@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../lib/supabase';
 import { useAdminAuth } from '../context/AdminAuthContext';
@@ -9,6 +9,19 @@ import EmptyState from '../components/EmptyState';
 const METAS = ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia'];
 const NIVEIS = ['iniciante', 'intermediario', 'avancado'];
 const RESTRICOES = ['padrao', 'vegetariano', 'low_carb'];
+
+// Espelha os ids de app-react/src/lib/achievements.js (BADGES) — os dois apps
+// não compartilham build, então o rótulo é duplicado aqui só pra exibição.
+const BADGE_LABELS = {
+  streak_3: '🔥 Sequência de 3 dias', streak_7: '🔥🔥 Sequência de 7 dias', streak_30: '🔥🔥🔥 Sequência de 30 dias',
+  workouts_10: '💪 10 treinos concluídos', workouts_50: '🏋️ 50 treinos concluídos', workouts_100: '🏆 100 treinos concluídos',
+  food_first: '🍎 Primeiro alimento registrado', food_50: '📒 50 alimentos registrados',
+  photo_first: '📸 Primeira foto de progresso', recipe_first: '📋 Primeira receita salva',
+  weight_10: '⚖️ 10 registros de peso',
+};
+
+const SEVERITY_BADGE = { leve: 'badge--ok', moderada: 'badge--warning', forte: 'badge--danger', lesao: 'badge--danger' };
+const SEVERITY_LABEL = { leve: 'Leve', moderada: 'Moderada', forte: 'Forte', lesao: 'Lesão' };
 
 function formatDate(value) {
   if (!value) return '—';
@@ -44,6 +57,16 @@ export default function UserDetail() {
   const [foodLogs, setFoodLogs] = useState([]);
   const [waterLogs, setWaterLogs] = useState([]);
   const [weightLogs, setWeightLogs] = useState([]);
+  const [personalRecords, setPersonalRecords] = useState([]);
+  const [discomfortLogs, setDiscomfortLogs] = useState([]);
+  const [achievements, setAchievements] = useState([]);
+  const [progressPhotos, setProgressPhotos] = useState([]);
+  const [savedRecipes, setSavedRecipes] = useState([]);
+  const [dietLogs, setDietLogs] = useState([]);
+  const [pushCount, setPushCount] = useState(0);
+  const [expandedWorkoutId, setExpandedWorkoutId] = useState(null);
+  const [workoutSets, setWorkoutSets] = useState({});
+  const [setsLoading, setSetsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState('perfil');
@@ -56,7 +79,7 @@ export default function UserDetail() {
     setLoading(true);
     setError('');
     try {
-      const [{ data: userRows, error: userErr }, plan, w, f, wa, we] = await Promise.all([
+      const [{ data: userRows, error: userErr }, plan, w, f, wa, we, pr, disc, ach, photos, recipes, diet, push] = await Promise.all([
         db.rpc('admin_get_user', { target: id }),
         db.from('workout_plans')
           .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, is_post_workout, order_index))')
@@ -65,6 +88,13 @@ export default function UserDetail() {
         db.from('food_logs').select('id, log_date, food_name, kcal').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
         db.from('water_logs').select('id, log_date, amount_ml').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
         db.from('weight_logs').select('id, log_date, weight').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
+        db.from('personal_records').select('id, exercise_name, max_weight, max_reps, achieved_at').eq('user_id', id).order('achieved_at', { ascending: false }),
+        db.from('exercise_discomfort').select('id, exercise_name, log_date, severity, note').eq('user_id', id).order('log_date', { ascending: false }).limit(30),
+        db.from('achievements').select('id, badge_id, unlocked_at').eq('user_id', id).order('unlocked_at', { ascending: false }),
+        db.from('progress_photos').select('id, photo_date, image_data, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
+        db.from('saved_recipes').select('id, name, kcal, proteina, carboidrato, gordura, ingredientes, created_at').eq('user_id', id).order('created_at', { ascending: false }),
+        db.from('diet_logs').select('id, log_date, meal_name, completed').eq('user_id', id).order('log_date', { ascending: false }).limit(30),
+        db.from('push_subscriptions').select('id', { count: 'exact', head: true }).eq('user_id', id),
       ]);
       if (userErr) throw userErr;
       const row = userRows?.[0];
@@ -88,6 +118,15 @@ export default function UserDetail() {
       setFoodLogs(f.data || []);
       setWaterLogs(wa.data || []);
       setWeightLogs(we.data || []);
+      setPersonalRecords(pr.data || []);
+      setDiscomfortLogs(disc.data || []);
+      setAchievements(ach.data || []);
+      setProgressPhotos(photos.data || []);
+      setSavedRecipes(recipes.data || []);
+      setDietLogs(diet.data || []);
+      setPushCount(push.count || 0);
+      setExpandedWorkoutId(null);
+      setWorkoutSets({});
     } catch (err) {
       setError(err.message);
     } finally {
@@ -164,6 +203,29 @@ export default function UserDetail() {
     }
   }
 
+  async function toggleWorkoutDetail(workoutId) {
+    if (expandedWorkoutId === workoutId) {
+      setExpandedWorkoutId(null);
+      return;
+    }
+    setExpandedWorkoutId(workoutId);
+    if (workoutSets[workoutId]) return;
+    setSetsLoading(true);
+    try {
+      const { data, error } = await db.from('exercise_sets')
+        .select('id, exercise_name, set_number, carga, reps, completed')
+        .eq('workout_id', workoutId)
+        .order('exercise_name', { ascending: true })
+        .order('set_number', { ascending: true });
+      if (error) throw error;
+      setWorkoutSets(prev => ({ ...prev, [workoutId]: data || [] }));
+    } catch (err) {
+      setActionMsg(`Erro: ${err.message}`);
+    } finally {
+      setSetsLoading(false);
+    }
+  }
+
   function exportTreinos() {
     downloadCsv(`treinos_${id}.csv`, toCsv(workouts, [
       { key: 'workout_date', label: 'Data' }, { key: 'day_of_week', label: 'Dia' },
@@ -191,6 +253,7 @@ export default function UserDetail() {
           <h1 className="page-title">{detail.email}</h1>
           <p className="user-detail__meta">
             Criado em {formatDate(detail.created_at)} · Último login {formatDate(detail.last_sign_in_at)}
+            {' · '}{pushCount > 0 ? `📲 ${pushCount} dispositivo(s) com push ativo` : '📴 sem push ativo'}
             {detail.is_admin && <span className="badge badge--admin">admin</span>}
             {isBanned && <span className="badge badge--danger">banido</span>}
           </p>
@@ -212,7 +275,8 @@ export default function UserDetail() {
       {actionMsg && <p className={`form-msg ${actionMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{actionMsg}</p>}
 
       {tab === 'perfil' && (
-        <form className="card form-grid" onSubmit={handleSaveProfile}>
+        <div className="stack">
+          <form className="card form-grid" onSubmit={handleSaveProfile}>
           <label className="field">
             <span className="field__label">Nome</span>
             <input className="input" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
@@ -270,7 +334,41 @@ export default function UserDetail() {
           <div className="form-grid__actions">
             <button className="btn btn--primary" type="submit" disabled={busy}>Salvar perfil</button>
           </div>
-        </form>
+          </form>
+
+          <section>
+            <h2 className="section-title">Conquistas</h2>
+            {achievements.length === 0 && <EmptyState icon="🏅" label="Nenhuma conquista desbloqueada ainda." />}
+            {achievements.length > 0 && (
+              <div className="actions-row">
+                {achievements.map(a => (
+                  <span key={a.id} className="badge badge--ok" title={formatDate(a.unlocked_at)}>
+                    {BADGE_LABELS[a.badge_id] || a.badge_id}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2 className="section-title">Fotos de progresso</h2>
+            {progressPhotos.length === 0 && <EmptyState icon="📸" label="Sem fotos de progresso." />}
+            {progressPhotos.length > 0 && (
+              <div className="actions-row" style={{ flexWrap: 'wrap' }}>
+                {progressPhotos.map(p => (
+                  <div key={p.id} style={{ width: 120 }}>
+                    <img
+                      src={p.image_data} alt={`Foto de progresso de ${p.photo_date}`}
+                      style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }}
+                    />
+                    <p className="user-detail__meta">{p.photo_date}</p>
+                    {p.note && <p className="user-detail__meta">{p.note}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       )}
 
       {tab === 'treinos' && (
@@ -315,17 +413,86 @@ export default function UserDetail() {
               <button className="btn btn--small" onClick={exportTreinos} disabled={workouts.length === 0}>Exportar CSV</button>
             </div>
             <table className="resp-table">
-              <thead><tr><th>Data</th><th>Dia</th><th>Concluído</th><th>Duração</th></tr></thead>
+              <thead><tr><th>Data</th><th>Dia</th><th>Concluído</th><th>Duração</th><th></th></tr></thead>
               <tbody>
                 {workouts.map(w => (
-                  <tr key={w.id}>
-                    <td data-label="Data">{w.workout_date}</td>
-                    <td data-label="Dia">{w.day_of_week}</td>
-                    <td data-label="Concluído">{w.completed ? 'sim' : 'não'}</td>
-                    <td data-label="Duração">{w.duration_seconds ? `${Math.round(w.duration_seconds / 60)} min` : '—'}</td>
+                  <Fragment key={w.id}>
+                    <tr>
+                      <td data-label="Data">{w.workout_date}</td>
+                      <td data-label="Dia">{w.day_of_week}</td>
+                      <td data-label="Concluído">{w.completed ? 'sim' : 'não'}</td>
+                      <td data-label="Duração">{w.duration_seconds ? `${Math.round(w.duration_seconds / 60)} min` : '—'}</td>
+                      <td data-label="">
+                        <button className="btn btn--ghost btn--small" onClick={() => toggleWorkoutDetail(w.id)}>
+                          {expandedWorkoutId === w.id ? 'Ocultar séries' : 'Ver séries'}
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedWorkoutId === w.id && (
+                      <tr>
+                        <td colSpan={5}>
+                          {setsLoading && !workoutSets[w.id] && <Loading label="Carregando séries…" />}
+                          {workoutSets[w.id] && workoutSets[w.id].length === 0 && (
+                            <EmptyState icon="🔢" label="Sem séries registradas para este treino." />
+                          )}
+                          {workoutSets[w.id]?.length > 0 && (
+                            <table className="resp-table">
+                              <thead><tr><th>Exercício</th><th>Série</th><th>Carga</th><th>Reps</th><th>Concluída</th></tr></thead>
+                              <tbody>
+                                {workoutSets[w.id].map(s => (
+                                  <tr key={s.id}>
+                                    <td data-label="Exercício">{s.exercise_name}</td>
+                                    <td data-label="Série">{s.set_number}</td>
+                                    <td data-label="Carga">{s.carga ?? '—'}</td>
+                                    <td data-label="Reps">{s.reps ?? '—'}</td>
+                                    <td data-label="Concluída">{s.completed ? 'sim' : 'não'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                ))}
+                {workouts.length === 0 && <tr><td colSpan={5}><EmptyState icon="🏋️" label="Sem treinos registrados." /></td></tr>}
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 className="section-title">Recordes pessoais</h2>
+            <table className="resp-table">
+              <thead><tr><th>Exercício</th><th>Carga máxima</th><th>Reps máximas</th><th>Data</th></tr></thead>
+              <tbody>
+                {personalRecords.map(p => (
+                  <tr key={p.id}>
+                    <td data-label="Exercício">{p.exercise_name}</td>
+                    <td data-label="Carga máxima">{p.max_weight ?? '—'}</td>
+                    <td data-label="Reps máximas">{p.max_reps ?? '—'}</td>
+                    <td data-label="Data">{p.achieved_at || '—'}</td>
                   </tr>
                 ))}
-                {workouts.length === 0 && <tr><td colSpan={4}><EmptyState icon="🏋️" label="Sem treinos registrados." /></td></tr>}
+                {personalRecords.length === 0 && <tr><td colSpan={4}><EmptyState icon="🏆" label="Sem recordes pessoais registrados." /></td></tr>}
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 className="section-title">Registros de dor/desconforto</h2>
+            <table className="resp-table">
+              <thead><tr><th>Data</th><th>Exercício</th><th>Severidade</th><th>Nota</th></tr></thead>
+              <tbody>
+                {discomfortLogs.map(d => (
+                  <tr key={d.id}>
+                    <td data-label="Data">{d.log_date}</td>
+                    <td data-label="Exercício">{d.exercise_name}</td>
+                    <td data-label="Severidade"><span className={`badge ${SEVERITY_BADGE[d.severity] || ''}`}>{SEVERITY_LABEL[d.severity] || d.severity}</span></td>
+                    <td data-label="Nota">{d.note || '—'}</td>
+                  </tr>
+                ))}
+                {discomfortLogs.length === 0 && <tr><td colSpan={4}><EmptyState icon="🩹" label="Nenhum registro de dor ou desconforto." /></td></tr>}
               </tbody>
             </table>
           </section>
@@ -355,6 +522,22 @@ export default function UserDetail() {
                 {!md.customMeals?.length && (
                   <tr><td colSpan={4}><EmptyState icon="🍽️" label="Sem cardápio personalizado salvo — o usuário usa o template padrão do objetivo." /></td></tr>
                 )}
+              </tbody>
+            </table>
+          </section>
+          <section>
+            <h2 className="section-title">Adesão ao cardápio (últimos registros)</h2>
+            <table className="resp-table">
+              <thead><tr><th>Data</th><th>Refeição</th><th>Concluída</th></tr></thead>
+              <tbody>
+                {dietLogs.map(d => (
+                  <tr key={d.id}>
+                    <td data-label="Data">{d.log_date}</td>
+                    <td data-label="Refeição">{d.meal_name}</td>
+                    <td data-label="Concluída">{d.completed ? 'sim' : 'não'}</td>
+                  </tr>
+                ))}
+                {dietLogs.length === 0 && <tr><td colSpan={3}><EmptyState icon="✅" label="Sem registros de adesão ao cardápio." /></td></tr>}
               </tbody>
             </table>
           </section>
@@ -391,6 +574,25 @@ export default function UserDetail() {
                   <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="Peso (kg)">{w.weight}</td></tr>
                 ))}
                 {weightLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="⚖️" label="Sem registros." /></td></tr>}
+              </tbody>
+            </table>
+          </section>
+          <section>
+            <h2 className="section-title">Receitas salvas</h2>
+            <table className="resp-table">
+              <thead><tr><th>Nome</th><th>Kcal</th><th>Proteína</th><th>Carbo</th><th>Gordura</th><th>Ingredientes</th></tr></thead>
+              <tbody>
+                {savedRecipes.map(r => (
+                  <tr key={r.id}>
+                    <td data-label="Nome">{r.name}</td>
+                    <td data-label="Kcal">{r.kcal}</td>
+                    <td data-label="Proteína">{r.proteina}</td>
+                    <td data-label="Carbo">{r.carboidrato}</td>
+                    <td data-label="Gordura">{r.gordura}</td>
+                    <td data-label="Ingredientes">{r.ingredientes || '—'}</td>
+                  </tr>
+                ))}
+                {savedRecipes.length === 0 && <tr><td colSpan={6}><EmptyState icon="📋" label="Sem receitas salvas." /></td></tr>}
               </tbody>
             </table>
           </section>

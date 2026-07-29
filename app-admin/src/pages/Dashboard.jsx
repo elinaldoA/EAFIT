@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { db } from '../lib/supabase';
 import Loading from '../components/Loading';
 
@@ -24,6 +25,8 @@ const TILES = [
   { key: 'total_workouts', label: 'Treinos registrados' },
   { key: 'workouts_last_7d', label: 'Treinos (7 dias)' },
   { key: 'total_food_logs', label: 'Refeições registradas' },
+  { key: 'active_users_7d', label: 'Ativos (7 dias)' },
+  { key: 'push_enabled_users', label: 'Com push ativo' },
 ];
 
 function formatDay(iso) {
@@ -65,6 +68,14 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {Number(stats?.severe_discomfort_30d) > 0 && (
+        <Link to="/seguranca" className="card" style={{ display: 'block', borderColor: 'var(--danger)' }}>
+          <h2 className="section-title" style={{ margin: 0 }}>
+            🩹 {stats.severe_discomfort_30d} relato(s) de dor forte/lesão nos últimos 30 dias — ver Segurança
+          </h2>
+        </Link>
+      )}
 
       <div className="card">
         <h2 className="section-title">Cadastros — últimos 14 dias</h2>

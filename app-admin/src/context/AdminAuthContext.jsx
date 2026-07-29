@@ -12,6 +12,11 @@ const AdminAuthContext = createContext(null);
 export function AdminAuthProvider({ children }) {
   const [adminUser, setAdminUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  // Supabase detecta o token de recuperação de senha na URL sozinho e dispara
+  // o evento PASSWORD_RECOVERY com uma sessão já válida — a gente intercepta
+  // aqui pra travar o app na tela de "definir nova senha" antes de deixar o
+  // usuário navegar normalmente com essa sessão.
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -36,7 +41,8 @@ export function AdminAuthProvider({ children }) {
       .catch(err => console.error('getSession:', err))
       .finally(() => { if (active) setAuthLoading(false); });
 
-    const { data: { subscription } } = db.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = db.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
       resolveSession(session).finally(() => { if (active) setAuthLoading(false); });
     });
 
@@ -82,8 +88,22 @@ export function AdminAuthProvider({ children }) {
     return { error: error?.message };
   }
 
+  async function requestPasswordReset(email) {
+    const { error } = await db.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname,
+    });
+    return { error: error?.message };
+  }
+
+  function finishRecovery() {
+    setRecoveryMode(false);
+  }
+
   return (
-    <AdminAuthContext.Provider value={{ adminUser, authLoading, login, logout, updateProfile, updatePassword }}>
+    <AdminAuthContext.Provider value={{
+      adminUser, authLoading, login, logout, updateProfile, updatePassword,
+      recoveryMode, requestPasswordReset, finishRecovery,
+    }}>
       {children}
     </AdminAuthContext.Provider>
   );
