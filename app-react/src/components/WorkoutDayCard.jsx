@@ -8,29 +8,11 @@ import { checkForNewPR, fetchProgressionSuggestion, fetchPlateauStatus } from '.
 import { fetchRecentDiscomfort } from '../lib/discomfort';
 import { substituteExercise } from '../lib/workoutPlans';
 import { getSaferAlternative } from '../data/workoutTemplates';
-import { TODAY_DATE } from '../data/treinoData';
 import { isNotifyEnabled } from '../lib/notifications';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import { DiscomfortPanel } from './DiscomfortWidgets';
-
-const RIR_OPTIONS = [
-  { value: 4, label: 'Fácil' },
-  { value: 3, label: 'Moderado' },
-  { value: 1, label: 'Difícil' },
-  { value: 0, label: 'Falha' },
-];
-
-const WARMUP_RAMP = [
-  { pct: 0.5, reps: 8 },
-  { pct: 0.7, reps: 5 },
-  { pct: 0.85, reps: 3 },
-];
-
-function roundHalfKg(n) {
-  return Math.round(n * 2) / 2;
-}
 
 function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
   const { user } = useAuth();
@@ -39,10 +21,6 @@ function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
   const [carga, setCarga] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_carga`) || '');
   const [reps, setReps] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_reps`) || '');
   const [done, setDone] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true');
-  const [rir, setRir] = useState(() => {
-    const stored = localStorage.getItem(`set_${ex.nome}_${n}_rir`);
-    return stored === null ? null : Number(stored);
-  });
   const [saved, setSaved] = useState(false);
   const cargaSaveTimer = useRef(null);
   const repsSaveTimer = useRef(null);
@@ -131,22 +109,6 @@ function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
     };
   });
 
-  // Opcional — RIR só faz sentido depois que a série foi marcada como feita, e não
-  // bloqueia nada: quem não quiser reportar simplesmente não clica em nenhum pill.
-  async function handleSetRir(value) {
-    const next = rir === value ? null : value; // clicar de novo desmarca
-    setRir(next);
-    if (next === null) localStorage.removeItem(`set_${ex.nome}_${n}_rir`);
-    else localStorage.setItem(`set_${ex.nome}_${n}_rir`, next);
-    if (user) {
-      try {
-        await saveSetState(day.dia, ex.nome, n, { rir: next });
-      } catch (err) {
-        console.error('saveSetState (rir):', err);
-      }
-    }
-  }
-
   async function handleCheck() {
     const next = !done;
     setDone(next);
@@ -207,63 +169,6 @@ function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
           disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
         >✓</button>
       </div>
-      {done && (
-        <div className="set-row__rir">
-          <span className="set-row__rir-label">Quão perto da falha?</span>
-          <div className="set-row__rir-pills">
-            {RIR_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`rir-pill${rir === opt.value ? ' rir-pill--active' : ''}`}
-                onClick={() => handleSetRir(opt.value)}
-              >{opt.label}</button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Aquecimento é só uma calculadora client-side (sem tabela/sync): 3 séries em
-// rampa (50/70/85% do peso-alvo), com checkboxes que resetam a cada dia — não
-// precisa de histórico entre dispositivos nem entra em PR/progressão.
-function WarmupChecklist({ exName, targetWeight }) {
-  const [open, setOpen] = useState(false);
-  const [, setTick] = useState(0);
-
-  if (!targetWeight) return null;
-
-  const sets = WARMUP_RAMP.map(({ pct, reps }) => ({ carga: roundHalfKg(targetWeight * pct), reps }));
-
-  function toggle(i) {
-    const key = `aquecimento_${TODAY_DATE}_${exName}_${i}`;
-    localStorage.setItem(key, localStorage.getItem(key) !== 'true');
-    setTick(t => t + 1);
-  }
-
-  return (
-    <div className="warmup">
-      <button type="button" className="warmup__toggle" onClick={() => setOpen(o => !o)}>
-        🔥 Aquecimento {open ? '▲' : '▼'}
-      </button>
-      {open && (
-        <div className="warmup__sets">
-          {sets.map((s, i) => {
-            const done = localStorage.getItem(`aquecimento_${TODAY_DATE}_${exName}_${i}`) === 'true';
-            return (
-              <button
-                key={i} type="button"
-                className={`warmup__set${done ? ' warmup__set--done' : ''}`}
-                onClick={() => toggle(i)}
-              >
-                {done ? '✓ ' : ''}{s.carga}kg × {s.reps}
-              </button>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -328,7 +233,6 @@ function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll,
     }
   }
 
-  const warmupTarget = suggestion?.suggestedCarga ?? suggestion?.lastCarga ?? plateau?.lastCarga ?? null;
   const allDone = allSetsDone(ex, setCount);
   return (
     <div className="ex-block">
@@ -368,8 +272,6 @@ function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll,
           {allDone ? '✓ Todas' : 'Marcar todas'}
         </button>
       </div>
-
-      <WarmupChecklist exName={ex.nome} targetWeight={warmupTarget} />
 
       <div className="ex-block__sets">
         {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (

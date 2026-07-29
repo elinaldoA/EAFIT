@@ -820,41 +820,6 @@ button, input { font-family: inherit; }
   gap: 4px;
 }
 
-.set-row__rir {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  padding-left: 58px;
-}
-
-.set-row__rir-label {
-  font-size: 0.64rem;
-  color: var(--text-dim);
-}
-
-.set-row__rir-pills {
-  display: flex;
-  gap: 4px;
-}
-
-.rir-pill {
-  border: 1px solid var(--border-2);
-  background: var(--surface-3);
-  color: var(--text-dim);
-  border-radius: var(--r-full);
-  padding: 2px 8px;
-  font-size: 0.64rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.rir-pill--active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
-}
-
 .ex-block__suggestion--under-effort {
   color: var(--success);
 }
@@ -881,42 +846,6 @@ button, input { font-family: inherit; }
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
-}
-
-.warmup {
-  margin: 6px 0;
-}
-
-.warmup__toggle {
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  cursor: pointer;
-}
-
-.warmup__sets {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.warmup__set {
-  border: 1px dashed var(--border-2);
-  background: var(--surface-3);
-  color: var(--text-muted);
-  border-radius: var(--r-md);
-  padding: 5px 8px;
-  font-size: 0.71rem;
-  cursor: pointer;
-}
-
-.warmup__set--done {
-  border-style: solid;
-  border-color: var(--success);
-  color: var(--success);
 }
 
 .workout-notes {
