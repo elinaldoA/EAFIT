@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
         const directTables = [
           'progress_photos', 'water_logs',
           'weight_logs', 'achievements', 'push_subscriptions',
-          'exercise_discomfort', 'personal_records',
+          'exercise_discomfort',
         ];
         for (const table of directTables) {
           const { error } = await admin.from(table).delete().eq('user_id', targetUserId);

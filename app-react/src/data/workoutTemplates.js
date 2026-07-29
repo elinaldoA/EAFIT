@@ -328,6 +328,15 @@ const LEVEL_EXERCISE_SUBS = {
     },
 };
 
+// Reaproveita a variante "iniciante" de LEVEL_EXERCISE_SUBS (trajetória guiada
+// em máquina / carga reduzida) como sugestão de substituição quando o usuário
+// relata dor/desconforto forte nesse exercício — mesma variante, motivo
+// diferente (reduzir demanda técnica/articular, não nível de experiência).
+// Retorna null se o exercício não tiver uma variante mais simples curada.
+export function getSaferAlternative(nome) {
+    return LEVEL_EXERCISE_SUBS[nome]?.iniciante ?? null;
+}
+
 const SERIES_DELTA = { iniciante: -1, intermediario: 0, avancado: 1 };
 const DESCANSO_DELTA_S = { iniciante: 15, intermediario: 0, avancado: -15 };
 

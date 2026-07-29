@@ -35,7 +35,7 @@ function chainResolving(result) {
 
 function mockSets(sets) {
   mockDb.from.mockReturnValue(chainResolving({
-    data: sets.map(s => ({ carga: s.carga, reps: s.reps, workouts: { user_id: 'u1', workout_date: s.date } })),
+    data: sets.map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir ?? null, workouts: { user_id: 'u1', workout_date: s.date } })),
     error: null,
   }));
 }
@@ -69,10 +69,35 @@ describe('fetchProgressionSuggestion', () => {
     expect(result).toEqual({
       lastCarga: 50,
       lastReps: 10,
+      avgRir: null,
       suggestedCarga: 52.5,
       suggestedReps: null,
       hitCeiling: true,
     });
+  });
+
+  it('bateu o teto com RIR médio alto (>= 3): sugere um salto maior (+5kg)', async () => {
+    mockSets([
+      { carga: 50, reps: 10, rir: 3, date: '2026-07-01' },
+      { carga: 50, reps: 10, rir: 4, date: '2026-07-01' },
+    ]);
+
+    const result = await fetchProgressionSuggestion('u1', 'Supino Reto', '8-10');
+
+    expect(result.avgRir).toBeCloseTo(3.5);
+    expect(result.suggestedCarga).toBe(55);
+  });
+
+  it('bateu o teto com RIR médio baixo: mantém o salto conservador (+2,5kg)', async () => {
+    mockSets([
+      { carga: 50, reps: 10, rir: 1, date: '2026-07-01' },
+      { carga: 50, reps: 10, rir: 0, date: '2026-07-01' },
+    ]);
+
+    const result = await fetchProgressionSuggestion('u1', 'Supino Reto', '8-10');
+
+    expect(result.avgRir).toBe(0.5);
+    expect(result.suggestedCarga).toBe(52.5);
   });
 
   it('não bateu o teto: repete a carga e sugere +1 rep (dupla progressão)', async () => {
@@ -83,6 +108,7 @@ describe('fetchProgressionSuggestion', () => {
     expect(result).toEqual({
       lastCarga: 50,
       lastReps: 8,
+      avgRir: null,
       suggestedCarga: 50,
       suggestedReps: 9,
       hitCeiling: false,
@@ -122,7 +148,22 @@ describe('fetchPlateauStatus', () => {
 
     const result = await fetchPlateauStatus('u1', 'Supino Reto', '8-10');
 
-    expect(result).toEqual({ sessionsStuck: 3, lastCarga: 50, suggestedDeload: 45 });
+    expect(result).toEqual({
+      sessionsStuck: 3, lastCarga: 50, avgRir: null, underEffort: false, suggestedDeload: 45,
+    });
+  });
+
+  it('estagnação com RIR médio alto: sinaliza underEffort em vez de platô real', async () => {
+    mockSets([
+      { carga: 50, reps: 8, rir: 4, date: '2026-06-17' },
+      { carga: 50, reps: 8, rir: 3, date: '2026-06-24' },
+      { carga: 50, reps: 8, rir: 4, date: '2026-07-01' },
+    ]);
+
+    const result = await fetchPlateauStatus('u1', 'Supino Reto', '8-10');
+
+    expect(result.underEffort).toBe(true);
+    expect(result.avgRir).toBeCloseTo(3.67, 1);
   });
 
   it('não sinaliza platô se os reps estão progredindo', async () => {

@@ -24,6 +24,10 @@ const SYNC_EXECUTORS = {
     const { error } = await db.from('workouts').update({ rating }).eq('id', id);
     if (error) throw error;
   },
+  workout_notes: async ({ id, notes }) => {
+    const { error } = await db.from('workouts').update({ notes }).eq('id', id);
+    if (error) throw error;
+  },
   set_state: async ({ workout_id, exercise_name, set_number, patch }) => {
     const { error } = await db
       .from('exercise_sets')
@@ -45,6 +49,11 @@ const SYNC_EXECUTORS = {
   workout_rating_by_day: async ({ userId, day, rating }) => {
     const wId = await ensureWorkoutId(userId, day);
     const { error } = await db.from('workouts').update({ rating }).eq('id', wId);
+    if (error) throw error;
+  },
+  workout_notes_by_day: async ({ userId, day, notes }) => {
+    const wId = await ensureWorkoutId(userId, day);
+    const { error } = await db.from('workouts').update({ notes }).eq('id', wId);
     if (error) throw error;
   },
   set_state_by_day: async ({ userId, day, exercise_name, set_number, patch }) => {
@@ -145,14 +154,14 @@ export function WorkoutProvider({ children }) {
 
         const { data: w, error: wErr } = await db
           .from('workouts')
-          .select('completed, started_at, finished_at, duration_seconds, rating')
+          .select('completed, started_at, finished_at, duration_seconds, rating, notes')
           .eq('id', wId)
           .single();
         if (wErr) throw wErr;
 
         const { data: sets, error: sErr } = await db
           .from('exercise_sets')
-          .select('exercise_name, set_number, carga, completed, reps')
+          .select('exercise_name, set_number, carga, completed, reps, rir')
           .eq('workout_id', wId);
         if (sErr) throw sErr;
 
@@ -167,8 +176,10 @@ export function WorkoutProvider({ children }) {
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_carga`, s.carga ?? '');
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_done`, s.completed);
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_reps`, s.reps ?? '');
+          if (s.rir != null) localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_rir`, s.rir);
         });
         if (timer.rating != null) localStorage.setItem(`treino_${dayName}_rating`, timer.rating);
+        if (timer.notes) localStorage.setItem(`treino_${dayName}_notes`, timer.notes);
         if (timer.duration_seconds != null) {
           localStorage.setItem(`treino_${dayName}_timer`, JSON.stringify({
             status: 'finished',
@@ -263,6 +274,25 @@ export function WorkoutProvider({ children }) {
     }
   }
 
+  async function saveWorkoutNotes(dayName, notes) {
+    if (!user) return;
+    let wId;
+    try {
+      wId = workoutIds[dayName] || await ensureWorkoutId(user.id, findDay(dayName));
+      if (!workoutIds[dayName]) setWorkoutIds(ids => ({ ...ids, [dayName]: wId }));
+      const { error } = await db.from('workouts').update({ notes }).eq('id', wId);
+      if (error) throw error;
+    } catch (err) {
+      console.error('saveWorkoutNotes:', err);
+      if (wId) {
+        enqueue('workout_notes', { id: wId, notes });
+      } else {
+        enqueue('workout_notes_by_day', { userId: user.id, day: findDay(dayName), notes });
+      }
+      setSyncStatus('pending');
+    }
+  }
+
   async function saveSetState(dayName, exerciseName, setNumber, patch) {
     if (!user) return;
     let wId;
@@ -296,7 +326,7 @@ export function WorkoutProvider({ children }) {
   }
 
   return (
-    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays, planExpired, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, syncNow, markPending, refreshPlan: loadUserData }}>
+    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays, planExpired, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, markPending, refreshPlan: loadUserData }}>
       {children}
     </WorkoutContext.Provider>
   );

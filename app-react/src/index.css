@@ -656,8 +656,14 @@ button, input { font-family: inherit; }
 
 .session-timer__actions {
   display: flex;
+  align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.session-timer__hint {
+  font-size: 0.66rem;
+  color: var(--text-dim);
 }
 
 /* ============================================================
@@ -739,6 +745,12 @@ button, input { font-family: inherit; }
   border-color: var(--primary);
 }
 
+.ex-block__mark-all:disabled,
+.ex-block__apply-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .ex-block__sets {
   display: flex;
   flex-direction: column;
@@ -777,6 +789,12 @@ button, input { font-family: inherit; }
 
 .set-row__carga.saved { border-color: var(--success); }
 
+.set-row__carga:disabled,
+.set-row__check:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .set-row__check {
   width: 32px;
   height: 28px;
@@ -794,6 +812,144 @@ button, input { font-family: inherit; }
   background: var(--success);
   border-color: var(--success);
   color: #09090b;
+}
+
+.set-row-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.set-row__rir {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-left: 58px;
+}
+
+.set-row__rir-label {
+  font-size: 0.64rem;
+  color: var(--text-dim);
+}
+
+.set-row__rir-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.rir-pill {
+  border: 1px solid var(--border-2);
+  background: var(--surface-3);
+  color: var(--text-dim);
+  border-radius: var(--r-full);
+  padding: 2px 8px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rir-pill--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.ex-block__suggestion--under-effort {
+  color: var(--success);
+}
+
+.ex-block__apply-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--primary-h);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ex-block__swap-btn {
+  margin-top: 8px;
+  align-self: flex-start;
+  border: 1px solid var(--warning);
+  background: none;
+  color: var(--warning);
+  border-radius: var(--r-full);
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.warmup {
+  margin: 6px 0;
+}
+
+.warmup__toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.warmup__sets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.warmup__set {
+  border: 1px dashed var(--border-2);
+  background: var(--surface-3);
+  color: var(--text-muted);
+  border-radius: var(--r-md);
+  padding: 5px 8px;
+  font-size: 0.71rem;
+  cursor: pointer;
+}
+
+.warmup__set--done {
+  border-style: solid;
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.workout-notes {
+  margin-bottom: 4px;
+}
+
+.workout-notes__toggle {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.workout-notes__textarea {
+  width: 100%;
+  margin-top: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  color: var(--text);
+  padding: 8px;
+  font-size: 0.79rem;
+  font-family: inherit;
+  min-height: 60px;
+  resize: vertical;
+  outline: none;
+}
+
+.workout-notes__textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
 }
 
 /* Pós-treino */

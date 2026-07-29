@@ -5,18 +5,44 @@ import { useToast } from '../context/ToastContext';
 import { parseRestSeconds, formatDuration } from '../lib/utils';
 import { playWorkoutFinishedSound } from '../lib/sound';
 import { checkForNewPR, fetchProgressionSuggestion, fetchPlateauStatus } from '../lib/records';
+import { fetchRecentDiscomfort } from '../lib/discomfort';
+import { substituteExercise } from '../lib/workoutPlans';
+import { getSaferAlternative } from '../data/workoutTemplates';
+import { TODAY_DATE } from '../data/treinoData';
 import { isNotifyEnabled } from '../lib/notifications';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
+import { DiscomfortPanel } from './DiscomfortWidgets';
 
-function SetRow({ ex, n, day, bump, onRestStart, onFillOthers }) {
+const RIR_OPTIONS = [
+  { value: 4, label: 'Fácil' },
+  { value: 3, label: 'Moderado' },
+  { value: 1, label: 'Difícil' },
+  { value: 0, label: 'Falha' },
+];
+
+const WARMUP_RAMP = [
+  { pct: 0.5, reps: 8 },
+  { pct: 0.7, reps: 5 },
+  { pct: 0.85, reps: 3 },
+];
+
+function roundHalfKg(n) {
+  return Math.round(n * 2) / 2;
+}
+
+function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
   const { user } = useAuth();
   const { saveSetState, workoutIds } = useWorkout();
   const toast = useToast();
   const [carga, setCarga] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_carga`) || '');
   const [reps, setReps] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_reps`) || '');
   const [done, setDone] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true');
+  const [rir, setRir] = useState(() => {
+    const stored = localStorage.getItem(`set_${ex.nome}_${n}_rir`);
+    return stored === null ? null : Number(stored);
+  });
   const [saved, setSaved] = useState(false);
   const cargaSaveTimer = useRef(null);
   const repsSaveTimer = useRef(null);
@@ -105,6 +131,22 @@ function SetRow({ ex, n, day, bump, onRestStart, onFillOthers }) {
     };
   });
 
+  // Opcional — RIR só faz sentido depois que a série foi marcada como feita, e não
+  // bloqueia nada: quem não quiser reportar simplesmente não clica em nenhum pill.
+  async function handleSetRir(value) {
+    const next = rir === value ? null : value; // clicar de novo desmarca
+    setRir(next);
+    if (next === null) localStorage.removeItem(`set_${ex.nome}_${n}_rir`);
+    else localStorage.setItem(`set_${ex.nome}_${n}_rir`, next);
+    if (user) {
+      try {
+        await saveSetState(day.dia, ex.nome, n, { rir: next });
+      } catch (err) {
+        console.error('saveSetState (rir):', err);
+      }
+    }
+  }
+
   async function handleCheck() {
     const next = !done;
     setDone(next);
@@ -142,32 +184,98 @@ function SetRow({ ex, n, day, bump, onRestStart, onFillOthers }) {
   }
 
   return (
-    <div className="set-row">
-      <span className="set-row__label">Série {n}</span>
-      <input
-        className={`set-row__carga${saved ? ' saved' : ''}`}
-        type="text" inputMode="decimal" placeholder="kg" autoComplete="off"
-        value={carga} onChange={handleCargaInput} onBlur={handleCargaBlur}
-      />
-      <input
-        className={`set-row__carga${saved ? ' saved' : ''}`}
-        type="text" inputMode="numeric" placeholder="reps" autoComplete="off"
-        value={reps} onChange={handleRepsInput} onBlur={handleRepsBlur}
-      />
-      <button
-        type="button"
-        className={`set-row__check${done ? ' set-row__check--done' : ''}`}
-        aria-pressed={done}
-        onClick={handleCheck}
-      >✓</button>
+    <div className="set-row-wrap">
+      <div className="set-row">
+        <span className="set-row__label">Série {n}</span>
+        <input
+          className={`set-row__carga${saved ? ' saved' : ''}`}
+          type="text" inputMode="decimal" placeholder="kg" autoComplete="off"
+          value={carga} onChange={handleCargaInput} onBlur={handleCargaBlur}
+          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
+        />
+        <input
+          className={`set-row__carga${saved ? ' saved' : ''}`}
+          type="text" inputMode="numeric" placeholder="reps" autoComplete="off"
+          value={reps} onChange={handleRepsInput} onBlur={handleRepsBlur}
+          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
+        />
+        <button
+          type="button"
+          className={`set-row__check${done ? ' set-row__check--done' : ''}`}
+          aria-pressed={done}
+          onClick={handleCheck}
+          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
+        >✓</button>
+      </div>
+      {done && (
+        <div className="set-row__rir">
+          <span className="set-row__rir-label">Quão perto da falha?</span>
+          <div className="set-row__rir-pills">
+            {RIR_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`rir-pill${rir === opt.value ? ' rir-pill--active' : ''}`}
+                onClick={() => handleSetRir(opt.value)}
+              >{opt.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll, onFillOthers }) {
+// Aquecimento é só uma calculadora client-side (sem tabela/sync): 3 séries em
+// rampa (50/70/85% do peso-alvo), com checkboxes que resetam a cada dia — não
+// precisa de histórico entre dispositivos nem entra em PR/progressão.
+function WarmupChecklist({ exName, targetWeight }) {
+  const [open, setOpen] = useState(false);
+  const [, setTick] = useState(0);
+
+  if (!targetWeight) return null;
+
+  const sets = WARMUP_RAMP.map(({ pct, reps }) => ({ carga: roundHalfKg(targetWeight * pct), reps }));
+
+  function toggle(i) {
+    const key = `aquecimento_${TODAY_DATE}_${exName}_${i}`;
+    localStorage.setItem(key, localStorage.getItem(key) !== 'true');
+    setTick(t => t + 1);
+  }
+
+  return (
+    <div className="warmup">
+      <button type="button" className="warmup__toggle" onClick={() => setOpen(o => !o)}>
+        🔥 Aquecimento {open ? '▲' : '▼'}
+      </button>
+      {open && (
+        <div className="warmup__sets">
+          {sets.map((s, i) => {
+            const done = localStorage.getItem(`aquecimento_${TODAY_DATE}_${exName}_${i}`) === 'true';
+            return (
+              <button
+                key={i} type="button"
+                className={`warmup__set${done ? ' warmup__set--done' : ''}`}
+                onClick={() => toggle(i)}
+              >
+                {done ? '✓ ' : ''}{s.carga}kg × {s.reps}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll, onFillOthers, onApplySuggestion, started }) {
   const { user } = useAuth();
+  const { refreshPlan } = useWorkout();
+  const toast = useToast();
   const [suggestion, setSuggestion] = useState(null);
   const [plateau, setPlateau] = useState(null);
+  const [discomfort, setDiscomfort] = useState(null);
+  const [substituting, setSubstituting] = useState(false);
   const setCount = parseInt(ex.series, 10);
 
   useEffect(() => {
@@ -179,6 +287,12 @@ function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll,
     fetchPlateauStatus(user.id, ex.nome, ex.reps)
       .then(p => { if (!cancelled) setPlateau(p); })
       .catch(err => console.error('fetchPlateauStatus:', err));
+    // Duplica a mesma consulta que o DiscomfortPanel já faz internamente —
+    // aqui só precisamos saber se dá pra mostrar o botão de troca de exercício,
+    // sem acoplar os dois componentes.
+    fetchRecentDiscomfort(user.id, ex.nome)
+      .then(d => { if (!cancelled) setDiscomfort(d); })
+      .catch(err => console.error('fetchRecentDiscomfort:', err));
     return () => { cancelled = true; };
   }, [user, open, setCount, ex.nome, ex.reps]);
 
@@ -193,6 +307,28 @@ function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll,
     );
   }
 
+  const alternative = getSaferAlternative(ex.nome);
+  const showSwap = discomfort && ['forte', 'lesao'].includes(discomfort.severity) && alternative;
+
+  async function handleSubstitute() {
+    if (!ex.id || !alternative || substituting) return;
+    setSubstituting(true);
+    try {
+      await substituteExercise(ex.id, {
+        nome: alternative.nome, series: ex.series, reps: ex.reps,
+        descanso: ex.descanso, tecnica: alternative.tecnica,
+      });
+      toast(`🔄 Trocado por ${alternative.nome}`);
+      await refreshPlan();
+    } catch (err) {
+      console.error('substituteExercise:', err);
+      toast('⚠️ Erro ao trocar o exercício');
+    } finally {
+      setSubstituting(false);
+    }
+  }
+
+  const warmupTarget = suggestion?.suggestedCarga ?? suggestion?.lastCarga ?? plateau?.lastCarga ?? null;
   const allDone = allSetsDone(ex, setCount);
   return (
     <div className="ex-block">
@@ -201,43 +337,66 @@ function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll,
           <span className="ex-name">{ex.nome}</span>
           <span className="ex-block__meta">{ex.reps} reps · desc. {ex.descanso}</span>
           {plateau ? (
-            <p className="ex-block__suggestion ex-block__suggestion--plateau">
-              ⚠️ Estagnado há {plateau.sessionsStuck} treinos em {plateau.lastCarga}kg
-              {' '}<span className="ex-block__suggestion-hint">— tente um deload pra {plateau.suggestedDeload}kg ou troque o exercício</span>
-            </p>
+            plateau.underEffort ? (
+              <p className="ex-block__suggestion ex-block__suggestion--under-effort">
+                💪 Carga travada, mas RIR médio de {plateau.avgRir.toFixed(1)} — você ainda tem folga
+                {' '}<span className="ex-block__suggestion-hint">— tente subir a carga na próxima sessão</span>
+              </p>
+            ) : (
+              <p className="ex-block__suggestion ex-block__suggestion--plateau">
+                ⚠️ Estagnado há {plateau.sessionsStuck} treinos em {plateau.lastCarga}kg
+                {' '}<span className="ex-block__suggestion-hint">— tente um deload pra {plateau.suggestedDeload}kg ou troque o exercício</span>
+                {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(plateau.suggestedDeload, null)}>🎯 Usar sugestão</button>
+              </p>
+            )
           ) : suggestion && (
             <p className="ex-block__suggestion">
               {suggestion.suggestedReps
                 ? <>💡 Sugestão: repita {suggestion.suggestedCarga}kg, mas tente {suggestion.suggestedReps} reps</>
                 : <>💡 Sugestão: {suggestion.suggestedCarga}kg</>}
               {' '}<span className="ex-block__suggestion-hint">(última vez: {suggestion.lastCarga}kg × {suggestion.lastReps} reps)</span>
+              {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(suggestion.suggestedCarga, suggestion.suggestedReps)}>🎯 Usar sugestão</button>
             </p>
           )}
         </div>
         <button
           type="button"
           className={`ex-block__mark-all${allDone ? ' ex-block__mark-all--done' : ''}`}
+          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
           onClick={onToggleAll}
         >
           {allDone ? '✓ Todas' : 'Marcar todas'}
         </button>
       </div>
+
+      <WarmupChecklist exName={ex.nome} targetWeight={warmupTarget} />
+
       <div className="ex-block__sets">
         {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (
-          <SetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onFillOthers={onFillOthers} />
+          <SetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onFillOthers={onFillOthers} started={started} />
         ))}
       </div>
+
+      {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
+      {showSwap && (
+        <button type="button" className="ex-block__swap-btn" disabled={substituting} onClick={handleSubstitute}>
+          {substituting ? 'Trocando…' : `🔄 Trocar por: ${alternative.nome}`}
+        </button>
+      )}
     </div>
   );
 }
 
 export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
   const { user } = useAuth();
-  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, activePlanDays } = useWorkout();
+  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays } = useWorkout();
   const toast = useToast();
   const [open, setOpen] = useState(isToday);
   const [checked, setChecked] = useState(() => localStorage.getItem(`treino_${day.dia}`) === 'true');
   const [markVersions, setMarkVersions] = useState({});
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notes, setNotes] = useState(() => localStorage.getItem(`treino_${day.dia}_notes`) || '');
+  const notesSaveTimer = useRef(null);
   const timer = useWorkoutTimer(day.dia);
 
   async function markDone(next) {
@@ -245,6 +404,45 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
     localStorage.setItem(`treino_${day.dia}`, next);
     if (user) await saveWorkoutStatus(day.dia, next);
   }
+
+  async function flushNotes(val) {
+    if (!user) return;
+    try {
+      await saveWorkoutNotes(day.dia, val);
+    } catch (err) {
+      console.error('saveWorkoutNotes:', err);
+    }
+  }
+
+  function handleNotesInput(e) {
+    const val = e.target.value;
+    setNotes(val);
+    localStorage.setItem(`treino_${day.dia}_notes`, val);
+    clearTimeout(notesSaveTimer.current);
+    notesSaveTimer.current = setTimeout(() => flushNotes(val), 800);
+  }
+
+  function handleNotesBlur() {
+    clearTimeout(notesSaveTimer.current);
+    flushNotes(notes);
+  }
+
+  // Mesma proteção contra F5/fechar aba que SetRow já usa: dispara o save
+  // pendente na hora em vez de esperar o debounce de 800ms.
+  useEffect(() => {
+    function flushPendingNotes() {
+      if (notesSaveTimer.current) {
+        clearTimeout(notesSaveTimer.current);
+        flushNotes(notes);
+      }
+    }
+    window.addEventListener('pagehide', flushPendingNotes);
+    window.addEventListener('beforeunload', flushPendingNotes);
+    return () => {
+      window.removeEventListener('pagehide', flushPendingNotes);
+      window.removeEventListener('beforeunload', flushPendingNotes);
+    };
+  });
 
   function handleResetTimer() {
     timer.reset();
@@ -325,6 +523,28 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
     }
   }
 
+  // Aplica a sugestão de progressão/deload direto na Série 1 (mesmo truque de
+  // localStorage + bump de markVersions que fillOtherSets já usa pra forçar o
+  // SetRow a reler o valor) e reaproveita fillOtherSets pra propagar às demais
+  // séries vazias quando há um alvo de reps (não há no caso de deload).
+  async function applySuggestion(ex, setCount, carga, reps) {
+    localStorage.setItem(`set_${ex.nome}_1_carga`, carga);
+    if (reps != null) localStorage.setItem(`set_${ex.nome}_1_reps`, reps);
+    setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
+    bump();
+    toast('🎯 Sugestão aplicada na Série 1');
+    if (user) {
+      const patch = { carga: parseFloat(carga) };
+      if (reps != null) patch.reps = parseFloat(reps);
+      try {
+        await saveSetState(day.dia, ex.nome, 1, patch);
+      } catch (err) {
+        console.error('applySuggestion:', err);
+      }
+    }
+    if (reps != null) await fillOtherSets(ex, setCount, carga, reps);
+  }
+
   async function handleCheckbox(e) {
     e.stopPropagation();
     const next = e.target.checked;
@@ -335,13 +555,16 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
     if (user) await saveWorkoutStatus(day.dia, next);
   }
 
+  const started = timer.status !== 'idle';
+
   function renderExerciseBlock(ex) {
     return (
       <ExerciseBlock
         key={ex.nome} ex={ex} day={day} bump={bump} onRestStart={onRestStart}
-        open={open} version={markVersions[ex.nome] || 0}
+        open={open} version={markVersions[ex.nome] || 0} started={started}
         onToggleAll={() => toggleAllSets(ex, parseInt(ex.series, 10))}
         onFillOthers={(carga, reps) => fillOtherSets(ex, parseInt(ex.series, 10), carga, reps)}
+        onApplySuggestion={(carga, reps) => applySuggestion(ex, parseInt(ex.series, 10), carga, reps)}
       />
     );
   }
@@ -380,7 +603,10 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
           </div>
           <div className="session-timer__actions">
             {timer.status === 'idle' && (
-              <button type="button" className="btn btn--primary btn--sm" onClick={handleStartWorkout}>▶ Iniciar treino</button>
+              <>
+                <span className="session-timer__hint">Inicie o treino para registrar as séries</span>
+                <button type="button" className="btn btn--primary btn--sm" onClick={handleStartWorkout}>▶ Iniciar treino</button>
+              </>
             )}
             {timer.status === 'running' && (
               <>
@@ -405,6 +631,19 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
 
         <div className="day-card__total">
           Carga total do treino: {calcDayTotalCarga(day).toLocaleString('pt-BR')} kg
+        </div>
+
+        <div className="workout-notes">
+          <button type="button" className="workout-notes__toggle" onClick={() => setNotesOpen(o => !o)}>
+            📝 Notas do treino {notesOpen ? '▲' : '▼'}
+          </button>
+          {notesOpen && (
+            <textarea
+              className="workout-notes__textarea"
+              placeholder="Como foi o treino? Alguma observação pra próxima vez…"
+              value={notes} onChange={handleNotesInput} onBlur={handleNotesBlur}
+            />
+          )}
         </div>
 
         {day.exercicios.map(ex => renderExerciseBlock(ex))}

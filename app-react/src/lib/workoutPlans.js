@@ -371,6 +371,19 @@ export async function updateExercise(exerciseId, patch, userId) {
   if (error) throw error;
 }
 
+// Troca o exercício de um dia do plano por outro (ex.: sugestão de
+// substituição por dor/desconforto, ver getSaferAlternative em
+// data/workoutTemplates.js). Diferente de updateExercise, NUNCA propaga pro
+// histórico (exercise_logs/exercise_sets) — a troca vale só dali pra frente;
+// séries já registradas continuam corretamente atribuídas ao exercício
+// antigo, sem misturar PR/progressão dos dois exercícios.
+export async function substituteExercise(exerciseId, { nome, series, reps, descanso, tecnica }) {
+  const { error } = await db.from('plan_exercises')
+    .update({ nome, series, reps, descanso, tecnica })
+    .eq('id', exerciseId);
+  if (error) throw error;
+}
+
 export async function deleteExercise(exerciseId) {
   const { error } = await db.from('plan_exercises').delete().eq('id', exerciseId);
   if (error) throw error;

@@ -35,6 +35,34 @@ async function callAdminAction(action, targetUserId, extra = {}) {
   return data;
 }
 
+// Epley — mesma fórmula de app-react/src/lib/records.js (sem pacote
+// compartilhado entre os dois apps, duplicação deliberada).
+function estimateOneRepMax(weight, reps) {
+  const w = parseFloat(weight);
+  const r = parseFloat(reps);
+  if (!Number.isFinite(w) || !Number.isFinite(r) || r <= 0) return null;
+  if (r === 1) return w;
+  return w * (1 + r / 30);
+}
+
+// personal_records (tabela) nunca foi escrita por nenhum código — PRs são
+// sempre calculados on-the-fly a partir de exercise_sets, igual ao app-react.
+function computePersonalRecords(sets) {
+  const bestByExercise = new Map();
+  for (const s of sets) {
+    const carga = parseFloat(s.carga);
+    if (!Number.isFinite(carga)) continue;
+    const oneRm = estimateOneRepMax(s.carga, s.reps);
+    const prev = bestByExercise.get(s.exercise_name);
+    if (!prev || carga > prev.carga) {
+      bestByExercise.set(s.exercise_name, { exercise_name: s.exercise_name, carga, oneRm: prev ? Math.max(prev.oneRm ?? 0, oneRm ?? 0) : oneRm });
+    } else if (oneRm !== null && oneRm > (prev.oneRm ?? 0)) {
+      prev.oneRm = oneRm;
+    }
+  }
+  return [...bestByExercise.values()].sort((a, b) => b.carga - a.carga).slice(0, 12);
+}
+
 async function callGeneratePlan(targetUserId) {
   const { data, error } = await db.functions.invoke('admin-generate-plan', {
     body: { kind: 'workout', targetUserId },
@@ -74,7 +102,7 @@ export default function UserDetail() {
     setLoading(true);
     setError('');
     try {
-      const [{ data: userRows, error: userErr }, plan, w, wa, we, pr, disc, ach, photos, push] = await Promise.all([
+      const [{ data: userRows, error: userErr }, plan, w, wa, we, allWorkoutIds, disc, ach, photos, push] = await Promise.all([
         db.rpc('admin_get_user', { target: id }),
         db.from('workout_plans')
           .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, is_post_workout, order_index))')
@@ -82,13 +110,23 @@ export default function UserDetail() {
         db.from('workouts').select('id, workout_date, day_of_week, completed, duration_seconds').eq('user_id', id).order('workout_date', { ascending: false }).limit(20),
         db.from('water_logs').select('id, log_date, amount_ml').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
         db.from('weight_logs').select('id, log_date, weight').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
-        db.from('personal_records').select('id, exercise_name, max_weight, max_reps, achieved_at').eq('user_id', id).order('achieved_at', { ascending: false }),
+        db.from('workouts').select('id').eq('user_id', id),
         db.from('exercise_discomfort').select('id, exercise_name, log_date, severity, note').eq('user_id', id).order('log_date', { ascending: false }).limit(30),
         db.from('achievements').select('id, badge_id, unlocked_at').eq('user_id', id).order('unlocked_at', { ascending: false }),
         db.from('progress_photos').select('id, photo_date, image_data, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
         db.from('push_subscriptions').select('id', { count: 'exact', head: true }).eq('user_id', id),
       ]);
       if (userErr) throw userErr;
+
+      const allIds = (allWorkoutIds.data || []).map(x => x.id);
+      let personalRecordsComputed = [];
+      if (allIds.length) {
+        const { data: allSets, error: setsErr } = await db
+          .from('exercise_sets').select('exercise_name, carga, reps')
+          .in('workout_id', allIds).eq('completed', true).not('carga', 'is', null);
+        if (setsErr) throw setsErr;
+        personalRecordsComputed = computePersonalRecords(allSets || []);
+      }
       const row = userRows?.[0];
       if (!row) throw new Error('Usuário não encontrado.');
       setDetail(row);
@@ -108,7 +146,7 @@ export default function UserDetail() {
       setWorkouts(w.data || []);
       setWaterLogs(wa.data || []);
       setWeightLogs(we.data || []);
-      setPersonalRecords(pr.data || []);
+      setPersonalRecords(personalRecordsComputed);
       setDiscomfortLogs(disc.data || []);
       setAchievements(ach.data || []);
       setProgressPhotos(photos.data || []);
@@ -466,17 +504,16 @@ export default function UserDetail() {
           <section>
             <h2 className="section-title">Recordes pessoais</h2>
             <table className="resp-table">
-              <thead><tr><th>Exercício</th><th>Carga máxima</th><th>Reps máximas</th><th>Data</th></tr></thead>
+              <thead><tr><th>Exercício</th><th>Carga máxima</th><th>1RM estimado</th></tr></thead>
               <tbody>
                 {personalRecords.map(p => (
-                  <tr key={p.id}>
+                  <tr key={p.exercise_name}>
                     <td data-label="Exercício">{p.exercise_name}</td>
-                    <td data-label="Carga máxima">{p.max_weight ?? '—'}</td>
-                    <td data-label="Reps máximas">{p.max_reps ?? '—'}</td>
-                    <td data-label="Data">{p.achieved_at || '—'}</td>
+                    <td data-label="Carga máxima">{p.carga}kg</td>
+                    <td data-label="1RM estimado">{p.oneRm ? `${Math.round(p.oneRm)}kg` : '—'}</td>
                   </tr>
                 ))}
-                {personalRecords.length === 0 && <tr><td colSpan={4}><EmptyState icon="🏆" label="Sem recordes pessoais registrados." /></td></tr>}
+                {personalRecords.length === 0 && <tr><td colSpan={3}><EmptyState icon="🏆" label="Sem recordes pessoais registrados." /></td></tr>}
               </tbody>
             </table>
           </section>
