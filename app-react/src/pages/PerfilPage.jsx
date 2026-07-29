@@ -13,6 +13,7 @@ import { createGeneratedPlan } from '../lib/workoutPlans';
 import { useReminders } from '../hooks/useReminders';
 import { useProfileData } from '../hooks/useProfileData';
 import LineChart from '../components/LineChart';
+import ProgressPhotos from '../components/ProgressPhotos';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
@@ -80,15 +81,17 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleSavePersonal() {
+    const { error } = await updateProfile({ nome, sobrenome, apelido });
+    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
     localStorage.setItem('profile_nome', nome);
     localStorage.setItem('profile_sobrenome', sobrenome);
     localStorage.setItem('profile_apelido', apelido);
-    const { error } = await updateProfile({ nome, sobrenome, apelido });
-    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
     toast('✅ Dados pessoais salvos!');
   }
 
   async function handleSave() {
+    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, pesoAlvo });
+    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
     localStorage.setItem('profile_sexo', sexo);
     localStorage.setItem('profile_idade', idade);
     localStorage.setItem('profile_peso', peso);
@@ -96,8 +99,6 @@ export default function PerfilPage({ active }) {
     localStorage.setItem('profile_meta', meta);
     localStorage.setItem('profile_nivel', nivel);
     localStorage.setItem('profile_pesoAlvo', pesoAlvo);
-    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, pesoAlvo });
-    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
 
     if (user && peso) {
       try {
@@ -137,16 +138,16 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleSaveWeeklyGoal() {
-    localStorage.setItem('profile_weeklyGoal', weeklyGoal);
     const { error } = await updateProfile({ weeklyGoal });
     if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
+    localStorage.setItem('profile_weeklyGoal', weeklyGoal);
     toast('📅 Meta semanal salva!');
   }
 
   async function handleSaveWaterGoal() {
-    localStorage.setItem('profile_macroAgua', macroAgua);
     const { error } = await updateProfile({ macroAgua });
     if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
+    localStorage.setItem('profile_macroAgua', macroAgua);
     toast('🎯 Meta de água salva!');
   }
 
@@ -167,7 +168,6 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleDeleteAccount() {
-    if (!window.confirm('Isso apaga seus treinos e dados salvos e encerra a sessão. Continuar?')) return;
     const { error } = await deleteAccount();
     if (error) toast(`⚠️ ${error}`);
   }
@@ -228,6 +228,11 @@ export default function PerfilPage({ active }) {
               emptyMsg="Nenhum peso registrado ainda. Salve seus dados corporais acima para começar."
             />
           </div>
+        </div>
+
+        <div className="profile-section">
+          <div className="profile-section__title">Fotos de progresso</div>
+          <ProgressPhotos />
         </div>
       </div>
 

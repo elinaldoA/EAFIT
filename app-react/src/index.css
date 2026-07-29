@@ -357,6 +357,12 @@ button, input { font-family: inherit; }
 }
 .btn--ghost:hover:not(:disabled) { background: var(--border-2); }
 
+.btn--danger {
+  background: var(--error);
+  color: #fff;
+}
+.btn--danger:hover:not(:disabled) { background: #dc2626; }
+
 .btn--full { width: 100%; }
 
 .btn--sm {

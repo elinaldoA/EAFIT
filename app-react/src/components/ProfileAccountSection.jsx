@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { version as APP_VERSION } from '../../package.json';
+
+const DELETE_CONFIRM_WORD = 'EXCLUIR';
 
 export default function ProfileAccountSection({
   user, accountOpen, setAccountOpen,
@@ -6,6 +9,16 @@ export default function ProfileAccountSection({
   newPassword, setNewPassword, onUpdatePassword,
   onLogout, onDeleteAccount,
 }) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  function handleConfirmDelete() {
+    if (deleteConfirmText.trim().toUpperCase() !== DELETE_CONFIRM_WORD) return;
+    onDeleteAccount();
+    setDeleteOpen(false);
+    setDeleteConfirmText('');
+  }
+
   return (
     <>
       <div className="profile-section">
@@ -39,7 +52,36 @@ export default function ProfileAccountSection({
       </div>
 
       <button className="btn btn--outline btn--full" onClick={onLogout}>Sair da conta</button>
-      <button className="btn btn--ghost btn--full" onClick={onDeleteAccount}>Excluir conta</button>
+
+      {!deleteOpen ? (
+        <button
+          type="button" className="btn btn--ghost btn--full"
+          onClick={() => setDeleteOpen(true)}
+        >Excluir conta</button>
+      ) : (
+        <div className="profile-field">
+          <label className="profile-field__label" htmlFor="deleteConfirm">
+            Isso apaga seus treinos e dados salvos e encerra a sessão — não pode ser desfeito. Digite <strong>{DELETE_CONFIRM_WORD}</strong> para confirmar.
+          </label>
+          <input
+            type="text" id="deleteConfirm" className="input input--sm"
+            value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)}
+            placeholder={DELETE_CONFIRM_WORD} autoComplete="off"
+          />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button" className="btn btn--danger btn--sm"
+              disabled={deleteConfirmText.trim().toUpperCase() !== DELETE_CONFIRM_WORD}
+              onClick={handleConfirmDelete}
+            >Excluir permanentemente</button>
+            <button
+              type="button" className="btn btn--outline btn--sm"
+              onClick={() => { setDeleteOpen(false); setDeleteConfirmText(''); }}
+            >Cancelar</button>
+          </div>
+        </div>
+      )}
+
       <p className="app-version">EAFIT v{APP_VERSION}</p>
     </>
   );
