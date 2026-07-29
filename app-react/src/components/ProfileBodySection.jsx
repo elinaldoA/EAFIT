@@ -1,6 +1,6 @@
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
-  meta, setMeta, nivel, setNivel, restricaoAlimentar, setRestricaoAlimentar, pesoAlvo, setPesoAlvo,
+  meta, setMeta, nivel, setNivel, pesoAlvo, setPesoAlvo,
   progress, imc, onSave, regenerating, onRegeneratePlan,
 }) {
   return (
@@ -56,14 +56,6 @@ export default function ProfileBodySection({
           <option value="iniciante">Iniciante</option>
           <option value="intermediario">Intermediário</option>
           <option value="avancado">Avançado</option>
-        </select>
-      </div>
-      <div className="profile-field">
-        <label className="profile-field__label" htmlFor="profileRestricao">Restrição alimentar</label>
-        <select id="profileRestricao" className="input input--sm" value={restricaoAlimentar} onChange={e => setRestricaoAlimentar(e.target.value)}>
-          <option value="padrao">Nenhuma</option>
-          <option value="vegetariano">Vegetariano</option>
-          <option value="low_carb">Low-carb</option>
         </select>
       </div>
       <div className="profile-field">

@@ -1,25 +1,5 @@
 import { db } from './supabase';
 
-export async function fetchMealLogs(userId, date) {
-  const { data, error } = await db
-    .from('diet_logs')
-    .select('meal_name, completed')
-    .eq('user_id', userId)
-    .eq('log_date', date);
-  if (error) throw error;
-  return data || [];
-}
-
-export async function upsertMealLog(userId, date, mealName, completed) {
-  const { error } = await db
-    .from('diet_logs')
-    .upsert(
-      { user_id: userId, log_date: date, meal_name: mealName, completed },
-      { onConflict: 'user_id,log_date,meal_name' }
-    );
-  if (error) throw error;
-}
-
 export async function fetchWaterLog(userId, date) {
   const { data, error } = await db
     .from('water_logs')

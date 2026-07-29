@@ -166,8 +166,7 @@ const SAUDE = [
     ], pos: []},
 ];
 
-// Objetivo cardio/resistência — sem eixo de restrição alimentar (só dietas
-// têm essa dimensão), então uma única versão cobre o fallback local inteiro.
+// Objetivo cardio/resistência — uma única versão cobre o fallback local inteiro.
 const RESISTENCIA = [
     { dia: 'Segunda', foco: 'Corrida Intervalada', exercicios: [
         { nome: 'Corrida Intervalada (HIIT)', series: '-', reps: '8x400m forte / 200m trote', descanso: '90s', tecnica: 'Ritmo forte controlado' },
@@ -397,9 +396,8 @@ async function fetchBaseTemplate(meta) {
     }
 }
 
-// sexo/idade não influenciam a seleção de exercícios nesta versão — só o
-// cálculo de macros (getMacroGoals, em treinoData.js). Aceitos aqui só para
-// manter a mesma assinatura de perfil usada na tela de onboarding.
+// sexo/idade não influenciam a seleção de exercícios nesta versão. Aceitos
+// aqui só para manter a mesma assinatura de perfil usada na tela de onboarding.
 export async function generatePlan({ peso, altura, meta, nivel }) {
     const base = await fetchBaseTemplate(meta);
     const leveled = applyLevelAdjustment(base, nivel);

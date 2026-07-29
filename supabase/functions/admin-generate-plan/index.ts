@@ -1,5 +1,5 @@
-// Gera e ativa um treino/cardápio novo pra um usuário específico, a pedido
-// de um admin (ex.: suporte). Mesmo padrão de auth de admin-users/index.ts.
+// Gera e ativa um treino novo pra um usuário específico, a pedido de um
+// admin (ex.: suporte). Mesmo padrão de auth de admin-users/index.ts.
 //
 // A lógica de ajuste por IMC/nível abaixo (computeImcBracket até
 // applyLevelAdjustment) é um PORT literal de
@@ -227,8 +227,8 @@ Deno.serve(async (req) => {
     return json({ error: 'Corpo inválido.' }, 400);
   }
   const { targetUserId, kind } = body as { targetUserId?: string; kind?: string };
-  if (!targetUserId || (kind !== 'workout' && kind !== 'meal')) {
-    return json({ error: 'Faltam "targetUserId" e "kind" ("workout" ou "meal").' }, 400);
+  if (!targetUserId || kind !== 'workout') {
+    return json({ error: 'Faltam "targetUserId" e "kind" ("workout").' }, 400);
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -246,80 +246,46 @@ Deno.serve(async (req) => {
       return json({ error: 'Este usuário ainda não completou o perfil (peso/altura).' }, 400);
     }
 
-    if (kind === 'workout') {
-      const { data: tpl, error: tplErr } = await admin
-        .from('workout_templates').select('days').eq('meta', meta).single();
-      if (tplErr || !tpl?.days) throw tplErr || new Error('Template não encontrado.');
+    const { data: tpl, error: tplErr } = await admin
+      .from('workout_templates').select('days').eq('meta', meta).single();
+    if (tplErr || !tpl?.days) throw tplErr || new Error('Template não encontrado.');
 
-      const leveled = applyLevelAdjustment(tpl.days as Day[], nivel);
-      const bracket = computeImcBracket(peso, altura);
-      const generatedDays = applyImcAdjustment(leveled, bracket);
+    const leveled = applyLevelAdjustment(tpl.days as Day[], nivel);
+    const bracket = computeImcBracket(peso, altura);
+    const generatedDays = applyImcAdjustment(leveled, bracket);
 
-      const { data: plan, error: planErr } = await admin
-        .from('workout_plans')
-        .insert({ user_id: targetUserId, name: `Plano gerado pelo admin (${new Date().toLocaleDateString('pt-BR')})`, is_active: false })
+    const { data: plan, error: planErr } = await admin
+      .from('workout_plans')
+      .insert({ user_id: targetUserId, name: `Plano gerado pelo admin (${new Date().toLocaleDateString('pt-BR')})`, is_active: false })
+      .select().single();
+    if (planErr) throw planErr;
+
+    for (let i = 0; i < generatedDays.length; i++) {
+      const day = generatedDays[i];
+      const { data: planDay, error: dayErr } = await admin
+        .from('plan_days')
+        .insert({ plan_id: plan.id, dia: day.dia, foco: day.foco, order_index: i })
         .select().single();
-      if (planErr) throw planErr;
+      if (dayErr) throw dayErr;
 
-      for (let i = 0; i < generatedDays.length; i++) {
-        const day = generatedDays[i];
-        const { data: planDay, error: dayErr } = await admin
-          .from('plan_days')
-          .insert({ plan_id: plan.id, dia: day.dia, foco: day.foco, order_index: i })
-          .select().single();
-        if (dayErr) throw dayErr;
-
-        const rows = exercisesToRows(planDay.id, day);
-        if (rows.length) {
-          const { error: exErr } = await admin.from('plan_exercises').insert(rows);
-          if (exErr) throw exErr;
-        }
+      const rows = exercisesToRows(planDay.id, day);
+      if (rows.length) {
+        const { error: exErr } = await admin.from('plan_exercises').insert(rows);
+        if (exErr) throw exErr;
       }
-
-      const { error: offErr } = await admin.from('workout_plans').update({ is_active: false }).eq('user_id', targetUserId);
-      if (offErr) throw offErr;
-      const startDate = new Date().toISOString().slice(0, 10);
-      const endDate = new Date(Date.now() + 28 * 86400000).toISOString().slice(0, 10);
-      const { error: onErr } = await admin.from('workout_plans')
-        .update({ is_active: true, start_date: startDate, end_date: endDate, duration_weeks: 4 })
-        .eq('id', plan.id);
-      if (onErr) throw onErr;
-
-      await admin.from('admin_audit_log').insert({ admin_id: callerId, target_user_id: targetUserId, action: 'generateWorkout', details: { meta, nivel } });
-      return json({ ok: true, planId: plan.id });
     }
 
-    // kind === 'meal'
-    // meal_templates tem chave composta (meta, restricao) — busca a variante
-    // exata e degrada pra 'padrao' se não existir, mesma cadeia de
-    // app-react/src/data/mealTemplates.js:fetchBaseMealTemplate (port
-    // deliberado, ver comentário no topo deste arquivo).
-    const restricaoAlimentar = (md.restricaoAlimentar as string) || 'padrao';
-    let mealTpl: { meals: unknown } | null = null;
-    {
-      const { data } = await admin
-        .from('meal_templates').select('meals').eq('meta', meta).eq('restricao', restricaoAlimentar).maybeSingle();
-      mealTpl = data;
-    }
-    if (!mealTpl?.meals && restricaoAlimentar !== 'padrao') {
-      const { data } = await admin
-        .from('meal_templates').select('meals').eq('meta', meta).eq('restricao', 'padrao').maybeSingle();
-      mealTpl = data;
-    }
-    if (!mealTpl?.meals) throw new Error('Template não encontrado.');
+    const { error: offErr } = await admin.from('workout_plans').update({ is_active: false }).eq('user_id', targetUserId);
+    if (offErr) throw offErr;
+    const startDate = new Date().toISOString().slice(0, 10);
+    const endDate = new Date(Date.now() + 28 * 86400000).toISOString().slice(0, 10);
+    const { error: onErr } = await admin.from('workout_plans')
+      .update({ is_active: true, start_date: startDate, end_date: endDate, duration_weeks: 4 })
+      .eq('id', plan.id);
+    if (onErr) throw onErr;
 
-    const mergedMetadata = { ...md, customMeals: mealTpl.meals };
-    const { error: updErr } = await admin.auth.admin.updateUserById(targetUserId, { user_metadata: mergedMetadata });
-    if (updErr) throw updErr;
-
-    // Guarda o cardápio anterior em details — diferente de workout_plans (que
-    // mantém o plano antigo, só inativo), customMeals é sobrescrito sem
-    // histórico, então isso é a única forma de recuperar o valor de antes.
-    await admin.from('admin_audit_log').insert({
-      admin_id: callerId, target_user_id: targetUserId, action: 'generateMeal',
-      details: { meta, restricaoAlimentar, previousMeals: md.customMeals ?? null },
-    });
-    return json({ ok: true });
+    await admin.from('admin_audit_log').insert({ admin_id: callerId, target_user_id: targetUserId, action: 'generateWorkout', details: { meta, nivel } });
+    return json({ ok: true, planId: plan.id });
   } catch (err) {
     console.error('admin-generate-plan error:', err);
     return json({ error: err instanceof Error ? err.message : String(err) }, 500);

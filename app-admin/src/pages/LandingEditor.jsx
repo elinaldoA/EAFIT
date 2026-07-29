@@ -21,7 +21,7 @@ const ICON_OPTIONS = [
   { value: 'wifi-off', label: 'Wi-Fi off (offline)' },
   { value: 'tag', label: 'Etiqueta (grátis)' },
   { value: 'activity', label: 'Atividade (treino)' },
-  { value: 'droplet', label: 'Gota (dieta)' },
+  { value: 'droplet', label: 'Gota (água)' },
   { value: 'chart', label: 'Gráfico (evolução)' },
   { value: 'user', label: 'Perfil (usuário)' },
 ];

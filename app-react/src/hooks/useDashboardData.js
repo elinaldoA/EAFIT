@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
 import { TODAY_DATE } from '../data/treinoData';
 import { fmtDate, parseLocalDate, toDateStr, calcStreak } from '../lib/utils';
-import { countFoodLogs } from '../lib/foodLog';
 import { countPhotos } from '../lib/progressPhotos';
-import { fetchRecipes } from '../lib/recipes';
 import { fetchWeightLogs } from '../lib/weightLog';
 import { fetchAllDiscomfort } from '../lib/discomfort';
 import { syncAchievements } from '../lib/achievements';
@@ -57,19 +55,15 @@ export function useDashboardData(active, user, toast) {
       const completedWorkouts = (allWorkouts || []).filter(w => w.completed);
       const streakDays = calcStreak(completedWorkouts.map(w => w.workout_date));
 
-      const [totalFoodLogs, totalPhotos, recipes, weights] = await Promise.all([
-        countFoodLogs(user.id),
+      const [totalPhotos, weights] = await Promise.all([
         countPhotos(user.id),
-        fetchRecipes(user.id),
         fetchWeightLogs(user.id),
       ]);
 
       const { unlockedIds, newlyEarned } = await syncAchievements(user.id, {
         streakDays,
         totalTreinos: completedWorkouts.length,
-        totalFoodLogs,
         totalPhotos,
-        totalRecipes: recipes.length,
         totalWeightLogs: weights.length,
       });
       setUnlockedBadges(unlockedIds);

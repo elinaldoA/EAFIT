@@ -814,124 +814,6 @@ button, input { font-family: inherit; }
 
 
 /* ============================================================
-   MACROS
-============================================================ */
-.macros {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.macro-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 12px 6px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.macro-card__value {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--primary);
-  line-height: 1;
-}
-
-.macro-card__label {
-  font-size: 0.55rem;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  letter-spacing: 0.4px;
-  font-weight: 600;
-}
-
-.macro-card--over {
-  border-color: var(--error);
-}
-
-.macro-card--over .macro-card__value {
-  color: var(--error);
-}
-
-/* ============================================================
-   REFEIÇÕES
-============================================================ */
-.meals { display: flex; flex-direction: column; gap: 8px; }
-
-.meal-edit-list { display: flex; flex-direction: column; gap: 10px; }
-
-.meal-edit-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 12px;
-}
-
-.meal-edit-row__fields {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 8px;
-}
-
-.meal-edit-row__hint {
-  font-size: 0.68rem;
-  color: var(--text-dim);
-  margin: 0;
-}
-
-.meal-card {
-  display: flex;
-  gap: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--primary);
-  border-radius: var(--r-lg);
-  padding: 13px 14px;
-  align-items: flex-start;
-}
-
-.meal-card__check {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border-2);
-  background: var(--bg);
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 0.8rem;
-  line-height: 1;
-  padding: 0;
-  margin-top: 1px;
-}
-
-.meal-card__check--done {
-  background: var(--success);
-  border-color: var(--success);
-}
-
-.meal-card__time {
-  min-width: 44px;
-  font-weight: 700;
-  color: var(--primary);
-  font-size: 0.76rem;
-  padding-top: 2px;
-  flex-shrink: 0;
-}
-
-.meal-card__body   { flex: 1; }
-.meal-card__name   { font-weight: 700; font-size: 0.88rem; margin-bottom: 3px; }
-.meal-card__desc   { font-size: 0.79rem; color: var(--text-muted); line-height: 1.55; }
-.meal-card__desc strong { color: var(--warning); }
-.meal-card__estimate { font-size: 0.68rem; color: var(--primary-h); margin: 3px 0 0; }
-
-/* ============================================================
    FOOTER (dentro da página)
 ============================================================ */
 .footer {
@@ -1929,8 +1811,6 @@ button.profile-section__title {
    MOBILE — telas pequenas
 ============================================================ */
 @media (max-width: 380px) {
-  .macros { grid-template-columns: repeat(2, 1fr); }
-
   .set-row {
     grid-template-columns: 44px 1fr 1fr 28px;
   }
@@ -2311,73 +2191,6 @@ button.profile-section__title {
   gap: 8px;
   width: 100%;
 }
-
-/* ============================================================
-   LOG DE ALIMENTOS (dentro do meal-card)
-============================================================ */
-.food-item-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.food-item-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
-  padding: 4px 0;
-  border-top: 1px dashed var(--border-2);
-}
-
-.food-item-row__name { flex: 1; color: var(--text-muted); min-width: 0; }
-.food-item-row__kcal { font-weight: 700; color: var(--text); white-space: nowrap; }
-
-.food-item-row__edit,
-.food-item-row__del {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  border: none;
-  background: var(--surface-3);
-  color: var(--text-dim);
-  border-radius: var(--r-full);
-  font-size: 0.65rem;
-  cursor: pointer;
-}
-
-.meal-card__add-food { margin-top: 8px; }
-
-.food-add-form {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 10px;
-  border: 1px dashed var(--border-2);
-  border-radius: var(--r-md);
-}
-
-.food-add-form__nums { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.food-add-form__actions { display: flex; gap: 8px; }
-
-/* ============================================================
-   RECEITAS SALVAS
-============================================================ */
-.recipe-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-}
-
-.recipe-row__main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.recipe-row__name { font-weight: 700; font-size: 0.88rem; }
-.recipe-row__macros { font-size: 0.74rem; color: var(--text-muted); }
-.recipe-row__ingredientes { font-size: 0.72rem; color: var(--text-dim); }
 
 .photo-modal__nav .btn { flex: 1; }
 

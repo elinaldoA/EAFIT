@@ -1,16 +1,16 @@
-# EAFIT — Treino & Dieta
+# EAFIT — Treino
 
-PWA (Progressive Web App) para acompanhamento de treino, dieta e evolução física, com sincronização em nuvem e uso offline.
+PWA (Progressive Web App) para acompanhamento de treino, hidratação e evolução física, com sincronização em nuvem e uso offline.
 
 🔗 **App em produção:** https://elinaldoa.github.io/EAFIT/
 📣 **Landing page:** https://elinaldoa.github.io/EAFIT/landing/
 
-<img src="docs/landing-demo.gif" alt="Demonstração das telas de Treino, Dieta, Água, Evolução e Perfil do EAFIT" width="280" />
+<img src="docs/landing-demo.gif" alt="Demonstração das telas de Treino, Água, Evolução e Perfil do EAFIT" width="280" />
 
 ## Funcionalidades
 
 - **Treino semanal** — plano de treino dividido por dia da semana, com séries, repetições, técnica e tempo de descanso por exercício. Marque séries concluídas e registre a carga usada em cada uma.
-- **Dieta** — cardápio diário com macros (kcal, proteína, carboidrato, gordura, água).
+- **Hidratação** — meta diária de água calculada a partir do peso, com histórico e lembretes.
 - **Evolução** — dashboard com:
   - avatar corporal indicando os grupos musculares trabalhados no dia
   - gráfico de volume total por treino
@@ -40,9 +40,9 @@ PWA (Progressive Web App) para acompanhamento de treino, dieta e evolução fís
 │   ├── src/
 │   │   ├── components/  # componentes de UI reutilizáveis
 │   │   ├── context/      # estado global (auth, tema, toast, treino)
-│   │   ├── data/         # dados estáticos do plano de treino/dieta
+│   │   ├── data/         # dados estáticos do plano de treino
 │   │   ├── lib/           # cliente de dados e utilitários
-│   │   └── pages/        # telas do app (Treino, Dieta, Evolução, Perfil)
+│   │   └── pages/        # telas do app (Treino, Água, Evolução, Perfil)
 │   └── vite.config.js
 └── .github/workflows/   # pipeline de build e deploy
 ```

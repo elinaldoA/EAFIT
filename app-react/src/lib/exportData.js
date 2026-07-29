@@ -1,8 +1,6 @@
 import { db } from './supabase';
 import { fetchWeightLogs } from './weightLog';
-import { fetchRecipes } from './recipes';
-import { fetchFoodLogsRange } from './foodLog';
-import { fetchWaterLogsRange } from './dietaLog';
+import { fetchWaterLogsRange } from './waterLog';
 import { fetchAllDiscomfort } from './discomfort';
 import { fetchUnlockedAchievements } from './achievements';
 
@@ -64,17 +62,8 @@ export async function gatherUserData(userId) {
     .order('photo_date', { ascending: true });
   if (photosErr) throw photosErr;
 
-  const { data: dietLogs, error: dietErr } = await db
-    .from('diet_logs')
-    .select('log_date, meal_name, completed')
-    .eq('user_id', userId)
-    .order('log_date', { ascending: true });
-  if (dietErr) throw dietErr;
-
-  const [weightLogs, recipes, foodLogs, waterLogs, discomfortReports, achievements] = await Promise.all([
+  const [weightLogs, waterLogs, discomfortReports, achievements] = await Promise.all([
     fetchWeightLogs(userId),
-    fetchRecipes(userId),
-    fetchFoodLogsRange(userId, EPOCH),
     fetchWaterLogsRange(userId, EPOCH),
     fetchAllDiscomfort(userId, 10000), // sem cap de 100 aqui — é backup completo, não o histórico exibido na tela
     fetchUnlockedAchievements(userId),
@@ -84,7 +73,7 @@ export async function gatherUserData(userId) {
     exportedAt: new Date().toISOString(),
     workouts, exerciseSets,
     workoutPlans: plans, planDays, planExercises,
-    weightLogs, progressPhotos: photos || [], dietLogs: dietLogs || [], foodLogs, waterLogs, recipes,
+    weightLogs, progressPhotos: photos || [], waterLogs,
     discomfortReports, achievements,
   };
 }
@@ -123,11 +112,10 @@ export async function exportSummaryCSV(userId) {
 
   const byDate = {};
   function ensure(date) {
-    if (!byDate[date]) byDate[date] = { data: date, treino_concluido: '', kcal_consumido: 0, agua_ml: '', peso_kg: '' };
+    if (!byDate[date]) byDate[date] = { data: date, treino_concluido: '', agua_ml: '', peso_kg: '' };
     return byDate[date];
   }
   data.workouts.forEach(w => { ensure(w.workout_date).treino_concluido = w.completed ? 'sim' : 'não'; });
-  data.foodLogs.forEach(f => { ensure(f.log_date).kcal_consumido += parseFloat(f.kcal) || 0; });
   data.waterLogs.forEach(w => { ensure(w.log_date).agua_ml = w.amount_ml; });
   data.weightLogs.forEach(w => { ensure(w.log_date).peso_kg = w.peso; });
 
@@ -163,7 +151,6 @@ export async function printReport(userId) {
       <div class="stats">
         <div class="stat"><b>${totalTreinos}</b>Treinos concluídos</div>
         <div class="stat"><b>${data.progressPhotos.length}</b>Fotos de progresso</div>
-        <div class="stat"><b>${data.recipes.length}</b>Receitas salvas</div>
         <div class="stat"><b>${data.achievements.length}</b>Conquistas desbloqueadas</div>
       </div>
       <h2>Histórico de peso</h2>

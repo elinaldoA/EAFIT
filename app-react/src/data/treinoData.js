@@ -92,97 +92,19 @@ export const treinoData = [
     ], pos:[]},
 ];
 
-export const DEFAULT_MACROS = { macroKcal:2600, macroProteina:200, macroCarboidrato:290, macroGordura:70, macroAgua:3.5 };
+export const DEFAULT_WATER_GOAL = 3.5;
 
-// Fator de atividade fixo (moderado) — não existe campo de nível de
-// atividade no perfil, então assumimos este valor para todo mundo.
-const ACTIVITY_FACTOR = 1.55;
-
-const META_KCAL_FACTOR = {
-    massa: 1.15,
-    forca: 1.05,
-    emagrecer: 0.80,
-    definicao: 0.90,
-    saude: 1.00,
-    resistencia: 1.05,
-};
-
-const META_MACRO_RATIO = {
-    massa: { proteina: 2.0, gordura: 1.0 },
-    forca: { proteina: 2.0, gordura: 1.0 },
-    emagrecer: { proteina: 2.2, gordura: 0.8 },
-    definicao: { proteina: 2.2, gordura: 0.8 },
-    saude: { proteina: 1.6, gordura: 0.9 },
-    // Resistência prioriza carboidrato (glicogênio) sobre proteína alta —
-    // por isso o menor g/kg de proteína do grupo.
-    resistencia: { proteina: 1.4, gordura: 0.8 },
-};
-
-// Mifflin-St Jeor: estima TDEE a partir de peso/altura/idade/sexo, ajusta
-// por objetivo (déficit/superávit) e distribui macros em g/kg de peso.
-function computeMacrosFromProfile(peso, altura, idade, sexo, meta) {
-    const bmr = sexo === 'F'
-        ? 10 * peso + 6.25 * altura - 5 * idade - 161
-        : 10 * peso + 6.25 * altura - 5 * idade + 5;
-    const tdee = bmr * ACTIVITY_FACTOR;
-    const kcal = tdee * (META_KCAL_FACTOR[meta] ?? 1);
-
-    const ratio = META_MACRO_RATIO[meta] ?? META_MACRO_RATIO.saude;
-    const proteina = peso * ratio.proteina;
-    const gordura = peso * ratio.gordura;
-    const carboidrato = Math.max(0, (kcal - proteina * 4 - gordura * 9) / 4);
-
-    return {
-        macroKcal: Math.round(kcal),
-        macroProteina: Math.round(proteina),
-        macroCarboidrato: Math.round(carboidrato),
-        macroGordura: Math.round(gordura),
-        macroAgua: Math.round(peso * 0.035 * 10) / 10,
-    };
-}
-
-export function getMacroGoals(user) {
+// Meta de água em litros: por padrão estimada a partir do peso (0.035L/kg),
+// mas o usuário pode sobrescrever salvando um valor próprio no perfil.
+export function getWaterGoalLiters(user) {
     const md = user?.user_metadata || {};
 
     const peso = parseFloat(md.peso);
-    const altura = parseFloat(md.altura);
-    const idade = parseFloat(md.idade);
-    const sexo = md.sexo;
-    const hasProfile = [peso, altura, idade].every(n => Number.isFinite(n) && n > 0) && (sexo === 'M' || sexo === 'F');
-    const computed = hasProfile ? computeMacrosFromProfile(peso, altura, idade, sexo, md.meta) : null;
+    const computed = Number.isFinite(peso) && peso > 0 ? Math.round(peso * 0.035 * 10) / 10 : null;
 
-    function num(key, def) {
-        const raw = md[key] ?? localStorage.getItem(`profile_${key}`);
-        const n = parseFloat(raw);
-        return Number.isFinite(n) && n > 0 ? n : def;
-    }
-    return {
-        macroKcal: num('macroKcal', computed?.macroKcal ?? DEFAULT_MACROS.macroKcal),
-        macroProteina: num('macroProteina', computed?.macroProteina ?? DEFAULT_MACROS.macroProteina),
-        macroCarboidrato: num('macroCarboidrato', computed?.macroCarboidrato ?? DEFAULT_MACROS.macroCarboidrato),
-        macroGordura: num('macroGordura', computed?.macroGordura ?? DEFAULT_MACROS.macroGordura),
-        macroAgua: num('macroAgua', computed?.macroAgua ?? DEFAULT_MACROS.macroAgua),
-    };
-}
-
-// kcal/proteina/carboidrato/gordura são estimativas aproximadas (não uma
-// tabela nutricional precisa) — usadas só pra debitar automaticamente do
-// orçamento do dia quando a refeição é marcada como feita sem alimentos
-// específicos registrados nela. Editável em "✏️ Editar refeições".
-export const dietaData = [
-    { horario:'07:30', nome:'☀️ Café da manhã',          descricao:'4 ovos inteiros + 3 claras (mexidos) · 40g aveia · 1 banana · 1 col. mel · Café preto', kcal:640, proteina:41, carboidrato:70, gordura:23 },
-    { horario:'10:30', nome:'🍏 Lanche da manhã',         descricao:'1 scoop Whey (ou 180g iogurte grego) · 1 maçã · 25g amêndoas', kcal:350, proteina:29, carboidrato:29, gordura:15 },
-    { horario:'13:00', nome:'🥗 Almoço',                  descricao:'220g frango grelhado · 250g arroz integral ou batata-doce · 200g brócolis · 1 col. azeite', kcal:830, proteina:80, carboidrato:74, gordura:26 },
-    { horario:'17:30', nome:'⚡ Pré-treino pesado',       descricao:'200g peito de peru/atum · 2 pães integrais · 1 batata-doce média (150g) · 1 banana · 500ml água', kcal:600, proteina:65, carboidrato:78, gordura:4 },
-    { horario:'19:30', nome:'☕ Pré-treino leve',         descricao:'Café preto (sem açúcar) · 1 scoop Whey (opcional)', kcal:120, proteina:24, carboidrato:3, gordura:2 },
-    { horario:'20:00', nome:'🏋️ Treino',                 descricao:'Beba **500ml a 1L** de água durante o treino', kcal:0, proteina:0, carboidrato:0, gordura:0 },
-    { horario:'21:15', nome:'🍽️ Pós-treino / Jantar',    descricao:'200g peixe (salmão/tilápia) ou contra-filé · 250g arroz branco · Salada verde com azeite', kcal:750, proteina:54, carboidrato:73, gordura:26 },
-    { horario:'23:30', nome:'🥛 Ceia (opcional)',         descricao:'Se bater fome: 2 ovos cozidos ou 1 scoop caseína com água', kcal:140, proteina:12, carboidrato:1, gordura:10 },
-];
-
-export function getDietaData(user) {
-    const custom = user?.user_metadata?.customMeals;
-    return Array.isArray(custom) && custom.length > 0 ? custom : dietaData;
+    const raw = md.macroAgua ?? localStorage.getItem('profile_macroAgua');
+    const n = parseFloat(raw);
+    return Number.isFinite(n) && n > 0 ? n : (computed ?? DEFAULT_WATER_GOAL);
 }
 
 export const DEFAULT_WEEKLY_GOAL = 5;

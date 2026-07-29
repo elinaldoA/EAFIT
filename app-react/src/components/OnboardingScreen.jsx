@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { generatePlan } from '../data/workoutTemplates';
-import { generateMealPlan } from '../data/mealTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/logo-mark.png';
 
@@ -15,7 +14,6 @@ export default function OnboardingScreen() {
   const [altura, setAltura] = useState('');
   const [meta, setMeta] = useState('massa');
   const [nivel, setNivel] = useState('intermediario');
-  const [restricaoAlimentar, setRestricaoAlimentar] = useState('padrao');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -49,8 +47,7 @@ export default function OnboardingScreen() {
       const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel });
       await seedGeneratedPlan(user.id, generatedDays);
 
-      const generatedMeals = await generateMealPlan({ meta, restricaoAlimentar });
-      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, restricaoAlimentar, customMeals: generatedMeals });
+      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel });
       if (error) throw error;
     } catch (err) {
       console.error('onboarding:', err);
@@ -67,7 +64,7 @@ export default function OnboardingScreen() {
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="EAFIT" />
           <div className="auth-logo__name">EAFIT</div>
-          <p className="auth-logo__tagline">Vamos montar seu treino e sua dieta</p>
+          <p className="auth-logo__tagline">Vamos montar seu treino personalizado</p>
         </div>
         <div className="auth-form">
           <div className="profile-field">
@@ -118,16 +115,8 @@ export default function OnboardingScreen() {
               <option value="avancado">Avançado</option>
             </select>
           </div>
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbRestricao">Restrição alimentar</label>
-            <select id="onbRestricao" className="input" value={restricaoAlimentar} onChange={e => setRestricaoAlimentar(e.target.value)}>
-              <option value="padrao">Nenhuma</option>
-              <option value="vegetariano">Vegetariano</option>
-              <option value="low_carb">Low-carb</option>
-            </select>
-          </div>
           <button className="btn btn--primary btn--full" disabled={busy} onClick={handleSubmit}>
-            {busy ? 'Gerando seu plano…' : 'Gerar meu treino e dieta'}
+            {busy ? 'Gerando seu plano…' : 'Gerar meu treino'}
           </button>
           <p className="auth-form__msg auth-form__msg--error">{msg}</p>
         </div>

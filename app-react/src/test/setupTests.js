@@ -1,5 +1,5 @@
 // Polyfill mínimo de localStorage para os módulos que leem preferências
-// salvas no navegador (ex.: getMacroGoals em treinoData.js). Evita puxar
+// salvas no navegador (ex.: getWaterGoalLiters em treinoData.js). Evita puxar
 // jsdom inteiro só para isso — os testes aqui são de lógica pura, não de
 // componentes.
 if (typeof globalThis.localStorage === 'undefined') {

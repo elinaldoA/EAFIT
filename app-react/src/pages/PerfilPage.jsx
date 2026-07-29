@@ -9,7 +9,6 @@ import { TODAY_DATE, DEFAULT_WEEKLY_GOAL } from '../data/treinoData';
 import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
-import { generateMealPlan } from '../data/mealTemplates';
 import { createGeneratedPlan } from '../lib/workoutPlans';
 import { useReminders } from '../hooks/useReminders';
 import { useProfileData } from '../hooks/useProfileData';
@@ -37,12 +36,7 @@ export default function PerfilPage({ active }) {
   const [altura, setAltura] = useState(md.altura || localStorage.getItem('profile_altura') || '');
   const [meta, setMeta] = useState(md.meta || localStorage.getItem('profile_meta') || 'massa');
   const [nivel, setNivel] = useState(md.nivel || localStorage.getItem('profile_nivel') || 'intermediario');
-  const [restricaoAlimentar, setRestricaoAlimentar] = useState(md.restricaoAlimentar || localStorage.getItem('profile_restricaoAlimentar') || 'padrao');
   const [pesoAlvo, setPesoAlvo] = useState(md.pesoAlvo || localStorage.getItem('profile_pesoAlvo') || '');
-  const [macroKcal, setMacroKcal] = useState(md.macroKcal || localStorage.getItem('profile_macroKcal') || '');
-  const [macroProteina, setMacroProteina] = useState(md.macroProteina || localStorage.getItem('profile_macroProteina') || '');
-  const [macroCarboidrato, setMacroCarboidrato] = useState(md.macroCarboidrato || localStorage.getItem('profile_macroCarboidrato') || '');
-  const [macroGordura, setMacroGordura] = useState(md.macroGordura || localStorage.getItem('profile_macroGordura') || '');
   const [macroAgua, setMacroAgua] = useState(md.macroAgua || localStorage.getItem('profile_macroAgua') || '');
   const [weeklyGoal, setWeeklyGoal] = useState(md.weeklyGoal || localStorage.getItem('profile_weeklyGoal') || DEFAULT_WEEKLY_GOAL);
   const { stats, weightLogs, setWeightLogs } = useProfileData(active, user, toast);
@@ -55,7 +49,6 @@ export default function PerfilPage({ active }) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const [regeneratingMeals, setRegeneratingMeals] = useState(false);
 
   async function handleExport(action, label) {
     if (!user || exporting) return;
@@ -102,9 +95,8 @@ export default function PerfilPage({ active }) {
     localStorage.setItem('profile_altura', altura);
     localStorage.setItem('profile_meta', meta);
     localStorage.setItem('profile_nivel', nivel);
-    localStorage.setItem('profile_restricaoAlimentar', restricaoAlimentar);
     localStorage.setItem('profile_pesoAlvo', pesoAlvo);
-    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, restricaoAlimentar, pesoAlvo });
+    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, pesoAlvo });
     if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
 
     if (user && peso) {
@@ -144,31 +136,6 @@ export default function PerfilPage({ active }) {
     }
   }
 
-  async function handleRegenerateMeals() {
-    if (!user || regeneratingMeals) return;
-    if (!window.confirm('Isso substitui suas refeições atuais por um novo cardápio baseado no seu objetivo. Continuar?')) return;
-
-    setRegeneratingMeals(true);
-    try {
-      const generatedMeals = await generateMealPlan({ meta, restricaoAlimentar });
-      // Persiste `meta`/`restricaoAlimentar` junto com o cardápio: sem isso,
-      // as metas de macro (getMacroGoals) continuam calculadas pro objetivo
-      // salvo anteriormente, contradizendo o cardápio recém-gerado se o
-      // usuário trocou o select sem clicar em "Salvar dados corporais" antes
-      // de regenerar.
-      localStorage.setItem('profile_meta', meta);
-      localStorage.setItem('profile_restricaoAlimentar', restricaoAlimentar);
-      const { error } = await updateProfile({ meta, restricaoAlimentar, customMeals: generatedMeals });
-      if (error) throw error;
-      toast('✅ Novo cardápio gerado!');
-    } catch (err) {
-      console.error('regenerateMeals:', err);
-      toast('⚠️ Erro ao gerar novo cardápio');
-    } finally {
-      setRegeneratingMeals(false);
-    }
-  }
-
   async function handleSaveWeeklyGoal() {
     localStorage.setItem('profile_weeklyGoal', weeklyGoal);
     const { error } = await updateProfile({ weeklyGoal });
@@ -176,15 +143,11 @@ export default function PerfilPage({ active }) {
     toast('📅 Meta semanal salva!');
   }
 
-  async function handleSaveMacros() {
-    localStorage.setItem('profile_macroKcal', macroKcal);
-    localStorage.setItem('profile_macroProteina', macroProteina);
-    localStorage.setItem('profile_macroCarboidrato', macroCarboidrato);
-    localStorage.setItem('profile_macroGordura', macroGordura);
+  async function handleSaveWaterGoal() {
     localStorage.setItem('profile_macroAgua', macroAgua);
-    const { error } = await updateProfile({ macroKcal, macroProteina, macroCarboidrato, macroGordura, macroAgua });
+    const { error } = await updateProfile({ macroAgua });
     if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
-    toast('🎯 Metas de macros salvas!');
+    toast('🎯 Meta de água salva!');
   }
 
   async function handleUpdateEmail() {
@@ -239,7 +202,6 @@ export default function PerfilPage({ active }) {
           sexo={sexo} setSexo={setSexo} idade={idade} setIdade={setIdade}
           peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
           meta={meta} setMeta={setMeta} nivel={nivel} setNivel={setNivel}
-          restricaoAlimentar={restricaoAlimentar} setRestricaoAlimentar={setRestricaoAlimentar}
           pesoAlvo={pesoAlvo} setPesoAlvo={setPesoAlvo}
           progress={progress} imc={imc} onSave={handleSave}
           regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}
@@ -248,12 +210,8 @@ export default function PerfilPage({ active }) {
         <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
 
         <MacrosSection
-          macroKcal={macroKcal} setMacroKcal={setMacroKcal}
-          macroProteina={macroProteina} setMacroProteina={setMacroProteina}
-          macroCarboidrato={macroCarboidrato} setMacroCarboidrato={setMacroCarboidrato}
-          macroGordura={macroGordura} setMacroGordura={setMacroGordura}
           macroAgua={macroAgua} setMacroAgua={setMacroAgua}
-          onSave={handleSaveMacros} regeneratingMeals={regeneratingMeals} onRegenerateMeals={handleRegenerateMeals}
+          onSave={handleSaveWaterGoal}
         />
       </div>
 

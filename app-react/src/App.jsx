@@ -14,7 +14,6 @@ import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
-const DietaPage = lazy(() => import('./pages/DietaPage'));
 const HidratacaoPage = lazy(() => import('./pages/HidratacaoPage'));
 const DashPage = lazy(() => import('./pages/DashPage'));
 const PerfilPage = lazy(() => import('./pages/PerfilPage'));
@@ -59,7 +58,6 @@ function Shell() {
               <main className="pages">
                 <Suspense fallback={<PageFallback />}>
                   {page === 'treino' && <TreinoPage />}
-                  {page === 'dieta' && <DietaPage />}
                   {page === 'hidratacao' && <HidratacaoPage active={page === 'hidratacao'} />}
                   {page === 'dash' && <DashPage active={page === 'dash'} />}
                   {page === 'perfil' && <PerfilPage active={page === 'perfil'} />}

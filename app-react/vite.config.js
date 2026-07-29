@@ -20,9 +20,9 @@ export default defineConfig({
       },
       includeAssets: ['icon.svg', 'favicon.svg', 'favicon.ico'],
       manifest: {
-        name: 'EAFIT - Treino e Dieta',
+        name: 'EAFIT - Treino',
         short_name: 'EAFIT',
-        description: 'Seu plano de treino e dieta personalizado',
+        description: 'Seu plano de treino personalizado',
         start_url: '/EAFIT/',
         scope: '/EAFIT/',
         display: 'standalone',

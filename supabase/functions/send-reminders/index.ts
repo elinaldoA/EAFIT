@@ -1,8 +1,8 @@
 // Edge Function que roda a cada minuto (via pg_cron) e envia notificações Web
 // Push para os usuários inscritos, mesmo com o app/navegador fechado. Espelha a
-// lógica de horários de refeição/água que hoje roda só no navegador
+// lógica de lembrete de água que hoje roda só no navegador
 // (app-react/src/components/ReminderScheduler.jsx), mas consultando o estado
-// real salvo no banco (diet_logs / water_logs) em vez de localStorage.
+// real salvo no banco (water_logs) em vez de localStorage.
 //
 // Também cobre notificações "inteligentes" que dependem de histórico salvo no
 // banco (streak em risco, inatividade, resumo semanal, follow-up de desconforto)
@@ -39,23 +39,6 @@ const DISCOMFORT_FOLLOWUP_TIME = '09:00'; // mesmo slot de INACTIVITY_TIME, evit
 const DISCOMFORT_FOLLOWUP_WINDOW_START = 4; // dias atrás
 const DISCOMFORT_FOLLOWUP_WINDOW_END = 3; // dias atrás — janela de 2 dias cobre falha de execução num dia exato sem precisar de estado
 const HISTORY_LOOKBACK_DAYS = 39; // cobre o badge de streak de 30 dias + a semana do resumo
-
-// Mesma tabela padrão de app-react/src/data/treinoData.js (dietaData) — se o
-// usuário tiver customMeals em user_metadata, essas prevalecem.
-const DEFAULT_MEALS = [
-  { horario: '07:30', nome: '☀️ Café da manhã', descricao: '4 ovos inteiros + 3 claras (mexidos) · 40g aveia · 1 banana · 1 col. mel · Café preto' },
-  { horario: '10:30', nome: '🍏 Lanche da manhã', descricao: '1 scoop Whey (ou 180g iogurte grego) · 1 maçã · 25g amêndoas' },
-  { horario: '13:00', nome: '🥗 Almoço', descricao: '220g frango grelhado · 250g arroz integral ou batata-doce · 200g brócolis · 1 col. azeite' },
-  { horario: '17:30', nome: '⚡ Pré-treino pesado', descricao: '200g peito de peru/atum · 2 pães integrais · 1 batata-doce média (150g) · 1 banana · 500ml água' },
-  { horario: '19:30', nome: '☕ Pré-treino leve', descricao: 'Café preto (sem açúcar) · 1 scoop Whey (opcional)' },
-  { horario: '20:00', nome: '🏋️ Treino', descricao: 'Beba 500ml a 1L de água durante o treino' },
-  { horario: '21:15', nome: '🍽️ Pós-treino / Jantar', descricao: '200g peixe (salmão/tilápia) ou contra-filé · 250g arroz branco · Salada verde com azeite' },
-  { horario: '23:30', nome: '🥛 Ceia (opcional)', descricao: 'Se bater fome: 2 ovos cozidos ou 1 scoop caseína com água' },
-];
-
-function stripHtml(s) {
-  return (s || '').replace(/<[^>]+>/g, '');
-}
 
 // Ausente em user_metadata = ligado (opt-out) — usuários que já tinham o switch mestre
 // ligado antes dessas preferências existirem continuam recebendo os novos tipos.
@@ -210,23 +193,10 @@ Deno.serve(async () => {
 
   for (const userId of userIds) {
     const meta = metaById.get(userId) || {};
-    const meals = Array.isArray(meta.customMeals) && meta.customMeals.length > 0 ? meta.customMeals : DEFAULT_MEALS;
     const macroAgua = Number(meta.macroAgua) > 0 ? Number(meta.macroAgua) : DEFAULT_MACRO_AGUA;
     const userSubs = subs.filter((s) => s.user_id === userId);
 
     const payloads = [];
-
-    const dueMeal = meals.find((m) => m.horario === time);
-    if (dueMeal) {
-      const { data: log } = await supabase
-        .from('diet_logs')
-        .select('completed')
-        .eq('user_id', userId).eq('log_date', date).eq('meal_name', dueMeal.nome)
-        .maybeSingle();
-      if (!log?.completed) {
-        payloads.push({ title: `⏰ ${dueMeal.nome}`, body: stripHtml(dueMeal.descricao), tag: `meal-${date}-${dueMeal.nome}` });
-      }
-    }
 
     if (WATER_REMINDER_TIMES.includes(time)) {
       const { data: waterLog } = await supabase

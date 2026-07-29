@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TODAY_DATE, WATER_STORAGE_KEY, getMacroGoals } from '../data/treinoData';
+import { TODAY_DATE, WATER_STORAGE_KEY, getWaterGoalLiters } from '../data/treinoData';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { useWorkout } from '../context/WorkoutContext';
-import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from '../lib/dietaLog';
+import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from '../lib/waterLog';
 import { enqueue } from '../lib/syncQueue';
 import { fmtDate, parseLocalDate, toDateStr } from '../lib/utils';
 import LineChart from '../components/LineChart';
@@ -21,8 +21,8 @@ export default function HidratacaoPage({ active }) {
   const { user } = useAuth();
   const { markPending } = useWorkout();
   const toast = useToast();
-  const macros = useMemo(() => getMacroGoals(user), [user]);
-  const goalMl = macros.macroAgua * 1000;
+  const waterGoalLiters = useMemo(() => getWaterGoalLiters(user), [user]);
+  const goalMl = waterGoalLiters * 1000;
 
   const [_tick, setTick] = useState(0);
   const bump = () => setTick(t => t + 1);

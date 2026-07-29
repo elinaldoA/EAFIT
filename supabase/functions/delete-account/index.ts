@@ -54,8 +54,8 @@ Deno.serve(async (req) => {
     if (delPlansErr) throw delPlansErr;
 
     const directTables = [
-      'progress_photos', 'diet_logs', 'water_logs', 'food_logs',
-      'weight_logs', 'achievements', 'saved_recipes', 'push_subscriptions',
+      'progress_photos', 'water_logs',
+      'weight_logs', 'achievements', 'push_subscriptions',
     ];
     for (const table of directTables) {
       const { error } = await admin.from(table).delete().eq('user_id', userId);

@@ -38,7 +38,7 @@ export default function AuthScreen() {
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="EAFIT" />
           <div className="auth-logo__name">EAFIT</div>
-          <p className="auth-logo__tagline">Treino e dieta em um só lugar</p>
+          <p className="auth-logo__tagline">Seu treino, sempre com você</p>
         </div>
         <div className="auth-form">
           <input

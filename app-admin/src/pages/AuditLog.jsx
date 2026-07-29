@@ -20,7 +20,6 @@ const ACTION_LABEL = {
   promoteAdmin: 'Promoveu a admin',
   demoteAdmin: 'Removeu admin',
   generateWorkout: 'Gerou novo treino',
-  generateMeal: 'Gerou novo cardápio',
 };
 
 export default function AuditLog() {

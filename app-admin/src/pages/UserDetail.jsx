@@ -8,15 +8,13 @@ import EmptyState from '../components/EmptyState';
 
 const METAS = ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia'];
 const NIVEIS = ['iniciante', 'intermediario', 'avancado'];
-const RESTRICOES = ['padrao', 'vegetariano', 'low_carb'];
 
 // Espelha os ids de app-react/src/lib/achievements.js (BADGES) — os dois apps
 // não compartilham build, então o rótulo é duplicado aqui só pra exibição.
 const BADGE_LABELS = {
   streak_3: '🔥 Sequência de 3 dias', streak_7: '🔥🔥 Sequência de 7 dias', streak_30: '🔥🔥🔥 Sequência de 30 dias',
   workouts_10: '💪 10 treinos concluídos', workouts_50: '🏋️ 50 treinos concluídos', workouts_100: '🏆 100 treinos concluídos',
-  food_first: '🍎 Primeiro alimento registrado', food_50: '📒 50 alimentos registrados',
-  photo_first: '📸 Primeira foto de progresso', recipe_first: '📋 Primeira receita salva',
+  photo_first: '📸 Primeira foto de progresso',
   weight_10: '⚖️ 10 registros de peso',
 };
 
@@ -37,9 +35,9 @@ async function callAdminAction(action, targetUserId, extra = {}) {
   return data;
 }
 
-async function callGeneratePlan(kind, targetUserId) {
+async function callGeneratePlan(targetUserId) {
   const { data, error } = await db.functions.invoke('admin-generate-plan', {
-    body: { kind, targetUserId },
+    body: { kind: 'workout', targetUserId },
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
@@ -54,15 +52,12 @@ export default function UserDetail() {
   const [detail, setDetail] = useState(null);
   const [activePlan, setActivePlan] = useState(null);
   const [workouts, setWorkouts] = useState([]);
-  const [foodLogs, setFoodLogs] = useState([]);
   const [waterLogs, setWaterLogs] = useState([]);
   const [weightLogs, setWeightLogs] = useState([]);
   const [personalRecords, setPersonalRecords] = useState([]);
   const [discomfortLogs, setDiscomfortLogs] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [progressPhotos, setProgressPhotos] = useState([]);
-  const [savedRecipes, setSavedRecipes] = useState([]);
-  const [dietLogs, setDietLogs] = useState([]);
   const [pushCount, setPushCount] = useState(0);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState(null);
   const [workoutSets, setWorkoutSets] = useState({});
@@ -79,21 +74,18 @@ export default function UserDetail() {
     setLoading(true);
     setError('');
     try {
-      const [{ data: userRows, error: userErr }, plan, w, f, wa, we, pr, disc, ach, photos, recipes, diet, push] = await Promise.all([
+      const [{ data: userRows, error: userErr }, plan, w, wa, we, pr, disc, ach, photos, push] = await Promise.all([
         db.rpc('admin_get_user', { target: id }),
         db.from('workout_plans')
           .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, is_post_workout, order_index))')
           .eq('user_id', id).eq('is_active', true).maybeSingle(),
         db.from('workouts').select('id, workout_date, day_of_week, completed, duration_seconds').eq('user_id', id).order('workout_date', { ascending: false }).limit(20),
-        db.from('food_logs').select('id, log_date, food_name, kcal').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
         db.from('water_logs').select('id, log_date, amount_ml').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
         db.from('weight_logs').select('id, log_date, weight').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
         db.from('personal_records').select('id, exercise_name, max_weight, max_reps, achieved_at').eq('user_id', id).order('achieved_at', { ascending: false }),
         db.from('exercise_discomfort').select('id, exercise_name, log_date, severity, note').eq('user_id', id).order('log_date', { ascending: false }).limit(30),
         db.from('achievements').select('id, badge_id, unlocked_at').eq('user_id', id).order('unlocked_at', { ascending: false }),
         db.from('progress_photos').select('id, photo_date, image_data, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
-        db.from('saved_recipes').select('id, name, kcal, proteina, carboidrato, gordura, ingredientes, created_at').eq('user_id', id).order('created_at', { ascending: false }),
-        db.from('diet_logs').select('id, log_date, meal_name, completed').eq('user_id', id).order('log_date', { ascending: false }).limit(30),
         db.from('push_subscriptions').select('id', { count: 'exact', head: true }).eq('user_id', id),
       ]);
       if (userErr) throw userErr;
@@ -105,7 +97,6 @@ export default function UserDetail() {
         nome: md.nome || '', sobrenome: md.sobrenome || '', apelido: md.apelido || '',
         sexo: md.sexo || '', idade: md.idade || '', peso: md.peso || '', altura: md.altura || '',
         meta: md.meta || 'massa', nivel: md.nivel || 'intermediario', pesoAlvo: md.pesoAlvo || '',
-        restricaoAlimentar: md.restricaoAlimentar || 'padrao',
       });
       const rawPlan = plan.data;
       setActivePlan(rawPlan ? {
@@ -115,15 +106,12 @@ export default function UserDetail() {
           .map(d => ({ ...d, plan_exercises: [...(d.plan_exercises || [])].sort((a, b) => a.order_index - b.order_index) })),
       } : null);
       setWorkouts(w.data || []);
-      setFoodLogs(f.data || []);
       setWaterLogs(wa.data || []);
       setWeightLogs(we.data || []);
       setPersonalRecords(pr.data || []);
       setDiscomfortLogs(disc.data || []);
       setAchievements(ach.data || []);
       setProgressPhotos(photos.data || []);
-      setSavedRecipes(recipes.data || []);
-      setDietLogs(diet.data || []);
       setPushCount(push.count || 0);
       setExpandedWorkoutId(null);
       setWorkoutSets({});
@@ -188,12 +176,12 @@ export default function UserDetail() {
     }
   }
 
-  async function handleGeneratePlan(kind, confirmMsg) {
+  async function handleGeneratePlan(confirmMsg) {
     if (!window.confirm(confirmMsg)) return;
     setBusy(true);
     setActionMsg('');
     try {
-      await callGeneratePlan(kind, id);
+      await callGeneratePlan(id);
       setActionMsg('Ação concluída.');
       await load();
     } catch (err) {
@@ -233,12 +221,6 @@ export default function UserDetail() {
     ]));
   }
 
-  function exportDieta() {
-    downloadCsv(`refeicoes_${id}.csv`, toCsv(foodLogs, [
-      { key: 'log_date', label: 'Data' }, { key: 'food_name', label: 'Alimento' }, { key: 'kcal', label: 'Kcal' },
-    ]));
-  }
-
   if (loading) return <Loading />;
   if (error) return <p className="form-msg form-msg--error">{error}</p>;
 
@@ -261,13 +243,13 @@ export default function UserDetail() {
       </div>
 
       <div className="tabs">
-        {['perfil', 'treinos', 'dieta', 'acoes'].map(t => (
+        {['perfil', 'treinos', 'acoes'].map(t => (
           <button
             key={t}
             className={`tabs__btn ${tab === t ? 'tabs__btn--active' : ''}`}
             onClick={() => setTab(t)}
           >
-            {t === 'perfil' ? 'Perfil' : t === 'treinos' ? 'Treinos' : t === 'dieta' ? 'Dieta' : 'Ações'}
+            {t === 'perfil' ? 'Perfil' : t === 'treinos' ? 'Treinos' : 'Ações'}
           </button>
         ))}
       </div>
@@ -325,12 +307,6 @@ export default function UserDetail() {
               {NIVEIS.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
           </label>
-          <label className="field">
-            <span className="field__label">Restrição alimentar</span>
-            <select className="input" value={form.restricaoAlimentar} onChange={e => setForm({ ...form, restricaoAlimentar: e.target.value })}>
-              {RESTRICOES.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
-          </label>
           <div className="form-grid__actions">
             <button className="btn btn--primary" type="submit" disabled={busy}>Salvar perfil</button>
           </div>
@@ -367,6 +343,32 @@ export default function UserDetail() {
                 ))}
               </div>
             )}
+          </section>
+
+          <section>
+            <h2 className="section-title">Peso</h2>
+            <table className="resp-table">
+              <thead><tr><th>Data</th><th>Peso (kg)</th></tr></thead>
+              <tbody>
+                {weightLogs.map(w => (
+                  <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="Peso (kg)">{w.weight}</td></tr>
+                ))}
+                {weightLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="⚖️" label="Sem registros." /></td></tr>}
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h2 className="section-title">Água</h2>
+            <table className="resp-table">
+              <thead><tr><th>Data</th><th>ml</th></tr></thead>
+              <tbody>
+                {waterLogs.map(w => (
+                  <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="ml">{w.amount_ml}</td></tr>
+                ))}
+                {waterLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="💧" label="Sem registros." /></td></tr>}
+              </tbody>
+            </table>
           </section>
         </div>
       )}
@@ -499,106 +501,6 @@ export default function UserDetail() {
         </div>
       )}
 
-      {tab === 'dieta' && (
-        <div className="stack">
-          <div className="page-header">
-            <button className="btn btn--small" onClick={exportDieta} disabled={foodLogs.length === 0}>Exportar CSV (refeições)</button>
-          </div>
-          <section>
-            <h2 className="section-title">
-              Cardápio atual ({md.customMeals?.length ? 'personalizado' : 'padrão do objetivo'})
-            </h2>
-            <table className="resp-table">
-              <thead><tr><th>Horário</th><th>Refeição</th><th>Descrição</th><th>Kcal</th></tr></thead>
-              <tbody>
-                {(md.customMeals || []).map((m, i) => (
-                  <tr key={i}>
-                    <td data-label="Horário">{m.horario}</td>
-                    <td data-label="Refeição">{m.nome}</td>
-                    <td data-label="Descrição">{m.descricao}</td>
-                    <td data-label="Kcal">{m.kcal}</td>
-                  </tr>
-                ))}
-                {!md.customMeals?.length && (
-                  <tr><td colSpan={4}><EmptyState icon="🍽️" label="Sem cardápio personalizado salvo — o usuário usa o template padrão do objetivo." /></td></tr>
-                )}
-              </tbody>
-            </table>
-          </section>
-          <section>
-            <h2 className="section-title">Adesão ao cardápio (últimos registros)</h2>
-            <table className="resp-table">
-              <thead><tr><th>Data</th><th>Refeição</th><th>Concluída</th></tr></thead>
-              <tbody>
-                {dietLogs.map(d => (
-                  <tr key={d.id}>
-                    <td data-label="Data">{d.log_date}</td>
-                    <td data-label="Refeição">{d.meal_name}</td>
-                    <td data-label="Concluída">{d.completed ? 'sim' : 'não'}</td>
-                  </tr>
-                ))}
-                {dietLogs.length === 0 && <tr><td colSpan={3}><EmptyState icon="✅" label="Sem registros de adesão ao cardápio." /></td></tr>}
-              </tbody>
-            </table>
-          </section>
-          <section>
-            <h2 className="section-title">Refeições (últimas 20)</h2>
-            <table className="resp-table">
-              <thead><tr><th>Data</th><th>Alimento</th><th>Kcal</th></tr></thead>
-              <tbody>
-                {foodLogs.map(f => (
-                  <tr key={f.id}><td data-label="Data">{f.log_date}</td><td data-label="Alimento">{f.food_name}</td><td data-label="Kcal">{f.kcal}</td></tr>
-                ))}
-                {foodLogs.length === 0 && <tr><td colSpan={3}><EmptyState icon="🍽️" label="Sem registros." /></td></tr>}
-              </tbody>
-            </table>
-          </section>
-          <section>
-            <h2 className="section-title">Água</h2>
-            <table className="resp-table">
-              <thead><tr><th>Data</th><th>ml</th></tr></thead>
-              <tbody>
-                {waterLogs.map(w => (
-                  <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="ml">{w.amount_ml}</td></tr>
-                ))}
-                {waterLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="💧" label="Sem registros." /></td></tr>}
-              </tbody>
-            </table>
-          </section>
-          <section>
-            <h2 className="section-title">Peso</h2>
-            <table className="resp-table">
-              <thead><tr><th>Data</th><th>Peso (kg)</th></tr></thead>
-              <tbody>
-                {weightLogs.map(w => (
-                  <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="Peso (kg)">{w.weight}</td></tr>
-                ))}
-                {weightLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="⚖️" label="Sem registros." /></td></tr>}
-              </tbody>
-            </table>
-          </section>
-          <section>
-            <h2 className="section-title">Receitas salvas</h2>
-            <table className="resp-table">
-              <thead><tr><th>Nome</th><th>Kcal</th><th>Proteína</th><th>Carbo</th><th>Gordura</th><th>Ingredientes</th></tr></thead>
-              <tbody>
-                {savedRecipes.map(r => (
-                  <tr key={r.id}>
-                    <td data-label="Nome">{r.name}</td>
-                    <td data-label="Kcal">{r.kcal}</td>
-                    <td data-label="Proteína">{r.proteina}</td>
-                    <td data-label="Carbo">{r.carboidrato}</td>
-                    <td data-label="Gordura">{r.gordura}</td>
-                    <td data-label="Ingredientes">{r.ingredientes || '—'}</td>
-                  </tr>
-                ))}
-                {savedRecipes.length === 0 && <tr><td colSpan={6}><EmptyState icon="📋" label="Sem receitas salvas." /></td></tr>}
-              </tbody>
-            </table>
-          </section>
-        </div>
-      )}
-
       {tab === 'acoes' && (
         <div className="card stack">
           {recoveryLink && (
@@ -634,15 +536,9 @@ export default function UserDetail() {
             <div className="actions-row">
               <button
                 className="btn" disabled={busy || !hasProfile}
-                onClick={() => handleGeneratePlan('workout', 'Isso cria um novo treino a partir do perfil atual do usuário e o ativa. O plano anterior continua salvo, só fica inativo. Continuar?')}
+                onClick={() => handleGeneratePlan('Isso cria um novo treino a partir do perfil atual do usuário e o ativa. O plano anterior continua salvo, só fica inativo. Continuar?')}
               >
                 Gerar novo treino
-              </button>
-              <button
-                className="btn" disabled={busy || !hasProfile}
-                onClick={() => handleGeneratePlan('meal', 'Isso substitui o cardápio atual do usuário por um novo, baseado no objetivo salvo no perfil. Continuar?')}
-              >
-                Gerar novo cardápio
               </button>
             </div>
           </div>

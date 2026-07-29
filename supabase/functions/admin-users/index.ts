@@ -134,8 +134,8 @@ Deno.serve(async (req) => {
         if (delPlansErr) throw delPlansErr;
 
         const directTables = [
-          'progress_photos', 'diet_logs', 'water_logs', 'food_logs',
-          'weight_logs', 'achievements', 'saved_recipes', 'push_subscriptions',
+          'progress_photos', 'water_logs',
+          'weight_logs', 'achievements', 'push_subscriptions',
           'exercise_discomfort', 'personal_records',
         ];
         for (const table of directTables) {

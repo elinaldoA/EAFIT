@@ -3,9 +3,8 @@ import { db } from '../lib/supabase';
 import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
 import { enqueue, flushQueue, queueSize } from '../lib/syncQueue';
-import { upsertMealLog, upsertWaterLog } from '../lib/dietaLog';
+import { upsertWaterLog } from '../lib/waterLog';
 import { upsertWeightLog } from '../lib/weightLog';
-import { addFoodItem, updateFoodItem, deleteFoodItem, setMealEstimate, clearMealEstimate } from '../lib/foodLog';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 
@@ -55,34 +54,13 @@ const SYNC_EXECUTORS = {
       .upsert({ workout_id: wId, exercise_name, set_number, ...patch }, { onConflict: 'workout_id,exercise_name,set_number' });
     if (error) throw error;
   },
-  // Upserts de dieta/água/peso são idempotentes (mesma chave = mesmo efeito),
+  // Upserts de água/peso são idempotentes (mesma chave = mesmo efeito),
   // então basta reexecutar o mesmo upsert quando a fila é esvaziada.
-  meal_log: async ({ userId, date, mealName, completed }) => {
-    await upsertMealLog(userId, date, mealName, completed);
-  },
   water_log: async ({ userId, date, amountMl }) => {
     await upsertWaterLog(userId, date, amountMl);
   },
   weight_log: async ({ userId, date, peso }) => {
     await upsertWeightLog(userId, date, peso);
-  },
-  // Add/edit/delete de alimentos não são upserts — add pode duplicar se a
-  // escrita original na verdade tiver ido pro banco e só a resposta se
-  // perdeu, mas isso é preferível a perder o registro do usuário de vez.
-  food_log_add: async ({ userId, date, mealName, item }) => {
-    await addFoodItem(userId, { date, mealName, ...item });
-  },
-  food_log_edit: async ({ id, userId, item }) => {
-    await updateFoodItem(id, userId, item);
-  },
-  food_log_delete: async ({ id, userId }) => {
-    await deleteFoodItem(id, userId);
-  },
-  meal_estimate_set: async ({ userId, date, meal }) => {
-    await setMealEstimate(userId, date, meal);
-  },
-  meal_estimate_clear: async ({ userId, date, mealName }) => {
-    await clearMealEstimate(userId, date, mealName);
   },
 };
 
@@ -136,7 +114,7 @@ export function WorkoutProvider({ children }) {
     return remaining;
   }, []);
 
-  // Usado por páginas fora do fluxo de treino (dieta, perfil) para sinalizar
+  // Usado por páginas fora do fluxo de treino (água, perfil) para sinalizar
   // que enfileiraram uma escrita que falhou.
   const markPending = useCallback(() => setSyncStatus('pending'), []);
 

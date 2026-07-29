@@ -7,10 +7,7 @@ export const BADGES = [
   { id: 'workouts_10', emoji: '💪', title: '10 treinos concluídos', desc: 'Complete 10 treinos', check: s => s.totalTreinos >= 10 },
   { id: 'workouts_50', emoji: '🏋️', title: '50 treinos concluídos', desc: 'Complete 50 treinos', check: s => s.totalTreinos >= 50 },
   { id: 'workouts_100', emoji: '🏆', title: '100 treinos concluídos', desc: 'Complete 100 treinos', check: s => s.totalTreinos >= 100 },
-  { id: 'food_first', emoji: '🍎', title: 'Primeiro alimento registrado', desc: 'Registre um alimento na aba Dieta', check: s => s.totalFoodLogs >= 1 },
-  { id: 'food_50', emoji: '📒', title: '50 alimentos registrados', desc: 'Registre 50 alimentos', check: s => s.totalFoodLogs >= 50 },
   { id: 'photo_first', emoji: '📸', title: 'Primeira foto de progresso', desc: 'Adicione uma foto de progresso', check: s => s.totalPhotos >= 1 },
-  { id: 'recipe_first', emoji: '📋', title: 'Primeira receita salva', desc: 'Salve uma receita', check: s => s.totalRecipes >= 1 },
   { id: 'weight_10', emoji: '⚖️', title: '10 registros de peso', desc: 'Registre seu peso 10 vezes', check: s => s.totalWeightLogs >= 10 },
 ];
 
