@@ -241,18 +241,11 @@ function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll,
           <span className="ex-name">{ex.nome}</span>
           <span className="ex-block__meta">{ex.reps} reps · desc. {ex.descanso}</span>
           {plateau ? (
-            plateau.underEffort ? (
-              <p className="ex-block__suggestion ex-block__suggestion--under-effort">
-                💪 Carga travada, mas RIR médio de {plateau.avgRir.toFixed(1)} — você ainda tem folga
-                {' '}<span className="ex-block__suggestion-hint">— tente subir a carga na próxima sessão</span>
-              </p>
-            ) : (
-              <p className="ex-block__suggestion ex-block__suggestion--plateau">
-                ⚠️ Estagnado há {plateau.sessionsStuck} treinos em {plateau.lastCarga}kg
-                {' '}<span className="ex-block__suggestion-hint">— tente um deload pra {plateau.suggestedDeload}kg ou troque o exercício</span>
-                {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(plateau.suggestedDeload, null)}>🎯 Usar sugestão</button>
-              </p>
-            )
+            <p className="ex-block__suggestion ex-block__suggestion--plateau">
+              ⚠️ Estagnado há {plateau.sessionsStuck} treinos em {plateau.lastCarga}kg
+              {' '}<span className="ex-block__suggestion-hint">— tente um deload pra {plateau.suggestedDeload}kg ou troque o exercício</span>
+              {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(plateau.suggestedDeload, null)}>🎯 Usar sugestão</button>
+            </p>
           ) : suggestion && (
             <p className="ex-block__suggestion">
               {suggestion.suggestedReps

@@ -820,10 +820,6 @@ button, input { font-family: inherit; }
   gap: 4px;
 }
 
-.ex-block__suggestion--under-effort {
-  color: var(--success);
-}
-
 .ex-block__apply-btn {
   border: none;
   background: none;

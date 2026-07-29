@@ -85,13 +85,13 @@ async function fetchSetsWithDatesFallback(userId, exerciseName) {
 
   const { data: sets, error } = await db
     .from('exercise_sets')
-    .select('workout_id, carga, reps, rir')
+    .select('workout_id, carga, reps')
     .in('workout_id', ids)
     .eq('exercise_name', exerciseName)
     .eq('completed', true)
     .not('carga', 'is', null);
   if (error) throw error;
-  return (sets || []).map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir, workout_date: dateById.get(s.workout_id) }));
+  return (sets || []).map(s => ({ carga: s.carga, reps: s.reps, workout_date: dateById.get(s.workout_id) }));
 }
 
 // Busca todas as séries concluídas (com carga, reps e data da sessão) de um
@@ -101,32 +101,24 @@ export async function fetchExerciseSetsWithDates(userId, exerciseName) {
   try {
     const { data, error } = await db
       .from('exercise_sets')
-      .select('carga, reps, rir, workouts!inner(user_id, workout_date)')
+      .select('carga, reps, workouts!inner(user_id, workout_date)')
       .eq('workouts.user_id', userId)
       .eq('exercise_name', exerciseName)
       .eq('completed', true)
       .not('carga', 'is', null);
     if (error) throw error;
-    return (data || []).map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir, workout_date: s.workouts.workout_date }));
+    return (data || []).map(s => ({ carga: s.carga, reps: s.reps, workout_date: s.workouts.workout_date }));
   } catch (err) {
     console.warn('fetchExerciseSetsWithDates: embed falhou, usando busca em 2 passos', err);
     return fetchSetsWithDatesFallback(userId, exerciseName);
   }
 }
 
-function averageRir(sets) {
-  const values = sets.map(s => s.rir).filter(Number.isFinite);
-  if (!values.length) return null;
-  return values.reduce((a, b) => a + b, 0) / values.length;
-}
-
 // Sugere a carga da próxima sessão: se todas as séries da última sessão bateram o
-// teto da faixa de reps planejada, sugere +2,5kg (ou +5kg se o RIR médio relatado
-// foi alto — ainda tinha folga, o salto conservador seria desperdício); senão,
-// sugere repetir a mesma carga e mirar em +1 rep (dupla progressão: sobe rep por
-// rep até bater o teto, só então sobe carga). Retorna null se o exercício não tem
-// histórico ou a faixa de reps não é numérica (ex.: "até a falha", isometria em
-// segundos, cardio).
+// teto da faixa de reps planejada, sugere +2,5kg; senão, sugere repetir a mesma
+// carga e mirar em +1 rep (dupla progressão: sobe rep por rep até bater o teto,
+// só então sobe carga). Retorna null se o exercício não tem histórico ou a faixa
+// de reps não é numérica (ex.: "até a falha", isometria em segundos, cardio).
 export async function fetchProgressionSuggestion(userId, exerciseName, repsStr) {
   const ceiling = parseRepCeiling(repsStr);
   if (ceiling === null) return null;
@@ -142,32 +134,22 @@ export async function fetchProgressionSuggestion(userId, exerciseName, repsStr) 
   const setsAtLastCarga = lastSets.filter(s => parseFloat(s.carga) === lastCarga);
   const hitCeiling = setsAtLastCarga.every(s => parseInt(s.reps, 10) >= ceiling);
   const lastReps = Math.max(...setsAtLastCarga.map(s => parseInt(s.reps, 10)));
-  const avgRir = averageRir(setsAtLastCarga);
-  const bigJump = hitCeiling && avgRir !== null && avgRir >= 3;
 
   return {
     lastCarga,
     lastReps,
-    avgRir,
-    suggestedCarga: hitCeiling ? lastCarga + (bigJump ? 5 : 2.5) : lastCarga,
+    suggestedCarga: hitCeiling ? lastCarga + 2.5 : lastCarga,
     suggestedReps: hitCeiling ? null : Math.min(ceiling, lastReps + 1),
     hitCeiling,
   };
 }
 
 const PLATEAU_SESSIONS = 3;
-const UNDER_EFFORT_RIR = 3;
-
 // Detecta estagnação: olha as últimas PLATEAU_SESSIONS sessões distintas do
 // exercício (maior carga de cada uma). Se a carga não mudou, os reps não
 // melhoraram e o teto da faixa nunca foi batido em nenhuma delas, sugere um
-// deload de 10% — a menos que o RIR médio relatado nessas sessões seja alto
-// (>= UNDER_EFFORT_RIR): aí a carga só está "travada" porque o usuário não
-// chegou perto da falha, não porque bateu um teto real — `underEffort: true`
-// sinaliza isso, e a UI mostra "suba a carga" em vez de sugerir deload. Sem
-// RIR relatado, assume platô real (comportamento anterior). Retorna null se
-// faltar histórico, a faixa de reps não for numérica, ou a carga/reps ainda
-// estiverem progredindo normalmente.
+// deload de 10%. Retorna null se faltar histórico, a faixa de reps não for
+// numérica, ou a carga/reps ainda estiverem progredindo normalmente.
 export async function fetchPlateauStatus(userId, exerciseName, repsStr) {
   const ceiling = parseRepCeiling(repsStr);
   if (ceiling === null) return null;
@@ -182,7 +164,7 @@ export async function fetchPlateauStatus(userId, exerciseName, repsStr) {
     if (!Number.isFinite(carga) || !Number.isFinite(reps)) return;
     const prev = bestByDate.get(s.workout_date);
     if (!prev || carga > prev.carga || (carga === prev.carga && reps > prev.reps)) {
-      bestByDate.set(s.workout_date, { carga, reps, rir: Number.isFinite(s.rir) ? s.rir : null });
+      bestByDate.set(s.workout_date, { carga, reps });
     }
   });
 
@@ -197,14 +179,9 @@ export async function fetchPlateauStatus(userId, exerciseName, repsStr) {
 
   if (!cargaFrozen || !noRepProgress || !neverHitCeiling) return null;
 
-  const avgRir = averageRir(sessions);
-  const underEffort = avgRir !== null && avgRir >= UNDER_EFFORT_RIR;
-
   return {
     sessionsStuck: PLATEAU_SESSIONS,
     lastCarga: first.carga,
-    avgRir,
-    underEffort,
     suggestedDeload: Math.round(first.carga * 0.9 * 2) / 2, // arredonda pra 0,5kg
   };
 }

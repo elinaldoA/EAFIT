@@ -161,7 +161,7 @@ export function WorkoutProvider({ children }) {
 
         const { data: sets, error: sErr } = await db
           .from('exercise_sets')
-          .select('exercise_name, set_number, carga, completed, reps, rir')
+          .select('exercise_name, set_number, carga, completed, reps')
           .eq('workout_id', wId);
         if (sErr) throw sErr;
 
@@ -176,7 +176,6 @@ export function WorkoutProvider({ children }) {
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_carga`, s.carga ?? '');
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_done`, s.completed);
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_reps`, s.reps ?? '');
-          if (s.rir != null) localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_rir`, s.rir);
         });
         if (timer.rating != null) localStorage.setItem(`treino_${dayName}_rating`, timer.rating);
         if (timer.notes) localStorage.setItem(`treino_${dayName}_notes`, timer.notes);
