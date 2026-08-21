@@ -47,6 +47,22 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 └── .github/workflows/   # pipeline de build e deploy
 ```
 
+## Convenções
+
+- **Nomenclatura**: termos de domínio (treino, carga, dia, foco, água) ficam em
+  português; infraestrutura e nomes de código genéricos (`WorkoutContext`,
+  `fetchDashboardData`, `useReminders`) ficam em inglês. A mistura é
+  intencional, não inconsistência — ao criar algo novo, siga o que já existe
+  ao redor do arquivo que você está mexendo.
+- **Duplicação entre app-react e as Edge Functions (Deno)**: como os dois
+  ambientes não compartilham build, algumas lógicas (geração de plano por
+  IMC/nível, exclusão de dados do usuário) são portadas manualmente em vez de
+  importadas de um pacote comum. Cada arquivo com esse tipo de duplicação
+  documenta no topo qual é o "original" e onde fica a cópia — ver
+  `app-react/src/data/workoutAdjustments.js` e
+  `supabase/functions/_shared/workoutAdjustments.ts` como exemplo. Ao mudar um
+  lado, replique no outro.
+
 ## Rodando localmente
 
 ```bash
@@ -89,8 +105,8 @@ usuário) e tem Termos de Uso + Política de Privacidade em `app-react/public/le
 passos manuais:
 
 - **Revisão jurídica dos textos legais**: `legal/termos.html` e `legal/privacidade.html`
-  são rascunho, com placeholders (`[nome/razão social]`, `[e-mail de contato]`, etc.) —
-  preencher e pedir revisão antes de tratar como documento válido.
+  já têm e-mail de contato e foro preenchidos; falta só `[nome/razão social, CNPJ ou
+  CPF]` — preencher e pedir revisão antes de tratar como documento válido.
 - **Leaked password protection**: ativar em Authentication → Policies no dashboard do
   Supabase (não dá pra fazer via CLI sem risco de sobrescrever outras configs de Auth).
 - **E-mail transacional**: o SMTP embutido do Supabase tem limite baixo de e-mails/hora.
