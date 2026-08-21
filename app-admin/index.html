@@ -3,6 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      CSP via meta tag porque o deploy é estático (GitHub Pages, sem headers
+      HTTP customizados). `frame-ancestors`/`report-uri`/`sandbox` são
+      ignorados quando entregues por meta tag (exigem header HTTP de
+      verdade) — de propósito fora daqui. style-src precisa de
+      'unsafe-inline' pelo style={{...}} do React; img-src precisa do
+      domínio do Supabase pelas fotos de progresso exibidas no perfil do
+      usuário (UserProfileTab.jsx).
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://btzdetvoneyhzthsmdrp.supabase.co; connect-src 'self' https://btzdetvoneyhzthsmdrp.supabase.co wss://btzdetvoneyhzthsmdrp.supabase.co; font-src 'self'; object-src 'none'; base-uri 'self'" />
     <title>EAFIT Admin — Backoffice</title>
     <meta name="description" content="Painel administrativo do EAFIT" />
   </head>

@@ -3,6 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!--
+      CSP via meta tag porque o deploy é estático (GitHub Pages, sem headers
+      HTTP customizados). `frame-ancestors`/`report-uri`/`sandbox` são
+      ignorados quando entregues por meta tag (exigem header HTTP de
+      verdade) — de propósito fora daqui. style-src precisa de
+      'unsafe-inline' pelo style={{...}} do React; img-src precisa de data:
+      pelas fotos de progresso recomprimidas em canvas (lib/imageUtils.js) e
+      do domínio do Supabase pelas signed URLs do Storage.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://btzdetvoneyhzthsmdrp.supabase.co; connect-src 'self' https://btzdetvoneyhzthsmdrp.supabase.co wss://btzdetvoneyhzthsmdrp.supabase.co; font-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'" />
     <title>EAFIT — Treino</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
     <link rel="alternate icon" href="favicon.ico?v=2" />

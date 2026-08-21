@@ -123,6 +123,17 @@ export async function exportSummaryCSV(userId) {
   downloadBlob(toCSV(rows), `meu-plano-resumo-${data.exportedAt.slice(0, 10)}.csv`, 'text/csv;charset=utf-8');
 }
 
+// win.document.write não escapa nada sozinho (diferente do JSX) — qualquer
+// valor interpolado aqui vira HTML literal. Hoje só entram date/numeric do
+// banco (baixo risco na prática), mas escapamos tudo por padrão pra que um
+// campo de texto livre adicionado no futuro (nota, comentário) não vire XSS
+// por descuido.
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
 export async function printReport(userId) {
   const data = await gatherUserData(userId);
   const totalTreinos = data.workouts.filter(w => w.completed).length;
@@ -147,16 +158,16 @@ export async function printReport(userId) {
     </head>
     <body>
       <h1>Relatório de progresso — Meu Plano</h1>
-      <p>Gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
+      <p>Gerado em ${escapeHtml(new Date().toLocaleDateString('pt-BR'))}</p>
       <div class="stats">
-        <div class="stat"><b>${totalTreinos}</b>Treinos concluídos</div>
-        <div class="stat"><b>${data.progressPhotos.length}</b>Fotos de progresso</div>
-        <div class="stat"><b>${data.achievements.length}</b>Conquistas desbloqueadas</div>
+        <div class="stat"><b>${escapeHtml(totalTreinos)}</b>Treinos concluídos</div>
+        <div class="stat"><b>${escapeHtml(data.progressPhotos.length)}</b>Fotos de progresso</div>
+        <div class="stat"><b>${escapeHtml(data.achievements.length)}</b>Conquistas desbloqueadas</div>
       </div>
       <h2>Histórico de peso</h2>
       <table>
         <tr><th>Data</th><th>Peso (kg)</th></tr>
-        ${data.weightLogs.map(w => `<tr><td>${w.log_date}</td><td>${w.peso}</td></tr>`).join('') || '<tr><td colspan="2">Sem registros</td></tr>'}
+        ${data.weightLogs.map(w => `<tr><td>${escapeHtml(w.log_date)}</td><td>${escapeHtml(w.peso)}</td></tr>`).join('') || '<tr><td colspan="2">Sem registros</td></tr>'}
       </table>
     </body>
     </html>
