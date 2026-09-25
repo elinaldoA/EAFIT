@@ -9,6 +9,7 @@ import { getSaferAlternative } from '../data/workoutTemplates';
 import { allSetsDone } from '../lib/workoutSets';
 import { DiscomfortPanel } from './DiscomfortWidgets';
 import SetRow from './SetRow';
+import ExerciseDemo from './ExerciseDemo';
 
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
 // destaque no próprio cabeçalho, então o bloco omite os dele.
@@ -44,8 +45,11 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
     return (
       <div className="ex-block">
         <div className="ex-block__header">
-          <span className="ex-name">{ex.nome}</span>
-          <span className="ex-block__meta">{ex.reps}</span>
+          <div className="ex-block__titles">
+            <span className="ex-name">{ex.nome}</span>
+            <span className="ex-block__meta">{ex.reps}</span>
+          </div>
+          {!hideName && <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />}
         </div>
       </div>
     );
@@ -81,6 +85,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
             <>
               <span className="ex-name">{ex.nome}</span>
               <span className="ex-block__meta">{ex.reps} reps · desc. {ex.descanso}</span>
+              <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
           )}
           {plateau ? (

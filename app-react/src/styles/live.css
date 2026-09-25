@@ -270,3 +270,137 @@ body.live-open .toast {
   transform: translateX(-50%) translateY(-16px);
 }
 body.live-open .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   DEMONSTRAÇÃO DE EXECUÇÃO (ExerciseDemo)
+============================================================ */
+.demo-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
+}
+.demo-btn--link {
+  background: none;
+  padding: 3px 0 0;
+  color: var(--water);
+  font-size: 0.68rem;
+}
+.demo-btn--chip {
+  background: rgba(56, 189, 248, .14);
+  color: var(--water);
+  border-radius: var(--r-full);
+  padding: 4px 10px;
+  font-size: 0.72rem;
+}
+.demo-btn span { font-size: 0.8em; }
+
+.demo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.demo-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .75);
+  backdrop-filter: blur(2px);
+}
+.demo-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--r-xl);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.2s ease both;
+}
+.demo-modal__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.demo-modal__titles { display: flex; flex-direction: column; min-width: 0; }
+.demo-modal__kicker {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--water);
+}
+.demo-modal__title { font-size: 1.05rem; font-weight: 800; line-height: 1.25; }
+
+/* Os 2 quadros empilhados; o ativo aparece com crossfade */
+.demo-modal__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  padding: 0;
+  border: none;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+}
+.demo-modal__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  user-select: none;
+}
+.demo-modal__frame--on { opacity: 1; }
+.demo-modal__loading { position: absolute; inset: 0; border-radius: 0; }
+.demo-modal__error {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+.demo-modal__badge {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.demo-modal__steps { display: flex; gap: 6px; }
+.demo-modal__steps span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  padding: 5px 0;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  transition: background var(--t), color var(--t);
+}
+.demo-modal__steps .is-on { background: var(--water); color: #04212e; }
+
+.demo-modal__tip { font-size: 0.8rem; color: var(--text-muted); }
+.demo-modal__credit { font-size: 0.62rem; color: var(--text-dim); }
