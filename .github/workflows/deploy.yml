@@ -28,7 +28,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app-react/package-lock.json
+          cache-dependency-path: |
+            app-react/package-lock.json
+            app-admin/package-lock.json
 
       - name: Build app-react
         working-directory: app-react

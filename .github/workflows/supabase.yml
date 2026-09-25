@@ -1,0 +1,104 @@
+name: Supabase
+
+# Testes das Edge Functions (Deno) rodam sozinhos em todo push/PR que mexe em
+# supabase/. Aplicar migrations e implantar funções em produção é disparo
+# manual (Actions → Supabase → Run workflow), porque a ordem importa: função
+# nova pode depender de migration nova (ex.: admin-generate-plan usa a RPC
+# create_workout_plan) ou de um secret configurado antes (CRON_SECRET) — o job
+# de funções só roda depois do de migrations quando os dois são marcados.
+#
+# Secrets do repositório necessários pro deploy:
+#   SUPABASE_ACCESS_TOKEN  (dashboard → Account → Access Tokens)
+#   SUPABASE_PROJECT_ID    (ref do projeto, ex.: btzdetvoneyhzthsmdrp)
+#   SUPABASE_DB_PASSWORD   (só pra aplicar migrations)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase.yml'
+  workflow_dispatch:
+    inputs:
+      push_migrations:
+        description: 'Aplicar migrations pendentes em produção (supabase db push)'
+        type: boolean
+        default: false
+      deploy_functions:
+        description: 'Implantar todas as Edge Functions em produção'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Testes (_shared)
+        run: deno test supabase/functions/_shared/
+
+      # send-reminders, send-push e admin-users ainda têm erros de tipagem
+      # antigos (JS sem tipos / generics do supabase-js) — entram aqui quando
+      # forem tipados.
+      - name: Checagem de tipos
+        run: >
+          deno check
+          supabase/functions/admin-broadcast/index.ts
+          supabase/functions/admin-generate-plan/index.ts
+          supabase/functions/delete-account/index.ts
+          supabase/functions/send-scheduled-broadcast/index.ts
+
+  push-migrations:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' && inputs.push_migrations
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+      - run: supabase db push
+
+  deploy-functions:
+    needs: [test, push-migrations]
+    # always() + checagem explícita: roda mesmo quando push-migrations foi
+    # pulado (não marcado), mas nunca se ele falhou.
+    if: >
+      always() && github.event_name == 'workflow_dispatch' && inputs.deploy_functions
+      && needs.test.result == 'success' && needs.push-migrations.result != 'failure'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Verify JWT espelha o que está em produção: desligado só nas funções
+      # chamadas pelo pg_cron (autenticadas pelo header x-cron-secret).
+      - name: Deploy
+        run: |
+          deploy() { supabase functions deploy "$1" --project-ref "$SUPABASE_PROJECT_ID" "${@:2}"; }
+          deploy send-reminders --no-verify-jwt
+          deploy send-scheduled-broadcast --no-verify-jwt
+          for fn in send-push delete-account admin-users admin-broadcast admin-generate-plan; do
+            deploy "$fn"
+          done

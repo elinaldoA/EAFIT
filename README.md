@@ -42,9 +42,14 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 │   │   ├── context/      # estado global (auth, tema, toast, treino)
 │   │   ├── data/         # dados estáticos do plano de treino
 │   │   ├── lib/           # cliente de dados e utilitários
-│   │   └── pages/        # telas do app (Treino, Água, Evolução, Perfil)
+│   │   ├── pages/        # telas do app (Treino, Água, Evolução, Perfil)
+│   │   └── styles/       # CSS por área, importado em ordem por index.css
 │   └── vite.config.js
-└── .github/workflows/   # pipeline de build e deploy
+├── app-admin/          # backoffice (React + Vite), publicado em /admin
+├── supabase/
+│   ├── functions/       # Edge Functions (Deno); _shared/ tem código + testes
+│   └── migrations/      # schema, RLS e RPCs
+└── .github/workflows/   # deploy.yml (Pages) e supabase.yml (testes/deploy do backend)
 ```
 
 ## Convenções
@@ -54,14 +59,19 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   `fetchDashboardData`, `useReminders`) ficam em inglês. A mistura é
   intencional, não inconsistência — ao criar algo novo, siga o que já existe
   ao redor do arquivo que você está mexendo.
+- **Context**: cada `context/XContext.jsx` exporta só o `XProvider`; o objeto
+  de context e o hook (`useX`) ficam em `context/useX.js`. Arquivo `.jsx` que
+  exporta componente e não-componente juntos perde o Fast Refresh (o lint
+  avisa).
 - **Duplicação entre app-react e as Edge Functions (Deno)**: como os dois
   ambientes não compartilham build, algumas lógicas (geração de plano por
   IMC/nível, exclusão de dados do usuário) são portadas manualmente em vez de
   importadas de um pacote comum. Cada arquivo com esse tipo de duplicação
   documenta no topo qual é o "original" e onde fica a cópia — ver
   `app-react/src/data/workoutAdjustments.js` e
-  `supabase/functions/_shared/workoutAdjustments.ts` como exemplo. Ao mudar um
-  lado, replique no outro.
+  `supabase/functions/_shared/workoutAdjustments.ts` como exemplo (o mesmo vale
+  pra `exerciseLibrary.js` ↔ `_shared/exerciseLibrary.ts`). Ao mudar um lado,
+  replique no outro — os testes dos dois lados rodam no CI.
 
 ## Rodando localmente
 
@@ -80,8 +90,8 @@ VITE_VAPID_PUBLIC_KEY=<chave publica VAPID, gerada com `npx web-push generate-va
 
 `VITE_VAPID_PUBLIC_KEY` é usada para inscrever o navegador em notificações push (funcionam com o app fechado). Sem ela, o app funciona normalmente, só a inscrição de push falha com "Push não configurado". A chave privada correspondente fica só no backend, como secret `VAPID_PRIVATE_KEY` das Edge Functions `send-reminders` e `send-push` (nunca no frontend).
 
-Duas Edge Functions cuidam de push (implantação manual, dashboard → Edge Functions → New function, colar o código de `supabase/functions/<nome>/index.ts`):
-- `send-reminders` — chamada só pelo cron (`pg_cron`, a cada minuto); **Verify JWT desativado**, pois não há usuário logado numa chamada interna do cron. Cobre refeição/água (horário fixo) e as notificações inteligentes: sequência em risco, inatividade, resumo semanal e lembrete de atualizar o peso (segunda de manhã).
+Edge Functions de push (implantadas pelo workflow `supabase.yml`, ver [Deploy](#deploy)):
+- `send-reminders` e `send-scheduled-broadcast` — chamadas só pelo cron (`pg_cron`, a cada minuto); **Verify JWT desativado**, pois não há usuário logado numa chamada interna do cron. Em vez de JWT, só aceitam requisição com o header `x-cron-secret` (valor guardado no Supabase Vault e no secret `CRON_SECRET` das funções — ver `supabase/migrations/20260925010000_cron_secret.sql`). `send-reminders` cobre refeição/água (horário fixo) e as notificações inteligentes: sequência em risco, inatividade, resumo semanal e lembrete de atualizar o peso (segunda de manhã).
 - `send-push` — chamada pelo próprio app logo após um evento (novo recorde, conquista desbloqueada); **Verify JWT ativado**, já que o usuário só pode mandar push pra si mesmo (o `user_id` vem do token da sessão, nunca do corpo da requisição).
 
 Depois:
@@ -95,7 +105,7 @@ npm run build    # build de produção em app-react/dist
 
 O deploy é automático: qualquer push em `main` que altere arquivos dentro de `app-react/` dispara o workflow `.github/workflows/deploy.yml`, que builda o projeto e publica no GitHub Pages.
 
-Migrations do Supabase (`supabase/migrations/`) não são aplicadas em produção automaticamente — rode `supabase db push` localmente (com o CLI já linkado ao projeto) sempre que adicionar uma migration nova.
+Backend (Supabase): o workflow `.github/workflows/supabase.yml` roda os testes e a checagem de tipos das Edge Functions em todo push/PR que mexe em `supabase/`. Aplicar migrations e implantar funções em produção é **manual**, em Actions → Supabase → Run workflow (marque "Aplicar migrations" e/ou "Implantar todas as Edge Functions"; migrations rodam antes das funções). Precisa dos secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID` e `SUPABASE_DB_PASSWORD` no repositório. Localmente, `supabase db push` (com o CLI linkado) continua funcionando.
 
 ## Antes de abrir pra outras pessoas
 
