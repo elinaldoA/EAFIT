@@ -35,6 +35,14 @@ describe('getExerciseMedia', () => {
     expect(getExerciseMedia('', '/')).toBeNull();
   });
 
+  it('mídia própria do admin tem prioridade sobre a padrão', () => {
+    const custom = { 'Supino Reto com Barra': { url: 'https://x/supino.mp4', type: 'video' } };
+    expect(getExerciseMedia('Supino Reto com Barra', '/', custom)).toEqual({ custom: true, type: 'video', url: 'https://x/supino.mp4' });
+    // e também vale pra exercício sem demonstração padrão
+    expect(getExerciseMedia('🔷 Burpee', '/', { Burpee: { url: 'u', type: 'imagem' } })?.custom).toBe(true);
+    expect(getExerciseMedia('Supino Reto com Halteres', '/', custom)?.id).toBe('Dumbbell_Bench_Press');
+  });
+
   it('todo id mapeado tem os 2 quadros em public/exercicios', () => {
     const missing = [...new Set(Object.values(EXERCISE_MEDIA))]
       .filter(id => ![0, 1].every(n => existsSync(`${PUBLIC_DIR}exercicios/${id}/${n}.webp`)));

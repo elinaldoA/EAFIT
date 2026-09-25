@@ -15,6 +15,7 @@ import AuditLog from './pages/AuditLog';
 import Safety from './pages/Safety';
 import Profile from './pages/Profile';
 import LandingEditor from './pages/LandingEditor';
+import ExerciseMedia from './pages/ExerciseMedia';
 
 // Fora do HashRouter de propósito: o link de "esqueci minha senha" volta com
 // um token no fragmento da URL (#access_token=...&type=recovery), que
@@ -37,6 +38,7 @@ function AppShell() {
             <Route path="/auditoria" element={<AuditLog />} />
             <Route path="/seguranca" element={<Safety />} />
             <Route path="/landing" element={<LandingEditor />} />
+            <Route path="/demonstracoes" element={<ExerciseMedia />} />
             <Route path="/perfil" element={<Profile />} />
           </Route>
         </Route>

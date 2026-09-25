@@ -28,6 +28,19 @@ registerRoute(
   })
 );
 
+// Mídia própria enviada pelo admin (bucket público exercise-media do Supabase).
+// Só imagens/GIFs vão pro cache: vídeo é pedido em pedaços (Range) pelo
+// navegador e fica na rede. Cada envio grava um arquivo com nome novo, então
+// o cache nunca serve uma versão antiga depois de uma troca.
+registerRoute(
+  ({ url, request }) => request.destination === 'image'
+    && url.pathname.includes('/storage/v1/object/public/exercise-media/'),
+  new CacheFirst({
+    cacheName: 'exercise-media-custom',
+    plugins: [new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 180 })],
+  })
+);
+
 self.addEventListener('push', (event) => {
   let data = {};
   try {
