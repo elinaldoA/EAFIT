@@ -1,6 +1,6 @@
-import { useAuth } from '../context/AuthContext';
-import { useAvatar } from '../context/AvatarContext';
-import { useWorkout } from '../context/WorkoutContext';
+import { useAuth } from '../context/useAuth';
+import { useAvatar } from '../context/useAvatar';
+import { useWorkout } from '../context/useWorkout';
 import { getDisplayName } from '../lib/utils';
 
 const SYNC_TITLE = {

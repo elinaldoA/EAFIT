@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/useAuth';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { WorkoutProvider } from './context/WorkoutContext';

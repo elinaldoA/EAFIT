@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { TODAY_DATE, WATER_STORAGE_KEY, getWaterGoalLiters } from '../data/treinoData';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { sendNotification } from '../lib/notifications';
 import { isPushSupported } from '../lib/pushSubscriptions';
 

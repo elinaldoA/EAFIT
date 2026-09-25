@@ -24,10 +24,11 @@ function chain(result) {
 
 vi.mock('../lib/supabase', () => ({ db: { from: mockFrom } }));
 vi.mock('../lib/workoutPlans', () => ({ fetchActivePlan: mockFetchActivePlan }));
-vi.mock('./AuthContext', () => ({ useAuth: () => mockAuthState }));
-vi.mock('./ToastContext', () => ({ useToast: () => mockToast }));
+vi.mock('./useAuth', () => ({ useAuth: () => mockAuthState }));
+vi.mock('./useToast', () => ({ useToast: () => mockToast }));
 
-import { WorkoutProvider, useWorkout } from './WorkoutContext';
+import { WorkoutProvider } from './WorkoutContext';
+import { useWorkout } from './useWorkout';
 
 function wrapper({ children }) {
   return <WorkoutProvider>{children}</WorkoutProvider>;

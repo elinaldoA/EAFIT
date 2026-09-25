@@ -4,9 +4,10 @@ import { getModalRoot } from '../lib/modalRoot';
 import { formatDuration } from '../lib/utils';
 import { getMuscleGroupsForDay } from '../data/treinoData';
 import { shareWorkoutSummary } from '../lib/shareCard';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/useToast';
 import BodyAvatar from './BodyAvatar';
-import RatingModal, { RATING_OPTIONS } from './RatingModal';
+import RatingModal from './RatingModal';
+import { RATING_OPTIONS } from '../lib/ratingOptions';
 
 export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
   const { day, durationMs, totalCarga, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets } = summary;

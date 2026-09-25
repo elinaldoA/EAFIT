@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAdminAuth } from '../context/useAdminAuth';
 
 export default function Profile() {
   const { adminUser, updateProfile, updatePassword, logout } = useAdminAuth();

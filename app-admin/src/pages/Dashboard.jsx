@@ -1,19 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { db } from '../lib/supabase';
+import { fetchDashboardStats, fetchSignupsByDay } from '../lib/dashboardStats';
 import Loading from '../components/Loading';
-
-export async function fetchDashboardStats() {
-  const { data, error } = await db.rpc('admin_dashboard_stats');
-  if (error) throw error;
-  return data?.[0] || null;
-}
-
-export async function fetchSignupsByDay(days = 14) {
-  const { data, error } = await db.rpc('admin_signups_by_day', { days_back: days });
-  if (error) throw error;
-  return data || [];
-}
 
 const TILES = [
   { key: 'total_users', label: 'Usuários' },

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { db } from '../lib/supabase';
+import { fetchUsersPage, PAGE_SIZE } from '../lib/users';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 
-const PAGE_SIZE = 50;
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos os status' },
   { value: 'active', label: 'Ativos' },
@@ -17,26 +16,6 @@ const STATUS_OPTIONS = [
 function formatDate(value) {
   if (!value) return '—';
   return new Date(value).toLocaleString('pt-BR');
-}
-
-// Lista SEM paginação — usada pelo picklist de destinatários do Broadcast,
-// que precisa da base inteira, não de uma página de cada vez.
-export async function fetchUsers() {
-  const { data, error } = await db.rpc('admin_list_users');
-  if (error) throw error;
-  return data || [];
-}
-
-export async function fetchUsersPage({ search = '', status = '', page = 0, pageSize = PAGE_SIZE } = {}) {
-  const { data, error } = await db.rpc('admin_list_users_page', {
-    search: search || null,
-    status_filter: status || null,
-    page_size: pageSize,
-    page_offset: page * pageSize,
-  });
-  if (error) throw error;
-  const rows = data || [];
-  return { rows, total: rows[0]?.total_count ?? 0 };
 }
 
 export default function UsersList() {

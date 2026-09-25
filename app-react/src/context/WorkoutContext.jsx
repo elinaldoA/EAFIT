@@ -1,14 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
 import { enqueue, flushQueue, queueSize } from '../lib/syncQueue';
 import { upsertWaterLog } from '../lib/waterLog';
 import { upsertWeightLog } from '../lib/weightLog';
-import { useAuth } from './AuthContext';
-import { useToast } from './ToastContext';
-
-const WorkoutContext = createContext(null);
+import { useAuth } from './useAuth';
+import { useToast } from './useToast';
+import { WorkoutContext } from './useWorkout';
 
 // Reexecuta uma escrita que falhou (ex.: sem internet no momento) quando a fila é esvaziada.
 const SYNC_EXECUTORS = {
@@ -329,8 +328,4 @@ export function WorkoutProvider({ children }) {
       {children}
     </WorkoutContext.Provider>
   );
-}
-
-export function useWorkout() {
-  return useContext(WorkoutContext);
 }

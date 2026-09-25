@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/logo-mark.png';

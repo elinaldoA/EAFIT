@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
-
-const AdminAuthContext = createContext(null);
+import { AdminAuthContext } from './useAdminAuth';
 
 // Só existe um papel aqui: super admin. O login usa o mesmo Supabase Auth do
 // app do aluno — a diferença é que, depois de autenticar, checamos
@@ -107,8 +106,4 @@ export function AdminAuthProvider({ children }) {
       {children}
     </AdminAuthContext.Provider>
   );
-}
-
-export function useAdminAuth() {
-  return useContext(AdminAuthContext);
 }

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { TODAY_NAME, TODAY_DATE, getMuscleGroupsForDay, getWeeklyGoal } from '../data/treinoData';
-import { useAuth } from '../context/AuthContext';
-import { useWorkout } from '../context/WorkoutContext';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/useAuth';
+import { useWorkout } from '../context/useWorkout';
+import { useToast } from '../context/useToast';
 import { fmtDate } from '../lib/utils';
 import { BADGES } from '../lib/achievements';
 import { useDashboardData } from '../hooks/useDashboardData';

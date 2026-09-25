@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useWorkout } from '../context/WorkoutContext';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/useAuth';
+import { useWorkout } from '../context/useWorkout';
+import { useToast } from '../context/useToast';
 import { fetchProgressionSuggestion, fetchPlateauStatus } from '../lib/records';
 import { fetchRecentDiscomfort } from '../lib/discomfort';
 import { substituteExercise } from '../lib/workoutPlans';

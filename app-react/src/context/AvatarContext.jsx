@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchAvatar } from '../lib/avatar';
-import { useAuth } from './AuthContext';
-
-const AvatarContext = createContext(null);
+import { useAuth } from './useAuth';
+import { AvatarContext } from './useAvatar';
 
 export function AvatarProvider({ children }) {
   const { user } = useAuth();
@@ -22,8 +21,4 @@ export function AvatarProvider({ children }) {
       {children}
     </AvatarContext.Provider>
   );
-}
-
-export function useAvatar() {
-  return useContext(AvatarContext);
 }
