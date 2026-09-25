@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { getExerciseMedia, MEDIA_CREDIT } from '../data/exerciseMedia';
+import { VIDEO_CREDIT } from '../data/exerciseVideos';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useCustomExerciseMedia } from '../hooks/useCustomExerciseMedia';
 
-const FRAME_MS = 900;
+// Devagar o bastante pra acompanhar cada posição (troca com fade — ver live.css).
+const FRAME_MS = 1600;
+const SPEEDS = [{ rate: 1, label: 'Normal' }, { rate: 0.5, label: 'Câmera lenta' }];
 
 function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -63,14 +66,19 @@ function FramesStage({ nome, frames }) {
   );
 }
 
-// Mídia própria (admin): GIF/imagem mostrada como veio; vídeo em loop, mudo,
-// com o toque pausando/continuando.
-function CustomStage({ nome, media }) {
+// Vídeo (padrão ou do admin) em loop, mudo, com o toque pausando/continuando e
+// opção de câmera lenta; GIF/imagem do admin mostrada como veio.
+function MediaStage({ nome, media }) {
   const videoRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [playing, setPlaying] = useState(() => !prefersReducedMotion());
+  const [rate, setRate] = useState(1);
   const isVideo = media.type === 'video';
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.playbackRate = rate;
+  }, [rate, ready]);
 
   function handleTap() {
     const v = videoRef.current;
@@ -80,6 +88,7 @@ function CustomStage({ nome, media }) {
   }
 
   return (
+    <>
     <button
       type="button" className="demo-modal__stage demo-modal__stage--custom"
       aria-label={isVideo ? (playing ? 'Pausar vídeo' : 'Continuar vídeo') : `Demonstração de ${nome}`}
@@ -101,6 +110,17 @@ function CustomStage({ nome, media }) {
       {failed && <p className="demo-modal__error">{OFFLINE_MSG}</p>}
       {isVideo && ready && !failed && <span className="demo-modal__badge">{playing ? '⏸' : '▶'}</span>}
     </button>
+    {isVideo && (
+      <div className="demo-modal__steps demo-modal__speed" role="group" aria-label="Velocidade do vídeo">
+        {SPEEDS.map(s => (
+          <button
+            key={s.rate} type="button" aria-pressed={rate === s.rate}
+            className={rate === s.rate ? 'is-on' : undefined} onClick={() => setRate(s.rate)}
+          >{s.label}</button>
+        ))}
+      </div>
+    )}
+    </>
   );
 }
 
@@ -124,10 +144,12 @@ function ExerciseDemoModal({ nome, tecnica, media, onClose }) {
           <button type="button" className="summary-modal__close" aria-label="Fechar" onClick={onClose}>✕</button>
         </div>
 
-        {media.custom ? <CustomStage nome={nome} media={media} /> : <FramesStage nome={nome} frames={media.frames} />}
+        {media.frames ? <FramesStage nome={nome} frames={media.frames} /> : <MediaStage nome={nome} media={media} />}
 
         {tecnica && <p className="demo-modal__tip">💡 {tecnica}</p>}
-        <p className="demo-modal__credit">{media.custom ? 'Demonstração da equipe EAFIT' : `Imagens: ${MEDIA_CREDIT}`}</p>
+        <p className="demo-modal__credit">
+          {media.custom ? 'Demonstração da equipe EAFIT' : media.stock ? VIDEO_CREDIT : `Imagens: ${MEDIA_CREDIT}`}
+        </p>
       </div>
     </div>,
     getModalRoot()
@@ -135,7 +157,7 @@ function ExerciseDemoModal({ nome, tecnica, media, onClose }) {
 }
 
 // Botão "Ver execução" — não renderiza nada se o exercício não tem mídia
-// própria (admin) nem demonstração padrão (data/exerciseMedia.js).
+// própria (admin), vídeo nem quadros padrão (data/exerciseMedia.js).
 export default function ExerciseDemo({ nome, tecnica, variant = 'link' }) {
   const [open, setOpen] = useState(false);
   const custom = useCustomExerciseMedia();
