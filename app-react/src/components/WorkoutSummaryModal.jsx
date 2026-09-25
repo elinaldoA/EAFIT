@@ -8,8 +8,10 @@ import { useToast } from '../context/useToast';
 import BodyAvatar from './BodyAvatar';
 import RatingModal from './RatingModal';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
+import { useBackToClose } from '../hooks/useBackToClose';
 
 export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
+  useBackToClose(onClose);
   const { day, durationMs, totalCarga, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets } = summary;
   const activeGroups = getMuscleGroupsForDay(day);
   const weekPct = weekTotal ? Math.min(100, (weekDone / weekTotal) * 100) : 0;

@@ -107,11 +107,15 @@ export const DEFAULT_WATER_GOAL = 3.5;
 
 // Meta de água em litros: por padrão estimada a partir do peso (0.035L/kg),
 // mas o usuário pode sobrescrever salvando um valor próprio no perfil.
+export function computedWaterGoalLiters(peso) {
+    const p = parseFloat(peso);
+    return Number.isFinite(p) && p > 0 ? Math.round(p * 0.035 * 10) / 10 : null;
+}
+
 export function getWaterGoalLiters(user) {
     const md = user?.user_metadata || {};
 
-    const peso = parseFloat(md.peso);
-    const computed = Number.isFinite(peso) && peso > 0 ? Math.round(peso * 0.035 * 10) / 10 : null;
+    const computed = computedWaterGoalLiters(md.peso);
 
     const raw = md.macroAgua ?? localStorage.getItem('profile_macroAgua');
     const n = parseFloat(raw);

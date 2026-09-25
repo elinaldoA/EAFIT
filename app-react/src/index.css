@@ -18,3 +18,4 @@
 @import './styles/achievements.css'; /* Conquistas (badges) */
 @import './styles/backup.css'; /* Exportar e backup */
 @import './styles/workout-summary.css'; /* Resumo do treino (modal ao finalizar) */
+@import './styles/error.css'; /* Tela de erro (ErrorBoundary) */

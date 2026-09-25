@@ -1,0 +1,23 @@
+/* ============================================================
+   TELA DE ERRO (ErrorBoundary)
+   ============================================================ */
+.error-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+}
+.error-screen--page {
+  min-height: 60vh;
+  background: transparent;
+}
+.error-screen__icon { font-size: 40px; }
+.error-screen__title { margin: 0; font-size: 20px; font-weight: 700; }
+.error-screen__text { margin: 0; max-width: 320px; color: var(--text-muted); line-height: 1.5; }
+.error-screen__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }

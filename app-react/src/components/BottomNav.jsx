@@ -33,14 +33,16 @@ const ICONS = {
 
 export default function BottomNav({ active, onChange }) {
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" aria-label="Navegação principal">
       {ITEMS.map(item => (
         <button
           key={item.key}
+          type="button"
           className={`nav-item${active === item.key ? ' active' : ''}`}
+          aria-current={active === item.key ? 'page' : undefined}
           onClick={() => onChange(item.key)}
         >
-          <span className="nav-item__icon">{ICONS[item.key]}</span>
+          <span className="nav-item__icon" aria-hidden="true">{ICONS[item.key]}</span>
           <span>{item.label}</span>
         </button>
       ))}

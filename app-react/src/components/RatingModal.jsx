@@ -1,8 +1,10 @@
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
+import { useBackToClose } from '../hooks/useBackToClose';
 
 export default function RatingModal({ value, onSelect, onClose }) {
+  useBackToClose(onClose);
   return createPortal(
     <div className="rating-modal" role="dialog" aria-modal="true">
       <div className="rating-modal__backdrop" onClick={onClose} />

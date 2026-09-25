@@ -26,10 +26,14 @@
 }
 
 .auth-logo__icon {
-  width: 130px;
-  height: 130px;
-  margin-bottom: 4px;
-  filter: drop-shadow(0 0 24px var(--primary));
+  width: 96px;
+  height: 96px;
+  margin-bottom: 8px;
+  border-radius: 26px;
+  /* Ícone de fundo contínuo (assets/app-icon.png) + cantos arredondados: o
+     logo-mark.png antigo trazia um quadrado preto em volta que aparecia com
+     o brilho. */
+  box-shadow: 0 0 0 1px var(--border), 0 12px 40px var(--primary-glow);
 }
 
 .auth-logo__name {
@@ -79,4 +83,78 @@
   font-size: 0.75rem;
   color: var(--text-muted);
   margin-top: 4px;
+}
+
+h1.auth-logo__name { margin: 0; }
+
+.auth-form__intro { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.auth-form__title { margin: 0; font-size: 1.15rem; font-weight: 700; }
+.auth-form__subtitle { margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; }
+
+/* Abas Entrar / Criar conta */
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 6px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.auth-tabs__tab {
+  padding: 10px 0;
+  border: 0;
+  border-radius: calc(var(--r-lg) - 4px);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t), color var(--t);
+}
+.auth-tabs__tab--active { background: var(--primary); color: #fff; }
+
+/* Campo com rótulo visível (antes só placeholder, que some ao digitar) */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field__label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+.field__hint { margin: 0; font-size: 0.75rem; color: var(--text-dim); }
+
+.password-input { position: relative; display: flex; align-items: center; }
+.password-input .input { padding-right: 84px; }
+.password-input__toggle {
+  position: absolute;
+  right: 6px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--r-md, 8px);
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-form__link {
+  align-self: center;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-form__link--right { align-self: flex-end; margin-top: -4px; }
+.auth-form__terms a { color: var(--primary); }
+
+/* Foco visível pra quem navega por teclado */
+.auth-tabs__tab:focus-visible,
+.auth-form__link:focus-visible,
+.password-input__toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

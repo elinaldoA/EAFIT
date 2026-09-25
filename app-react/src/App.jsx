@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { ThemeProvider } from './context/ThemeContext';
@@ -14,6 +14,10 @@ import BottomNav from './components/BottomNav';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 import { useDayRollover } from './hooks/useDayRollover';
+import { useHashTab } from './hooks/useHashTab';
+import ErrorBoundary from './components/ErrorBoundary';
+import BootSplash from './components/BootSplash';
+import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HidratacaoPage = lazy(() => import('./pages/HidratacaoPage'));
@@ -30,12 +34,15 @@ function PageFallback() {
   );
 }
 
+const TABS = ['treino', 'hidratacao', 'dash', 'perfil'];
+
 function Shell() {
-  const { user, authLoading } = useAuth();
-  const [page, setPage] = useState('treino');
+  const { user, authLoading, recoveryMode } = useAuth();
+  const [page, setPage] = useHashTab(TABS, 'treino');
   useDayRollover();
 
-  if (authLoading) return null;
+  if (authLoading) return <BootSplash />;
+  if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;
 
   const needsOnboarding = user && !user.user_metadata?.peso;
 
@@ -59,12 +66,15 @@ function Shell() {
               </header>
 
               <main className="pages">
+                {/* key={page}: trocar de aba limpa o erro da aba anterior */}
+                <ErrorBoundary variant="page" key={page}>
                 <Suspense fallback={<PageFallback />}>
                   {page === 'treino' && <TreinoPage />}
                   {page === 'hidratacao' && <HidratacaoPage active={page === 'hidratacao'} />}
                   {page === 'dash' && <DashPage active={page === 'dash'} />}
                   {page === 'perfil' && <PerfilPage active={page === 'perfil'} />}
                 </Suspense>
+                </ErrorBoundary>
               </main>
 
               <BottomNav active={page} onChange={setPage} />

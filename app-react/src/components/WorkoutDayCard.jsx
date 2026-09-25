@@ -192,13 +192,21 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
 
   return (
     <div className={`day-card${isToday ? ' day-card--today' : ''}`}>
-      <div className={`day-card__header${open ? ' open' : ''}`} onClick={() => setOpen(o => !o)}>
+      <div
+        className={`day-card__header${open ? ' open' : ''}`}
+        role="button" tabIndex={0} aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
+        onKeyDown={e => {
+          if (e.target !== e.currentTarget) return;
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(o => !o); }
+        }}
+      >
         <div className="day-card__left">
           <input
             type="checkbox" className="day-card__check"
+            aria-label={`Marcar treino de ${day.dia} como concluído`}
             checked={checked} onChange={handleCheckbox} onClick={e => e.stopPropagation()}
           />
-          <span className="day-card__indicator">{checked ? '✅' : '⬜'}</span>
           <div className="day-card__info">
             <div className="day-card__name">{day.dia}</div>
             <div className="day-card__focus">{day.foco}</div>

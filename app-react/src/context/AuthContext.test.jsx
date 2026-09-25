@@ -10,6 +10,8 @@ const { mockAuth, mockFunctions } = vi.hoisted(() => ({
     signUp: vi.fn(),
     signOut: vi.fn(),
     updateUser: vi.fn(),
+    resetPasswordForEmail: vi.fn(),
+    resend: vi.fn(),
   },
   mockFunctions: { invoke: vi.fn() },
 }));
@@ -99,8 +101,66 @@ describe('AuthProvider', () => {
       response = await result.current.signup('a@b.com', 'segredo123');
     });
 
-    expect(response).toEqual({ success: 'Conta criada! Verifique seu e-mail para ativar.' });
+    expect(response).toEqual({ success: 'Conta criada! Enviamos um link de confirmação para o seu e-mail.' });
     expect(result.current.user).toBeNull();
+  });
+
+  it('signup com e-mail que já tem conta (identities vazio) avisa em vez de fingir sucesso', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signUp.mockResolvedValue({ data: { session: null, user: { id: 'u2', identities: [] } }, error: null });
+    let response;
+    await act(async () => {
+      response = await result.current.signup('a@b.com', 'segredo123');
+    });
+
+    expect(response.error).toMatch(/Já existe uma conta/);
+  });
+
+  it('login com e-mail não confirmado sinaliza needsConfirmation', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signInWithPassword.mockResolvedValue({ data: null, error: { code: 'email_not_confirmed', message: 'Email not confirmed' } });
+    let response;
+    await act(async () => {
+      response = await result.current.login('a@b.com', 'segredo123');
+    });
+
+    expect(response.needsConfirmation).toBe(true);
+    expect(response.error).toMatch(/Confirme seu e-mail/);
+  });
+
+  it('requestPasswordReset manda o link de volta pro app e não revela se a conta existe', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.resetPasswordForEmail.mockResolvedValue({ error: null });
+    let response;
+    await act(async () => {
+      response = await result.current.requestPasswordReset('a@b.com');
+    });
+
+    expect(mockAuth.resetPasswordForEmail).toHaveBeenCalledWith('a@b.com', { redirectTo: window.location.origin + window.location.pathname });
+    expect(response.success).toMatch(/Se houver uma conta/);
+  });
+
+  it('evento PASSWORD_RECOVERY liga recoveryMode e finishRecovery desliga', async () => {
+    let authCallback;
+    mockAuth.onAuthStateChange.mockImplementation(cb => {
+      authCallback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    act(() => authCallback('PASSWORD_RECOVERY', { user: { id: 'u1' } }));
+    expect(result.current.recoveryMode).toBe(true);
+    expect(result.current.user).toEqual({ id: 'u1' });
+
+    act(() => result.current.finishRecovery());
+    expect(result.current.recoveryMode).toBe(false);
   });
 
   it('logout limpa o usuário', async () => {
