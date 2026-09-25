@@ -8,13 +8,27 @@ import { useEffect, useRef } from 'react';
 // Quando o modal é fechado pela própria UI (✕, backdrop, timer), a entrada
 // que ele empilhou ainda está no histórico: o cleanup desfaz com
 // history.back() e marca o popstate resultante pra ser ignorado.
+//
+// Esse history.back() é assíncrono. Se outro modal montar antes dele assentar
+// (ex.: fechar o modo treino e abrir o resumo na sequência, ou o remount do
+// StrictMode no dev) e já empilhar a entrada dele, o "voltar" pendente tira a
+// entrada NOVA do histórico — e o próximo fechamento volta uma página a mais,
+// saindo do app. Por isso, com um "voltar" em andamento, o pushState do modal
+// novo espera o popstate dele chegar (pendingPush).
 const stack = [];
+const pendingPush = [];
 let ignorePops = 0;
 let listening = false;
+
+function pushEntry(entry) {
+  entry.pushed = true;
+  window.history.pushState({ eafitModal: true }, '');
+}
 
 function handlePopState() {
   if (ignorePops > 0) {
     ignorePops -= 1;
+    if (ignorePops === 0) pendingPush.splice(0).forEach(pushEntry);
     return;
   }
   const top = stack.pop();
@@ -30,14 +44,20 @@ export function useBackToClose(onClose) {
       window.addEventListener('popstate', handlePopState);
       listening = true;
     }
-    const entry = { onCloseRef };
+    const entry = { onCloseRef, pushed: false };
     stack.push(entry);
-    window.history.pushState({ eafitModal: true }, '');
+    if (ignorePops > 0) pendingPush.push(entry);
+    else pushEntry(entry);
 
     return () => {
       const idx = stack.indexOf(entry);
       if (idx === -1) return; // já saiu da pilha: foi fechado pelo "voltar"
       stack.splice(idx, 1);
+      const pending = pendingPush.indexOf(entry);
+      if (pending !== -1) {
+        pendingPush.splice(pending, 1); // nunca chegou a empilhar: nada a desfazer
+        return;
+      }
       ignorePops += 1;
       window.history.back();
     };
