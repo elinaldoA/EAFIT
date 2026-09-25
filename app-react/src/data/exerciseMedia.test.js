@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { EXERCISE_MEDIA, getExerciseMedia, normalizeExerciseName } from './exerciseMedia';
+import { EXERCISE_VIDEOS } from './exerciseVideos';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../../public/', import.meta.url));
 
@@ -14,13 +15,19 @@ describe('normalizeExerciseName', () => {
 });
 
 describe('getExerciseMedia', () => {
-  it('monta os 2 quadros a partir do base do app', () => {
-    expect(getExerciseMedia('Supino Reto com Barra', '/EAFIT/')).toEqual({
-      id: 'Barbell_Bench_Press_-_Medium_Grip',
+  it('sem vídeo, monta os 2 quadros a partir do base do app', () => {
+    expect(getExerciseMedia('Remada Curvada com Barra', '/EAFIT/')).toEqual({
+      id: 'Bent_Over_Barbell_Row',
       frames: [
-        '/EAFIT/exercicios/Barbell_Bench_Press_-_Medium_Grip/0.webp',
-        '/EAFIT/exercicios/Barbell_Bench_Press_-_Medium_Grip/1.webp',
+        '/EAFIT/exercicios/Bent_Over_Barbell_Row/0.webp',
+        '/EAFIT/exercicios/Bent_Over_Barbell_Row/1.webp',
       ],
+    });
+  });
+
+  it('vídeo curto tem prioridade sobre os quadros', () => {
+    expect(getExerciseMedia('🔷 Supino Reto com Barra', '/EAFIT/')).toEqual({
+      stock: true, type: 'video', url: '/EAFIT/videos/supino-reto-barra.mp4',
     });
   });
 
@@ -40,12 +47,18 @@ describe('getExerciseMedia', () => {
     expect(getExerciseMedia('Supino Reto com Barra', '/', custom)).toEqual({ custom: true, type: 'video', url: 'https://x/supino.mp4' });
     // e também vale pra exercício sem demonstração padrão
     expect(getExerciseMedia('🔷 Burpee', '/', { Burpee: { url: 'u', type: 'imagem' } })?.custom).toBe(true);
-    expect(getExerciseMedia('Supino Reto com Halteres', '/', custom)?.id).toBe('Dumbbell_Bench_Press');
+    expect(getExerciseMedia('Remada Curvada com Barra', '/', custom)?.id).toBe('Bent_Over_Barbell_Row');
   });
 
   it('todo id mapeado tem os 2 quadros em public/exercicios', () => {
     const missing = [...new Set(Object.values(EXERCISE_MEDIA))]
       .filter(id => ![0, 1].every(n => existsSync(`${PUBLIC_DIR}exercicios/${id}/${n}.webp`)));
+    expect(missing).toEqual([]);
+  });
+
+  it('todo vídeo mapeado existe em public/videos', () => {
+    const missing = [...new Set(Object.values(EXERCISE_VIDEOS))]
+      .filter(slug => !existsSync(`${PUBLIC_DIR}videos/${slug}.mp4`));
     expect(missing).toEqual([]);
   });
 });
