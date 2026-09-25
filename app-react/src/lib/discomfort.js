@@ -1,6 +1,6 @@
 import { db } from './supabase';
 import { parseLocalDate, toDateStr } from './utils';
-import { TODAY_DATE } from '../data/treinoData';
+import { todayDate } from '../data/treinoData';
 
 const RECENT_DAYS = 14;
 
@@ -19,7 +19,7 @@ export async function logDiscomfort(userId, exerciseName, logDate, severity, not
 // usado pra avisar o usuário quando o mesmo exercício reincide. Retorna null se
 // não houver nenhum relato recente.
 export async function fetchRecentDiscomfort(userId, exerciseName) {
-  const since = parseLocalDate(TODAY_DATE);
+  const since = parseLocalDate(todayDate());
   since.setDate(since.getDate() - RECENT_DAYS);
 
   const { data, error } = await db

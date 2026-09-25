@@ -5,10 +5,7 @@ import { useToast } from '../context/useToast';
 import { getModalRoot } from '../lib/modalRoot';
 import { fetchPhotos, addPhoto, deletePhoto } from '../lib/progressPhotos';
 import { fmtDate } from '../lib/utils';
-
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
+import { todayDate } from '../data/treinoData';
 
 function PhotoViewer({ photos, index, onClose, onNavigate, onDelete }) {
   useEffect(() => {
@@ -47,7 +44,7 @@ export default function ProgressPhotos() {
   const [loading, setLoading] = useState(true);
   const [viewerIndex, setViewerIndex] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [date, setDate] = useState(todayStr());
+  const [date, setDate] = useState(todayDate());
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
@@ -124,7 +121,7 @@ export default function ProgressPhotos() {
 
       {showForm && (
         <div className="photo-add-form">
-          <input className="input input--sm" type="date" value={date} max={todayStr()} onChange={e => setDate(e.target.value)} />
+          <input className="input input--sm" type="date" value={date} max={todayDate()} onChange={e => setDate(e.target.value)} />
           <input className="input input--sm" placeholder="Nota (opcional)" value={note} onChange={e => setNote(e.target.value)} />
           <button
             type="button" className="btn btn--primary btn--sm"

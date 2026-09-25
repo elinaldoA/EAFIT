@@ -1,7 +1,7 @@
 import { db } from './supabase';
 import { fetchExerciseSetsWithDates } from './records';
 import { fetchWeightLogs } from './weightLog';
-import { TODAY_DATE } from '../data/treinoData';
+import { todayDate } from '../data/treinoData';
 import { parseLocalDate, toDateStr } from './utils';
 
 const DISCOMFORT_LOOKBACK_DAYS = 14;
@@ -12,7 +12,7 @@ const MIN_ADHERENCE = 0.5;
 const WEIGHT_GOAL_DIRECTION = { massa: 'up', emagrecer: 'down' };
 
 function daysAgo(days) {
-  const d = parseLocalDate(TODAY_DATE);
+  const d = parseLocalDate(todayDate());
   d.setDate(d.getDate() - days);
   return toDateStr(d);
 }
@@ -87,7 +87,7 @@ async function adherenceRatio(userId, sinceDate, weeklyGoal) {
     .gte('workout_date', sinceDate);
   if (error) throw error;
 
-  const weeksElapsed = Math.max(1, Math.round((parseLocalDate(TODAY_DATE) - parseLocalDate(sinceDate)) / (7 * 86400000)));
+  const weeksElapsed = Math.max(1, Math.round((parseLocalDate(todayDate()) - parseLocalDate(sinceDate)) / (7 * 86400000)));
   const expected = (weeklyGoal > 0 ? weeklyGoal : 5) * weeksElapsed;
   return expected > 0 ? (data || []).length / expected : 1;
 }

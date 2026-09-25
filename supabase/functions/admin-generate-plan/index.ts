@@ -2,30 +2,29 @@
 // admin (ex.: suporte). Mesmo padrão de auth de admin-users/index.ts.
 //
 // A lógica de ajuste por IMC/nível (computeImcBracket, applyImcAdjustment,
-// applyLevelAdjustment) mora em ../_shared/workoutAdjustments.ts — ver o
-// comentário lá sobre por que é um PORT duplicado de
-// app-react/src/data/workoutAdjustments.js.
+// applyLevelAdjustment) mora em ../_shared/workoutAdjustments.ts e o sorteio
+// de exercícios da biblioteca em ../_shared/exerciseLibrary.ts — ver os
+// comentários lá sobre por que são PORTs duplicados de
+// app-react/src/data/workoutAdjustments.js e exerciseLibrary.js. A sequência
+// template → biblioteca → nível → IMC é a mesma de generatePlan em
+// app-react/src/data/workoutTemplates.js.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { computeImcBracket, applyImcAdjustment, applyLevelAdjustment, type Day } from '../_shared/workoutAdjustments.ts';
+import { withLibraryExercises, type LibraryClient } from '../_shared/exerciseLibrary.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// ---------- escrita no banco (port de app-react/src/lib/workoutPlans.js) ----------
+const CYCLE_WEEKS = 4;
 
-function exercisesToRows(planDayId: string, day: Day) {
-  return [
-    ...day.exercicios.map((ex, idx) => ({
-      plan_day_id: planDayId, nome: ex.nome, series: ex.series, reps: ex.reps,
-      descanso: ex.descanso, tecnica: ex.tecnica, is_post_workout: false, order_index: idx,
-    })),
-    ...day.pos.map((p, idx) => ({
-      plan_day_id: planDayId, nome: p.nome, series: p.series, reps: p.reps,
-      descanso: p.descanso, tecnica: p.tecnica, is_post_workout: true, order_index: idx,
-    })),
-  ];
+// Data de hoje no fuso de Brasília — mesmo critério de todayDate() no app;
+// toISOString() (UTC) viraria o dia seguinte a partir das 21:00.
+function todayInSaoPaulo(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
 }
 
 Deno.serve(async (req) => {
@@ -79,39 +78,23 @@ Deno.serve(async (req) => {
       .from('workout_templates').select('days').eq('meta', meta).single();
     if (tplErr || !tpl?.days) throw tplErr || new Error('Template não encontrado.');
 
-    const leveled = applyLevelAdjustment(tpl.days as Day[], nivel);
+    const withLibrary = await withLibraryExercises(admin as unknown as LibraryClient, tpl.days as Day[], nivel);
+    const leveled = applyLevelAdjustment(withLibrary, nivel);
     const bracket = computeImcBracket(peso, altura);
     const generatedDays = applyImcAdjustment(leveled, bracket);
 
-    const { data: plan, error: planErr } = await admin
-      .from('workout_plans')
-      .insert({ user_id: targetUserId, name: `Plano gerado pelo admin (${new Date().toLocaleDateString('pt-BR')})`, is_active: false })
-      .select().single();
+    // Cria, preenche e ativa o plano numa transação só (RPC de
+    // supabase/migrations/20260925020000_atomic_plan_rpcs.sql) — uma falha no
+    // meio não deixa plano pela metade nem o usuário sem plano ativo.
+    const { data: plan, error: planErr } = await admin.rpc('create_workout_plan', {
+      p_user_id: targetUserId,
+      p_name: `Plano gerado pelo admin (${new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })})`,
+      p_days: generatedDays,
+      p_activate: true,
+      p_start_date: todayInSaoPaulo(),
+      p_duration_weeks: CYCLE_WEEKS,
+    });
     if (planErr) throw planErr;
-
-    for (let i = 0; i < generatedDays.length; i++) {
-      const day = generatedDays[i];
-      const { data: planDay, error: dayErr } = await admin
-        .from('plan_days')
-        .insert({ plan_id: plan.id, dia: day.dia, foco: day.foco, order_index: i })
-        .select().single();
-      if (dayErr) throw dayErr;
-
-      const rows = exercisesToRows(planDay.id, day);
-      if (rows.length) {
-        const { error: exErr } = await admin.from('plan_exercises').insert(rows);
-        if (exErr) throw exErr;
-      }
-    }
-
-    const { error: offErr } = await admin.from('workout_plans').update({ is_active: false }).eq('user_id', targetUserId);
-    if (offErr) throw offErr;
-    const startDate = new Date().toISOString().slice(0, 10);
-    const endDate = new Date(Date.now() + 28 * 86400000).toISOString().slice(0, 10);
-    const { error: onErr } = await admin.from('workout_plans')
-      .update({ is_active: true, start_date: startDate, end_date: endDate, duration_weeks: 4 })
-      .eq('id', plan.id);
-    if (onErr) throw onErr;
 
     await admin.from('admin_audit_log').insert({ admin_id: callerId, target_user_id: targetUserId, action: 'generateWorkout', details: { meta, nivel } });
     return json({ ok: true, planId: plan.id });

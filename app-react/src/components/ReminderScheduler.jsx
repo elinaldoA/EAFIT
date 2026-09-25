@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { TODAY_DATE, WATER_STORAGE_KEY, getWaterGoalLiters } from '../data/treinoData';
+import { todayDate, waterStorageKey, getWaterGoalLiters } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { sendNotification } from '../lib/notifications';
 import { isPushSupported } from '../lib/pushSubscriptions';
@@ -34,11 +34,11 @@ export default function ReminderScheduler() {
       if (WATER_REMINDER_TIMES.includes(current) && !waterNotifiedRef.current.has(current)) {
         waterNotifiedRef.current.add(current);
         const goalMl = getWaterGoalLiters(user) * 1000;
-        const currentMl = parseInt(localStorage.getItem(WATER_STORAGE_KEY), 10) || 0;
+        const currentMl = parseInt(localStorage.getItem(waterStorageKey()), 10) || 0;
         if (currentMl < goalMl) {
           sendNotification('💧 Hora de beber água', {
             body: `Você bebeu ${(currentMl / 1000).toFixed(1)}L de ${(goalMl / 1000).toFixed(1)}L hoje.`,
-            tag: `water-${TODAY_DATE}-${current}`,
+            tag: `water-${todayDate()}-${current}`,
           }).catch(err => console.error('sendNotification:', err));
         }
       }

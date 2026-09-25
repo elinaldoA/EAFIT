@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TODAY_DATE, WATER_STORAGE_KEY, getWaterGoalLiters } from '../data/treinoData';
+import { todayDate, waterStorageKey, getWaterGoalLiters } from '../data/treinoData';
 import { useToast } from '../context/useToast';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
@@ -10,7 +10,7 @@ import LineChart from '../components/LineChart';
 import Skeleton from '../components/Skeleton';
 
 function getWaterMl() {
-  return parseInt(localStorage.getItem(WATER_STORAGE_KEY), 10) || 0;
+  return parseInt(localStorage.getItem(waterStorageKey()), 10) || 0;
 }
 
 function fmtLiters(ml) {
@@ -37,18 +37,18 @@ export default function HidratacaoPage({ active }) {
     async function load() {
       setLoading(true);
       try {
-        // Ancora em TODAY_DATE (fuso de Brasília), não em `new Date()` local +
+        // Ancora em todayDate() (fuso de Brasília), não em `new Date()` local +
         // toISOString() (UTC) — evita que a janela de 60 dias fique um dia
         // deslocada dependendo do fuso/horário do navegador.
-        const since = parseLocalDate(TODAY_DATE);
+        const since = parseLocalDate(todayDate());
         since.setDate(since.getDate() - 59);
         const sinceStr = toDateStr(since);
 
         const [todayMl, history] = await Promise.all([
-          fetchWaterLog(user.id, TODAY_DATE),
+          fetchWaterLog(user.id, todayDate()),
           fetchWaterLogsRange(user.id, sinceStr),
         ]);
-        if (todayMl !== null) localStorage.setItem(WATER_STORAGE_KEY, todayMl);
+        if (todayMl !== null) localStorage.setItem(waterStorageKey(), todayMl);
         setWaterLogs(history);
         bump();
       } catch (err) {
@@ -69,15 +69,15 @@ export default function HidratacaoPage({ active }) {
 
   function handleAddWater(deltaMl) {
     const next = Math.max(0, water + deltaMl);
-    localStorage.setItem(WATER_STORAGE_KEY, next);
+    localStorage.setItem(waterStorageKey(), next);
     bump();
     if (deltaMl > 0 && next >= goalMl && water < goalMl) {
       toast('🎉 Meta de hidratação do dia atingida!');
     }
     if (user) {
-      upsertWaterLog(user.id, TODAY_DATE, next).catch(err => {
+      upsertWaterLog(user.id, todayDate(), next).catch(err => {
         console.error('upsertWaterLog:', err);
-        enqueue('water_log', { userId: user.id, date: TODAY_DATE, amountMl: next });
+        enqueue('water_log', { userId: user.id, date: todayDate(), amountMl: next });
         markPending();
       });
     }
@@ -85,12 +85,12 @@ export default function HidratacaoPage({ active }) {
 
   function handleResetWater() {
     if (!window.confirm('Zerar a água registrada hoje?')) return;
-    localStorage.removeItem(WATER_STORAGE_KEY);
+    localStorage.removeItem(waterStorageKey());
     bump();
     if (user) {
-      upsertWaterLog(user.id, TODAY_DATE, 0).catch(err => {
+      upsertWaterLog(user.id, todayDate(), 0).catch(err => {
         console.error('resetWaterLog:', err);
-        enqueue('water_log', { userId: user.id, date: TODAY_DATE, amountMl: 0 });
+        enqueue('water_log', { userId: user.id, date: todayDate(), amountMl: 0 });
         markPending();
       });
     }

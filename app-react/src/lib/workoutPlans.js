@@ -1,5 +1,5 @@
 import { db } from './supabase';
-import { treinoData, TODAY_DATE } from '../data/treinoData';
+import { treinoData, todayDate } from '../data/treinoData';
 import { parseLocalDate, toDateStr } from './utils';
 import { evaluateCycleEvolution } from './planEvolution';
 import { generatePlan, NIVEIS } from '../data/workoutTemplates';
@@ -31,50 +31,33 @@ function addWeeks(dateStr, weeks) {
   return toDateStr(d);
 }
 
-function exercisesToRows(planDayId, day) {
-  return [
-    ...day.exercicios.map((ex, idx) => ({
-      plan_day_id: planDayId, nome: ex.nome, series: ex.series, reps: ex.reps,
-      descanso: ex.descanso, tecnica: ex.tecnica, is_post_workout: false, order_index: idx,
-    })),
-    ...day.pos.map((p, idx) => ({
-      plan_day_id: planDayId, nome: p.nome, series: p.series, reps: p.reps,
-      descanso: p.descanso, tecnica: p.tecnica, is_post_workout: true, order_index: idx,
-    })),
-  ];
+function toRpcDays(days) {
+  return days.map(d => ({
+    dia: d.dia,
+    foco: d.foco ?? '',
+    exercicios: (d.exercicios || []).map(({ nome, series, reps, descanso, tecnica }) => ({ nome, series, reps, descanso, tecnica })),
+    pos: (d.pos || []).map(({ nome, series, reps, descanso, tecnica }) => ({ nome, series, reps, descanso, tecnica })),
+  }));
 }
 
-async function insertDaysAndExercises(planId, days) {
-  for (let i = 0; i < days.length; i++) {
-    const day = days[i];
-    const { data: planDay, error: dayErr } = await db
-      .from('plan_days')
-      .insert({ plan_id: planId, dia: day.dia, foco: day.foco, order_index: i })
-      .select()
-      .single();
-    if (dayErr) throw dayErr;
-
-    const rows = exercisesToRows(planDay.id, day);
-    if (rows.length) {
-      const { error: exErr } = await db.from('plan_exercises').insert(rows);
-      if (exErr) throw exErr;
-    }
-  }
+// Cria plano + dias + exercícios (e opcionalmente ativa) numa transação só,
+// via RPC create_workout_plan (supabase/migrations/20260925020000_atomic_plan_rpcs.sql)
+// — uma falha no meio não deixa mais plano pela metade no banco.
+async function createPlanWithDays(userId, name, days, { activate = false, durationWeeks = null } = {}) {
+  const { data, error } = await db.rpc('create_workout_plan', {
+    p_user_id: userId,
+    p_name: name,
+    p_days: toRpcDays(days),
+    p_activate: activate,
+    p_start_date: activate && durationWeeks ? todayDate() : null,
+    p_duration_weeks: activate ? durationWeeks : null,
+  });
+  if (error) throw error;
+  return data;
 }
 
 async function seedDefaultPlan(userId, days = treinoData) {
-  const { data: plan, error } = await db
-    .from('workout_plans')
-    .insert({
-      user_id: userId, name: 'Meu plano', is_active: true,
-      start_date: TODAY_DATE, end_date: addWeeks(TODAY_DATE, DEFAULT_CYCLE_WEEKS), duration_weeks: DEFAULT_CYCLE_WEEKS,
-    })
-    .select()
-    .single();
-  if (error) throw error;
-
-  await insertDaysAndExercises(plan.id, days);
-  return plan;
+  return createPlanWithDays(userId, 'Meu plano', days, { activate: true, durationWeeks: DEFAULT_CYCLE_WEEKS });
 }
 
 // Usado pela tela de onboarding para semear o plano já personalizado
@@ -85,21 +68,10 @@ export async function seedGeneratedPlan(userId, generatedDays) {
 }
 
 // Usado pela Perfil para regenerar o treino a partir dos dados atuais do
-// usuário. Insere como inativo e só então chama setActivePlan — assim nunca
-// existe mais de um plano ativo ao mesmo tempo (diferente de seedDefaultPlan,
-// que pode inserir direto como ativo porque só roda quando não há nenhum
-// plano ainda).
+// usuário. A RPC cria inativo e ativa na mesma transação (desativando os
+// outros) — nunca existe mais de um plano ativo ao mesmo tempo.
 export async function createGeneratedPlan(userId, name, generatedDays, durationWeeks = DEFAULT_CYCLE_WEEKS) {
-  const { data: plan, error } = await db
-    .from('workout_plans')
-    .insert({ user_id: userId, name, is_active: false })
-    .select()
-    .single();
-  if (error) throw error;
-
-  await insertDaysAndExercises(plan.id, generatedDays);
-  await setActivePlan(userId, plan.id, durationWeeks);
-  return plan;
+  return createPlanWithDays(userId, name, generatedDays, { activate: true, durationWeeks });
 }
 
 const inFlightSeed = new Map();
@@ -165,7 +137,7 @@ export async function autoGenerateNextCycle(userId, plan, evaluation, meta = {})
   const generatedDays = await generatePlan({ peso: meta.peso, altura: meta.altura, meta: meta.meta, nivel: nivelAjustado });
 
   const label = VERDICT_LABEL[evaluation.verdict] || 'Continuidade';
-  const name = `${label} automática (${TODAY_DATE})`;
+  const name = `${label} automática (${todayDate()})`;
 
   const baseWeeks = plan.duration_weeks ?? DEFAULT_CYCLE_WEEKS;
   const durationWeeks = Math.max(1, baseWeeks + DURATION_ADJUST_WEEKS[evaluation.verdict]);
@@ -239,7 +211,7 @@ export async function fetchActivePlan(userId, meta = {}) {
   // padrão agora, pra data de expiração aparecer e a evolução automática
   // passar a valer também pra planos já em uso.
   if (!plan.end_date) {
-    const startDate = plan.start_date || TODAY_DATE;
+    const startDate = plan.start_date || todayDate();
     const endDate = addWeeks(startDate, DEFAULT_CYCLE_WEEKS);
     const { error: backfillErr } = await db
       .from('workout_plans')
@@ -251,7 +223,7 @@ export async function fetchActivePlan(userId, meta = {}) {
 
   const days = await fetchPlanDays(plan.id);
 
-  if (plan.end_date && plan.end_date <= TODAY_DATE) {
+  if (plan.end_date && plan.end_date <= todayDate()) {
     const { switched, evaluation, successorName } = await applyPlanExpiry(userId, plan, days, meta);
     if (switched) {
       const next = await fetchActivePlan(userId, meta);
@@ -274,37 +246,26 @@ export async function listPlans(userId) {
 }
 
 export async function createPlan(userId, name, copyFromPlanId = null) {
-  const { data: plan, error } = await db
-    .from('workout_plans')
-    .insert({ user_id: userId, name, is_active: false })
-    .select()
-    .single();
-  if (error) throw error;
-
-  if (copyFromPlanId) {
-    const days = await fetchPlanDays(copyFromPlanId);
-    await insertDaysAndExercises(plan.id, days);
-  } else {
-    const rows = treinoData.map((day, i) => ({ plan_id: plan.id, dia: day.dia, foco: '', order_index: i }));
-    const { error: daysErr } = await db.from('plan_days').insert(rows);
-    if (daysErr) throw daysErr;
-  }
-
-  return plan;
+  const days = copyFromPlanId
+    ? await fetchPlanDays(copyFromPlanId)
+    : treinoData.map(day => ({ dia: day.dia, foco: '', exercicios: [], pos: [] }));
+  return createPlanWithDays(userId, name, days);
 }
 
 // durationWeeks define o prazo do ciclo (start_date = hoje, end_date = hoje +
 // N semanas); null/0 ativa o plano sem prazo (comportamento anterior, ciclo
 // indefinido) e limpa qualquer prazo que o plano já tivesse.
+// Desativar os outros + ativar este rodam na mesma transação (RPC
+// activate_workout_plan) — antes, uma falha entre os dois updates deixava o
+// usuário sem nenhum plano ativo. userId fica na assinatura por compatibilidade
+// com os chamadores; a RPC deriva o dono do próprio plano.
 export async function setActivePlan(userId, planId, durationWeeks = null) {
-  const { error: offErr } = await db.from('workout_plans').update({ is_active: false }).eq('user_id', userId);
-  if (offErr) throw offErr;
-
-  const patch = durationWeeks
-    ? { is_active: true, start_date: TODAY_DATE, end_date: addWeeks(TODAY_DATE, durationWeeks), duration_weeks: durationWeeks }
-    : { is_active: true, start_date: null, end_date: null, duration_weeks: null };
-  const { error: onErr } = await db.from('workout_plans').update(patch).eq('id', planId);
-  if (onErr) throw onErr;
+  const { error } = await db.rpc('activate_workout_plan', {
+    p_plan_id: planId,
+    p_start_date: durationWeeks ? todayDate() : null,
+    p_duration_weeks: durationWeeks || null,
+  });
+  if (error) throw error;
 }
 
 // next_plan_id: plano ativado automaticamente quando o ciclo termina bem

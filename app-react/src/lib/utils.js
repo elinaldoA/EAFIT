@@ -1,4 +1,4 @@
-import { TODAY_DATE, DAY_NAMES } from '../data/treinoData';
+import { todayDate, DAY_NAMES } from '../data/treinoData';
 
 // Parses a "YYYY-MM-DD" string as a local date at noon, avoiding the UTC
 // midnight parsing of `new Date(str)` shifting the day in negative-offset timezones.
@@ -22,14 +22,14 @@ export function fmtDate(dateStr) {
 // Dias restantes até endDate (negativo = já vencido). Compara datas puras
 // (meio-dia local), não timestamps, pra não variar com hora do dia.
 export function daysUntil(endDate) {
-  const diffMs = parseLocalDate(endDate) - parseLocalDate(TODAY_DATE);
+  const diffMs = parseLocalDate(endDate) - parseLocalDate(todayDate());
   return Math.round(diffMs / 86400000);
 }
 
 // Returns the "YYYY-MM-DD" date of `dayName` within the calendar week (Sun-Sat) containing today.
 export function getDateForWeekday(dayName) {
   const idx = DAY_NAMES.indexOf(dayName);
-  const today = parseLocalDate(TODAY_DATE);
+  const today = parseLocalDate(todayDate());
   const d = new Date(today);
   d.setDate(today.getDate() + (idx - today.getDay()));
   return toDateStr(d);
@@ -85,7 +85,7 @@ export function calcStreak(dates) {
   if (!dates.length) return 0;
   const unique = [...new Set(dates)].sort().reverse();
   let streak = 0;
-  let prev = parseLocalDate(TODAY_DATE);
+  let prev = parseLocalDate(todayDate());
   for (const d of unique) {
     const curr = parseLocalDate(d);
     const diff = Math.round((prev - curr) / 86400000);

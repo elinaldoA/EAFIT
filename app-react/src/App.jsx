@@ -13,6 +13,7 @@ import TopbarProfile from './components/TopbarProfile';
 import BottomNav from './components/BottomNav';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
+import { useDayRollover } from './hooks/useDayRollover';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HidratacaoPage = lazy(() => import('./pages/HidratacaoPage'));
@@ -32,6 +33,7 @@ function PageFallback() {
 function Shell() {
   const { user, authLoading } = useAuth();
   const [page, setPage] = useState('treino');
+  useDayRollover();
 
   if (authLoading) return null;
 

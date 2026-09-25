@@ -3,14 +3,25 @@ export const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'S
 // devolveria a data em UTC, que já vira o dia seguinte às 21:00 no horário local
 // (UTC−3) — fazendo o app carimbar os dados no dia de amanhã 3h antes da meia-noite.
 // O servidor (supabase/functions/send-reminders) usa exatamente este mesmo fuso.
-export const TODAY_DATE = new Intl.DateTimeFormat('en-CA', {
+//
+// São funções (não constantes de módulo) de propósito: o PWA costuma ficar
+// aberto de um dia pro outro, e uma constante calculada no carregamento
+// continuaria carimbando treino/água/peso com a data de ontem.
+const SAO_PAULO_DATE = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Sao_Paulo',
   year: 'numeric', month: '2-digit', day: '2-digit',
-}).format(new Date());
-// Nome do dia derivado da MESMA data acima, para não divergir do TODAY_DATE
+});
+export function todayDate() {
+  return SAO_PAULO_DATE.format(new Date());
+}
+// Nome do dia derivado da MESMA data acima, para não divergir de todayDate()
 // no intervalo 21:00–00:00 (parse como meio-dia local evita salto de fuso).
-export const TODAY_NAME = DAY_NAMES[new Date(TODAY_DATE + 'T12:00:00').getDay()];
-export const WATER_STORAGE_KEY = `agua_${TODAY_DATE}`;
+export function todayName() {
+  return DAY_NAMES[new Date(todayDate() + 'T12:00:00').getDay()];
+}
+export function waterStorageKey() {
+  return `agua_${todayDate()}`;
+}
 
 export const treinoData = [
     { dia:'Segunda', foco:'Peito / Ombro / Tríceps', exercicios:[

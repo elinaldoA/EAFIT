@@ -5,7 +5,7 @@ import { useAvatar } from '../context/useAvatar';
 import { useWorkout } from '../context/useWorkout';
 import { enqueue } from '../lib/syncQueue';
 import { fmtDate } from '../lib/utils';
-import { TODAY_DATE, DEFAULT_WEEKLY_GOAL } from '../data/treinoData';
+import { todayDate, DEFAULT_WEEKLY_GOAL } from '../data/treinoData';
 import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
@@ -102,11 +102,11 @@ export default function PerfilPage({ active }) {
 
     if (user && peso) {
       try {
-        await upsertWeightLog(user.id, TODAY_DATE, parseFloat(peso));
+        await upsertWeightLog(user.id, todayDate(), parseFloat(peso));
         setWeightLogs(await fetchWeightLogs(user.id));
       } catch (err) {
         console.error('upsertWeightLog:', err);
-        enqueue('weight_log', { userId: user.id, date: TODAY_DATE, peso: parseFloat(peso) });
+        enqueue('weight_log', { userId: user.id, date: todayDate(), peso: parseFloat(peso) });
         markPending();
       }
     }
