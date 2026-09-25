@@ -2,7 +2,8 @@
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Sem maximum-scale/user-scalable=no: bloquear o zoom reprova acessibilidade (WCAG 1.4.4). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!--
       CSP via meta tag porque o deploy é estático (GitHub Pages, sem headers
       HTTP customizados). `frame-ancestors`/`report-uri`/`sandbox` são
@@ -16,14 +17,54 @@
     <title>EAFIT — Treino</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
     <link rel="alternate icon" href="favicon.ico?v=2" />
-    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <meta name="theme-color" content="#0e0e12" />
+    <meta name="color-scheme" content="dark light" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="EAFIT" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="description" content="Plano de treino personalizado com sync em nuvem" />
+    <meta name="description" content="Plano de treino personalizado, registro de cargas e recordes, hidratação e evolução. Funciona offline e sincroniza entre dispositivos." />
+
+    <!-- Prévia de link (WhatsApp, redes sociais). URLs absolutas: crawlers não resolvem caminho relativo. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="EAFIT" />
+    <meta property="og:title" content="EAFIT — Seu treino, sempre com você" />
+    <meta property="og:description" content="Plano de treino personalizado, registro de cargas e recordes, hidratação e evolução." />
+    <meta property="og:url" content="https://elinaldoa.github.io/EAFIT/" />
+    <meta property="og:image" content="https://elinaldoa.github.io/EAFIT/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Logo do EAFIT com o slogan Seu treino, sempre com você" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!--
+      Splash estática: aparece enquanto o JS baixa/inicializa (antes era tela
+      em branco) e é substituída quando o React renderiza em #root. <style>
+      inline é permitido pela CSP (style-src 'unsafe-inline'); script inline
+      não, por isso o tema aqui segue só prefers-color-scheme.
+    -->
+    <style>
+      .boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #0e0e12; color: #e4e4e7; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      .boot img { width: 88px; height: 88px; border-radius: 22px; }
+      .boot__name { font-size: 22px; font-weight: 800; letter-spacing: .12em; }
+      .boot__bar { width: 120px; height: 3px; border-radius: 3px; background: rgba(249,115,22,.18); overflow: hidden; }
+      .boot__bar::after { content: ''; display: block; width: 40%; height: 100%; background: #f97316; border-radius: 3px; animation: boot-slide 1.1s ease-in-out infinite; }
+      @keyframes boot-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+      @media (prefers-color-scheme: light) { .boot { background: #f4f4f5; color: #18181b; } }
+      @media (prefers-reduced-motion: reduce) { .boot__bar::after { animation: none; width: 100%; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <noscript>O EAFIT precisa de JavaScript ativado para funcionar.</noscript>
+    <div id="root">
+      <div class="boot" role="status" aria-label="Carregando o EAFIT">
+        <img src="icon-maskable-192.png" alt="" />
+        <div class="boot__name">EAFIT</div>
+        <div class="boot__bar"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
