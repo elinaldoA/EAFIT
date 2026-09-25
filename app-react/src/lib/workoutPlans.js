@@ -40,6 +40,66 @@ function toRpcDays(days) {
   }));
 }
 
+// Banco sem a migration 20260925020000_atomic_plan_rpcs.sql aplicada: o
+// PostgREST responde PGRST202 (função fora do schema cache). Nesse caso cai no
+// caminho antigo, com requisições avulsas — sem isso, criar/trocar plano (e o
+// cadastro de usuário novo) quebra por completo até a migration ser aplicada.
+export function isMissingRpc(error) {
+  return error?.code === 'PGRST202' || error?.code === '42883';
+}
+
+function exercisesToRows(planDayId, day) {
+  const row = post => (ex, idx) => ({
+    plan_day_id: planDayId, nome: ex.nome, series: ex.series ?? '', reps: ex.reps ?? '',
+    descanso: ex.descanso ?? '', tecnica: ex.tecnica ?? '', is_post_workout: post, order_index: idx,
+  });
+  return [...(day.exercicios || []).map(row(false)), ...(day.pos || []).map(row(true))];
+}
+
+async function legacyCreatePlan(userId, name, days, { activate, durationWeeks }) {
+  const { data: plan, error } = await db
+    .from('workout_plans')
+    .insert({ user_id: userId, name, is_active: false })
+    .select()
+    .single();
+  if (error) throw error;
+
+  try {
+    for (let i = 0; i < days.length; i++) {
+      const day = days[i];
+      const { data: planDay, error: dayErr } = await db
+        .from('plan_days')
+        .insert({ plan_id: plan.id, dia: day.dia, foco: day.foco ?? '', order_index: i })
+        .select('id')
+        .single();
+      if (dayErr) throw dayErr;
+      const rows = exercisesToRows(planDay.id, day);
+      if (rows.length) {
+        const { error: exErr } = await db.from('plan_exercises').insert(rows);
+        if (exErr) throw exErr;
+      }
+    }
+  } catch (err) {
+    // Não deixa plano pela metade (cascade remove dias/exercícios já gravados).
+    await db.from('workout_plans').delete().eq('id', plan.id);
+    throw err;
+  }
+
+  if (activate) await legacyActivatePlan(userId, plan.id, durationWeeks);
+  return plan;
+}
+
+async function legacyActivatePlan(userId, planId, durationWeeks) {
+  const { error: offErr } = await db.from('workout_plans').update({ is_active: false }).eq('user_id', userId).neq('id', planId);
+  if (offErr) throw offErr;
+  const start = todayDate();
+  const patch = durationWeeks
+    ? { is_active: true, start_date: start, end_date: addWeeks(start, durationWeeks), duration_weeks: durationWeeks }
+    : { is_active: true, start_date: null, end_date: null, duration_weeks: null };
+  const { error: onErr } = await db.from('workout_plans').update(patch).eq('id', planId);
+  if (onErr) throw onErr;
+}
+
 // Cria plano + dias + exercícios (e opcionalmente ativa) numa transação só,
 // via RPC create_workout_plan (supabase/migrations/20260925020000_atomic_plan_rpcs.sql)
 // — uma falha no meio não deixa mais plano pela metade no banco.
@@ -52,6 +112,7 @@ async function createPlanWithDays(userId, name, days, { activate = false, durati
     p_start_date: activate && durationWeeks ? todayDate() : null,
     p_duration_weeks: activate ? durationWeeks : null,
   });
+  if (isMissingRpc(error)) return legacyCreatePlan(userId, name, days, { activate, durationWeeks });
   if (error) throw error;
   return data;
 }
@@ -265,6 +326,7 @@ export async function setActivePlan(userId, planId, durationWeeks = null) {
     p_start_date: durationWeeks ? todayDate() : null,
     p_duration_weeks: durationWeeks || null,
   });
+  if (isMissingRpc(error)) return legacyActivatePlan(userId, planId, durationWeeks || null);
   if (error) throw error;
 }
 

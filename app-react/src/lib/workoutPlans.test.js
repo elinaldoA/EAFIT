@@ -13,7 +13,7 @@ vi.mock('./supabase', () => ({ db: mockDb }));
 // histórico de séries/peso/aderência que evaluateCycleEvolution.test.js já cobre.
 vi.mock('./planEvolution', () => ({ evaluateCycleEvolution: vi.fn() }));
 
-import { adjustNivelForVerdict, autoGenerateNextCycle, fetchActivePlan } from './workoutPlans';
+import { adjustNivelForVerdict, autoGenerateNextCycle, fetchActivePlan, createGeneratedPlan, setActivePlan, isMissingRpc } from './workoutPlans';
 import { evaluateCycleEvolution } from './planEvolution';
 import { todayDate } from '../data/treinoData';
 
@@ -25,6 +25,7 @@ function chainResolving(resultFactory) {
     delete() { return chain; },
     select: () => chain,
     eq: () => chain,
+    neq: () => chain,
     order: () => chain,
     in: () => chain,
     gte: () => chain,
@@ -272,5 +273,75 @@ describe('fetchActivePlan (fluxo de vencimento do ciclo)', () => {
     const result = await fetchActivePlan('u1', baseMeta);
 
     expect(result.id).toBe('p-old');
+  });
+});
+
+describe('banco sem as RPCs de plano (migration não aplicada)', () => {
+  const MISSING = { code: 'PGRST202', message: 'Could not find the function public.create_workout_plan' };
+
+  function recordWrites() {
+    const writes = [];
+    mockDb.from.mockImplementation((table) => {
+      const chain = chainResolving((payload) => ({
+        data: payload ? { id: table === 'workout_plans' ? 'legacy-plan' : 'day-id', ...payload } : null,
+        error: null,
+      }));
+      const { insert, update, delete: del } = chain;
+      chain.insert = (p) => { writes.push([table, 'insert', p]); return insert(p); };
+      chain.update = (p) => { writes.push([table, 'update', p]); return update(p); };
+      chain.delete = () => { writes.push([table, 'delete']); return del(); };
+      return chain;
+    });
+    return writes;
+  }
+
+  it('isMissingRpc reconhece função ausente e ignora outros erros', () => {
+    expect(isMissingRpc(MISSING)).toBe(true);
+    expect(isMissingRpc({ code: '42883' })).toBe(true);
+    expect(isMissingRpc({ code: '42501' })).toBe(false);
+    expect(isMissingRpc(null)).toBe(false);
+  });
+
+  it('gerar novo treino cai no caminho antigo: cria plano, dias, exercícios e ativa', async () => {
+    mockDb.rpc.mockResolvedValue({ data: null, error: MISSING });
+    const writes = recordWrites();
+    const days = [
+      { dia: 'Segunda', foco: 'Peito', exercicios: [{ nome: 'Supino Reto com Barra', series: '4', reps: '8', descanso: '90s', tecnica: '' }], pos: [{ nome: 'Prancha', series: '3', reps: '30s', descanso: '', tecnica: '' }] },
+      { dia: 'Terça', foco: 'Descanso', exercicios: [], pos: [] },
+    ];
+
+    const plan = await createGeneratedPlan('u1', 'Novo', days, 4);
+
+    expect(plan.id).toBe('legacy-plan');
+    expect(writes.filter(w => w[0] === 'plan_days')).toHaveLength(2);
+    const ex = writes.find(w => w[0] === 'plan_exercises')[2];
+    expect(ex.map(r => [r.nome, r.is_post_workout])).toEqual([['Supino Reto com Barra', false], ['Prancha', true]]);
+    const activation = writes.filter(w => w[0] === 'workout_plans' && w[1] === 'update').map(w => w[2]);
+    expect(activation[0]).toEqual({ is_active: false });
+    expect(activation[1]).toMatchObject({ is_active: true, start_date: todayDate(), duration_weeks: 4 });
+  });
+
+  it('falha no meio apaga o plano incompleto', async () => {
+    mockDb.rpc.mockResolvedValue({ data: null, error: MISSING });
+    const writes = recordWrites();
+    const base = mockDb.from.getMockImplementation();
+    mockDb.from.mockImplementation((table) => table === 'plan_exercises'
+      ? chainResolving({ data: null, error: { code: '23502', message: 'boom' } })
+      : base(table));
+
+    await expect(createGeneratedPlan('u1', 'Novo', [{ dia: 'Segunda', foco: '', exercicios: [{ nome: 'X' }], pos: [] }])).rejects.toMatchObject({ code: '23502' });
+    expect(writes).toContainEqual(['workout_plans', 'delete']);
+  });
+
+  it('trocar de plano cai no caminho antigo', async () => {
+    mockDb.rpc.mockResolvedValue({ data: null, error: MISSING });
+    const writes = recordWrites();
+    await setActivePlan('u1', 'p2', null);
+    expect(writes.map(w => w[2])).toEqual([{ is_active: false }, { is_active: true, start_date: null, end_date: null, duration_weeks: null }]);
+  });
+
+  it('outros erros da RPC continuam sendo lançados', async () => {
+    mockDb.rpc.mockResolvedValue({ data: null, error: { code: '42501', message: 'rls' } });
+    await expect(createGeneratedPlan('u1', 'Novo', [])).rejects.toMatchObject({ code: '42501' });
   });
 });
