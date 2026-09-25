@@ -20,6 +20,7 @@ import BootSplash from './components/BootSplash';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
+const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
 const HidratacaoPage = lazy(() => import('./pages/HidratacaoPage'));
 const DashPage = lazy(() => import('./pages/DashPage'));
 const PerfilPage = lazy(() => import('./pages/PerfilPage'));
@@ -34,7 +35,7 @@ function PageFallback() {
   );
 }
 
-const TABS = ['treino', 'hidratacao', 'dash', 'perfil'];
+const TABS = ['treino', 'historico', 'hidratacao', 'dash', 'perfil'];
 
 function Shell() {
   const { user, authLoading, recoveryMode } = useAuth();
@@ -70,6 +71,7 @@ function Shell() {
                 <ErrorBoundary variant="page" key={page}>
                 <Suspense fallback={<PageFallback />}>
                   {page === 'treino' && <TreinoPage />}
+                  {page === 'historico' && <HistoricoPage />}
                   {page === 'hidratacao' && <HidratacaoPage active={page === 'hidratacao'} />}
                   {page === 'dash' && <DashPage active={page === 'dash'} />}
                   {page === 'perfil' && <PerfilPage active={page === 'perfil'} />}

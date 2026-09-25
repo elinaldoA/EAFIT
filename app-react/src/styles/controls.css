@@ -141,3 +141,58 @@
   margin-bottom: 12px;
   font-size: 0.78rem;
 }
+
+/* Foco visível só na navegação por teclado (não aparece no toque). */
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Botão redondo só com ícone (setas do calendário etc.) */
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--border-2);
+  background: var(--surface-3);
+  color: var(--text);
+  font-size: 1.15rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--t), opacity var(--t);
+}
+.icon-btn:hover:not(:disabled) { background: var(--border-2); }
+.icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Ação secundária em texto (ex.: "Ver todas", "Finalizar") */
+.link-btn {
+  border: none;
+  background: none;
+  padding: 2px 0;
+  color: var(--primary-h);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Estado vazio de listas e seções */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 28px 20px;
+  background: var(--surface);
+  border: 1px dashed var(--border-2);
+  border-radius: var(--r-lg);
+}
+.empty-state--inline { padding: 16px; }
+.empty-state__icon { font-size: 1.8rem; line-height: 1; margin-bottom: 4px; }
+.empty-state__title { font-weight: 700; font-size: 0.88rem; }
+.empty-state__text { font-size: 0.76rem; color: var(--text-muted); max-width: 300px; }

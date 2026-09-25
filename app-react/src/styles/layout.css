@@ -82,6 +82,10 @@
   gap: 12px;
 }
 
+/* Cards nunca encolhem pra caber: a página rola. Sem isso, um card com
+   overflow:hidden (ex.: today-card) é esmagado pelo flex da coluna. */
+.page > * { flex-shrink: 0; }
+
 .page.active {
   display: flex;
   animation: fadeUp 0.2s ease both;
@@ -121,11 +125,18 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.nav-item.active { color: var(--primary); }
+.nav-item.active { color: var(--primary); font-weight: 800; }
 .nav-item:active  { opacity: 0.7; }
 
+/* Pílula atrás do ícone da aba ativa (padrão de navegação inferior do Android). */
 .nav-item__icon {
-  width: 22px;
-  height: 22px;
-  stroke-width: 1.8;
+  width: 44px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-full);
+  transition: background var(--t);
 }
+.nav-item__icon svg { width: 21px; height: 21px; stroke-width: 1.8; }
+.nav-item.active .nav-item__icon { background: var(--primary-glow); }

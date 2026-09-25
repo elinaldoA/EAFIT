@@ -10,6 +10,8 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 ## Funcionalidades
 
 - **Treino semanal** — plano de treino dividido por dia da semana, com séries, repetições, técnica e tempo de descanso por exercício. Marque séries concluídas e registre a carga usada em cada uma.
+- **Modo treino ao vivo** — tela cheia com um exercício por vez: séries com campos grandes, descanso embutido (com +15s/pular e alarme), progresso do treino, tela sempre acesa (Wake Lock) e navegação entre exercícios. Abre pelo card "Treino de hoje" ou pelo botão ⚡ de cada dia.
+- **Histórico** — calendário mensal dos treinos (concluídos e incompletos), resumo do mês (treinos, tempo, séries, volume) e o detalhe de cada sessão com a comparação de cada exercício contra a última vez que ele foi feito.
 - **Hidratação** — meta diária de água calculada a partir do peso, com histórico e lembretes.
 - **Evolução** — dashboard com:
   - avatar corporal indicando os grupos musculares trabalhados no dia
@@ -42,7 +44,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 │   │   ├── context/      # estado global (auth, tema, toast, treino)
 │   │   ├── data/         # dados estáticos do plano de treino
 │   │   ├── lib/           # cliente de dados e utilitários
-│   │   ├── pages/        # telas do app (Treino, Água, Evolução, Perfil)
+│   │   ├── pages/        # telas do app (Treino, Histórico, Água, Evolução, Perfil)
 │   │   └── styles/       # CSS por área, importado em ordem por index.css
 │   └── vite.config.js
 ├── app-admin/          # backoffice (React + Vite), publicado em /admin
