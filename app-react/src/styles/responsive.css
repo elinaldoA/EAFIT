@@ -24,6 +24,7 @@
 ============================================================ */
 @media (max-width: 380px) {
   .set-row {
-    grid-template-columns: 44px 1fr 1fr 28px;
+    grid-template-columns: 44px 1fr 1fr 36px;
   }
+  .set-row__check { width: 36px; }
 }

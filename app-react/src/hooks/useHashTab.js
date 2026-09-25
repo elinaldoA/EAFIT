@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-// Aba atual no hash da URL (#treino, #hidratacao, #dash, #perfil) e no
+// Aba atual no hash da URL (#treino, #historico, #hidratacao, #dash, #perfil) e no
 // histórico do navegador: o "voltar" do Android volta pra aba anterior em vez
 // de fechar o app, recarregar mantém a aba, e os atalhos do ícone instalado
 // (manifest.shortcuts em vite.config.js) abrem direto numa aba.

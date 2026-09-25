@@ -7,8 +7,12 @@ import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import ExerciseBlock from './ExerciseBlock';
+import LiveWorkoutModal from './LiveWorkoutModal';
 
-export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
+// liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
+// TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
+// que é quem tem o cronômetro e as ações de série do dia.
+export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
   const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays } = useWorkout();
   const toast = useToast();
@@ -18,6 +22,9 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
   const [notesOpen, setNotesOpen] = useState(false);
   const [notes, setNotes] = useState(() => localStorage.getItem(`treino_${day.dia}_notes`) || '');
   const notesSaveTimer = useRef(null);
+  // Muda ao sair do modo ao vivo: remonta os SetRow da lista, que leem o
+  // localStorage só na montagem e ficariam com os valores de antes.
+  const [liveEpoch, setLiveEpoch] = useState(0);
   const timer = useWorkoutTimer(day.dia);
 
   async function markDone(next) {
@@ -102,6 +109,25 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
     onFinish(buildSummary(timer.elapsedMs));
   }
 
+  // Abrir o modo ao vivo já inicia o cronômetro — as séries ficam travadas
+  // até o treino começar, e no modo ao vivo não há outro botão pra isso.
+  useEffect(() => {
+    if (liveOpen && timer.status === 'idle') handleStartWorkout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveOpen]);
+
+  function closeLive() {
+    onCloseLive();
+    setLiveEpoch(e => e + 1);
+  }
+
+  function finishFromLive() {
+    const alreadyFinished = timer.status === 'finished';
+    closeLive();
+    if (alreadyFinished) handleShowSummary();
+    else handleFinishWorkout();
+  }
+
   async function toggleAllSets(ex, setCount) {
     const next = !allSetsDone(ex, setCount);
     for (let n = 1; n <= setCount; n++) {
@@ -178,11 +204,14 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
 
   const started = timer.status !== 'idle';
 
-  function renderExerciseBlock(ex) {
+  function renderExerciseBlock(ex, live = null) {
     return (
       <ExerciseBlock
-        key={ex.nome} ex={ex} day={day} bump={bump} onRestStart={onRestStart}
-        open={open} version={markVersions[ex.nome] || 0} started={started}
+        key={ex.nome} ex={ex} day={day} bump={bump} onRestStart={live ? live.onRestStart : onRestStart}
+        // Na lista, não busca sugestões enquanto o modo ao vivo (que tem as
+        // próprias instâncias do bloco) estiver aberto por cima.
+        open={live ? true : open && !liveOpen} hideName={!!live}
+        version={`${markVersions[ex.nome] || 0}-${liveEpoch}`} started={started}
         onToggleAll={() => toggleAllSets(ex, parseInt(ex.series, 10))}
         onFillOthers={(carga, reps) => fillOtherSets(ex, parseInt(ex.series, 10), carga, reps)}
         onApplySuggestion={(carga, reps) => applySuggestion(ex, parseInt(ex.series, 10), carga, reps)}
@@ -190,8 +219,10 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
     );
   }
 
+  const { done: setsDone, total: setsTotal } = countSets(gatherExerciseDetails(day));
+
   return (
-    <div className={`day-card${isToday ? ' day-card--today' : ''}`}>
+    <div className={`day-card${isToday ? ' day-card--today' : ''}${checked ? ' day-card--done' : ''}`}>
       <div
         className={`day-card__header${open ? ' open' : ''}`}
         role="button" tabIndex={0} aria-expanded={open}
@@ -219,10 +250,17 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
               {timer.status === 'paused' ? '⏸' : '⏱'} {formatDuration(timer.elapsedMs)}
             </span>
           )}
-          <span className="day-card__count">{day.exercicios.length} exerc.</span>
-          <span className="chevron">▼</span>
+          <span className="day-card__count">
+            {setsDone > 0 ? `${setsDone}/${setsTotal} séries` : `${day.exercicios.length} exerc.`}
+          </span>
+          <span className="chevron" aria-hidden="true">▼</span>
         </div>
       </div>
+      {setsTotal > 0 && setsDone > 0 && (
+        <div className="day-card__progress" aria-hidden="true">
+          <div className="day-card__progress-fill" style={{ width: `${(setsDone / setsTotal) * 100}%` }} />
+        </div>
+      )}
 
       <div className={`day-card__body${open ? ' open' : ''}`}>
         <div className="session-timer">
@@ -233,19 +271,27 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
           <div className="session-timer__actions">
             {timer.status === 'idle' && (
               <>
-                <span className="session-timer__hint">Inicie o treino para registrar as séries</span>
-                <button type="button" className="btn btn--primary btn--sm" onClick={handleStartWorkout}>▶ Iniciar treino</button>
+                <button type="button" className="btn btn--outline btn--sm" onClick={handleStartWorkout}>▶ Iniciar</button>
+                {setsTotal > 0 && (
+                  <button type="button" className="btn btn--primary btn--sm" onClick={onOpenLive}>⚡ Modo treino</button>
+                )}
               </>
             )}
             {timer.status === 'running' && (
               <>
-                <button type="button" className="btn btn--outline btn--sm" onClick={timer.pause}>⏸ Pausar</button>
+                <button type="button" className="btn btn--outline btn--sm" aria-label="Pausar" onClick={timer.pause}>⏸</button>
+                {setsTotal > 0 && (
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>⚡ Modo treino</button>
+                )}
                 <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>🏁 Finalizar</button>
               </>
             )}
             {timer.status === 'paused' && (
               <>
-                <button type="button" className="btn btn--outline btn--sm" onClick={timer.resume}>▶ Continuar</button>
+                <button type="button" className="btn btn--outline btn--sm" aria-label="Continuar" onClick={timer.resume}>▶</button>
+                {setsTotal > 0 && (
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>⚡ Modo treino</button>
+                )}
                 <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>🏁 Finalizar</button>
               </>
             )}
@@ -256,6 +302,9 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
               </>
             )}
           </div>
+          {timer.status === 'idle' && (
+            <span className="session-timer__hint">Inicie o treino para registrar as séries</span>
+          )}
         </div>
 
         <div className="day-card__total">
@@ -284,6 +333,16 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish }) {
           </div>
         )}
       </div>
+
+      {liveOpen && (
+        <LiveWorkoutModal
+          day={day}
+          timer={timer}
+          renderExercise={(ex, onLiveRest) => renderExerciseBlock(ex, { onRestStart: onLiveRest })}
+          onFinish={finishFromLive}
+          onClose={closeLive}
+        />
+      )}
     </div>
   );
 }
