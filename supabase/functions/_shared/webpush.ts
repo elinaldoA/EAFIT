@@ -27,7 +27,8 @@ export async function sendWebPush(
     );
     return 'sent';
   } catch (err) {
-    if (err.statusCode === 404 || err.statusCode === 410) return 'stale';
+    const statusCode = (err as { statusCode?: number })?.statusCode;
+    if (statusCode === 404 || statusCode === 410) return 'stale';
     console.error('sendWebPush error:', err);
     return 'error';
   }
