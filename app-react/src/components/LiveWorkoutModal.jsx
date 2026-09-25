@@ -6,6 +6,7 @@ import { playRestDoneSound } from '../lib/sound';
 import { allSetsDone, countSets, gatherExerciseDetails } from '../lib/workoutSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
+import ExerciseDemo from './ExerciseDemo';
 
 function setCountOf(ex) {
   return parseInt(ex.series, 10) || 0;
@@ -134,6 +135,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
             {setCountOf(ex) > 0 && <span className="live__chip">{ex.series} séries</span>}
             <span className="live__chip">{ex.reps}{setCountOf(ex) > 0 ? ' reps' : ''}</span>
             {ex.descanso && ex.descanso !== '-' && <span className="live__chip">⏱ {ex.descanso}</span>}
+            <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} variant="chip" />
           </div>
           {ex.tecnica && <p className="live__tecnica">💡 {ex.tecnica}</p>}
         </div>
