@@ -1,6 +1,7 @@
 import { db } from '../lib/supabase';
 import { treinoData } from './treinoData';
 import { computeImcBracket, applyImcAdjustment, applyLevelAdjustment, NIVEIS, getSaferAlternative } from './workoutAdjustments';
+import { withLibraryExercises } from './exerciseLibrary';
 
 export { computeImcBracket, applyImcAdjustment, applyLevelAdjustment, NIVEIS, getSaferAlternative };
 
@@ -226,7 +227,8 @@ async function fetchBaseTemplate(meta) {
 // aqui só para manter a mesma assinatura de perfil usada na tela de onboarding.
 export async function generatePlan({ peso, altura, meta, nivel }) {
     const base = await fetchBaseTemplate(meta);
-    const leveled = applyLevelAdjustment(base, nivel);
+    const withLibrary = await withLibraryExercises(base, nivel);
+    const leveled = applyLevelAdjustment(withLibrary, nivel);
     const bracket = computeImcBracket(peso, altura);
     return applyImcAdjustment(leveled, bracket);
 }
