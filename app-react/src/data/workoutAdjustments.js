@@ -2,14 +2,14 @@
 // imports de rede/Supabase de propósito, pra ficar o mais portável possível.
 //
 // Isso é espelhado (copiado à mão) em
-// supabase/functions/admin-generate-plan/index.ts, porque a Edge Function
-// roda em Deno e este repo não tem um pacote compartilhado entre app-react e
-// as Edge Functions (ver comentário no topo daquele arquivo). Se mudar
-// qualquer coisa aqui — sobretudo LEVEL_EXERCISE_SUBS, SERIES_DELTA,
-// DESCANSO_DELTA_S, computeImcBracket ou applyImcAdjustment — replique a
-// mudança lá também. Os testes de app-react/src/data/workoutTemplates.test.js
-// cobrem o comportamento deste arquivo, mas não têm como verificar o lado
-// Deno automaticamente.
+// supabase/functions/_shared/workoutAdjustments.ts (usado por
+// admin-generate-plan), porque as Edge Functions rodam em Deno e este repo não
+// tem um pacote compartilhado entre app-react e elas (ver comentário no topo
+// daquele arquivo). Se mudar qualquer coisa aqui — sobretudo
+// LEVEL_EXERCISE_SUBS, SERIES_DELTA, DESCANSO_DELTA_S, computeImcBracket ou
+// applyImcAdjustment — replique a mudança lá também. Os testes de
+// app-react/src/data/workoutTemplates.test.js cobrem este arquivo e
+// _shared/workoutAdjustments.test.ts cobre o port (rodam os dois no CI).
 export function computeImcBracket(peso, altura) {
     const p = parseFloat(peso);
     const a = parseFloat(altura);
