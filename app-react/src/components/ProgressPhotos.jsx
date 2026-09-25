@@ -6,8 +6,10 @@ import { getModalRoot } from '../lib/modalRoot';
 import { fetchPhotos, addPhoto, deletePhoto } from '../lib/progressPhotos';
 import { fmtDate } from '../lib/utils';
 import { todayDate } from '../data/treinoData';
+import { useBackToClose } from '../hooks/useBackToClose';
 
 function PhotoViewer({ photos, index, onClose, onNavigate, onDelete }) {
+  useBackToClose(onClose);
   useEffect(() => {
     document.body.classList.add('modal-open');
     return () => document.body.classList.remove('modal-open');

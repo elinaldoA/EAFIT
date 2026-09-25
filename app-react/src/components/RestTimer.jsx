@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { playRestDoneSound } from '../lib/sound';
 import { getModalRoot } from '../lib/modalRoot';
+import { useBackToClose } from '../hooks/useBackToClose';
 
 const RADIUS = 90;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export default function RestTimer({ session, onClose }) {
+  useBackToClose(onClose);
   const [left, setLeft] = useState(session.seconds);
   const [paused, setPaused] = useState(false);
   const doneRef = useRef(false);

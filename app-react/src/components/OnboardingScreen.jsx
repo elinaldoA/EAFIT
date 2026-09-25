@@ -3,7 +3,7 @@ import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
-import logoMark from '../assets/logo-mark.png';
+import logoMark from '../assets/app-icon.png';
 
 export default function OnboardingScreen() {
   const { user, updateProfile } = useAuth();

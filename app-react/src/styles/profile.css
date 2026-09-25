@@ -229,3 +229,10 @@ button.profile-section__title {
   color: var(--text-muted);
   margin-left: auto;
 }
+
+.profile-field__hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-dim);
+}

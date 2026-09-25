@@ -5,7 +5,7 @@ import { useAvatar } from '../context/useAvatar';
 import { useWorkout } from '../context/useWorkout';
 import { enqueue } from '../lib/syncQueue';
 import { fmtDate } from '../lib/utils';
-import { todayDate, DEFAULT_WEEKLY_GOAL } from '../data/treinoData';
+import { todayDate, DEFAULT_WEEKLY_GOAL, computedWaterGoalLiters, DEFAULT_WATER_GOAL } from '../data/treinoData';
 import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
@@ -211,6 +211,7 @@ export default function PerfilPage({ active }) {
 
         <MacrosSection
           macroAgua={macroAgua} setMacroAgua={setMacroAgua}
+          suggestedGoal={computedWaterGoalLiters(peso) ?? DEFAULT_WATER_GOAL}
           onSave={handleSaveWaterGoal}
         />
       </div>

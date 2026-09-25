@@ -9,6 +9,7 @@ import {
   listPlans, createPlan, setActivePlan, renamePlan, deletePlan, updatePlanSuccessors,
   fetchPlanDays, updatePlanDay, addExercise, updateExercise, deleteExercise, reorderExercises,
 } from '../lib/workoutPlans';
+import { useBackToClose } from '../hooks/useBackToClose';
 
 const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -128,6 +129,7 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete }) {
 }
 
 export default function PlanEditorModal({ onClose }) {
+  useBackToClose(onClose);
   const { user } = useAuth();
   const { refreshPlan } = useWorkout();
   const toast = useToast();
