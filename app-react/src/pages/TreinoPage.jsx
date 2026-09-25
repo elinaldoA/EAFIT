@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { TODAY_NAME } from '../data/treinoData';
+import { todayName } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
@@ -85,7 +85,7 @@ export default function TreinoPage() {
       <div id="treinoContainer">
         <div className={`accordion${loading ? ' accordion--loading' : ''}`} key={dataVersion}>
           {activePlanDays.map(day => (
-            <DayCard key={day.dia} day={day} isToday={day.dia === TODAY_NAME} bump={bump} onRestStart={handleRestStart} onFinish={setSummary} />
+            <DayCard key={day.dia} day={day} isToday={day.dia === todayName()} bump={bump} onRestStart={handleRestStart} onFinish={setSummary} />
           ))}
         </div>
       </div>

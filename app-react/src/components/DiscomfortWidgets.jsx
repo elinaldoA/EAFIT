@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TODAY_DATE } from '../data/treinoData';
+import { todayDate } from '../data/treinoData';
 import { fmtDate } from '../lib/utils';
 import { fetchRecentDiscomfort, logDiscomfort, summarizeDiscomfortByExercise } from '../lib/discomfort';
 
@@ -25,8 +25,8 @@ export function DiscomfortPanel({ userId, exerciseName, toast }) {
   async function handleSave() {
     setSaving(true);
     try {
-      await logDiscomfort(userId, exerciseName, TODAY_DATE, severity, note);
-      setDiscomfort({ severity, note: note.trim() || null, log_date: TODAY_DATE });
+      await logDiscomfort(userId, exerciseName, todayDate(), severity, note);
+      setDiscomfort({ severity, note: note.trim() || null, log_date: todayDate() });
       setReportOpen(false);
       setNote('');
       toast('✅ Desconforto registrado');

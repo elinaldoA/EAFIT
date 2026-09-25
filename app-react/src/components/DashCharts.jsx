@@ -1,4 +1,4 @@
-import { TODAY_DATE } from '../data/treinoData';
+import { todayDate } from '../data/treinoData';
 import { fmtDate, parseLocalDate, toDateStr, getWeekStart } from '../lib/utils';
 import { estimateOneRepMax } from '../lib/records';
 
@@ -6,7 +6,7 @@ export function Heatmap({ workouts }) {
   const dateMap = {};
   workouts.forEach(w => { dateMap[w.workout_date] = w.completed ? 'done' : 'miss'; });
 
-  const today = parseLocalDate(TODAY_DATE);
+  const today = parseLocalDate(todayDate());
   const todayDow = today.getDay();
   const currentMonday = new Date(today);
   currentMonday.setDate(today.getDate() - (todayDow === 0 ? 6 : todayDow - 1));
@@ -40,7 +40,7 @@ export function Heatmap({ workouts }) {
 }
 
 export function WeeklyBars({ workouts, weeklyGoal }) {
-  const today = parseLocalDate(TODAY_DATE);
+  const today = parseLocalDate(todayDate());
   const todayDow = today.getDay();
   const currentMonday = new Date(today);
   currentMonday.setDate(today.getDate() - (todayDow === 0 ? 6 : todayDow - 1));

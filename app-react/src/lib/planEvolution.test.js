@@ -12,11 +12,11 @@ vi.mock('./weightLog', () => ({ fetchWeightLogs: vi.fn() }));
 import { evaluateCycleEvolution } from './planEvolution';
 import { fetchExerciseSetsWithDates } from './records';
 import { fetchWeightLogs } from './weightLog';
-import { TODAY_DATE } from '../data/treinoData';
+import { todayDate } from '../data/treinoData';
 import { parseLocalDate, toDateStr } from './utils';
 
 function daysAgo(days) {
-  const d = parseLocalDate(TODAY_DATE);
+  const d = parseLocalDate(todayDate());
   d.setDate(d.getDate() - days);
   return toDateStr(d);
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { TODAY_NAME, TODAY_DATE, getMuscleGroupsForDay, getWeeklyGoal } from '../data/treinoData';
+import { todayName, todayDate, getMuscleGroupsForDay, getWeeklyGoal } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
@@ -24,8 +24,8 @@ export default function DashPage({ active }) {
 
   const [selectedExercise, setSelectedExercise] = useState('');
   const weeklyGoal = getWeeklyGoal(user);
-  const day = activePlanDays.find(d => d.dia === TODAY_NAME);
-  const todayCompleted = workouts.find(w => w.workout_date === TODAY_DATE)?.completed ?? false;
+  const day = activePlanDays.find(d => d.dia === todayName());
+  const todayCompleted = workouts.find(w => w.workout_date === todayDate())?.completed ?? false;
 
   const [selectedView, setSelectedView] = useState('today');
 

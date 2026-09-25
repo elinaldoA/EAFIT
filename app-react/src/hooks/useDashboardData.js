@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
-import { TODAY_DATE } from '../data/treinoData';
+import { todayDate } from '../data/treinoData';
 import { fmtDate, parseLocalDate, toDateStr, calcStreak } from '../lib/utils';
 import { countPhotos } from '../lib/progressPhotos';
 import { fetchWeightLogs } from '../lib/weightLog';
@@ -95,10 +95,10 @@ export function useDashboardData(active, user, toast) {
     async function loadDashboard() {
       setLoading(true);
       try {
-        // Ancora em TODAY_DATE (fuso de Brasília), não em `new Date()` local +
+        // Ancora em todayDate() (fuso de Brasília), não em `new Date()` local +
         // toISOString() (UTC) — mesmo ajuste feito em HidratacaoPage.jsx, evita
         // que a janela de 60 dias fique deslocada dependendo do fuso do navegador.
-        const since = parseLocalDate(TODAY_DATE);
+        const since = parseLocalDate(todayDate());
         since.setDate(since.getDate() - 59);
         const sinceStr = toDateStr(since);
 
