@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
-import { validateMediaFile, storagePathFor, mediaKindFor, buildRows, normalizeName, MAX_BYTES } from './exerciseMedia';
+import { validateMediaFile, storagePathFor, mediaKindFor, buildRows, normalizeName, defaultDemoFor, MAX_BYTES } from './exerciseMedia';
 
 const file = (type, size = 1000) => ({ type, size });
 
@@ -39,16 +39,25 @@ describe('mediaKindFor / normalizeName', () => {
   });
 });
 
+describe('defaultDemoFor', () => {
+  it('diz o que o app mostra sem mídia própria', () => {
+    expect(defaultDemoFor('Supino Reto com Barra')).toBe('video');
+    expect(defaultDemoFor('🔷 Burpee')).toBe('video');
+    expect(defaultDemoFor('Remada Curvada com Barra')).toBe('imagens');
+    expect(defaultDemoFor('Air Bike (Assault Bike)')).toBeNull();
+  });
+});
+
 describe('buildRows', () => {
   it('junta biblioteca e mídias, incluindo nomes fora da biblioteca, em ordem alfabética', () => {
     const rows = buildRows(
       [{ nome: 'Supino Reto com Barra', grupo_muscular: 'peito' }, { nome: 'Agachamento Livre', grupo_muscular: 'quadriceps' }],
       [{ nome: 'Supino Reto com Barra', storage_path: 's.mp4' }, { nome: 'Afundo Búlgaro (foco glúteo)', storage_path: 'a.gif' }],
     );
-    expect(rows.map(r => [r.nome, r.grupo, r.media?.storage_path ?? null])).toEqual([
-      ['Afundo Búlgaro (foco glúteo)', null, 'a.gif'],
-      ['Agachamento Livre', 'quadriceps', null],
-      ['Supino Reto com Barra', 'peito', 's.mp4'],
+    expect(rows.map(r => [r.nome, r.grupo, r.media?.storage_path ?? null, r.padrao])).toEqual([
+      ['Afundo Búlgaro (foco glúteo)', null, 'a.gif', 'imagens'],
+      ['Agachamento Livre', 'quadriceps', null, 'imagens'],
+      ['Supino Reto com Barra', 'peito', 's.mp4', 'video'],
     ]);
   });
 });

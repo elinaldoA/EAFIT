@@ -11,7 +11,21 @@ const FILTERS = [
   { value: 'todos', label: 'Todos' },
   { value: 'com', label: 'Com mídia própria' },
   { value: 'sem', label: 'Sem mídia própria' },
+  { value: 'sem-video', label: 'Sem vídeo' },
 ];
+
+const PADRAO = {
+  video: { cls: 'badge--ok', label: 'Padrão: vídeo' },
+  imagens: { cls: 'badge--warning', label: 'Padrão: 2 imagens' },
+};
+
+// Sem mídia própria, o que o app mostra hoje.
+function DefaultDemo({ padrao }) {
+  const p = PADRAO[padrao];
+  return p ? <span className={`badge ${p.cls}`}>{p.label}</span> : <span className="muted">Sem demonstração</span>;
+}
+
+const hasVideo = r => r.media?.media_type === 'video' || (!r.media && r.padrao === 'video');
 
 function Preview({ media }) {
   const url = publicUrl(media.storage_path);
@@ -54,10 +68,14 @@ export default function ExerciseMedia() {
     const q = normalizeName(search).toLowerCase();
     return rows.filter(r =>
       (!q || r.nome.toLowerCase().includes(q))
-      && (filter === 'todos' || (filter === 'com' ? r.media : !r.media)));
+      && (filter === 'todos'
+        || (filter === 'com' && r.media)
+        || (filter === 'sem' && !r.media)
+        || (filter === 'sem-video' && !hasVideo(r))));
   }, [rows, search, filter]);
 
   const withMedia = rows.filter(r => r.media).length;
+  const withoutVideo = rows.filter(r => !hasVideo(r)).length;
 
   function pickFile(row) {
     targetRef.current = row;
@@ -114,7 +132,7 @@ export default function ExerciseMedia() {
           <h1 className="page-title">Demonstrações de exercícios</h1>
           <p className="page-subtitle">
             Envie um GIF, imagem ou vídeo curto (até 15MB) com a execução correta. No app, ele substitui a
-            demonstração padrão do botão "Ver execução". {!loading && `${withMedia} de ${rows.length} com mídia própria.`}
+            demonstração padrão do botão "Ver execução". {!loading && `${withMedia} de ${rows.length} com mídia própria · ${withoutVideo} ainda sem vídeo (filtro "Sem vídeo" mostra o que falta gravar).`}
           </p>
         </div>
       </div>
@@ -150,14 +168,14 @@ export default function ExerciseMedia() {
 
       {!loading && !error && (
         <table className="resp-table">
-          <thead><tr><th>Exercício</th><th>Grupo</th><th>Mídia própria</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Exercício</th><th>Grupo</th><th>Demonstração</th><th>Ações</th></tr></thead>
           <tbody>
             {visible.map(r => (
               <tr key={r.nome}>
                 <td data-label="Exercício">{r.nome}</td>
                 <td data-label="Grupo">{r.grupo ? r.grupo.replace('_', ' ') : <span className="badge">fora da biblioteca</span>}</td>
-                <td data-label="Mídia própria">
-                  {r.media ? <Preview media={r.media} /> : <span className="muted">Padrão (se houver)</span>}
+                <td data-label="Demonstração">
+                  {r.media ? <Preview media={r.media} /> : <DefaultDemo padrao={r.padrao} />}
                 </td>
                 <td data-label="Ações">
                   {confirmRemove === r.nome ? (

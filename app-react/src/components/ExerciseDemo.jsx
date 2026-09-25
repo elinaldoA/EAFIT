@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { getExerciseMedia, MEDIA_CREDIT } from '../data/exerciseMedia';
-import { VIDEO_CREDIT } from '../data/exerciseVideos';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useCustomExerciseMedia } from '../hooks/useCustomExerciseMedia';
 
@@ -148,7 +147,7 @@ function ExerciseDemoModal({ nome, tecnica, media, onClose }) {
 
         {tecnica && <p className="demo-modal__tip">💡 {tecnica}</p>}
         <p className="demo-modal__credit">
-          {media.custom ? 'Demonstração da equipe EAFIT' : media.stock ? VIDEO_CREDIT : `Imagens: ${MEDIA_CREDIT}`}
+          {media.custom ? 'Demonstração da equipe EAFIT' : media.stock ? media.credit : `Imagens: ${MEDIA_CREDIT}`}
         </p>
       </div>
     </div>,

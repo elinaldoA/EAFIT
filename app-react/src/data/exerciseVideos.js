@@ -1,11 +1,13 @@
 // Vídeos curtos de execução (≈7s, sem áudio, 360p) por nome de exercício.
-// Fonte: wger.de (wger.de/api/v2/video), gravados por Goulart e licenciados
-// CC BY-SA 4.0 — cortados/recomprimidos pra public/videos/<slug>.mp4. Cada
+// Fontes: wger.de (wger.de/api/v2/video, Goulart, CC BY-SA 4.0) e Wikimedia
+// Commons (crédito próprio em VIDEO_CREDITS) — cortados/recomprimidos pra
+// public/videos/<slug>.mp4. Cada
 // vídeo foi conferido quadro a quadro: só entra quando é o MESMO movimento.
 // Têm prioridade sobre os 2 quadros do Free Exercise DB (exerciseMedia.js).
 // Não entram no precache nem no cache do service worker (vídeo usa range
 // request); tocam direto da rede.
 export const EXERCISE_VIDEOS = {
+  'Burpee': 'burpee',
   'Afundo Estático': 'afundo-estatico',
   'Agachamento Frontal': 'agachamento-frontal',
   'Agachamento no Smith': 'agachamento-smith',
@@ -30,6 +32,7 @@ export const EXERCISE_VIDEOS = {
   'Paralelas (Peito)': 'paralelas',
   'Remada Baixa na Polia': 'remada-baixa-polia',
   'Romeno com Halteres': 'romeno-halteres',
+  'Remada com Barra T': 'remada-barra-t',
   'Rosca Alternada com Halteres': 'rosca-halteres',
   'Rosca Direta com Barra': 'rosca-direta-barra',
   'Rosca Martelo Alternada': 'rosca-martelo',
@@ -48,3 +51,13 @@ export const EXERCISE_VIDEOS = {
 };
 
 export const VIDEO_CREDIT = 'Vídeo: Goulart · wger.de · CC BY-SA 4.0';
+
+// Vídeos que não vêm do wger (licença/autor exigem o crédito certo).
+const VIDEO_CREDITS = {
+  burpee: 'Vídeo: Taco Fleur · Wikimedia Commons · CC BY-SA 4.0',
+  'remada-barra-t': 'Vídeo: FitnessScape · Wikimedia Commons · CC BY 3.0',
+};
+
+export function videoCredit(slug) {
+  return VIDEO_CREDITS[slug] || VIDEO_CREDIT;
+}

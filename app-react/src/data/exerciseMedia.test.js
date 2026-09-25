@@ -28,6 +28,7 @@ describe('getExerciseMedia', () => {
   it('vídeo curto tem prioridade sobre os quadros', () => {
     expect(getExerciseMedia('🔷 Supino Reto com Barra', '/EAFIT/')).toEqual({
       stock: true, type: 'video', url: '/EAFIT/videos/supino-reto-barra.mp4',
+      credit: 'Vídeo: Goulart · wger.de · CC BY-SA 4.0',
     });
   });
 
@@ -36,7 +37,6 @@ describe('getExerciseMedia', () => {
   });
 
   it('sem equivalente seguro, não tem demonstração', () => {
-    expect(getExerciseMedia('Burpee', '/')).toBeNull();
     // "Air Bike" no Free Exercise DB é o abdominal bicicleta, não a bike de academia
     expect(getExerciseMedia('Air Bike (Assault Bike)', '/')).toBeNull();
     expect(getExerciseMedia('', '/')).toBeNull();
@@ -47,6 +47,7 @@ describe('getExerciseMedia', () => {
     expect(getExerciseMedia('Supino Reto com Barra', '/', custom)).toEqual({ custom: true, type: 'video', url: 'https://x/supino.mp4' });
     // e também vale pra exercício sem demonstração padrão
     expect(getExerciseMedia('🔷 Burpee', '/', { Burpee: { url: 'u', type: 'imagem' } })?.custom).toBe(true);
+    expect(getExerciseMedia('Burpee', '/')?.credit).toMatch(/Taco Fleur/);
     expect(getExerciseMedia('Remada Curvada com Barra', '/', custom)?.id).toBe('Bent_Over_Barbell_Row');
   });
 
