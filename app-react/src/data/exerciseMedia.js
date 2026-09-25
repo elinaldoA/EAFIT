@@ -223,8 +223,13 @@ export function normalizeExerciseName(nome) {
   return String(nome || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
 
-export function getExerciseMedia(nome, base = import.meta.env.BASE_URL) {
-  const id = EXERCISE_MEDIA[normalizeExerciseName(nome)];
+// custom: mapa de mídias próprias enviadas pelo admin (lib/customExerciseMedia.js)
+// — quando tem uma pro exercício, ela vale no lugar da padrão.
+export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom = null) {
+  const key = normalizeExerciseName(nome);
+  const own = custom?.[key];
+  if (own) return { custom: true, type: own.type, url: own.url };
+  const id = EXERCISE_MEDIA[key];
   if (!id) return null;
   return { id, frames: [0, 1].map(n => `${base}exercicios/${id}/${n}.webp`) };
 }
