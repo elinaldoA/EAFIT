@@ -1,4 +1,8 @@
 import { db } from './supabase';
+// Demonstração padrão que o app já mostra sem mídia própria (vídeo curto ou 2
+// quadros) — mesma fonte do app, pra não divergir.
+import { EXERCISE_VIDEOS } from '../../../app-react/src/data/exerciseVideos.js';
+import { EXERCISE_MEDIA, normalizeExerciseName } from '../../../app-react/src/data/exerciseMedia.js';
 
 // Mídia própria de demonstração de execução (tabela exercise_media + bucket
 // público exercise-media — ver supabase/migrations/20260925040000_exercise_media.sql).
@@ -19,8 +23,13 @@ export const ACCEPT = Object.keys(TYPES).join(',');
 
 // Mesmo critério do app (normalizeExerciseName): planos antigos prefixam emoji
 // nos exercícios de pós-treino.
-export function normalizeName(nome) {
-  return String(nome || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+export const normalizeName = normalizeExerciseName;
+
+// 'video' | 'imagens' | null
+export function defaultDemoFor(nome) {
+  const key = normalizeName(nome);
+  if (EXERCISE_VIDEOS[key]) return 'video';
+  return EXERCISE_MEDIA[key] ? 'imagens' : null;
 }
 
 export function validateMediaFile(file) {
@@ -48,9 +57,10 @@ export function mediaKindFor(file) {
 // exercise_media (variações usadas em planos, fora da biblioteca).
 export function buildRows(library, media) {
   const mediaByName = new Map((media || []).map(m => [m.nome, m]));
-  const rows = (library || []).map(l => ({ nome: l.nome, grupo: l.grupo_muscular, media: mediaByName.get(l.nome) || null }));
+  const row = (nome, grupo, m) => ({ nome, grupo, media: m, padrao: defaultDemoFor(nome) });
+  const rows = (library || []).map(l => row(l.nome, l.grupo_muscular, mediaByName.get(l.nome) || null));
   const known = new Set(rows.map(r => r.nome));
-  (media || []).forEach(m => { if (!known.has(m.nome)) rows.push({ nome: m.nome, grupo: null, media: m }); });
+  (media || []).forEach(m => { if (!known.has(m.nome)) rows.push(row(m.nome, null, m)); });
   return rows.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 

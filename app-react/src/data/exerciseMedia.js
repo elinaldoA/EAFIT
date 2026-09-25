@@ -1,4 +1,4 @@
-import { EXERCISE_VIDEOS } from './exerciseVideos';
+import { EXERCISE_VIDEOS, videoCredit } from './exerciseVideos';
 
 // Demonstração de execução (2 quadros do movimento, sem ordem garantida) por nome de
 // exercício. Imagens do Free Exercise DB (github.com/yuhonas/free-exercise-db),
@@ -232,7 +232,7 @@ export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom =
   const own = custom?.[key];
   if (own) return { custom: true, type: own.type, url: own.url };
   const video = EXERCISE_VIDEOS[key];
-  if (video) return { stock: true, type: 'video', url: `${base}videos/${video}.mp4` };
+  if (video) return { stock: true, type: 'video', url: `${base}videos/${video}.mp4`, credit: videoCredit(video) };
   const id = EXERCISE_MEDIA[key];
   if (!id) return null;
   return { id, frames: [0, 1].map(n => `${base}exercicios/${id}/${n}.webp`) };
