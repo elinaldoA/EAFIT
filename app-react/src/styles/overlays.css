@@ -174,20 +174,63 @@ body.modal-open { overflow: hidden; }
   opacity: 0.7;
 }
 
-/* ── Update Banner ── */
-.update-banner {
+/* ── Aviso de versão nova (UpdatePrompt) ── */
+.update-card {
   position: fixed;
-  top: env(safe-area-inset-top, 0px);
-  left: 0; right: 0;
-  background: var(--surface-3);
-  border-bottom: 1px solid var(--primary);
-  display: flex;
+  left: 12px;
+  right: 12px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 12px;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg), 0 0 0 4px var(--primary-glow);
+  color: var(--text);
+  animation: update-card-in 280ms ease-out;
+}
+.update-card--above-nav {
+  bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+}
+.update-card__icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-lg);
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+.update-card__icon svg { width: 20px; height: 20px; }
+.update-card__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.update-card__title { font-size: 0.92rem; }
+.update-card__desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+.update-card__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.update-card__later {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text);
-  z-index: 1000;
-  gap: 12px;
+  cursor: pointer;
+}
+.update-card__later:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@keyframes update-card-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .update-card { animation: none; }
 }

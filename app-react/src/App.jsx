@@ -48,7 +48,7 @@ function Shell() {
 
   return (
     <div className="shell">
-      <UpdatePrompt />
+      <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}
 
