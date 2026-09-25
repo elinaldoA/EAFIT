@@ -593,3 +593,22 @@ a { color: var(--primary); }
   white-space: pre-wrap;
   margin-top: 8px;
 }
+
+/* ---------- demonstrações de exercícios ---------- */
+
+.page-subtitle { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); max-width: 70ch; }
+.muted { color: var(--text-muted); font-size: 13px; }
+
+.media-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.media-custom { display: flex; gap: 8px; flex: 1 1 320px; min-width: 0; }
+.media-custom .input { min-width: 0; }
+
+.media-thumb {
+  display: block;
+  width: 120px;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #000;
+  border: 1px solid var(--border);
+}
