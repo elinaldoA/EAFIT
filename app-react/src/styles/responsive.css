@@ -1,0 +1,29 @@
+/* ============================================================
+   DESKTOP — moldura de celular centralizada
+============================================================ */
+@media (min-width: 480px) {
+  body {
+    background: #070709;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .shell {
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 0 0 8px #111113, var(--shadow-lg);
+  }
+}
+
+/* ============================================================
+   MOBILE — telas pequenas
+============================================================ */
+@media (max-width: 380px) {
+  .set-row {
+    grid-template-columns: 44px 1fr 1fr 28px;
+  }
+}

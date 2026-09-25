@@ -1,0 +1,231 @@
+/* ============================================================
+   INPUT MODIFIER
+============================================================ */
+.input--sm {
+  padding: 9px 12px;
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   PROFILE PAGE
+============================================================ */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px 16px;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 30%, var(--primary-h));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #09090b;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.profile-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-avatar__edit {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  border: 1px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+}
+
+.profile-hero__info { min-width: 0; }
+
+.profile-email {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-handle {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-since {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-card--streak {
+  border-color: var(--warning);
+  background: rgba(251,191,36,.04);
+}
+
+.stat-card__value {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.stat-card--streak .stat-card__value { color: var(--warning); }
+
+.stat-card__label {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.4px;
+  font-weight: 600;
+}
+
+/* Section groups — visual clustering for stacked cards */
+.section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-group__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 0 2px;
+}
+
+/* Profile section */
+.profile-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-section__title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+button.profile-section__title {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-section__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.profile-field__label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.profile-field--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.profile-field--row .profile-field__label {
+  font-size: 0.79rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* IMC card */
+.imc-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+}
+
+.imc-card__label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.imc-card__value {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+.imc-card__class {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}

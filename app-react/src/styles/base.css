@@ -1,0 +1,40 @@
+/* ============================================================
+   RESET
+============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+button, input { font-family: inherit; }
+
+/* ============================================================
+   SHELL — frame do app
+============================================================ */
+.shell {
+  /* svh (não dvh) de propósito: dvh recalcula a altura conforme a barra do
+     navegador/gestos do Android aparece ou some, e logo após o reload forçado
+     pelo update do PWA esse recálculo pode ficar "preso" num valor maior que
+     a área realmente visível — empurrando o bottom-nav pra fora da tela (sem
+     como rolar, já que html/body têm overflow:hidden) até fechar e reabrir o
+     app. svh usa sempre a menor altura possível, garantindo que o bottom-nav
+     nunca fique atrás da barra de sistema.
+  */
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  /* Faz do shell o "viewport" dos modais portados para dentro dele (ver lib/modalRoot.js) —
+     sem isso, position:fixed nos modais ignora a moldura de celular do preview desktop. */
+  transform: translateZ(0);
+}
