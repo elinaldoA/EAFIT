@@ -5,9 +5,19 @@ import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from '../lib/waterLog';
 import { enqueue } from '../lib/syncQueue';
-import { fmtDate, parseLocalDate, toDateStr } from '../lib/utils';
-import LineChart from '../components/LineChart';
+import { parseLocalDate, toDateStr } from '../lib/utils';
+import { buildDailySeries, waterStats } from '../lib/waterStats';
+import WaterBars from '../components/WaterBars';
 import Skeleton from '../components/Skeleton';
+
+const HISTORY_DAYS = 14;
+
+const QUICK_ADD = [
+  { ml: 200, icon: '🥛', label: 'Copo' },
+  { ml: 300, icon: '☕', label: 'Caneca' },
+  { ml: 500, icon: '🥤', label: 'Garrafa' },
+  { ml: 750, icon: '🍶', label: 'Squeeze' },
+];
 
 function getWaterMl() {
   return parseInt(localStorage.getItem(waterStorageKey()), 10) || 0;
@@ -28,6 +38,9 @@ export default function HidratacaoPage({ active }) {
   const bump = () => setTick(t => t + 1);
   const [waterLogs, setWaterLogs] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Últimas adições desta visita, pra "Desfazer" tirar exatamente o que entrou
+  // por engano. Vazia (app reaberto), o botão vira um -200ml de correção.
+  const [undoStack, setUndoStack] = useState([]);
 
   const water = getWaterMl();
 
@@ -38,15 +51,14 @@ export default function HidratacaoPage({ active }) {
       setLoading(true);
       try {
         // Ancora em todayDate() (fuso de Brasília), não em `new Date()` local +
-        // toISOString() (UTC) — evita que a janela de 60 dias fique um dia
-        // deslocada dependendo do fuso/horário do navegador.
+        // toISOString() (UTC) — evita que a janela fique um dia deslocada
+        // dependendo do fuso/horário do navegador.
         const since = parseLocalDate(todayDate());
-        since.setDate(since.getDate() - 59);
-        const sinceStr = toDateStr(since);
+        since.setDate(since.getDate() - (HISTORY_DAYS - 1));
 
         const [todayMl, history] = await Promise.all([
           fetchWaterLog(user.id, todayDate()),
-          fetchWaterLogsRange(user.id, sinceStr),
+          fetchWaterLogsRange(user.id, toDateStr(since)),
         ]);
         if (todayMl !== null) localStorage.setItem(waterStorageKey(), todayMl);
         setWaterLogs(history);
@@ -62,18 +74,18 @@ export default function HidratacaoPage({ active }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, user]);
 
-  const waterPoints = useMemo(() => waterLogs
-    .filter(w => Number.isFinite(w.amount_ml))
-    .map(w => ({ value: Math.round(w.amount_ml / 1000 * 10) / 10, label: fmtDate(w.log_date) })),
-  [waterLogs]);
+  // O dia de hoje vem do localStorage (atualizado na hora a cada toque), não
+  // do histórico buscado ao abrir a aba.
+  const series = useMemo(() => {
+    const s = buildDailySeries(waterLogs, todayDate(), HISTORY_DAYS);
+    s[s.length - 1] = { ...s[s.length - 1], ml: water };
+    return s;
+  }, [waterLogs, water]);
+  const stats = useMemo(() => waterStats(series, goalMl), [series, goalMl]);
 
-  function handleAddWater(deltaMl) {
-    const next = Math.max(0, water + deltaMl);
+  function saveWater(next) {
     localStorage.setItem(waterStorageKey(), next);
     bump();
-    if (deltaMl > 0 && next >= goalMl && water < goalMl) {
-      toast('🎉 Meta de hidratação do dia atingida!');
-    }
     if (user) {
       upsertWaterLog(user.id, todayDate(), next).catch(err => {
         console.error('upsertWaterLog:', err);
@@ -83,53 +95,95 @@ export default function HidratacaoPage({ active }) {
     }
   }
 
-  function handleResetWater() {
-    if (!window.confirm('Zerar a água registrada hoje?')) return;
-    localStorage.removeItem(waterStorageKey());
-    bump();
-    if (user) {
-      upsertWaterLog(user.id, todayDate(), 0).catch(err => {
-        console.error('resetWaterLog:', err);
-        enqueue('water_log', { userId: user.id, date: todayDate(), amountMl: 0 });
-        markPending();
-      });
+  function handleAddWater(deltaMl) {
+    const next = Math.max(0, water + deltaMl);
+    if (deltaMl > 0) {
+      setUndoStack(s => [...s, deltaMl].slice(-10));
+      if (next >= goalMl && water < goalMl) toast('🎉 Meta de hidratação do dia atingida!');
     }
+    saveWater(next);
   }
 
-  const pct = Math.min(100, (water / goalMl) * 100);
+  function handleUndo() {
+    const last = undoStack[undoStack.length - 1] ?? 200;
+    setUndoStack(s => s.slice(0, -1));
+    saveWater(Math.max(0, water - last));
+  }
+
+  function handleResetWater() {
+    if (!window.confirm('Zerar a água registrada hoje?')) return;
+    setUndoStack([]);
+    saveWater(0);
+  }
+
+  const pct = goalMl ? Math.min(100, (water / goalMl) * 100) : 0;
+  const remaining = Math.max(0, goalMl - water);
+  const done = water >= goalMl;
+  const undoAmount = undoStack[undoStack.length - 1];
 
   return (
     <section id="page-hidratacao" className="page active">
-      <div className="progress-card">
-        <div className="progress-card__row">
-          <span className="progress-card__label">💧 Hidratação hoje</span>
-          <span className="progress-card__count">{fmtLiters(water)}L / {fmtLiters(goalMl)}L</span>
+      <div className={`water-hero${done ? ' water-hero--done' : ''}`}>
+        <div className="water-hero__ring" style={{ '--pct': pct }} role="img" aria-label={`${Math.round(pct)}% da meta de água`}>
+          <div className="water-hero__inner">
+            <span className="water-hero__value">{fmtLiters(water)}<small>L</small></span>
+            <span className="water-hero__goal">de {fmtLiters(goalMl)}L</span>
+          </div>
         </div>
-        <div className="progress-card__bar">
-          <div className="progress-card__fill progress-card__fill--water" style={{ width: `${pct}%` }} />
+        <div className="water-hero__info">
+          <span className="water-hero__kicker">Hidratação hoje</span>
+          <strong className="water-hero__status">
+            {done ? 'Meta batida! 🎉' : `Faltam ${fmtLiters(remaining)}L`}
+          </strong>
+          <span className="water-hero__hint">
+            {done
+              ? `${Math.round(pct)}% da meta · continue se hidratando`
+              : `≈ ${Math.ceil(remaining / 250)} ${Math.ceil(remaining / 250) === 1 ? 'copo' : 'copos'} de 250ml`}
+          </span>
         </div>
-        <div className="water-actions">
-          <button type="button" className="btn btn--outline btn--sm" onClick={() => handleAddWater(200)}>+200ml</button>
-          <button type="button" className="btn btn--outline btn--sm" onClick={() => handleAddWater(500)}>+500ml</button>
-          <button type="button" className="btn btn--outline btn--sm" onClick={() => handleAddWater(-200)}>-200ml</button>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={handleResetWater}>Zerar</button>
+      </div>
+
+      <div className="water-quick">
+        {QUICK_ADD.map(q => (
+          <button key={q.ml} type="button" className="water-quick__btn" onClick={() => handleAddWater(q.ml)}>
+            <span className="water-quick__icon" aria-hidden="true">{q.icon}</span>
+            <span className="water-quick__ml">+{q.ml}ml</span>
+            <span className="water-quick__label">{q.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="water-actions">
+        <button type="button" className="btn btn--ghost btn--sm" disabled={water === 0} onClick={handleUndo}>
+          ↶ {undoAmount ? `Desfazer +${undoAmount}ml` : '−200ml'}
+        </button>
+        <button type="button" className="link-btn water-actions__reset" disabled={water === 0} onClick={handleResetWater}>
+          Zerar o dia
+        </button>
+      </div>
+
+      <div className="history-stats water-stats">
+        <div className="stat-card">
+          <span className="stat-card__value">{stats.avg7 ? fmtLiters(stats.avg7) : '–'}</span>
+          <span className="stat-card__label">Média 7 dias (L)</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-card__value">{stats.streak}</span>
+          <span className="stat-card__label">Dias seguidos na meta</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-card__value">{stats.daysHit}/{HISTORY_DAYS}</span>
+          <span className="stat-card__label">Dias na meta</span>
         </div>
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Histórico</div>
+        <div className="section-group__label">Últimos {HISTORY_DAYS} dias</div>
         <div className="dash-card">
-          <div className="dash-card__title">Água consumida por dia</div>
-          <div className="line-chart-wrap">
-            {loading ? <Skeleton height={130} /> : (
-              <LineChart
-                points={waterPoints}
-                valueSuffix="L"
-                singleMsg={v => `1 dia registrado: ${v}L — registre água em outros dias para ver a evolução`}
-                emptyMsg="Nenhuma água registrada ainda."
-              />
-            )}
-          </div>
+          {loading ? <Skeleton height={150} /> : <WaterBars series={series} goalMl={goalMl} />}
+          <p className="dash-card__subtitle">
+            Meta de {fmtLiters(goalMl)}L por dia · melhor dia: {stats.bestMl ? `${fmtLiters(stats.bestMl)}L` : '–'} · ajuste a meta em Perfil
+          </p>
         </div>
       </div>
     </section>

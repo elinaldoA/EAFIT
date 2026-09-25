@@ -12,8 +12,8 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 - **Treino semanal** — plano de treino dividido por dia da semana, com séries, repetições, técnica e tempo de descanso por exercício. Marque séries concluídas e registre a carga usada em cada uma.
 - **Modo treino ao vivo** — tela cheia com um exercício por vez: séries com campos grandes, descanso embutido (com +15s/pular e alarme), progresso do treino, tela sempre acesa (Wake Lock) e navegação entre exercícios. Abre pelo card "Treino de hoje" ou pelo botão ⚡ de cada dia.
 - **Histórico** — calendário mensal dos treinos (concluídos e incompletos), resumo do mês (treinos, tempo, séries, volume) e o detalhe de cada sessão com a comparação de cada exercício contra a última vez que ele foi feito.
-- **Hidratação** — meta diária de água calculada a partir do peso, com histórico e lembretes.
-- **Evolução** — dashboard com:
+- **Hidratação** — meta diária de água calculada a partir do peso, anel de progresso do dia, adições rápidas (copo, caneca, garrafa, squeeze) com desfazer, média dos últimos 7 dias, sequência de dias na meta, barras dos últimos 14 dias e lembretes.
+- **Evolução** — resumo no topo (treinos em 30 dias, sequência, recordes, conquistas) e abas Treinos, Recordes e Corpo, com:
   - avatar corporal indicando os grupos musculares trabalhados no dia
   - gráfico de volume total por treino
   - heatmap dos últimos 35 dias

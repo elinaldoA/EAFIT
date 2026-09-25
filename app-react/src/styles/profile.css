@@ -236,3 +236,79 @@ button.profile-section__title {
   line-height: 1.4;
   color: var(--text-dim);
 }
+
+/* ============================================================
+   CARD RECOLHÍVEL (CollapsibleCard) e atalho
+============================================================ */
+.collapse {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color var(--t);
+}
+.collapse--open { border-color: var(--border-2); }
+
+.collapse__head,
+.shortcut-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.collapse__head:active,
+.shortcut-card:active { background: var(--surface-2); }
+
+.shortcut-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.collapse__icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  font-size: 1.05rem;
+}
+
+.collapse__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.collapse__title { font-size: 0.9rem; font-weight: 700; }
+.collapse__summary {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collapse__chevron {
+  color: var(--text-dim);
+  font-size: 1.3rem;
+  line-height: 1;
+  transition: transform var(--t);
+}
+.collapse--open .collapse__chevron { transform: rotate(90deg); }
+
+.collapse__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 16px 16px;
+  animation: fadeUp 0.18s ease both;
+}
+
+.collapse__divider { height: 1px; background: var(--border); margin: 6px 0; }
+
+.link-btn--danger { color: var(--error); align-self: center; padding: 6px 0; }

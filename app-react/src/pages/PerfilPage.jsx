@@ -4,7 +4,6 @@ import { useToast } from '../context/useToast';
 import { useAvatar } from '../context/useAvatar';
 import { useWorkout } from '../context/useWorkout';
 import { enqueue } from '../lib/syncQueue';
-import { fmtDate } from '../lib/utils';
 import { todayDate, DEFAULT_WEEKLY_GOAL, computedWaterGoalLiters, DEFAULT_WATER_GOAL } from '../data/treinoData';
 import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
@@ -12,14 +11,13 @@ import { generatePlan } from '../data/workoutTemplates';
 import { createGeneratedPlan } from '../lib/workoutPlans';
 import { useReminders } from '../hooks/useReminders';
 import { useProfileData } from '../hooks/useProfileData';
-import LineChart from '../components/LineChart';
-import ProgressPhotos from '../components/ProgressPhotos';
+import CollapsibleCard from '../components/CollapsibleCard';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
 import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
-import ProfilePreferencesSection from '../components/ProfilePreferencesSection';
+import { NotificationsSection, ExportSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
 
 export default function PerfilPage({ active }) {
@@ -46,7 +44,6 @@ export default function PerfilPage({ active }) {
 
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [accountOpen, setAccountOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -178,10 +175,18 @@ export default function PerfilPage({ active }) {
     () => metaProgress(parseFloat(peso), parseFloat(pesoAlvo), weightLogs),
     [peso, pesoAlvo, weightLogs]
   );
-  const weightPoints = useMemo(
-    () => weightLogs.map(w => ({ label: fmtDate(w.log_date), value: w.peso })),
-    [weightLogs]
-  );
+  const suggestedWaterGoal = computedWaterGoalLiters(peso) ?? DEFAULT_WATER_GOAL;
+  const waterGoalLabel = String(parseFloat(macroAgua) || suggestedWaterGoal).replace('.', ',');
+  const fullName = [nome, sobrenome].filter(Boolean).join(' ');
+  const bodySummary = [peso && `${peso}kg`, altura && `${altura}cm`, imc && `IMC ${imc.value.replace('.', ',')}`]
+    .filter(Boolean).join(' · ') || 'Peso, altura, meta e nível';
+
+  // Peso e fotos moram na aba Corpo da Evolução (antes ficavam repetidos
+  // aqui). Grava a aba e troca o hash — useHashTab ouve o hashchange.
+  function openBodyProgress() {
+    try { localStorage.setItem('dash_tab', 'corpo'); } catch { /* sem storage */ }
+    window.location.hash = 'dash';
+  }
 
   return (
     <section id="page-perfil" className="page active">
@@ -193,63 +198,63 @@ export default function PerfilPage({ active }) {
       <div className="section-group">
         <div className="section-group__label">Meus dados</div>
 
-        <ProfilePersonalSection
-          nome={nome} setNome={setNome} sobrenome={sobrenome} setSobrenome={setSobrenome}
-          apelido={apelido} setApelido={setApelido} onSave={handleSavePersonal}
-        />
+        <CollapsibleCard icon="👤" title="Dados pessoais" summary={fullName || apelido || 'Nome e apelido'}>
+          <ProfilePersonalSection
+            nome={nome} setNome={setNome} sobrenome={sobrenome} setSobrenome={setSobrenome}
+            apelido={apelido} setApelido={setApelido} onSave={handleSavePersonal}
+          />
+        </CollapsibleCard>
 
-        <ProfileBodySection
-          sexo={sexo} setSexo={setSexo} idade={idade} setIdade={setIdade}
-          peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
-          meta={meta} setMeta={setMeta} nivel={nivel} setNivel={setNivel}
-          pesoAlvo={pesoAlvo} setPesoAlvo={setPesoAlvo}
-          progress={progress} imc={imc} onSave={handleSave}
-          regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}
-        />
+        <CollapsibleCard icon="📏" title="Meu corpo" summary={bodySummary}>
+          <ProfileBodySection
+            sexo={sexo} setSexo={setSexo} idade={idade} setIdade={setIdade}
+            peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
+            meta={meta} setMeta={setMeta} nivel={nivel} setNivel={setNivel}
+            pesoAlvo={pesoAlvo} setPesoAlvo={setPesoAlvo}
+            progress={progress} imc={imc} onSave={handleSave}
+            regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}
+          />
+        </CollapsibleCard>
 
-        <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
+        <CollapsibleCard icon="🎯" title="Metas" summary={`${weeklyGoalNum} treinos/semana · ${waterGoalLabel}L de água por dia`}>
+          <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
+          <div className="collapse__divider" />
+          <MacrosSection
+            macroAgua={macroAgua} setMacroAgua={setMacroAgua}
+            suggestedGoal={suggestedWaterGoal}
+            onSave={handleSaveWaterGoal}
+          />
+        </CollapsibleCard>
 
-        <MacrosSection
-          macroAgua={macroAgua} setMacroAgua={setMacroAgua}
-          suggestedGoal={computedWaterGoalLiters(peso) ?? DEFAULT_WATER_GOAL}
-          onSave={handleSaveWaterGoal}
-        />
-      </div>
-
-      <div className="section-group">
-        <div className="section-group__label">Progresso</div>
-
-        <div className="profile-section">
-          <div className="profile-section__title">Evolução do peso</div>
-          <div className="line-chart-wrap">
-            <LineChart
-              points={weightPoints}
-              valueSuffix="kg"
-              singleMsg={v => `1 registro: ${v}kg — salve seu peso novamente em outro dia para ver a evolução`}
-              emptyMsg="Nenhum peso registrado ainda. Salve seus dados corporais acima para começar."
-            />
-          </div>
-        </div>
-
-        <div className="profile-section">
-          <div className="profile-section__title">Fotos de progresso</div>
-          <ProgressPhotos />
-        </div>
+        <button type="button" className="shortcut-card" onClick={openBodyProgress}>
+          <span className="collapse__icon" aria-hidden="true">📈</span>
+          <span className="collapse__text">
+            <span className="collapse__title">Peso e fotos de progresso</span>
+            <span className="collapse__summary">
+              {weightLogs.length ? `${weightLogs.length} registros de peso · ver em Evolução` : 'Ver em Evolução'}
+            </span>
+          </span>
+          <span className="collapse__chevron" aria-hidden="true">›</span>
+        </button>
       </div>
 
       <div className="section-group">
         <div className="section-group__label">Preferências</div>
-        <ProfilePreferencesSection
-          user={user} updateProfile={updateProfile} toast={toast}
-          remindersEnabled={remindersEnabled} toggleReminders={toggleReminders}
-          exporting={exporting} onExport={handleExport}
-        />
+        <CollapsibleCard icon="🔔" title="Notificações" summary={remindersEnabled ? 'Ativadas' : 'Desativadas'}>
+          <NotificationsSection
+            user={user} updateProfile={updateProfile} toast={toast}
+            remindersEnabled={remindersEnabled} toggleReminders={toggleReminders}
+          />
+        </CollapsibleCard>
+        <CollapsibleCard icon="💾" title="Exportar e backup" summary="CSV, JSON ou relatório para imprimir">
+          <ExportSection exporting={exporting} onExport={handleExport} />
+        </CollapsibleCard>
       </div>
 
       <div className="section-group">
         <div className="section-group__label">Conta</div>
         <ProfileAccountSection
-          user={user} accountOpen={accountOpen} setAccountOpen={setAccountOpen}
+          user={user}
           newEmail={newEmail} setNewEmail={setNewEmail} onUpdateEmail={handleUpdateEmail}
           newPassword={newPassword} setNewPassword={setNewPassword} onUpdatePassword={handleUpdatePassword}
           onLogout={logout} onDeleteAccount={handleDeleteAccount}

@@ -1,7 +1,10 @@
 import { useId } from 'react';
 
-export default function LineChart({ points, emptyMsg, singleMsg, valueSuffix = '' }) {
+export default function LineChart({ points: rawPoints, emptyMsg, singleMsg, valueSuffix = '' }) {
   const svgId = useId();
+  // Um valor não numérico (coluna nula, texto) virava NaN nas coordenadas e
+  // quebrava o SVG inteiro — descarta o ponto em vez de desenhar lixo.
+  const points = rawPoints.filter(p => Number.isFinite(p.value));
 
   if (points.length < 2) {
     const msg = points.length === 1 && singleMsg ? singleMsg(points[0].value) : (emptyMsg || 'Nenhum registro disponível');
@@ -49,7 +52,7 @@ export default function LineChart({ points, emptyMsg, singleMsg, valueSuffix = '
         );
       })}
       <text x={mX.toFixed(1)} y={(mY - 8).toFixed(1)} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="var(--primary)">
-        {maxV}{valueSuffix}
+        {maxV.toLocaleString('pt-BR')}{valueSuffix}
       </text>
     </svg>
   );

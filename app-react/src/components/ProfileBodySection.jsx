@@ -4,8 +4,7 @@ export default function ProfileBodySection({
   progress, imc, onSave, regenerating, onRegeneratePlan,
 }) {
   return (
-    <div className="profile-section">
-      <div className="profile-section__title">Meu Corpo</div>
+    <>
       <div className="profile-section__fields">
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileSexo">Sexo biológico</label>
@@ -80,7 +79,7 @@ export default function ProfileBodySection({
       {imc && (
         <div className="imc-card">
           <span className="imc-card__label">IMC</span>
-          <span className="imc-card__value">{imc.value}</span>
+          <span className="imc-card__value">{imc.value.replace('.', ',')}</span>
           <span className="imc-card__class">{imc.cls}</span>
         </div>
       )}
@@ -88,6 +87,6 @@ export default function ProfileBodySection({
       <button className="btn btn--outline btn--full" disabled={regenerating} onClick={onRegeneratePlan}>
         {regenerating ? 'Gerando novo treino…' : '🔄 Gerar novo treino com esses dados'}
       </button>
-    </div>
+    </>
   );
 }

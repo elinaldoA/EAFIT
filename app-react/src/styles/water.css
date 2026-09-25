@@ -1,0 +1,159 @@
+/* ============================================================
+   ÁGUA — anel do dia, adições rápidas, resumo e barras diárias
+============================================================ */
+.water-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(56, 189, 248, .4);
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgba(56, 189, 248, .14), transparent 60%),
+    var(--surface);
+}
+.water-hero--done { border-color: rgba(74, 222, 128, .5); }
+
+/* --pct vem inline (0–100) */
+.water-hero__ring {
+  --pct: 0;
+  width: 124px;
+  height: 124px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--water) calc(var(--pct) * 1%), var(--surface-3) 0);
+  transition: background 0.4s ease;
+}
+.water-hero--done .water-hero__ring {
+  background: conic-gradient(var(--success) calc(var(--pct) * 1%), var(--surface-3) 0);
+}
+
+.water-hero__inner {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.water-hero__value {
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--water);
+  font-variant-numeric: tabular-nums;
+}
+.water-hero--done .water-hero__value { color: var(--success); }
+.water-hero__value small { font-size: 0.9rem; margin-left: 1px; }
+.water-hero__goal { font-size: 0.7rem; color: var(--text-dim); margin-top: 3px; }
+
+.water-hero__info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.water-hero__kicker {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--water);
+}
+.water-hero--done .water-hero__kicker { color: var(--success); }
+.water-hero__status { font-size: 1.2rem; font-weight: 900; line-height: 1.2; }
+.water-hero__hint { font-size: 0.74rem; color: var(--text-muted); }
+
+.water-quick {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.water-quick__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 4px 10px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--t), transform var(--t), background var(--t);
+  -webkit-tap-highlight-color: transparent;
+}
+.water-quick__btn:hover { border-color: rgba(56, 189, 248, .6); }
+.water-quick__btn:active { transform: scale(0.95); background: rgba(56, 189, 248, .1); }
+.water-quick__icon { font-size: 1.4rem; line-height: 1.2; }
+.water-quick__ml { font-size: 0.82rem; font-weight: 800; color: var(--water); }
+.water-quick__label { font-size: 0.62rem; color: var(--text-dim); }
+
+.water-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.water-actions__reset { color: var(--text-dim); }
+.water-actions__reset:disabled, .water-actions .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.water-stats { grid-template-columns: repeat(3, 1fr); }
+.water-stats .stat-card__value { color: var(--water); }
+
+/* Barras diárias */
+.water-bars { display: flex; flex-direction: column; gap: 6px; }
+
+.water-bars__plot {
+  position: relative;
+  height: 130px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-top: 8px;
+}
+
+.water-bars__goal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1.5px dashed rgba(56, 189, 248, .55);
+  pointer-events: none;
+}
+.water-bars__goal span {
+  position: absolute;
+  right: 0;
+  top: -15px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--water);
+  text-transform: uppercase;
+}
+
+.water-bars__col { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.water-bars__bar {
+  width: 100%;
+  border-radius: 4px 4px 2px 2px;
+  background: rgba(56, 189, 248, .35);
+  transition: height 0.4s cubic-bezier(.4, 0, .2, 1);
+}
+.water-bars__bar--hit { background: var(--water); }
+.water-bars__bar--today { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--water); }
+
+.water-bars__labels { display: flex; gap: 4px; }
+.water-bars__labels span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.water-bars__labels .water-bars__label--today { color: var(--water); font-weight: 800; }
+
+@media (max-width: 380px) {
+  .water-hero { gap: 12px; padding: 14px; }
+  .water-hero__ring { width: 104px; height: 104px; }
+  .water-hero__inner { width: 86px; height: 86px; }
+  .water-hero__value { font-size: 1.4rem; }
+}

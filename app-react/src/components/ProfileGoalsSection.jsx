@@ -2,8 +2,7 @@ import { DEFAULT_WATER_GOAL, DEFAULT_WEEKLY_GOAL } from '../data/treinoData';
 
 export function WeeklyGoalSection({ weeklyGoal, setWeeklyGoal, onSave }) {
   return (
-    <div className="profile-section">
-      <div className="profile-section__title">Meta Semanal de Treinos</div>
+    <>
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="weeklyGoal">Treinos por semana</label>
         <input
@@ -12,7 +11,7 @@ export function WeeklyGoalSection({ weeklyGoal, setWeeklyGoal, onSave }) {
         />
       </div>
       <button className="btn btn--primary btn--full" onClick={onSave}>Salvar meta semanal</button>
-    </div>
+    </>
   );
 }
 
@@ -21,8 +20,7 @@ export function WeeklyGoalSection({ weeklyGoal, setWeeklyGoal, onSave }) {
 // que aparece como placeholder, não o padrão fixo de 3,5 L.
 export function MacrosSection({ macroAgua, setMacroAgua, onSave, suggestedGoal = DEFAULT_WATER_GOAL }) {
   return (
-    <div className="profile-section">
-      <div className="profile-section__title">Meta de Água</div>
+    <>
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="macroAgua">Meta de água (L)</label>
         <input
@@ -35,6 +33,6 @@ export function MacrosSection({ macroAgua, setMacroAgua, onSave, suggestedGoal =
         </p>
       </div>
       <button className="btn btn--primary btn--full" onClick={onSave}>Salvar meta de água</button>
-    </div>
+    </>
   );
 }
