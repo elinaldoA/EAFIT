@@ -1,4 +1,4 @@
-import { useAdminAuth } from '../../context/AdminAuthContext';
+import { useAdminAuth } from '../../context/useAdminAuth';
 import ThemeToggle from '../ThemeToggle';
 
 export default function Topbar({ onMenuClick }) {

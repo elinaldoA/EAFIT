@@ -1,13 +1,6 @@
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
-
-export const RATING_OPTIONS = [
-  { value: 1, label: 'Péssimo' },
-  { value: 2, label: 'Ruim' },
-  { value: 3, label: 'Regular' },
-  { value: 4, label: 'Bom' },
-  { value: 5, label: 'Ótimo' },
-];
+import { RATING_OPTIONS } from '../lib/ratingOptions';
 
 export default function RatingModal({ value, onSelect, onClose }) {
   return createPortal(

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAdminAuth } from '../context/useAdminAuth';
 import logoMark from '../assets/logo-mark.png';
 
 // Renderizada no lugar do resto do app enquanto recoveryMode estiver ativo —

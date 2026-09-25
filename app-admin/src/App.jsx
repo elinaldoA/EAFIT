@@ -1,6 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
-import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
+import { AdminAuthProvider } from './context/AdminAuthContext';
+import { useAdminAuth } from './context/useAdminAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';

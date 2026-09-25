@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
-import { useAvatar } from '../context/AvatarContext';
-import { useWorkout } from '../context/WorkoutContext';
+import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
+import { useAvatar } from '../context/useAvatar';
+import { useWorkout } from '../context/useWorkout';
 import { enqueue } from '../lib/syncQueue';
 import { fmtDate } from '../lib/utils';
 import { TODAY_DATE, DEFAULT_WEEKLY_GOAL } from '../data/treinoData';

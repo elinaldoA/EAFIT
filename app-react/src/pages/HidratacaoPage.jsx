@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TODAY_DATE, WATER_STORAGE_KEY, getWaterGoalLiters } from '../data/treinoData';
-import { useToast } from '../context/ToastContext';
-import { useAuth } from '../context/AuthContext';
-import { useWorkout } from '../context/WorkoutContext';
+import { useToast } from '../context/useToast';
+import { useAuth } from '../context/useAuth';
+import { useWorkout } from '../context/useWorkout';
 import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from '../lib/waterLog';
 import { enqueue } from '../lib/syncQueue';
 import { fmtDate, parseLocalDate, toDateStr } from '../lib/utils';

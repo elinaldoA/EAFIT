@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
 import { getModalRoot } from '../lib/modalRoot';
 import { fetchPhotos, addPhoto, deletePhoto } from '../lib/progressPhotos';
 import { fmtDate } from '../lib/utils';

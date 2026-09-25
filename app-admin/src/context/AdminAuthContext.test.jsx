@@ -17,7 +17,8 @@ vi.mock('../lib/supabase', () => ({
   db: { auth: mockAuth, from: mockFrom },
 }));
 
-import { AdminAuthProvider, useAdminAuth } from './AdminAuthContext';
+import { AdminAuthProvider } from './AdminAuthContext';
+import { useAdminAuth } from './useAdminAuth';
 
 function wrapper({ children }) {
   return <AdminAuthProvider>{children}</AdminAuthProvider>;

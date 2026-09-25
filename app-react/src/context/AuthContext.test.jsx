@@ -18,7 +18,8 @@ vi.mock('../lib/supabase', () => ({
   db: { auth: mockAuth, functions: mockFunctions },
 }));
 
-import { AuthProvider, useAuth } from './AuthContext';
+import { AuthProvider } from './AuthContext';
+import { useAuth } from './useAuth';
 
 function wrapper({ children }) {
   return <AuthProvider>{children}</AuthProvider>;

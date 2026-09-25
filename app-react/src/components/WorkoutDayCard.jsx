@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useWorkout } from '../context/WorkoutContext';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/useAuth';
+import { useWorkout } from '../context/useWorkout';
+import { useToast } from '../context/useToast';
 import { formatDuration } from '../lib/utils';
 import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';

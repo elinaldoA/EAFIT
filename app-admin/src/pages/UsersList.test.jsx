@@ -6,7 +6,7 @@ vi.mock('../lib/supabase', () => ({
   db: { rpc: mockRpc },
 }));
 
-import { fetchUsers } from './UsersList';
+import { fetchUsers } from '../lib/users';
 
 beforeEach(() => {
   vi.clearAllMocks();

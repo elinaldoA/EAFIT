@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-
-const ThemeContext = createContext(null);
+import { useEffect, useState } from 'react';
+import { ThemeContext } from './useTheme';
 
 // Mesma lógica de app-react/src/context/ThemeContext.jsx — data-theme na raiz
 // + persistência em localStorage, pra manter os dois apps consistentes.
@@ -24,8 +23,4 @@ export function ThemeProvider({ children }) {
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  return useContext(ThemeContext);
 }

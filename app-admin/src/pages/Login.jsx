@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAdminAuth } from '../context/useAdminAuth';
 import logoMark from '../assets/logo-mark.png';
 
 export default function Login() {

@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { TODAY_NAME } from '../data/treinoData';
-import { useAuth } from '../context/AuthContext';
-import { useWorkout } from '../context/WorkoutContext';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/useAuth';
+import { useWorkout } from '../context/useWorkout';
+import { useToast } from '../context/useToast';
 import { getDateForWeekday, fmtDate, daysUntil } from '../lib/utils';
 import { db } from '../lib/supabase';
 import RestTimer from '../components/RestTimer';

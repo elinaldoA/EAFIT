@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../lib/supabase';
-import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAdminAuth } from '../context/useAdminAuth';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import { formatDate, callAdminAction, computePersonalRecords, callGeneratePlan } from '../lib/userDetailHelpers';

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
-import { useAuth } from '../context/AuthContext';
-import { useWorkout } from '../context/WorkoutContext';
-import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/useAuth';
+import { useWorkout } from '../context/useWorkout';
+import { useToast } from '../context/useToast';
 import { fmtDate, daysUntil } from '../lib/utils';
 import {
   listPlans, createPlan, setActivePlan, renamePlan, deletePlan, updatePlanSuccessors,

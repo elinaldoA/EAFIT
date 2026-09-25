@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
-import { useAdminAuth } from '../context/AdminAuthContext';
-import { fetchUsers } from './UsersList';
+import { useAdminAuth } from '../context/useAdminAuth';
+import { fetchUsers } from '../lib/users';
 import EmptyState from '../components/EmptyState';
 
 function formatDate(value) {
