@@ -13,6 +13,22 @@ function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
+// iOS Safari só põe em tela cheia o próprio <video> (webkitEnterFullscreen).
+function canFullscreen() {
+  if (typeof document === 'undefined') return false;
+  return !!document.fullscreenEnabled || 'webkitEnterFullscreen' in HTMLVideoElement.prototype;
+}
+
+async function enterFullscreen(video) {
+  try {
+    if (video.requestFullscreen) await video.requestFullscreen();
+    else video.webkitEnterFullscreen?.();
+    // Vídeos são deitados (16:9): no celular, tenta girar junto. Nem todo
+    // navegador deixa travar a orientação — sem isso, só fica em tela cheia.
+    await screen.orientation?.lock?.('landscape');
+  } catch { /* recusado pelo navegador: segue no modal */ }
+}
+
 const OFFLINE_MSG = 'Sem conexão — a demonstração aparece quando você estiver online (depois disso ela fica salva no aparelho).';
 
 // Padrão (Free Exercise DB): 2 quadros alternando; o toque pausa/continua.
@@ -79,6 +95,13 @@ function MediaStage({ nome, media }) {
     if (videoRef.current) videoRef.current.playbackRate = rate;
   }, [rate, ready]);
 
+  // Ao sair da tela cheia, libera a orientação travada.
+  useEffect(() => {
+    const onChange = () => { if (!document.fullscreenElement) screen.orientation?.unlock?.(); };
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
   function handleTap() {
     const v = videoRef.current;
     if (!isVideo || !v) return;
@@ -88,8 +111,9 @@ function MediaStage({ nome, media }) {
 
   return (
     <>
+    <div className="demo-modal__stage-wrap">
     <button
-      type="button" className="demo-modal__stage demo-modal__stage--custom"
+      type="button" className={`demo-modal__stage demo-modal__stage--custom${ready ? '' : ' demo-modal__stage--loading'}`}
       aria-label={isVideo ? (playing ? 'Pausar vídeo' : 'Continuar vídeo') : `Demonstração de ${nome}`}
       onClick={handleTap} disabled={failed || !isVideo}
     >
@@ -109,6 +133,13 @@ function MediaStage({ nome, media }) {
       {failed && <p className="demo-modal__error">{OFFLINE_MSG}</p>}
       {isVideo && ready && !failed && <span className="demo-modal__badge">{playing ? '⏸' : '▶'}</span>}
     </button>
+    {isVideo && ready && !failed && canFullscreen() && (
+      <button
+        type="button" className="demo-modal__fullscreen" aria-label="Ver em tela cheia"
+        onClick={() => enterFullscreen(videoRef.current)}
+      >⛶</button>
+    )}
+    </div>
     {isVideo && (
       <div className="demo-modal__steps demo-modal__speed" role="group" aria-label="Velocidade do vídeo">
         {SPEEDS.map(s => (
