@@ -11,11 +11,13 @@
 // exato em que os dois baterem o mesmo horário.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
+import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!;
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!;
+const CRON_SECRET = Deno.env.get('CRON_SECRET');
 
 webpush.setVapidDetails('mailto:contato@eafit.app', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
@@ -95,7 +97,9 @@ function daysSinceLastWorkout(dates, todayStr) {
   return daysBetween(mostRecent, todayStr);
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  if (!isAuthorizedCronRequest(req, CRON_SECRET)) return new Response('Unauthorized', { status: 401 });
+
   const { date, time } = nowInSaoPaulo();
   const dow = parseDateOnly(date).getDay(); // 0=domingo .. 1=segunda .. 6=sábado
 
