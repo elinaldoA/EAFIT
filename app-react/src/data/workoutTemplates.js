@@ -127,9 +127,13 @@ const DEFINICAO = [
         { nome: '🔷 Roda (Ab Wheel)', series: '3', reps: '10-12', descanso: '30s', tecnica: 'Extensão total core' },
         { nome: '🏃 Cardio — Escada', series: '-', reps: '15min · Moderado', descanso: '-', tecnica: '' },
     ]},
-    { dia: 'Sexta', foco: 'Cardio Leve / Recuperação', exercicios: [
-        { nome: 'Caminhada Rápida ou Bicicleta', series: '-', reps: '30-40min', descanso: '-', tecnica: '5-6km/h ou 130bpm' },
-    ], pos: []},
+    { dia: 'Sexta', foco: 'Superiores', exercicios: [
+        { nome: 'Supino Inclinado com Halteres', series: '3', reps: '10-12', descanso: '60s', tecnica: 'Controle na descida' },
+        { nome: 'Remada Unilateral com Halter',  series: '3', reps: '10-12', descanso: '60s', tecnica: 'Máximo alongamento' },
+        { nome: 'Elevação Lateral com Halteres', series: '3', reps: '12-15', descanso: '45s', tecnica: 'Leve inclinação' },
+    ], pos: [
+        { nome: '🏃 Cardio — Esteira', series: '-', reps: '15min · Moderado', descanso: '-', tecnica: '' },
+    ]},
     { dia: 'Sábado', foco: 'Cardio Leve / Recuperação', exercicios: [
         { nome: 'Caminhada Rápida ou Bicicleta', series: '-', reps: '30min', descanso: '-', tecnica: '5-6km/h ou 130bpm' },
     ], pos: []},
@@ -159,8 +163,10 @@ const SAUDE = [
         { nome: 'Cadeira Flexora (Deitado)', series: '3', reps: '12-15', descanso: '60s', tecnica: 'Negativa lenta' },
         { nome: 'Elevação Pélvica',           series: '3', reps: '15-20', descanso: '45s', tecnica: 'Pausa 3s no topo' },
     ], pos: []},
-    { dia: 'Sexta', foco: 'Descanso Total', exercicios: [
-        { nome: 'Sem treino', series: '-', reps: '-', descanso: '-', tecnica: 'Recuperação ativa' },
+    { dia: 'Sexta', foco: 'Superiores', exercicios: [
+        { nome: 'Remada Unilateral com Halter',  series: '3', reps: '12-15', descanso: '60s', tecnica: 'Máximo alongamento' },
+        { nome: 'Supino Inclinado com Halteres', series: '3', reps: '12-15', descanso: '60s', tecnica: 'Controle na descida' },
+        { nome: 'Elevação Lateral com Halteres', series: '3', reps: '12-15', descanso: '45s', tecnica: 'Leve inclinação' },
     ], pos: []},
     { dia: 'Sábado', foco: 'Cardio Leve / Recuperação', exercicios: [
         { nome: 'Caminhada Rápida ou Bicicleta', series: '-', reps: '30min', descanso: '-', tecnica: '5-6km/h ou 130bpm' },

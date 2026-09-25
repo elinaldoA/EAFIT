@@ -125,6 +125,17 @@ describe('generatePlan', () => {
     }
   });
 
+  // A semana de treino do app é Segunda–Sexta (TreinoPage) — a Sexta não
+  // pode vir como descanso/cardio leve pra quem está com IMC normal.
+  it('a Sexta é dia de treino em todos os objetivos', async () => {
+    for (const meta of ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia']) {
+      const plan = await generatePlan({ peso: 70, altura: 175, meta, nivel: 'intermediario' });
+      const sexta = plan.find(d => d.dia === 'Sexta');
+      expect(sexta.foco).not.toMatch(/Cardio Leve|Descanso/);
+      expect(sexta.exercicios.length).toBeGreaterThan(0);
+    }
+  });
+
   it('cai no template de "saude" para um objetivo desconhecido', async () => {
     const plan = await generatePlan({ peso: 80, altura: 178, meta: 'inexistente', nivel: 'intermediario' });
     expect(plan).toHaveLength(7);
