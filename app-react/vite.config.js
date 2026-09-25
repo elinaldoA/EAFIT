@@ -49,6 +49,7 @@ export default defineConfig({
         // via hash (ver hooks/useHashTab.js).
         shortcuts: [
           { name: 'Treino de hoje', short_name: 'Treino', url: '/EAFIT/#treino', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Histórico de treinos', short_name: 'Histórico', url: '/EAFIT/#historico', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
           { name: 'Registrar água', short_name: 'Água', url: '/EAFIT/#hidratacao', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
           { name: 'Minha evolução', short_name: 'Evolução', url: '/EAFIT/#dash', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
         ],

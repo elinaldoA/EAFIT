@@ -10,7 +10,9 @@ import { allSetsDone } from '../lib/workoutSets';
 import { DiscomfortPanel } from './DiscomfortWidgets';
 import SetRow from './SetRow';
 
-export default function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll, onFillOthers, onApplySuggestion, started }) {
+// hideName: o modo treino ao vivo já mostra nome/meta do exercício em
+// destaque no próprio cabeçalho, então o bloco omite os dele.
+export default function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll, onFillOthers, onApplySuggestion, started, hideName = false }) {
   const { user } = useAuth();
   const { refreshPlan } = useWorkout();
   const toast = useToast();
@@ -75,8 +77,12 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
     <div className="ex-block">
       <div className="ex-block__header">
         <div className="ex-block__titles">
-          <span className="ex-name">{ex.nome}</span>
-          <span className="ex-block__meta">{ex.reps} reps · desc. {ex.descanso}</span>
+          {!hideName && (
+            <>
+              <span className="ex-name">{ex.nome}</span>
+              <span className="ex-block__meta">{ex.reps} reps · desc. {ex.descanso}</span>
+            </>
+          )}
           {plateau ? (
             <p className="ex-block__suggestion ex-block__suggestion--plateau">
               ⚠️ Estagnado há {plateau.sessionsStuck} treinos em {plateau.lastCarga}kg

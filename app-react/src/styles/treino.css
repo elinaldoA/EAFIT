@@ -91,6 +91,15 @@
 }
 
 .day-card--today { border-color: var(--primary); }
+.day-card--done .day-card__name { color: var(--text-muted); }
+
+/* Progresso de séries do dia, colado na base do cabeçalho */
+.day-card__progress { height: 3px; background: var(--surface-3); }
+.day-card__progress-fill {
+  height: 100%;
+  background: var(--success);
+  transition: width 0.4s cubic-bezier(.4, 0, .2, 1);
+}
 
 .day-card__header {
   display: flex;
@@ -214,6 +223,7 @@
 }
 
 .session-timer__hint {
+  flex-basis: 100%;
   font-size: 0.66rem;
   color: var(--text-dim);
 }
@@ -311,7 +321,7 @@
 
 .set-row {
   display: grid;
-  grid-template-columns: 52px 1fr 1fr 32px;
+  grid-template-columns: 52px 1fr 1fr 40px;
   gap: 6px;
   align-items: center;
 }
@@ -327,9 +337,11 @@
   border: 1px solid var(--border-2);
   border-radius: var(--r-sm);
   color: var(--text);
+  height: 36px;
   padding: 5px 4px;
   text-align: center;
-  font-size: 0.71rem;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
   transition: border-color var(--t), box-shadow var(--t);
   outline: none;
 }
@@ -348,8 +360,8 @@
 }
 
 .set-row__check {
-  width: 32px;
-  height: 28px;
+  width: 40px;
+  height: 36px;
   border-radius: var(--r-sm);
   border: 1px solid var(--border-2);
   background: var(--bg);
@@ -364,6 +376,11 @@
   background: var(--success);
   border-color: var(--success);
   color: #09090b;
+  animation: checkPop 0.22s ease;
+}
+
+@keyframes checkPop {
+  50% { transform: scale(1.12); }
 }
 
 .set-row-wrap {
@@ -458,3 +475,100 @@
   margin-top: 4px;
 }
 .footer strong { color: var(--primary); }
+
+/* ============================================================
+   CARD "TREINO DE HOJE"
+============================================================ */
+.today-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(249, 115, 22, .45);
+  background:
+    radial-gradient(120% 90% at 100% 0%, var(--primary-glow), transparent 60%),
+    var(--surface);
+}
+.today-card--done { border-color: rgba(74, 222, 128, .45); }
+
+.today-card__top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+
+.today-card__kicker {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--primary);
+}
+.today-card--done .today-card__kicker { color: var(--success); }
+
+.today-card__title {
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  margin: 2px 0 4px;
+}
+
+.today-card__meta { font-size: 0.74rem; color: var(--text-muted); }
+
+/* Anel de progresso só com CSS (conic-gradient) — --pct vem inline, 0–100 */
+.today-card__ring {
+  --pct: 0;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--primary) calc(var(--pct) * 1%), var(--surface-3) 0);
+}
+.today-card--done .today-card__ring { background: conic-gradient(var(--success) calc(var(--pct) * 1%), var(--surface-3) 0); }
+.today-card__ring span {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.today-card__rest { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ============================================================
+   FAIXA DA SEMANA (dentro do progress-card)
+============================================================ */
+.week-strip { display: flex; justify-content: space-between; gap: 6px; }
+
+.week-strip__day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.week-strip__dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-3);
+  border: 1.5px solid var(--border-2);
+  color: #09090b;
+  font-size: 0.8rem;
+  font-weight: 900;
+  transition: background var(--t), border-color var(--t);
+}
+.week-strip__day--done .week-strip__dot { background: var(--primary); border-color: var(--primary); }
+.week-strip__day--today .week-strip__dot { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+
+.week-strip__label { font-size: 0.62rem; font-weight: 700; color: var(--text-dim); }
+.week-strip__day--today .week-strip__label { color: var(--primary); }
