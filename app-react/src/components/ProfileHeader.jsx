@@ -9,7 +9,7 @@ export default function ProfileHeader({ user, avatarData, uploadingAvatar, onAva
         <label className={`profile-avatar${avatarData ? ' profile-avatar--photo' : ''}`}>
           {avatarData
             ? <img src={avatarData} alt="Foto de perfil" className="profile-avatar__img" />
-            : (user?.email?.[0]?.toUpperCase() || '?')}
+            : (getDisplayName(user)?.[0]?.toUpperCase() || '?')}
           <span className="profile-avatar__edit">{uploadingAvatar ? '…' : '📷'}</span>
           <input type="file" accept="image/*" hidden disabled={uploadingAvatar} onChange={onAvatarChange} />
         </label>

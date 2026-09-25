@@ -244,8 +244,8 @@
 }
 .heatmap-cell:hover { transform: scale(1.15); }
 
-.heatmap-cell--done   { background: var(--success); }
-.heatmap-cell--miss   { background: var(--error);   opacity: 0.4; }
+.heatmap-cell--done   { background: var(--primary); }
+.heatmap-cell--miss   { background: var(--primary-glow); box-shadow: inset 0 0 0 1px rgba(249, 115, 22, .35); }
 .heatmap-cell--rest   { background: var(--surface-3); opacity: 0.45; }
 .heatmap-cell--future { background: var(--surface-3); opacity: 0.2; }
 
@@ -264,8 +264,8 @@
   border-radius: 2px;
   flex-shrink: 0;
 }
-.heatmap-legend__dot--done { background: var(--success); }
-.heatmap-legend__dot--miss { background: var(--error); opacity: 0.4; }
+.heatmap-legend__dot--done { background: var(--primary); }
+.heatmap-legend__dot--miss { background: var(--primary-glow); box-shadow: inset 0 0 0 1px rgba(249, 115, 22, .5); }
 .heatmap-legend__dot--none { background: var(--surface-3); }
 
 /* Bar chart */
@@ -503,31 +503,101 @@
 }
 .pr-row:last-child { border-bottom: none; }
 
+.pr-row__left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+
 .pr-row__name {
   font-size: 0.79rem;
   font-weight: 600;
   color: var(--text);
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Barra relativa ao maior recorde da lista */
+.pr-row__bar { height: 4px; border-radius: var(--r-full); background: var(--surface-3); overflow: hidden; }
+.pr-row__bar div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--primary), var(--primary-h)); }
+
 .pr-row__right {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
   flex-shrink: 0;
 }
 
 .pr-row__val {
-  font-size: 0.9rem;
-  font-weight: 800;
+  font-size: 0.95rem;
+  font-weight: 900;
   color: var(--primary);
+  font-variant-numeric: tabular-nums;
 }
+
+.pr-row__meta { font-size: 0.64rem; color: var(--text-dim); white-space: nowrap; }
 
 .pr-row__date {
   font-size: 0.65rem;
   color: var(--text-dim);
 }
+
+/* ── Resumo no topo da Evolução ── */
+.dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.dash-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 4px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.dash-kpi__value {
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.dash-kpi__label {
+  font-size: 0.56rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+}
+
+/* ── Controle segmentado (abas dentro da página) ── */
+.seg {
+  position: sticky;
+  top: -14px; /* gruda no topo compensando o padding da .page */
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .5);
+}
+.seg__btn {
+  flex: 1;
+  border: none;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 9px 6px;
+  cursor: pointer;
+  transition: background var(--t), color var(--t);
+  -webkit-tap-highlight-color: transparent;
+}
+.seg__btn--active { background: var(--primary); color: #09090b; }

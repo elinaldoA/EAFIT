@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { version as APP_VERSION } from '../../package.json';
+import CollapsibleCard from './CollapsibleCard';
 
 const DELETE_CONFIRM_WORD = 'EXCLUIR';
 
 export default function ProfileAccountSection({
-  user, accountOpen, setAccountOpen,
+  user,
   newEmail, setNewEmail, onUpdateEmail,
   newPassword, setNewPassword, onUpdatePassword,
   onLogout, onDeleteAccount,
@@ -21,16 +22,7 @@ export default function ProfileAccountSection({
 
   return (
     <>
-      <div className="profile-section">
-        <button
-          type="button"
-          className="profile-section__title"
-          onClick={() => setAccountOpen(o => !o)}
-        >
-          Alterar e-mail / senha {accountOpen ? '▲' : '▼'}
-        </button>
-        {accountOpen && (
-          <>
+      <CollapsibleCard icon="🔐" title="E-mail e senha" summary={user?.email}>
             <div className="profile-field">
               <label className="profile-field__label" htmlFor="newEmail">Novo e-mail</label>
               <input
@@ -47,17 +39,15 @@ export default function ProfileAccountSection({
               />
               <button className="btn btn--outline btn--sm" onClick={onUpdatePassword}>Atualizar senha</button>
             </div>
-          </>
-        )}
-      </div>
+      </CollapsibleCard>
 
       <button className="btn btn--outline btn--full" onClick={onLogout}>Sair da conta</button>
 
       {!deleteOpen ? (
         <button
-          type="button" className="btn btn--ghost btn--full"
+          type="button" className="link-btn link-btn--danger"
           onClick={() => setDeleteOpen(true)}
-        >Excluir conta</button>
+        >Excluir minha conta</button>
       ) : (
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="deleteConfirm">

@@ -96,16 +96,22 @@ export function PRList({ logs }) {
   });
 
   const sorted = Object.entries(prMap).sort((a, b) => b[1].val - a[1].val).slice(0, 12);
+  const top = sorted[0]?.[1].val || 1;
   if (!sorted.length) return <p className="dash-empty">Nenhuma carga numérica registrada ainda.</p>;
 
   return (
     <div id="dashPRList" className="pr-list">
       {sorted.map(([name, { val, date, oneRm }]) => (
         <div className="pr-row" key={name}>
-          <div className="pr-row__name">{name}</div>
+          <div className="pr-row__left">
+            <div className="pr-row__name">{name}</div>
+            <div className="pr-row__bar"><div style={{ width: `${(val / top) * 100}%` }} /></div>
+          </div>
           <div className="pr-row__right">
-            <span className="pr-row__val">{val}kg{oneRm != null && ` · 1RM ~${oneRm.toFixed(1)}kg`}</span>
-            <span className="pr-row__date">{fmtDate(date)}</span>
+            <span className="pr-row__val">{val.toLocaleString('pt-BR')}kg</span>
+            <span className="pr-row__meta">
+              {oneRm != null && <>1RM ~{Math.round(oneRm).toLocaleString('pt-BR')}kg · </>}{fmtDate(date)}
+            </span>
           </div>
         </div>
       ))}

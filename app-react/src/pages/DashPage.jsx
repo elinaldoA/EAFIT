@@ -3,7 +3,7 @@ import { todayName, todayDate, getMuscleGroupsForDay, getWeeklyGoal } from '../d
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
-import { fmtDate } from '../lib/utils';
+import { fmtDate, parseLocalDate, toDateStr, calcStreak } from '../lib/utils';
 import { BADGES } from '../lib/achievements';
 import { useDashboardData } from '../hooks/useDashboardData';
 import BodyAvatar from '../components/BodyAvatar';
@@ -12,6 +12,25 @@ import ProgressPhotos from '../components/ProgressPhotos';
 import Skeleton from '../components/Skeleton';
 import { Heatmap, WeeklyBars, PRList, WeekCompare, LoadHistory } from '../components/DashCharts';
 import { DiscomfortPanel, DiscomfortHistory } from '../components/DiscomfortWidgets';
+
+const TABS = [
+  { key: 'treinos', label: 'Treinos' },
+  { key: 'recordes', label: 'Recordes' },
+  { key: 'corpo', label: 'Corpo' },
+];
+const TAB_STORAGE_KEY = 'dash_tab';
+
+// Aba lembrada entre visitas (e usada pelo atalho "Peso e fotos" do Perfil,
+// que grava 'corpo' aqui antes de navegar). localStorage pode lançar em aba
+// privada — sem ele, só abre sempre em Treinos.
+function readTab() {
+  try {
+    const t = localStorage.getItem(TAB_STORAGE_KEY);
+    return TABS.some(x => x.key === t) ? t : 'treinos';
+  } catch {
+    return 'treinos';
+  }
+}
 
 export default function DashPage({ active }) {
   const { user } = useAuth();
@@ -22,7 +41,13 @@ export default function DashPage({ active }) {
     exercises, volumePoints, handleRefreshRecords,
   } = useDashboardData(active, user, toast);
 
+  const [tab, setTabState] = useState(readTab);
   const [selectedExercise, setSelectedExercise] = useState('');
+
+  function setTab(next) {
+    setTabState(next);
+    try { localStorage.setItem(TAB_STORAGE_KEY, next); } catch { /* sem storage */ }
+  }
   const weeklyGoal = getWeeklyGoal(user);
   const day = activePlanDays.find(d => d.dia === todayName());
   const todayCompleted = workouts.find(w => w.workout_date === todayDate())?.completed ?? false;
@@ -54,19 +79,40 @@ export default function DashPage({ active }) {
     return { viewActiveGroups: new Set(), selectedSubtitle: '–' };
   }, [selectedView, workouts, activePlanDays, day, todayCompleted]);
 
+  // Sem escolha do usuário, o gráfico abre no exercício treinado mais
+  // recentemente, em vez de começar vazio.
+  const defaultExercise = useMemo(() => {
+    const withCarga = logs.filter(l => !isNaN(parseFloat(l.carga)));
+    if (!withCarga.length) return exercises[0] || '';
+    return withCarga.reduce((a, b) => (b.workout_date > a.workout_date ? b : a)).exercise_name;
+  }, [logs, exercises]);
+  const exercise = selectedExercise || defaultExercise;
+
+  const summary = useMemo(() => {
+    const since = parseLocalDate(todayDate());
+    since.setDate(since.getDate() - 29);
+    const sinceStr = toDateStr(since);
+    const completed = workouts.filter(w => w.completed);
+    return {
+      treinos30: completed.filter(w => w.workout_date >= sinceStr).length,
+      streak: calcStreak(completed.map(w => w.workout_date)),
+      recordes: new Set(allTimeLogs.filter(l => !isNaN(parseFloat(l.carga))).map(l => l.exercise_name)).size,
+    };
+  }, [workouts, allTimeLogs]);
+
   const loadPoints = useMemo(() => {
-    if (!selectedExercise) return [];
+    if (!exercise) return [];
     // Se o exercício não tem registro nos últimos 60 dias (só apareceu no
     // seletor por causa de allTimeLogs), cai pro histórico completo — senão
     // o gráfico ficaria vazio pra um exercício que a lista de recordes ao
     // lado mostra ter PR.
-    const hasRecentData = logs.some(l => l.exercise_name === selectedExercise);
+    const hasRecentData = logs.some(l => l.exercise_name === exercise);
     const source = hasRecentData ? logs : allTimeLogs;
     return source
-      .filter(l => l.exercise_name === selectedExercise && !isNaN(parseFloat(l.carga)))
+      .filter(l => l.exercise_name === exercise && !isNaN(parseFloat(l.carga)))
       .sort((a, b) => a.workout_date.localeCompare(b.workout_date))
       .map(l => ({ value: parseFloat(l.carga), label: fmtDate(l.workout_date) }));
-  }, [logs, allTimeLogs, selectedExercise]);
+  }, [logs, allTimeLogs, exercise]);
 
   const weightPoints = useMemo(
     () => weightLogs.map(w => ({ label: fmtDate(w.log_date), value: w.peso })),
@@ -75,6 +121,36 @@ export default function DashPage({ active }) {
 
   return (
     <section id="page-dash" className="page active">
+      <div className="dash-kpis">
+        <div className="dash-kpi">
+          <span className="dash-kpi__value">{loading ? '–' : summary.treinos30}</span>
+          <span className="dash-kpi__label">Treinos<br />30 dias</span>
+        </div>
+        <div className="dash-kpi">
+          <span className="dash-kpi__value">{loading ? '–' : `${summary.streak}d`}</span>
+          <span className="dash-kpi__label">Sequência<br />atual</span>
+        </div>
+        <div className="dash-kpi">
+          <span className="dash-kpi__value">{loadingPR ? '–' : summary.recordes}</span>
+          <span className="dash-kpi__label">Exercícios<br />com recorde</span>
+        </div>
+        <div className="dash-kpi">
+          <span className="dash-kpi__value">{unlockedBadges.size}/{BADGES.length}</span>
+          <span className="dash-kpi__label">Conquistas</span>
+        </div>
+      </div>
+
+      <div className="seg" role="tablist" aria-label="Seções da evolução">
+        {TABS.map(t => (
+          <button
+            key={t.key} type="button" role="tab" aria-selected={tab === t.key}
+            className={`seg__btn${tab === t.key ? ' seg__btn--active' : ''}`}
+            onClick={() => setTab(t.key)}
+          >{t.label}</button>
+        ))}
+      </div>
+
+      {tab === 'treinos' && (<>
       <div className="dash-card">
         <div className="dash-card__title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
           <div className="dash-card__title" style={{ marginBottom: 0 }}>Visualização Anatômica</div>
@@ -85,12 +161,11 @@ export default function DashPage({ active }) {
             onChange={e => setSelectedView(e.target.value)}
           >
             <option value="today">Hoje ({day ? day.dia : 'Sem treino'})</option>
-            {workouts.slice().reverse().map(w => {
+            {workouts.filter(w => w.completed).reverse().map(w => {
               const planDay = activePlanDays.find(d => d.dia === w.day_of_week);
-              const foco = planDay ? planDay.foco : 'Geral';
               return (
                 <option key={w.id} value={`workout-${w.id}`}>
-                  {fmtDate(w.workout_date)} - {w.day_of_week} ({w.completed ? foco : 'Não iniciado'})
+                  {fmtDate(w.workout_date)} · {w.day_of_week}{planDay ? ` (${planDay.foco})` : ''}
                 </option>
               );
             })}
@@ -103,8 +178,6 @@ export default function DashPage({ active }) {
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Treinos</div>
-
         <div className="dash-card">
           <div className="dash-card__title">Soma de cargas por treino</div>
           <p className="dash-card__subtitle">Soma do peso de todas as séries concluídas em cada treino (não considera repetições)</p>
@@ -147,8 +220,8 @@ export default function DashPage({ active }) {
 
         <div className="dash-card">
           <div className="dash-card__title">Evolução de carga</div>
-          <select className="input input--sm" value={selectedExercise} onChange={e => setSelectedExercise(e.target.value)}>
-            <option value="">Selecione um exercício</option>
+          <select className="input input--sm" value={exercise} onChange={e => setSelectedExercise(e.target.value)} aria-label="Exercício">
+            {!exercise && <option value="">Selecione um exercício</option>}
             {exercises.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
           <div className="line-chart-wrap">
@@ -157,25 +230,25 @@ export default function DashPage({ active }) {
                 points={loadPoints}
                 valueSuffix="kg"
                 singleMsg={v => `1 registro: ${v}kg — treine mais vezes para ver a evolução`}
-                emptyMsg={selectedExercise ? 'Nenhum registro para este exercício' : 'Selecione um exercício com carga registrada'}
+                emptyMsg={exercise ? 'Nenhum registro para este exercício' : 'Registre cargas na aba Treino para ver a evolução'}
               />
             )}
           </div>
-          {!loading && selectedExercise && <WeekCompare logs={logs} exercise={selectedExercise} />}
-          {!loading && selectedExercise && <LoadHistory points={loadPoints} />}
-          {!loading && selectedExercise && <DiscomfortPanel userId={user.id} exerciseName={selectedExercise} toast={toast} />}
+          {!loading && exercise && <WeekCompare logs={logs} exercise={exercise} />}
+          {!loading && exercise && <LoadHistory points={loadPoints} />}
+          {!loading && exercise && <DiscomfortPanel userId={user.id} exerciseName={exercise} toast={toast} />}
         </div>
+      </div>
+      </>)}
 
-        <div className="dash-card">
-          <div className="dash-card__title">Histórico de desconforto</div>
-          {loading ? <Skeleton height={100} /> : <DiscomfortHistory reports={discomfortHistory} />}
-        </div>
-
+      {tab === 'recordes' && (<>
+      <div className="section-group">
+        <div className="section-group__label">Recordes pessoais</div>
         <div className="dash-card">
           <div className="dash-card__title-row">
-            <div className="dash-card__title">Recordes pessoais — maior carga</div>
-            <button type="button" className="btn btn--outline btn--sm" disabled={loadingPR} onClick={handleRefreshRecords}>
-              🔄
+            <div className="dash-card__title">Maior carga por exercício</div>
+            <button type="button" className="icon-btn" aria-label="Atualizar recordes" disabled={loadingPR} onClick={handleRefreshRecords}>
+              ↻
             </button>
           </div>
           {loadingPR ? <Skeleton height={100} /> : <PRList logs={allTimeLogs} />}
@@ -183,7 +256,7 @@ export default function DashPage({ active }) {
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Conquistas</div>
+        <div className="section-group__label">Conquistas · {unlockedBadges.size} de {BADGES.length}</div>
         <div className="dash-card">
           <div className="badge-grid">
             {BADGES.map(b => {
@@ -201,7 +274,17 @@ export default function DashPage({ active }) {
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Fotos de progresso</div>
+        <div className="section-group__label">Desconforto</div>
+        <div className="dash-card">
+          <div className="dash-card__title">Histórico de desconforto</div>
+          {loading ? <Skeleton height={100} /> : <DiscomfortHistory reports={discomfortHistory} />}
+        </div>
+      </div>
+      </>)}
+
+      {tab === 'corpo' && (
+      <div className="section-group">
+        <div className="section-group__label">Peso e fotos de progresso</div>
         <div className="dash-card">
           <div className="dash-card__title">Evolução do peso</div>
           <div className="line-chart-wrap">
@@ -216,9 +299,11 @@ export default function DashPage({ active }) {
           </div>
         </div>
         <div className="dash-card">
+          <div className="dash-card__title">Fotos de progresso</div>
           <ProgressPhotos />
         </div>
       </div>
+      )}
     </section>
   );
 }
