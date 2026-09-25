@@ -1,3 +1,5 @@
+import { EXERCISE_VIDEOS } from './exerciseVideos';
+
 // Demonstração de execução (2 quadros do movimento, sem ordem garantida) por nome de
 // exercício. Imagens do Free Exercise DB (github.com/yuhonas/free-exercise-db),
 // em domínio público (Unlicense), convertidas pra WebP 400px e servidas pelo
@@ -223,12 +225,14 @@ export function normalizeExerciseName(nome) {
   return String(nome || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
 
-// custom: mapa de mídias próprias enviadas pelo admin (lib/customExerciseMedia.js)
-// — quando tem uma pro exercício, ela vale no lugar da padrão.
+// Ordem: mídia própria do admin (custom, lib/customExerciseMedia.js) → vídeo
+// curto (data/exerciseVideos.js) → 2 quadros do Free Exercise DB.
 export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom = null) {
   const key = normalizeExerciseName(nome);
   const own = custom?.[key];
   if (own) return { custom: true, type: own.type, url: own.url };
+  const video = EXERCISE_VIDEOS[key];
+  if (video) return { stock: true, type: 'video', url: `${base}videos/${video}.mp4` };
   const id = EXERCISE_MEDIA[key];
   if (!id) return null;
   return { id, frames: [0, 1].map(n => `${base}exercicios/${id}/${n}.webp`) };
