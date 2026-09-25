@@ -1,18 +1,23 @@
 // Edge Function chamada pelo cron (a cada minuto) pra disparar as
 // notificações agendadas em public.scheduled_broadcasts (ver "Agendar" em
 // app-admin/src/pages/Broadcast.jsx). Mesmo padrão de send-reminders: sem
-// usuário logado, Verify JWT desativado, age via service role.
+// usuário logado, Verify JWT desativado, age via service role e só aceita
+// chamada com o header x-cron-secret (ver ../_shared/cronAuth.ts).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
+import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const CRON_SECRET = Deno.env.get('CRON_SECRET');
 
 configureVapid();
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  if (!isAuthorizedCronRequest(req, CRON_SECRET)) return new Response('Unauthorized', { status: 401 });
+
   const { data: due, error: dueErr } = await supabase
     .from('scheduled_broadcasts')
     .select('id, title, body, target_user_ids, created_by')
