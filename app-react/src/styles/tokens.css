@@ -1,0 +1,53 @@
+/* ============================================================
+   TOKENS
+============================================================ */
+:root {
+  --bg:           #0e0e12;
+  --surface:      #18181b;
+  --surface-2:    #1c1c21;
+  --surface-3:    #27272a;
+  --border:       #2a2a2e;
+  --border-2:     #3f3f46;
+  --text:         #e4e4e7;
+  --text-muted:   #a1a1aa;
+  --text-dim:     #71717a;
+  --primary:      #f97316;
+  --primary-h:    #fb923c;
+  --primary-glow: rgba(249,115,22,.18);
+  --success:      #4ade80;
+  --warning:      #fbbf24;
+  --error:        #ef4444;
+  --water:        #38bdf8;
+
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   14px;
+  --r-xl:   20px;
+  --r-full: 9999px;
+
+  --topbar-h:    56px;
+  --bottomnav-h: 60px;
+
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.5);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.7);
+
+  --t: 160ms ease;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --bg:           #f4f4f5;
+  --surface:      #ffffff;
+  --surface-2:    #f1f1f4;
+  --surface-3:    #e4e4e7;
+  --border:       #d4d4d8;
+  --border-2:     #a1a1aa;
+  --text:         #18181b;
+  --text-muted:   #52525b;
+  --text-dim:     #71717a;
+  --primary-glow: rgba(249,115,22,.12);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.10);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.12);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.18);
+}
