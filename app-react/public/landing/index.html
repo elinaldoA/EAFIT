@@ -1399,6 +1399,49 @@
         if (window.__eafitObserveReveal) window.__eafitObserveReveal(main);
       }
 
+      // ---------- contagem anônima de visitas (public.page_visits) ----------
+      // Cópia da regra de app-react/src/lib/pageVisits.js (detectSource) —
+      // mudou lá, mude aqui. 1 visita por dia por navegador, sem identificar
+      // ninguém; falha em silêncio.
+      var REFERRER_SOURCES = [
+        [/(^|\.)google\./, 'google'], [/(^|\.)bing\.com$/, 'bing'],
+        [/(^|\.)instagram\.com$/, 'instagram'], [/(^|\.)(facebook\.com|fb\.com|fb\.me)$/, 'facebook'],
+        [/(^|\.)(t\.co|twitter\.com|x\.com)$/, 'x'], [/(^|\.)tiktok\.com$/, 'tiktok'],
+        [/(^|\.)(youtube\.com|youtu\.be)$/, 'youtube'], [/(^|\.)(whatsapp\.com|wa\.me)$/, 'whatsapp'],
+        [/(^|\.)linkedin\.com$/, 'linkedin'],
+      ];
+      function detectSource() {
+        var params = new URLSearchParams(window.location.search);
+        var tagged = (params.get('origem') || params.get('utm_source') || '').toLowerCase()
+          .replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+        if (tagged) return tagged;
+        var host = '';
+        try { host = document.referrer ? new URL(document.referrer).hostname.toLowerCase() : ''; } catch (e) { host = ''; }
+        if (!host) return 'direto';
+        if (host === window.location.hostname) return 'landing';
+        for (var i = 0; i < REFERRER_SOURCES.length; i++) {
+          if (REFERRER_SOURCES[i][0].test(host)) return REFERRER_SOURCES[i][1];
+        }
+        return 'outro-site';
+      }
+      (function recordVisit() {
+        var key = 'eafit_visit_landing';
+        var today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+        try {
+          if (localStorage.getItem(key) === today) return;
+          localStorage.setItem(key, today);
+        } catch (e) { /* sem armazenamento: conta mesmo assim */ }
+        fetch(SUPABASE_URL + '/rest/v1/page_visits', {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json', Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({ page: 'landing', source: detectSource() }),
+          keepalive: true,
+        }).catch(function () {});
+      })();
+
       fetch(SUPABASE_URL + '/rest/v1/landing_content?select=content&id=eq.1', {
         headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
       })

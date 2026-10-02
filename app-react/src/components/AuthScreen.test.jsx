@@ -6,6 +6,8 @@ vi.mock('../context/useAuth', () => ({
   useAuth: () => ({ login: vi.fn(), signup: vi.fn(), requestPasswordReset: vi.fn(), resendConfirmation: vi.fn() }),
 }));
 
+vi.mock('../lib/pageVisits', () => ({ recordVisit: vi.fn() }));
+
 import AuthScreen from './AuthScreen';
 import { markKnownUser } from '../lib/knownUser';
 

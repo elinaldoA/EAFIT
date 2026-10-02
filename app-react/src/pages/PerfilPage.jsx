@@ -19,6 +19,7 @@ import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
 import { NotificationsSection, ExportSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
+import { shareInvite } from '../lib/invite';
 
 export default function PerfilPage({ active }) {
   const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
@@ -188,6 +189,12 @@ export default function PerfilPage({ active }) {
     window.location.hash = 'dash';
   }
 
+  async function handleInvite() {
+    const result = await shareInvite();
+    if (result === 'copied') toast('🔗 Link copiado — cole na conversa com seus amigos');
+    else if (result === 'failed') toast('⚠️ Não deu pra compartilhar. Mande o link elinaldoa.github.io/EAFIT/landing');
+  }
+
   return (
     <section id="page-perfil" className="page active">
       <ProfileHeader
@@ -233,6 +240,18 @@ export default function PerfilPage({ active }) {
             <span className="collapse__summary">
               {weightLogs.length ? `${weightLogs.length} registros de peso · ver em Evolução` : 'Ver em Evolução'}
             </span>
+          </span>
+          <span className="collapse__chevron" aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <div className="section-group">
+        <div className="section-group__label">Treine junto</div>
+        <button type="button" className="shortcut-card" onClick={handleInvite}>
+          <span className="collapse__icon" aria-hidden="true">🤝</span>
+          <span className="collapse__text">
+            <span className="collapse__title">Convidar amigos</span>
+            <span className="collapse__summary">Mande o link do EAFIT pra quem treina com você</span>
           </span>
           <span className="collapse__chevron" aria-hidden="true">›</span>
         </button>

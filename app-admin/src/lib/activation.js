@@ -4,6 +4,7 @@
 // série marcada — não só aberto (o app cria as linhas da semana ao abrir).
 
 export const FUNNEL_STEPS = [
+  { key: 'visits', label: 'Visitaram a tela de acesso' },
   { key: 'signed_up', label: 'Criaram conta' },
   { key: 'confirmed', label: 'Confirmaram o e-mail' },
   { key: 'onboarded', label: 'Preencheram o perfil' },
@@ -33,6 +34,45 @@ export function buildFunnel(row) {
     if (!worst || s.pctOfPrev < worst.pctOfPrev) worst = s;
   });
   return { steps, worstKey: start > 0 && worst ? worst.key : null };
+}
+
+// Nome legível de cada origem gravada por lib/pageVisits.js (app) e pelo
+// <script> da landing. Origem desconhecida (ex.: ?origem=grupo-academia num
+// link montado à mão) aparece como veio.
+const SOURCE_LABELS = {
+  card: 'Card de treino compartilhado',
+  convite: 'Convite (botão no Perfil)',
+  landing: 'Veio da landing',
+  direto: 'Direto / WhatsApp / sem origem',
+  google: 'Google',
+  bing: 'Bing',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  x: 'X (Twitter)',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  whatsapp: 'WhatsApp',
+  linkedin: 'LinkedIn',
+  'outro-site': 'Outro site',
+};
+
+export function sourceLabel(source) {
+  return SOURCE_LABELS[source] || source;
+}
+
+// Linhas (page, source, visits) → uma linha por origem com landing, tela de
+// acesso e total, ordenadas pelo total.
+export function groupVisitSources(rows) {
+  const bySource = new Map();
+  (rows || []).forEach(r => {
+    const item = bySource.get(r.source) || { source: r.source, label: sourceLabel(r.source), landing: 0, acesso: 0, total: 0 };
+    const n = Number(r.visits) || 0;
+    if (r.page === 'landing') item.landing += n;
+    else if (r.page === 'acesso') item.acesso += n;
+    item.total += n;
+    bySource.set(r.source, item);
+  });
+  return [...bySource.values()].sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
 }
 
 // Linhas (cohort_week, week_index) → tabela: coortes da mais nova pra mais

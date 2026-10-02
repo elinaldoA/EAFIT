@@ -24,3 +24,9 @@ export async function fetchRetentionCohorts(weeks = 8) {
   if (error) throw error;
   return data || [];
 }
+
+export async function fetchVisitSources(days = 30) {
+  const { data, error } = await db.rpc('admin_visit_sources', { days_back: days });
+  if (error) throw error;
+  return data || [];
+}

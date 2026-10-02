@@ -1,23 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { buildFunnel, pivotRetention } from './activation';
+import { buildFunnel, pivotRetention, groupVisitSources, sourceLabel } from './activation';
 
 describe('buildFunnel', () => {
   it('calcula % do total e da etapa anterior e aponta a maior perda', () => {
     const { steps, worstKey } = buildFunnel({
-      signed_up: 100, confirmed: 80, onboarded: 72, first_workout: 30, second_workout_7d: 18,
+      visits: 200, signed_up: 100, confirmed: 80, onboarded: 72, first_workout: 30, second_workout_7d: 18,
     });
-    expect(steps.map(s => s.pctOfStart)).toEqual([100, 80, 72, 30, 18]);
-    expect(steps.map(s => s.pctOfPrev)).toEqual([null, 80, 90, 42, 60]);
+    expect(steps.map(s => s.pctOfStart)).toEqual([100, 50, 40, 36, 15, 9]);
+    expect(steps.map(s => s.pctOfPrev)).toEqual([null, 50, 80, 90, 42, 60]);
     expect(worstKey).toBe('first_workout');
   });
 
   it('aceita contagens como string (bigint do Postgres vem assim)', () => {
-    const { steps } = buildFunnel({ signed_up: '4', confirmed: '2', onboarded: '2', first_workout: '1', second_workout_7d: '0' });
-    expect(steps.map(s => s.count)).toEqual([4, 2, 2, 1, 0]);
+    const { steps } = buildFunnel({ visits: '9', signed_up: '4', confirmed: '2', onboarded: '2', first_workout: '1', second_workout_7d: '0' });
+    expect(steps.map(s => s.count)).toEqual([9, 4, 2, 2, 1, 0]);
   });
 
   it('funil vazio não tem % nem pior etapa', () => {
-    const { steps, worstKey } = buildFunnel({ signed_up: 0, confirmed: 0, onboarded: 0, first_workout: 0, second_workout_7d: 0 });
+    const { steps, worstKey } = buildFunnel({ visits: 0, signed_up: 0, confirmed: 0, onboarded: 0, first_workout: 0, second_workout_7d: 0 });
     expect(steps.every(s => s.pctOfStart === null)).toBe(true);
     expect(worstKey).toBeNull();
   });
@@ -49,5 +49,26 @@ describe('pivotRetention', () => {
 
   it('sem linhas, tabela vazia', () => {
     expect(pivotRetention([])).toEqual({ weekIndexes: [], cohorts: [], average: [] });
+  });
+});
+
+describe('groupVisitSources', () => {
+  it('junta landing e tela de acesso por origem e ordena pelo total', () => {
+    const rows = [
+      { page: 'landing', source: 'card', visits: '3' },
+      { page: 'acesso', source: 'landing', visits: 4 },
+      { page: 'acesso', source: 'card', visits: 2 },
+      { page: 'landing', source: 'grupo-academia', visits: 1 },
+    ];
+    expect(groupVisitSources(rows)).toEqual([
+      { source: 'card', label: 'Card de treino compartilhado', landing: 3, acesso: 2, total: 5 },
+      { source: 'landing', label: 'Veio da landing', landing: 0, acesso: 4, total: 4 },
+      { source: 'grupo-academia', label: 'grupo-academia', landing: 1, acesso: 0, total: 1 },
+    ]);
+  });
+
+  it('origem desconhecida aparece como veio', () => {
+    expect(sourceLabel('google')).toBe('Google');
+    expect(sourceLabel('xyz')).toBe('xyz');
   });
 });

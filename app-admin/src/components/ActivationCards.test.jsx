@@ -2,11 +2,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-const { mockFunnel, mockRetention } = vi.hoisted(() => ({ mockFunnel: vi.fn(), mockRetention: vi.fn() }));
+const { mockFunnel, mockRetention, mockSources } = vi.hoisted(() => ({ mockFunnel: vi.fn(), mockRetention: vi.fn(), mockSources: vi.fn() }));
 
 vi.mock('../lib/dashboardStats', () => ({
   fetchFunnel: mockFunnel,
   fetchRetentionCohorts: mockRetention,
+  fetchVisitSources: mockSources,
 }));
 
 import ActivationFunnel from './ActivationFunnel';
@@ -18,16 +19,20 @@ beforeEach(() => {
 
 describe('ActivationFunnel', () => {
   it('mostra as etapas, marca a maior perda e recarrega ao trocar o período', async () => {
-    mockFunnel.mockResolvedValue({ signed_up: '50', confirmed: '45', onboarded: '40', first_workout: '12', second_workout_7d: '8' });
+    mockFunnel.mockResolvedValue({ visits: '120', signed_up: '50', confirmed: '45', onboarded: '40', first_workout: '12', second_workout_7d: '8', visits_since: '2026-10-02' });
+    mockSources.mockResolvedValue([{ page: 'landing', source: 'card', visits: '7' }, { page: 'acesso', source: 'card', visits: '3' }]);
     render(<ActivationFunnel />);
 
     expect(await screen.findByText('Fizeram o 1º treino')).toBeTruthy();
     expect(screen.getByText('30% da etapa anterior')).toBeTruthy();
     expect(screen.getByText('maior perda').closest('li').textContent).toContain('1º treino');
     expect(mockFunnel).toHaveBeenCalledWith(30);
+    expect(screen.getByText('Card de treino compartilhado').closest('tr').textContent).toContain('10');
+    expect(screen.getByText(/desde 02\/10\/2026/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Todos' }));
     expect(mockFunnel).toHaveBeenLastCalledWith(0);
+    expect(mockSources).toHaveBeenLastCalledWith(0);
   });
 });
 

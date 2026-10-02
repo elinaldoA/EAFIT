@@ -1,8 +1,9 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import logoMark from '../assets/app-icon.png';
 import PasswordInput from './PasswordInput';
 import { isKnownUser } from '../lib/knownUser';
+import { recordVisit } from '../lib/pageVisits';
 
 const MODES = {
   login: { title: 'Entrar', submit: 'Entrar', busy: 'Entrando…' },
@@ -20,6 +21,9 @@ export default function AuthScreen() {
   const [msg, setMsg] = useState({ text: '', type: '' });
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Topo do funil do painel admin: quem chega aqui sem sessão.
+  useEffect(() => { recordVisit('acesso'); }, []);
 
   function switchMode(next) {
     setMode(next);

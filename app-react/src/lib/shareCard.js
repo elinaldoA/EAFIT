@@ -1,4 +1,5 @@
 import { formatDuration } from './utils';
+import { SHARE_CARD_URL } from './links';
 import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE } from '../data/bodyMuscleMap';
 import bodyAnatomyImg from '../assets/anatomia.jpg';
@@ -137,9 +138,8 @@ async function drawBodyAvatarSection(ctx, x, y, contentW, day) {
 
 // Link público que acompanha o card: a landing explica o app pra quem ainda
 // não o conhece (a raiz do app abre direto no login).
-export const SHARE_URL = 'https://elinaldoa.github.io/EAFIT/landing/';
 const SHARE_URL_LABEL = 'elinaldoa.github.io/EAFIT';
-export const SHARE_TEXT = `Treino concluído no EAFIT 💪 Monte o seu grátis: ${SHARE_URL}`;
+export const SHARE_TEXT = `Treino concluído no EAFIT 💪 Monte o seu grátis: ${SHARE_CARD_URL}`;
 
 // Watermark (logo + nome + endereço do app): o card circula como imagem solta
 // (status, stories, download), então o endereço precisa estar NA imagem pra
