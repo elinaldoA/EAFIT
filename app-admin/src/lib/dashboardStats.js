@@ -11,3 +11,16 @@ export async function fetchSignupsByDay(days = 14) {
   if (error) throw error;
   return data || [];
 }
+
+// days: 7/30/90 = cadastrados nesse período; 0 = todos.
+export async function fetchFunnel(days = 30) {
+  const { data, error } = await db.rpc('admin_funnel', { days_back: days });
+  if (error) throw error;
+  return data?.[0] || null;
+}
+
+export async function fetchRetentionCohorts(weeks = 8) {
+  const { data, error } = await db.rpc('admin_retention_cohorts', { weeks });
+  if (error) throw error;
+  return data || [];
+}

@@ -6,7 +6,7 @@ vi.mock('../lib/supabase', () => ({
   db: { rpc: mockRpc },
 }));
 
-import { fetchDashboardStats, fetchSignupsByDay } from '../lib/dashboardStats';
+import { fetchDashboardStats, fetchSignupsByDay, fetchFunnel, fetchRetentionCohorts } from '../lib/dashboardStats';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -42,5 +42,26 @@ describe('fetchSignupsByDay', () => {
   it('retorna array vazio quando data vem null', async () => {
     mockRpc.mockResolvedValue({ data: null, error: null });
     expect(await fetchSignupsByDay()).toEqual([]);
+  });
+});
+
+describe('fetchFunnel', () => {
+  it('chama admin_funnel com o período e retorna a primeira linha', async () => {
+    mockRpc.mockResolvedValue({ data: [{ signed_up: 10 }], error: null });
+    expect(await fetchFunnel(90)).toEqual({ signed_up: 10 });
+    expect(mockRpc).toHaveBeenCalledWith('admin_funnel', { days_back: 90 });
+  });
+
+  it('propaga erro', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { message: 'not_authorized' } });
+    await expect(fetchFunnel()).rejects.toMatchObject({ message: 'not_authorized' });
+  });
+});
+
+describe('fetchRetentionCohorts', () => {
+  it('chama admin_retention_cohorts com o número de semanas', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: null });
+    expect(await fetchRetentionCohorts(8)).toEqual([]);
+    expect(mockRpc).toHaveBeenCalledWith('admin_retention_cohorts', { weeks: 8 });
   });
 });

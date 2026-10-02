@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchDashboardStats, fetchSignupsByDay } from '../lib/dashboardStats';
 import Loading from '../components/Loading';
+import ActivationFunnel from '../components/ActivationFunnel';
+import RetentionCohorts from '../components/RetentionCohorts';
 
 const TILES = [
   { key: 'total_users', label: 'Usuários' },
@@ -10,9 +12,9 @@ const TILES = [
   { key: 'confirmed_users', label: 'E-mail confirmado' },
   { key: 'banned_users', label: 'Banidos' },
   { key: 'admins_count', label: 'Admins' },
-  { key: 'total_workouts', label: 'Treinos registrados' },
+  { key: 'total_workouts', label: 'Treinos feitos' },
   { key: 'workouts_last_7d', label: 'Treinos (7 dias)' },
-  { key: 'active_users_7d', label: 'Ativos (7 dias)' },
+  { key: 'active_users_7d', label: 'Treinaram (7 dias)' },
   { key: 'push_enabled_users', label: 'Com push ativo' },
 ];
 
@@ -63,6 +65,10 @@ export default function Dashboard() {
           </h2>
         </Link>
       )}
+
+      <ActivationFunnel />
+
+      <RetentionCohorts />
 
       <div className="card">
         <h2 className="section-title">Cadastros — últimos 14 dias</h2>
