@@ -2,472 +2,1041 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EAFIT — Treino e evolução em um só app</title>
-  <meta name="description" content="Plano de treino semanal, hidratação e dashboard de evolução física. Grátis, funciona offline e sincroniza na nuvem." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>EAFIT — Treino com plano, registro e evolução</title>
+  <meta name="description" content="Plano de treino montado pro seu objetivo, modo treino ao vivo, demonstração dos exercícios, hidratação e gráficos de evolução. Grátis, sem anúncios e funciona offline." />
   <link rel="canonical" href="https://elinaldoa.github.io/EAFIT/landing/" />
 
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="EAFIT — Treino e evolução em um só app" />
-  <meta property="og:description" content="Plano de treino semanal, hidratação e dashboard de evolução física. Grátis, funciona offline e sincroniza na nuvem." />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="EAFIT" />
+  <meta property="og:title" content="EAFIT — Treino com plano, registro e evolução" />
+  <meta property="og:description" content="Plano de treino pro seu objetivo, modo ao vivo, demonstração dos exercícios e gráficos de evolução. Grátis e funciona offline." />
   <meta property="og:url" content="https://elinaldoa.github.io/EAFIT/landing/" />
-  <meta property="og:image" content="https://elinaldoa.github.io/EAFIT/icon-512.png" />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:image" content="https://elinaldoa.github.io/EAFIT/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Logo do EAFIT com o slogan Seu treino, sempre com você" />
+  <meta name="twitter:card" content="summary_large_image" />
 
-  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
-  <link rel="alternate icon" href="../favicon.ico" />
-  <meta name="theme-color" content="#0e0e12" />
+  <link rel="icon" href="../favicon.svg?v=2" type="image/svg+xml" />
+  <link rel="alternate icon" href="../favicon.ico?v=2" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <meta name="theme-color" content="#0b0b0f" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+  <meta name="color-scheme" content="dark light" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "EAFIT",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Web, Android, iOS",
+    "url": "https://elinaldoa.github.io/EAFIT/",
+    "description": "Plano de treino personalizado, modo treino ao vivo, demonstração de exercícios, hidratação e evolução. Funciona offline.",
+    "inLanguage": "pt-BR",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" }
+  }
+  </script>
 
   <style>
+    /* ============================================================
+       TOKENS — espelham app-react/src/styles/tokens.css. O admin pode
+       trocar --primary/--primary-h/--primary-glow (cor principal) via
+       landing_content; o resto é fixo.
+    ============================================================ */
     :root {
-      --bg:           #0e0e12;
-      --surface:      #18181b;
+      --bg:           #0b0b0f;
+      --bg-2:         #101015;
+      --surface:      #16161a;
       --surface-2:    #1c1c21;
-      --border:       #2a2a2e;
-      --text:         #e4e4e7;
+      --surface-3:    #27272a;
+      --border:       #26262b;
+      --border-2:     #3f3f46;
+      --text:         #ececef;
       --text-muted:   #a1a1aa;
       --text-dim:     #71717a;
       --primary:      #f97316;
       --primary-h:    #fb923c;
       --primary-glow: rgba(249, 115, 22, .18);
+      --primary-ink:  #fb923c;   /* laranja pra TEXTO (contraste) */
+      --on-primary:   #0e0e12;
       --success:      #4ade80;
       --water:        #38bdf8;
-      --error:        #ef4444;
+      --error:        #f87171;
+      --nav-bg:       rgba(11, 11, 15, .78);
+      --phone-frame:  #1f1f24;
+      --shadow-lg:    0 40px 80px -30px rgba(0, 0, 0, .75);
+      --r-md: 12px; --r-lg: 18px; --r-xl: 26px;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; overflow-x: hidden; max-width: 100%; }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg:           #fafafa;
+        --bg-2:         #f4f4f5;
+        --surface:      #ffffff;
+        --surface-2:    #f4f4f5;
+        --surface-3:    #e4e4e7;
+        --border:       #e4e4e7;
+        --border-2:     #d4d4d8;
+        --text:         #18181b;
+        --text-muted:   #52525b;
+        --text-dim:     #71717a;
+        --primary-glow: rgba(249, 115, 22, .14);
+        --primary-ink:  #c2410c;
+        --success:      #16a34a;
+        --water:        #0284c7;
+        --error:        #dc2626;
+        --nav-bg:       rgba(250, 250, 250, .82);
+        --phone-frame:  #18181b;
+        --shadow-lg:    0 40px 80px -30px rgba(24, 24, 27, .35);
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
     body {
       margin: 0;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.5;
+      line-height: 1.55;
       overflow-x: hidden;
-      width: 100%;
-      max-width: 100%;
       -webkit-font-smoothing: antialiased;
     }
-    img { max-width: 100%; display: block; }
+    img, video, svg { display: block; max-width: 100%; }
     a { color: inherit; }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 24px); position: relative; z-index: 1; }
+    h1, h2, h3 { text-wrap: balance; }
+    p { text-wrap: pretty; }
+    .wrap { max-width: 1140px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 28px); position: relative; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 6px; }
 
-    header.nav {
-      position: sticky; top: 0; z-index: 20;
-      background: rgba(14,14,18,.85);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-inner {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px;
-      padding: 14px 0;
-    }
-    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: clamp(15px, 4vw, 18px); text-decoration: none; white-space: nowrap; }
-    .logo img { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
-
+    /* ---------- botões ---------- */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      min-height: 44px;
-      padding: 13px 24px; border-radius: 10px; font-weight: 700; font-size: 15px;
-      text-decoration: none; border: 1px solid transparent; cursor: pointer;
+      min-height: 48px; padding: 12px 24px; border-radius: 12px;
+      font: inherit; font-weight: 700; font-size: 15.5px; text-decoration: none;
+      border: 1px solid transparent; cursor: pointer; white-space: nowrap;
       transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
-      white-space: nowrap;
     }
     .btn:active { transform: scale(.97); }
-    .btn-primary { background: var(--primary); color: #0e0e12; box-shadow: 0 8px 24px var(--primary-glow); }
-    .btn-primary:hover { background: var(--primary-h); box-shadow: 0 10px 30px rgba(249,115,22,.32); transform: translateY(-1px); }
-    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
-    .btn-ghost:hover { border-color: var(--text-dim); }
-    .btn-sm { padding: 9px 16px; font-size: 14px; box-shadow: none; }
+    .btn-primary { background: var(--primary); color: var(--on-primary); box-shadow: 0 10px 30px -8px var(--primary); }
+    .btn-primary:hover { background: var(--primary-h); transform: translateY(-1px); }
+    .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { border-color: var(--border-2); }
+    .btn-sm { min-height: 40px; padding: 8px 16px; font-size: 14px; box-shadow: none; }
+    .btn svg { flex-shrink: 0; }
+
+    /* ---------- nav ---------- */
+    header.nav {
+      position: sticky; top: 0; z-index: 30;
+      background: var(--nav-bg);
+      -webkit-backdrop-filter: saturate(160%) blur(12px);
+      backdrop-filter: saturate(160%) blur(12px);
+      border-bottom: 1px solid transparent;
+      transition: border-color .2s ease;
+    }
+    header.nav.is-scrolled { border-bottom-color: var(--border); }
+    .nav-inner { display: flex; align-items: center; gap: 24px; height: 64px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -.01em; text-decoration: none; }
+    .logo img { width: 30px; height: 30px; border-radius: 8px; }
+    .nav-inner > nav { margin-left: auto; }
+    .nav-links { display: flex; gap: 4px; list-style: none; padding: 0; margin: 0; }
+    .nav-links a { display: block; padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-size: 14.5px; font-weight: 600; text-decoration: none; }
+    .nav-links a:hover { color: var(--text); background: var(--surface-2); }
+    .nav-inner > .btn { margin-left: 8px; }
 
     /* ---------- hero ---------- */
-    .hero { position: relative; padding: clamp(56px, 12vw, 100px) 0 40px; text-align: center; overflow: hidden; }
-    .hero::before, .hero::after {
-      content: ""; width: 560px; height: 560px; border-radius: 50%;
-      filter: blur(70px); z-index: 0; pointer-events: none;
-      position: absolute; max-width: 90vw;
+    .hero { position: relative; padding: clamp(40px, 7vw, 88px) 0 clamp(48px, 7vw, 96px); overflow: hidden; }
+    .hero::before {
+      content: ""; position: absolute; inset: -30% -10% auto; height: 900px; pointer-events: none;
+      background:
+        radial-gradient(40% 50% at 78% 30%, var(--primary-glow), transparent 70%),
+        radial-gradient(30% 40% at 12% 10%, rgba(56, 189, 248, .10), transparent 70%);
     }
-    .hero::before { top: -220px; left: -180px; background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%); }
-    .hero::after { top: -160px; right: -220px; background: radial-gradient(circle, rgba(56,189,248,.14) 0%, transparent 70%); }
+    .hero::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 56px 56px;
+      -webkit-mask-image: radial-gradient(60% 60% at 70% 30%, #000 0%, transparent 75%);
+      mask-image: radial-gradient(60% 60% at 70% 30%, #000 0%, transparent 75%);
+    }
+    .hero .wrap { z-index: 1; }
+    .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
+    .hero-grid > *, .show-row > * { min-width: 0; }
 
     .badge {
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--surface); border: 1px solid var(--border);
-      color: var(--text-muted); font-size: 13px; padding: 6px 14px;
-      border-radius: 999px; margin-bottom: 24px;
+      color: var(--text-muted); font-size: 13.5px; font-weight: 600;
+      padding: 6px 14px 6px 12px; border-radius: 999px; margin-bottom: 22px;
     }
-    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(74, 222, 128, .15); }
     h1 {
-      font-size: clamp(34px, 6vw, 58px); line-height: 1.1; margin: 0 0 20px;
-      letter-spacing: -0.03em; font-weight: 800;
+      font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; margin: 0 0 22px;
+      letter-spacing: -.035em; font-weight: 850;
     }
-    h1 .grad {
-      background: linear-gradient(135deg, var(--primary), var(--primary-h));
+    .grad {
+      background: linear-gradient(120deg, var(--primary) 10%, var(--primary-h) 60%, #fbbf24);
       -webkit-background-clip: text; background-clip: text; color: transparent;
     }
-    .hero p.lead {
-      font-size: clamp(15px, 2vw, 20px); color: var(--text-muted);
-      max-width: 580px; margin: 0 auto 36px; padding: 0 8px;
-    }
-    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: clamp(40px, 8vw, 64px); }
-    .hero-actions .btn { flex: 0 1 auto; }
+    .lead { font-size: clamp(16px, 1.6vw, 19px); color: var(--text-muted); max-width: 540px; margin: 0 0 32px; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .hero-proof { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 0; color: var(--text-muted); font-size: 14px; font-weight: 600; }
+    .hero-proof li { display: flex; align-items: center; gap: 7px; }
+    .hero-proof svg { color: var(--success); }
 
-    /* ---------- phone mockup ---------- */
-    .mockup-stage { display: flex; justify-content: center; perspective: 1400px; padding: 0 16px; }
-    .mockup {
-      width: min(300px, 78vw); background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 28px; padding: 14px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.02);
-      transform: rotateX(4deg);
-      transition: transform .4s ease;
+    /* ---------- celular com telas do app (HTML, não screenshot) ---------- */
+    .hero-visual { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    .phone {
+      position: relative; width: 300px; max-width: 78vw; aspect-ratio: 300 / 620;
+      border-radius: 46px; padding: 11px; background: var(--phone-frame);
+      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, .06) inset, 0 0 0 1px rgba(0, 0, 0, .3);
     }
-    .mockup:hover { transform: rotateX(0deg) translateY(-4px); }
-    .mockup-notch { width: 60px; height: 5px; border-radius: 3px; background: var(--border); margin: 0 auto 14px; }
+    .phone::before { /* ilha */
+      content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      width: 86px; height: 24px; border-radius: 14px; background: #000; z-index: 5;
+    }
+    .phone__screen {
+      position: relative; width: 100%; height: 100%; overflow: hidden;
+      border-radius: 36px; background: var(--bg);
+      font-size: 11px; line-height: 1.35;
+      container-type: inline-size;
+    }
+    .scr {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      opacity: 0; transform: translateY(8px) scale(.985);
+      transition: opacity .45s ease, transform .45s ease; pointer-events: none;
+    }
+    .scr.is-active { opacity: 1; transform: none; }
 
-    .mockup-screens {
-      position: relative; aspect-ratio: 290 / 515;
-      border-radius: 18px; overflow: hidden; background: #f4f4f5;
+    .screen-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); }
+    .screen-tab {
+      border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 700;
+      padding: 7px 13px; border-radius: 999px; cursor: pointer; position: relative; overflow: hidden;
+      transition: background .2s ease, color .2s ease;
     }
-    .mockup-screen {
-      position: absolute; inset: 0; opacity: 0; transform: translateX(10px);
-      transition: opacity .5s ease, transform .5s ease; pointer-events: none;
-    }
-    .mockup-screen.active { opacity: 1; transform: none; pointer-events: auto; }
-    .mockup-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+    .screen-tab[aria-selected="true"] { background: var(--surface-3); color: var(--text); }
+    .screen-tab .prog { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--primary); }
+    .screen-tab[aria-selected="true"] .prog.run { animation: tabprog var(--dur, 5s) linear forwards; }
+    @keyframes tabprog { to { width: 100%; } }
 
-    .mockup-tabs { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
-    .mockup-tab {
-      width: 7px; height: 7px; border-radius: 50%; background: var(--border);
-      border: none; padding: 0; cursor: pointer; transition: background .2s ease, transform .2s ease;
+    .float-chip {
+      position: absolute; z-index: 6; display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.25;
+      background: var(--surface); border: 1px solid var(--border); box-shadow: 0 16px 40px -16px rgba(0, 0, 0, .5);
+      animation: floaty 6s ease-in-out infinite;
     }
-    .mockup-tab.active { background: var(--primary); transform: scale(1.3); }
+    .float-chip b { display: block; font-size: 13.5px; }
+    .float-chip small { color: var(--text-muted); font-size: 12px; }
+    .float-chip .ico { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; }
+    .float-chip--pr { top: 2%; left: -14%; }
+    .float-chip--pr .ico { background: var(--primary-glow); }
+    .float-chip--water { bottom: 31%; right: -12%; animation-delay: -3s; }
+    .float-chip--water .ico { background: rgba(56, 189, 248, .15); }
+    @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-    /* ---------- highlight strip ---------- */
+    /* ----- peças das telas (prefixo m-) ----- */
+    .m-status { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px 0; height: 40px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .m-status i { display: inline-block; width: 18px; height: 9px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; opacity: .8; }
+    .m-status i::after { content: ""; position: absolute; inset: 1px 5px 1px 1px; background: currentColor; border-radius: 1px; }
+    .m-topbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px 10px; flex-shrink: 0; }
+    .m-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #fbbf24); display: grid; place-items: center; color: #0e0e12; font-weight: 800; font-size: 10px; }
+    .m-topbar b { font-size: 12.5px; }
+    .m-topbar .online { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+    .m-topbar .sp { flex: 1; }
+    .m-icon-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; font-size: 10px; }
+    .m-body { flex: 1; overflow: hidden; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
+    .m-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px; }
+    .m-label { font-size: 8.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); }
+    .m-tabbar { display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px 16px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .m-tabbar span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 8px; font-weight: 600; color: var(--text-dim); }
+    .m-tabbar span.on { color: var(--primary); }
+    .m-tabbar svg { width: 17px; height: 17px; }
+
+    /* tela: ao vivo */
+    .m-live { padding: 0 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .m-live__top { display: flex; align-items: center; gap: 8px; }
+    .m-live__head { flex: 1; display: flex; flex-direction: column; }
+    .m-live__head b { font-size: 12.5px; }
+    .m-live__head small { color: var(--text-muted); font-size: 9.5px; }
+    .m-clock { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+    .m-bar { height: 4px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+    .m-bar i { display: block; height: 100%; width: 38%; background: var(--primary); border-radius: 4px; }
+    .m-steps { display: flex; gap: 4px; }
+    .m-steps i { flex: 1; height: 4px; border-radius: 3px; background: var(--surface-3); }
+    .m-steps i.done { background: var(--success); }
+    .m-steps i.cur { background: var(--primary); }
+    .m-kicker { font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--primary-ink); margin-top: 2px; }
+    .m-title { font-size: 16px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+    .m-chips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .m-chips span { font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); }
+    .m-tip { font-size: 10px; color: var(--text-muted); padding: 6px 8px; border-radius: 8px; background: var(--surface); border: 1px dashed var(--border-2); }
+    .m-sets { display: flex; flex-direction: column; gap: 5px; }
+    .m-set { display: grid; grid-template-columns: 22px 1fr 1fr 26px; gap: 6px; align-items: center; }
+    .m-set--head { font-size: 8.5px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
+    .m-set .n { font-weight: 800; color: var(--text-muted); text-align: center; }
+    .m-set .f { height: 28px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 700; font-size: 11.5px; }
+    .m-set .ck { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border-2); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+    .m-set.done .f { color: var(--text-muted); }
+    .m-set.done .ck { background: var(--success); border-color: var(--success); color: #0e0e12; }
+    .m-set.cur .f { border-color: var(--primary); }
+    .m-set.cur .f.empty { color: var(--text-dim); }
+    .m-last { font-size: 9.5px; color: var(--text-muted); text-align: center; }
+    .m-last b { color: var(--text); }
+    .m-rest { position: relative; overflow: hidden; display: flex; align-items: center; gap: 6px; margin-top: auto; padding: 9px 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--primary); }
+    .m-rest__bar { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--primary-glow); transform-origin: left; }
+    .m-rest > div { position: relative; flex: 1; display: flex; flex-direction: column; }
+    .m-rest small { font-size: 8.5px; font-weight: 800; color: var(--primary-ink); text-transform: uppercase; letter-spacing: .08em; }
+    .m-rest b { font-size: 18px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+    .m-pill { position: relative; font-size: 10px; font-weight: 700; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--border-2); background: var(--surface); }
+    .m-foot { display: flex; gap: 6px; }
+    .m-foot span { height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 11.5px; }
+    .m-foot .prev { width: 40px; border: 1px solid var(--border); background: var(--surface); }
+    .m-foot .next { flex: 1; background: var(--primary); color: #0e0e12; }
+
+    /* tela: água */
+    .m-water { display: flex; align-items: center; gap: 12px; }
+    .m-ring {
+      --pct: 62; width: 92px; height: 92px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
+      background: conic-gradient(var(--water) calc(var(--pct) * 1%), var(--surface-3) 0);
+    }
+    .m-ring > div { width: 76px; height: 76px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .m-ring b { font-size: 19px; line-height: 1; }
+    .m-ring b small { font-size: 10px; }
+    .m-ring span { font-size: 9px; color: var(--text-muted); }
+    .m-water__info { display: flex; flex-direction: column; gap: 2px; }
+    .m-water__info strong { font-size: 14px; }
+    .m-water__info span { font-size: 9.5px; color: var(--text-muted); }
+    .m-quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .m-quick span { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 0; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 9.5px; font-weight: 800; }
+    .m-quick em { font-style: normal; font-size: 14px; }
+    .m-quick small { font-size: 8px; color: var(--text-muted); font-weight: 600; }
+    .m-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .m-stats div { padding: 7px 6px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; }
+    .m-stats b { font-size: 14px; }
+    .m-stats span { font-size: 8px; color: var(--text-muted); line-height: 1.2; }
+    .m-wbars { position: relative; display: flex; align-items: flex-end; gap: 3px; height: 70px; margin-top: 6px; }
+    .m-wbars i { flex: 1; border-radius: 3px 3px 1px 1px; background: rgba(56, 189, 248, .35); }
+    .m-wbars i.hit { background: var(--water); }
+    .m-wbars::after { content: ""; position: absolute; left: 0; right: 0; bottom: 52px; border-top: 1px dashed var(--text-dim); opacity: .6; }
+
+    /* tela: evolução */
+    .m-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+    .m-kpis div { padding: 8px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+    .m-kpis b { font-size: 17px; display: block; line-height: 1.1; }
+    .m-kpis span { font-size: 8.5px; color: var(--text-muted); }
+    .m-seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; gap: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); }
+    .m-seg span { text-align: center; padding: 4px 0; border-radius: 7px; font-size: 9.5px; font-weight: 700; color: var(--text-muted); }
+    .m-seg span.on { background: var(--primary); color: #0e0e12; }
+    .m-heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 6px; }
+    .m-heat i { aspect-ratio: 1; border-radius: 3px; background: var(--surface-3); }
+    .m-heat i.l1 { background: rgba(249, 115, 22, .35); }
+    .m-heat i.l2 { background: rgba(249, 115, 22, .65); }
+    .m-heat i.l3 { background: var(--primary); }
+    .m-chart { width: 100%; height: 70px; margin-top: 4px; overflow: visible; }
+
+    /* tela: histórico */
+    .m-month { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 12px; }
+    .m-month span { color: var(--text-dim); font-size: 13px; }
+    .m-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; margin-top: 6px; }
+    .m-cal .wd { font-size: 8px; font-weight: 800; color: var(--text-dim); padding-bottom: 2px; }
+    .m-cal i { font-style: normal; font-size: 9.5px; font-weight: 600; padding: 4px 0; border-radius: 7px; color: var(--text-muted); position: relative; }
+    .m-cal i.d { background: var(--primary); color: #0e0e12; font-weight: 800; }
+    .m-cal i.p { box-shadow: inset 0 0 0 1.5px var(--primary); color: var(--text); }
+    .m-cal i.t { box-shadow: inset 0 0 0 1.5px var(--text); color: var(--text); font-weight: 800; }
+    .m-sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; text-align: center; }
+    .m-sum b { display: block; font-size: 13px; }
+    .m-sum span { font-size: 7.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    .m-session { display: flex; gap: 8px; align-items: center; }
+    .m-session .dt { width: 34px; height: 34px; border-radius: 10px; background: var(--primary-glow); color: var(--primary-ink); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; line-height: 1; }
+    .m-session .dt small { font-size: 7px; text-transform: uppercase; }
+    .m-session div:last-child { display: flex; flex-direction: column; }
+    .m-session b { font-size: 11px; }
+    .m-session span { font-size: 9px; color: var(--text-muted); }
+    .m-up { color: var(--success); font-weight: 700; }
+
+    /* ---------- faixa de destaques ---------- */
     .highlights {
-      display: grid; grid-template-columns: repeat(4, 1fr);
+      display: flex; flex-wrap: wrap; justify-content: center;
       border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: var(--bg-2);
     }
     .highlight {
-      display: flex; align-items: center; gap: 8px; justify-content: center;
-      padding: 20px 8px; border-left: 1px solid var(--border); color: var(--text-muted);
-      font-size: clamp(11.5px, 2.4vw, 14px); font-weight: 600; text-align: center;
+      flex: 1 1 200px; display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 22px 12px; color: var(--text-muted); font-size: 15px; font-weight: 700;
     }
-    .highlight:first-child { border-left: none; }
+    .highlight + .highlight { border-left: 1px solid var(--border); }
     .highlight svg { color: var(--primary); flex-shrink: 0; }
 
-    section { padding: clamp(56px, 9vw, 88px) 0; }
-    .section-head { text-align: center; max-width: 560px; margin: 0 auto clamp(32px, 6vw, 48px); padding: 0 8px; }
-    .section-head h2 { font-size: clamp(24px, 3vw, 36px); margin: 0 0 12px; letter-spacing: -0.02em; }
-    .section-head p { color: var(--text-muted); margin: 0; }
+    /* ---------- seções ---------- */
+    section { padding: clamp(64px, 9vw, 112px) 0; }
+    .section-head { text-align: center; max-width: 640px; margin: 0 auto clamp(36px, 6vw, 60px); }
+    .eyebrow { display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--primary-ink); margin-bottom: 12px; }
+    .section-head h2 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.03em; }
+    .section-head p { color: var(--text-muted); margin: 0; font-size: clamp(15.5px, 1.4vw, 17.5px); }
 
-    .features {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-    }
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 26px;
-      transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
-    }
-    .card:hover {
-      transform: translateY(-5px); border-color: rgba(249,115,22,.4);
-      box-shadow: 0 16px 32px -12px rgba(0,0,0,.4);
-    }
-    .icon-badge {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: var(--primary-glow); color: var(--primary);
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 16px;
-    }
-    .card h3 { margin: 0 0 8px; font-size: 17px; }
-    .card p { margin: 0; color: var(--text-muted); font-size: 14.5px; }
-
-    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .compare-col {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: clamp(20px, 4vw, 28px);
-    }
-    .compare-col.good { border-color: rgba(74,222,128,.35); background: linear-gradient(160deg, var(--surface), rgba(74,222,128,.05)); }
-    .compare-tag {
-      display: inline-block; font-size: 12.5px; font-weight: 700;
-      padding: 4px 12px; border-radius: 999px; margin-bottom: 18px;
-    }
-    .compare-tag.bad { background: rgba(239,68,68,.12); color: #f87171; }
-    .compare-tag.good { background: rgba(74,222,128,.14); color: var(--success); }
+    /* ---------- comparação ---------- */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 960px; margin: 0 auto; }
+    .compare-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: clamp(22px, 3.5vw, 32px); }
+    .compare-col.good { border-color: rgba(249, 115, 22, .45); background: linear-gradient(170deg, var(--primary-glow), var(--surface) 55%); }
+    .compare-tag { display: inline-block; font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 999px; margin-bottom: 20px; }
+    .compare-tag.bad { background: rgba(239, 68, 68, .12); color: var(--error); }
+    .compare-tag.good { background: var(--primary); color: var(--on-primary); }
     .compare-col ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
-    .compare-col li { position: relative; padding-left: 26px; font-size: 14.5px; color: var(--text-muted); }
+    .compare-col li { position: relative; padding-left: 30px; color: var(--text-muted); }
     .compare-col li::before {
-      position: absolute; left: 0; top: 1px; font-weight: 700; font-size: 15px;
+      position: absolute; left: 0; top: 2px; width: 20px; height: 20px; border-radius: 50%;
+      display: grid; place-items: center; font-size: 12px; font-weight: 900;
     }
-    .compare-col:not(.good) li::before { content: "×"; color: var(--error); }
-    .compare-col.good li::before { content: "✓"; color: var(--success); }
+    .compare-col:not(.good) li::before { content: "✕"; color: var(--error); background: rgba(239, 68, 68, .12); }
+    .compare-col.good li::before { content: "✓"; color: var(--on-primary); background: var(--primary); }
     .compare-col.good li { color: var(--text); }
 
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .step { position: relative; padding-left: 4px; }
+    /* ---------- vitrine (linhas alternadas) ---------- */
+    .showcase { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .show-list { display: flex; flex-direction: column; gap: clamp(64px, 9vw, 120px); }
+    .show-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 80px); align-items: center; }
+    .show-row:nth-child(even) .show-copy { order: 2; }
+    .show-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--primary-ink); margin-bottom: 12px; }
+    .show-tag i { width: 26px; height: 26px; border-radius: 8px; background: var(--primary-glow); display: grid; place-items: center; font-style: normal; }
+    .show-copy h3 { font-size: clamp(24px, 2.8vw, 34px); line-height: 1.12; letter-spacing: -.025em; margin: 0 0 14px; }
+    .show-copy > p { color: var(--text-muted); margin: 0 0 22px; font-size: 16.5px; }
+    .checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .checks li { position: relative; padding-left: 28px; font-weight: 600; }
+    .checks li::before {
+      content: ""; position: absolute; left: 0; top: 4px; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--primary-glow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f97316' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / 11px no-repeat;
+    }
+    .show-visual {
+      position: relative; min-height: 340px; border-radius: var(--r-xl); padding: clamp(20px, 3vw, 32px);
+      background: radial-gradient(80% 80% at 50% 0%, var(--primary-glow), transparent 70%), var(--surface);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .panel { width: 100%; max-width: 380px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; box-shadow: 0 24px 48px -24px rgba(0, 0, 0, .5); }
+    .panel + .panel { margin-top: 12px; }
+    .panel-label { font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+    /* visual: descanso */
+    .rest-big { display: flex; align-items: center; gap: 20px; }
+    .rest-ring { position: relative; width: 132px; height: 132px; flex-shrink: 0; }
+    .rest-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .rest-ring circle { fill: none; stroke-width: 9; }
+    .rest-ring .bg { stroke: var(--surface-3); }
+    .rest-ring .fg { stroke: var(--primary); stroke-linecap: round; stroke-dasharray: 339.3; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
+    .rest-ring > div { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .rest-ring b { font-size: 30px; font-variant-numeric: tabular-nums; line-height: 1; }
+    .rest-ring span { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+    .rest-side { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+    .rest-side .row { display: flex; gap: 8px; }
+    .chip-btn { flex: 1; text-align: center; font-weight: 800; font-size: 14px; padding: 9px 0; border-radius: 10px; border: 1px solid var(--border-2); background: var(--surface); }
+    .rest-next { font-size: 13px; color: var(--text-muted); }
+    .rest-next b { color: var(--text); display: block; font-size: 14.5px; }
+    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); }
+
+    /* visual: vídeo de demonstração */
+    .demo-video { position: relative; border-radius: 12px; overflow: hidden; background: #0e0e12; aspect-ratio: 16 / 10; }
+    .demo-video video { width: 100%; height: 100%; object-fit: cover; }
+    .demo-video .speed { position: absolute; left: 10px; top: 10px; font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 999px; background: rgba(0, 0, 0, .65); color: #fff; }
+    .demo-controls { display: flex; gap: 8px; margin-top: 12px; }
+    .demo-controls button {
+      flex: 1; min-height: 40px; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
+      border-radius: 10px; border: 1px solid var(--border-2); background: var(--surface); color: var(--text);
+    }
+    .demo-controls button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+    .credit { font-size: 11.5px; color: var(--text-dim); margin: 10px 0 0; }
+    .credit a { color: var(--text-muted); }
+
+    /* visual: evolução */
+    .load-chart { width: 100%; height: auto; overflow: visible; }
+    .load-chart .grid line { stroke: var(--border); }
+    .load-chart text { fill: var(--text-dim); font-size: 10px; font-family: inherit; }
+    .load-chart .line { fill: none; stroke: var(--primary); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 600; stroke-dashoffset: 0; transition: stroke-dashoffset 1.6s ease; }
+    .js .reveal:not(.visible) .load-chart .line { stroke-dashoffset: 600; }
+    .load-chart .pt { fill: var(--bg); stroke: var(--primary); stroke-width: 2; }
+    .load-chart .pr { fill: var(--primary); }
+    .load-chart .pr-label { fill: var(--primary-ink); font-weight: 800; font-size: 11px; }
+    .pr-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .pr-list div { padding: 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+    .pr-list b { display: block; font-size: 17px; }
+    .pr-list span { font-size: 11.5px; color: var(--text-muted); line-height: 1.3; display: block; }
+
+    /* visual: plano */
+    .opt-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .opt { font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); }
+    .opt.on { border-color: var(--primary); background: var(--primary-glow); color: var(--text); }
+    .week { display: flex; flex-direction: column; gap: 6px; }
+    .week div { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 13.5px; }
+    .week b { color: var(--primary-ink); font-size: 12.5px; }
+    .week span { color: var(--text-dim); font-size: 12px; }
+    .week div.rest { opacity: .55; }
+    .week div.today { border-color: var(--primary); }
+
+    /* ---------- grid de funcionalidades ---------- */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px;
+      transition: transform .25s ease, border-color .25s ease;
+    }
+    .card:hover { transform: translateY(-3px); border-color: rgba(249, 115, 22, .45); }
+    .icon-badge { width: 44px; height: 44px; border-radius: 12px; background: var(--primary-glow); color: var(--primary); display: grid; place-items: center; margin-bottom: 16px; }
+    .card h3 { margin: 0 0 6px; font-size: 17px; letter-spacing: -.01em; }
+    .card p { margin: 0; color: var(--text-muted); font-size: 15px; }
+
+    /* ---------- passos ---------- */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; position: relative; }
+    .step { position: relative; padding: 26px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
     .step .num {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2);
-      border: 1px solid var(--border); color: var(--primary); font-weight: 700;
-      font-size: 14px; margin-bottom: 16px;
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; margin-bottom: 18px;
+      background: var(--primary); color: var(--on-primary); font-weight: 900; font-size: 17px;
     }
-    .step h3 { margin: 0 0 8px; font-size: 16px; }
-    .step p { margin: 0; color: var(--text-muted); font-size: 14.5px; }
+    .step h3 { margin: 0 0 6px; font-size: 18px; }
+    .step p { margin: 0; color: var(--text-muted); font-size: 15px; }
 
+    /* ---------- FAQ ---------- */
+    .faq { background: var(--bg-2); border-top: 1px solid var(--border); }
+    .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    .faq-list details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); transition: border-color .2s ease; }
+    .faq-list details[open] { border-color: var(--border-2); }
+    .faq-list summary {
+      list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 18px 20px; font-weight: 700; font-size: 16.5px;
+    }
+    .faq-list summary::-webkit-details-marker { display: none; }
+    .faq-list summary::after {
+      content: "+"; flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--surface-2); color: var(--primary-ink); font-size: 18px; font-weight: 700; transition: transform .2s ease;
+    }
+    .faq-list details[open] summary::after { transform: rotate(45deg); }
+    .faq-list details p { margin: 0; padding: 0 20px 20px; color: var(--text-muted); }
+
+    /* ---------- CTA final ---------- */
     .cta-band {
-      position: relative; overflow: hidden;
-      background: linear-gradient(160deg, var(--surface), var(--surface-2));
+      position: relative; overflow: hidden; text-align: center;
+      border-radius: 28px; padding: clamp(48px, 8vw, 88px) clamp(20px, 6vw, 48px);
+      background: radial-gradient(70% 90% at 50% 0%, var(--primary-glow), transparent 70%), var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px; padding: clamp(40px, 8vw, 64px) clamp(20px, 6vw, 32px); text-align: center;
     }
-    .cta-band::before {
-      content: ""; position: absolute; width: 500px; height: 500px; left: 50%; top: 50%;
-      transform: translate(-50%, -50%); border-radius: 50%;
-      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-      filter: blur(50px); z-index: 0;
-    }
-    .cta-band > * { position: relative; z-index: 1; }
-    .cta-band h2 { margin: 0 0 12px; font-size: clamp(24px, 3vw, 32px); }
-    .cta-band p { color: var(--text-muted); margin: 0 0 28px; }
+    .cta-band > * { position: relative; }
+    .cta-band h2 { margin: 0 auto 14px; max-width: 640px; font-size: clamp(28px, 4vw, 46px); line-height: 1.08; letter-spacing: -.03em; }
+    .cta-band p { color: var(--text-muted); margin: 0 0 30px; font-size: 17px; }
+    .cta-band .hint { margin: 22px 0 0; font-size: 13.5px; color: var(--text-dim); }
 
-    footer { border-top: 1px solid var(--border); padding: 28px 0; }
-    .footer-inner {
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 12px; color: var(--text-dim); font-size: 13.5px;
-      text-align: center;
-    }
-    footer a { color: var(--text-muted); text-decoration: none; }
-    footer a:hover { color: var(--text); }
+    /* ---------- rodapé ---------- */
+    footer { border-top: 1px solid var(--border); padding: 36px 0 calc(36px + env(safe-area-inset-bottom)); }
+    .footer-inner { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: flex-start; justify-content: space-between; }
+    .footer-brand p { margin: 8px 0 0; color: var(--text-dim); font-size: 14px; max-width: 320px; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 8px 22px; list-style: none; margin: 0; padding: 0; }
+    .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 14.5px; font-weight: 600; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-credits { flex-basis: 100%; margin: 8px 0 0; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-dim); }
+    .footer-credits a { color: var(--text-muted); }
 
-    /* ---------- scroll reveal ---------- */
-    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease; }
-    .reveal.visible { opacity: 1; transform: none; }
-    .features .card:nth-child(2) { transition-delay: .06s; }
-    .features .card:nth-child(3) { transition-delay: .12s; }
-    .features .card:nth-child(4) { transition-delay: .18s; }
-    .features .card:nth-child(5) { transition-delay: .24s; }
-    .features .card:nth-child(6) { transition-delay: .3s; }
-    .steps .step:nth-child(2) { transition-delay: .1s; }
-    .steps .step:nth-child(3) { transition-delay: .2s; }
+    /* ---------- revelar ao rolar (só com JS) ---------- */
+    .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+    .js .reveal.visible { opacity: 1; transform: none; }
+    .js .reveal-d1 { transition-delay: .08s; }
+    .js .reveal-d2 { transition-delay: .16s; }
 
-    /* ---------- tablet ---------- */
+    /* ---------- responsivo ---------- */
     @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; text-align: center; }
+      .lead { margin-left: auto; margin-right: auto; }
+      .hero-actions, .hero-proof { justify-content: center; }
       .features { grid-template-columns: repeat(2, 1fr); }
+      .show-row { grid-template-columns: 1fr; }
+      .show-row:nth-child(even) .show-copy { order: 0; }
+      .show-copy { max-width: 600px; }
     }
-
-    /* ---------- mobile ---------- */
     @media (max-width: 760px) {
-      .features { grid-template-columns: 1fr; }
-      .compare { grid-template-columns: 1fr; }
-      .steps { grid-template-columns: 1fr; }
-      .highlights { grid-template-columns: repeat(2, 1fr); }
-      .highlight:nth-child(2) { border-left: 1px solid var(--border); }
-      .highlight:nth-child(3) { border-left: none; }
-      .highlight:nth-child(3), .highlight:nth-child(4) { border-top: 1px solid var(--border); }
-      .hero { padding: 56px 0 28px; }
-      section { padding: 52px 0; }
-      .mockup { width: min(260px, 72vw); }
-      .steps { gap: 32px; }
-      .footer-inner { justify-content: center; }
+      .nav-links { display: none; }
+      .nav-inner > .btn { margin-left: auto; }
+      .compare, .steps { grid-template-columns: 1fr; }
+      .highlight { flex-basis: 50%; font-size: 14px; padding: 18px 8px; }
+      .highlight + .highlight { border-left: 0; }
+      .highlight:nth-child(even) { border-left: 1px solid var(--border); }
+      .highlight:nth-child(n+3) { border-top: 1px solid var(--border); }
+      .float-chip--pr { left: -4%; top: 2%; }
+      .float-chip--water { right: -4%; }
+      .show-visual { min-height: 0; }
     }
-
-    /* ---------- small phones ---------- */
-    @media (max-width: 420px) {
-      .nav-inner { padding: 12px 0; }
-      .hero-actions { flex-direction: column; align-items: stretch; }
+    @media (max-width: 560px) {
+      .features { grid-template-columns: 1fr; }
+      .hero-actions { flex-direction: column; }
       .hero-actions .btn { width: 100%; }
-      .highlight { font-size: 11px; gap: 6px; padding: 16px 6px; }
-      .highlight svg { width: 15px; height: 15px; }
-      .card { padding: 20px; }
-      .compare-col { padding: 18px; }
+      .float-chip { display: none; }
+      .rest-big { flex-direction: column; text-align: center; }
+      .rest-side { width: 100%; }
+      .pr-list { grid-template-columns: 1fr 1fr; }
+      .pr-list div:last-child { display: none; }
+      .screen-tab { padding: 7px 10px; font-size: 12.5px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+      .js .reveal { opacity: 1; transform: none; }
     }
   </style>
 </head>
 <body>
+  <script>document.documentElement.classList.add('js');</script>
 
   <header class="nav">
     <div class="wrap nav-inner">
-      <a class="logo" href="#top">
-        <img src="../icon.svg" alt="EAFIT" width="28" height="28" />
+      <a class="logo" href="#top" aria-label="EAFIT — início">
+        <img src="../icon.svg" alt="" width="30" height="30" />
         EAFIT
       </a>
+      <nav aria-label="Seções">
+        <ul class="nav-links">
+          <li><a href="#recursos">Recursos</a></li>
+          <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#faq">Dúvidas</a></li>
+        </ul>
+      </nav>
       <a class="btn btn-primary btn-sm" href="../">Abrir app</a>
     </div>
   </header>
 
+  <!--
+    Cada bloco com data-section é editável pelo admin (Painel admin → Landing
+    page, tabela public.landing_content). O texto abaixo é o fallback (SEO,
+    JS desligado, fetch falhou) e deve espelhar o seed mais recente em
+    supabase/migrations/*landing_content*.sql.
+  -->
   <main id="top">
+    <!-- ========== HERO ========== -->
     <section class="hero" data-section="hero">
-      <div class="wrap">
-        <span class="badge"><span class="dot"></span> Grátis · instalável · funciona offline</span>
-        <h1>Pare de treinar sem rumo.<br />Veja sua evolução <span class="grad">acontecer de verdade</span></h1>
-        <p class="lead">
-          Chega de planilha perdida e carga esquecida. O EAFIT monta
-          seu treino e mostra sua evolução — semana a semana, série a série.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="../">Abrir o app grátis</a>
-          <a class="btn btn-ghost" href="#features">Ver funcionalidades</a>
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <span class="badge"><span class="dot"></span> Grátis · sem anúncios · funciona offline</span>
+          <h1>Pare de treinar no improviso.<br />Treine com plano e veja <span class="grad">cada quilo a mais.</span></h1>
+          <p class="lead">O EAFIT monta seu treino pelo seu objetivo e nível, guia cada série no modo ao vivo e transforma o que você registra em gráficos, recordes e sequência — no celular, mesmo sem internet.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="../">Começar grátis</a>
+            <a class="btn btn-ghost" href="#recursos">Ver o app por dentro</a>
+          </div>
+          <ul class="hero-proof">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Sem cartão de crédito</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>200 exercícios com demonstração</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Instala em 1 toque</li>
+          </ul>
         </div>
 
-        <div class="mockup-stage">
-          <div class="mockup">
-            <div class="mockup-notch"></div>
-            <div class="mockup-screens">
-              <div class="mockup-screen active" data-screen="0">
-                <img src="screenshots/treino.png" alt="Tela de treino do EAFIT" loading="eager" />
+        <div class="hero-visual">
+          <div class="float-chip float-chip--pr" aria-hidden="true">
+            <span class="ico">🏆</span>
+            <div><b>Novo recorde</b><small>Supino Reto · 82,5 kg</small></div>
+          </div>
+          <div class="float-chip float-chip--water" aria-hidden="true">
+            <span class="ico">💧</span>
+            <div><b>Meta de água batida</b><small>5 dias seguidos</small></div>
+          </div>
+
+          <div class="phone" role="img" aria-label="Prévia das telas do app EAFIT">
+            <div class="phone__screen" aria-hidden="true">
+
+              <!-- Tela 1: modo treino ao vivo -->
+              <div class="scr is-active" id="scr-0">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-live">
+                  <div class="m-live__top">
+                    <span class="m-icon-btn">✕</span>
+                    <div class="m-live__head"><b>Segunda</b><small>Peito · Ombro · Tríceps</small></div>
+                    <span class="m-clock" data-clock>32:14</span>
+                  </div>
+                  <div class="m-bar"><i></i></div>
+                  <div class="m-steps"><i class="done"></i><i class="cur"></i><i></i><i></i><i></i><i></i></div>
+                  <div class="m-kicker">Exercício 2 de 6</div>
+                  <div class="m-title">Supino Inclinado com Halteres</div>
+                  <div class="m-chips"><span>4 séries</span><span>8–10 reps</span><span>⏱ 90s</span><span>▶ Ver execução</span></div>
+                  <div class="m-tip">💡 Controle na descida</div>
+                  <div class="m-sets">
+                    <div class="m-set m-set--head"><span>#</span><span>Carga</span><span>Reps</span><span></span></div>
+                    <div class="m-set done"><span class="n">1</span><span class="f">26 kg</span><span class="f">10</span><span class="ck">✓</span></div>
+                    <div class="m-set done"><span class="n">2</span><span class="f">26 kg</span><span class="f">9</span><span class="ck">✓</span></div>
+                    <div class="m-set cur"><span class="n">3</span><span class="f">26 kg</span><span class="f empty">—</span><span class="ck"></span></div>
+                    <div class="m-set"><span class="n">4</span><span class="f">26 kg</span><span class="f">—</span><span class="ck"></span></div>
+                  </div>
+                  <div class="m-last">Última vez: <b>24 kg × 10</b></div>
+                  <div class="m-rest">
+                    <span class="m-rest__bar" data-rest-bar></span>
+                    <div><small>Descanso</small><b data-rest>1:30</b></div>
+                    <span class="m-pill">+15s</span><span class="m-pill">Pular</span>
+                  </div>
+                  <div class="m-foot"><span class="prev">‹</span><span class="next">Próximo exercício →</span></div>
+                </div>
               </div>
-              <div class="mockup-screen" data-screen="1">
-                <img src="screenshots/agua.png" alt="Tela de hidratação do EAFIT" loading="lazy" />
+
+              <!-- Tela 2: água -->
+              <div class="scr" id="scr-1">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Olá, Ana</b><span class="online"></span><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card m-water">
+                    <div class="m-ring"><div><b>2,2<small>L</small></b><span>de 3,5L</span></div></div>
+                    <div class="m-water__info">
+                      <span class="m-label">Hidratação hoje</span>
+                      <strong>Faltam 1,3L</strong>
+                      <span>≈ 6 copos de 250ml</span>
+                    </div>
+                  </div>
+                  <div class="m-quick">
+                    <span><em>🥛</em>+200ml<small>Copo</small></span>
+                    <span><em>☕</em>+300ml<small>Caneca</small></span>
+                    <span><em>🥤</em>+500ml<small>Garrafa</small></span>
+                    <span><em>🍶</em>+750ml<small>Squeeze</small></span>
+                  </div>
+                  <div class="m-stats">
+                    <div><b>3,3</b><span>Média 7 dias (L)</span></div>
+                    <div><b>5</b><span>Dias seguidos na meta</span></div>
+                    <div><b>9/14</b><span>Dias na meta</span></div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">Últimos 14 dias</span>
+                    <div class="m-wbars">
+                      <i style="height:62%"></i><i class="hit" style="height:80%"></i><i style="height:55%"></i><i class="hit" style="height:84%"></i><i class="hit" style="height:76%"></i><i style="height:48%"></i><i class="hit" style="height:90%"></i><i class="hit" style="height:78%"></i><i style="height:66%"></i><i class="hit" style="height:80%"></i><i class="hit" style="height:86%"></i><i class="hit" style="height:77%"></i><i class="hit" style="height:94%"></i><i style="height:50%"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="hidratacao"></div>
               </div>
-              <div class="mockup-screen" data-screen="2">
-                <img src="screenshots/evolucao.png" alt="Tela de evolução do EAFIT" loading="lazy" />
+
+              <!-- Tela 3: evolução -->
+              <div class="scr" id="scr-2">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Evolução</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-kpis">
+                    <div><b>14</b><span>treinos em 30 dias</span></div>
+                    <div><b>🔥 5</b><span>dias de sequência</span></div>
+                    <div><b>8</b><span>recordes pessoais</span></div>
+                    <div><b>6</b><span>conquistas</span></div>
+                  </div>
+                  <div class="m-seg"><span class="on">Treinos</span><span>Recordes</span><span>Corpo</span></div>
+                  <div class="m-card">
+                    <span class="m-label">Últimos 35 dias</span>
+                    <div class="m-heat">
+                      <i class="l2"></i><i></i><i class="l1"></i><i class="l3"></i><i></i><i class="l2"></i><i></i>
+                      <i class="l3"></i><i class="l1"></i><i></i><i class="l2"></i><i class="l3"></i><i></i><i></i>
+                      <i class="l2"></i><i class="l3"></i><i class="l2"></i><i></i><i class="l3"></i><i class="l1"></i><i></i>
+                      <i class="l3"></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l3"></i><i></i><i></i>
+                      <i class="l3"></i><i class="l3"></i><i class="l2"></i><i class="l3"></i><i class="l3"></i><i></i><i></i>
+                    </div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">Volume por treino</span>
+                    <svg class="m-chart" viewBox="0 0 260 70" preserveAspectRatio="none">
+                      <defs><linearGradient id="mg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f97316" stop-opacity=".35"/><stop offset="1" stop-color="#f97316" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0 58 L30 52 L60 55 L90 44 L120 46 L150 34 L180 36 L210 24 L240 20 L260 12 L260 70 L0 70 Z" fill="url(#mg)"/>
+                      <path d="M0 58 L30 52 L60 55 L90 44 L120 46 L150 34 L180 36 L210 24 L240 20 L260 12" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="dash"></div>
               </div>
-              <div class="mockup-screen" data-screen="3">
-                <img src="screenshots/perfil.png" alt="Tela de perfil do EAFIT" loading="lazy" />
+
+              <!-- Tela 4: histórico -->
+              <div class="scr" id="scr-3">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Histórico</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card">
+                    <div class="m-month"><span>‹</span>Setembro 2026<span>›</span></div>
+                    <div class="m-cal">
+                      <span class="wd">D</span><span class="wd">S</span><span class="wd">T</span><span class="wd">Q</span><span class="wd">Q</span><span class="wd">S</span><span class="wd">S</span>
+                      <i></i><i class="d">1</i><i class="d">2</i><i>3</i><i class="d">4</i><i class="d">5</i><i>6</i>
+                      <i>7</i><i class="d">8</i><i class="p">9</i><i class="d">10</i><i class="d">11</i><i>12</i><i>13</i>
+                      <i>14</i><i class="d">15</i><i class="d">16</i><i class="d">17</i><i>18</i><i class="d">19</i><i>20</i>
+                      <i>21</i><i class="d">22</i><i class="d">23</i><i class="d">24</i><i class="t">25</i><i>26</i><i>27</i>
+                      <i>28</i><i>29</i><i>30</i><i></i><i></i><i></i><i></i>
+                    </div>
+                  </div>
+                  <div class="m-card m-sum">
+                    <div><b>15</b><span>Treinos</span></div>
+                    <div><b>14h</b><span>Tempo</span></div>
+                    <div><b>312</b><span>Séries</span></div>
+                    <div><b>48t</b><span>Volume</span></div>
+                  </div>
+                  <div class="m-card m-session">
+                    <div class="dt">24<small>qua</small></div>
+                    <div><b>Pernas · Quadríceps</b><span>58 min · 22 séries · <span class="m-up">↑ 3 evoluíram</span></span></div>
+                  </div>
+                  <div class="m-card m-session">
+                    <div class="dt">23<small>ter</small></div>
+                    <div><b>Costas · Bíceps</b><span>52 min · 20 séries · <span class="m-up">↑ 2 evoluíram</span></span></div>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="historico"></div>
               </div>
+
             </div>
-            <div class="mockup-tabs">
-              <button class="mockup-tab active" data-tab="0" aria-label="Treino"></button>
-              <button class="mockup-tab" data-tab="1" aria-label="Água"></button>
-              <button class="mockup-tab" data-tab="2" aria-label="Evolução"></button>
-              <button class="mockup-tab" data-tab="3" aria-label="Perfil"></button>
-            </div>
+          </div>
+
+          <div class="screen-tabs" role="tablist" aria-label="Telas do app">
+            <button class="screen-tab" role="tab" aria-selected="true" aria-controls="scr-0" data-tab="0">Ao vivo<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-1" data-tab="1">Água<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-2" data-tab="2">Evolução<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-3" data-tab="3">Histórico<span class="prog"></span></button>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- ========== DESTAQUES ========== -->
     <div class="highlights" data-section="highlights">
-      <div class="highlight">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-        Sync automático
-      </div>
-      <div class="highlight">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Instalável
-      </div>
-      <div class="highlight">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"></path><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-        Funciona offline
-      </div>
-      <div class="highlight">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-        100% grátis
-      </div>
+      <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>Sync entre aparelhos</div>
+      <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Instala como app</div>
+      <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"></path><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>Funciona offline</div>
+      <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>Grátis e sem anúncios</div>
     </div>
 
+    <!-- ========== COMPARAÇÃO ========== -->
     <section data-section="compare">
       <div class="wrap">
-        <div class="section-head">
-          <h2>Sua rotina hoje vs. sua rotina com o EAFIT</h2>
-          <p>A diferença entre treinar por treinar e treinar com propósito.</p>
+        <div class="section-head reveal">
+          <h2>Treinar por treinar vs. treinar com o EAFIT</h2>
+          <p>A diferença não está no esforço. Está em saber o que fazer e enxergar o resultado.</p>
         </div>
         <div class="compare">
           <div class="compare-col reveal">
             <span class="compare-tag bad">Sem plano</span>
             <ul>
-              <li>Anota a carga no papel ou não anota nada</li>
-              <li>Esquece o que treinou e quanto levantou semana passada</li>
-              <li>Come "no olho", sem saber se bate a meta de proteína</li>
+              <li>Anota a carga no papel, quando anota</li>
+              <li>Não lembra quanto levantou na semana passada</li>
+              <li>Descansa no achismo, olhando o relógio</li>
               <li>Não sabe se está evoluindo de verdade</li>
             </ul>
           </div>
-          <div class="compare-col good reveal">
+          <div class="compare-col good reveal reveal-d1">
             <span class="compare-tag good">Com EAFIT</span>
             <ul>
-              <li>Treino do dia pronto, com carga da última vez à vista</li>
-              <li>Cada série concluída fica registrada automaticamente</li>
-              <li>Cardápio com macros calculados pro seu objetivo</li>
-              <li>Gráficos, heatmap e PRs mostram sua evolução real</li>
+              <li>Treino do dia pronto, com a carga da última vez à vista</li>
+              <li>Cada série marcada vira histórico automaticamente</li>
+              <li>Descanso cronometrado, com alarme e +15s</li>
+              <li>Gráficos, heatmap e recordes mostram o progresso real</li>
             </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="features" data-section="features">
+    <!-- ========== VITRINE ========== -->
+    <section id="recursos" class="showcase" data-section="showcase">
       <div class="wrap">
-        <div class="section-head">
+        <div class="section-head reveal">
+          <span class="eyebrow">Por dentro do app</span>
+          <h2>Feito pra usar no meio do treino</h2>
+          <p>Botões grandes, tela sempre acesa e nada de digitar mais do que o necessário.</p>
+        </div>
+
+        <div class="show-list">
+          <!-- 1. Modo ao vivo -->
+          <article class="show-row">
+            <div class="show-copy reveal">
+              <span class="show-tag"><i>⚡</i>Modo treino ao vivo</span>
+              <h3>Um exercício por vez, sem perder a série de vista</h3>
+              <p>Abra o treino de hoje e o EAFIT vai guiando: séries com campos grandes, a carga da última vez como referência e o descanso começando sozinho quando você marca a série.</p>
+              <ul class="checks">
+                <li>Descanso com alarme, +15s e pular</li>
+                <li>Tela sempre acesa durante o treino</li>
+                <li>Resumo e comparação ao finalizar</li>
+              </ul>
+            </div>
+            <div class="show-visual reveal reveal-d1" aria-hidden="true">
+              <div style="width:100%;max-width:380px">
+                <div class="panel">
+                  <div class="panel-label"><span>Descanso</span><span>Série 2 de 4</span></div>
+                  <div class="rest-big">
+                    <div class="rest-ring">
+                      <svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="54"/><circle class="fg" cx="60" cy="60" r="54" data-ring/></svg>
+                      <div><b data-rest-big>1:30</b><span>de 1:30</span></div>
+                    </div>
+                    <div class="rest-side">
+                      <div class="row"><span class="chip-btn">+15s</span><span class="chip-btn">Pular</span></div>
+                      <div class="rest-next">A seguir<b>Série 3 · 26 kg × 10</b></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel pill-row">
+                  <span class="pill">🔆 Tela acesa</span>
+                  <span class="pill">⏱ 32:14 de treino</span>
+                  <span class="pill">✓ 7/16 séries</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 2. Demonstração -->
+          <article class="show-row">
+            <div class="show-copy reveal">
+              <span class="show-tag"><i>▶</i>Demonstração de execução</span>
+              <h3>Na dúvida do movimento, veja antes de fazer</h3>
+              <p>Toque em “Ver execução” na lista ou no modo ao vivo. Os vídeos são curtos, sem som e têm câmera lenta para você reparar no detalhe da técnica.</p>
+              <ul class="checks">
+                <li>200 exercícios com demonstração</li>
+                <li>Vídeos reais com opção de câmera lenta</li>
+                <li>Dica de técnica em cada exercício</li>
+              </ul>
+            </div>
+            <div class="show-visual reveal reveal-d1">
+              <div class="panel">
+                <div class="panel-label"><span>Elevação Lateral com Halteres</span><span>3 × 12</span></div>
+                <div class="demo-video">
+                  <video id="demoVideo" muted loop playsinline preload="none" poster="../exercicios/Side_Lateral_Raise/0.webp" aria-label="Vídeo de demonstração da elevação lateral com halteres">
+                    <source src="../videos/elevacao-lateral-halteres.mp4" type="video/mp4" />
+                  </video>
+                  <span class="speed" id="demoSpeed" hidden>0,5×</span>
+                </div>
+                <div class="demo-controls">
+                  <button type="button" id="demoPlay" aria-pressed="false">⏸ Pausar</button>
+                  <button type="button" id="demoSlow" aria-pressed="false">🐢 Câmera lenta</button>
+                </div>
+                <p class="credit">Vídeo: Goulart · <a href="https://wger.de" target="_blank" rel="noopener noreferrer">wger.de</a> · CC BY-SA 4.0</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- 3. Evolução -->
+          <article class="show-row">
+            <div class="show-copy reveal">
+              <span class="show-tag"><i>📈</i>Evolução e recordes</span>
+              <h3>Seu progresso em números, não em impressão</h3>
+              <p>Cada série registrada alimenta a evolução de carga por exercício, o volume por treino, o heatmap dos últimos 35 dias e a lista de recordes pessoais.</p>
+              <ul class="checks">
+                <li>Recordes pessoais (PRs) detectados sozinhos</li>
+                <li>Avatar com os músculos trabalhados no dia</li>
+                <li>Conquistas por sequência e constância</li>
+              </ul>
+            </div>
+            <div class="show-visual reveal reveal-d1" aria-hidden="true">
+              <div style="width:100%;max-width:380px">
+                <div class="panel">
+                  <div class="panel-label"><span>Supino Reto · carga máxima</span><span class="m-up">+22,5 kg</span></div>
+                  <svg class="load-chart" viewBox="0 0 340 170">
+                    <g class="grid">
+                      <line x1="30" x2="340" y1="20" y2="20"/><line x1="30" x2="340" y1="70" y2="70"/><line x1="30" x2="340" y1="120" y2="120"/>
+                    </g>
+                    <text x="0" y="24">85</text><text x="0" y="74">70</text><text x="0" y="124">55</text>
+                    <text x="34" y="160">jul</text><text x="150" y="160">ago</text><text x="270" y="160">set</text>
+                    <polyline class="line" points="40,103 68,103 96,95 124,87 152,87 180,70 208,62 236,53 264,53 292,45 320,28"/>
+                    <circle class="pt" cx="40" cy="103" r="3.5"/><circle class="pt" cx="96" cy="95" r="3.5"/><circle class="pt" cx="152" cy="87" r="3.5"/><circle class="pt" cx="208" cy="62" r="3.5"/><circle class="pt" cx="264" cy="53" r="3.5"/>
+                    <circle class="pr" cx="320" cy="28" r="6"/>
+                    <text class="pr-label" x="248" y="18">🏆 82,5 kg</text>
+                  </svg>
+                </div>
+                <div class="panel pr-list">
+                  <div><b>140 kg</b><span>Leg Press 45°</span></div>
+                  <div><b>110 kg</b><span>Levantamento Terra</span></div>
+                  <div><b>36 kg</b><span>Rosca Direta</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 4. Plano -->
+          <article class="show-row">
+            <div class="show-copy reveal">
+              <span class="show-tag"><i>🗓️</i>Plano personalizado</span>
+              <h3>Diga seu objetivo. O treino da semana sai pronto.</h3>
+              <p>No cadastro você informa peso, altura, objetivo e nível. O EAFIT monta a divisão da semana com séries, repetições, descanso e técnica — e você ajusta o que quiser no editor.</p>
+              <ul class="checks">
+                <li>6 objetivos e 3 níveis de experiência</li>
+                <li>Troque exercícios e ajuste séries e descanso</li>
+                <li>Meta de água calculada pelo seu peso</li>
+              </ul>
+            </div>
+            <div class="show-visual reveal reveal-d1" aria-hidden="true">
+              <div style="width:100%;max-width:380px">
+                <div class="panel">
+                  <div class="panel-label"><span>Objetivo</span></div>
+                  <div class="opt-group">
+                    <span class="opt on">Ganho de massa</span><span class="opt">Força</span><span class="opt">Emagrecimento</span><span class="opt">Definição</span><span class="opt">Saúde</span><span class="opt">Resistência</span>
+                  </div>
+                  <div class="panel-label" style="margin-top:14px"><span>Nível</span></div>
+                  <div class="opt-group"><span class="opt">Iniciante</span><span class="opt on">Intermediário</span><span class="opt">Avançado</span></div>
+                </div>
+                <div class="panel week">
+                  <div class="today"><b>SEG</b>Peito · Ombro · Tríceps<span>7 exerc.</span></div>
+                  <div><b>TER</b>Costas · Bíceps<span>8 exerc.</span></div>
+                  <div><b>QUA</b>Pernas · Quadríceps<span>7 exerc.</span></div>
+                  <div><b>QUI</b>Superiores · Força<span>7 exerc.</span></div>
+                  <div><b>SEX</b>Posterior · Glúteos<span>7 exerc.</span></div>
+                  <div class="rest"><b>SÁB</b>Descanso<span>—</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== FUNCIONALIDADES ========== -->
+    <section id="funcionalidades" data-section="features">
+      <div class="wrap">
+        <div class="section-head reveal">
           <h2>Tudo que você precisa pra treinar sério</h2>
           <p>Sem planilha, sem app pago, sem depender de internet.</p>
         </div>
         <div class="features">
-          <div class="card reveal">
-            <div class="icon-badge">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-            </div>
-            <h3>Treino semanal</h3>
-            <p>Plano dividido por dia da semana, com séries, repetições, técnica e tempo de descanso por exercício.</p>
-          </div>
-          <div class="card reveal">
-            <div class="icon-badge">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
-            </div>
-            <h3>Hidratação</h3>
-            <p>Meta diária de água calculada a partir do seu peso, com histórico e lembretes ao longo do dia.</p>
-          </div>
-          <div class="card reveal">
-            <div class="icon-badge">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-            </div>
-            <h3>Evolução e recordes</h3>
-            <p>Volume por treino, heatmap dos últimos 35 dias, evolução de carga por exercício e seus PRs.</p>
-          </div>
-          <div class="card reveal">
-            <div class="icon-badge">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path></svg>
-            </div>
-            <h3>Perfil e IMC</h3>
-            <p>Dados corporais, cálculo de IMC, meta principal e estatísticas de frequência e sequência de treinos.</p>
-          </div>
-          <div class="card reveal">
-            <div class="icon-badge">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-            </div>
-            <h3>Sync em nuvem</h3>
-            <p>Login por e-mail e dados sincronizados entre celular, tablet e computador automaticamente.</p>
-          </div>
-          <div class="card reveal">
-            <div class="icon-badge">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            </div>
-            <h3>Instalável e offline</h3>
-            <p>Funciona como app instalável no celular, com cache local e sem precisar de internet o tempo todo.</p>
-          </div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><h3>Plano semanal personalizado</h3><p>Treino dividido por dia da semana, montado pelo seu objetivo e nível, com séries, repetições, descanso e técnica.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div><h3>Modo treino ao vivo</h3><p>Tela cheia com um exercício por vez, descanso com alarme e tela sempre acesa enquanto você treina.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg></div><h3>Demonstração de execução</h3><p>Vídeos curtos com câmera lenta e imagens do movimento para 200 exercícios.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line><polyline points="8.5 14.5 10.5 16.5 15.5 12"></polyline></svg></div><h3>Histórico completo</h3><p>Calendário do mês, resumo de tempo, séries e volume, e cada sessão comparada com a anterior.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><h3>Evolução e recordes</h3><p>Evolução de carga por exercício, volume por treino, heatmap de 35 dias e seus recordes pessoais.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg></div><h3>Hidratação</h3><p>Meta diária pelo seu peso, adições rápidas com desfazer, sequência de dias na meta e lembretes.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path></svg></div><h3>Conquistas e sequência</h3><p>Medalhas por constância, dias seguidos de treino e marcos de 10, 50 e 100 treinos.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div><h3>Fotos e peso</h3><p>Fotos de progresso e registro de peso para comparar o antes e o depois com calma.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg></div><h3>Offline e sincronizado</h3><p>Registre sem internet; quando a conexão volta, tudo sincroniza entre celular, tablet e computador.</p></div>
         </div>
       </div>
     </section>
 
-    <section data-section="steps">
+    <!-- ========== COMO FUNCIONA ========== -->
+    <section id="como-funciona" data-section="steps">
       <div class="wrap">
-        <div class="section-head">
-          <h2>Como funciona</h2>
-          <p>Leva menos de 2 minutos pra começar.</p>
+        <div class="section-head reveal">
+          <h2>Comece em menos de 2 minutos</h2>
+          <p>Sem download em loja e sem configuração complicada.</p>
         </div>
         <div class="steps">
-          <div class="step reveal">
-            <span class="num">1</span>
-            <h3>Crie sua conta</h3>
-            <p>Cadastro rápido por e-mail, sem burocracia.</p>
-          </div>
-          <div class="step reveal">
-            <span class="num">2</span>
-            <h3>Onboarding personalizado</h3>
-            <p>Informe peso, altura e objetivo — o app monta seu treino.</p>
-          </div>
-          <div class="step reveal">
-            <span class="num">3</span>
-            <h3>Acompanhe todo dia</h3>
-            <p>Registre suas séries, sua hidratação e veja sua evolução crescer.</p>
-          </div>
+          <div class="step reveal"><span class="num">1</span><h3>Crie sua conta</h3><p>Só e-mail e senha. Abre direto no navegador do celular ou do computador.</p></div>
+          <div class="step reveal reveal-d1"><span class="num">2</span><h3>Conte seu objetivo</h3><p>Peso, altura, objetivo e nível — o plano da semana sai na hora.</p></div>
+          <div class="step reveal reveal-d2"><span class="num">3</span><h3>Treine e acompanhe</h3><p>Marque as séries, beba sua água e veja os gráficos e recordes crescerem.</p></div>
         </div>
       </div>
     </section>
 
+    <!-- ========== FAQ ========== -->
+    <section id="faq" class="faq" data-section="faq">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Perguntas frequentes</h2>
+          <p>Ainda em dúvida? As respostas mais comuns estão aqui.</p>
+        </div>
+        <div class="faq-list">
+          <details><summary>É grátis mesmo?</summary><p>Sim. Não tem plano pago, não tem anúncio e não pede cartão de crédito.</p></details>
+          <details><summary>Preciso baixar na loja de apps?</summary><p>Não. O EAFIT é um app web instalável: abra no navegador e, no Android, toque em “Instalar app” ou “Adicionar à tela inicial”; no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”. Ele passa a abrir em tela cheia, como qualquer app.</p></details>
+          <details><summary>Funciona sem internet na academia?</summary><p>Funciona. Você registra séries e água offline e, quando a conexão volta, tudo é sincronizado sozinho com a sua conta.</p></details>
+          <details><summary>Posso mudar o treino que o app montou?</summary><p>Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso de cada dia.</p></details>
+          <details><summary>Serve para quem está começando?</summary><p>Serve. No cadastro você escolhe entre iniciante, intermediário e avançado, e os exercícios têm demonstração de execução e dica de técnica.</p></details>
+          <details><summary>O que acontece com os meus dados?</summary><p>Ficam na sua conta, protegidos por login. No Perfil você pode exportar tudo ou excluir a conta quando quiser. Detalhes na <a href="../legal/privacidade.html">Política de Privacidade</a>.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== CTA FINAL ========== -->
     <section data-section="cta">
       <div class="wrap">
         <div class="cta-band reveal">
-          <h2>Pronto pra começar a treinar sério?</h2>
-          <p>Grátis, sem anúncios, funciona offline.</p>
-          <a class="btn btn-primary" href="../">Abrir o EAFIT</a>
+          <h2>Seu próximo treino já pode ficar registrado.</h2>
+          <p>Crie a conta em menos de 2 minutos. Grátis, sem anúncios e funciona offline.</p>
+          <a class="btn btn-primary" href="../">Começar agora
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+          <p class="hint">Dica: no celular, adicione à tela inicial e use como app.</p>
         </div>
       </div>
     </section>
@@ -475,54 +1044,188 @@
 
   <footer>
     <div class="wrap footer-inner">
-      <span>EAFIT — Treino &amp; Evolução</span>
-      <a href="../">Abrir app</a>
+      <div class="footer-brand">
+        <a class="logo" href="#top"><img src="../icon.svg" alt="" width="30" height="30" />EAFIT</a>
+        <p>Seu treino, sempre com você.</p>
+      </div>
+      <ul class="footer-links">
+        <li><a href="../">Abrir app</a></li>
+        <li><a href="#recursos">Recursos</a></li>
+        <li><a href="#faq">Dúvidas</a></li>
+        <li><a href="../legal/termos.html">Termos de Uso</a></li>
+        <li><a href="../legal/privacidade.html">Privacidade</a></li>
+      </ul>
+      <p class="footer-credits">
+        Demonstrações: vídeos de <a href="https://wger.de" target="_blank" rel="noopener noreferrer">wger.de</a> (Goulart, CC BY-SA 4.0) e imagens do
+        <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">Free Exercise DB</a> (domínio público).
+      </p>
     </div>
   </footer>
 
+  <!-- Ícones da barra inferior do app (mesmos de app-react/src/components/BottomNav.jsx) -->
+  <template id="tpl-tabbar">
+    <span data-key="treino"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="10" width="4" height="4" rx="1"/><rect x="18" y="10" width="4" height="4" rx="1"/><rect x="6" y="7" width="2" height="10" rx="1"/><rect x="16" y="7" width="2" height="10" rx="1"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Treino</span>
+    <span data-key="historico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><polyline points="8.5 14.5 10.5 16.5 15.5 12"/></svg>Histórico</span>
+    <span data-key="hidratacao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s7 8.5 7 13a7 7 0 0 1-14 0c0-4.5 7-13 7-13z"/></svg>Água</span>
+    <span data-key="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>Evolução</span>
+    <span data-key="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</span>
+  </template>
+
   <script>
     (function () {
-      var screens = document.querySelectorAll('.mockup-screen');
-      var tabs = document.querySelectorAll('.mockup-tab');
-      var current = 0;
-      var timer = null;
-
-      function show(index) {
-        current = index;
-        screens.forEach(function (s, i) { s.classList.toggle('active', i === index); });
-        tabs.forEach(function (t, i) { t.classList.toggle('active', i === index); });
-      }
-
-      function next() { show((current + 1) % screens.length); }
-
       var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (screens.length && !reduceMotion) {
-        timer = setInterval(next, 3200);
-        var mockup = document.querySelector('.mockup');
-        if (mockup) {
-          mockup.addEventListener('mouseenter', function () { clearInterval(timer); });
-          mockup.addEventListener('mouseleave', function () { timer = setInterval(next, 3200); });
-        }
-      }
 
+      // ---------- barra inferior das telas do celular ----------
+      var tpl = document.getElementById('tpl-tabbar');
+      document.querySelectorAll('[data-tabbar]').forEach(function (bar) {
+        bar.appendChild(tpl.content.cloneNode(true));
+        var on = bar.querySelector('[data-key="' + bar.getAttribute('data-tabbar') + '"]');
+        if (on) on.classList.add('on');
+      });
+
+      // ---------- nav com borda ao rolar ----------
+      var nav = document.querySelector('header.nav');
+      function onScroll() { nav.classList.toggle('is-scrolled', window.scrollY > 8); }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      // ---------- carrossel de telas do celular ----------
+      var DUR = 5000;
+      var screens = document.querySelectorAll('.scr');
+      var tabs = document.querySelectorAll('.screen-tab');
+      var current = 0, timer = null, paused = false, inView = true;
+
+      function show(i) {
+        current = i;
+        screens.forEach(function (s, k) { s.classList.toggle('is-active', k === i); });
+        tabs.forEach(function (t, k) {
+          t.setAttribute('aria-selected', k === i ? 'true' : 'false');
+          t.tabIndex = k === i ? 0 : -1;
+          var p = t.querySelector('.prog');
+          p.classList.remove('run');
+          void p.offsetWidth; // reinicia a animação da barrinha
+          if (k === i && !reduceMotion && !paused) p.classList.add('run');
+        });
+        if (i === 0) startLiveRest();
+      }
+      function schedule() {
+        clearTimeout(timer);
+        if (reduceMotion || paused || !inView) return;
+        timer = setTimeout(function () { show((current + 1) % screens.length); schedule(); }, DUR);
+      }
       tabs.forEach(function (tab, i) {
-        tab.addEventListener('click', function () {
-          clearInterval(timer);
-          show(i);
-          if (!reduceMotion) timer = setInterval(next, 3200);
+        tab.style.setProperty('--dur', DUR + 'ms');
+        tab.addEventListener('click', function () { paused = true; clearTimeout(timer); show(i); });
+        tab.addEventListener('keydown', function (e) {
+          var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+          if (!d) return;
+          e.preventDefault();
+          var n = (current + d + tabs.length) % tabs.length;
+          paused = true; clearTimeout(timer); show(n); tabs[n].focus();
         });
       });
-    })();
+      var visual = document.querySelector('.hero-visual');
+      if ('IntersectionObserver' in window && visual) {
+        new IntersectionObserver(function (entries) {
+          inView = entries[0].isIntersecting;
+          if (inView) schedule(); else clearTimeout(timer);
+        }).observe(visual);
+      }
 
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          io.unobserve(entry.target);
-        }
+      // ---------- descanso contando (celular + vitrine) ----------
+      function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+      function countdown(total, onTick) {
+        var left = total, id = null;
+        function tick() { onTick(left, total); left = left <= 0 ? total : left - 1; }
+        return {
+          start: function () { if (id || reduceMotion) return; tick(); id = setInterval(tick, 1000); },
+          stop: function () { clearInterval(id); id = null; },
+        };
+      }
+
+      var restEl = document.querySelector('[data-rest]');
+      var restBar = document.querySelector('[data-rest-bar]');
+      var clockEl = document.querySelector('[data-clock]');
+      var clockSec = 32 * 60 + 14;
+      var liveRest = countdown(90, function (left, total) {
+        restEl.textContent = fmt(left);
+        restBar.style.transform = 'scaleX(' + (left / total) + ')';
+        clockSec++;
+        clockEl.textContent = fmt(clockSec);
       });
-    }, { threshold: 0.15 });
-    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+      function startLiveRest() { liveRest.start(); }
+      if (!reduceMotion) startLiveRest();
+
+      var ring = document.querySelector('[data-ring]');
+      var bigEl = document.querySelector('[data-rest-big]');
+      var C = 2 * Math.PI * 54;
+      var bigRest = countdown(90, function (left, total) {
+        bigEl.textContent = fmt(left);
+        ring.style.strokeDashoffset = String(C * (1 - left / total));
+      });
+
+      // ---------- vídeo de demonstração ----------
+      var video = document.getElementById('demoVideo');
+      var playBtn = document.getElementById('demoPlay');
+      var slowBtn = document.getElementById('demoSlow');
+      var speedTag = document.getElementById('demoSpeed');
+      var userPaused = false;
+      function syncPlayBtn() {
+        var playing = !video.paused;
+        playBtn.textContent = playing ? '⏸ Pausar' : '▶ Reproduzir';
+      }
+      playBtn.addEventListener('click', function () {
+        if (video.paused) { userPaused = false; video.play().catch(function () {}); }
+        else { userPaused = true; video.pause(); }
+      });
+      slowBtn.addEventListener('click', function () {
+        var slow = video.playbackRate === 1;
+        video.playbackRate = slow ? 0.5 : 1;
+        slowBtn.setAttribute('aria-pressed', String(slow));
+        speedTag.hidden = !slow;
+      });
+      video.addEventListener('play', syncPlayBtn);
+      video.addEventListener('pause', syncPlayBtn);
+      syncPlayBtn();
+
+      // ---------- observadores de visibilidade ----------
+      function observeReveal(root) {
+        var els = (root || document).querySelectorAll('.reveal:not(.visible)');
+        if (!('IntersectionObserver' in window) || reduceMotion) {
+          els.forEach(function (el) { el.classList.add('visible'); });
+          return;
+        }
+        els.forEach(function (el) { revealIO.observe(el); });
+      }
+      var revealIO = 'IntersectionObserver' in window && new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('visible');
+          revealIO.unobserve(entry.target);
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+      observeReveal();
+      window.__eafitObserveReveal = observeReveal;
+
+      if ('IntersectionObserver' in window) {
+        var ringPanel = ring.closest('.show-visual');
+        new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) bigRest.start(); else bigRest.stop();
+        }, { threshold: 0.3 }).observe(ringPanel);
+
+        // Vídeo só baixa/toca quando aparece na tela (preload="none").
+        new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) {
+            if (!userPaused && !reduceMotion) video.play().catch(function () {});
+          } else if (!video.paused) {
+            video.pause();
+          }
+        }, { threshold: 0.4 }).observe(video);
+      }
+
+      show(0);
+      schedule();
+    })();
   </script>
 
   <script>
@@ -545,6 +1248,11 @@
         droplet: '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>',
         chart: '<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>',
         user: '<circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>',
+        zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>',
+        play: '<circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon>',
+        calendar: '<rect x="3" y="4" width="18" height="17" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line><polyline points="8.5 14.5 10.5 16.5 15.5 12"></polyline>',
+        trophy: '<path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path>',
+        camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle>',
       };
 
       function svgIcon(key, size) {
@@ -577,6 +1285,13 @@
         root.setProperty('--primary-glow', 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',.18)');
       }
 
+      function renderHead(section, el) {
+        var head = el.querySelector('.section-head');
+        if (!head) return;
+        var h2 = head.querySelector('h2'); if (h2 && section.title) h2.textContent = section.title;
+        var p = head.querySelector('p'); if (p) p.textContent = section.subtitle || '';
+      }
+
       function renderHero(section, el) {
         var badge = el.querySelector('.badge');
         if (badge) badge.innerHTML = '<span class="dot"></span> ' + esc(section.badge);
@@ -590,19 +1305,13 @@
       }
 
       function renderHighlights(section, el) {
-        var items = section.items || [];
-        el.style.gridTemplateColumns = 'repeat(' + Math.max(items.length, 1) + ', 1fr)';
-        el.innerHTML = items.map(function (item) {
-          return '<div class="highlight">' + svgIcon(item.icon, 18) + esc(item.label) + '</div>';
+        el.innerHTML = (section.items || []).map(function (item) {
+          return '<div class="highlight">' + svgIcon(item.icon, 20) + esc(item.label) + '</div>';
         }).join('');
       }
 
       function renderCompare(section, el) {
-        var head = el.querySelector('.section-head');
-        if (head) {
-          var h2 = head.querySelector('h2'); if (h2) h2.textContent = section.title || '';
-          var p = head.querySelector('p'); if (p) p.textContent = section.subtitle || '';
-        }
+        renderHead(section, el);
         var bad = el.querySelector('.compare-col:not(.good)');
         if (bad) {
           var badTag = bad.querySelector('.compare-tag'); if (badTag) badTag.textContent = section.badLabel || '';
@@ -618,29 +1327,31 @@
       }
 
       function renderFeatures(section, el) {
-        var head = el.querySelector('.section-head');
-        if (head) {
-          var h2 = head.querySelector('h2'); if (h2) h2.textContent = section.title || '';
-          var p = head.querySelector('p'); if (p) p.textContent = section.subtitle || '';
-        }
+        renderHead(section, el);
         var grid = el.querySelector('.features');
         if (grid) {
           grid.innerHTML = (section.items || []).map(function (item) {
-            return '<div class="card"><div class="icon-badge">' + svgIcon(item.icon) + '</div><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
+            return '<div class="card reveal"><div class="icon-badge">' + svgIcon(item.icon) + '</div><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
           }).join('');
         }
       }
 
       function renderSteps(section, el) {
-        var head = el.querySelector('.section-head');
-        if (head) {
-          var h2 = head.querySelector('h2'); if (h2) h2.textContent = section.title || '';
-          var p = head.querySelector('p'); if (p) p.textContent = section.subtitle || '';
-        }
+        renderHead(section, el);
         var grid = el.querySelector('.steps');
         if (grid) {
           grid.innerHTML = (section.items || []).map(function (item, i) {
-            return '<div class="step"><span class="num">' + (i + 1) + '</span><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
+            return '<div class="step reveal"><span class="num">' + (i + 1) + '</span><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
+          }).join('');
+        }
+      }
+
+      function renderFaq(section, el) {
+        renderHead(section, el);
+        var list = el.querySelector('.faq-list');
+        if (list && Array.isArray(section.items)) {
+          list.innerHTML = section.items.map(function (item) {
+            return '<details><summary>' + esc(item.question) + '</summary><p>' + esc(item.answer) + '</p></details>';
           }).join('');
         }
       }
@@ -650,23 +1361,42 @@
         if (!band) return;
         var h2 = band.querySelector('h2'); if (h2) h2.textContent = section.title || '';
         var p = band.querySelector('p'); if (p) p.textContent = section.subtitle || '';
-        var btn = band.querySelector('.btn'); if (btn) btn.textContent = section.ctaLabel || btn.textContent;
+        var btn = band.querySelector('.btn');
+        if (btn && section.ctaLabel) btn.firstChild.textContent = section.ctaLabel + ' ';
       }
 
-      var RENDERERS = { hero: renderHero, highlights: renderHighlights, compare: renderCompare, features: renderFeatures, steps: renderSteps, cta: renderCta };
+      var RENDERERS = {
+        hero: renderHero, highlights: renderHighlights, compare: renderCompare,
+        showcase: renderHead, features: renderFeatures, steps: renderSteps, faq: renderFaq, cta: renderCta,
+      };
 
       function applyContent(content) {
         if (!content || !Array.isArray(content.sections)) return;
         if (content.theme && content.theme.primaryColor) applyPrimaryColor(content.theme.primaryColor);
         var main = document.getElementById('top');
+        var defaultOrder = Array.prototype.slice.call(main.querySelectorAll(':scope > [data-section]'));
+        var order = [];
+
         content.sections.forEach(function (section) {
-          var el = main.querySelector('[data-section="' + section.id + '"]');
+          var el = main.querySelector(':scope > [data-section="' + section.id + '"]');
           if (!el) return;
           el.style.display = section.enabled === false ? 'none' : '';
           var renderer = RENDERERS[section.type];
           if (renderer && section.enabled !== false) renderer(section, el);
-          main.appendChild(el); // reordena: reinserir na ordem do content move o nó pro fim
+          order.push(el);
         });
+
+        // Seções que existem no HTML mas não no content (ex.: seção nova
+        // antes da migration rodar) ficam logo depois de quem as precedia
+        // por padrão, em vez de pular pro topo da página.
+        defaultOrder.forEach(function (el, i) {
+          if (order.indexOf(el) !== -1) return;
+          var prev = i > 0 ? order.indexOf(defaultOrder[i - 1]) : -1;
+          order.splice(prev + 1, 0, el);
+        });
+        order.forEach(function (el) { main.appendChild(el); });
+
+        if (window.__eafitObserveReveal) window.__eafitObserveReveal(main);
       }
 
       fetch(SUPABASE_URL + '/rest/v1/landing_content?select=content&id=eq.1', {

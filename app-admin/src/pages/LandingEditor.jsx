@@ -7,8 +7,10 @@ const SECTION_LABELS = {
   hero: 'Topo (hero)',
   highlights: 'Faixa de destaques',
   compare: 'Comparação (sem plano vs. com EAFIT)',
+  showcase: 'Por dentro do app (vitrine com telas)',
   features: 'Funcionalidades',
   steps: 'Como funciona',
+  faq: 'Perguntas frequentes',
   cta: 'Chamada final',
 };
 
@@ -24,6 +26,11 @@ const ICON_OPTIONS = [
   { value: 'droplet', label: 'Gota (água)' },
   { value: 'chart', label: 'Gráfico (evolução)' },
   { value: 'user', label: 'Perfil (usuário)' },
+  { value: 'zap', label: 'Raio (modo ao vivo)' },
+  { value: 'play', label: 'Play (demonstração)' },
+  { value: 'calendar', label: 'Calendário (histórico)' },
+  { value: 'trophy', label: 'Troféu (conquistas)' },
+  { value: 'camera', label: 'Câmera (fotos)' },
 ];
 
 function moveItem(list, from, to) {
@@ -252,6 +259,49 @@ export default function LandingEditor() {
                       </label>
                       <label className="field" style={{ gridColumn: '1 / -1' }}><span className="field__label">Descrição</span>
                         <textarea className="input" rows={2} value={item.description} onChange={e => update({ description: e.target.value })} />
+                      </label>
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {section.type === 'showcase' && (
+              <div className="form-grid">
+                <label className="field"><span className="field__label">Título</span>
+                  <input className="input" value={section.title} onChange={e => updateSection(idx, { title: e.target.value })} />
+                </label>
+                <label className="field"><span className="field__label">Subtítulo</span>
+                  <input className="input" value={section.subtitle} onChange={e => updateSection(idx, { subtitle: e.target.value })} />
+                </label>
+                <p className="field__label" style={{ gridColumn: '1 / -1', margin: 0 }}>
+                  As telas e textos de cada funcionalidade desta seção são fixos no HTML da landing.
+                </p>
+              </div>
+            )}
+
+            {section.type === 'faq' && (
+              <div className="stack">
+                <div className="form-grid">
+                  <label className="field"><span className="field__label">Título</span>
+                    <input className="input" value={section.title} onChange={e => updateSection(idx, { title: e.target.value })} />
+                  </label>
+                  <label className="field"><span className="field__label">Subtítulo</span>
+                    <input className="input" value={section.subtitle} onChange={e => updateSection(idx, { subtitle: e.target.value })} />
+                  </label>
+                </div>
+                <LandingItemListEditor
+                  items={section.items}
+                  onChange={items => updateSection(idx, { items })}
+                  emptyItem={{ question: '', answer: '' }}
+                  addLabel="Adicionar pergunta"
+                  renderFields={(item, update) => (
+                    <div className="form-grid">
+                      <label className="field" style={{ gridColumn: '1 / -1' }}><span className="field__label">Pergunta</span>
+                        <input className="input" value={item.question} onChange={e => update({ question: e.target.value })} />
+                      </label>
+                      <label className="field" style={{ gridColumn: '1 / -1' }}><span className="field__label">Resposta</span>
+                        <textarea className="input" rows={3} value={item.answer} onChange={e => update({ answer: e.target.value })} />
                       </label>
                     </div>
                   )}
