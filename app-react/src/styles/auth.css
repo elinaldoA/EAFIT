@@ -53,6 +53,26 @@
   margin-top: 4px;
 }
 
+.auth-logo__pitch {
+  margin: 10px 0 0;
+  max-width: 300px;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.auth-logo__more {
+  margin-top: 6px;
+  padding: 6px 4px;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-logo__more:hover { text-decoration: underline; }
+.auth-logo__more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+
 .auth-form {
   display: flex;
   flex-direction: column;

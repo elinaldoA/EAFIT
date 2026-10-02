@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import logoMark from '../assets/app-icon.png';
 import PasswordInput from './PasswordInput';
+import { isKnownUser } from '../lib/knownUser';
 
 const MODES = {
   login: { title: 'Entrar', submit: 'Entrar', busy: 'Entrando…' },
@@ -12,7 +13,7 @@ const MODES = {
 export default function AuthScreen() {
   const { login, signup, requestPasswordReset, resendConfirmation } = useAuth();
   const emailId = useId();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(() => (isKnownUser() ? 'login' : 'signup'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -68,6 +69,12 @@ export default function AuthScreen() {
           <img className="auth-logo__icon" src={logoMark} alt="" />
           <h1 className="auth-logo__name">EAFIT</h1>
           <p className="auth-logo__tagline">Seu treino, sempre com você</p>
+          {mode === 'signup' && (
+            <p className="auth-logo__pitch">
+              Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Grátis e funciona offline.
+            </p>
+          )}
+          <a className="auth-logo__more" href="landing/">Conheça o app →</a>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>

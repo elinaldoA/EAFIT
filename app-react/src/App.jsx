@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { ThemeProvider } from './context/ThemeContext';
@@ -6,6 +6,7 @@ import { ToastProvider } from './context/ToastContext';
 import { WorkoutProvider } from './context/WorkoutContext';
 import { AvatarProvider } from './context/AvatarContext';
 import AuthScreen from './components/AuthScreen';
+import { markKnownUser } from './lib/knownUser';
 import OnboardingScreen from './components/OnboardingScreen';
 import ThemeToggle from './components/ThemeToggle';
 import UserChip from './components/UserChip';
@@ -41,6 +42,11 @@ function Shell() {
   const { user, authLoading, recoveryMode } = useAuth();
   const [page, setPage] = useHashTab(TABS, 'treino');
   useDayRollover();
+
+  // Este aparelho já teve conta logada: a tela de acesso abre em "Entrar".
+  useEffect(() => {
+    if (user) markKnownUser();
+  }, [user]);
 
   if (authLoading) return <BootSplash />;
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;

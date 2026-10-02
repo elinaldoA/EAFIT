@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Enviado no Google Search Console (propriedade de prefixo de URL
+  https://elinaldoa.github.io/EAFIT/). robots.txt não dá pra publicar daqui:
+  ele precisaria ficar na raiz do domínio (elinaldoa.github.io/robots.txt),
+  que pertence ao repositório do site de usuário, não a este projeto.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://elinaldoa.github.io/EAFIT/landing/</loc>
+    <lastmod>2026-10-02</lastmod>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://elinaldoa.github.io/EAFIT/</loc>
+    <lastmod>2026-10-02</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://elinaldoa.github.io/EAFIT/legal/termos.html</loc>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://elinaldoa.github.io/EAFIT/legal/privacidade.html</loc>
+    <priority>0.2</priority>
+  </url>
+</urlset>

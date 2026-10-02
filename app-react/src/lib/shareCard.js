@@ -135,28 +135,51 @@ async function drawBodyAvatarSection(ctx, x, y, contentW, day) {
   drawBodyView(ctx, img, startX + BODY_BOX_W + BODY_BOX_GAP, boxY, BODY_BOX_W, BODY_BOX_H, BODY_IMG_HALF_SIZE.width, BACK_MUSCLE_PATHS, activeGroups, 'Costas');
 }
 
-// Watermark (logo + nome do app) pra identificar o app quando o card circula
-// fora do EAFIT.
+// Link público que acompanha o card: a landing explica o app pra quem ainda
+// não o conhece (a raiz do app abre direto no login).
+export const SHARE_URL = 'https://elinaldoa.github.io/EAFIT/landing/';
+const SHARE_URL_LABEL = 'elinaldoa.github.io/EAFIT';
+export const SHARE_TEXT = `Treino concluído no EAFIT 💪 Monte o seu grátis: ${SHARE_URL}`;
+
+// Watermark (logo + nome + endereço do app): o card circula como imagem solta
+// (status, stories, download), então o endereço precisa estar NA imagem pra
+// quem vê conseguir chegar no app.
 async function drawWatermark(ctx, width, y, height) {
   ctx.fillStyle = 'rgba(0,0,0,0.22)';
   ctx.fillRect(0, y, width, height);
 
   const label = 'EAFIT';
+  const labelH = 56;
+  const urlH = 44;
   ctx.textAlign = 'center';
-  ctx.font = '800 48px system-ui, sans-serif';
+
+  function drawLabels(top) {
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 48px system-ui, sans-serif';
+    ctx.fillText(label, width / 2, top + labelH - 14);
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.font = '600 30px system-ui, sans-serif';
+    ctx.fillText(SHARE_URL_LABEL, width / 2, top + labelH + urlH - 8);
+  }
 
   try {
     const icon = await loadImage(`${import.meta.env.BASE_URL}icon-192.png`);
     const size = 150;
-    const labelH = 56;
-    const groupH = size + 16 + labelH;
+    const groupH = size + 16 + labelH + urlH;
     const groupY = y + (height - groupH) / 2;
+    // Cantos arredondados: o PNG tem fundo quadrado escuro que aparecia como
+    // uma moldura preta sobre o gradiente.
+    ctx.save();
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(width / 2 - size / 2, groupY, size, size, 36);
+      ctx.clip();
+    }
     ctx.drawImage(icon, width / 2 - size / 2, groupY, size, size);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(label, width / 2, groupY + size + 16 + labelH - 14);
+    ctx.restore();
+    drawLabels(groupY + size + 16);
   } catch {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(label, width / 2, y + height / 2 + 15);
+    drawLabels(y + (height - labelH - urlH) / 2);
   }
 }
 
@@ -228,7 +251,9 @@ export async function shareWorkoutSummary(summary) {
   const file = new File([blob], 'meu-treino.png', { type: 'image/png' });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    await navigator.share({ files: [file], title: 'Meu treino', text: 'Confira meu treino no EAFIT! 💪' });
+    // Link vai no texto (não em `url`): vários apps descartam `url` quando há
+    // arquivo junto, e outros duplicariam o link.
+    await navigator.share({ files: [file], title: 'Meu treino', text: SHARE_TEXT });
     return 'shared';
   }
 
