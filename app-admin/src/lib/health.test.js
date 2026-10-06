@@ -61,16 +61,28 @@ describe('evaluateJobs', () => {
 
 describe('summarizeHttp', () => {
   it('ok quando tudo é 2xx', () => {
-    expect(summarizeHttp([{ status_group: '2xx', total: '10' }])).toEqual({ total: 10, ok: 10, failed: 0, state: 'ok' });
+    expect(summarizeHttp([{ status_group: '2xx', total: '10', last_at: minutesAgo(1) }], now))
+      .toEqual({ total: 10, ok: 10, failed: 0, recentFailed: 0, state: 'ok' });
   });
 
-  it('bad quando há 401/5xx', () => {
-    const r = summarizeHttp([{ status_group: '2xx', total: 8 }, { status_group: '401', total: 2 }]);
-    expect(r).toMatchObject({ failed: 2, state: 'bad' });
+  it('bad quando há erro na última hora', () => {
+    const r = summarizeHttp([
+      { status_group: '2xx', total: 8, last_at: minutesAgo(1) },
+      { status_group: '401', total: 2, last_at: minutesAgo(20) },
+    ], now);
+    expect(r).toMatchObject({ failed: 2, recentFailed: 2, state: 'bad' });
+  });
+
+  it('warn (histórico) quando o erro é antigo', () => {
+    const r = summarizeHttp([
+      { status_group: '2xx', total: 8, last_at: minutesAgo(1) },
+      { status_group: '4xx', total: 1, last_at: minutesAgo(300) },
+    ], now);
+    expect(r).toMatchObject({ failed: 1, recentFailed: 0, state: 'warn' });
   });
 
   it('warn sem nenhuma resposta registrada', () => {
-    expect(summarizeHttp([]).state).toBe('warn');
+    expect(summarizeHttp([], now).state).toBe('warn');
   });
 });
 

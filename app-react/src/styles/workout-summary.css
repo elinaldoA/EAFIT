@@ -191,3 +191,7 @@
   color: var(--success);
   background: rgba(74, 222, 128, .12);
 }
+
+/* Convite pra ativar lembretes (PushPrompt), dentro do resumo do treino */
+.push-prompt__text { margin: 0 0 10px; font-size: 0.82rem; line-height: 1.4; color: var(--text-muted); }
+.push-prompt__actions { display: flex; gap: 8px; flex-wrap: wrap; }

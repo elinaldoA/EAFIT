@@ -37,12 +37,27 @@ export function evaluateJobs(jobs, now = new Date()) {
   });
 }
 
-// Resume as respostas HTTP das Edge Functions: o que não é 2xx merece atenção.
-export function summarizeHttp(rows) {
-  const total = (rows || []).reduce((a, r) => a + Number(r.total), 0);
-  const ok = (rows || []).filter(r => r.status_group === '2xx').reduce((a, r) => a + Number(r.total), 0);
+// Janela em que uma falha ainda conta como problema atual; o que for mais
+// antigo vira histórico (aviso), pra um erro de horas atrás — ex.: de antes de
+// um deploy — não ficar acusando "problema" até o banco descartá-lo.
+export const RECENT_MINUTES = 60;
+
+// Resume as respostas HTTP das Edge Functions. Um grupo não-2xx é "recente"
+// quando a última ocorrência dele está dentro da janela.
+export function summarizeHttp(rows, now = new Date()) {
+  const list = rows || [];
+  const total = list.reduce((a, r) => a + Number(r.total), 0);
+  const ok = list.filter(r => r.status_group === '2xx').reduce((a, r) => a + Number(r.total), 0);
   const failed = total - ok;
-  return { total, ok, failed, state: total === 0 ? 'warn' : failed > 0 ? 'bad' : 'ok' };
+  const limit = now.getTime() - RECENT_MINUTES * 60000;
+  const recentFailed = list
+    .filter(r => r.status_group !== '2xx' && r.last_at && new Date(r.last_at).getTime() >= limit)
+    .reduce((a, r) => a + Number(r.total), 0);
+  let state = 'ok';
+  if (total === 0) state = 'warn';
+  else if (recentFailed > 0) state = 'bad';
+  else if (failed > 0) state = 'warn';
+  return { total, ok, failed, recentFailed, state };
 }
 
 export function formatBytes(bytes) {

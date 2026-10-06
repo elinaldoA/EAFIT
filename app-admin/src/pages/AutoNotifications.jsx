@@ -2,14 +2,17 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   WEEKDAY_LABELS, renderTemplate, countByKind, describeSchedule, fetchRules, saveRule, fetchLog,
+  fetchPreview, previewMessage,
 } from '../lib/autoNotifications';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 
 function RuleCard({ rule, stats, onSaved }) {
+  const saved = rule;
   const [draft, setDraft] = useState(rule);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [preview, setPreview] = useState(null); // null | { loading } | { rows } | { error }
 
   const dirty = ['enabled', 'send_hour', 'cooldown_days', 'title', 'body'].some(k => draft[k] !== rule[k])
     || JSON.stringify(draft.weekdays || []) !== JSON.stringify(rule.weekdays || []);
@@ -38,6 +41,15 @@ function RuleCard({ rule, stats, onSaved }) {
       setMsg(`Erro: ${err.message}`);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handlePreview() {
+    setPreview({ loading: true });
+    try {
+      setPreview({ rows: await fetchPreview(rule.kind) });
+    } catch (err) {
+      setPreview({ error: err.message });
     }
   }
 
@@ -102,6 +114,41 @@ function RuleCard({ rule, stats, onSaved }) {
         <div className="push-preview__title">{renderTemplate(draft.title) || '—'}</div>
         <div className="push-preview__body">{renderTemplate(draft.body) || '—'}</div>
         <div className="push-preview__meta">Prévia com dados de exemplo · {describeSchedule({ ...draft, send_hour: Number(draft.send_hour) })}</div>
+      </div>
+
+      <div>
+        <button className="btn btn--small" onClick={handlePreview} disabled={preview?.loading}>
+          {preview?.loading ? 'Consultando…' : 'Ver quem receberia agora'}
+        </button>
+        {preview?.error && <p className="form-msg form-msg--error" style={{ marginTop: 8 }}>Erro: {preview.error}</p>}
+        {preview?.rows && (
+          <div style={{ marginTop: 10 }}>
+            {!saved.enabled && <p className="form-msg form-msg--error">Esta regra está pausada: nada é enviado enquanto estiver pausada.</p>}
+            {preview.rows.length === 0 ? (
+              <p className="card-note" style={{ marginTop: 0 }}>
+                Ninguém se encaixa agora (critério da regra, intervalo mínimo, limite de 1 por dia ou sem push ativo).
+                Com poucos usuários com push, é normal.
+              </p>
+            ) : (
+              <>
+                <p className="user-detail__meta" style={{ margin: '0 0 6px' }}>
+                  {preview.rows.length} pessoa(s) receberia(m) no horário configurado. A lista ignora horário e dia da semana.
+                </p>
+                <ul className="preview-list">
+                  {preview.rows.slice(0, 20).map(c => {
+                    const m = previewMessage(draft, c);
+                    return (
+                      <li key={c.user_id}>
+                        <strong>{c.email}</strong>
+                        <div>{m.title} — {m.body}</div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="card-head" style={{ marginBottom: 0 }}>

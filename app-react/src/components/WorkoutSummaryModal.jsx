@@ -7,6 +7,7 @@ import { shareWorkoutSummary } from '../lib/shareCard';
 import { useToast } from '../context/useToast';
 import BodyAvatar from './BodyAvatar';
 import RatingModal from './RatingModal';
+import PushPrompt from './PushPrompt';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { useBackToClose } from '../hooks/useBackToClose';
 
@@ -72,6 +73,8 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
                   {rating ? `Avaliação: ${RATING_OPTIONS.find(opt => opt.value === rating)?.label}` : 'Avaliar treino'}
                 </button>
               </div>
+
+              <PushPrompt />
 
               <div className="summary-stats">
                 <div className="stat-card">

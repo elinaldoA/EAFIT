@@ -36,6 +36,7 @@ export default function SystemHealth() {
 
   const jobs = health.cron.data ? evaluateJobs(health.cron.data) : [];
   const http = health.http.data ? summarizeHttp(health.http.data) : null;
+  const httpHistory = http && http.state === 'warn' && http.failed > 0;
   const push = health.push.data?.[0];
   const overdue = health.overdue.data || 0;
   const usage = health.usage.data || [];
@@ -45,10 +46,13 @@ export default function SystemHealth() {
 
   const problems = [
     ...jobs.filter(j => j.state === 'bad').map(j => `${j.label}: ${j.reason}`),
-    ...(http?.state === 'bad' ? [`${http.failed} chamada(s) das funções com erro`] : []),
+    ...(http?.state === 'bad' ? [`${http.recentFailed} chamada(s) das funções com erro na última hora`] : []),
     ...(overdue > 0 ? [`${overdue} notificação(ões) agendada(s) atrasada(s)`] : []),
   ];
-  const warnings = jobs.filter(j => j.state === 'warn').map(j => `${j.label}: ${j.reason}`);
+  const warnings = [
+    ...jobs.filter(j => j.state === 'warn').map(j => `${j.label}: ${j.reason}`),
+    ...(httpHistory ? [`${http.failed} chamada(s) das funções com erro antigo (mais de 1h) — só histórico`] : []),
+  ];
   const pushRate = push && Number(push.total_users) > 0
     ? Math.round((Number(push.users_with_push) / Number(push.total_users)) * 100) : null;
 
@@ -120,6 +124,7 @@ export default function SystemHealth() {
             <>
               <p style={{ margin: '0 0 10px' }}>
                 <StateBadge state={http.state} /> {http.ok} de {http.total} chamada(s) com sucesso
+                {httpHistory && <span className="user-detail__meta"> · erros só de mais de 1h atrás</span>}
               </p>
               <div className="table-wrap">
                 <table className="resp-table">

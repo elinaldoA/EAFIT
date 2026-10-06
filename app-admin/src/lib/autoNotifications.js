@@ -63,3 +63,17 @@ export async function fetchLog() {
   if (recentError) throw recentError;
   return { rows: rows || [], recent: recent || [] };
 }
+
+// Quem receberia a regra agora (ignora horário e dia da semana; respeita regra
+// ligada, opt-out, push ativo, intervalo mínimo e o limite de 1 por dia).
+export async function fetchPreview(kind) {
+  const { data, error } = await db.rpc('admin_engagement_preview', { rule_kind: kind });
+  if (error) throw error;
+  return data || [];
+}
+
+// Texto exato que essa pessoa receberia, com os dados reais dela.
+export function previewMessage(rule, candidate) {
+  const values = { nome: candidate.nome, ...(candidate.vars || {}) };
+  return { title: renderTemplate(rule.title, values), body: renderTemplate(rule.body, values) };
+}

@@ -859,3 +859,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 /* ---------- feedback ---------- */
 
 .feedback-message { margin: 0; white-space: pre-wrap; line-height: 1.55; font-size: 14px; }
+
+.preview-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.preview-list li { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-muted); }
+.preview-list strong { color: var(--text); }

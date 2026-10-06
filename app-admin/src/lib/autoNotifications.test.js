@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
-import { renderTemplate, countByKind, describeSchedule } from './autoNotifications';
+import { renderTemplate, countByKind, describeSchedule, previewMessage } from './autoNotifications';
 
 describe('renderTemplate', () => {
   it('troca placeholders pelos valores de exemplo', () => {
@@ -42,5 +42,18 @@ describe('describeSchedule', () => {
 
   it('lista os dias da semana em ordem', () => {
     expect(describeSchedule({ send_hour: 18, weekdays: [5, 4] })).toBe('Qui, Sex às 18h');
+  });
+});
+
+describe('previewMessage', () => {
+  it('usa o nome e as variáveis reais da pessoa', () => {
+    const rule = { title: '🎯 Faltam {faltam} treino(s)', body: '{nome}, você fez {feitos} de {meta}.' };
+    expect(previewMessage(rule, { nome: 'Bia', vars: { faltam: 1, feitos: 4, meta: 5 } })).toEqual({
+      title: '🎯 Faltam 1 treino(s)', body: 'Bia, você fez 4 de 5.',
+    });
+  });
+
+  it('aguenta candidato sem variáveis', () => {
+    expect(previewMessage({ title: 'Oi {nome}', body: 'x' }, { nome: 'Lu' }).title).toBe('Oi Lu');
   });
 });
