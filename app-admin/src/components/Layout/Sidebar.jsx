@@ -1,9 +1,12 @@
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import logoMark from '../../assets/logo-mark.png';
-import { NAV_GROUPS } from './nav';
+import { NAV_GROUPS, sectionForPath } from './nav';
 import NavIcon from './NavIcon';
 
 export default function Sidebar({ open, onClose }) {
+  const { pathname } = useLocation();
+  const current = sectionForPath(pathname);
+
   return (
     <>
       {open && <div className="sidebar__backdrop" onClick={onClose} />}
@@ -19,22 +22,28 @@ export default function Sidebar({ open, onClose }) {
           {NAV_GROUPS.map(group => (
             <div className="sidebar__group" key={group.label}>
               <div className="sidebar__group-label">{group.label}</div>
-              {group.links.map(link => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  end={link.end}
-                  className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
-                  onClick={onClose}
-                >
-                  <span className="sidebar__link-icon"><NavIcon name={link.icon} /></span>
-                  <span>{link.label}</span>
-                </NavLink>
-              ))}
+              {group.sections.map(section => {
+                const active = current?.key === section.key;
+                return (
+                  <Link
+                    key={section.key}
+                    to={section.tabs[0].to}
+                    aria-current={active ? 'page' : undefined}
+                    className={`sidebar__link ${active ? 'sidebar__link--active' : ''}`}
+                    onClick={onClose}
+                  >
+                    <span className="sidebar__link-icon"><NavIcon name={section.icon} /></span>
+                    <span>{section.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           ))}
         </nav>
-        <div className="sidebar__footer">Gestão do projeto EAFIT</div>
+        <div className="sidebar__footer">
+          <Link to="/perfil" onClick={onClose}>Meu perfil</Link>
+          <span>Gestão do projeto EAFIT</span>
+        </div>
       </aside>
     </>
   );

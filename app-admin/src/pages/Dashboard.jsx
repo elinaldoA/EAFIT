@@ -21,11 +21,19 @@ const TILES = [
   { key: 'push_enabled_users', label: 'Com push ativo' },
 ];
 
+const DASH_TABS = [
+  { key: 'resumo', label: 'Resumo' },
+  { key: 'publico', label: 'Público' },
+  { key: 'ativacao', label: 'Ativação' },
+  { key: 'retencao', label: 'Retenção' },
+];
+
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [newFeedback, setNewFeedback] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState('resumo');
 
   useEffect(() => {
     let active = true;
@@ -46,18 +54,6 @@ export default function Dashboard() {
         <h1 className="page-title">Dashboard</h1>
       </div>
 
-      <KpiPanel />
-
-      <h2 className="section-label">Base de usuários</h2>
-      <div className="tile-grid">
-        {TILES.map(t => (
-          <div className="tile" key={t.key}>
-            <div className="tile__value">{stats?.[t.key] ?? '—'}</div>
-            <div className="tile__label">{t.label}</div>
-          </div>
-        ))}
-      </div>
-
       {newFeedback > 0 && (
         <Link to="/feedback" className="card" style={{ display: 'block', borderColor: 'var(--primary)' }}>
           <h2 className="section-title" style={{ margin: 0 }}>
@@ -74,11 +70,36 @@ export default function Dashboard() {
         </Link>
       )}
 
-      <AudienceInsights />
+      <div className="tabs">
+        {DASH_TABS.map(t => (
+          <button
+            key={t.key}
+            className={`tabs__btn ${tab === t.key ? 'tabs__btn--active' : ''}`}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-      <ActivationFunnel />
+      {tab === 'resumo' && (
+        <>
+          <KpiPanel />
 
-      <RetentionCohorts />
+        <h2 className="section-label">Base de usuários</h2>
+        <div className="tile-grid">
+          {TILES.map(t => (
+            <div className="tile" key={t.key}>
+              <div className="tile__value">{stats?.[t.key] ?? '—'}</div>
+              <div className="tile__label">{t.label}</div>
+            </div>
+          ))}
+        </div>
+        </>
+      )}
+      {tab === 'publico' && <AudienceInsights />}
+      {tab === 'ativacao' && <ActivationFunnel />}
+      {tab === 'retencao' && <RetentionCohorts />}
     </div>
   );
 }

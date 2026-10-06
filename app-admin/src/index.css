@@ -193,6 +193,9 @@ a { color: var(--primary); }
 .sidebar__link-icon { display: grid; place-items: center; width: 18px; height: 18px; flex-shrink: 0; }
 .sidebar__link-icon svg { width: 18px; height: 18px; }
 
+.sidebar__footer { display: flex; flex-direction: column; gap: 4px; }
+.sidebar__footer a { color: var(--text-muted); text-decoration: none; font-weight: 500; }
+.sidebar__footer a:hover { color: var(--primary); }
 .sidebar__footer {
   padding: 12px 18px;
   border-top: 1px solid var(--border);
@@ -255,6 +258,7 @@ a { color: var(--primary); }
 .topbar__spacer { flex: 1; }
 
 .topbar__user {
+  text-decoration: none;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -436,6 +440,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 }
 
 .tabs__btn {
+  text-decoration: none;
   padding: 10px 16px;
   background: none;
   border: none;
@@ -863,3 +868,12 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .preview-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
 .preview-list li { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-muted); }
 .preview-list strong { color: var(--text); }
+
+/* ---------- seções com abas ---------- */
+
+.section-title-main { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 14px; }
+
+/* o título da aba já está na faixa de abas: o da página vira secundário */
+.section-body .page-title { font-size: 17px; font-weight: 600; color: var(--text-muted); }
+.section-body > .page-header:first-child,
+.section-body > .stack > .page-header:first-child { margin-bottom: 14px; }

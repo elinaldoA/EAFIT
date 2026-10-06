@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../../context/useAdminAuth';
 import ThemeToggle from '../ThemeToggle';
 import { titleForPath } from './nav';
@@ -18,10 +18,10 @@ export default function Topbar({ onMenuClick }) {
       </div>
       <div className="topbar__spacer" />
       {email && (
-        <div className="topbar__user" title={email}>
+        <Link className="topbar__user" to="/perfil" title="Meu perfil">
           <span className="topbar__avatar" aria-hidden="true">{email[0]}</span>
           <span className="topbar__email">{email}</span>
-        </div>
+        </Link>
       )}
       <ThemeToggle />
       <button className="btn btn--ghost btn--small" onClick={logout}>Sair</button>
