@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
-import { buildSessions, formatSets, formatDurationMin, friendlyInsightError } from './trainerInsights';
+import { buildSessions, formatSets, formatDurationMin, friendlyInsightError, progressionSuggestions, nextLoad } from './trainerInsights';
 
 const set = (exercise, n, carga, reps) => ({ exercise, n, carga, reps });
 
@@ -51,5 +51,38 @@ describe('formatadores', () => {
   it('traduz erros', () => {
     expect(friendlyInsightError({ message: 'invalid_goals' })).toMatch(/1 a 7 treinos/);
     expect(friendlyInsightError({ message: 'q' })).toMatch(/Tente de novo/);
+  });
+});
+
+describe('progressionSuggestions', () => {
+  const session = (id, sets) => ({ id, date: `2026-10-0${id}`, day: 'x', completed: true, sets });
+  const sets = (exercise, carga, reps, n = 3) => Array.from({ length: n }, (_, i) => ({ exercise, n: i + 1, carga, reps }));
+  // do mais recente (id maior) ao mais antigo, como vem do banco
+  const build = list => buildSessions(list);
+
+  it('sugere subir quando repete a carga com 12+ repetições duas vezes', () => {
+    const s = build([session(3, sets('Supino', 40, 12)), session(2, sets('Supino', 40, 13)), session(1, sets('Supino', 35, 10))]);
+    expect(progressionSuggestions(s)).toEqual([{ name: 'Supino', kind: 'subir', top: 40, next: 42.5 }]);
+  });
+
+  it('não sugere se as repetições ficaram abaixo da meta', () => {
+    const s = build([session(2, sets('Supino', 40, 8)), session(1, sets('Supino', 40, 9))]);
+    expect(progressionSuggestions(s)).toEqual([]);
+  });
+
+  it('marca estagnado: mesma carga 3 vezes sem ganhar repetições', () => {
+    const s = build([session(3, sets('Remada', 30, 8)), session(2, sets('Remada', 30, 8)), session(1, sets('Remada', 30, 9))]);
+    expect(progressionSuggestions(s)).toEqual([{ name: 'Remada', kind: 'estagnado', top: 30 }]);
+  });
+
+  it('não marca estagnado se as repetições estão subindo', () => {
+    const s = build([session(3, sets('Remada', 30, 10)), session(2, sets('Remada', 30, 9)), session(1, sets('Remada', 30, 8))]);
+    expect(progressionSuggestions(s)).toEqual([]);
+  });
+
+  it('nextLoad usa passos menores para cargas leves', () => {
+    expect(nextLoad(10)).toBe(11);
+    expect(nextLoad(20)).toBe(22);
+    expect(nextLoad(50)).toBe(52.5);
   });
 });

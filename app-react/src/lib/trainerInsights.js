@@ -106,3 +106,46 @@ export async function fetchMyGoals() {
   const row = (data || [])[0];
   return row ? { weekly: row.goal_weekly, weight: num(row.goal_weight), note: row.goal_note || '', at: row.goal_at } : null;
 }
+
+// ---- Sugestão de progressão de carga ---------------------------------------
+// Sem plano na mão (as sessões só trazem o que foi feito), a regra usa só o
+// histórico: "subir" quando nas duas últimas vezes o aluno fez a mesma carga
+// máxima e, nas séries com ela, chegou à média de REPS_TO_PROGRESS repetições
+// ou mais; "estagnado" quando repetiu a carga máxima nas 3 últimas vezes sem
+// ganhar repetições. É uma sugestão: quem decide é o personal.
+export const REPS_TO_PROGRESS = 12;
+
+export function nextLoad(top) {
+  const step = top >= 40 ? 2.5 : top >= 15 ? 2 : 1;
+  return Math.round((top + step) * 10) / 10;
+}
+
+function avgRepsAtTop(e) {
+  const reps = e.sets.filter(s => s.carga === e.top && Number.isFinite(s.reps)).map(s => s.reps);
+  return reps.length ? reps.reduce((a, b) => a + b, 0) / reps.length : null;
+}
+
+// `sessions`: saída de buildSessions (da mais recente para a mais antiga).
+export function progressionSuggestions(sessions) {
+  const byName = new Map(); // exercício -> aparições com carga, da mais recente para a mais antiga
+  for (const s of sessions) {
+    for (const e of s.exercises) {
+      if (e.top === null) continue;
+      if (!byName.has(e.name)) byName.set(e.name, []);
+      byName.get(e.name).push({ top: e.top, avg: avgRepsAtTop(e) });
+    }
+  }
+
+  const out = [];
+  for (const [name, seen] of byName) {
+    const [a, b, c] = seen;
+    if (a && b && a.top === b.top && a.avg !== null && b.avg !== null
+        && a.avg >= REPS_TO_PROGRESS && b.avg >= REPS_TO_PROGRESS) {
+      out.push({ name, kind: 'subir', top: a.top, next: nextLoad(a.top) });
+    } else if (a && b && c && a.top === b.top && b.top === c.top
+        && a.avg !== null && c.avg !== null && a.avg <= c.avg) {
+      out.push({ name, kind: 'estagnado', top: a.top });
+    }
+  }
+  return out.sort((x, y) => (x.kind === y.kind ? x.name.localeCompare(y.name) : x.kind === 'subir' ? -1 : 1));
+}

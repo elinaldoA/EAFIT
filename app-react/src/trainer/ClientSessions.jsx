@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDate } from '../lib/utils';
-import { buildSessions, formatSets, formatDurationMin, fetchClientSessions } from '../lib/trainerInsights';
+import { buildSessions, formatSets, formatDurationMin, fetchClientSessions, progressionSuggestions } from '../lib/trainerInsights';
 
 // Últimos treinos do aluno, série a série, com a evolução de carga em relação
 // à sessão anterior de cada exercício.
@@ -18,7 +18,32 @@ export default function ClientSessions({ clientId }) {
 
   const sessions = useMemo(() => (raw ? buildSessions(raw) : []), [raw]);
 
+  const suggestions = useMemo(() => progressionSuggestions(sessions), [sessions]);
+  const fmtKg = n => String(n).replace('.', ',');
+
   return (
+    <>
+    {suggestions.length > 0 && (
+      <div className="dash-card">
+        <div className="dash-card__title">📈 Sugestões de carga</div>
+        <p className="profile-field__hint" style={{ marginTop: 0 }}>Baseadas nos últimos treinos. Você decide se faz sentido para o aluno.</p>
+        <ul className="measure-deltas">
+          {suggestions.map(s => (
+            <li key={s.name} className="session-ex">
+              <span>
+                <strong>{s.name}</strong>
+                <small>{s.kind === 'subir'
+                  ? `Fez ${fmtKg(s.top)} kg com 12+ repetições nas últimas 2 vezes`
+                  : `Repetiu ${fmtKg(s.top)} kg nas últimas 3 vezes sem ganhar repetições`}</small>
+              </span>
+              <span className={s.kind === 'subir' ? 'measure-deltas__down' : 'measure-deltas__up'}>
+                {s.kind === 'subir' ? `↑ ${fmtKg(s.next)} kg` : 'estagnado'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
     <div className="dash-card">
       <div className="dash-card__title">Últimos treinos</div>
       {!raw && <p className="dash-empty">Carregando…</p>}
@@ -58,5 +83,6 @@ export default function ClientSessions({ clientId }) {
         );
       })}
     </div>
+    </>
   );
 }
