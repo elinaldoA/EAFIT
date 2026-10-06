@@ -9,6 +9,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
+import { saveInbox } from '../_shared/inbox.ts';
 import { isRuleDue, nowInSaoPaulo, renderTemplate, type EngagementRule } from '../_shared/engagement.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -89,6 +90,7 @@ Deno.serve(async (req) => {
           .from('notification_log')
           .insert({ user_id: c.user_id, kind: rule.kind, title, body });
         if (logErr) console.error('notification_log insert error:', logErr.message);
+        await saveInbox(supabase, [c.user_id], { kind: rule.kind, title, body });
       }
     }
     summary.push({ kind: rule.kind, candidates: list.length, sent: sentUsers });

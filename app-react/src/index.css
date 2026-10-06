@@ -25,3 +25,4 @@
 @import './styles/water.css'; /* Tela de Água */
 @import './styles/trainer.css'; /* Ambiente do Personal Trainer */
 @import './styles/tutorial.css'; /* Tutorial guiado (aluno e personal) */
+@import './styles/inbox.css'; /* Central de avisos (sino) */

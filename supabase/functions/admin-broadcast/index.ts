@@ -5,6 +5,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { corsHeadersFor } from '../_shared/cors.ts';
+import { listAllUserIds, saveInbox } from '../_shared/inbox.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -61,6 +62,9 @@ Deno.serve(async (req) => {
     if (result === 'sent') sent++;
     else if (result === 'stale') await admin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
   }
+
+  const inboxIds = Array.isArray(targetUserIds) && targetUserIds.length > 0 ? targetUserIds : await listAllUserIds(admin);
+  await saveInbox(admin, inboxIds, { kind: 'aviso', title, body: message });
 
   await admin.from('admin_audit_log').insert({
     admin_id: callerId,

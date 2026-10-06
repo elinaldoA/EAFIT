@@ -6,6 +6,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
+import { listAllUserIds, saveInbox } from '../_shared/inbox.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -52,6 +53,11 @@ Deno.serve(async (req) => {
     await supabase.from('scheduled_broadcasts')
       .update({ sent_at: new Date().toISOString(), sent_count: sent, target_count: subs?.length || 0 })
       .eq('id', broadcast.id);
+
+    const inboxIds = Array.isArray(broadcast.target_user_ids) && broadcast.target_user_ids.length > 0
+      ? broadcast.target_user_ids
+      : await listAllUserIds(supabase);
+    await saveInbox(supabase, inboxIds, { kind: 'aviso', title: broadcast.title, body: broadcast.body });
 
     await supabase.from('admin_audit_log').insert({
       admin_id: broadcast.created_by,

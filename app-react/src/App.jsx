@@ -15,6 +15,7 @@ import UserChip from './components/UserChip';
 import TopbarProfile from './components/TopbarProfile';
 import BottomNav from './components/BottomNav';
 import Tutorial from './components/Tutorial';
+import InboxBell from './components/InboxBell';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 import { useDayRollover } from './hooks/useDayRollover';
@@ -89,6 +90,7 @@ function Shell() {
                   {isTrainer && (
                     <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>🧑‍🏫 Personal</button>
                   )}
+                  <InboxBell />
                   <ThemeToggle />
                   <div className="topbar__auth"><UserChip /></div>
                 </div>
