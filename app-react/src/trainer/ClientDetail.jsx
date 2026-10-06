@@ -9,6 +9,9 @@ import LineChart from '../components/LineChart';
 import Skeleton from '../components/Skeleton';
 import PlanBuilder from './PlanBuilder';
 import MessageComposer from './MessageComposer';
+import ClientSessions from './ClientSessions';
+import ClientNotes from './ClientNotes';
+import ClientGoals from './ClientGoals';
 
 const GOALS = {
   massa: 'Ganho de massa', forca: 'Força', emagrecer: 'Emagrecimento',
@@ -91,6 +94,8 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
             </div>
           </div>
 
+          <ClientSessions clientId={client.id} />
+
           <div className="dash-card">
             <div className="dash-card__title">
               Peso{summary.weightDelta !== null && <span className="trainer-delta"> · {summary.weightDelta > 0 ? '+' : ''}{fmt(summary.weightDelta)} kg no período</span>}
@@ -160,6 +165,9 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
               </ul>
             </div>
           )}
+
+          <ClientGoals clientId={client.id} />
+          <ClientNotes clientId={client.id} />
 
           <div className="dash-card">
             <div className="dash-card__title">Plano atual</div>

@@ -26,6 +26,7 @@ import AnnouncementBanner from './components/AnnouncementBanner';
 import TrainerShell from './trainer/TrainerShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
+import { useTrainerGoalsSync } from './hooks/useTrainerGoalsSync';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
@@ -51,6 +52,7 @@ function Shell() {
   const [page, setPage] = useHashTab(TABS, 'treino');
   const { isTrainer, mode, setMode } = useTrainerMode(user?.id);
   const unreadMessages = useUnreadMessages(user?.id);
+  useTrainerGoalsSync(user?.id);
   useDayRollover();
 
   // Este aparelho já teve conta logada: a tela de acesso abre em "Entrar".

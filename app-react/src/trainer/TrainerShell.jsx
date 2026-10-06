@@ -7,8 +7,9 @@ import AlunosPage from './AlunosPage';
 import TrainerAccount from './TrainerAccount';
 import MessagesPage from './MessagesPage';
 import ClassPage from './ClassPage';
+import TemplatesPage from './TemplatesPage';
 
-const TABS = ['alunos', 'turma', 'recados', 'conta'];
+const TABS = ['alunos', 'modelos', 'turma', 'recados', 'conta'];
 
 // Casca do app no modo Personal: outra navegação e outras páginas, mas o mesmo
 // login, tema e visual do app de aluno.
@@ -18,6 +19,7 @@ export default function TrainerShell({ onSwitchToStudent }) {
 
   const items = useMemo(() => [
     { key: 'alunos', label: 'Alunos', badge: attention },
+    { key: 'modelos', label: 'Modelos' },
     { key: 'turma', label: 'Turma' },
     { key: 'recados', label: 'Recados' },
     { key: 'conta', label: 'Conta' },
@@ -36,6 +38,7 @@ export default function TrainerShell({ onSwitchToStudent }) {
         <ErrorBoundary variant="page" key={page}>
           <Suspense fallback={null}>
             {page === 'alunos' && <AlunosPage onClientsLoaded={setAttention} />}
+            {page === 'modelos' && <TemplatesPage />}
             {page === 'turma' && <ClassPage />}
             {page === 'recados' && <MessagesPage />}
             {page === 'conta' && <TrainerAccount onSwitchToStudent={onSwitchToStudent} />}

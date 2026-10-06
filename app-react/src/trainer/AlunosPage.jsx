@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
 import { clientAttention, sortClients, fetchClients, fetchTrainerCode } from '../lib/trainer';
+import { weekOverview } from '../lib/trainerSettings';
 import Skeleton from '../components/Skeleton';
 import ClientDetail from './ClientDetail';
 
@@ -47,6 +48,7 @@ export default function AlunosPage({ onClientsLoaded }) {
     if (filter === 'ok') return level === 'ok';
     return true;
   }), [sorted, filter, today]);
+  const week = useMemo(() => weekOverview(clients || []), [clients]);
   const needAttention = sorted.filter(c => ['risco', 'atencao'].includes(clientAttention(c, today).level)).length;
 
   async function handleShare() {
@@ -82,6 +84,14 @@ export default function AlunosPage({ onClientsLoaded }) {
 
       {clients && clients.length > 0 && (
         <>
+          <div className="dash-card">
+            <div className="dash-card__title">Esta semana</div>
+            <div className="recap__grid">
+              <div className="recap__stat"><span className="recap__value">{week.active}/{week.total}</span><span className="recap__label">alunos treinaram (7 dias)</span></div>
+              <div className="recap__stat"><span className="recap__value">{week.sessions}</span><span className="recap__label">treinos no total</span></div>
+              <div className="recap__stat"><span className="recap__value">{week.idle}</span><span className="recap__label">sem treinar na semana</span></div>
+            </div>
+          </div>
           <div className="trainer-summary">
             <span><strong>{clients.length}</strong> aluno(s)</span>
             <span className={needAttention ? 'trainer-summary__warn' : ''}><strong>{needAttention}</strong> precisam de atenção</span>

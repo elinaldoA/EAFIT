@@ -2,30 +2,40 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useToast } from '../context/useToast';
 import { sendMessage } from '../lib/trainerMessages';
 import { fetchLibrary } from '../lib/exerciseSwap';
+import { fetchTemplates, saveTemplate, templateToPlan, friendlyTemplateError } from '../lib/trainerTemplates';
 import {
   WEEK_DAYS, DURATION_CHOICES, MAX_EXERCISES, emptyDraft, emptyExercise, toggleDay, moveItem, draftFromPlan,
   buildPlanPayload, fetchClientPlan, assignPlan, friendlyPlanError,
 } from '../lib/trainerPlan';
 
-// Montagem do treino de um aluno: dias da semana, foco, exercícios (com
-// sugestão da biblioteca do app) e prazo. Ao enviar, vira o plano ativo do
-// aluno (RPC trainer_assign_plan); o plano anterior dele continua salvo.
-export default function PlanBuilder({ client, onBack, onSent }) {
+// Montagem de treino: dias da semana, foco, exercícios (com sugestão da
+// biblioteca do app) e prazo. Com `client`, ao enviar vira o plano ativo do
+// aluno (RPC trainer_assign_plan; o plano anterior dele continua salvo) e dá
+// pra salvar como modelo. Sem `client`, é a criação de um modelo (a partir de
+// `initialPlan`, se vier). Modelos podem ser carregados em qualquer um dos dois.
+export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
   const toast = useToast();
   const listId = useId();
   const [draft, setDraft] = useState(null);
   const [library, setLibrary] = useState([]);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const clientId = client?.id;
 
   useEffect(() => {
     let active = true;
-    fetchClientPlan(client.id)
-      .then(plan => { if (active) setDraft(draftFromPlan(plan)); })
-      .catch(err => { console.error('fetchClientPlan:', err); if (active) setDraft(emptyDraft()); });
+    if (clientId) {
+      fetchClientPlan(clientId)
+        .then(plan => { if (active) setDraft(draftFromPlan(plan)); })
+        .catch(err => { console.error('fetchClientPlan:', err); if (active) setDraft(emptyDraft()); });
+    } else {
+      setDraft(draftFromPlan(initialPlan || null));
+    }
     fetchLibrary().then(rows => { if (active) setLibrary(rows.filter(r => !r.is_post_workout)); }).catch(() => {});
+    fetchTemplates().then(rows => { if (active) setTemplates(rows); }).catch(() => {});
     return () => { active = false; };
-  }, [client.id]);
+  }, [clientId, initialPlan]);
 
   const byName = useMemo(() => new Map(library.map(r => [r.nome.toLowerCase(), r])), [library]);
 
@@ -42,6 +52,30 @@ export default function PlanBuilder({ client, onBack, onSent }) {
     setEx(di, ei, lib
       ? { nome, series: lib.series || '3', reps: lib.reps || '10-12', descanso: lib.descanso || '60s', tecnica: lib.tecnica || '' }
       : { nome });
+  }
+
+  function handleLoadTemplate(id) {
+    const tpl = templates.find(t => t.id === id);
+    if (!tpl) return;
+    if (draft.days.length && !window.confirm('Carregar o modelo substitui o que você montou até agora. Continuar?')) return;
+    setDraft(draftFromPlan(templateToPlan(tpl)));
+    setError('');
+  }
+
+  async function handleSaveTemplate() {
+    const payload = buildPlanPayload(draft);
+    if (!payload.ok) { setError(payload.error); return; }
+    setSending(true); setError('');
+    try {
+      await saveTemplate(payload);
+      toast('💾 Modelo salvo');
+      if (!client) onSent();
+      else fetchTemplates().then(setTemplates).catch(() => {});
+    } catch (err) {
+      setError(friendlyTemplateError(err));
+    } finally {
+      setSending(false);
+    }
   }
 
   async function handleSend() {
@@ -65,9 +99,18 @@ export default function PlanBuilder({ client, onBack, onSent }) {
 
   return (
     <section className="page active trainer-page">
-      <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>‹ Voltar à ficha</button>
+      <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>{client ? '‹ Voltar à ficha' : '‹ Voltar aos modelos'}</button>
       <div className="dash-card">
-        <div className="dash-card__title">📋 Treino de {client.name}</div>
+        <div className="dash-card__title">{client ? `📋 Treino de ${client.name}` : '🧩 Modelo de treino'}</div>
+        {templates.length > 0 && (
+          <div className="profile-field">
+            <label className="profile-field__label" htmlFor="loadTemplate">Começar de um modelo</label>
+            <select id="loadTemplate" className="input input--sm" value="" onChange={e => handleLoadTemplate(e.target.value)}>
+              <option value="">Escolher modelo…</option>
+              {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          </div>
+        )}
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="planName">Nome do plano</label>
           <input id="planName" className="input input--sm" placeholder="Ex: Hipertrofia — ciclo 1" maxLength={60}
@@ -130,8 +173,13 @@ export default function PlanBuilder({ client, onBack, onSent }) {
       ))}
 
       {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
-      <button type="button" className="btn btn--primary btn--full" disabled={sending} onClick={handleSend}>
-        {sending ? 'Enviando…' : '📤 Enviar treino para o aluno'}
+      {client && (
+        <button type="button" className="btn btn--primary btn--full" disabled={sending} onClick={handleSend}>
+          {sending ? 'Enviando…' : '📤 Enviar treino para o aluno'}
+        </button>
+      )}
+      <button type="button" className={client ? 'btn btn--outline btn--full' : 'btn btn--primary btn--full'} disabled={sending} onClick={handleSaveTemplate}>
+        {client ? '💾 Salvar como modelo' : (sending ? 'Salvando…' : '💾 Salvar modelo')}
       </button>
     </section>
   );

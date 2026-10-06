@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchMyMessages, markMessagesRead } from '../lib/trainerMessages';
+import { fetchMyGoals } from '../lib/trainerInsights';
 import { fmtDate } from '../lib/utils';
 import {
   normalizeTrainerCode, friendlyTrainerError, fetchMyTrainer, linkTrainer, unlinkTrainer,
@@ -14,6 +15,7 @@ export default function ProfileTrainerSection({ toast, onChange }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [goals, setGoals] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -61,6 +63,7 @@ export default function ProfileTrainerSection({ toast, onChange }) {
     fetchMyMessages(10)
       .then(rows => { if (active) setMessages(rows); return markMessagesRead(); })
       .catch(() => { /* migration pendente: sem histórico */ });
+    fetchMyGoals().then(g => { if (active) setGoals(g); }).catch(() => { /* sem metas */ });
     return () => { active = false; };
   }, [trainer]);
 
@@ -73,6 +76,15 @@ export default function ProfileTrainerSection({ toast, onChange }) {
           Você é aluno de <strong>{trainer.name}</strong>. Ele acompanha seus treinos, peso, medidas, check-ins e desconfortos.
           Você pode encerrar o vínculo quando quiser.
         </p>
+        {goals && (
+          <div className="personal-goals">
+            <span className="profile-field__label">🎯 Metas do seu personal</span>
+            <p>
+              {[goals.weekly && `${goals.weekly} treinos por semana`, goals.weight && `peso alvo ${String(goals.weight).replace('.', ',')} kg`].filter(Boolean).join(' · ')}
+            </p>
+            {goals.note && <small>{goals.note}</small>}
+          </div>
+        )}
         {messages.length > 0 && (
           <div className="personal-history">
             <span className="profile-field__label">Recados do personal</span>
