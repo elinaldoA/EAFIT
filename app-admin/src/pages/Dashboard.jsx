@@ -45,7 +45,7 @@ export default function Dashboard() {
 
       <KpiPanel />
 
-      <h2 className="section-title" style={{ margin: 0 }}>Base de usuários (totais)</h2>
+      <h2 className="section-label">Base de usuários</h2>
       <div className="tile-grid">
         {TILES.map(t => (
           <div className="tile" key={t.key}>

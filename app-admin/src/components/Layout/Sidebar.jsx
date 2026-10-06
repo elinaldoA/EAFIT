@@ -1,18 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import logoMark from '../../assets/logo-mark.png';
-
-const links = [
-  { to: '/', label: 'Dashboard', icon: '📊', end: true },
-  { to: '/users', label: 'Usuários', icon: '👥' },
-  { to: '/engajamento', label: 'Engajamento', icon: '📈' },
-  { to: '/notificacoes', label: 'Notificações', icon: '🔔' },
-  { to: '/conteudo', label: 'Conteúdo', icon: '📋' },
-  { to: '/demonstracoes', label: 'Demonstrações', icon: '🎬' },
-  { to: '/landing', label: 'Landing page', icon: '🖥️' },
-  { to: '/seguranca', label: 'Segurança', icon: '🩹' },
-  { to: '/auditoria', label: 'Auditoria', icon: '🕒' },
-  { to: '/perfil', label: 'Meu perfil', icon: '👤' },
-];
+import { NAV_GROUPS } from './nav';
+import NavIcon from './NavIcon';
 
 export default function Sidebar({ open, onClose }) {
   return (
@@ -21,22 +10,31 @@ export default function Sidebar({ open, onClose }) {
       <aside className={`sidebar ${open ? 'sidebar--open' : ''}`}>
         <div className="sidebar__brand">
           <img className="sidebar__brand-mark" src={logoMark} alt="EAFIT" />
-          <span className="sidebar__brand-name">EAFIT Admin</span>
+          <span>
+            EAFIT
+            <span className="sidebar__brand-sub">Painel administrativo</span>
+          </span>
         </div>
-        <nav className="sidebar__nav">
-          {links.map(link => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
-              className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
-              onClick={onClose}
-            >
-              <span className="sidebar__link-icon">{link.icon}</span>
-              <span>{link.label}</span>
-            </NavLink>
+        <nav className="sidebar__nav" aria-label="Principal">
+          {NAV_GROUPS.map(group => (
+            <div className="sidebar__group" key={group.label}>
+              <div className="sidebar__group-label">{group.label}</div>
+              {group.links.map(link => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.end}
+                  className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
+                  onClick={onClose}
+                >
+                  <span className="sidebar__link-icon"><NavIcon name={link.icon} /></span>
+                  <span>{link.label}</span>
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
+        <div className="sidebar__footer">Gestão do projeto EAFIT</div>
       </aside>
     </>
   );
