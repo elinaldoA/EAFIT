@@ -25,6 +25,7 @@ import MaintenanceScreen from './components/MaintenanceScreen';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import TrainerShell from './trainer/TrainerShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
+import { useUnreadMessages } from './hooks/useUnreadMessages';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
@@ -49,6 +50,7 @@ function Shell() {
   const { config } = useAppConfig();
   const [page, setPage] = useHashTab(TABS, 'treino');
   const { isTrainer, mode, setMode } = useTrainerMode(user?.id);
+  const unreadMessages = useUnreadMessages(user?.id);
   useDayRollover();
 
   // Este aparelho já teve conta logada: a tela de acesso abre em "Entrar".
@@ -102,7 +104,7 @@ function Shell() {
                 </ErrorBoundary>
               </main>
 
-              <BottomNav active={page} onChange={setPage} />
+              <BottomNav active={page} onChange={setPage} badges={{ perfil: unreadMessages }} />
             </div>
           </WorkoutProvider>
         </AvatarProvider>

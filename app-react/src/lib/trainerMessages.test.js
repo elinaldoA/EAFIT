@@ -1,8 +1,10 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('./supabase', () => ({ db: {} }));
+const { mockDb } = vi.hoisted(() => ({ mockDb: { rpc: vi.fn() } }));
+vi.mock('./supabase', () => ({ db: mockDb }));
 
-import { groupSent, unreadCount, recipientsLabel, friendlyMessageError } from './trainerMessages';
+import { groupSent, unreadCount, recipientsLabel, friendlyMessageError, markMessagesRead, MESSAGES_READ_EVENT } from './trainerMessages';
 
 describe('groupSent', () => {
   it('agrupa o mesmo envio e ordena do mais recente ao mais antigo', () => {
@@ -39,5 +41,26 @@ describe('textos auxiliares', () => {
   it('traduz erros', () => {
     expect(friendlyMessageError({ message: 'no_recipients' })).toMatch(/Nenhum aluno/);
     expect(friendlyMessageError({ message: 'zzz' })).toMatch(/Tente de novo/);
+  });
+});
+
+describe('markMessagesRead', () => {
+  it('avisa o app (zera a bolinha) depois de marcar como lido', async () => {
+    mockDb.rpc.mockResolvedValue({ error: null });
+    const handler = vi.fn();
+    window.addEventListener(MESSAGES_READ_EVENT, handler);
+    await markMessagesRead();
+    window.removeEventListener(MESSAGES_READ_EVENT, handler);
+    expect(mockDb.rpc).toHaveBeenCalledWith('mark_messages_read');
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('não dispara o evento se a chamada falhar', async () => {
+    mockDb.rpc.mockResolvedValue({ error: new Error('x') });
+    const handler = vi.fn();
+    window.addEventListener(MESSAGES_READ_EVENT, handler);
+    await expect(markMessagesRead()).rejects.toThrow();
+    window.removeEventListener(MESSAGES_READ_EVENT, handler);
+    expect(handler).not.toHaveBeenCalled();
   });
 });

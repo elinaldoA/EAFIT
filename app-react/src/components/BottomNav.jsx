@@ -39,7 +39,7 @@ const ICONS = {
   ),
 };
 
-export default function BottomNav({ active, onChange }) {
+export default function BottomNav({ active, onChange, badges = {} }) {
   return (
     <nav className="bottom-nav" aria-label="Navegação principal">
       {ITEMS.map(item => (
@@ -52,6 +52,7 @@ export default function BottomNav({ active, onChange }) {
         >
           <span className="nav-item__icon" aria-hidden="true">{ICONS[item.key]}</span>
           <span>{item.label}</span>
+          {badges[item.key] > 0 && <span className="trainer-badge" aria-label={`${badges[item.key]} não lido(s)`}>{badges[item.key]}</span>}
         </button>
       ))}
     </nav>

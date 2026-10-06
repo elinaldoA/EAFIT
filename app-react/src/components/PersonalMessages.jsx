@@ -29,7 +29,10 @@ export default function PersonalMessages() {
     <div className="personal-msg" role="status">
       <div className="personal-msg__title">💬 {unreadCount(messages) > 1 ? `${messages.length} recados do seu personal` : 'Recado do seu personal'}</div>
       {messages.slice(0, 3).map(m => <p key={m.id} className="personal-msg__body">{m.body}</p>)}
-      <button type="button" className="btn btn--outline btn--sm" onClick={handleRead}>Entendi</button>
+      <div className="personal-msg__actions">
+        <button type="button" className="btn btn--outline btn--sm" onClick={handleRead}>Entendi</button>
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => { window.location.hash = '#perfil'; }}>Ver histórico</button>
+      </div>
     </div>
   );
 }

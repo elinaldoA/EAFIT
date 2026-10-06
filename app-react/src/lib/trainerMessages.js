@@ -1,6 +1,8 @@
 import { db } from './supabase';
 
 export const MAX_MESSAGE = 500;
+// Disparado quando o aluno marca os recados como lidos (zera a bolinha na hora).
+export const MESSAGES_READ_EVENT = 'eafit:messages-read';
 
 const ERRORS = {
   not_authorized: 'Sem permissão para enviar recados.',
@@ -78,4 +80,5 @@ export async function fetchMyMessages(limit = 20) {
 export async function markMessagesRead() {
   const { error } = await db.rpc('mark_messages_read');
   if (error) throw error;
+  window.dispatchEvent(new Event(MESSAGES_READ_EVENT));
 }

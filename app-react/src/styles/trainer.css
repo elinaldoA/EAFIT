@@ -52,3 +52,5 @@
 .personal-history__item { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); }
 .personal-history__item small { color: var(--text-muted); }
 .personal-history__item p { margin: 2px 0 0; font-size: 0.85rem; white-space: pre-wrap; }
+
+.personal-msg__actions { display: flex; gap: 8px; }
