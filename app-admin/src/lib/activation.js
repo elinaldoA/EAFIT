@@ -75,6 +75,45 @@ export function groupVisitSources(rows) {
   return [...bySource.values()].sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
 }
 
+// Nome legível de cada lugar gravado por landing_events (ver
+// supabase/migrations/20261018010000_landing_events.sql).
+const EVENT_PLACES = {
+  nav: 'Menu do topo',
+  hero: 'Topo da página',
+  sticky: 'Barra fixa (celular)',
+  personal: 'Seção Personal',
+  cta: 'CTA final',
+  rodape: 'Rodapé',
+  outro: 'Outro',
+};
+const REACH_LABELS = {
+  personal: 'Chegaram em "Para personais"',
+  testimonials: 'Chegaram em "Depoimentos"',
+  install: 'Chegaram em "Instalar"',
+  faq: 'Chegaram no FAQ',
+  cta: 'Chegaram no CTA final',
+};
+
+// Linhas (event, place, total) → cliques por lugar (ordenados), instalação
+// e alcance das seções (na ordem da página).
+export function groupLandingEvents(rows) {
+  const clicks = [];
+  const reach = [];
+  let installClicks = 0;
+  let installed = 0;
+  (rows || []).forEach(r => {
+    const n = Number(r.total) || 0;
+    if (r.event === 'cta_click') clicks.push({ place: r.place, label: EVENT_PLACES[r.place] || r.place, total: n });
+    else if (r.event === 'reach') reach.push({ place: r.place, label: REACH_LABELS[r.place] || r.place, total: n });
+    else if (r.event === 'install_click') installClicks += n;
+    else if (r.event === 'install_done') installed += n;
+  });
+  clicks.sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
+  const order = Object.keys(REACH_LABELS);
+  reach.sort((a, b) => (order.indexOf(a.place) + 1 || 99) - (order.indexOf(b.place) + 1 || 99));
+  return { clicks, reach, installClicks, installed, totalClicks: clicks.reduce((t, c) => t + c.total, 0) };
+}
+
 // Linhas (cohort_week, week_index) → tabela: coortes da mais nova pra mais
 // antiga, uma célula por semana desde o cadastro (null = janela ainda não
 // começou), e a média ponderada por semana usando só células completas.

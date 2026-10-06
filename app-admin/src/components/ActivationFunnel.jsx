@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchFunnel, fetchVisitSources } from '../lib/dashboardStats';
-import { buildFunnel, groupVisitSources } from '../lib/activation';
+import { fetchFunnel, fetchVisitSources, fetchLandingEvents } from '../lib/dashboardStats';
+import { buildFunnel, groupVisitSources, groupLandingEvents } from '../lib/activation';
 import Loading from './Loading';
 
 const PERIODS = [
@@ -19,6 +19,7 @@ export default function ActivationFunnel() {
   const [days, setDays] = useState(30);
   const [row, setRow] = useState(null);
   const [sources, setSources] = useState([]);
+  const [events, setEvents] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -26,8 +27,8 @@ export default function ActivationFunnel() {
     let active = true;
     setLoading(true);
     setError('');
-    Promise.all([fetchFunnel(days), fetchVisitSources(days)])
-      .then(([r, s]) => { if (active) { setRow(r); setSources(groupVisitSources(s)); } })
+    Promise.all([fetchFunnel(days), fetchVisitSources(days), fetchLandingEvents(days)])
+      .then(([r, s, e]) => { if (active) { setRow(r); setSources(groupVisitSources(s)); setEvents(groupLandingEvents(e)); } })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -92,11 +93,32 @@ export default function ActivationFunnel() {
               </table>
             </div>
           ) : <p className="card-note" style={{ marginTop: 0 }}>Nenhuma visita registrada no período.</p>}
+
+          <h3 className="subsection-title">O que fazem na landing</h3>
+          {events && (events.clicks.length || events.reach.length || events.installClicks || events.installed) ? (
+            <div className="table-wrap">
+              <table className="source-table">
+                <thead>
+                  <tr><th scope="col">Evento</th><th scope="col">Sessões</th></tr>
+                </thead>
+                <tbody>
+                  {events.clicks.map(c => (
+                    <tr key={`c-${c.place}`}><th scope="row">Clique em “Começar/Criar conta” · {c.label}</th><td>{c.total}</td></tr>
+                  ))}
+                  {events.reach.map(r => (
+                    <tr key={`r-${r.place}`}><th scope="row">{r.label}</th><td>{r.total}</td></tr>
+                  ))}
+                  {events.installClicks > 0 && <tr><th scope="row">Clicaram em “Instalar agora”</th><td>{events.installClicks}</td></tr>}
+                  {events.installed > 0 && <tr><th scope="row">Instalaram o app</th><td>{events.installed}</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          ) : <p className="card-note" style={{ marginTop: 0 }}>Nenhum evento registrado no período.</p>}
         </>
       )}
 
       <p className="card-note">
-        Sem admins. Visitas são anônimas e contadas no máximo 1 vez por dia por navegador
+        Sem admins. Visitas são anônimas e contadas no máximo 1 vez por dia por navegador (eventos da landing: 1 vez por sessão)
         {row?.visits_since ? `, desde ${formatDate(row.visits_since)}` : ''} — cadastros anteriores a isso
         podem deixar a 1ª etapa menor que a 2ª. Treino = concluído, finalizado ou com ao menos uma série
         marcada. Cadastros recentes ainda podem avançar no funil.

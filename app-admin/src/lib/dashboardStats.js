@@ -30,3 +30,9 @@ export async function fetchVisitSources(days = 30) {
   if (error) throw error;
   return data || [];
 }
+
+export async function fetchLandingEvents(days = 30) {
+  const { data, error } = await db.rpc('admin_landing_events', { days_back: days });
+  if (error) throw error;
+  return data || [];
+}

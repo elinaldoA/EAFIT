@@ -2128,6 +2128,56 @@
           .catch(function () {});
       })();
 
+      // ---------- eventos anônimos (public.landing_events) ----------
+      // Cliques nos CTAs que levam ao app, instalação e seções alcançadas.
+      // Sem identificar ninguém; 1 registro por evento+lugar por sessão;
+      // falha em silêncio. Lugar = seção do clique (ou nav/sticky).
+      function track(event, place) {
+        var key = 'eafit_ev_' + event + ':' + place;
+        try {
+          if (sessionStorage.getItem(key)) return;
+          sessionStorage.setItem(key, '1');
+        } catch (e) { /* sem armazenamento: conta mesmo assim */ }
+        fetch(SUPABASE_URL + '/rest/v1/landing_events', {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json', Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({ event: event, place: place }),
+          keepalive: true,
+        }).catch(function () {});
+      }
+
+      function clickPlace(a) {
+        if (a.closest('.nav')) return 'nav';
+        if (a.closest('.sticky-cta')) return 'sticky';
+        if (a.closest('footer')) return 'rodape';
+        var sec = a.closest('[data-section]');
+        return (sec && sec.getAttribute('data-section')) || 'outro';
+      }
+
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href="../"]');
+        if (a) track('cta_click', clickPlace(a));
+        if (e.target.closest && e.target.closest('#install-btn')) track('install_click', 'install');
+      });
+      window.addEventListener('appinstalled', function () { track('install_done', 'install'); });
+
+      if ('IntersectionObserver' in window) {
+        var reachObs = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (!en.isIntersecting) return;
+            reachObs.unobserve(en.target);
+            track('reach', en.target.getAttribute('data-section'));
+          });
+        }, { threshold: 0.3 });
+        ['personal', 'testimonials', 'install', 'faq', 'cta'].forEach(function (id) {
+          var el = document.querySelector('[data-section="' + id + '"]');
+          if (el) reachObs.observe(el);
+        });
+      }
+
       // ---------- contagem anônima de visitas (public.page_visits) ----------
       // Cópia da regra de app-react/src/lib/pageVisits.js (detectSource) —
       // mudou lá, mude aqui. 1 visita por dia por navegador, sem identificar
