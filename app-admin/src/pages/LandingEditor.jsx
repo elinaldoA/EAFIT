@@ -31,6 +31,9 @@ const ICON_OPTIONS = [
   { value: 'calendar', label: 'Calendário (histórico)' },
   { value: 'trophy', label: 'Troféu (conquistas)' },
   { value: 'camera', label: 'Câmera (fotos)' },
+  { value: 'users', label: 'Pessoas (desafios)' },
+  { value: 'pause', label: 'Pausa (modo pausa)' },
+  { value: 'repeat', label: 'Troca (exercício)' },
 ];
 
 function moveItem(list, from, to) {

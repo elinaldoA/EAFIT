@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>EAFIT — Treino com plano, registro e evolução</title>
-  <meta name="description" content="Plano de treino montado pro seu objetivo, modo treino ao vivo, demonstração dos exercícios, hidratação e gráficos de evolução. Grátis, sem anúncios e funciona offline." />
+  <meta name="description" content="Plano de treino montado pro seu objetivo, modo ao vivo, demonstração dos exercícios, desafios com amigos e gráficos de evolução. Grátis, sem anúncios e funciona offline." />
   <link rel="canonical" href="https://elinaldoa.github.io/EAFIT/landing/" />
 
   <meta property="og:type" content="website" />
@@ -578,6 +578,24 @@
       *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
       .js .reveal { opacity: 1; transform: none; }
     }
+    /* visual: desafios, rotina, retrospectiva */
+    .board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .board li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; font-weight: 600; }
+    .board li.me { border-color: var(--primary); background: var(--primary-glow); }
+    .board b { color: var(--primary-ink); }
+    .pause-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.35; border-color: #fbbf24; background: rgba(251, 191, 36, .1); }
+    .pause-note .chip-btn { flex: 0 0 auto; padding: 8px 14px; background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+    .checkin-demo { display: flex; flex-direction: column; gap: 8px; }
+    .checkin-demo > div { display: flex; align-items: center; gap: 4px; }
+    .checkin-demo span { flex: 1; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+    .checkin-demo i { font-style: normal; font-size: 20px; line-height: 1; padding: 6px; border-radius: 10px; border: 1px solid transparent; opacity: .5; }
+    .checkin-demo i.on { opacity: 1; border-color: var(--primary); background: var(--primary-glow); }
+    .recap-demo b { font-size: 20px; }
+    .measure-demo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+    .measure-demo li { display: flex; justify-content: space-between; gap: 8px; color: var(--text-muted); }
+    .measure-demo b { color: var(--success); }
+    .measure-demo b.up { color: var(--primary-ink); }
+
   </style>
 </head>
 <body>
@@ -613,7 +631,7 @@
         <div class="hero-copy">
           <span class="badge"><span class="dot"></span> Grátis · sem anúncios · funciona offline</span>
           <h1>Pare de treinar no improviso.<br />Treine com plano e veja <span class="grad">cada quilo a mais.</span></h1>
-          <p class="lead">O EAFIT monta seu treino pelo seu objetivo e nível, guia cada série no modo ao vivo e transforma o que você registra em gráficos, recordes e sequência — no celular, mesmo sem internet.</p>
+          <p class="lead">O EAFIT monta seu treino pelo seu objetivo e nível, guia cada série no modo ao vivo e transforma o que você registra em gráficos, recordes e sequência. Dá pra desafiar os amigos e pausar sem perder a sequência — no celular, mesmo sem internet.</p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="../">Começar grátis</a>
             <a class="btn btn-ghost" href="#recursos">Ver o app por dentro</a>
@@ -808,6 +826,7 @@
               <li>Não lembra quanto levantou na semana passada</li>
               <li>Descansa no achismo, olhando o relógio</li>
               <li>Não sabe se está evoluindo de verdade</li>
+              <li>Perde a sequência numa viagem ou semana corrida</li>
             </ul>
           </div>
           <div class="compare-col good reveal reveal-d1">
@@ -817,6 +836,7 @@
               <li>Cada série marcada vira histórico automaticamente</li>
               <li>Descanso cronometrado, com alarme e +15s</li>
               <li>Gráficos, heatmap e recordes mostram o progresso real</li>
+              <li>Modo pausa e desafios com amigos mantêm você no ritmo</li>
             </ul>
           </div>
         </div>
@@ -944,7 +964,7 @@
               <p>No cadastro você informa peso, altura, objetivo e nível. O EAFIT monta a divisão da semana com séries, repetições, descanso e técnica — e você ajusta o que quiser no editor.</p>
               <ul class="checks">
                 <li>6 objetivos e 3 níveis de experiência</li>
-                <li>Troque exercícios e ajuste séries e descanso</li>
+                <li>Troque qualquer exercício por alternativas do mesmo músculo</li>
                 <li>Meta de água calculada pelo seu peso</li>
               </ul>
             </div>
@@ -969,6 +989,101 @@
               </div>
             </div>
           </article>
+
+          <!-- 5. Desafios com amigos -->
+          <article class="show-row">
+            <div class="show-copy reveal">
+              <span class="show-tag"><i>👥</i>Desafios com amigos</span>
+              <h3>Treinar fica mais fácil quando alguém cobra</h3>
+              <p>Crie um desafio, mande o código de convite no WhatsApp e vejam quem treina mais dias no período. Sem lista de amigos e sem expor seus dados.</p>
+              <ul class="checks">
+                <li>Entra quem tem o código, até 20 pessoas</li>
+                <li>Placar de dias treinados, atualizado sozinho</li>
+                <li>Só apelido e pontuação ficam visíveis</li>
+              </ul>
+            </div>
+            <div class="show-visual reveal reveal-d1" aria-hidden="true">
+              <div style="width:100%;max-width:380px">
+                <div class="panel">
+                  <div class="panel-label"><span>Turma da firma</span><span>5 dias restantes</span></div>
+                  <ol class="board">
+                    <li><span>1º Carol</span><b>9 dias</b></li>
+                    <li class="me"><span>2º Você</span><b>8 dias</b></li>
+                    <li><span>3º Rafa</span><b>6 dias</b></li>
+                    <li><span>4º Bruno</span><b>4 dias</b></li>
+                  </ol>
+                </div>
+                <div class="panel pill-row">
+                  <span class="pill">📤 Convidar · K7M2QX</span>
+                  <span class="pill">👥 4 pessoas</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 6. Rotina: pausa, check-in, horario -->
+          <article class="show-row">
+            <div class="show-copy reveal">
+              <span class="show-tag"><i>⏸</i>Respeita a sua rotina</span>
+              <h3>Viajou ou ficou doente? Sua sequência espera por você</h3>
+              <p>Ative o modo pausa por 7, 14 ou 30 dias: a sequência fica protegida e os lembretes silenciam. O check-in de energia, sono e humor ajuda a ajustar o treino do dia.</p>
+              <ul class="checks">
+                <li>Modo pausa sem perder a sequência</li>
+                <li>Check-in diário em 3 toques, com dica do dia</li>
+                <li>Lembrete 1h antes do seu horário de treino</li>
+              </ul>
+            </div>
+            <div class="show-visual reveal reveal-d1" aria-hidden="true">
+              <div style="width:100%;max-width:380px">
+                <div class="panel pause-note">
+                  <span>⏸ Modo pausa até 24/10 — sua sequência está protegida.</span>
+                  <span class="chip-btn">Retomar</span>
+                </div>
+                <div class="panel">
+                  <div class="panel-label"><span>Como você está hoje?</span></div>
+                  <div class="checkin-demo">
+                    <div><span>Energia</span><i>😴</i><i>🥱</i><i>🙂</i><i class="on">😃</i><i>⚡</i></div>
+                    <div><span>Sono</span><i>😵</i><i>😪</i><i class="on">🙂</i><i>😌</i><i>😴</i></div>
+                    <div><span>Humor</span><i>😞</i><i>😕</i><i>😐</i><i class="on">🙂</i><i>😄</i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- 7. Retrospectiva e medidas -->
+          <article class="show-row">
+            <div class="show-copy reveal">
+              <span class="show-tag"><i>📅</i>Retrospectiva e medidas</span>
+              <h3>Feche o mês sabendo o quanto evoluiu</h3>
+              <p>Veja treinos, tempo, volume, recordes e melhor sequência do mês, compartilhe como imagem e acompanhe cintura, braço e coxa junto com peso e fotos.</p>
+              <ul class="checks">
+                <li>Retrospectiva mensal para compartilhar</li>
+                <li>Medidas corporais com gráfico de evolução</li>
+                <li>Novas conquistas de constância</li>
+              </ul>
+            </div>
+            <div class="show-visual reveal reveal-d1" aria-hidden="true">
+              <div style="width:100%;max-width:380px">
+                <div class="panel">
+                  <div class="panel-label"><span>Retrospectiva · setembro</span><span class="m-up">▲ 18% vs. agosto</span></div>
+                  <div class="pr-list recap-demo">
+                    <div><b>16</b><span>treinos</span></div>
+                    <div><b>12h40</b><span>de treino</span></div>
+                    <div><b>9</b><span>recordes</span></div>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-label"><span>Medidas corporais</span></div>
+                  <ul class="measure-demo">
+                    <li><span>Cintura</span><span>90 → 86,5 cm <b>(-3,5)</b></span></li>
+                    <li><span>Braço</span><span>34 → 35,5 cm <b class="up">(+1,5)</b></span></li>
+                    <li><span>Coxa</span><span>56 → 58 cm <b class="up">(+2)</b></span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -983,12 +1098,15 @@
         <div class="features">
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><h3>Plano semanal personalizado</h3><p>Treino dividido por dia da semana, montado pelo seu objetivo e nível, com séries, repetições, descanso e técnica.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div><h3>Modo treino ao vivo</h3><p>Tela cheia com um exercício por vez, descanso com alarme e tela sempre acesa enquanto você treina.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></div><h3>Troca de exercício</h3><p>Sem o aparelho ou com desconforto? Troque na hora por alternativas do mesmo músculo e do seu nível.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg></div><h3>Demonstração de execução</h3><p>Vídeos curtos com câmera lenta e imagens do movimento para 200 exercícios.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line><polyline points="8.5 14.5 10.5 16.5 15.5 12"></polyline></svg></div><h3>Histórico completo</h3><p>Calendário do mês, resumo de tempo, séries e volume, e cada sessão comparada com a anterior.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line><polyline points="8.5 14.5 10.5 16.5 15.5 12"></polyline></svg></div><h3>Histórico e retrospectiva</h3><p>Calendário do mês, tempo, séries e volume, cada sessão comparada com a anterior e uma retrospectiva do mês para compartilhar.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><h3>Evolução e recordes</h3><p>Evolução de carga por exercício, volume por treino, heatmap de 35 dias e seus recordes pessoais.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg></div><h3>Hidratação</h3><p>Meta diária pelo seu peso, adições rápidas com desfazer, sequência de dias na meta e lembretes.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path></svg></div><h3>Conquistas e sequência</h3><p>Medalhas por constância, dias seguidos de treino e marcos de 10, 50 e 100 treinos.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div><h3>Fotos e peso</h3><p>Fotos de progresso e registro de peso para comparar o antes e o depois com calma.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path></svg></div><h3>Conquistas e sequência</h3><p>Medalhas por constância, sequência de 7 e 14 dias e marcos de 10, 25, 50, 100 e 200 treinos.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div><h3>Fotos, peso e medidas</h3><p>Fotos de progresso, registro de peso e medidas de cintura, braço, coxa e mais, com gráfico da evolução.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><h3>Desafios com amigos</h3><p>Crie um desafio, compartilhe o código de convite e vejam quem treina mais dias no período.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg></div><h3>Modo pausa e check-in</h3><p>Pause por 7, 14 ou 30 dias sem perder a sequência e registre energia, sono e humor em 3 toques.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg></div><h3>Offline e sincronizado</h3><p>Registre sem internet; quando a conexão volta, tudo sincroniza entre celular, tablet e computador.</p></div>
         </div>
       </div>
@@ -1004,7 +1122,7 @@
         <div class="steps">
           <div class="step reveal"><span class="num">1</span><h3>Crie sua conta</h3><p>Só e-mail e senha. Abre direto no navegador do celular ou do computador.</p></div>
           <div class="step reveal reveal-d1"><span class="num">2</span><h3>Conte seu objetivo</h3><p>Peso, altura, objetivo e nível — o plano da semana sai na hora.</p></div>
-          <div class="step reveal reveal-d2"><span class="num">3</span><h3>Treine e acompanhe</h3><p>Marque as séries, beba sua água e veja os gráficos e recordes crescerem.</p></div>
+          <div class="step reveal reveal-d2"><span class="num">3</span><h3>Treine, acompanhe e desafie</h3><p>Marque as séries, veja gráficos e recordes crescerem e convide os amigos para um desafio.</p></div>
         </div>
       </div>
     </section>
@@ -1020,7 +1138,9 @@
           <details><summary>É grátis mesmo?</summary><p>Sim. Não tem plano pago, não tem anúncio e não pede cartão de crédito.</p></details>
           <details><summary>Preciso baixar na loja de apps?</summary><p>Não. O EAFIT é um app web instalável: abra no navegador e, no Android, toque em “Instalar app” ou “Adicionar à tela inicial”; no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”. Ele passa a abrir em tela cheia, como qualquer app.</p></details>
           <details><summary>Funciona sem internet na academia?</summary><p>Funciona. Você registra séries e água offline e, quando a conexão volta, tudo é sincronizado sozinho com a sua conta.</p></details>
-          <details><summary>Posso mudar o treino que o app montou?</summary><p>Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso de cada dia.</p></details>
+          <details><summary>Posso mudar o treino que o app montou?</summary><p>Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso. E na hora de treinar, o botão “Trocar exercício” sugere alternativas do mesmo músculo e do seu nível.</p></details>
+          <details><summary>Como funcionam os desafios com amigos?</summary><p>Você cria um desafio (7, 14 ou 30 dias), recebe um código e manda para quem quiser. Quem entra pelo código participa, e vence quem treinar mais dias no período. Os outros só veem seu apelido e sua pontuação.</p></details>
+          <details><summary>E se eu viajar ou ficar doente?</summary><p>Ative o modo pausa no Perfil por 7, 14 ou 30 dias. A sequência de treinos fica protegida e os lembretes de treino são silenciados até você voltar.</p></details>
           <details><summary>Serve para quem está começando?</summary><p>Serve. No cadastro você escolhe entre iniciante, intermediário e avançado, e os exercícios têm demonstração de execução e dica de técnica.</p></details>
           <details><summary>O que acontece com os meus dados?</summary><p>Ficam na sua conta, protegidos por login. No Perfil você pode exportar tudo ou excluir a conta quando quiser. Detalhes na <a href="../legal/privacidade.html">Política de Privacidade</a>.</p></details>
         </div>
@@ -1253,6 +1373,9 @@
         calendar: '<rect x="3" y="4" width="18" height="17" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line><polyline points="8.5 14.5 10.5 16.5 15.5 12"></polyline>',
         trophy: '<path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path>',
         camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle>',
+        users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
+        pause: '<circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line>',
+        repeat: '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>',
       };
 
       function svgIcon(key, size) {
