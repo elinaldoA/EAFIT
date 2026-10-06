@@ -33,6 +33,8 @@ export default function Broadcast() {
   const [segments, setSegments] = useState([]);
   const [segmentId, setSegmentId] = useState('');
   const [segmentBusy, setSegmentBusy] = useState(false);
+  const [templates, setTemplates] = useState(null); // null = tabela ainda não existe (migration pendente)
+  const [templateId, setTemplateId] = useState('');
   const [searchParams] = useSearchParams();
 
   const loadExtras = useCallback(async () => {
@@ -45,6 +47,16 @@ export default function Broadcast() {
     setHistory(hist || []);
     setPending(sched || []);
   }, []);
+
+  const loadTemplates = useCallback(async () => {
+    const { data, error } = await db.from('broadcast_templates')
+      .select('id, name, title, body').order('name', { ascending: true });
+    setTemplates(error ? null : data || []);
+  }, []);
+
+  useEffect(() => {
+    loadTemplates().catch(() => {});
+  }, [loadTemplates]);
 
   useEffect(() => {
     fetchUsers().then(setUsers).catch(() => {});
@@ -135,6 +147,56 @@ export default function Broadcast() {
     }
   }
 
+  function applyTemplate(id) {
+    setTemplateId(id);
+    const t = (templates || []).find(x => x.id === id);
+    if (t) { setTitle(t.title); setBody(t.body); }
+  }
+
+  async function saveTemplate() {
+    if (!title.trim() || !body.trim()) { setMsg('Erro: preencha título e mensagem para salvar o modelo.'); return; }
+    const name = window.prompt('Nome do modelo:', title.trim().slice(0, 60));
+    if (!name || !name.trim()) return;
+    const { error } = await db.from('broadcast_templates').insert({
+      name: name.trim().slice(0, 60), title: title.trim(), body: body.trim(), created_by: adminUser.id,
+    });
+    if (error) { setMsg(`Erro: ${error.message}`); return; }
+    setMsg('Modelo salvo.');
+    await loadTemplates();
+  }
+
+  async function deleteTemplate() {
+    const t = (templates || []).find(x => x.id === templateId);
+    if (!t || !window.confirm(`Apagar o modelo "${t.name}"?`)) return;
+    const { error } = await db.from('broadcast_templates').delete().eq('id', t.id);
+    if (error) { setMsg(`Erro: ${error.message}`); return; }
+    setTemplateId('');
+    await loadTemplates();
+  }
+
+  // Teste seguro: manda só para o próprio admin (precisa ter push ativo num
+  // aparelho) e mantém o formulário preenchido para o envio de verdade.
+  async function handleSendToMe() {
+    if (!title.trim() || !body.trim()) { setMsg('Erro: preencha título e mensagem.'); return; }
+    setBusy(true);
+    setMsg('');
+    try {
+      const { data, error } = await db.functions.invoke('admin-broadcast', {
+        body: { title, body, targetUserIds: [adminUser.id] },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setMsg(data.targetCount === 0
+        ? 'Erro: você não tem push ativo em nenhum aparelho. Ative os lembretes no app (Perfil → Notificações) logado com esta conta.'
+        : `Teste enviado: ${data.sent} de ${data.targetCount} dispositivo(s).`);
+      await loadExtras();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function cancelScheduled(id) {
     if (!window.confirm('Cancelar esta notificação agendada?')) return;
     const { error } = await db.from('scheduled_broadcasts').delete().eq('id', id);
@@ -148,6 +210,19 @@ export default function Broadcast() {
       </div>
 
       <form className="card stack" onSubmit={handleSubmit}>
+        {templates !== null && (
+          <div className="field">
+            <span className="field__label">Modelo de mensagem</span>
+            <div className="actions-row">
+              <select className="input" value={templateId} onChange={e => applyTemplate(e.target.value)}>
+                <option value="">{templates.length ? 'Escolha um modelo…' : 'Nenhum modelo salvo ainda'}</option>
+                {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              <button type="button" className="btn btn--ghost btn--small" onClick={saveTemplate}>Salvar como modelo</button>
+              {templateId && <button type="button" className="btn btn--ghost btn--small" onClick={deleteTemplate}>Apagar modelo</button>}
+            </div>
+          </div>
+        )}
         <label className="field">
           <span className="field__label">Título</span>
           <input className="input" required value={title} onChange={e => setTitle(e.target.value)} />
@@ -204,9 +279,14 @@ export default function Broadcast() {
 
         {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
 
-        <button className="btn btn--primary" type="submit" disabled={busy}>
-          {busy ? 'Enviando…' : (scheduleAt ? 'Agendar notificação' : 'Enviar notificação agora')}
-        </button>
+        <div className="actions-row">
+          <button className="btn btn--primary" type="submit" disabled={busy}>
+            {busy ? 'Enviando…' : (scheduleAt ? 'Agendar notificação' : 'Enviar notificação agora')}
+          </button>
+          <button className="btn btn--ghost" type="button" disabled={busy} onClick={handleSendToMe}>
+            Enviar só para mim (teste)
+          </button>
+        </div>
       </form>
 
       <section>

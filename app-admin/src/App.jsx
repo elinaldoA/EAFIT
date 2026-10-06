@@ -18,6 +18,7 @@ import PlanAnalytics from './pages/PlanAnalytics';
 import Feedback from './pages/Feedback';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
+import BroadcastHistory from './pages/BroadcastHistory';
 import Templates from './pages/Templates';
 import AuditLog from './pages/AuditLog';
 import Safety from './pages/Safety';
@@ -50,6 +51,7 @@ function AppShell() {
             <Route path="/saude" element={<SystemHealth />} />
             <Route path="/segmentos" element={<Segments />} />
             <Route path="/notificacoes" element={<Broadcast />} />
+            <Route path="/historico-envios" element={<BroadcastHistory />} />
             <Route path="/conteudo" element={<Templates />} />
             <Route path="/auditoria" element={<AuditLog />} />
             <Route path="/seguranca" element={<Safety />} />

@@ -40,6 +40,7 @@ export const NAV_GROUPS = [
         key: 'comunicacao', label: 'Comunicação', icon: 'bell',
         tabs: [
           { to: '/notificacoes', label: 'Enviar notificação' },
+          { to: '/historico-envios', label: 'Histórico' },
           { to: '/automacoes', label: 'Automáticas' },
         ],
       },
