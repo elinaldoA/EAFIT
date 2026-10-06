@@ -12,10 +12,11 @@ import WorkoutSummaryModal from '../components/WorkoutSummaryModal';
 import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
+import PersonalMessages from '../components/PersonalMessages';
 
 export default function TreinoPage() {
   const { user } = useAuth();
-  const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planStartDate, planEndDate, saveWorkoutRating } = useWorkout();
+  const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating } = useWorkout();
   const toast = useToast();
   const loading = syncStatus === 'loading';
   const [_tick, setTick] = useState(0);
@@ -61,10 +62,14 @@ export default function TreinoPage() {
   return (
     <section id="page-treino" className="page active">
       <PauseBanner />
+      <PersonalMessages />
       <DailyCheckin />
+      {planByTrainer && !planExpired && <p className="trainer-plan-note">📋 Plano montado pelo seu personal</p>}
       {planExpired && (
         <div className="plan-expired-banner">
-          <span>⏳ Seu plano venceu e não tem um próximo configurado — escolha o que treinar agora.</span>
+          <span>{planByTrainer
+            ? '⏳ O ciclo do plano do seu personal terminou — fale com ele para o próximo, ou escolha o que treinar agora.'
+            : '⏳ Seu plano venceu e não tem um próximo configurado — escolha o que treinar agora.'}</span>
           <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowPlanEditor(true)}>Escolher plano</button>
         </div>
       )}
@@ -97,7 +102,7 @@ export default function TreinoPage() {
         </div>
         {planEndDate && !planExpired && (
           <p className="progress-card__cycle">
-            📅 Treino válido de {planStartDate ? fmtDate(planStartDate) : '—'} até {fmtDate(planEndDate)} ({Math.max(0, daysUntil(planEndDate))}d restantes) · atualizado automaticamente ao vencer
+            📅 Treino válido de {planStartDate ? fmtDate(planStartDate) : '—'} até {fmtDate(planEndDate)} ({Math.max(0, daysUntil(planEndDate))}d restantes){planByTrainer ? '' : ' · atualizado automaticamente ao vencer'}
           </p>
         )}
       </div>

@@ -35,6 +35,7 @@ export default function UserDetail() {
   const [actionMsg, setActionMsg] = useState('');
   const [recoveryLink, setRecoveryLink] = useState('');
   const [form, setForm] = useState(null);
+  const [trainerCode, setTrainerCode] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,6 +101,12 @@ export default function UserDetail() {
 
   useEffect(() => { load(); }, [load]);
 
+  const loadTrainer = useCallback(async () => {
+    const { data } = await db.from('trainers').select('code').eq('user_id', id).maybeSingle();
+    setTrainerCode(data?.code ?? null);
+  }, [id]);
+  useEffect(() => { loadTrainer(); }, [loadTrainer]);
+
   async function runAction(action, extra, confirmMsg) {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
     setBusy(true);
@@ -145,6 +152,32 @@ export default function UserDetail() {
       });
       setActionMsg('Ação concluída.');
       await load();
+    } catch (err) {
+      setActionMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Personal trainer: a função admin_set_trainer cria/remove o registro em
+  // public.trainers (e encerra os vínculos ao remover). Não há como alguém se
+  // tornar personal sozinho.
+  async function handleToggleTrainer() {
+    const makeTrainer = !trainerCode;
+    if (!window.confirm(makeTrainer
+      ? 'Liberar o ambiente de Personal Trainer para este usuário?'
+      : 'Remover o acesso de Personal Trainer? Os vínculos com alunos serão encerrados.')) return;
+    setBusy(true);
+    setActionMsg('');
+    try {
+      const { error } = await db.rpc('admin_set_trainer', { p_user: id, p_on: makeTrainer });
+      if (error) throw error;
+      await db.from('admin_audit_log').insert({
+        admin_id: adminUser.id, target_user_id: id,
+        action: makeTrainer ? 'promoteTrainer' : 'demoteTrainer', details: null,
+      });
+      setActionMsg('Ação concluída.');
+      await loadTrainer();
     } catch (err) {
       setActionMsg(`Erro: ${err.message}`);
     } finally {
@@ -260,6 +293,7 @@ export default function UserDetail() {
           detail={detail} adminUser={adminUser} busy={busy} recoveryLink={recoveryLink}
           isBanned={isBanned} hasProfile={hasProfile}
           onRunAction={runAction} onToggleAdmin={handleToggleAdmin} onGeneratePlan={handleGeneratePlan}
+          trainerCode={trainerCode} onToggleTrainer={handleToggleTrainer}
         />
       )}
     </div>

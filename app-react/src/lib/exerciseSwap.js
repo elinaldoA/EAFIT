@@ -46,10 +46,10 @@ export function pickAlternatives({ current, library, nivel, dayNames = [], avoid
 let libraryPromise = null;
 
 // A biblioteca muda raramente: busca uma vez por sessão (e refaz se falhar).
-function fetchLibrary() {
+export function fetchLibrary() {
   if (!libraryPromise) {
     libraryPromise = db.from('exercise_library')
-      .select('nome, grupo_muscular, tipo, equipamento, tecnica, is_post_workout, nivel_minimo')
+      .select('nome, grupo_muscular, tipo, equipamento, series, reps, descanso, tecnica, is_post_workout, nivel_minimo')
       .then(({ data, error }) => {
         if (error) throw error;
         return data || [];

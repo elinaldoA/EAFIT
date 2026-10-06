@@ -60,6 +60,7 @@ jobs:
           supabase/functions/delete-account/index.ts
           supabase/functions/send-scheduled-broadcast/index.ts
           supabase/functions/send-engagement/index.ts
+          supabase/functions/trainer-push/index.ts
 
   push-migrations:
     needs: test
@@ -101,6 +102,6 @@ jobs:
           deploy send-reminders --no-verify-jwt
           deploy send-scheduled-broadcast --no-verify-jwt
           deploy send-engagement --no-verify-jwt
-          for fn in send-push delete-account admin-users admin-broadcast admin-generate-plan; do
+          for fn in send-push delete-account admin-users admin-broadcast admin-generate-plan trainer-push; do
             deploy "$fn"
           done

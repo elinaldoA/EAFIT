@@ -3,6 +3,7 @@ import { useAuth } from '../context/useAuth';
 import { useAppConfig } from '../context/useAppConfig';
 import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
 import ProfilePauseSection from '../components/ProfilePauseSection';
+import ProfileTrainerSection from '../components/ProfileTrainerSection';
 import { activePause, formatDayBR } from '../lib/pause';
 import { isFlagOn } from '../lib/appConfig';
 import { useToast } from '../context/useToast';
@@ -30,7 +31,7 @@ export default function PerfilPage({ active }) {
   const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
   const toast = useToast();
   const { config } = useAppConfig();
-  const { markPending, refreshPlan } = useWorkout();
+  const { markPending, refreshPlan, planByTrainer } = useWorkout();
 
   const md = user?.user_metadata || {};
   const [nome, setNome] = useState(md.nome || localStorage.getItem('profile_nome') || '');
@@ -125,6 +126,7 @@ export default function PerfilPage({ active }) {
       toast('⚠️ Preencha peso e altura antes de gerar um novo treino');
       return;
     }
+    if (planByTrainer && !window.confirm('Seu plano atual foi montado pelo seu personal. Gerar um novo treino automático vai substituí-lo (ele continua salvo em "Editar treino"). Continuar?')) return;
     if (!window.confirm('Isso cria um novo plano de treino com base nos seus dados atuais e o ativa. Seus planos existentes continuam salvos e podem ser reativados em "Editar treino". Continuar?')) return;
 
     setRegenerating(true);
@@ -287,6 +289,9 @@ export default function PerfilPage({ active }) {
           summary={activePause(user.user_metadata, todayDate()) ? `Pausado até ${formatDayBR(activePause(user.user_metadata, todayDate()).to)}` : 'Viagem ou doença? Pause sem perder a sequência'}
         >
           <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
+        </CollapsibleCard>
+        <CollapsibleCard icon="🤝" title="Meu personal" summary="Vincule-se ao seu personal trainer">
+          <ProfileTrainerSection toast={toast} />
         </CollapsibleCard>
         <CollapsibleCard icon="💾" title="Exportar e backup" summary="CSV, JSON ou relatório para imprimir">
           <ExportSection exporting={exporting} onExport={handleExport} />

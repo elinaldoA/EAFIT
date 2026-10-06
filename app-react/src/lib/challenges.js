@@ -8,6 +8,8 @@ export const DURATION_OPTIONS = [7, 14, 30];
 const ERRORS = {
   invalid_code: 'Código não encontrado. Confira com quem te convidou.',
   challenge_ended: 'Esse desafio já terminou.',
+  no_recipients: 'Nenhum aluno vinculado para participar.',
+  not_authorized: 'Sem permissão para essa ação.',
   challenge_full: 'Esse desafio já está com 20 participantes.',
   too_many_challenges: 'Você já tem 5 desafios em andamento. Aguarde algum terminar.',
 };
@@ -49,6 +51,12 @@ export function daysLeft(c, today) {
   return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86400000);
 }
 
+// Recado que avisa a turma de um desafio criado pelo personal.
+export function classChallengeMessage(title, endDate) {
+  const [, m, d] = endDate.split('-');
+  return `Novo desafio da turma: "${title}", até ${d}/${m}. Vence quem treinar mais dias! Acompanhe em Dashboard → Treinos → Desafios.`;
+}
+
 export function inviteText(c) {
   return `Bora treinar juntos? Entra no desafio "${c.title}" no meu app de treino com o código ${c.invite_code} (Dashboard → Treinos → Desafios).`;
 }
@@ -71,6 +79,20 @@ export async function createChallenge(title, start, end) {
   const { data, error } = await db.rpc('create_challenge', { p_title: title, p_start: start, p_end: end });
   if (error) throw error;
   return data;
+}
+
+// Personal: cria o desafio e coloca os alunos ativos (clientIds vazio = todos).
+export async function createClassChallenge(title, start, end, clientIds) {
+  const { data, error } = await db.rpc('trainer_create_challenge', {
+    p_title: title, p_start: start, p_end: end, p_clients: clientIds && clientIds.length ? clientIds : null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteClassChallenge(id) {
+  const { error } = await db.rpc('trainer_delete_challenge', { p_id: id });
+  if (error) throw error;
 }
 
 export async function joinChallenge(code) {

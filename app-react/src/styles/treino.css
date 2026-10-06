@@ -654,3 +654,5 @@
   cursor: pointer;
 }
 .checkin__opt--on { opacity: 1; border-color: var(--accent, currentColor); background: var(--surface-2, rgba(255,255,255,.06)); }
+
+.trainer-plan-note { margin: 0; font-size: 0.8rem; color: var(--primary-ink, var(--primary)); font-weight: 700; }

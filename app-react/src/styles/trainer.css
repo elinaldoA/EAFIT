@@ -1,0 +1,54 @@
+/* ── Ambiente do Personal Trainer ── */
+.trainer-topbar__title { font-weight: 800; font-size: 1rem; }
+.trainer-topbar__title span { color: var(--primary); font-weight: 700; }
+.trainer-page { display: flex; flex-direction: column; gap: 12px; padding-bottom: 16px; }
+
+.trainer-badge {
+  position: absolute; top: 4px; right: calc(50% - 22px);
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+  background: var(--error); color: #fff; font-size: 0.65rem; font-weight: 800;
+  display: grid; place-items: center;
+}
+.bottom-nav .nav-item { position: relative; }
+
+.trainer-code { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.trainer-code__label { display: block; font-size: 0.75rem; color: var(--text-muted); }
+.trainer-code__value { font-size: 1.4rem; letter-spacing: .12em; }
+.trainer-summary { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-muted); }
+.trainer-summary strong { color: var(--text); }
+.trainer-summary__warn strong { color: var(--warning); }
+.trainer-delta { font-weight: 600; font-size: 0.8rem; color: var(--text-muted); }
+
+.client-row { width: 100%; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 6px; color: inherit; font: inherit; }
+.client-row__main { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.client-row__meta { display: flex; gap: 12px; font-size: 0.78rem; color: var(--text-muted); flex-wrap: wrap; }
+.client-name { font-size: 1.05rem; }
+.client-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+.client-badge--ok { color: var(--success); border-color: var(--success); }
+.client-badge--atencao { color: var(--warning); border-color: var(--warning); }
+.client-badge--risco { color: var(--error); border-color: var(--error); }
+.client-badge--novo, .client-badge--pausado { color: var(--text-muted); }
+
+.trainer-consent { display: flex; align-items: flex-start; gap: 8px; font-size: 0.8rem; color: var(--text-muted); margin: 8px 0; }
+.trainer-consent input { margin-top: 3px; }
+
+/* recados */
+.sent-msg { padding: 10px 0; border-top: 1px solid var(--border); }
+.sent-msg:first-of-type { border-top: 0; }
+.sent-msg__head { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8rem; font-weight: 700; }
+.sent-msg__head small, .sent-msg__read { color: var(--text-muted); font-weight: 400; }
+.sent-msg__body { margin: 4px 0; font-size: 0.88rem; white-space: pre-wrap; }
+
+.personal-msg {
+  display: flex; flex-direction: column; gap: 6px; padding: 12px;
+  background: var(--primary-glow, rgba(249, 115, 22, .12)); border: 1px solid var(--primary);
+  border-radius: var(--r-lg);
+}
+.personal-msg__title { font-weight: 800; font-size: 0.88rem; }
+.personal-msg__body { margin: 0; font-size: 0.88rem; white-space: pre-wrap; }
+.personal-msg .btn { align-self: flex-start; }
+
+.personal-history { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.personal-history__item { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); }
+.personal-history__item small { color: var(--text-muted); }
+.personal-history__item p { margin: 2px 0 0; font-size: 0.85rem; white-space: pre-wrap; }

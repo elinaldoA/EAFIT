@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('./supabase', () => ({ db: {} }));
 
 import {
-  normalizeCode, validateChallenge, challengeStatus, daysLeft, addDaysStr, friendlyChallengeError, inviteText,
+  normalizeCode, validateChallenge, challengeStatus, daysLeft, addDaysStr, friendlyChallengeError, inviteText, classChallengeMessage,
 } from './challenges';
 
 describe('normalizeCode', () => {
@@ -50,5 +50,13 @@ describe('textos', () => {
     const t = inviteText({ title: 'Turma', invite_code: 'A1B2C3' });
     expect(t).toContain('"Turma"');
     expect(t).toContain('A1B2C3');
+  });
+});
+
+describe('desafio da turma', () => {
+  it('o recado cita o nome e a data final', () => {
+    const t = classChallengeMessage('Turma de outubro', '2026-10-31');
+    expect(t).toContain('"Turma de outubro"');
+    expect(t).toContain('até 31/10');
   });
 });

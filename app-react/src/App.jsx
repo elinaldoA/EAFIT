@@ -23,6 +23,8 @@ import BootSplash from './components/BootSplash';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import AnnouncementBanner from './components/AnnouncementBanner';
+import TrainerShell from './trainer/TrainerShell';
+import { useTrainerMode } from './hooks/useTrainerMode';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
@@ -46,6 +48,7 @@ function Shell() {
   const { user, authLoading, recoveryMode } = useAuth();
   const { config } = useAppConfig();
   const [page, setPage] = useHashTab(TABS, 'treino');
+  const { isTrainer, mode, setMode } = useTrainerMode(user?.id);
   useDayRollover();
 
   // Este aparelho já teve conta logada: a tela de acesso abre em "Entrar".
@@ -59,7 +62,8 @@ function Shell() {
   if (authLoading) return <BootSplash />;
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;
 
-  const needsOnboarding = user && !user.user_metadata?.peso;
+  const trainerView = !!user && isTrainer && mode === 'trainer';
+  const needsOnboarding = user && !trainerView && !user.user_metadata?.peso;
 
   return (
     <div className="shell">
@@ -67,8 +71,9 @@ function Shell() {
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}
+      {trainerView && <TrainerShell onSwitchToStudent={() => setMode('aluno')} />}
 
-      {user && !needsOnboarding && (
+      {user && !needsOnboarding && !trainerView && (
         <AvatarProvider>
           <WorkoutProvider>
             <ReminderScheduler />
@@ -76,6 +81,9 @@ function Shell() {
               <header className="topbar">
                 <TopbarProfile />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {isTrainer && (
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>🧑‍🏫 Personal</button>
+                  )}
                   <ThemeToggle />
                   <div className="topbar__auth"><UserChip /></div>
                 </div>

@@ -111,6 +111,7 @@ export function WorkoutProvider({ children }) {
   const [workoutIds, setWorkoutIds] = useState({});
   const [activePlanDays, setActivePlanDays] = useState([]);
   const [planExpired, setPlanExpired] = useState(false);
+  const [planByTrainer, setPlanByTrainer] = useState(false);
   const [planStartDate, setPlanStartDate] = useState(null);
   const [planEndDate, setPlanEndDate] = useState(null);
   const [syncStatus, setSyncStatus] = useState(() => (queueSize() > 0 ? 'pending' : 'ok'));
@@ -140,6 +141,7 @@ export function WorkoutProvider({ children }) {
       const plan = await fetchActivePlan(user.id, user.user_metadata);
       const days = plan.days;
       setPlanExpired(!!plan.expiredNoSuccessor);
+      setPlanByTrainer(!!plan.byTrainer);
       setPlanStartDate(plan.startDate || null);
       setPlanEndDate(plan.endDate || null);
       if (plan.switchInfo) {
@@ -327,7 +329,7 @@ export function WorkoutProvider({ children }) {
   }
 
   return (
-    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays, planExpired, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, markPending, refreshPlan: loadUserData }}>
+    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, markPending, refreshPlan: loadUserData }}>
       {children}
     </WorkoutContext.Provider>
   );

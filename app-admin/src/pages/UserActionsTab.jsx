@@ -1,6 +1,6 @@
 export default function UserActionsTab({
   detail, adminUser, busy, recoveryLink, isBanned, hasProfile,
-  onRunAction, onToggleAdmin, onGeneratePlan,
+  onRunAction, onToggleAdmin, onGeneratePlan, trainerCode, onToggleTrainer,
 }) {
   return (
     <div className="card stack">
@@ -26,6 +26,9 @@ export default function UserActionsTab({
             {detail.is_admin ? 'Remover admin' : 'Tornar admin'}
           </button>
         )}
+        <button className="btn" disabled={busy} onClick={onToggleTrainer}>
+          {trainerCode ? `Remover personal (código ${trainerCode})` : 'Tornar personal trainer'}
+        </button>
         <button className="btn btn--danger" disabled={busy} onClick={() => onRunAction('deleteUser', {}, 'Excluir esta conta e todos os dados permanentemente?')}>
           Excluir conta
         </button>

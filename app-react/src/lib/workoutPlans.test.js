@@ -23,7 +23,7 @@ function chainResolving(resultFactory) {
     insert(payload) { chain._payload = payload; return chain; },
     update(payload) { chain._payload = payload; return chain; },
     delete() { return chain; },
-    select: () => chain,
+    select: (cols) => { chain._cols = cols; return chain; },
     eq: () => chain,
     neq: () => chain,
     order: () => chain,
@@ -160,9 +160,15 @@ describe('fetchActivePlan (fluxo de vencimento do ciclo)', () => {
     let i = 0;
     mockDb.from.mockImplementation((table) => {
       if (table === 'workout_plans') {
-        const factory = factories[Math.min(i, factories.length - 1)];
-        i += 1;
-        return chainResolving(factory);
+        // A consulta de created_by (plano do personal) não entra na fila:
+        // responde "sem personal" e deixa as demais na ordem prevista.
+        const chain = chainResolving((payload) => {
+          if (chain._cols === 'created_by') return { data: null, error: null };
+          const factory = factories[Math.min(i, factories.length - 1)];
+          i += 1;
+          return typeof factory === 'function' ? factory(payload) : factory;
+        });
+        return chain;
       }
       if (table === 'plan_days') {
         return chainResolving((payload) => (payload ? { data: { id: 'day-id', ...payload }, error: null } : { data: [], error: null }));
@@ -343,5 +349,36 @@ describe('banco sem as RPCs de plano (migration não aplicada)', () => {
   it('outros erros da RPC continuam sendo lançados', async () => {
     mockDb.rpc.mockResolvedValue({ data: null, error: { code: '42501', message: 'rls' } });
     await expect(createGeneratedPlan('u1', 'Novo', [])).rejects.toMatchObject({ code: '42501' });
+  });
+});
+
+describe('fetchActivePlan com plano do personal', () => {
+  const plan = (end) => ({ id: 'p-trainer', name: 'Do personal', created_at: '2024-01-01', start_date: '2020-01-01', end_date: end, duration_weeks: 4, next_plan_id: null, regression_plan_id: null });
+
+  function mockTrainerPlan(endDate) {
+    mockDb.from.mockImplementation((table) => {
+      if (table === 'workout_plans') {
+        const chain = chainResolving(() => (chain._cols === 'created_by'
+          ? { data: { created_by: 'trainer-1' }, error: null }
+          : { data: [plan(endDate)], error: null }));
+        return chain;
+      }
+      return chainResolving({ data: [], error: null });
+    });
+  }
+
+  it('vencido: não gera ciclo novo nem troca, só marca como vencido', async () => {
+    evaluateCycleEvolution.mockReset();
+    mockTrainerPlan('2020-02-01');
+    const result = await fetchActivePlan('u1', { peso: 80, altura: 180, nivel: 'iniciante', meta: 'massa' });
+    expect(result).toMatchObject({ id: 'p-trainer', byTrainer: true, expiredNoSuccessor: true });
+    expect(evaluateCycleEvolution).not.toHaveBeenCalled();
+  });
+
+  it('sem prazo: não ganha ciclo padrão automático', async () => {
+    mockTrainerPlan(null);
+    const result = await fetchActivePlan('u1', {});
+    expect(result).toMatchObject({ byTrainer: true, endDate: null });
+    expect(result.expiredNoSuccessor).toBeUndefined();
   });
 });

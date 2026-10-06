@@ -7,7 +7,7 @@ import {
   fetchLeaderboard,
 } from '../lib/challenges';
 
-function Leaderboard({ id }) {
+export function Leaderboard({ id }) {
   const [rows, setRows] = useState(null);
   useEffect(() => {
     let active = true;
@@ -111,7 +111,7 @@ export default function Challenges() {
               <span className="challenge__title">{c.title}</span>
               <span className="challenge__meta">
                 {status === 'encerrado' ? 'Encerrado' : status === 'futuro' ? 'Ainda não começou' : left === 0 ? 'Último dia' : `${left} dia(s) restantes`}
-                {' · '}{c.members} pessoa(s) · você em {c.rank}º ({c.score})
+                {' · '}{c.members} pessoa(s){c.rank === null ? ' · você é o coach' : ` · você em ${c.rank}º (${c.score})`}
               </span>
             </button>
             {expanded && (

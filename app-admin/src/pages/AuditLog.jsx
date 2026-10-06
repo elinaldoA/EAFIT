@@ -19,6 +19,8 @@ const ACTION_LABEL = {
   broadcastPush: 'Notificação em massa',
   updateAppSettings: 'Alterou configurações do app',
   promoteAdmin: 'Promoveu a admin',
+  promoteTrainer: 'Liberou como personal trainer',
+  demoteTrainer: 'Removeu o acesso de personal trainer',
   demoteAdmin: 'Removeu admin',
   generateWorkout: 'Gerou novo treino',
 };

@@ -233,6 +233,18 @@ async function applyPlanExpiry(userId, plan, days, meta) {
   return { switched: true, evaluation, successorName: successor.name };
 }
 
+// Plano montado pelo personal (workout_plans.created_by). Consulta à parte e
+// tolerante: se a coluna ainda não existir (migration pendente), o plano é
+// tratado como do próprio usuário em vez de quebrar a abertura do app.
+async function fetchIsTrainerPlan(planId) {
+  try {
+    const { data, error } = await db.from('workout_plans').select('created_by').eq('id', planId).maybeSingle();
+    return !error && !!data?.created_by;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchActivePlan(userId, meta = {}) {
   const { data: actives, error } = await db
     .from('workout_plans')
@@ -267,11 +279,15 @@ export async function fetchActivePlan(userId, meta = {}) {
     }
   }
 
+  // Plano do personal: nunca ganha ciclo automático nem é trocado sozinho ao
+  // vencer — quem decide o próximo é o personal.
+  const byTrainer = await fetchIsTrainerPlan(plan.id);
+
   // Backfill: planos ativados antes do ciclo com prazo existir (ou ativados
   // sem duração pelo editor) não têm start_date/end_date. Atribui um ciclo
   // padrão agora, pra data de expiração aparecer e a evolução automática
   // passar a valer também pra planos já em uso.
-  if (!plan.end_date) {
+  if (!plan.end_date && !byTrainer) {
     const startDate = plan.start_date || todayDate();
     const endDate = addWeeks(startDate, DEFAULT_CYCLE_WEEKS);
     const { error: backfillErr } = await db
@@ -283,6 +299,11 @@ export async function fetchActivePlan(userId, meta = {}) {
   }
 
   const days = await fetchPlanDays(plan.id);
+
+  if (byTrainer) {
+    const expired = !!plan.end_date && plan.end_date <= todayDate();
+    return { id: plan.id, name: plan.name, days, startDate: plan.start_date, endDate: plan.end_date, byTrainer: true, ...(expired ? { expiredNoSuccessor: true } : {}) };
+  }
 
   if (plan.end_date && plan.end_date <= todayDate()) {
     const { switched, evaluation, successorName } = await applyPlanExpiry(userId, plan, days, meta);
