@@ -7,6 +7,7 @@ import {
   fetchTemplates, deleteTemplate, assignPlanBulk, templateSummary, templateToPlan, friendlyTemplateError,
 } from '../lib/trainerTemplates';
 import PlanBuilder from './PlanBuilder';
+import Loading from '../components/Loading';
 
 // Aba Modelos do personal: biblioteca de treinos prontos, que podem ser
 // editados como novo modelo ou enviados a vários alunos de uma vez.
@@ -74,7 +75,7 @@ export default function TemplatesPage() {
         <button type="button" className="btn btn--primary btn--sm" onClick={() => setBuilder({ initialPlan: null })}>+ Novo modelo</button>
       </div>
 
-      {!templates && <p className="dash-empty">Carregando…</p>}
+      {!templates && <Loading />}
       {templates && templates.length === 0 && (
         <div className="dash-card"><p className="dash-empty">Nenhum modelo ainda. Crie um aqui ou use "Salvar como modelo" ao montar o treino de um aluno.</p></div>
       )}

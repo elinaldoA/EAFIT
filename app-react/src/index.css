@@ -21,5 +21,6 @@
 @import './styles/error.css'; /* Tela de erro (ErrorBoundary) */
 @import './styles/live.css'; /* Modo treino ao vivo (tela cheia) */
 @import './styles/history.css'; /* Tela de Histórico */
+@import './styles/loading.css'; /* Spinner de halter */
 @import './styles/water.css'; /* Tela de Água */
 @import './styles/trainer.css'; /* Ambiente do Personal Trainer */

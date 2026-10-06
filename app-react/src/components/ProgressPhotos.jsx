@@ -7,6 +7,7 @@ import { fetchPhotos, addPhoto, deletePhoto } from '../lib/progressPhotos';
 import { fmtDate } from '../lib/utils';
 import { todayDate } from '../data/treinoData';
 import { useBackToClose } from '../hooks/useBackToClose';
+import Loading from './Loading';
 
 function PhotoViewer({ photos, index, onClose, onNavigate, onDelete }) {
   useBackToClose(onClose);
@@ -104,7 +105,7 @@ export default function ProgressPhotos() {
     <div className="photo-progress">
       <div className="photo-strip">
         {loading ? (
-          <p className="dash-empty">Carregando…</p>
+          <Loading />
         ) : (
           <>
             {photos.map((p, i) => (

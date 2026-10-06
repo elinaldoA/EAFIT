@@ -10,6 +10,7 @@ import {
   fetchPlanDays, updatePlanDay, addExercise, updateExercise, deleteExercise, reorderExercises,
 } from '../lib/workoutPlans';
 import { useBackToClose } from '../hooks/useBackToClose';
+import Loading from './Loading';
 
 const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -356,7 +357,7 @@ export default function PlanEditorModal({ onClose }) {
         <div className="plan-modal__body">
           {tab === 'planos' && (
             <div className="plan-list">
-              {loadingPlans ? <p className="dash-empty">Carregando…</p> : plans.map(p => (
+              {loadingPlans ? <Loading /> : plans.map(p => (
                 <PlanRow
                   key={p.id} plan={p} allPlans={plans}
                   onSetActive={() => handleSetActive(p.id)}
@@ -400,7 +401,7 @@ export default function PlanEditorModal({ onClose }) {
                 ))}
               </div>
 
-              {loadingDays ? <p className="dash-empty">Carregando…</p> : !day ? (
+              {loadingDays ? <Loading /> : !day ? (
                 <p className="dash-empty">Dia não encontrado neste plano.</p>
               ) : (
                 <>

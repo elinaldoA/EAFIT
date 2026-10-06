@@ -6,6 +6,7 @@ import {
   friendlyChallengeError, inviteText, fetchMyChallenges, createChallenge, joinChallenge, leaveChallenge,
   fetchLeaderboard,
 } from '../lib/challenges';
+import Loading from './Loading';
 
 export function Leaderboard({ id }) {
   const [rows, setRows] = useState(null);
@@ -17,7 +18,7 @@ export function Leaderboard({ id }) {
     return () => { active = false; };
   }, [id]);
 
-  if (!rows) return <p className="dash-empty">Carregando placar…</p>;
+  if (!rows) return <Loading label="Carregando placar…" />;
   return (
     <ol className="challenge__board">
       {rows.map((r, i) => (

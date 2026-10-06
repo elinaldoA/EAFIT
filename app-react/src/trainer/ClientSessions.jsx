@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDate } from '../lib/utils';
 import { buildSessions, formatSets, formatDurationMin, fetchClientSessions, progressionSuggestions } from '../lib/trainerInsights';
+import Loading from '../components/Loading';
 
 // Últimos treinos do aluno, série a série, com a evolução de carga em relação
 // à sessão anterior de cada exercício.
@@ -46,7 +47,7 @@ export default function ClientSessions({ clientId }) {
     )}
     <div className="dash-card">
       <div className="dash-card__title">Últimos treinos</div>
-      {!raw && <p className="dash-empty">Carregando…</p>}
+      {!raw && <Loading />}
       {raw && sessions.length === 0 && <p className="dash-empty">O aluno ainda não registrou treinos.</p>}
 
       {sessions.map(s => {

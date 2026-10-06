@@ -7,6 +7,7 @@ import {
   WEEK_DAYS, DURATION_CHOICES, MAX_EXERCISES, emptyDraft, emptyExercise, toggleDay, moveItem, draftFromPlan,
   buildPlanPayload, fetchClientPlan, assignPlan, friendlyPlanError,
 } from '../lib/trainerPlan';
+import Loading from '../components/Loading';
 
 // Montagem de treino: dias da semana, foco, exercícios (com sugestão da
 // biblioteca do app) e prazo. Com `client`, ao enviar vira o plano ativo do
@@ -39,7 +40,7 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
 
   const byName = useMemo(() => new Map(library.map(r => [r.nome.toLowerCase(), r])), [library]);
 
-  if (!draft) return <section className="page active trainer-page"><p className="dash-empty">Carregando…</p></section>;
+  if (!draft) return <section className="page active trainer-page"><Loading /></section>;
 
   const setDay = (idx, fn) => setDraft(d => ({ ...d, days: d.days.map((day, i) => (i === idx ? fn(day) : day)) }));
   const setEx = (di, ei, patch) => setDay(di, day => ({

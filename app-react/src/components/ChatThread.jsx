@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MAX_MESSAGE } from '../lib/trainerMessages';
 import { fmtDate } from '../lib/utils';
+import Loading from './Loading';
 
 // Conversa entre personal e aluno. `me` = 'trainer' ou 'client' (de que lado
 // está quem vê); `load` busca as mensagens e `send(texto)` grava a resposta.
@@ -40,7 +41,7 @@ export default function ChatThread({ me, onError, load, send, onLoaded, sendLabe
   return (
     <div className="chat">
       <div className="chat__list" role="log" aria-label="Conversa">
-        {!items && <p className="dash-empty">Carregando…</p>}
+        {!items && <Loading />}
         {items && items.length === 0 && <p className="dash-empty">Nenhuma mensagem ainda.</p>}
         {(items || []).map(m => (
           <div key={m.id} className={m.from === me ? 'chat__msg chat__msg--mine' : 'chat__msg'}>

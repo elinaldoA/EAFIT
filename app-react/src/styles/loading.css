@@ -1,0 +1,51 @@
+
+/* ---------- spinner de halter ---------- */
+
+.dumbbell { display: inline-block; color: var(--text-muted, #a1a1aa); line-height: 0; }
+.dumbbell--sm { width: 32px; }
+.dumbbell--md { width: 56px; }
+.dumbbell--lg { width: 88px; }
+.dumbbell__svg { width: 100%; height: auto; overflow: visible; animation: dumbbell-lift 1.1s ease-in-out infinite; }
+
+@keyframes dumbbell-lift {
+  0%, 100% { transform: translateY(6px) rotate(0); }
+  45%, 55% { transform: translateY(-6px) rotate(-3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dumbbell__svg { animation: none; }
+}
+
+/* ---------- overlay de carregamento (tela cheia, bloqueia a interação) ---------- */
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 8, 12, .72);
+  backdrop-filter: blur(3px);
+  cursor: progress;
+  outline: none;
+}
+
+.loading-overlay__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+  padding: 26px 32px;
+  border-radius: 16px;
+  background: var(--surface, #17171b);
+  border: 1px solid var(--border, #26262b);
+  color: var(--text, #ececef);
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .7);
+}
+
+.loading-overlay__pct { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.loading-overlay__bar { width: 100%; height: 4px; border-radius: 4px; background: var(--surface-3, #27272a); overflow: hidden; }
+.loading-overlay__bar > span { display: block; height: 100%; background: var(--primary, #f97316); border-radius: 4px; transition: width .12s linear; }
+.loading-overlay__label { font-size: .8rem; color: var(--text-muted, #a1a1aa); }

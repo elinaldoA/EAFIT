@@ -3,6 +3,7 @@ import { fetchClients } from '../lib/trainer';
 import { fetchSentMessages, groupSent, recipientsLabel } from '../lib/trainerMessages';
 import { fmtDate } from '../lib/utils';
 import MessageComposer from './MessageComposer';
+import Loading from '../components/Loading';
 
 // Aba Recados do personal: escolhe quem recebe (todos ou alunos específicos),
 // envia e acompanha o histórico com o "lido" de cada aluno.
@@ -53,7 +54,7 @@ export default function MessagesPage() {
 
       <div className="dash-card">
         <div className="dash-card__title">Enviados</div>
-        {!sent && <p className="dash-empty">Carregando…</p>}
+        {!sent && <Loading />}
         {sent && groups.length === 0 && <p className="dash-empty">Nenhum recado enviado ainda.</p>}
         {groups.map(g => {
           const read = g.recipients.filter(r => r.read).length;
