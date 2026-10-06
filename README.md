@@ -5,7 +5,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 🔗 **App em produção:** https://elinaldoa.github.io/EAFIT/
 📣 **Landing page:** https://elinaldoa.github.io/EAFIT/landing/
 
-<img src="docs/landing-demo.gif" alt="Demonstração das telas de Treino, Água, Evolução e Perfil do EAFIT" width="280" />
+<img src="app-react/public/landing/img/app-treino.webp" alt="Tela de Treino do EAFIT" width="240" /> <img src="app-react/public/landing/img/app-agua.webp" alt="Tela de Água do EAFIT" width="240" />
 
 ## Funcionalidades
 

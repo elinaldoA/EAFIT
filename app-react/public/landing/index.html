@@ -611,6 +611,16 @@
     .step h3 { margin: 0 0 6px; font-size: 18px; }
     .step p { margin: 0; color: var(--text-muted); font-size: 15px; }
 
+    /* ---------- telas reais ---------- */
+    .shots { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(20px, 4vw, 44px); }
+    .shot { margin: 0; width: min(100%, 270px); text-align: center; }
+    .shot img {
+      display: block; width: 100%; height: auto; border-radius: 30px; border: 6px solid var(--phone-frame);
+      box-shadow: var(--shadow-lg); background: var(--surface);
+    }
+    .shot figcaption { margin-top: 16px; color: var(--text-muted); font-size: 14.5px; }
+    .shot figcaption strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 2px; }
+
     /* ---------- para quem é ---------- */
     .audience .features { grid-template-columns: repeat(4, 1fr); }
     @media (max-width: 980px) { .audience .features { grid-template-columns: repeat(2, 1fr); } }
@@ -1447,6 +1457,27 @@
           <div class="step reveal"><span class="num">1</span><h3>Crie sua conta</h3><p>Só e-mail e senha. Abre direto no navegador do celular ou do computador.</p></div>
           <div class="step reveal reveal-d1"><span class="num">2</span><h3>Conte seu objetivo</h3><p>Peso, altura, objetivo e nível — o plano da semana sai na hora.</p></div>
           <div class="step reveal reveal-d2"><span class="num">3</span><h3>Treine, acompanhe e desafie</h3><p>Marque as séries, veja gráficos e recordes crescerem e convide os amigos para um desafio.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== TELAS REAIS ========== -->
+    <!-- Prints reais do app (conta anonimizada: nome "Ana"). Refazer quando a UI mudar. -->
+    <section data-section="screens">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>O app de verdade, sem maquiagem</h2>
+          <p>Telas reais do EAFIT no celular: o treino do dia pronto e a hidratação sob controle.</p>
+        </div>
+        <div class="shots">
+          <figure class="shot reveal">
+            <img src="img/app-treino.webp" width="560" height="1211" loading="lazy" alt="Tela Treino do EAFIT: treino de hoje Costas e Bíceps com botão Começar treino, semana atual e lista dos dias" />
+            <figcaption><strong>Treino do dia pronto</strong>Abra, toque em começar e vá marcando as séries.</figcaption>
+          </figure>
+          <figure class="shot reveal reveal-d1">
+            <img src="img/app-agua.webp" width="560" height="1211" loading="lazy" alt="Tela Água do EAFIT: 2,3 litros de 3,5 litros, atalhos de copo, caneca, garrafa e squeeze e gráfico dos últimos 14 dias" />
+            <figcaption><strong>Hidratação sem esforço</strong>Meta pelo seu peso e registro em um toque.</figcaption>
+          </figure>
         </div>
       </div>
     </section>
