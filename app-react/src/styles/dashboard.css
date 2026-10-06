@@ -623,3 +623,15 @@
 .measure-deltas__down { color: var(--success); }
 .measure-deltas__up { color: var(--warning); }
 .measure-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+
+/* ── Desafios com amigos ── */
+.challenge { border: 1px solid var(--border); border-radius: var(--r-lg); margin-bottom: 8px; overflow: hidden; }
+.challenge__head { width: 100%; display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 12px; background: transparent; border: 0; color: inherit; cursor: pointer; }
+.challenge__title { font-weight: 600; font-size: 0.9rem; }
+.challenge__meta { font-size: 0.75rem; color: var(--text-muted); }
+.challenge__body { padding: 0 12px 12px; }
+.challenge__board { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; }
+.challenge__row { display: flex; justify-content: space-between; gap: 8px; padding: 4px 6px; border-radius: 6px; }
+.challenge__row--me { background: var(--surface-2); }
+.challenge__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.challenge__form { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }

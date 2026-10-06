@@ -12,6 +12,7 @@ import BodyAvatar from '../components/BodyAvatar';
 import LineChart from '../components/LineChart';
 import ProgressPhotos from '../components/ProgressPhotos';
 import MonthlyRecap from '../components/MonthlyRecap';
+import Challenges from '../components/Challenges';
 import BodyMeasurements from '../components/BodyMeasurements';
 import CheckinInsights from '../components/CheckinInsights';
 import Skeleton from '../components/Skeleton';
@@ -160,6 +161,7 @@ export default function DashPage({ active }) {
 
       {tab === 'treinos' && (<>
       <MonthlyRecap userId={user.id} allTimeLogs={allTimeLogs} loadingLogs={loadingPR} />
+      <Challenges />
       <div className="dash-card">
         <div className="dash-card__title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
           <div className="dash-card__title" style={{ marginBottom: 0 }}>Visualização Anatômica</div>
