@@ -605,6 +605,14 @@
     .step h3 { margin: 0 0 6px; font-size: 18px; }
     .step p { margin: 0; color: var(--text-muted); font-size: 15px; }
 
+    /* ---------- faixa de números ---------- */
+    .stats-band { padding: 0 0 clamp(40px, 6vw, 72px); }
+    .stats-band[hidden] { display: none; }
+    .stats-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+    .stat { flex: 1 1 180px; max-width: 260px; text-align: center; padding: 22px 16px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
+    .stat b { display: block; font-size: clamp(28px, 4vw, 38px); line-height: 1.1; letter-spacing: -.03em; color: var(--primary-ink); }
+    .stat span { display: block; margin-top: 6px; color: var(--text-muted); font-size: 14px; }
+
     /* ---------- instalar + CTA fixo ---------- */
     .install-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 820px; margin: 0 auto; }
     .install-card { padding: 26px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
@@ -1090,6 +1098,11 @@
       <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"></path><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>Funciona offline</div>
       <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>Grátis e sem anúncios</div>
     </div>
+
+    <!-- ========== NÚMEROS (public.landing_stats; some se os totais ainda forem baixos) ========== -->
+    <section class="stats-band" data-section="stats" id="landing-stats" hidden>
+      <div class="wrap"><div class="stats-grid" id="landing-stats-grid"></div></div>
+    </section>
 
     <!-- ========== COMPARAÇÃO ========== -->
     <section data-section="compare">
@@ -2074,6 +2087,45 @@
         }
         new IntersectionObserver(function (en) { pastHero = !en[0].isIntersecting; sync(); }).observe(hero);
         if (cta) new IntersectionObserver(function (en) { onCta = en[0].isIntersecting; sync(); }).observe(cta);
+      })();
+
+      // ---------- faixa de números reais (RPC landing_stats) ----------
+      // Só mostra um total quando ele já é "bonito" (>= mínimo); se nenhum
+      // passar, ou a RPC falhar, a faixa continua escondida.
+      (function () {
+        var band = document.getElementById('landing-stats');
+        var grid = document.getElementById('landing-stats-grid');
+        if (!band || !grid) return;
+        var TILES = [
+          { key: 'users', min: 50, label: 'pessoas treinando' },
+          { key: 'workouts', min: 100, label: 'treinos concluídos' },
+          { key: 'sets', min: 1000, label: 'séries registradas' },
+        ];
+        function round(n) {
+          var step = n >= 10000 ? 1000 : n >= 1000 ? 100 : 10;
+          return Math.floor(n / step) * step;
+        }
+        fetch(SUPABASE_URL + '/rest/v1/rpc/landing_stats', {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: '{}',
+        })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            if (!d) return;
+            var tiles = TILES.filter(function (t) { return Number(d[t.key]) >= t.min; });
+            if (!tiles.length) return;
+            tiles.push({ value: '200', label: 'exercícios com demonstração' });
+            grid.innerHTML = tiles.map(function (t) {
+              var v = t.value || round(Number(d[t.key])).toLocaleString('pt-BR') + '+';
+              return '<div class="stat"><b>' + v + '</b><span>' + t.label + '</span></div>';
+            }).join('');
+            band.hidden = false;
+          })
+          .catch(function () {});
       })();
 
       // ---------- contagem anônima de visitas (public.page_visits) ----------
