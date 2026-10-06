@@ -1,0 +1,56 @@
+/* ============================================================
+   TUTORIAL GUIADO
+============================================================ */
+.tutorial {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.tutorial__dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+/* O destaque é uma caixa transparente cuja sombra gigante escurece o resto. */
+.tutorial__spot {
+  position: fixed;
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72), 0 0 0 2px var(--primary);
+  pointer-events: none;
+  transition: top .2s, left .2s, width .2s, height .2s;
+}
+
+.tutorial__card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.tutorial__card--top { position: absolute; top: calc(var(--topbar-h) + 12px); }
+.tutorial__card--bottom { position: absolute; bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+
+.tutorial__icon { font-size: 2rem; line-height: 1; margin-bottom: 8px; }
+.tutorial__title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+.tutorial__text { font-size: 0.86rem; line-height: 1.5; color: var(--text-muted); margin: 0 0 14px; }
+
+.tutorial__dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; }
+.tutorial__dot { width: 6px; height: 6px; border-radius: var(--r-full); background: var(--border-2); }
+.tutorial__dot--on { width: 18px; background: var(--primary); }
+
+.tutorial__actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tutorial__nav { display: flex; gap: 8px; }

@@ -14,6 +14,7 @@ import ThemeToggle from './components/ThemeToggle';
 import UserChip from './components/UserChip';
 import TopbarProfile from './components/TopbarProfile';
 import BottomNav from './components/BottomNav';
+import Tutorial from './components/Tutorial';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 import { useDayRollover } from './hooks/useDayRollover';
@@ -107,6 +108,7 @@ function Shell() {
               </main>
 
               <BottomNav active={page} onChange={setPage} badges={{ perfil: unreadMessages }} />
+              <Tutorial role="aluno" userId={user.id} onNavigate={setPage} />
             </div>
           </WorkoutProvider>
         </AvatarProvider>

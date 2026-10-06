@@ -24,3 +24,4 @@
 @import './styles/loading.css'; /* Spinner de halter */
 @import './styles/water.css'; /* Tela de Água */
 @import './styles/trainer.css'; /* Ambiente do Personal Trainer */
+@import './styles/tutorial.css'; /* Tutorial guiado (aluno e personal) */

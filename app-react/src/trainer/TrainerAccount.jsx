@@ -4,6 +4,7 @@ import { useToast } from '../context/useToast';
 import { useReminders } from '../hooks/useReminders';
 import { isNotificationSupported } from '../lib/notifications';
 import { getDisplayName } from '../lib/utils';
+import { startTutorial } from '../lib/tutorial';
 import {
   ALERT_OPTIONS, DEFAULT_SETTINGS, INACTIVE_DAY_CHOICES, fetchTrainerSettings, saveTrainerSettings,
 } from '../lib/trainerSettings';
@@ -70,6 +71,12 @@ export default function TrainerAccount({ onSwitchToStudent }) {
             </select>
           </div>
         )}
+      </div>
+
+      <div className="dash-card">
+        <div className="dash-card__title">🎓 Ajuda</div>
+        <p className="profile-field__hint" style={{ marginTop: 0 }}>Reveja o passo a passo de todas as funções do painel.</p>
+        <button type="button" className="btn btn--outline btn--full" onClick={startTutorial}>Ver tutorial</button>
       </div>
 
       <button type="button" className="btn btn--outline btn--full" onClick={logout}>Sair da conta</button>

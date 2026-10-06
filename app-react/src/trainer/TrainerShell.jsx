@@ -2,6 +2,8 @@ import { Suspense, useMemo, useState } from 'react';
 import { useHashTab } from '../hooks/useHashTab';
 import ErrorBoundary from '../components/ErrorBoundary';
 import ThemeToggle from '../components/ThemeToggle';
+import Tutorial from '../components/Tutorial';
+import { useAuth } from '../context/useAuth';
 import TrainerNav from './TrainerNav';
 import AlunosPage from './AlunosPage';
 import TrainerAccount from './TrainerAccount';
@@ -14,6 +16,7 @@ const TABS = ['alunos', 'modelos', 'turma', 'recados', 'conta'];
 // Casca do app no modo Personal: outra navegação e outras páginas, mas o mesmo
 // login, tema e visual do app de aluno.
 export default function TrainerShell({ onSwitchToStudent }) {
+  const { user } = useAuth();
   const [page, setPage] = useHashTab(TABS, 'alunos');
   const [attention, setAttention] = useState(0);
 
@@ -47,6 +50,7 @@ export default function TrainerShell({ onSwitchToStudent }) {
       </main>
 
       <TrainerNav items={items} active={page} onChange={setPage} />
+      <Tutorial role="trainer" userId={user?.id} onNavigate={setPage} />
     </div>
   );
 }

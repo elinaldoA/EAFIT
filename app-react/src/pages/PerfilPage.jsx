@@ -26,6 +26,7 @@ import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSect
 import { NotificationsSection, ExportSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
 import { shareInvite } from '../lib/invite';
+import { startTutorial } from '../lib/tutorial';
 
 export default function PerfilPage({ active }) {
   const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
@@ -296,6 +297,18 @@ export default function PerfilPage({ active }) {
         <CollapsibleCard icon="💾" title="Exportar e backup" summary="CSV, JSON ou relatório para imprimir">
           <ExportSection exporting={exporting} onExport={handleExport} />
         </CollapsibleCard>
+      </div>
+
+      <div className="section-group">
+        <div className="section-group__label">Ajuda</div>
+        <button type="button" className="shortcut-card" onClick={startTutorial}>
+          <span className="collapse__icon" aria-hidden="true">🎓</span>
+          <span className="collapse__text">
+            <span className="collapse__title">Ver tutorial</span>
+            <span className="collapse__summary">Passo a passo de todas as funções do app</span>
+          </span>
+          <span className="collapse__chevron" aria-hidden="true">›</span>
+        </button>
       </div>
 
       <div className="section-group">
