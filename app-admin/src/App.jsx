@@ -21,6 +21,7 @@ import Broadcast from './pages/Broadcast';
 import Templates from './pages/Templates';
 import AuditLog from './pages/AuditLog';
 import Safety from './pages/Safety';
+import Trainers from './pages/Trainers';
 import Profile from './pages/Profile';
 import LandingEditor from './pages/LandingEditor';
 import ExerciseMedia from './pages/ExerciseMedia';
@@ -52,6 +53,7 @@ function AppShell() {
             <Route path="/conteudo" element={<Templates />} />
             <Route path="/auditoria" element={<AuditLog />} />
             <Route path="/seguranca" element={<Safety />} />
+            <Route path="/personais" element={<Trainers />} />
             <Route path="/landing" element={<LandingEditor />} />
             <Route path="/biblioteca" element={<ExerciseLibrary />} />
             <Route path="/demonstracoes" element={<ExerciseMedia />} />

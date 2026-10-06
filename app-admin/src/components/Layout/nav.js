@@ -17,6 +17,7 @@ export const NAV_GROUPS = [
       { to: '/segmentos', label: 'Segmentos', icon: 'target' },
       { to: '/notificacoes', label: 'Notificações', icon: 'bell' },
       { to: '/automacoes', label: 'Notif. automáticas', icon: 'zap' },
+      { to: '/personais', label: 'Personais', icon: 'user' },
       { to: '/seguranca', label: 'Segurança', icon: 'shield' },
     ],
   },
