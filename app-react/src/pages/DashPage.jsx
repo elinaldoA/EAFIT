@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { todayName, todayDate, getMuscleGroupsForDay, getWeeklyGoal } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
+import { useAppConfig } from '../context/useAppConfig';
+import { isFlagOn } from '../lib/appConfig';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { fmtDate, parseLocalDate, toDateStr, calcStreak } from '../lib/utils';
@@ -34,6 +36,7 @@ function readTab() {
 
 export default function DashPage({ active }) {
   const { user } = useAuth();
+  const { config } = useAppConfig();
   const { activePlanDays } = useWorkout();
   const toast = useToast();
   const {
@@ -298,10 +301,12 @@ export default function DashPage({ active }) {
             )}
           </div>
         </div>
-        <div className="dash-card">
-          <div className="dash-card__title">Fotos de progresso</div>
-          <ProgressPhotos />
-        </div>
+        {isFlagOn(config.flags, 'fotos_progresso') && (
+          <div className="dash-card">
+            <div className="dash-card__title">Fotos de progresso</div>
+            <ProgressPhotos />
+          </div>
+        )}
       </div>
       )}
     </section>

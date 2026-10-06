@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useAdminAuth } from '../context/useAdminAuth';
+import { fetchSegments, createSegment, hasFilters } from '../lib/segments';
 import { fetchUsersPage, PAGE_SIZE } from '../lib/users';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
@@ -48,6 +50,10 @@ export default function UsersList() {
   const [nivel, setNivel] = useState('');
   const [meta, setMeta] = useState('');
   const [page, setPage] = useState(0);
+  const [segments, setSegments] = useState([]);
+  const [segmentMsg, setSegmentMsg] = useState('');
+  const { adminUser } = useAdminAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Debounce simples: só dispara a busca 300ms depois do usuário parar de
   // digitar, pra não fazer uma query por tecla.
@@ -57,6 +63,40 @@ export default function UsersList() {
   }, [searchInput]);
 
   useEffect(() => { setPage(0); }, [status, sort, nivel, meta]);
+
+  useEffect(() => { fetchSegments().then(setSegments).catch(() => {}); }, []);
+
+  function applyFilters(f = {}) {
+    setSearchInput(f.search || '');
+    setSearch(f.search || '');
+    setStatus(f.status || '');
+    setNivel(f.nivel || '');
+    setMeta(f.meta || '');
+    setPage(0);
+  }
+
+  // Link vindo da página Segmentos (?segment=ID): aplica os filtros salvos.
+  const segmentParam = searchParams.get('segment');
+  useEffect(() => {
+    if (!segmentParam || !segments.length) return;
+    const seg = segments.find(x => x.id === segmentParam);
+    if (seg) applyFilters(seg.filters);
+    setSearchParams({}, { replace: true });
+  }, [segmentParam, segments, setSearchParams]);
+
+  async function handleSaveSegment() {
+    const filters = { search, status, nivel, meta };
+    const name = window.prompt('Nome do segmento (ex.: Iniciantes inativos):');
+    if (!name?.trim()) return;
+    setSegmentMsg('');
+    try {
+      await createSegment({ name, filters, adminId: adminUser?.id });
+      setSegments(await fetchSegments());
+      setSegmentMsg(`Segmento "${name.trim()}" salvo.`);
+    } catch (err) {
+      setSegmentMsg(`Erro: ${err.message}`);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -111,10 +151,27 @@ export default function UsersList() {
           <select className="input" value={sort} onChange={e => setSort(e.target.value)} aria-label="Ordenar por">
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
+          {segments.length > 0 && (
+            <select className="input" value="" aria-label="Aplicar segmento" onChange={e => {
+              const seg = segments.find(x => x.id === e.target.value);
+              if (seg) applyFilters(seg.filters);
+            }}>
+              <option value="">Aplicar segmento…</option>
+              {segments.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
+            </select>
+          )}
+          <button
+            className="btn btn--small" onClick={handleSaveSegment}
+            disabled={!hasFilters({ search, status, nivel, meta })}
+            title="Guarda os filtros atuais como um segmento reutilizável"
+          >
+            Salvar segmento
+          </button>
           <button className="btn btn--small" onClick={handleExport} disabled={total === 0}>Exportar CSV</button>
         </div>
       </div>
 
+      {segmentMsg && <p className={`form-msg ${segmentMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{segmentMsg}</p>}
       {loading && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
 

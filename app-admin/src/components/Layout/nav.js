@@ -12,6 +12,7 @@ export const NAV_GROUPS = [
     label: 'Gestão',
     links: [
       { to: '/users', label: 'Usuários', icon: 'users' },
+      { to: '/segmentos', label: 'Segmentos', icon: 'target' },
       { to: '/notificacoes', label: 'Notificações', icon: 'bell' },
       { to: '/automacoes', label: 'Notif. automáticas', icon: 'zap' },
       { to: '/seguranca', label: 'Segurança', icon: 'shield' },
@@ -28,6 +29,8 @@ export const NAV_GROUPS = [
   {
     label: 'Sistema',
     links: [
+      { to: '/configuracoes', label: 'Configurações do app', icon: 'sliders' },
+      { to: '/saude', label: 'Saúde do sistema', icon: 'pulse' },
       { to: '/auditoria', label: 'Auditoria', icon: 'clock' },
       { to: '/perfil', label: 'Meu perfil', icon: 'user' },
     ],

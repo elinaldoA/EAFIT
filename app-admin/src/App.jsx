@@ -10,6 +10,9 @@ import Dashboard from './pages/Dashboard';
 import UsersList from './pages/UsersList';
 import Engagement from './pages/Engagement';
 import AutoNotifications from './pages/AutoNotifications';
+import SystemHealth from './pages/SystemHealth';
+import Segments from './pages/Segments';
+import AppSettings from './pages/AppSettings';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import Templates from './pages/Templates';
@@ -37,6 +40,9 @@ function AppShell() {
             <Route path="/users/:id" element={<UserDetail />} />
             <Route path="/engajamento" element={<Engagement />} />
             <Route path="/automacoes" element={<AutoNotifications />} />
+            <Route path="/configuracoes" element={<AppSettings />} />
+            <Route path="/saude" element={<SystemHealth />} />
+            <Route path="/segmentos" element={<Segments />} />
             <Route path="/notificacoes" element={<Broadcast />} />
             <Route path="/conteudo" element={<Templates />} />
             <Route path="/auditoria" element={<AuditLog />} />

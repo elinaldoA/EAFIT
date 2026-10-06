@@ -17,6 +17,7 @@ const ACTION_LABEL = {
   updateProfile: 'Editou perfil',
   deleteUser: 'Excluiu conta',
   broadcastPush: 'Notificação em massa',
+  updateAppSettings: 'Alterou configurações do app',
   promoteAdmin: 'Promoveu a admin',
   demoteAdmin: 'Removeu admin',
   generateWorkout: 'Gerou novo treino',

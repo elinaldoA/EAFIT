@@ -3,6 +3,8 @@ import { db } from '../lib/supabase';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { fetchUsers } from '../lib/users';
 import EmptyState from '../components/EmptyState';
+import { useSearchParams } from 'react-router-dom';
+import { fetchSegments, resolveSegment } from '../lib/segments';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -28,6 +30,10 @@ export default function Broadcast() {
   const [msg, setMsg] = useState('');
   const [history, setHistory] = useState([]);
   const [pending, setPending] = useState([]);
+  const [segments, setSegments] = useState([]);
+  const [segmentId, setSegmentId] = useState('');
+  const [segmentBusy, setSegmentBusy] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const loadExtras = useCallback(async () => {
     const [{ data: hist }, { data: sched }] = await Promise.all([
@@ -45,14 +51,42 @@ export default function Broadcast() {
     loadExtras().catch(() => {});
   }, [loadExtras]);
 
+  // Resolve o segmento na hora (a base muda) e usa os ids como destinatários.
+  const pickSegment = useCallback(async (id, list) => {
+    setSegmentId(id);
+    setSelectedIds([]);
+    const seg = (list || segments).find(x => x.id === id);
+    if (!seg) return;
+    setSegmentBusy(true);
+    try {
+      setSelectedIds(await resolveSegment(seg));
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setSegmentBusy(false);
+    }
+  }, [segments]);
+
+  useEffect(() => {
+    fetchSegments().then(list => {
+      setSegments(list);
+      const fromUrl = searchParams.get('segment');
+      if (fromUrl && list.some(x => x.id === fromUrl)) {
+        setScope('segment');
+        pickSegment(fromUrl, list);
+      }
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function toggleUser(id) {
     setSelectedIds(ids => (ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]));
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (scope === 'specific' && selectedIds.length === 0) {
-      setMsg('Erro: selecione ao menos um usuário.');
+    if (scope !== 'all' && selectedIds.length === 0) {
+      setMsg(scope === 'segment' ? 'Erro: o segmento está vazio ou não foi escolhido.' : 'Erro: selecione ao menos um usuário.');
       return;
     }
     const isScheduled = !!scheduleAt;
@@ -64,7 +98,7 @@ export default function Broadcast() {
 
     if (!window.confirm(
       isScheduled
-        ? `Agendar notificação para ${formatDate(scheduledDate)}, ${scope === 'all' ? 'TODOS os usuários' : `${selectedIds.length} usuário(s) selecionado(s)`}?`
+        ? `Agendar notificação para ${formatDate(scheduledDate)}, ${scope === 'all' ? 'TODOS os usuários' : `${selectedIds.length} usuário(s) ${scope === 'segment' ? 'do segmento' : 'selecionado(s)'}`}?`
         : (scope === 'all' ? 'Enviar notificação para TODOS os usuários?' : `Enviar notificação para ${selectedIds.length} usuário(s) selecionado(s)?`)
     )) return;
 
@@ -74,7 +108,7 @@ export default function Broadcast() {
       if (isScheduled) {
         const { error } = await db.from('scheduled_broadcasts').insert({
           title, body,
-          target_user_ids: scope === 'specific' ? selectedIds : null,
+          target_user_ids: scope !== 'all' ? selectedIds : null,
           scheduled_at: scheduledDate.toISOString(),
           created_by: adminUser.id,
         });
@@ -83,7 +117,7 @@ export default function Broadcast() {
         await loadExtras();
       } else {
         const { data, error } = await db.functions.invoke('admin-broadcast', {
-          body: { title, body, targetUserIds: scope === 'specific' ? selectedIds : undefined },
+          body: { title, body, targetUserIds: scope !== 'all' ? selectedIds : undefined },
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
@@ -127,9 +161,26 @@ export default function Broadcast() {
           <span className="field__label">Destinatários</span>
           <div className="actions-row">
             <label><input type="radio" checked={scope === 'all'} onChange={() => setScope('all')} /> Todos os usuários</label>
-            <label><input type="radio" checked={scope === 'specific'} onChange={() => setScope('specific')} /> Selecionar usuários</label>
+            <label><input type="radio" checked={scope === 'specific'} onChange={() => { setScope('specific'); setSelectedIds([]); }} /> Selecionar usuários</label>
+            {segments.length > 0 && (
+              <label><input type="radio" checked={scope === 'segment'} onChange={() => { setScope('segment'); setSelectedIds([]); setSegmentId(''); }} /> Segmento salvo</label>
+            )}
           </div>
         </div>
+
+        {scope === 'segment' && (
+          <div className="field">
+            <select className="input" value={segmentId} onChange={e => pickSegment(e.target.value)}>
+              <option value="">Escolha um segmento…</option>
+              {segments.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
+            </select>
+            {segmentId && (
+              <span className="user-detail__meta">
+                {segmentBusy ? 'Calculando…' : `${selectedIds.length} usuário(s) no segmento hoje (só quem tem push ativo recebe).`}
+              </span>
+            )}
+          </div>
+        )}
 
         {scope === 'specific' && (
           <div className="card" style={{ maxHeight: 220, overflowY: 'auto' }}>

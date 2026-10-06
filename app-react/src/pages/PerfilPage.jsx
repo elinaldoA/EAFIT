@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../context/useAuth';
+import { useAppConfig } from '../context/useAppConfig';
+import { isFlagOn } from '../lib/appConfig';
 import { useToast } from '../context/useToast';
 import { useAvatar } from '../context/useAvatar';
 import { useWorkout } from '../context/useWorkout';
@@ -24,6 +26,7 @@ import { shareInvite } from '../lib/invite';
 export default function PerfilPage({ active }) {
   const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
   const toast = useToast();
+  const { config } = useAppConfig();
   const { markPending, refreshPlan } = useWorkout();
 
   const md = user?.user_metadata || {};
@@ -245,17 +248,19 @@ export default function PerfilPage({ active }) {
         </button>
       </div>
 
-      <div className="section-group">
-        <div className="section-group__label">Treine junto</div>
-        <button type="button" className="shortcut-card" onClick={handleInvite}>
-          <span className="collapse__icon" aria-hidden="true">🤝</span>
-          <span className="collapse__text">
-            <span className="collapse__title">Convidar amigos</span>
-            <span className="collapse__summary">Mande o link do EAFIT pra quem treina com você</span>
-          </span>
-          <span className="collapse__chevron" aria-hidden="true">›</span>
-        </button>
-      </div>
+      {isFlagOn(config.flags, 'convite_amigos') && (
+        <div className="section-group">
+          <div className="section-group__label">Treine junto</div>
+          <button type="button" className="shortcut-card" onClick={handleInvite}>
+            <span className="collapse__icon" aria-hidden="true">🤝</span>
+            <span className="collapse__text">
+              <span className="collapse__title">Convidar amigos</span>
+              <span className="collapse__summary">Mande o link do EAFIT pra quem treina com você</span>
+            </span>
+            <span className="collapse__chevron" aria-hidden="true">›</span>
+          </button>
+        </div>
+      )}
 
       <div className="section-group">
         <div className="section-group__label">Preferências</div>

@@ -234,3 +234,38 @@ body.modal-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .update-card { animation: none; }
 }
+
+/* ── Aviso do admin (AnnouncementBanner) e tela de manutenção ── */
+.announce {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  background: var(--primary-glow);
+  color: var(--text);
+  border-bottom: 1px solid var(--primary);
+}
+.announce--warning { background: rgba(251, 191, 36, .14); border-bottom-color: var(--warning); }
+.announce--success { background: rgba(74, 222, 128, .14); border-bottom-color: var(--success); }
+.announce__text { flex: 1; min-width: 0; }
+.announce__link { color: var(--primary); font-weight: 600; }
+.announce__close {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.announce__close:hover { color: var(--text); }
+
+.maintenance { z-index: 2000; padding: 24px; text-align: center; }
+.maintenance__title { margin: 4px 0 0; font-size: 1.15rem; }
+.maintenance__text { margin: 0; max-width: 32ch; font-size: 0.9rem; line-height: 1.45; opacity: .8; }

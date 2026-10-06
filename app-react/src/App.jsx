@@ -4,6 +4,8 @@ import { useAuth } from './context/useAuth';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { WorkoutProvider } from './context/WorkoutContext';
+import { AppConfigProvider } from './context/AppConfigContext';
+import { useAppConfig } from './context/useAppConfig';
 import { AvatarProvider } from './context/AvatarContext';
 import AuthScreen from './components/AuthScreen';
 import { markKnownUser } from './lib/knownUser';
@@ -19,6 +21,8 @@ import { useHashTab } from './hooks/useHashTab';
 import ErrorBoundary from './components/ErrorBoundary';
 import BootSplash from './components/BootSplash';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
+import MaintenanceScreen from './components/MaintenanceScreen';
+import AnnouncementBanner from './components/AnnouncementBanner';
 
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
@@ -40,6 +44,7 @@ const TABS = ['treino', 'historico', 'hidratacao', 'dash', 'perfil'];
 
 function Shell() {
   const { user, authLoading, recoveryMode } = useAuth();
+  const { config } = useAppConfig();
   const [page, setPage] = useHashTab(TABS, 'treino');
   useDayRollover();
 
@@ -48,6 +53,9 @@ function Shell() {
     if (user) markKnownUser();
   }, [user]);
 
+  // Manutenção ligada no painel admin: bloqueia o app inteiro (antes até do login).
+  if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;
+
   if (authLoading) return <BootSplash />;
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;
 
@@ -55,6 +63,7 @@ function Shell() {
 
   return (
     <div className="shell">
+      <AnnouncementBanner />
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}
@@ -98,9 +107,11 @@ export default function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
-        <AuthProvider>
-          <Shell />
-        </AuthProvider>
+        <AppConfigProvider>
+          <AuthProvider>
+            <Shell />
+          </AuthProvider>
+        </AppConfigProvider>
       </ToastProvider>
     </ThemeProvider>
   );
