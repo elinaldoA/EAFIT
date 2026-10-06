@@ -6,6 +6,7 @@ export const NAV_GROUPS = [
     links: [
       { to: '/', label: 'Dashboard', icon: 'dashboard', end: true },
       { to: '/engajamento', label: 'Engajamento', icon: 'trend' },
+      { to: '/analise-planos', label: 'Análise dos planos', icon: 'chart' },
     ],
   },
   {

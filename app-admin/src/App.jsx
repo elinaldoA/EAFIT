@@ -14,6 +14,7 @@ import SystemHealth from './pages/SystemHealth';
 import Segments from './pages/Segments';
 import AppSettings from './pages/AppSettings';
 import ExerciseLibrary from './pages/ExerciseLibrary';
+import PlanAnalytics from './pages/PlanAnalytics';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import Templates from './pages/Templates';
@@ -39,6 +40,7 @@ function AppShell() {
             <Route index element={<Dashboard />} />
             <Route path="/users" element={<UsersList />} />
             <Route path="/users/:id" element={<UserDetail />} />
+            <Route path="/analise-planos" element={<PlanAnalytics />} />
             <Route path="/engajamento" element={<Engagement />} />
             <Route path="/automacoes" element={<AutoNotifications />} />
             <Route path="/configuracoes" element={<AppSettings />} />
