@@ -13,6 +13,7 @@ import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
 import PersonalMessages from '../components/PersonalMessages';
+import MyAppointments from '../components/MyAppointments';
 
 export default function TreinoPage() {
   const { user } = useAuth();
@@ -63,6 +64,7 @@ export default function TreinoPage() {
     <section id="page-treino" className="page active">
       <PauseBanner />
       <PersonalMessages />
+      <MyAppointments onlyPending />
       <DailyCheckin />
       {planByTrainer && !planExpired && <p className="trainer-plan-note">📋 Plano montado pelo seu personal</p>}
       {planExpired && (

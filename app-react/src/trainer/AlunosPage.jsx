@@ -4,6 +4,7 @@ import { useToast } from '../context/useToast';
 import { clientAttention, sortClients, fetchClients, fetchTrainerCode } from '../lib/trainer';
 import { weekOverview } from '../lib/trainerSettings';
 import { fetchUnreadReplies } from '../lib/trainerMessages';
+import { fetchTrainerAppointments, upcomingAppointments, formatWhen } from '../lib/trainerAppointments';
 import Skeleton from '../components/Skeleton';
 import ClientDetail from './ClientDetail';
 
@@ -25,12 +26,14 @@ export default function AlunosPage({ onClientsLoaded }) {
   const [filter, setFilter] = useState('todos');
   const [selected, setSelected] = useState(null);
   const [replies, setReplies] = useState({});
+  const [appts, setAppts] = useState([]);
   const today = todayDate();
 
   const reload = useCallback(async () => {
     try {
       const list = await fetchClients();
       setClients(list);
+      fetchTrainerAppointments().then(r => setAppts(upcomingAppointments(r))).catch(() => { /* migration pendente */ });
       fetchUnreadReplies().then(setReplies).catch(() => { /* migration pendente */ });
       onClientsLoaded?.(list.filter(c => ['risco', 'atencao'].includes(clientAttention(c, todayDate()).level)).length);
     } catch (err) {
@@ -84,6 +87,19 @@ export default function AlunosPage({ onClientsLoaded }) {
         <button type="button" className="btn btn--primary btn--sm" disabled={!code} onClick={handleShare}>📤 Convidar aluno</button>
       </div>
       <p className="profile-field__hint">O aluno digita esse código em Perfil → Meu personal e autoriza você a acompanhar o treino dele.</p>
+
+      {appts.length > 0 && (
+        <div className="dash-card">
+          <div className="dash-card__title">📅 Próximas aulas</div>
+          {appts.slice(0, 5).map(a => (
+            <div className="appt" key={a.id}>
+              <div><strong>{formatWhen(a.starts)}</strong> · {a.name}
+                <span className={`appt__status appt__status--${a.status}`}>{a.status === 'confirmed' ? 'Confirmada' : 'Aguardando'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {clients && clients.length > 0 && (
         <>

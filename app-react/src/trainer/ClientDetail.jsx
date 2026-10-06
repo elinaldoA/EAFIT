@@ -14,6 +14,7 @@ import ClientSessions from './ClientSessions';
 import ClientNotes from './ClientNotes';
 import ClientGoals from './ClientGoals';
 import ClientPhotos from './ClientPhotos';
+import ClientAppointments from './ClientAppointments';
 
 const GOALS = {
   massa: 'Ganho de massa', forca: 'Força', emagrecer: 'Emagrecimento',
@@ -173,6 +174,8 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
 
           <ClientGoals clientId={client.id} />
           <ClientNotes clientId={client.id} />
+
+          <ClientAppointments client={client} />
 
           <ClientPhotos client={client} />
 
