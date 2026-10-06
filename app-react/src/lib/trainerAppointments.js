@@ -87,4 +87,10 @@ export async function fetchMyAppointments() {
 export async function respondAppointment(id, status) {
   const { error } = await db.rpc('respond_appointment', { p_id: id, p_status: status });
   if (error) throw error;
+  // Avisa o personal (melhor esforço: a resposta já está salva).
+  try {
+    await db.functions.invoke('reply-push', { body: { appointment_id: id } });
+  } catch (err) {
+    console.warn('reply-push:', err);
+  }
 }
