@@ -22,6 +22,7 @@ export const NAV_GROUPS = [
     label: 'Conteúdo',
     links: [
       { to: '/conteudo', label: 'Conteúdo', icon: 'clipboard' },
+      { to: '/biblioteca', label: 'Biblioteca de exercícios', icon: 'dumbbell' },
       { to: '/demonstracoes', label: 'Demonstrações', icon: 'play' },
       { to: '/landing', label: 'Landing page', icon: 'monitor' },
     ],

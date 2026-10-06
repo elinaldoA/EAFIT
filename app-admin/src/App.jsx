@@ -13,6 +13,7 @@ import AutoNotifications from './pages/AutoNotifications';
 import SystemHealth from './pages/SystemHealth';
 import Segments from './pages/Segments';
 import AppSettings from './pages/AppSettings';
+import ExerciseLibrary from './pages/ExerciseLibrary';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import Templates from './pages/Templates';
@@ -48,6 +49,7 @@ function AppShell() {
             <Route path="/auditoria" element={<AuditLog />} />
             <Route path="/seguranca" element={<Safety />} />
             <Route path="/landing" element={<LandingEditor />} />
+            <Route path="/biblioteca" element={<ExerciseLibrary />} />
             <Route path="/demonstracoes" element={<ExerciseMedia />} />
             <Route path="/perfil" element={<Profile />} />
           </Route>
