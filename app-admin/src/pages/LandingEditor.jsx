@@ -6,10 +6,15 @@ import LandingItemListEditor from '../components/LandingItemListEditor';
 const SECTION_LABELS = {
   hero: 'Topo (hero)',
   highlights: 'Faixa de destaques',
+  stats: 'Faixa de números (automática)',
   compare: 'Comparação (sem plano vs. com EAFIT)',
+  audience: 'Pra quem é',
   showcase: 'Por dentro do app (vitrine com telas)',
   features: 'Funcionalidades',
   steps: 'Como funciona',
+  personal: 'Para personais (modo Personal)',
+  testimonials: 'Depoimentos',
+  install: 'Como instalar',
   faq: 'Perguntas frequentes',
   cta: 'Chamada final',
 };
@@ -305,6 +310,94 @@ export default function LandingEditor() {
                       </label>
                       <label className="field" style={{ gridColumn: '1 / -1' }}><span className="field__label">Resposta</span>
                         <textarea className="input" rows={3} value={item.answer} onChange={e => update({ answer: e.target.value })} />
+                      </label>
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {(section.type === 'stats' || section.type === 'personal') && (
+              <p className="field__label" style={{ margin: 0 }}>
+                {section.type === 'stats'
+                  ? 'Os números vêm do banco e só aparecem quando já são relevantes (50 pessoas, 100 treinos ou 1.000 séries). Aqui você só escolhe se pode aparecer e em que posição.'
+                  : 'O conteúdo desta seção é fixo no HTML da landing; aqui você só escolhe se fica visível e em que posição.'}
+              </p>
+            )}
+
+            {section.type === 'install' && (
+              <div className="form-grid">
+                <label className="field"><span className="field__label">Título</span>
+                  <input className="input" value={section.title} onChange={e => updateSection(idx, { title: e.target.value })} />
+                </label>
+                <label className="field"><span className="field__label">Subtítulo</span>
+                  <input className="input" value={section.subtitle} onChange={e => updateSection(idx, { subtitle: e.target.value })} />
+                </label>
+                <p className="field__label" style={{ gridColumn: '1 / -1', margin: 0 }}>
+                  Os passos de instalação (Android e iPhone) são fixos no HTML da landing.
+                </p>
+              </div>
+            )}
+
+            {section.type === 'audience' && (
+              <div className="stack">
+                <div className="form-grid">
+                  <label className="field"><span className="field__label">Título</span>
+                    <input className="input" value={section.title} onChange={e => updateSection(idx, { title: e.target.value })} />
+                  </label>
+                  <label className="field"><span className="field__label">Subtítulo</span>
+                    <input className="input" value={section.subtitle} onChange={e => updateSection(idx, { subtitle: e.target.value })} />
+                  </label>
+                </div>
+                <LandingItemListEditor
+                  items={section.items}
+                  onChange={items => updateSection(idx, { items })}
+                  emptyItem={{ icon: 'user', title: '', description: '' }}
+                  addLabel="Adicionar perfil"
+                  renderFields={(item, update) => (
+                    <div className="form-grid">
+                      <label className="field"><span className="field__label">Ícone</span>
+                        <select className="input" value={item.icon} onChange={e => update({ icon: e.target.value })}>
+                          {ICON_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </label>
+                      <label className="field"><span className="field__label">Título</span>
+                        <input className="input" value={item.title} onChange={e => update({ title: e.target.value })} />
+                      </label>
+                      <label className="field" style={{ gridColumn: '1 / -1' }}><span className="field__label">Descrição</span>
+                        <textarea className="input" rows={2} value={item.description} onChange={e => update({ description: e.target.value })} />
+                      </label>
+                    </div>
+                  )}
+                />
+              </div>
+            )}
+
+            {section.type === 'testimonials' && (
+              <div className="stack">
+                <div className="form-grid">
+                  <label className="field"><span className="field__label">Título</span>
+                    <input className="input" value={section.title} onChange={e => updateSection(idx, { title: e.target.value })} />
+                  </label>
+                  <label className="field"><span className="field__label">Subtítulo</span>
+                    <input className="input" value={section.subtitle} onChange={e => updateSection(idx, { subtitle: e.target.value })} />
+                  </label>
+                </div>
+                <LandingItemListEditor
+                  items={section.items}
+                  onChange={items => updateSection(idx, { items })}
+                  emptyItem={{ name: '', role: '', text: '' }}
+                  addLabel="Adicionar depoimento"
+                  renderFields={(item, update) => (
+                    <div className="form-grid">
+                      <label className="field"><span className="field__label">Nome</span>
+                        <input className="input" value={item.name} onChange={e => update({ name: e.target.value })} />
+                      </label>
+                      <label className="field"><span className="field__label">Perfil (ex.: Iniciante · 2 meses de treino)</span>
+                        <input className="input" value={item.role} onChange={e => update({ role: e.target.value })} />
+                      </label>
+                      <label className="field" style={{ gridColumn: '1 / -1' }}><span className="field__label">Depoimento</span>
+                        <textarea className="input" rows={3} value={item.text} onChange={e => update({ text: e.target.value })} />
                       </label>
                     </div>
                   )}

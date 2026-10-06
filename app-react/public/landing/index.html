@@ -166,7 +166,7 @@
       --border-2:     #3f3f46;
       --text:         #ececef;
       --text-muted:   #a1a1aa;
-      --text-dim:     #71717a;
+      --text-dim:     #8b8b95;   /* >= 4.5:1 sobre --bg e --surface */
       --primary:      #f97316;
       --primary-h:    #fb923c;
       --primary-glow: rgba(249, 115, 22, .18);
@@ -220,6 +220,12 @@
     p { text-wrap: pretty; }
     .wrap { max-width: 1140px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 28px); position: relative; }
     .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .skip-link {
+      position: absolute; left: 12px; top: -60px; z-index: 100; padding: 10px 16px; border-radius: 10px;
+      background: var(--primary); color: var(--on-primary); font-weight: 700; text-decoration: none;
+    }
+    .skip-link:focus { top: 12px; }
+    main:focus { outline: none; }
     :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 6px; }
 
     /* ---------- botões ---------- */
@@ -605,6 +611,11 @@
     .step h3 { margin: 0 0 6px; font-size: 18px; }
     .step p { margin: 0; color: var(--text-muted); font-size: 15px; }
 
+    /* ---------- para quem é ---------- */
+    .audience .features { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 980px) { .audience .features { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .audience .features { grid-template-columns: 1fr; } }
+
     /* ---------- faixa de números ---------- */
     .stats-band { padding: 0 0 clamp(40px, 6vw, 72px); }
     .stats-band[hidden] { display: none; }
@@ -689,6 +700,8 @@
     .footer-links a:hover { color: var(--text); }
     .footer-credits { flex-basis: 100%; margin: 8px 0 0; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-dim); }
     .footer-credits a { color: var(--text-muted); }
+    .footer-credits.footer-privacy { margin-top: 0; padding-top: 0; border-top: 0; }
+    .footer-credits.footer-privacy + .footer-credits { margin-top: 0; padding-top: 12px; border-top: 0; }
 
     /* ---------- revelar ao rolar (só com JS) ---------- */
     .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
@@ -822,6 +835,8 @@
 <body>
   <script>document.documentElement.classList.add('js');</script>
 
+  <a class="skip-link" href="#top">Pular para o conteúdo</a>
+
   <header class="nav">
     <div class="wrap nav-inner">
       <a class="logo" href="#top" aria-label="EAFIT — início">
@@ -848,7 +863,7 @@
     JS desligado, fetch falhou) e deve espelhar o seed mais recente em
     supabase/migrations/*landing_content*.sql.
   -->
-  <main id="top">
+  <main id="top" tabindex="-1">
     <!-- ========== HERO ========== -->
     <section class="hero" data-section="hero">
       <div class="wrap hero-grid">
@@ -1132,6 +1147,22 @@
               <li>Modo pausa e desafios com amigos mantêm você no ritmo</li>
             </ul>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PARA QUEM É ========== -->
+    <section class="audience" data-section="audience">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Pra quem o EAFIT foi feito</h2>
+          <p>Do primeiro dia na academia ao treino com acompanhamento.</p>
+        </div>
+        <div class="features">
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div><h3>Quem está começando</h3><p>Plano pronto pelo seu nível, demonstração de cada exercício e dicas de técnica pra treinar com segurança.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><h3>Quem quer evoluir</h3><p>Carga da última vez à vista, recordes, heatmap e gráficos pra enxergar o progresso de verdade.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"></path><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg></div><h3>Quem treina em qualquer lugar</h3><p>Funciona offline, sincroniza depois e tem modo pausa pra viagem ou semana corrida.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><h3>Personal trainers</h3><p>Acompanhe alunos, monte e envie treinos, marque aulas com lembrete e crie desafios pra turma.</p></div>
         </div>
       </div>
     </section>
@@ -1705,7 +1736,12 @@
         <li><a href="#faq">Dúvidas</a></li>
         <li><a href="../legal/termos.html">Termos de Uso</a></li>
         <li><a href="../legal/privacidade.html">Privacidade</a></li>
+        <li><a href="mailto:naldoads17@gmail.com">Contato</a></li>
       </ul>
+      <p class="footer-credits footer-privacy">
+        Seus dados ficam na sua conta, protegidos por login (LGPD): você pode exportar ou excluir tudo quando quiser, no Perfil.
+        Dúvidas ou suporte: <a href="mailto:naldoads17@gmail.com">naldoads17@gmail.com</a>.
+      </p>
       <p class="footer-credits">
         Demonstrações: vídeos de <a href="https://wger.de" target="_blank" rel="noopener noreferrer">wger.de</a> (Goulart, CC BY-SA 4.0) e imagens do
         <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener noreferrer">Free Exercise DB</a> (domínio público).
@@ -2016,6 +2052,29 @@
         }
       }
 
+      function renderTestimonials(section, el) {
+        renderHead(section, el);
+        var grid = el.querySelector('.quotes');
+        if (grid && Array.isArray(section.items)) {
+          grid.innerHTML = section.items.map(function (item, i) {
+            var initial = esc(String(item.name || '?').trim().charAt(0).toUpperCase());
+            return '<figure class="quote reveal' + (i % 3 ? ' reveal-d' + (i % 3) : '') + '"><div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>' +
+              '<blockquote>“' + esc(item.text) + '”</blockquote>' +
+              '<figcaption><span class="avatar" aria-hidden="true">' + initial + '</span><span class="who"><strong>' + esc(item.name) + '</strong><span>' + esc(item.role) + '</span></span></figcaption></figure>';
+          }).join('');
+        }
+      }
+
+      function renderAudience(section, el) {
+        renderHead(section, el);
+        var grid = el.querySelector('.features');
+        if (grid) {
+          grid.innerHTML = (section.items || []).map(function (item) {
+            return '<div class="card reveal"><div class="icon-badge">' + svgIcon(item.icon) + '</div><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
+          }).join('');
+        }
+      }
+
       function renderCta(section, el) {
         var band = el.querySelector('.cta-band');
         if (!band) return;
@@ -2028,6 +2087,7 @@
       var RENDERERS = {
         hero: renderHero, highlights: renderHighlights, compare: renderCompare,
         showcase: renderHead, features: renderFeatures, steps: renderSteps, faq: renderFaq, cta: renderCta,
+        testimonials: renderTestimonials, audience: renderAudience, install: renderHead,
       };
 
       function applyContent(content) {
