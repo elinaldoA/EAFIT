@@ -8,6 +8,7 @@ import { formatDate, callAdminAction, computePersonalRecords, callGeneratePlan }
 import UserProfileTab from './UserProfileTab';
 import UserWorkoutsTab from './UserWorkoutsTab';
 import UserActionsTab from './UserActionsTab';
+import UserNotesTab from './UserNotesTab';
 
 export default function UserDetail() {
   const { id } = useParams();
@@ -218,13 +219,13 @@ export default function UserDetail() {
       </div>
 
       <div className="tabs">
-        {['perfil', 'treinos', 'acoes'].map(t => (
+        {['perfil', 'treinos', 'notas', 'acoes'].map(t => (
           <button
             key={t}
             className={`tabs__btn ${tab === t ? 'tabs__btn--active' : ''}`}
             onClick={() => setTab(t)}
           >
-            {t === 'perfil' ? 'Perfil' : t === 'treinos' ? 'Treinos' : 'Ações'}
+            {t === 'perfil' ? 'Perfil' : t === 'treinos' ? 'Treinos' : t === 'notas' ? 'Notas' : 'Ações'}
           </button>
         ))}
       </div>
@@ -247,6 +248,8 @@ export default function UserDetail() {
           personalRecords={personalRecords} discomfortLogs={discomfortLogs}
         />
       )}
+
+      {tab === 'notas' && <UserNotesTab userId={id} adminUser={adminUser} />}
 
       {tab === 'acoes' && (
         <UserActionsTab

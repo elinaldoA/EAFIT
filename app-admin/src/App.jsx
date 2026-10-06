@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import UsersList from './pages/UsersList';
+import Engagement from './pages/Engagement';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import Templates from './pages/Templates';
@@ -33,6 +34,7 @@ function AppShell() {
             <Route index element={<Dashboard />} />
             <Route path="/users" element={<UsersList />} />
             <Route path="/users/:id" element={<UserDetail />} />
+            <Route path="/engajamento" element={<Engagement />} />
             <Route path="/notificacoes" element={<Broadcast />} />
             <Route path="/conteudo" element={<Templates />} />
             <Route path="/auditoria" element={<AuditLog />} />

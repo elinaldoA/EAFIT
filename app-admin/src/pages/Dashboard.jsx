@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchDashboardStats, fetchSignupsByDay } from '../lib/dashboardStats';
+import { fetchDashboardStats } from '../lib/dashboardStats';
 import Loading from '../components/Loading';
 import ActivationFunnel from '../components/ActivationFunnel';
 import RetentionCohorts from '../components/RetentionCohorts';
+import KpiPanel from '../components/KpiPanel';
+import AudienceInsights from '../components/AudienceInsights';
 
 const TILES = [
   { key: 'total_users', label: 'Usuários' },
@@ -18,21 +20,15 @@ const TILES = [
   { key: 'push_enabled_users', label: 'Com push ativo' },
 ];
 
-function formatDay(iso) {
-  const [, m, d] = iso.split('-');
-  return `${d}/${m}`;
-}
-
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
-  const [signups, setSignups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchDashboardStats(), fetchSignupsByDay(14)])
-      .then(([s, sig]) => { if (active) { setStats(s); setSignups(sig); } })
+    fetchDashboardStats()
+      .then(s => { if (active) setStats(s); })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -41,14 +37,15 @@ export default function Dashboard() {
   if (loading) return <Loading />;
   if (error) return <p className="form-msg form-msg--error">{error}</p>;
 
-  const maxCount = Math.max(1, ...signups.map(s => Number(s.count)));
-
   return (
     <div className="stack">
       <div className="page-header">
         <h1 className="page-title">Dashboard</h1>
       </div>
 
+      <KpiPanel />
+
+      <h2 className="section-title" style={{ margin: 0 }}>Base de usuários (totais)</h2>
       <div className="tile-grid">
         {TILES.map(t => (
           <div className="tile" key={t.key}>
@@ -66,22 +63,11 @@ export default function Dashboard() {
         </Link>
       )}
 
+      <AudienceInsights />
+
       <ActivationFunnel />
 
       <RetentionCohorts />
-
-      <div className="card">
-        <h2 className="section-title">Cadastros — últimos 14 dias</h2>
-        <div className="bar-chart" role="img" aria-label="Cadastros por dia, últimos 14 dias">
-          {signups.map(s => (
-            <div className="bar-chart__col" key={s.day} title={`${formatDay(s.day)}: ${s.count} cadastro(s)`}>
-              <span className="bar-chart__count">{s.count > 0 ? s.count : ''}</span>
-              <div className="bar-chart__bar" style={{ height: `${Math.max(4, (Number(s.count) / maxCount) * 100)}%` }} />
-              <span className="bar-chart__day">{formatDay(s.day)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import logoMark from '../../assets/logo-mark.png';
 const links = [
   { to: '/', label: 'Dashboard', icon: '📊', end: true },
   { to: '/users', label: 'Usuários', icon: '👥' },
+  { to: '/engajamento', label: 'Engajamento', icon: '📈' },
   { to: '/notificacoes', label: 'Notificações', icon: '🔔' },
   { to: '/conteudo', label: 'Conteúdo', icon: '📋' },
   { to: '/demonstracoes', label: 'Demonstrações', icon: '🎬' },
