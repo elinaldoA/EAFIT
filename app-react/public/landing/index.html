@@ -211,7 +211,7 @@
     }
     .scr.is-active { opacity: 1; transform: none; }
 
-    .screen-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); }
+    .screen-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; border-radius: 22px; max-width: 360px; background: var(--surface); border: 1px solid var(--border); }
     .screen-tab {
       border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 700;
       padding: 7px 13px; border-radius: 999px; cursor: pointer; position: relative; overflow: hidden;
@@ -596,6 +596,27 @@
     .measure-demo b { color: var(--success); }
     .measure-demo b.up { color: var(--primary-ink); }
 
+    /* telas novas do celular: check-in, troca, retrospectiva, desafios */
+    .m-ck { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .m-ck > div { display: flex; align-items: center; gap: 2px; }
+    .m-ck span { flex: 1; font-size: 10px; color: var(--text-muted); font-weight: 600; }
+    .m-ck i { font-style: normal; font-size: 14px; line-height: 1; padding: 4px; border-radius: 8px; border: 1px solid transparent; opacity: .5; }
+    .m-ck i.on { opacity: 1; border-color: var(--primary); background: var(--primary-glow); }
+    .m-ex { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+    .m-ex > div { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; padding: 7px 8px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); }
+    .m-ex b { font-size: 10.5px; }
+    .m-ex span { font-size: 9px; color: var(--text-muted); }
+    .m-ex em { font-style: normal; font-size: 11px; }
+    .m-sum--3 { grid-template-columns: repeat(3, 1fr); margin-top: 6px; }
+    .m-delta { font-size: 10px; margin-top: 6px; color: var(--text-muted); font-weight: 600; }
+    .m-chal { margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
+    .m-chal b { font-size: 12px; }
+    .m-chal small { font-size: 9px; color: var(--text-muted); }
+    .m-board { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .m-board > div { display: flex; justify-content: space-between; padding: 5px 8px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); font-size: 10px; font-weight: 600; }
+    .m-board > div.me { border-color: var(--primary); background: var(--primary-glow); }
+    .m-pill--wide { display: block; text-align: center; margin-top: 8px; }
+
   </style>
 </head>
 <body>
@@ -669,7 +690,7 @@
                   <div class="m-steps"><i class="done"></i><i class="cur"></i><i></i><i></i><i></i><i></i></div>
                   <div class="m-kicker">Exercício 2 de 6</div>
                   <div class="m-title">Supino Inclinado com Halteres</div>
-                  <div class="m-chips"><span>4 séries</span><span>8–10 reps</span><span>⏱ 90s</span><span>▶ Ver execução</span></div>
+                  <div class="m-chips"><span>4 séries</span><span>8–10 reps</span><span>🔄 Trocar</span><span>▶ Ver execução</span></div>
                   <div class="m-tip">💡 Controle na descida</div>
                   <div class="m-sets">
                     <div class="m-set m-set--head"><span>#</span><span>Carga</span><span>Reps</span><span></span></div>
@@ -790,6 +811,68 @@
                 <div class="m-tabbar" data-tabbar="historico"></div>
               </div>
 
+              <!-- Tela 5: check-in e troca de exercício -->
+              <div class="scr" id="scr-4">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Olá, Ana</b><span class="online"></span><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card">
+                    <span class="m-label">Como você está hoje?</span>
+                    <div class="m-ck">
+                      <div><span>Energia</span><i>😴</i><i>🥱</i><i>🙂</i><i class="on">😃</i><i>⚡</i></div>
+                      <div><span>Sono</span><i>😵</i><i>😪</i><i>🙂</i><i class="on">😌</i><i>😴</i></div>
+                      <div><span>Humor</span><i>😞</i><i>😕</i><i>😐</i><i>🙂</i><i class="on">😄</i></div>
+                    </div>
+                  </div>
+                  <div class="m-tip">✅ Energia alta: ótimo dia para buscar um recorde!</div>
+                  <div class="m-card">
+                    <span class="m-label">Treino de hoje · Peito, Ombro e Tríceps</span>
+                    <div class="m-ex">
+                      <div><b>Supino Reto</b><span>4 × 8–10</span><em>🔄</em></div>
+                      <div><b>Supino Inclinado com Halteres</b><span>4 × 8–10</span><em>🔄</em></div>
+                      <div><b>Elevação Lateral</b><span>3 × 12</span><em>🔄</em></div>
+                    </div>
+                  </div>
+                  <div class="m-foot"><span class="next">▶ Iniciar treino</span></div>
+                </div>
+                <div class="m-tabbar" data-tabbar="treino"></div>
+              </div>
+
+              <!-- Tela 6: retrospectiva e desafios -->
+              <div class="scr" id="scr-5">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Evolução</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card">
+                    <span class="m-label">📅 Retrospectiva · setembro</span>
+                    <div class="m-sum m-sum--3">
+                      <div><b>16</b><span>Treinos</span></div>
+                      <div><b>12h40</b><span>Tempo</span></div>
+                      <div><b>9</b><span>Recordes</span></div>
+                    </div>
+                    <div class="m-delta m-up">▲ 18% vs. mês anterior</div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">🏆 Desafios com amigos</span>
+                    <div class="m-chal">
+                      <b>Turma da firma</b>
+                      <small>5 dias restantes · 4 pessoas · você em 2º</small>
+                      <div class="m-board">
+                        <div><span>1º Carol</span><b>9</b></div>
+                        <div class="me"><span>2º Você</span><b>8</b></div>
+                        <div><span>3º Rafa</span><b>6</b></div>
+                      </div>
+                    </div>
+                    <div class="m-pill m-pill--wide">📤 Convidar · K7M2QX</div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">📏 Medidas · cintura</span>
+                    <div class="m-delta">90 → 86,5 cm <span class="m-up">(-3,5)</span></div>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="dash"></div>
+              </div>
+
             </div>
           </div>
 
@@ -798,6 +881,8 @@
             <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-1" data-tab="1">Água<span class="prog"></span></button>
             <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-2" data-tab="2">Evolução<span class="prog"></span></button>
             <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-3" data-tab="3">Histórico<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-4" data-tab="4">Check-in<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-5" data-tab="5">Desafios<span class="prog"></span></button>
           </div>
         </div>
       </div>
@@ -822,7 +907,7 @@
           <div class="compare-col reveal">
             <span class="compare-tag bad">Sem plano</span>
             <ul>
-              <li>Anota a carga no papel, quando anota</li>
+              <li>Usa apps genéricos que não sabem o seu treino nem a sua carga</li>
               <li>Não lembra quanto levantou na semana passada</li>
               <li>Descansa no achismo, olhando o relógio</li>
               <li>Não sabe se está evoluindo de verdade</li>
