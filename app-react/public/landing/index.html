@@ -539,6 +539,7 @@
     .js .reveal.visible { opacity: 1; transform: none; }
     .js .reveal-d1 { transition-delay: .08s; }
     .js .reveal-d2 { transition-delay: .16s; }
+    .js .reveal-d3 { transition-delay: .24s; }
 
     /* ---------- responsivo ---------- */
     @media (max-width: 980px) {
@@ -617,6 +618,29 @@
     .m-board > div.me { border-color: var(--primary); background: var(--primary-glow); }
     .m-pill--wide { display: block; text-align: center; margin-top: 8px; }
 
+    /* ---------- bônus: personal trainer ---------- */
+    .personal { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .personal-row { margin-bottom: clamp(36px, 6vw, 64px); }
+    .personal-row .show-copy { order: 0 !important; }
+    .p-clients { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .p-clients li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; }
+    .p-warn { color: #fbbf24; }
+    .p-badge { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+    .p-badge--ok { color: var(--success); border-color: var(--success); }
+    .p-badge--atencao { color: #fbbf24; border-color: #fbbf24; }
+    .p-badge--risco { color: var(--error); border-color: var(--error); }
+    .p-badge--pausa { color: var(--text-muted); }
+    .p-msg p { margin: 0 0 10px; font-size: 14px; color: var(--text); }
+    .personal-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .personal-cards .icon-badge { font-size: 22px; }
+    .personal-cards .card h3 { font-size: 16px; }
+    .personal-cards .card p { font-size: 14px; }
+    .personal-cta { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: clamp(28px, 5vw, 48px); padding: 20px 24px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
+    .personal-cta p { margin: 0; color: var(--text-muted); max-width: 640px; }
+    .personal-cta strong { color: var(--text); }
+    @media (max-width: 900px) { .personal-cards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .personal-cards { grid-template-columns: 1fr; } .personal-cta { flex-direction: column; align-items: stretch; text-align: center; } }
+
   </style>
 </head>
 <body>
@@ -632,6 +656,7 @@
         <ul class="nav-links">
           <li><a href="#recursos">Recursos</a></li>
           <li><a href="#como-funciona">Como funciona</a></li>
+          <li><a href="#personal">Para personais</a></li>
           <li><a href="#faq">Dúvidas</a></li>
         </ul>
       </nav>
@@ -1212,6 +1237,60 @@
       </div>
     </section>
 
+    <!-- ========== BONUS: PERSONAL TRAINER ========== -->
+    <section id="personal" class="personal" data-section="personal">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Bônus · para Personal Trainers</span>
+          <h2>É personal? O EAFIT também é a sua ferramenta</h2>
+          <p>Acompanhe todos os seus alunos num só lugar, envie o treino direto para o app deles e mantenha a turma motivada, sem planilha e sem grupo bagunçado.</p>
+        </div>
+
+        <div class="show-row personal-row">
+          <div class="show-copy reveal">
+            <span class="show-tag"><i>🧑‍🏫</i>Modo Personal</span>
+            <h3>Saiba quem precisa de você antes de o aluno sumir</h3>
+            <p>No modo Personal você vê a frequência, a sequência, o peso e as medidas de cada aluno, com um alerta para quem está parado, e age na hora com treino novo ou recado.</p>
+            <ul class="checks">
+              <li>Lista de alunos com quem precisa de atenção no topo</li>
+              <li>Ficha com frequência, evolução de peso, medidas e cargas</li>
+              <li>O aluno autoriza o vínculo e pode encerrá-lo quando quiser</li>
+            </ul>
+          </div>
+          <div class="show-visual reveal reveal-d1" aria-hidden="true">
+            <div style="width:100%;max-width:380px">
+              <div class="panel">
+                <div class="panel-label"><span>Seus alunos · 12</span><span class="p-warn">2 precisam de atenção</span></div>
+                <ul class="p-clients">
+                  <li><b>Rafa</b><span class="p-badge p-badge--risco">Sumido há 9 dias</span></li>
+                  <li><b>Bruno</b><span class="p-badge p-badge--atencao">Parado há 5 dias</span></li>
+                  <li><b>Carol</b><span class="p-badge p-badge--ok">Treinou hoje</span></li>
+                  <li><b>Lia</b><span class="p-badge p-badge--pausa">Em pausa</span></li>
+                </ul>
+              </div>
+              <div class="panel p-msg">
+                <div class="panel-label"><span>💬 Recado para Rafa</span></div>
+                <p>Bora voltar amanhã? Deixei o treino de pernas pronto no seu app. 💪</p>
+                <span class="pill">📤 Enviar · o aluno recebe uma notificação</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="personal-cards">
+          <div class="card reveal"><div class="icon-badge">📋</div><h3>Monte e envie treinos</h3><p>Escolha os dias, os exercícios e a duração. O treino vira o plano do aluno, sem ser trocado sozinho pelo app.</p></div>
+          <div class="card reveal reveal-d1"><div class="icon-badge">💬</div><h3>Recados com notificação</h3><p>Fale com um aluno ou com a turma toda e veja quem já leu.</p></div>
+          <div class="card reveal reveal-d2"><div class="icon-badge">🏆</div><h3>Desafios da turma</h3><p>Crie um desafio e todos os alunos entram na hora. Vence quem treinar mais dias.</p></div>
+          <div class="card reveal reveal-d3"><div class="icon-badge">🔁</div><h3>Seu app, nos dois modos</h3><p>Troque para o modo aluno e treine também. Mesma conta, mesmo app.</p></div>
+        </div>
+
+        <div class="personal-cta reveal">
+          <p><strong>Como ter acesso?</strong> O modo Personal é liberado pela equipe do EAFIT na sua conta. Crie sua conta grátis e peça a liberação.</p>
+          <a class="btn btn-primary" href="../">Criar minha conta</a>
+        </div>
+      </div>
+    </section>
+
     <!-- ========== FAQ ========== -->
     <section id="faq" class="faq" data-section="faq">
       <div class="wrap">
@@ -1256,6 +1335,7 @@
       <ul class="footer-links">
         <li><a href="../">Abrir app</a></li>
         <li><a href="#recursos">Recursos</a></li>
+        <li><a href="#personal">Para personais</a></li>
         <li><a href="#faq">Dúvidas</a></li>
         <li><a href="../legal/termos.html">Termos de Uso</a></li>
         <li><a href="../legal/privacidade.html">Privacidade</a></li>
