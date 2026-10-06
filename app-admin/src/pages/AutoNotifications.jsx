@@ -71,6 +71,12 @@ function RuleCard({ rule, stats, onSaved }) {
         </label>
       </div>
 
+      {rule.per_user_hour && (
+        <p className="user-detail__meta" style={{ margin: 0 }}>
+          ⏰ Quem definiu o horário preferido de treino no app recebe 1h antes dele. O horário abaixo vale só para quem não definiu.
+        </p>
+      )}
+
       <div className="form-grid">
         <label className="field">
           <span className="field__label">Horário de envio (Brasília)</span>

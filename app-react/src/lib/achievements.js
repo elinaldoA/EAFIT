@@ -2,13 +2,18 @@ import { db } from './supabase';
 
 export const BADGES = [
   { id: 'streak_3', emoji: '🔥', title: 'Sequência de 3 dias', desc: 'Complete treinos em 3 dias seguidos', check: s => s.streakDays >= 3 },
+  { id: 'streak_14', emoji: '🔥🔥', title: 'Sequência de 14 dias', desc: 'Complete treinos em 14 dias seguidos', check: s => s.streakDays >= 14 },
   { id: 'streak_7', emoji: '🔥🔥', title: 'Sequência de 7 dias', desc: 'Complete treinos em 7 dias seguidos', check: s => s.streakDays >= 7 },
   { id: 'streak_30', emoji: '🔥🔥🔥', title: 'Sequência de 30 dias', desc: 'Complete treinos em 30 dias seguidos', check: s => s.streakDays >= 30 },
   { id: 'workouts_10', emoji: '💪', title: '10 treinos concluídos', desc: 'Complete 10 treinos', check: s => s.totalTreinos >= 10 },
+  { id: 'workouts_25', emoji: '💪', title: '25 treinos concluídos', desc: 'Complete 25 treinos', check: s => s.totalTreinos >= 25 },
   { id: 'workouts_50', emoji: '🏋️', title: '50 treinos concluídos', desc: 'Complete 50 treinos', check: s => s.totalTreinos >= 50 },
   { id: 'workouts_100', emoji: '🏆', title: '100 treinos concluídos', desc: 'Complete 100 treinos', check: s => s.totalTreinos >= 100 },
+  { id: 'workouts_200', emoji: '👑', title: '200 treinos concluídos', desc: 'Complete 200 treinos', check: s => s.totalTreinos >= 200 },
   { id: 'photo_first', emoji: '📸', title: 'Primeira foto de progresso', desc: 'Adicione uma foto de progresso', check: s => s.totalPhotos >= 1 },
+  { id: 'photo_5', emoji: '🖼️', title: '5 fotos de progresso', desc: 'Adicione 5 fotos de progresso', check: s => s.totalPhotos >= 5 },
   { id: 'weight_10', emoji: '⚖️', title: '10 registros de peso', desc: 'Registre seu peso 10 vezes', check: s => s.totalWeightLogs >= 10 },
+  { id: 'weight_30', emoji: '📉', title: '30 registros de peso', desc: 'Registre seu peso 30 vezes', check: s => s.totalWeightLogs >= 30 },
 ];
 
 export async function fetchUnlockedAchievements(userId) {

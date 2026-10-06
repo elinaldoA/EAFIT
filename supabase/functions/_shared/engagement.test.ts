@@ -34,3 +34,9 @@ Deno.test('renderTemplate limpa placeholder sem valor', () => {
   assertEquals(renderTemplate('Oi {nome}, bora?', {}), 'Oi, bora?');
   assertEquals(renderTemplate('Hoje é dia de {foco}', { foco: null }), 'Hoje é dia de');
 });
+
+Deno.test('isRuleDue: per_user_hour roda em qualquer hora, respeitando o dia da semana', () => {
+  assertEquals(isRuleDue({ send_hour: 17, weekdays: null, per_user_hour: true }, 9, 3), true);
+  assertEquals(isRuleDue({ send_hour: 17, weekdays: [1, 2], per_user_hour: true }, 9, 3), false);
+  assertEquals(isRuleDue({ send_hour: 17, weekdays: [1, 2], per_user_hour: true }, 9, 2), true);
+});

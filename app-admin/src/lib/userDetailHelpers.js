@@ -7,6 +7,9 @@ export const NIVEIS = ['iniciante', 'intermediario', 'avancado'];
 // não compartilham build, então o rótulo é duplicado aqui só pra exibição.
 export const BADGE_LABELS = {
   streak_3: '🔥 Sequência de 3 dias', streak_7: '🔥🔥 Sequência de 7 dias', streak_30: '🔥🔥🔥 Sequência de 30 dias',
+  streak_14: '🔥🔥 Sequência de 14 dias',
+  workouts_25: '💪 25 treinos concluídos', workouts_200: '👑 200 treinos concluídos',
+  photo_5: '🖼️ 5 fotos de progresso', weight_30: '📉 30 registros de peso',
   workouts_10: '💪 10 treinos concluídos', workouts_50: '🏋️ 50 treinos concluídos', workouts_100: '🏆 100 treinos concluídos',
   photo_first: '📸 Primeira foto de progresso',
   weight_10: '⚖️ 10 registros de peso',

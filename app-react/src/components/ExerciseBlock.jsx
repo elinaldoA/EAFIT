@@ -10,6 +10,7 @@ import { allSetsDone } from '../lib/workoutSets';
 import { DiscomfortPanel } from './DiscomfortWidgets';
 import SetRow from './SetRow';
 import ExerciseDemo from './ExerciseDemo';
+import ExerciseSwap from './ExerciseSwap';
 
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
 // destaque no próprio cabeçalho, então o bloco omite os dele.
@@ -77,6 +78,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
   }
 
   const allDone = allSetsDone(ex, setCount);
+  // Troca geral só pros exercícios de força do plano (não o pós-treino) que têm id.
+  const canSwap = !!user && !!ex.id && day.exercicios.some(e => e.nome === ex.nome);
   return (
     <div className="ex-block">
       <div className="ex-block__header">
@@ -126,6 +129,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
           {substituting ? 'Trocando…' : `🔄 Trocar por: ${alternative.nome}`}
         </button>
       )}
+      {canSwap && <ExerciseSwap ex={ex} day={day} user={user} toast={toast} onSwapped={refreshPlan} />}
     </div>
   );
 }

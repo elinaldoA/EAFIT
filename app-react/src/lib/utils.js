@@ -1,4 +1,5 @@
 import { todayDate, DAY_NAMES } from '../data/treinoData';
+import { pausedDaySet, addDays } from './pause';
 
 // Parses a "YYYY-MM-DD" string as a local date at noon, avoiding the UTC
 // midnight parsing of `new Date(str)` shifting the day in negative-offset timezones.
@@ -81,15 +82,27 @@ export function parseRepCeiling(repsStr) {
   return single ? parseInt(single[1], 10) : null;
 }
 
-export function calcStreak(dates) {
+// Sequência de dias seguidos treinando, contando de hoje pra trás. Os dias
+// cobertos por `pauses` (modo pausa, ver lib/pause.js) não quebram a sequência
+// nem somam a ela: o tempo parado congela. `today` existe pra teste.
+export function calcStreak(dates, pauses = [], today = todayDate()) {
   if (!dates.length) return 0;
+  const paused = pausedDaySet(pauses);
   const unique = [...new Set(dates)].sort().reverse();
   let streak = 0;
-  let prev = parseLocalDate(todayDate());
+  let prev = parseLocalDate(today);
   for (const d of unique) {
     const curr = parseLocalDate(d);
     const diff = Math.round((prev - curr) / 86400000);
-    if (diff <= 1) { streak++; prev = curr; }
+    let bridged = diff <= 1;
+    if (!bridged) {
+      // todos os dias entre este treino e o anterior precisam estar em pausa
+      bridged = true;
+      for (let i = 1; i < diff; i++) {
+        if (!paused.has(addDays(d, i))) { bridged = false; break; }
+      }
+    }
+    if (bridged) { streak++; prev = curr; }
     else break;
   }
   return streak;

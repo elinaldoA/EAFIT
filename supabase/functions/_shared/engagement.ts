@@ -4,6 +4,7 @@ export type EngagementRule = {
   kind: string;
   send_hour: number;
   weekdays: number[] | null;
+  per_user_hour?: boolean;
   title: string;
   body: string;
 };
@@ -25,9 +26,16 @@ export function nowInSaoPaulo(now: Date = new Date()): { date: string; hour: num
   return { date, hour, dow };
 }
 
-// A regra dispara agora? (horário exato e, se houver filtro, dia da semana.)
-export function isRuleDue(rule: Pick<EngagementRule, 'send_hour' | 'weekdays'>, hour: number, dow: number): boolean {
-  if (rule.send_hour !== hour) return false;
+// A regra dispara agora? Horário exato e, se houver filtro, dia da semana.
+// Regras com per_user_hour rodam a cada hora: quem recebe em cada hora é
+// decidido no banco (engagement_candidates), pelo horário preferido de cada
+// usuário — aqui só vale o filtro de dia da semana.
+export function isRuleDue(
+  rule: Pick<EngagementRule, 'send_hour' | 'weekdays' | 'per_user_hour'>,
+  hour: number,
+  dow: number,
+): boolean {
+  if (!rule.per_user_hour && rule.send_hour !== hour) return false;
   if (!rule.weekdays || rule.weekdays.length === 0) return true;
   return rule.weekdays.includes(dow);
 }

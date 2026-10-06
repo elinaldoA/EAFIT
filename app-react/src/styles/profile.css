@@ -312,3 +312,7 @@ button.profile-section__title {
 .collapse__divider { height: 1px; background: var(--border); margin: 6px 0; }
 
 .link-btn--danger { color: var(--error); align-self: center; padding: 6px 0; }
+
+/* ── Modo pausa ── */
+.pause-status { margin: 0 0 10px; font-size: 0.85rem; color: var(--warning); }
+.pause-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }

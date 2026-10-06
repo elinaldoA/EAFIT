@@ -11,7 +11,7 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 const DIRECT_USER_TABLES = [
   'progress_photos', 'water_logs',
   'weight_logs', 'achievements', 'push_subscriptions',
-  'exercise_discomfort',
+  'exercise_discomfort', 'body_measurements', 'daily_checkins',
 ];
 
 export async function deleteUserData(admin: SupabaseClient, userId: string): Promise<void> {

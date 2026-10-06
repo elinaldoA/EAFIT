@@ -23,7 +23,7 @@ export function useProfileData(active, user, toast) {
         const total = workouts.length;
         const wStart = getWeekStart();
         const week = workouts.filter(w => w.workout_date >= wStart).length;
-        const streak = calcStreak(workouts.map(w => w.workout_date));
+        const streak = calcStreak(workouts.map(w => w.workout_date), user.user_metadata?.pauses);
 
         setStats({ total, week, streak: streak > 0 ? `${streak}d` : '0d' });
       } catch (err) {

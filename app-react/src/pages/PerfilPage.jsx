@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useAppConfig } from '../context/useAppConfig';
 import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
+import ProfilePauseSection from '../components/ProfilePauseSection';
+import { activePause, formatDayBR } from '../lib/pause';
 import { isFlagOn } from '../lib/appConfig';
 import { useToast } from '../context/useToast';
 import { useAvatar } from '../context/useAvatar';
@@ -279,6 +281,12 @@ export default function PerfilPage({ active }) {
             user={user} updateProfile={updateProfile} toast={toast}
             remindersEnabled={remindersEnabled} toggleReminders={toggleReminders}
           />
+        </CollapsibleCard>
+        <CollapsibleCard
+          icon="⏸" title="Modo pausa"
+          summary={activePause(user.user_metadata, todayDate()) ? `Pausado até ${formatDayBR(activePause(user.user_metadata, todayDate()).to)}` : 'Viagem ou doença? Pause sem perder a sequência'}
+        >
+          <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
         </CollapsibleCard>
         <CollapsibleCard icon="💾" title="Exportar e backup" summary="CSV, JSON ou relatório para imprimir">
           <ExportSection exporting={exporting} onExport={handleExport} />

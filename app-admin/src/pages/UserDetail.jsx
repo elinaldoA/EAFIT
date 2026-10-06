@@ -212,6 +212,10 @@ export default function UserDetail() {
           <p className="user-detail__meta">
             Criado em {formatDate(detail.created_at)} · Último login {formatDate(detail.last_sign_in_at)}
             {' · '}{pushCount > 0 ? `📲 ${pushCount} dispositivo(s) com push ativo` : '📴 sem push ativo'}
+            {md.trainingHour !== undefined && md.trainingHour !== null && <>{' · '}⏰ treina por volta das {String(md.trainingHour).padStart(2, '0')}h</>}
+            {md.pausedUntil && md.pausedUntil >= new Date().toISOString().slice(0, 10) && (
+              <span className="badge badge--warning">⏸ pausado até {md.pausedUntil.split('-').reverse().slice(0, 2).join('/')}</span>
+            )}
             {detail.is_admin && <span className="badge badge--admin">admin</span>}
             {isBanned && <span className="badge badge--danger">banido</span>}
           </p>

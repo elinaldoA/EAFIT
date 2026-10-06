@@ -1,4 +1,5 @@
 import { formatDuration } from './utils';
+import { formatMinutes } from './monthlyRecap';
 import { SHARE_CARD_URL } from './links';
 import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE } from '../data/bodyMuscleMap';
@@ -244,26 +245,90 @@ export async function renderWorkoutSummaryCard(summary) {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
-export async function shareWorkoutSummary(summary) {
-  const blob = await renderWorkoutSummaryCard(summary);
+// Compartilha a imagem pelo share nativo (quando suporta arquivos) ou baixa.
+async function shareImageBlob(blob, filename, title, text) {
   if (!blob) throw new Error('Não foi possível gerar a imagem.');
 
-  const file = new File([blob], 'meu-treino.png', { type: 'image/png' });
+  const file = new File([blob], filename, { type: 'image/png' });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     // Link vai no texto (não em `url`): vários apps descartam `url` quando há
     // arquivo junto, e outros duplicariam o link.
-    await navigator.share({ files: [file], title: 'Meu treino', text: SHARE_TEXT });
+    await navigator.share({ files: [file], title, text });
     return 'shared';
   }
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'meu-treino.png';
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
   return 'downloaded';
+}
+
+export async function shareWorkoutSummary(summary) {
+  const blob = await renderWorkoutSummaryCard(summary);
+  return shareImageBlob(blob, 'meu-treino.png', 'Meu treino', SHARE_TEXT);
+}
+
+// Cartão 9:16 da retrospectiva do mês (mesmo visual/marca do resumo do treino,
+// em laranja pra diferenciar). `recap` vem de buildMonthlyRecap.
+export async function renderMonthlyRecapCard(recap) {
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  gradient.addColorStop(0, '#f97316');
+  gradient.addColorStop(1, '#111827');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 48px system-ui, sans-serif';
+  ctx.fillText('📅 Meu mês no EAFIT', CARD_WIDTH / 2, 190);
+  ctx.font = '600 36px system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(recap.label, CARD_WIDTH / 2, 250);
+
+  const statsGap = 24;
+  const boxH = 190;
+  const boxW = (CONTENT_W - statsGap) / 2;
+  const stats = [
+    [String(recap.treinos), 'treinos'],
+    [formatMinutes(recap.minutes), 'de treino'],
+    [`${recap.volume.toLocaleString('pt-BR')}kg`, 'volume total'],
+    [String(recap.prCount), 'recordes batidos'],
+    [recap.bestStreak ? `${recap.bestStreak} dia(s)` : '—', 'melhor sequência'],
+    [recap.favWeekday || '—', 'dia favorito'],
+  ];
+  let y = 340;
+  stats.forEach(([value, label], i) => {
+    const x = PAD_X + (i % 2) * (boxW + statsGap);
+    drawStatBox(ctx, x, y, boxW, boxH, value, label);
+    if (i % 2 === 1) y += boxH + statsGap;
+  });
+
+  if (recap.deltaPct !== null) {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 38px system-ui, sans-serif';
+    const arrow = recap.deltaPct > 0 ? '▲' : recap.deltaPct < 0 ? '▼' : '●';
+    ctx.fillText(`${arrow} ${Math.abs(recap.deltaPct)}% treinos vs. mês anterior`, CARD_WIDTH / 2, y + 50);
+  }
+
+  const watermarkH = 430;
+  await drawWatermark(ctx, CARD_WIDTH, CARD_HEIGHT - watermarkH, watermarkH);
+
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+export async function shareMonthlyRecap(recap) {
+  const blob = await renderMonthlyRecapCard(recap);
+  return shareImageBlob(blob, 'meu-mes-eafit.png', 'Meu mês no EAFIT', `Meu mês no EAFIT 💪 Monte o seu grátis: ${SHARE_CARD_URL}`);
 }

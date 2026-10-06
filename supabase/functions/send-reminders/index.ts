@@ -281,7 +281,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    for (const payload of payloads) {
+    // Modo pausa (user_metadata.pausedUntil, 'YYYY-MM-DD' inclusive): só o
+    // lembrete de água continua; sequência, inatividade, resumo etc. ficam quietos.
+    const paused = typeof meta.pausedUntil === 'string' && meta.pausedUntil >= date;
+    const toSend = paused ? payloads.filter((p) => String(p.tag).startsWith('water-')) : payloads;
+
+    for (const payload of toSend) {
       for (const sub of userSubs) {
         try {
           await webpush.sendNotification(

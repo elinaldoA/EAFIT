@@ -601,3 +601,25 @@
   -webkit-tap-highlight-color: transparent;
 }
 .seg__btn--active { background: var(--primary); color: #09090b; }
+
+/* ── Retrospectiva do mês (MonthlyRecap) ── */
+.recap__head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.recap__toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); }
+.recap__btn { padding: 5px 10px; border: 0; border-radius: var(--r-sm); background: none; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.recap__btn--active { background: var(--primary); color: #fff; }
+.recap__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.recap__stat { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; background: var(--surface-2); border-radius: var(--r-md); }
+.recap__value { font-size: 1.15rem; font-weight: 800; text-transform: capitalize; }
+.recap__label { font-size: 0.7rem; color: var(--text-muted); }
+.recap__delta { margin: 10px 0; font-size: 0.8rem; font-weight: 700; color: var(--success); }
+.recap__delta--down { color: var(--error); }
+.recap .btn { margin-top: 6px; }
+
+/* ── Medidas corporais ── */
+.measure-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.measure-form__field { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; color: var(--text-muted); }
+.measure-deltas { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
+.measure-deltas li { display: flex; justify-content: space-between; gap: 8px; }
+.measure-deltas__down { color: var(--success); }
+.measure-deltas__up { color: var(--warning); }
+.measure-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }

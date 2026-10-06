@@ -53,7 +53,7 @@ export function useDashboardData(active, user, toast) {
       }
 
       const completedWorkouts = (allWorkouts || []).filter(w => w.completed);
-      const streakDays = calcStreak(completedWorkouts.map(w => w.workout_date));
+      const streakDays = calcStreak(completedWorkouts.map(w => w.workout_date), user.user_metadata?.pauses);
 
       const [totalPhotos, weights] = await Promise.all([
         countPhotos(user.id),

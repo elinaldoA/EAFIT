@@ -39,6 +39,22 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
           .catch(err => toast(`❌ Falhou: ${err.message}`))}
       >Testar notificação</button>
 
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="trainingHour">Horário em que costumo treinar</label>
+        <select
+          id="trainingHour" className="input input--sm"
+          value={user.user_metadata?.trainingHour ?? ''}
+          onChange={e => updateProfile({ trainingHour: e.target.value === '' ? null : Number(e.target.value) })
+            .then(({ error }) => (error ? toast(`❌ ${error.message}`) : toast('⏰ Horário salvo')))}
+        >
+          <option value="">Sem preferência</option>
+          {Array.from({ length: 19 }, (_, i) => i + 5).map(h => (
+            <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
+          ))}
+        </select>
+        <span className="profile-field__hint">O lembrete de "hoje é dia de treino" chega 1h antes.</span>
+      </div>
+
       {NOTIFY_PREFS.map(({ key, label }) => (
         <div className="profile-field profile-field--row" key={key}>
           <label className="profile-field__label" htmlFor={key}>{label}</label>

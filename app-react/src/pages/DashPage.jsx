@@ -11,6 +11,9 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import BodyAvatar from '../components/BodyAvatar';
 import LineChart from '../components/LineChart';
 import ProgressPhotos from '../components/ProgressPhotos';
+import MonthlyRecap from '../components/MonthlyRecap';
+import BodyMeasurements from '../components/BodyMeasurements';
+import CheckinInsights from '../components/CheckinInsights';
 import Skeleton from '../components/Skeleton';
 import { Heatmap, WeeklyBars, PRList, WeekCompare, LoadHistory } from '../components/DashCharts';
 import { DiscomfortPanel, DiscomfortHistory } from '../components/DiscomfortWidgets';
@@ -98,10 +101,10 @@ export default function DashPage({ active }) {
     const completed = workouts.filter(w => w.completed);
     return {
       treinos30: completed.filter(w => w.workout_date >= sinceStr).length,
-      streak: calcStreak(completed.map(w => w.workout_date)),
+      streak: calcStreak(completed.map(w => w.workout_date), user?.user_metadata?.pauses),
       recordes: new Set(allTimeLogs.filter(l => !isNaN(parseFloat(l.carga))).map(l => l.exercise_name)).size,
     };
-  }, [workouts, allTimeLogs]);
+  }, [workouts, allTimeLogs, user?.user_metadata?.pauses]);
 
   const loadPoints = useMemo(() => {
     if (!exercise) return [];
@@ -116,6 +119,8 @@ export default function DashPage({ active }) {
       .sort((a, b) => a.workout_date.localeCompare(b.workout_date))
       .map(l => ({ value: parseFloat(l.carga), label: fmtDate(l.workout_date) }));
   }, [logs, allTimeLogs, exercise]);
+
+  const trainedDates = useMemo(() => workouts.filter(w => w.completed).map(w => w.workout_date), [workouts]);
 
   const weightPoints = useMemo(
     () => weightLogs.map(w => ({ label: fmtDate(w.log_date), value: w.peso })),
@@ -154,6 +159,7 @@ export default function DashPage({ active }) {
       </div>
 
       {tab === 'treinos' && (<>
+      <MonthlyRecap userId={user.id} allTimeLogs={allTimeLogs} loadingLogs={loadingPR} />
       <div className="dash-card">
         <div className="dash-card__title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
           <div className="dash-card__title" style={{ marginBottom: 0 }}>Visualização Anatômica</div>
@@ -307,6 +313,8 @@ export default function DashPage({ active }) {
             <ProgressPhotos />
           </div>
         )}
+        <BodyMeasurements userId={user.id} />
+        <CheckinInsights userId={user.id} trainedDates={trainedDates} />
       </div>
       )}
     </section>

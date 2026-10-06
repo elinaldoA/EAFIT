@@ -10,6 +10,8 @@ import RestTimer from '../components/RestTimer';
 import PlanEditorModal from '../components/PlanEditorModal';
 import WorkoutSummaryModal from '../components/WorkoutSummaryModal';
 import DayCard from '../components/WorkoutDayCard';
+import PauseBanner from '../components/PauseBanner';
+import DailyCheckin from '../components/DailyCheckin';
 
 export default function TreinoPage() {
   const { user } = useAuth();
@@ -58,6 +60,8 @@ export default function TreinoPage() {
 
   return (
     <section id="page-treino" className="page active">
+      <PauseBanner />
+      <DailyCheckin />
       {planExpired && (
         <div className="plan-expired-banner">
           <span>⏳ Seu plano venceu e não tem um próximo configurado — escolha o que treinar agora.</span>

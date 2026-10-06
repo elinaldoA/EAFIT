@@ -32,9 +32,8 @@ Deno.serve(async (req) => {
 
   const { data: rules, error: rulesErr } = await supabase
     .from('engagement_rules')
-    .select('kind, send_hour, weekdays, title, body')
+    .select('kind, send_hour, weekdays, per_user_hour, title, body')
     .eq('enabled', true)
-    .eq('send_hour', hour)
     .order('priority', { ascending: true });
   if (rulesErr) return json({ error: rulesErr.message }, 500);
 

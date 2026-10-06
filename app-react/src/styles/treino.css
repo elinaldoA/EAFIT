@@ -572,3 +572,85 @@
 
 .week-strip__label { font-size: 0.62rem; font-weight: 700; color: var(--text-dim); }
 .week-strip__day--today .week-strip__label { color: var(--primary); }
+
+/* ── Troca geral de exercício (ExerciseSwap) ── */
+.ex-swap { margin-top: 8px; }
+.ex-swap__toggle {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ex-swap__toggle:hover { color: var(--primary); }
+.ex-swap__panel {
+  margin-top: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.ex-swap__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.ex-swap__option:hover:not(:disabled) { border-color: var(--primary); }
+.ex-swap__option:disabled { opacity: .6; cursor: default; }
+.ex-swap__meta { color: var(--text-dim); font-size: 0.72rem; text-transform: capitalize; white-space: nowrap; }
+.ex-swap__hint { margin: 0; font-size: 0.74rem; color: var(--text-dim); line-height: 1.35; }
+
+/* ── Faixa do modo pausa (PauseBanner) ── */
+.pause-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(251, 191, 36, .12);
+  border: 1px solid var(--warning);
+  border-radius: var(--r-lg);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+/* ── Check-in diário ── */
+.checkin {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.checkin--done { flex-direction: row; align-items: center; justify-content: space-between; font-size: 0.82rem; }
+.checkin__title { font-weight: 600; font-size: 0.9rem; }
+.checkin__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.checkin__label { font-size: 0.82rem; color: var(--text-muted); min-width: 52px; }
+.checkin__scale { display: flex; gap: 4px; }
+.checkin__opt {
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-md, 8px);
+  opacity: .55;
+  cursor: pointer;
+}
+.checkin__opt--on { opacity: 1; border-color: var(--accent, currentColor); background: var(--surface-2, rgba(255,255,255,.06)); }
