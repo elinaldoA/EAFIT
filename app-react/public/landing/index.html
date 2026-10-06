@@ -18,6 +18,10 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Logo do EAFIT com o slogan Seu treino, sempre com você" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="EAFIT — Treino com plano, registro e evolução" />
+  <meta name="twitter:description" content="Plano de treino pro seu objetivo, modo ao vivo, demonstração dos exercícios e gráficos de evolução. Grátis e funciona offline." />
+  <meta name="twitter:image" content="https://elinaldoa.github.io/EAFIT/og-image.png" />
+  <link rel="manifest" href="../manifest.webmanifest" />
 
   <link rel="icon" href="../favicon.svg?v=2" type="image/svg+xml" />
   <link rel="alternate icon" href="../favicon.ico?v=2" />
@@ -38,6 +42,112 @@
     "inLanguage": "pt-BR",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" }
   }
+  </script>
+
+  <!-- Espelho do FAQ visível (seção #faq). Mudou lá, atualize aqui. -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "É grátis mesmo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sim. Não tem plano pago, não tem anúncio e não pede cartão de crédito."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Preciso baixar na loja de apps?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Não. O EAFIT é um app web instalável: abra no navegador e, no Android, toque em “Instalar app” ou “Adicionar à tela inicial”; no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”. Ele passa a abrir em tela cheia, como qualquer app."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Funciona sem internet na academia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Funciona. Você registra séries e água offline e, quando a conexão volta, tudo é sincronizado sozinho com a sua conta."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Posso mudar o treino que o app montou?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso. E na hora de treinar, o botão “Trocar exercício” sugere alternativas do mesmo músculo e do seu nível."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Como funcionam os desafios com amigos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Você cria um desafio (7, 14 ou 30 dias), recebe um código e manda para quem quiser. Quem entra pelo código participa, e vence quem treinar mais dias no período. Os outros só veem seu apelido e sua pontuação."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "E se eu viajar ou ficar doente?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ative o modo pausa no Perfil por 7, 14 ou 30 dias. A sequência de treinos fica protegida e os lembretes de treino são silenciados até você voltar."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Serve para quem está começando?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Serve. No cadastro você escolhe entre iniciante, intermediário e avançado, e os exercícios têm demonstração de execução e dica de técnica."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "O que acontece com os meus dados?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ficam na sua conta, protegidos por login. No Perfil você pode exportar tudo ou excluir a conta quando quiser. Detalhes na Política de Privacidade."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Sou personal trainer. Posso usar o EAFIT com meus alunos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pode. O modo Personal é liberado pela equipe do EAFIT na sua conta. Você passa seu código de convite, o aluno digita no app e autoriza, e aí você acompanha treinos, peso e medidas, monta e envia treinos, manda recados e cria desafios para a turma."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Como funciona a agenda de aulas com o personal?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "O personal marca a aula com dia, horário e local, e você recebe um aviso para confirmar ou recusar pelo app. Depois de confirmada, você e o personal recebem um lembrete na véspera e outro pouco antes da aula."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "O que o meu personal vê dos meus dados?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Só depois que você digita o código dele e autoriza: treinos, peso, medidas, check-ins e desconfortos. Suas fotos de evolução ficam privadas, a menos que você ligue o compartilhamento à parte em Perfil → Meu personal. Você pode desligar ou encerrar o vínculo quando quiser."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "' + esc(item.question) + '",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "' + esc(item.answer) + '"
+      }
+    }
+  ]
+}
   </script>
 
   <style>
@@ -495,6 +605,29 @@
     .step h3 { margin: 0 0 6px; font-size: 18px; }
     .step p { margin: 0; color: var(--text-muted); font-size: 15px; }
 
+    /* ---------- instalar + CTA fixo ---------- */
+    .install-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 820px; margin: 0 auto; }
+    .install-card { padding: 26px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
+    .install-card h3 { margin: 0 0 12px; font-size: 18px; }
+    .install-card ol { margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 15px; }
+    .install-card li + li { margin-top: 6px; }
+    .install-card .btn { margin-top: 18px; }
+    .install-card .btn[hidden] { display: none; }
+    .install-note { max-width: 820px; margin: 18px auto 0; text-align: center; color: var(--text-dim); font-size: 13.5px; }
+    .sticky-cta { display: none; }
+    @media (max-width: 760px) {
+      .install-grid { grid-template-columns: 1fr; }
+      .sticky-cta {
+        display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+        background: var(--nav-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border); transform: translateY(110%); transition: transform .3s ease;
+      }
+      .sticky-cta.show { transform: none; }
+      .sticky-cta .btn { width: 100%; }
+      footer { padding-bottom: 84px; }
+    }
+
     /* ---------- depoimentos ---------- */
     .quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .quote { display: flex; flex-direction: column; gap: 16px; padding: 26px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
@@ -690,8 +823,10 @@
       <nav aria-label="Seções">
         <ul class="nav-links">
           <li><a href="#recursos">Recursos</a></li>
+          <li><a href="#funcionalidades">Funcionalidades</a></li>
           <li><a href="#como-funciona">Como funciona</a></li>
           <li><a href="#personal">Para personais</a></li>
+          <li><a href="#depoimentos">Depoimentos</a></li>
           <li><a href="#faq">Dúvidas</a></li>
         </ul>
       </nav>
@@ -1496,6 +1631,36 @@
       </div>
     </section>
 
+    <!-- ========== COMO INSTALAR ========== -->
+    <section id="instalar" data-section="install">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Instale em 2 toques</h2>
+          <p>Sem loja de apps. O EAFIT abre em tela cheia, como qualquer aplicativo.</p>
+        </div>
+        <div class="install-grid">
+          <div class="install-card reveal">
+            <h3>🤖 Android (Chrome)</h3>
+            <ol>
+              <li>Abra o EAFIT no Chrome.</li>
+              <li>Toque em <strong>Instalar app</strong> (ou menu ⋮ → <strong>Adicionar à tela inicial</strong>).</li>
+              <li>Pronto: o ícone aparece junto dos seus apps.</li>
+            </ol>
+            <button type="button" class="btn btn-primary" id="install-btn" hidden>Instalar agora</button>
+          </div>
+          <div class="install-card reveal reveal-d1">
+            <h3>🍎 iPhone (Safari)</h3>
+            <ol>
+              <li>Abra o EAFIT no Safari.</li>
+              <li>Toque em <strong>Compartilhar</strong> (quadrado com seta).</li>
+              <li>Escolha <strong>Adicionar à Tela de Início</strong>.</li>
+            </ol>
+          </div>
+        </div>
+        <p class="install-note">No computador, use o ícone de instalar na barra de endereço do Chrome ou Edge.</p>
+      </div>
+    </section>
+
     <!-- ========== CTA FINAL ========== -->
     <section data-section="cta">
       <div class="wrap">
@@ -1505,7 +1670,7 @@
           <a class="btn btn-primary" href="../">Começar agora
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
           </a>
-          <p class="hint">Dica: no celular, adicione à tela inicial e use como app.</p>
+          <p class="hint">Dica: no celular, <a href="#instalar">adicione à tela inicial</a> e use como app.</p>
         </div>
       </div>
     </section>
@@ -1520,7 +1685,10 @@
       <ul class="footer-links">
         <li><a href="../">Abrir app</a></li>
         <li><a href="#recursos">Recursos</a></li>
+        <li><a href="#funcionalidades">Funcionalidades</a></li>
         <li><a href="#personal">Para personais</a></li>
+        <li><a href="#depoimentos">Depoimentos</a></li>
+        <li><a href="#instalar">Instalar</a></li>
         <li><a href="#faq">Dúvidas</a></li>
         <li><a href="../legal/termos.html">Termos de Uso</a></li>
         <li><a href="../legal/privacidade.html">Privacidade</a></li>
@@ -1531,6 +1699,8 @@
       </p>
     </div>
   </footer>
+
+  <div class="sticky-cta" id="sticky-cta" aria-hidden="true"><a class="btn btn-primary" href="../" tabindex="-1">Começar grátis</a></div>
 
   <!-- Ícones da barra inferior do app (mesmos de app-react/src/components/BottomNav.jsx) -->
   <template id="tpl-tabbar">
@@ -1875,6 +2045,36 @@
 
         if (window.__eafitObserveReveal) window.__eafitObserveReveal(main);
       }
+
+      // ---------- instalar (PWA) + CTA fixo no celular ----------
+      (function () {
+        var installBtn = document.getElementById('install-btn');
+        var deferred = null;
+        window.addEventListener('beforeinstallprompt', function (e) {
+          e.preventDefault(); deferred = e;
+          if (installBtn) installBtn.hidden = false;
+        });
+        if (installBtn) installBtn.addEventListener('click', function () {
+          if (!deferred) return;
+          deferred.prompt();
+          deferred.userChoice.finally(function () { deferred = null; installBtn.hidden = true; });
+        });
+        window.addEventListener('appinstalled', function () { if (installBtn) installBtn.hidden = true; });
+
+        var bar = document.getElementById('sticky-cta');
+        var hero = document.querySelector('.hero');
+        var cta = document.querySelector('[data-section="cta"]');
+        if (!bar || !hero || !('IntersectionObserver' in window)) return;
+        var pastHero = false, onCta = false;
+        function sync() {
+          var on = pastHero && !onCta;
+          bar.classList.toggle('show', on);
+          bar.setAttribute('aria-hidden', on ? 'false' : 'true');
+          var a = bar.querySelector('a'); if (a) a.tabIndex = on ? 0 : -1;
+        }
+        new IntersectionObserver(function (en) { pastHero = !en[0].isIntersecting; sync(); }).observe(hero);
+        if (cta) new IntersectionObserver(function (en) { onCta = en[0].isIntersecting; sync(); }).observe(cta);
+      })();
 
       // ---------- contagem anônima de visitas (public.page_visits) ----------
       // Cópia da regra de app-react/src/lib/pageVisits.js (detectSource) —
