@@ -855,3 +855,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 }
 .banner-preview--warning { border-bottom-color: var(--warning); background: rgba(234,179,8,.14); }
 .banner-preview--success { border-bottom-color: var(--ok); background: rgba(34,197,94,.14); }
+
+/* ---------- feedback ---------- */
+
+.feedback-message { margin: 0; white-space: pre-wrap; line-height: 1.55; font-size: 14px; }

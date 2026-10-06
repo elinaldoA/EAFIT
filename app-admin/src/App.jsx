@@ -15,6 +15,7 @@ import Segments from './pages/Segments';
 import AppSettings from './pages/AppSettings';
 import ExerciseLibrary from './pages/ExerciseLibrary';
 import PlanAnalytics from './pages/PlanAnalytics';
+import Feedback from './pages/Feedback';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import Templates from './pages/Templates';
@@ -41,6 +42,7 @@ function AppShell() {
             <Route path="/users" element={<UsersList />} />
             <Route path="/users/:id" element={<UserDetail />} />
             <Route path="/analise-planos" element={<PlanAnalytics />} />
+            <Route path="/feedback" element={<Feedback />} />
             <Route path="/engajamento" element={<Engagement />} />
             <Route path="/automacoes" element={<AutoNotifications />} />
             <Route path="/configuracoes" element={<AppSettings />} />

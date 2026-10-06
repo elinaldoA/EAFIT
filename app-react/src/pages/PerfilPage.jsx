@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useAppConfig } from '../context/useAppConfig';
+import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
 import { isFlagOn } from '../lib/appConfig';
 import { useToast } from '../context/useToast';
 import { useAvatar } from '../context/useAvatar';
@@ -259,6 +260,15 @@ export default function PerfilPage({ active }) {
             </span>
             <span className="collapse__chevron" aria-hidden="true">›</span>
           </button>
+        </div>
+      )}
+
+      {isFlagOn(config.flags, 'feedback') && (
+        <div className="section-group">
+          <div className="section-group__label">Ajude a melhorar</div>
+          <CollapsibleCard icon="💬" title="Enviar feedback" summary="Sugestão, problema ou elogio">
+            <ProfileFeedbackSection userId={user.id} toast={toast} />
+          </CollapsibleCard>
         </div>
       )}
 

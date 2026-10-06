@@ -5,6 +5,7 @@ import Loading from '../components/Loading';
 import ActivationFunnel from '../components/ActivationFunnel';
 import RetentionCohorts from '../components/RetentionCohorts';
 import KpiPanel from '../components/KpiPanel';
+import { fetchNewFeedbackCount } from '../lib/feedback';
 import AudienceInsights from '../components/AudienceInsights';
 
 const TILES = [
@@ -22,6 +23,7 @@ const TILES = [
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
+  const [newFeedback, setNewFeedback] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -31,6 +33,7 @@ export default function Dashboard() {
       .then(s => { if (active) setStats(s); })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
+    fetchNewFeedbackCount().then(n => { if (active) setNewFeedback(n); });
     return () => { active = false; };
   }, []);
 
@@ -54,6 +57,14 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {newFeedback > 0 && (
+        <Link to="/feedback" className="card" style={{ display: 'block', borderColor: 'var(--primary)' }}>
+          <h2 className="section-title" style={{ margin: 0 }}>
+            💬 {newFeedback} feedback(s) novo(s) de usuários — ver Feedback
+          </h2>
+        </Link>
+      )}
 
       {Number(stats?.severe_discomfort_30d) > 0 && (
         <Link to="/seguranca" className="card" style={{ display: 'block', borderColor: 'var(--danger)' }}>

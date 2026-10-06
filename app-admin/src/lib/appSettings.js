@@ -6,6 +6,7 @@ import { db } from './supabase';
 export const KNOWN_FLAGS = [
   { key: 'fotos_progresso', label: 'Fotos de progresso', hint: 'Card no Dashboard do app.' },
   { key: 'convite_amigos', label: 'Convidar amigos', hint: 'Atalho no Perfil do app.' },
+  { key: 'feedback', label: 'Enviar feedback', hint: 'Formulário de sugestão/problema/elogio no Perfil do app.' },
 ];
 
 export const BANNER_LEVELS = [

@@ -13,6 +13,7 @@ export const NAV_GROUPS = [
     label: 'Gestão',
     links: [
       { to: '/users', label: 'Usuários', icon: 'users' },
+      { to: '/feedback', label: 'Feedback', icon: 'message' },
       { to: '/segmentos', label: 'Segmentos', icon: 'target' },
       { to: '/notificacoes', label: 'Notificações', icon: 'bell' },
       { to: '/automacoes', label: 'Notif. automáticas', icon: 'zap' },
