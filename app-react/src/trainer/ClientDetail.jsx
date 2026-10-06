@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
 import { fmtDate } from '../lib/utils';
@@ -8,10 +8,12 @@ import { clientAttention, summarizeClient, fetchClientDetail, removeClient, frie
 import LineChart from '../components/LineChart';
 import Skeleton from '../components/Skeleton';
 import PlanBuilder from './PlanBuilder';
-import MessageComposer from './MessageComposer';
+import ChatThread from '../components/ChatThread';
+import { fetchTrainerThread, markThreadRead, sendMessage, friendlyMessageError } from '../lib/trainerMessages';
 import ClientSessions from './ClientSessions';
 import ClientNotes from './ClientNotes';
 import ClientGoals from './ClientGoals';
+import ClientPhotos from './ClientPhotos';
 
 const GOALS = {
   massa: 'Ganho de massa', forca: 'Força', emagrecer: 'Emagrecimento',
@@ -44,6 +46,9 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
   const att = clientAttention(client, today);
   const profile = detail?.profile || {};
   const goal = Number(profile.weeklyGoal) || null;
+
+  const loadThread = useCallback(() => fetchTrainerThread(client.id), [client.id]);
+  const sendToClient = useCallback(body => sendMessage([client.id], body), [client.id]);
 
   async function handleRemove() {
     if (!window.confirm(`Encerrar o acompanhamento de ${client.name}? Você deixa de ver os dados dele.`)) return;
@@ -169,6 +174,8 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
           <ClientGoals clientId={client.id} />
           <ClientNotes clientId={client.id} />
 
+          <ClientPhotos client={client} />
+
           <div className="dash-card">
             <div className="dash-card__title">Plano atual</div>
             <p className="profile-field__hint" style={{ margin: 0 }}>
@@ -180,8 +187,13 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
           </div>
 
           <div className="dash-card">
-            <div className="dash-card__title">💬 Recado para {client.name}</div>
-            <MessageComposer clientIds={[client.id]} label="Enviar recado" />
+            <div className="dash-card__title">💬 Conversa com {client.name}</div>
+            <ChatThread
+              me="trainer" sendLabel="Enviar recado" onError={friendlyMessageError}
+              placeholder="Escreva um recado, incentivo ou orientação… (o aluno recebe uma notificação)"
+              load={loadThread} send={sendToClient}
+              onLoaded={() => { markThreadRead(client.id).catch(() => { /* sem respostas / migration pendente */ }); }}
+            />
           </div>
 
           <button type="button" className="btn btn--outline btn--full" onClick={handleRemove}>Encerrar acompanhamento</button>

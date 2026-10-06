@@ -3,6 +3,7 @@ import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
 import { clientAttention, sortClients, fetchClients, fetchTrainerCode } from '../lib/trainer';
 import { weekOverview } from '../lib/trainerSettings';
+import { fetchUnreadReplies } from '../lib/trainerMessages';
 import Skeleton from '../components/Skeleton';
 import ClientDetail from './ClientDetail';
 
@@ -23,12 +24,14 @@ export default function AlunosPage({ onClientsLoaded }) {
   const [code, setCode] = useState('');
   const [filter, setFilter] = useState('todos');
   const [selected, setSelected] = useState(null);
+  const [replies, setReplies] = useState({});
   const today = todayDate();
 
   const reload = useCallback(async () => {
     try {
       const list = await fetchClients();
       setClients(list);
+      fetchUnreadReplies().then(setReplies).catch(() => { /* migration pendente */ });
       onClientsLoaded?.(list.filter(c => ['risco', 'atencao'].includes(clientAttention(c, todayDate()).level)).length);
     } catch (err) {
       console.error('fetchClients:', err);
@@ -65,7 +68,7 @@ export default function AlunosPage({ onClientsLoaded }) {
     return (
       <ClientDetail
         client={selected}
-        onBack={() => setSelected(null)}
+        onBack={() => { setSelected(null); reload(); }}
         onRemoved={() => { setSelected(null); reload(); }}
       />
     );
@@ -122,6 +125,7 @@ export default function AlunosPage({ onClientsLoaded }) {
               <strong>{c.name}</strong>
               <span className={`client-badge client-badge--${att.level}`}>{att.label}</span>
             </div>
+            {replies[c.id] > 0 && <span className="client-row__reply">💬 {replies[c.id]} resposta(s) nova(s)</span>}
             <div className="client-row__meta">
               <span>{c.days7} treino(s) nos últimos 7 dias</span>
               <span>{c.days30} em 30 dias</span>

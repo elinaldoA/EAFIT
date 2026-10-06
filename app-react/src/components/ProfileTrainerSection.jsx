@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { fetchMyMessages, markMessagesRead } from '../lib/trainerMessages';
+import { fetchMyThread, markMessagesRead, sendReply, friendlyReplyError } from '../lib/trainerMessages';
+import ChatThread from './ChatThread';
+import { fetchSharePhotos, setSharePhotos } from '../lib/trainerPhotos';
 import { fetchMyGoals } from '../lib/trainerInsights';
-import { fmtDate } from '../lib/utils';
 import {
   normalizeTrainerCode, friendlyTrainerError, fetchMyTrainer, linkTrainer, unlinkTrainer,
 } from '../lib/trainer';
@@ -14,8 +15,8 @@ export default function ProfileTrainerSection({ toast, onChange }) {
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [messages, setMessages] = useState([]);
   const [goals, setGoals] = useState(null);
+  const [sharePhotos, setShare] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -60,12 +61,17 @@ export default function ProfileTrainerSection({ toast, onChange }) {
   useEffect(() => {
     if (!trainer) return undefined;
     let active = true;
-    fetchMyMessages(10)
-      .then(rows => { if (active) setMessages(rows); return markMessagesRead(); })
-      .catch(() => { /* migration pendente: sem histórico */ });
+    markMessagesRead().catch(() => { /* migration pendente */ });
+    fetchSharePhotos().then(v => { if (active) setShare(v); }).catch(() => { /* migration pendente */ });
     fetchMyGoals().then(g => { if (active) setGoals(g); }).catch(() => { /* sem metas */ });
     return () => { active = false; };
   }, [trainer]);
+
+  async function handleSharePhotos(next) {
+    setShare(next);
+    try { await setSharePhotos(next); toast(next ? '📸 Fotos compartilhadas com seu personal' : 'Fotos deixaram de ser compartilhadas'); }
+    catch { setShare(!next); toast('❌ Não foi possível salvar'); }
+  }
 
   if (trainer === undefined) return <p className="profile-field__hint">Carregando…</p>;
 
@@ -85,17 +91,14 @@ export default function ProfileTrainerSection({ toast, onChange }) {
             {goals.note && <small>{goals.note}</small>}
           </div>
         )}
-        {messages.length > 0 && (
-          <div className="personal-history">
-            <span className="profile-field__label">Recados do personal</span>
-            {messages.map(m => (
-              <div className="personal-history__item" key={m.id}>
-                <small>{m.kind === 'treino' ? '📋 ' : ''}{fmtDate(String(m.at).slice(0, 10))}</small>
-                <p>{m.body}</p>
-              </div>
-            ))}
-          </div>
-        )}
+        <label className="trainer-consent">
+          <input type="checkbox" checked={sharePhotos} onChange={e => handleSharePhotos(e.target.checked)} />
+          <span><strong>Compartilhar minhas fotos de evolução</strong><br />Seu personal passa a ver as fotos que você já tirou e as próximas. Desligado por padrão; você desliga quando quiser.</span>
+        </label>
+        <div className="personal-history">
+          <span className="profile-field__label">Conversa com o personal</span>
+          <ChatThread me="client" load={fetchMyThread} send={sendReply} onError={friendlyReplyError} placeholder="Responda ao seu personal…" />
+        </div>
         <button type="button" className="btn btn--outline btn--full" disabled={busy} onClick={handleUnlink}>Encerrar vínculo</button>
       </>
     );

@@ -82,3 +82,56 @@ export async function markMessagesRead() {
   if (error) throw error;
   window.dispatchEvent(new Event(MESSAGES_READ_EVENT));
 }
+
+const REPLY_ERRORS = {
+  no_trainer: 'Você não tem um personal vinculado.',
+  invalid_body: `Escreva uma mensagem de até ${MAX_MESSAGE} caracteres.`,
+  rate_limited: 'Limite diário de respostas atingido. Tente amanhã.',
+};
+
+export function friendlyReplyError(err) {
+  const msg = String(err?.message || '');
+  const key = Object.keys(REPLY_ERRORS).find(k => msg.includes(k));
+  return key ? REPLY_ERRORS[key] : 'Não foi possível enviar. Tente de novo.';
+}
+
+function mapThread(rows) {
+  return (rows || []).map(r => ({ id: r.th_id, from: r.th_from, body: r.th_body, kind: r.th_kind, at: r.th_at }));
+}
+
+// Aluno responde ao personal. O push é "melhor esforço", como em sendMessage.
+export async function sendReply(body) {
+  const { error } = await db.rpc('client_send_reply', { p_body: body });
+  if (error) throw error;
+  try {
+    await db.functions.invoke('reply-push', { body: {} });
+  } catch (err) {
+    console.warn('reply-push:', err);
+  }
+}
+
+export async function fetchMyThread(limit = 40) {
+  const { data, error } = await db.rpc('my_thread', { p_limit: limit });
+  if (error) throw error;
+  return mapThread(data);
+}
+
+export async function fetchTrainerThread(clientId, limit = 40) {
+  const { data, error } = await db.rpc('trainer_thread', { p_client: clientId, p_limit: limit });
+  if (error) throw error;
+  return mapThread(data);
+}
+
+export async function markThreadRead(clientId) {
+  const { error } = await db.rpc('trainer_mark_thread_read', { p_client: clientId });
+  if (error) throw error;
+}
+
+// { [clientId]: quantidade } de respostas ainda não lidas pelo personal.
+export async function fetchUnreadReplies() {
+  const { data, error } = await db.rpc('trainer_unread_replies');
+  if (error) throw error;
+  const out = {};
+  for (const r of data || []) out[r.ur_client] = r.ur_count;
+  return out;
+}
