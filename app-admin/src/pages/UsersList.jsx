@@ -55,7 +55,9 @@ export default function UsersList() {
     // paginar N vezes.
     const { rows } = await fetchUsersPage({ search, status, page: 0, pageSize: 10000 });
     downloadCsv('usuarios.csv', toCsv(rows, [
-      { key: 'email', label: 'Email' }, { key: 'created_at', label: 'CriadoEm' },
+      { key: 'nome', label: 'Nome' }, { key: 'sobrenome', label: 'Sobrenome' },
+      { key: 'apelido', label: 'Apelido' }, { key: 'email', label: 'Email' },
+      { key: 'peso_alvo', label: 'PesoAlvo' }, { key: 'created_at', label: 'CriadoEm' },
       { key: 'last_sign_in_at', label: 'UltimoLogin' }, { key: 'email_confirmed_at', label: 'Confirmado' },
       { key: 'banned_until', label: 'BanidoAte' }, { key: 'is_admin', label: 'Admin' },
     ]));
@@ -68,7 +70,7 @@ export default function UsersList() {
         <div className="actions-row">
           <input
             className="input search-input"
-            placeholder="Buscar por e-mail…"
+            placeholder="Buscar por nome, apelido ou e-mail…"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
           />
@@ -87,7 +89,11 @@ export default function UsersList() {
           <table className="resp-table">
             <thead>
               <tr>
+                <th>Nome</th>
+                <th>Sobrenome</th>
+                <th>Apelido</th>
                 <th>E-mail</th>
+                <th>Peso alvo</th>
                 <th>Criado em</th>
                 <th>Último login</th>
                 <th>Status</th>
@@ -97,7 +103,11 @@ export default function UsersList() {
             <tbody>
               {users.map(u => (
                 <tr key={u.id}>
+                  <td data-label="Nome">{u.nome || '—'}</td>
+                  <td data-label="Sobrenome">{u.sobrenome || '—'}</td>
+                  <td data-label="Apelido">{u.apelido || '—'}</td>
                   <td data-label="E-mail">{u.email}</td>
+                  <td data-label="Peso alvo">{u.peso_alvo ? `${u.peso_alvo} kg` : '—'}</td>
                   <td data-label="Criado em">{formatDate(u.created_at)}</td>
                   <td data-label="Último login">{formatDate(u.last_sign_in_at)}</td>
                   <td data-label="Status">
@@ -112,7 +122,7 @@ export default function UsersList() {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={5}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
+                <tr><td colSpan={9}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
               )}
             </tbody>
           </table>
