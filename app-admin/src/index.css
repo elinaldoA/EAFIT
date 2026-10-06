@@ -813,3 +813,18 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .note { padding: 12px 0; border-bottom: 1px solid var(--border); }
 .note:last-child { border-bottom: none; }
 .note__text { margin: 0 0 4px; white-space: pre-wrap; line-height: 1.5; }
+
+/* ---------- notificações automáticas ---------- */
+
+.switch-row { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+
+.push-preview {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  max-width: 420px;
+}
+.push-preview__title { font-weight: 600; font-size: 13.5px; }
+.push-preview__body { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+.push-preview__meta { font-size: 11px; color: var(--text-dim); margin-top: 8px; }

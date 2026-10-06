@@ -2,6 +2,7 @@ import { isNotificationSupported, isIosSafariNotInstalled, sendNotification, isN
 import { exportSummaryCSV, exportBackupJSON, printReport } from '../lib/exportData';
 
 const NOTIFY_PREFS = [
+  { key: 'notifyEngagement', label: 'Lembretes e incentivos para treinar (treino do dia, meta semanal, plano vencendo)' },
   { key: 'notifyStreakRisk', label: 'Sequência em risco (à noite, se ainda não treinou hoje)' },
   { key: 'notifyInactivity', label: 'Voltar a treinar (dias parado)' },
   { key: 'notifyWeeklySummary', label: 'Resumo semanal (segunda de manhã)' },

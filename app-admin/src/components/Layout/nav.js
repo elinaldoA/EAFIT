@@ -13,6 +13,7 @@ export const NAV_GROUPS = [
     links: [
       { to: '/users', label: 'Usuários', icon: 'users' },
       { to: '/notificacoes', label: 'Notificações', icon: 'bell' },
+      { to: '/automacoes', label: 'Notif. automáticas', icon: 'zap' },
       { to: '/seguranca', label: 'Segurança', icon: 'shield' },
     ],
   },

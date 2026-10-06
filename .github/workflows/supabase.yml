@@ -59,6 +59,7 @@ jobs:
           supabase/functions/admin-generate-plan/index.ts
           supabase/functions/delete-account/index.ts
           supabase/functions/send-scheduled-broadcast/index.ts
+          supabase/functions/send-engagement/index.ts
 
   push-migrations:
     needs: test
@@ -99,6 +100,7 @@ jobs:
           deploy() { supabase functions deploy "$1" --project-ref "$SUPABASE_PROJECT_ID" "${@:2}"; }
           deploy send-reminders --no-verify-jwt
           deploy send-scheduled-broadcast --no-verify-jwt
+          deploy send-engagement --no-verify-jwt
           for fn in send-push delete-account admin-users admin-broadcast admin-generate-plan; do
             deploy "$fn"
           done
