@@ -53,10 +53,16 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body || '',
     tag: data.tag,
-    icon: `${APP_URL}icon-192.png`,
-    badge: `${APP_URL}icon-192.png`,
     data: { url: data.url || APP_URL },
   };
+  // No Android o app instalado já aparece no cabeçalho da notificação; mandar
+  // também `icon` desenha o logo de novo, grande, do outro lado. O `badge` do
+  // Android precisa ser uma silhueta transparente (o nosso ícone tem fundo
+  // sólido e viraria um quadrado branco), então nesses aparelhos vai sem os dois.
+  if (!/android/i.test(self.navigator.userAgent)) {
+    options.icon = `${APP_URL}icon-192.png`;
+    options.badge = `${APP_URL}icon-192.png`;
+  }
 
   event.waitUntil(self.registration.showNotification(title, options));
 });
