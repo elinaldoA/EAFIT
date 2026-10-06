@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  FEEDBACK_KINDS, MAX_LENGTH, validateFeedback, friendlyFeedbackError, sendFeedback,
+  FEEDBACK_KINDS, MAX_LENGTH, validateFeedback, friendlyFeedbackError, sendFeedback, fetchMyReplies,
 } from '../lib/feedback';
 
 // Formulário de sugestão/problema/elogio dentro do Perfil. O envio cai na
@@ -10,6 +10,13 @@ export default function ProfileFeedbackSection({ userId, toast }) {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [replies, setReplies] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    fetchMyReplies().then(rows => { if (active) setReplies(rows); });
+    return () => { active = false; };
+  }, []);
 
   async function handleSend() {
     const check = validateFeedback(kind, text);
@@ -29,6 +36,17 @@ export default function ProfileFeedbackSection({ userId, toast }) {
 
   return (
     <>
+      {replies.length > 0 && (
+        <div className="profile-field">
+          <span className="profile-field__label">Respostas da equipe</span>
+          {replies.map(r => (
+            <div key={r.id} className="feedback-reply">
+              <p className="profile-field__hint" style={{ margin: 0 }}>Você: {r.message}</p>
+              <p className="feedback-reply__text">💬 {r.admin_reply}</p>
+            </div>
+          ))}
+        </div>
+      )}
       <p className="profile-field__hint">Conte o que você gostaria de ver no app, reporte um problema ou mande um elogio. A gente lê tudo.</p>
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="feedbackKind">Tipo</label>

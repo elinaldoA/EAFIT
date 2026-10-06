@@ -316,3 +316,13 @@ button.profile-section__title {
 /* ── Modo pausa ── */
 .pause-status { margin: 0 0 10px; font-size: 0.85rem; color: var(--warning); }
 .pause-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+/* Resposta da equipe a um feedback (Perfil → Enviar feedback) */
+.feedback-reply {
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  margin-top: 6px;
+}
+.feedback-reply__text { margin: 6px 0 0; font-size: 0.86rem; color: var(--text); line-height: 1.45; }

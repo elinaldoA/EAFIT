@@ -53,3 +53,29 @@ export function noteValue(draft) {
   const v = (draft || '').trim();
   return v === '' ? null : v;
 }
+
+export const REPLY_MAX = 500;
+
+// Resposta válida: 1 a 500 caracteres depois de aparar.
+export function replyValue(draft) {
+  const v = (draft || '').trim();
+  return v.length >= 1 && v.length <= REPLY_MAX ? v : null;
+}
+
+// Grava a resposta no feedback e avisa o usuário (push + central de avisos,
+// via admin-broadcast). A resposta é salva primeiro: se o aviso falhar, ela
+// continua visível para o usuário no Perfil e o admin é informado.
+export async function replyToFeedback(item, text, { resolve = false } = {}) {
+  const reply = replyValue(text);
+  if (!reply) throw new Error(`Escreva uma resposta de 1 a ${REPLY_MAX} caracteres.`);
+
+  const fields = { admin_reply: reply, replied_at: new Date().toISOString() };
+  if (resolve && item.status !== 'resolvido') fields.status = 'resolvido';
+  await updateFeedback(item.id, fields);
+
+  const { data, error } = await db.functions.invoke('admin-broadcast', {
+    body: { title: '💬 Resposta ao seu feedback', body: reply, targetUserIds: [item.user_id] },
+  });
+  if (error || data?.error) return { notified: false };
+  return { notified: true };
+}

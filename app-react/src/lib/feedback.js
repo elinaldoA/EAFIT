@@ -35,3 +35,15 @@ export async function sendFeedback(userId, kind, message) {
   });
   if (error) throw error;
 }
+
+// Feedbacks do próprio usuário que a equipe já respondeu (mais recentes
+// primeiro). Falha (offline, migration pendente) vira lista vazia.
+export async function fetchMyReplies(limit = 5) {
+  const { data, error } = await db.from('feedback')
+    .select('id, message, admin_reply, replied_at')
+    .not('admin_reply', 'is', null)
+    .order('replied_at', { ascending: false })
+    .limit(limit);
+  if (error) return [];
+  return data || [];
+}

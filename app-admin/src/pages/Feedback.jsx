@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   PAGE_SIZE, KIND_LABELS, KIND_BADGE, STATUS_OPTIONS, STATUS_BADGE,
   fetchFeedback, updateFeedback, deleteFeedback, noteChanged, noteValue,
+  REPLY_MAX, replyValue, replyToFeedback,
 } from '../lib/feedback';
 import { displayName } from '../lib/management';
 import { formatDate } from '../lib/userDetailHelpers';
@@ -15,6 +16,8 @@ function FeedbackCard({ item, onChanged }) {
   const [note, setNote] = useState(item.admin_note || '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [reply, setReply] = useState('');
+  const [resolveOnReply, setResolveOnReply] = useState(true);
 
   async function run(fn) {
     setBusy(true);
@@ -31,6 +34,20 @@ function FeedbackCard({ item, onChanged }) {
 
   const handleStatus = e => run(() => updateFeedback(item.id, { status: e.target.value }));
   const handleSaveNote = () => run(() => updateFeedback(item.id, { admin_note: noteValue(note) }));
+  async function handleReply() {
+    setBusy(true);
+    setMsg('');
+    try {
+      const { notified } = await replyToFeedback(item, reply, { resolve: resolveOnReply });
+      if (!notified) setMsg('Resposta salva, mas o aviso ao usuário falhou (ele ainda a vê no Perfil).');
+      setReply('');
+      await onChanged();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
   const handleDelete = () => {
     if (!window.confirm('Excluir este feedback?')) return;
     return run(() => deleteFeedback(item.id));
@@ -53,6 +70,24 @@ function FeedbackCard({ item, onChanged }) {
       </div>
 
       <p className="feedback-message">{item.message}</p>
+
+      {item.admin_reply && (
+        <div className="card" style={{ background: 'var(--surface-2, transparent)' }}>
+          <span className="field__label">Sua resposta · {formatDate(item.replied_at)}</span>
+          <p className="feedback-message">{item.admin_reply}</p>
+        </div>
+      )}
+
+      <label className="field">
+        <span className="field__label">{item.admin_reply ? 'Nova resposta ao usuário' : 'Responder ao usuário (ele recebe um aviso no app)'}</span>
+        <textarea className="input" rows={2} maxLength={REPLY_MAX} value={reply} onChange={e => setReply(e.target.value)} />
+      </label>
+      <div className="actions-row">
+        <button className="btn btn--primary btn--small" disabled={busy || !replyValue(reply)} onClick={handleReply}>Enviar resposta</button>
+        {item.status !== 'resolvido' && (
+          <label><input type="checkbox" checked={resolveOnReply} onChange={e => setResolveOnReply(e.target.checked)} /> Marcar como resolvido</label>
+        )}
+      </div>
 
       <label className="field">
         <span className="field__label">Nota interna (o usuário não vê)</span>
