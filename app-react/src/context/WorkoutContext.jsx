@@ -203,8 +203,11 @@ export function WorkoutProvider({ children }) {
   useEffect(() => {
     if (user) loadUserData();
     else { setWorkoutIds({}); setActivePlanDays([]); setPlanExpired(false); setPlanStartDate(null); setPlanEndDate(null); }
+    // Depende só do id: o Supabase emite um objeto `user` novo em eventos como
+    // TOKEN_REFRESHED/SIGNED_IN (ex.: ao voltar o foco pra aba). Com [user], cada um
+    // recarregava tudo e o dataVersion remontava o treino, matando o descanso em andamento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id]);
 
   function findDay(dayName) {
     return activePlanDays.find(d => d.dia === dayName);
