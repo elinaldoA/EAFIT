@@ -180,7 +180,12 @@ describe('pushSubscriptions', () => {
   it('sem chave VAPID configurada falha dizendo o motivo', async () => {
     Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { ready: Promise.resolve({}) } });
     window.PushManager = function PushManager() {};
-    await expect(subscribeToPush('u1')).rejects.toThrow(/VITE_VAPID_PUBLIC_KEY/);
+    // A chave é lida na importação (e o CI define o secret), então reimporta sem ela.
+    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', '');
+    vi.resetModules();
+    const { subscribeToPush: subscribeWithoutKey } = await import('./pushSubscriptions');
+    await expect(subscribeWithoutKey('u1')).rejects.toThrow(/VITE_VAPID_PUBLIC_KEY/);
+    vi.unstubAllEnvs();
     delete navigator.serviceWorker;
     delete window.PushManager;
   });
