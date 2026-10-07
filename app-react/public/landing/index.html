@@ -30,6 +30,22 @@
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
   <meta name="color-scheme" content="dark light" />
 
+  <script>
+    // Idioma: ?lang=en|pt (e guarda) > escolha salva (app_lang, a mesma do app) > português.
+    (function () {
+      var lang = 'pt';
+      try {
+        var q = new URLSearchParams(location.search).get('lang');
+        if (q === 'en' || q === 'pt') localStorage.setItem('app_lang', q);
+        var saved = localStorage.getItem('app_lang');
+        if (saved === 'en' || saved === 'pt') lang = saved;
+      } catch (e) { /* sem storage: português */ }
+      window.LANDING_LANG = lang;
+      document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
+    })();
+  </script>
+  <script src="i18n-en.js" defer></script>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -266,6 +282,10 @@
     .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
     .btn-ghost:hover { border-color: var(--border-2); }
     .btn-sm { min-height: 40px; padding: 8px 16px; font-size: 14px; box-shadow: none; }
+    .nav-actions { display: flex; align-items: center; gap: 8px; }
+    .lang-btn { min-height: 40px; min-width: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-2); background: transparent; color: var(--text-muted); font: inherit; font-size: 13.5px; font-weight: 700; letter-spacing: .04em; cursor: pointer; }
+    .lang-btn:hover { color: var(--text); background: var(--surface-2); }
+    .lang-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     .btn svg { flex-shrink: 0; }
 
     /* ---------- nav ---------- */
@@ -887,7 +907,10 @@
           <li><a href="#faq">Dúvidas</a></li>
         </ul>
       </nav>
-      <a class="btn btn-primary btn-sm" href="../">Abrir app</a>
+      <div class="nav-actions">
+        <button type="button" class="lang-btn" id="lang-toggle" aria-label="Idioma: português. Mudar para inglês / Language: Portuguese. Switch to English">EN</button>
+        <a class="btn btn-primary btn-sm" href="../">Abrir app</a>
+      </div>
     </div>
   </header>
 
@@ -2245,7 +2268,7 @@
             if (!tiles.length) return;
             tiles.push({ value: '200', label: 'exercícios com demonstração' });
             grid.innerHTML = tiles.map(function (t) {
-              var v = t.value || round(Number(d[t.key])).toLocaleString('pt-BR') + '+';
+              var v = t.value || round(Number(d[t.key])).toLocaleString(window.LANDING_LANG === 'en' ? 'en-US' : 'pt-BR') + '+';
               return '<div class="stat"><b>' + v + '</b><span>' + t.label + '</span></div>';
             }).join('');
             band.hidden = false;
@@ -2356,6 +2379,89 @@
         })
         .catch(function () { /* mantém o conteúdo estático padrão acima */ });
     })();
+  </script>
+
+  <script>
+    // Seletor de idioma e tradução do texto da página (dicionário em i18n-en.js).
+    // Roda sobre o DOM já pronto e de novo a cada mudança — o conteúdo vindo do
+    // painel admin chega depois e substitui o texto estático. Texto sem entrada
+    // no dicionário (ex.: algo recém-escrito no admin) fica em português.
+    document.addEventListener('DOMContentLoaded', function () {
+      var lang = window.LANDING_LANG === 'en' ? 'en' : 'pt';
+      var btn = document.getElementById('lang-toggle');
+      if (btn) {
+        btn.textContent = lang === 'en' ? 'PT' : 'EN';
+        btn.setAttribute('aria-label', lang === 'en'
+          ? 'Language: English. Switch to Portuguese / Idioma: inglês. Mudar para português'
+          : 'Idioma: português. Mudar para inglês / Language: Portuguese. Switch to English');
+        btn.addEventListener('click', function () {
+          try { localStorage.setItem('app_lang', lang === 'en' ? 'pt' : 'en'); } catch (e) { /* sem storage */ }
+          var url = new URL(location.href);
+          url.searchParams.delete('lang');
+          location.href = url.toString();
+        });
+      }
+      var dict = window.LANDING_EN;
+      if (lang !== 'en' || !dict) return;
+
+      var pending = false;
+      function norm(t) { return t.replace(/\s+/g, ' ').trim(); }
+
+      function translateTextNodes(root) {
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode: function (n) {
+            var p = n.parentNode && n.parentNode.nodeName;
+            return p === 'SCRIPT' || p === 'STYLE' || p === 'NOSCRIPT' ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+          },
+        });
+        var node;
+        while ((node = walker.nextNode())) {
+          var raw = node.nodeValue;
+          var key = norm(raw);
+          if (!key || !Object.prototype.hasOwnProperty.call(dict.text, key)) continue;
+          var lead = raw.match(/^\s*/)[0];
+          var trail = raw.match(/\s*$/)[0];
+          var next = lead + dict.text[key] + trail;
+          if (next !== raw) node.nodeValue = next;
+        }
+      }
+
+      function translateAttrs(root) {
+        root.querySelectorAll('[alt],[aria-label],[title],[placeholder]').forEach(function (el) {
+          ['alt', 'aria-label', 'title', 'placeholder'].forEach(function (a) {
+            var v = el.getAttribute(a);
+            if (v && Object.prototype.hasOwnProperty.call(dict.attrs, v)) el.setAttribute(a, dict.attrs[v]);
+          });
+        });
+      }
+
+      function translateHead() {
+        var m = dict.meta;
+        var t = dict.text[norm(document.title)];
+        if (t) document.title = t;
+        function set(sel, v) { var el = document.querySelector(sel); if (el && v) el.setAttribute('content', v); }
+        set('meta[name="description"]', m.description);
+        set('meta[property="og:title"]', m.ogTitle);
+        set('meta[name="twitter:title"]', m.ogTitle);
+        set('meta[property="og:description"]', m.ogDescription);
+        set('meta[name="twitter:description"]', m.ogDescription);
+        set('meta[property="og:locale"]', m.ogLocale);
+        set('meta[property="og:image:alt"]', dict.attrs['Logo do EAFIT com o slogan Seu treino, sempre com você']);
+      }
+
+      function run() {
+        pending = false;
+        translateTextNodes(document.body);
+        translateAttrs(document.body);
+      }
+      translateHead();
+      run();
+      new MutationObserver(function () {
+        if (pending) return;
+        pending = true;
+        requestAnimationFrame(run);
+      }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
   </script>
 
 </body>

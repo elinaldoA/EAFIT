@@ -25,11 +25,40 @@
   th, td { text-align: left; padding: 8px; border-bottom: 1px solid #2a2a2e; color: #a1a1aa; }
   th { color: #e4e4e7; }
   .back { display: inline-block; margin-bottom: 24px; color: #71717a; text-decoration: none; font-size: 0.9rem; }
+  [data-l] { display: none; }
+  html[data-lang="pt"] [data-l="pt"], html[data-lang="en"] [data-l="en"] { display: block; }
+  .legal-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .legal-top .back { margin-bottom: 0; }
+  html[data-lang="pt"] .bl-en, html[data-lang="en"] .bl-pt { display: none; }
+  .lang-link { background: none; border: 1px solid #3f3f46; color: #a1a1aa; border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+  .lang-link:hover { color: #e4e4e7; }
+  .notice { color: #71717a; font-size: 0.85rem; border-left: 3px solid #3f3f46; padding-left: 12px; }
 </style>
+<script>
+  // Idioma: ?lang=en|pt (e guarda) > escolha salva (app_lang, a mesma do app) > português.
+  (function () {
+    var lang = 'pt';
+    try {
+      var q = new URLSearchParams(location.search).get('lang');
+      if (q === 'en' || q === 'pt') localStorage.setItem('app_lang', q);
+      var s = localStorage.getItem('app_lang');
+      if (s === 'en' || s === 'pt') lang = s;
+    } catch (e) { /* sem storage: português */ }
+    var root = document.documentElement;
+    root.setAttribute('data-lang', lang);
+    root.lang = lang === 'en' ? 'en' : 'pt-BR';
+    document.title = lang === 'en' ? "Privacy Policy — EAFIT" : "Política de Privacidade — EAFIT";
+    window.__legalLang = lang;
+  })();
+</script>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../landing/">&larr; Voltar ao EAFIT</a>
+  <div class="legal-top">
+    <a class="back" href="../landing/"><span class="bl-pt">&larr; Voltar ao EAFIT</span><span class="bl-en">&larr; Back to EAFIT</span></a>
+    <button type="button" class="lang-link" id="lang-toggle">EN</button>
+  </div>
+  <div data-l="pt">
   <h1>Política de Privacidade</h1>
   <p class="updated">
     Rascunho — preencher <span class="placeholder">[nome/razão social, CNPJ ou CPF]</span> e pedir
@@ -49,7 +78,7 @@
     <tr><td>Cadastro</td><td>Nome, apelido, e-mail, senha (armazenada de forma criptografada)</td></tr>
     <tr><td>Dados de saúde/corpo</td><td>Peso, altura, meta, nível, fotos de progresso</td></tr>
     <tr><td>Atividade no app</td><td>Treinos realizados, séries, cargas, repetições, água registrada, recordes, conquistas</td></tr>
-    <tr><td>Técnicos</td><td>Inscrição push (para notificações), preferências de tema e lembretes</td></tr>
+    <tr><td>Técnicos</td><td>Inscrição push (para notificações), preferências de tema, lembretes e idioma</td></tr>
     <tr><td>Visitas (anônimas)</td><td>Contagem de acessos à página de apresentação e à tela de login/cadastro: só a data, a página e a origem do acesso (ex.: Google, link compartilhado). Não registramos IP, aparelho nem quem você é.</td></tr>
   </table>
 
@@ -93,7 +122,7 @@
 
   <h2>8. Cookies e armazenamento local</h2>
   <p>
-    O app usa armazenamento local do navegador (localStorage) para preferências (tema, lembretes),
+    O app usa armazenamento local do navegador (localStorage) para preferências (tema, lembretes, idioma),
     para funcionar offline como PWA e para contar cada visita no máximo uma vez por dia (guarda só a
     data da última visita, nada que identifique você). Não usamos cookies de rastreamento de terceiros
     ou publicidade.
@@ -104,6 +133,98 @@
 
   <h2>10. Alterações nesta política</h2>
   <p>Mudanças relevantes serão comunicadas dentro do app antes de entrarem em vigor.</p>
+  </div>
+
+  <div data-l="en">
+  <h1>Privacy Policy</h1>
+  <p class="notice">
+    Courtesy translation. In case of any difference, the Portuguese version prevails.
+  </p>
+  <p class="updated">
+    Draft — fill in <span class="placeholder">[company name, CNPJ or CPF]</span> and obtain legal
+    review before publishing as a valid document (LGPD, Law 13,709/2018).
+  </p>
+
+  <h2>1. Who processes your data</h2>
+  <p>
+    <span class="placeholder">[company name]</span> decides how and why your data is processed
+    (controller, under the LGPD). Contact for privacy matters: naldoads17@gmail.com.
+  </p>
+
+  <h2>2. What data we collect</h2>
+  <table>
+    <tr><th>Category</th><th>Examples</th></tr>
+    <tr><td>Registration</td><td>Name, nickname, email, password (stored encrypted)</td></tr>
+    <tr><td>Health/body data</td><td>Weight, height, goal, level, progress photos</td></tr>
+    <tr><td>Activity in the app</td><td>Workouts done, sets, weights, reps, logged water, records, achievements</td></tr>
+    <tr><td>Technical</td><td>Push subscription (for notifications), theme and reminder preferences, language</td></tr>
+    <tr><td>Visits (anonymous)</td><td>A count of visits to the presentation page and to the sign-in/sign-up screen: only the date, the page and the source of the visit (e.g. Google, shared link). We do not record your IP, device or who you are.</td></tr>
+  </table>
+
+  <h2>3. Why we process this data</h2>
+  <p>
+    To provide the features you use: saving and syncing your workouts across devices, calculating your
+    progress and records, sending the reminders and notifications you turned on, and keeping your
+    account secure. The legal basis is performance of the contract (use of the app) and, for
+    notifications, your consent — which you can withdraw at any time in Profile.
+  </p>
+
+  <h2>4. Who we share it with</h2>
+  <p>
+    We do not sell your data. We use the following service providers (processors, under the LGPD) so the
+    app works:
+  </p>
+  <ul>
+    <li><strong>Supabase</strong> — database, authentication and file storage (progress photos).</li>
+    <li><strong>Push service</strong> (Web Push/VAPID) — delivery of notifications to your browser/device.</li>
+    <li><strong>GitHub Pages</strong> — hosting of the app's static files.</li>
+  </ul>
+
+  <h2>5. How we protect your data</h2>
+  <p>
+    Your data is isolated per account: database security policies (Row Level Security) ensure each person
+    only accesses their own records. Progress photos are kept in private storage, reachable only through
+    a temporary signed link, never publicly.
+  </p>
+
+  <h2>6. How long we keep it</h2>
+  <p>As long as your account is active. If you delete your account, the associated data is erased.</p>
+
+  <h2>7. Your rights (LGPD)</h2>
+  <p>At any time, directly in the app's <strong>Profile</strong> tab, you can:</p>
+  <ul>
+    <li><strong>Access and export</strong> a copy of all your data ("Export" button).</li>
+    <li><strong>Correct</strong> profile and plan data directly in the app screens.</li>
+    <li><strong>Delete</strong> your account and all associated data ("Delete account" button).</li>
+  </ul>
+  <p>For other requests (portability, information about processing, withdrawal of consent), get in touch: naldoads17@gmail.com.</p>
+
+  <h2>8. Cookies and local storage</h2>
+  <p>
+    The app uses the browser's local storage (localStorage) for preferences (theme, reminders, language),
+    to work offline as a PWA and to count each visit at most once a day (it only stores the date of the
+    last visit, nothing that identifies you). We do not use third-party tracking or advertising cookies.
+  </p>
+
+  <h2>9. Minors</h2>
+  <p>EAFIT is not directed at people under 18 without the supervision of a legal guardian.</p>
+
+  <h2>10. Changes to this policy</h2>
+  <p>Relevant changes will be communicated inside the app before they take effect.</p>
+  </div>
 </div>
+<script>
+  (function () {
+    var lang = window.__legalLang || 'pt';
+    var btn = document.getElementById('lang-toggle');
+    if (!btn) return;
+    btn.textContent = lang === 'en' ? 'PT' : 'EN';
+    btn.setAttribute('aria-label', lang === 'en' ? 'Mudar para português / Switch to Portuguese' : 'Mudar para inglês / Switch to English');
+    btn.addEventListener('click', function () {
+      try { localStorage.setItem('app_lang', lang === 'en' ? 'pt' : 'en'); } catch (e) { /* sem storage */ }
+      var u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.toString();
+    });
+  })();
+</script>
 </body>
 </html>
