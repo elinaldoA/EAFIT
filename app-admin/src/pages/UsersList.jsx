@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { fetchSegments, createSegment, hasFilters } from '../lib/segments';
@@ -7,6 +7,17 @@ import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { METAS, NIVEIS } from '../lib/userDetailHelpers';
+import { toggleId, toggleAll, bulkAction, bulkNotify, summarize } from '../lib/bulkActions';
+
+const CSV_COLUMNS = [
+  { key: 'nome', label: 'Nome' }, { key: 'sobrenome', label: 'Sobrenome' },
+  { key: 'apelido', label: 'Apelido' }, { key: 'email', label: 'Email' },
+  { key: 'peso_alvo', label: 'PesoAlvo' }, { key: 'nivel', label: 'Nivel' }, { key: 'meta', label: 'Meta' },
+  { key: 'last_training', label: 'UltimoTreino' }, { key: 'trainings_30d', label: 'Treinos30d' },
+  { key: 'plan_end_date', label: 'FimDoPlano' }, { key: 'created_at', label: 'CriadoEm' },
+  { key: 'last_sign_in_at', label: 'UltimoLogin' }, { key: 'email_confirmed_at', label: 'Confirmado' },
+  { key: 'banned_until', label: 'BanidoAte' }, { key: 'is_admin', label: 'Admin' },
+];
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos os status' },
@@ -52,6 +63,10 @@ export default function UsersList() {
   const [page, setPage] = useState(0);
   const [segments, setSegments] = useState([]);
   const [segmentMsg, setSegmentMsg] = useState('');
+  const [selected, setSelected] = useState(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState('');
+  const seenRows = useRef(new Map());
   const { adminUser } = useAdminAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -102,7 +117,7 @@ export default function UsersList() {
     let active = true;
     setLoading(true);
     fetchUsersPage({ search, status, sort, nivel, meta, page })
-      .then(({ rows, total }) => { if (active) { setUsers(rows); setTotal(total); } })
+      .then(({ rows, total }) => { if (active) { rows.forEach(r => seenRows.current.set(r.id, r)); setUsers(rows); setTotal(total); } })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -115,16 +130,50 @@ export default function UsersList() {
     // filtro em vigor — pra isso vale a pena um limite bem alto em vez de
     // paginar N vezes.
     const { rows } = await fetchUsersPage({ search, status, sort, nivel, meta, page: 0, pageSize: 10000 });
-    downloadCsv('usuarios.csv', toCsv(rows, [
-      { key: 'nome', label: 'Nome' }, { key: 'sobrenome', label: 'Sobrenome' },
-      { key: 'apelido', label: 'Apelido' }, { key: 'email', label: 'Email' },
-      { key: 'peso_alvo', label: 'PesoAlvo' }, { key: 'nivel', label: 'Nivel' }, { key: 'meta', label: 'Meta' },
-      { key: 'last_training', label: 'UltimoTreino' }, { key: 'trainings_30d', label: 'Treinos30d' },
-      { key: 'plan_end_date', label: 'FimDoPlano' }, { key: 'created_at', label: 'CriadoEm' },
-      { key: 'last_sign_in_at', label: 'UltimoLogin' }, { key: 'email_confirmed_at', label: 'Confirmado' },
-      { key: 'banned_until', label: 'BanidoAte' }, { key: 'is_admin', label: 'Admin' },
-    ]));
+    downloadCsv('usuarios.csv', toCsv(rows, CSV_COLUMNS));
   }
+
+  const selectedRows = [...selected].map(id => seenRows.current.get(id)).filter(Boolean);
+  // Admins e a própria conta ficam fora de banir/desbanir em massa.
+  const bannable = selectedRows.filter(u => !u.is_admin && u.id !== adminUser?.id).map(u => u.id);
+
+  function handleExportSelected() {
+    downloadCsv('usuarios-selecionados.csv', toCsv(selectedRows, CSV_COLUMNS));
+  }
+
+  async function handleBulk(label, confirmText, run) {
+    if (confirmText && !window.confirm(confirmText)) return;
+    setBulkBusy(true);
+    setBulkMsg('');
+    try {
+      setBulkMsg(await run());
+    } catch (err) {
+      setBulkMsg(`Erro: ${err.message}`);
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  const handleBulkBan = (action, verb, confirmText) => handleBulk(verb, confirmText, async () => {
+    const res = await bulkAction(action, bannable);
+    setSelected(new Set());
+    setUsers(await fetchUsersPage({ search, status, sort, nivel, meta, page }).then(r => r.rows));
+    return summarize(res, verb);
+  });
+
+  const handleBulkNotify = () => {
+    const title = window.prompt('Título da notificação:');
+    if (!title?.trim()) return;
+    const body = window.prompt('Mensagem:');
+    if (!body?.trim()) return;
+    return handleBulk('Enviado', `Enviar para ${selected.size} usuário(s)?`, async () => {
+      const data = await bulkNotify([...selected], { title: title.trim(), body: body.trim() });
+      return `Enviado: ${data.sent} de ${data.targetCount} dispositivo(s).`;
+    });
+  };
+
+  const visibleIds = users.map(u => u.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => selected.has(id));
 
   return (
     <div>
@@ -171,6 +220,24 @@ export default function UsersList() {
         </div>
       </div>
 
+      {selected.size > 0 && (
+        <div className="card actions-row" role="region" aria-label="Ações em massa">
+          <strong>{selected.size} selecionado(s)</strong>
+          <button className="btn btn--small" disabled={bulkBusy} onClick={handleBulkNotify}>Notificar</button>
+          <button className="btn btn--small" disabled={bulkBusy} onClick={handleExportSelected}>Exportar seleção</button>
+          <button
+            className="btn btn--small" disabled={bulkBusy || bannable.length === 0}
+            onClick={() => handleBulkBan('unban', 'Desbanidos', `Desbanir ${bannable.length} usuário(s)?`)}
+          >Desbanir</button>
+          <button
+            className="btn btn--small btn--danger" disabled={bulkBusy || bannable.length === 0}
+            title="Admins e a sua própria conta são ignorados"
+            onClick={() => handleBulkBan('ban', 'Banidos', `Banir ${bannable.length} usuário(s)? Admins e a sua conta são ignorados.`)}
+          >Banir</button>
+          <button className="btn btn--ghost btn--small" disabled={bulkBusy} onClick={() => setSelected(new Set())}>Limpar seleção</button>
+        </div>
+      )}
+      {bulkMsg && <p className={`form-msg ${bulkMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{bulkMsg}</p>}
       {segmentMsg && <p className={`form-msg ${segmentMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{segmentMsg}</p>}
       {loading && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
@@ -180,6 +247,13 @@ export default function UsersList() {
           <div className="table-wrap"><table className="resp-table">
             <thead>
               <tr>
+                <th>
+                  <input
+                    type="checkbox" aria-label="Selecionar todos da página"
+                    checked={allVisibleSelected}
+                    onChange={() => setSelected(sel => toggleAll(sel, visibleIds))}
+                  />
+                </th>
                 <th>Nome</th>
                 <th>Sobrenome</th>
                 <th>Apelido</th>
@@ -198,6 +272,13 @@ export default function UsersList() {
             <tbody>
               {users.map(u => (
                 <tr key={u.id}>
+                  <td data-label="">
+                    <input
+                      type="checkbox" aria-label={`Selecionar ${u.email}`}
+                      checked={selected.has(u.id)}
+                      onChange={() => setSelected(sel => toggleId(sel, u.id))}
+                    />
+                  </td>
                   <td data-label="Nome">{u.nome || '—'}</td>
                   <td data-label="Sobrenome">{u.sobrenome || '—'}</td>
                   <td data-label="Apelido">{u.apelido || '—'}</td>
@@ -221,7 +302,7 @@ export default function UsersList() {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={13}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
+                <tr><td colSpan={14}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
               )}
             </tbody>
           </table></div>
