@@ -119,7 +119,9 @@ describe('PlanEditorModal — planos', () => {
     const input = await screen.findByDisplayValue('Hipertrofia');
     fireEvent.change(input, { target: { value: 'Massa' } });
     fireEvent.blur(input);
-    await waitFor(() => expect(h.refreshPlan).toHaveBeenCalled());
+    // renomear -> recarregar a lista -> atualizar o treino: três awaits em cadeia, que
+    // estouram o 1s padrão do waitFor quando o runner do CI está lento.
+    await waitFor(() => expect(h.refreshPlan).toHaveBeenCalled(), { timeout: 4000 });
   });
 
   it('ativar pergunta a duração do ciclo e ativa', async () => {
