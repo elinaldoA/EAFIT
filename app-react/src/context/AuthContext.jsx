@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import { AuthContext } from './useAuth';
 import { translateAuthError, isEmailNotConfirmed, isSpecificAuthError } from '../lib/authErrors';
+import { claimLocalData, clearUserLocalData } from '../lib/localData';
 
 import { t } from '../lib/i18n';
 const MIN_PASSWORD = 6;
@@ -30,6 +31,7 @@ export function AuthProvider({ children }) {
     // o menu) sumia até fechar e reabrir o app.
     db.auth.getSession()
       .then(({ data: { session } }) => {
+        if (session) claimLocalData(session.user.id);
         setUser(session ? session.user : null);
       })
       .catch(err => {
@@ -39,6 +41,8 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = db.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      if (session) claimLocalData(session.user.id);
+      else if (event === 'SIGNED_OUT') clearUserLocalData();
       setUser(session ? session.user : null);
       setAuthLoading(false);
     });
@@ -54,6 +58,7 @@ export function AuthProvider({ children }) {
       // se o e-mail existe); rede/limite de tentativas ganham texto próprio.
       return { error: isSpecificAuthError(error) ? translateAuthError(error) : t('E-mail ou senha inválidos.') };
     }
+    claimLocalData(data.user.id);
     setUser(data.user);
     return {};
   }
@@ -71,6 +76,7 @@ export function AuthProvider({ children }) {
       return { error: translateAuthError({ code: 'user_already_exists' }) };
     }
     if (data.session) {
+      claimLocalData(data.user.id);
       setUser(data.user);
       return {};
     }
@@ -96,6 +102,7 @@ export function AuthProvider({ children }) {
 
   async function logout() {
     await db.auth.signOut();
+    clearUserLocalData();
     setUser(null);
   }
 
@@ -121,6 +128,7 @@ export function AuthProvider({ children }) {
     const { error } = await db.functions.invoke('delete-account');
     if (error) return { error: t('Não foi possível excluir a conta agora. Tente de novo em instantes.') };
     await db.auth.signOut();
+    clearUserLocalData();
     setUser(null);
     return {};
   }
