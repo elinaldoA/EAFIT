@@ -8,11 +8,32 @@
 // diferentes (self-service vs. admin).
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
-const DIRECT_USER_TABLES = [
-  'progress_photos', 'water_logs',
-  'weight_logs', 'achievements', 'push_subscriptions',
-  'exercise_discomfort', 'body_measurements', 'daily_checkins', 'challenge_members',
-  'feed_reactions', 'feed_events', 'friend_profiles',
+// Tabelas apagadas por coluna do usuário, filhas antes das pais. A maioria também
+// tem on delete cascade para auth.users — a lista é explícita de propósito: a
+// exclusão não depende de cada FK ter sido criada com cascade (já houve tabela
+// que não tinha) e fica claro, num lugar só, tudo que guarda dado de pessoa.
+// Quem é aluno E personal tem as duas colunas (trainer_id/client_id) limpas.
+// app-react/src/data/userDataTables.test.js confere esta lista contra as
+// migrations: tabela nova com FK para o usuário precisa entrar aqui (ou na
+// lista de exceções do teste, com o motivo).
+const USER_COLUMNS: [table: string, column: string][] = [
+  ['progress_photos', 'user_id'], ['water_logs', 'user_id'],
+  ['weight_logs', 'user_id'], ['achievements', 'user_id'], ['push_subscriptions', 'user_id'],
+  ['exercise_discomfort', 'user_id'], ['body_measurements', 'user_id'], ['daily_checkins', 'user_id'],
+  ['challenge_members', 'user_id'],
+  ['feed_reactions', 'user_id'], ['feed_events', 'user_id'], ['friend_profiles', 'user_id'],
+  ['friendships', 'requester_id'], ['friendships', 'addressee_id'],
+  ['feedback', 'user_id'], ['user_notifications', 'user_id'], ['notification_log', 'user_id'],
+  ['client_errors', 'user_id'], ['admin_user_notes', 'user_id'],
+  ['appointment_reminder_log', 'recipient'],
+  ['trainer_appointments', 'client_id'], ['trainer_appointments', 'trainer_id'],
+  ['trainer_alert_log', 'client_id'], ['trainer_alert_log', 'trainer_id'],
+  ['trainer_messages', 'client_id'], ['trainer_messages', 'trainer_id'],
+  ['trainer_notes', 'client_id'], ['trainer_notes', 'trainer_id'],
+  ['trainer_goals', 'client_id'], ['trainer_goals', 'trainer_id'],
+  ['trainer_clients', 'client_id'], ['trainer_clients', 'trainer_id'],
+  ['trainer_templates', 'trainer_id'], ['trainer_settings', 'trainer_id'],
+  ['trainers', 'user_id'],
 ];
 
 export async function deleteUserData(admin: SupabaseClient, userId: string): Promise<void> {
@@ -45,10 +66,15 @@ export async function deleteUserData(admin: SupabaseClient, userId: string): Pro
   const { error: delPlansErr } = await admin.from('workout_plans').delete().eq('user_id', userId);
   if (delPlansErr) throw delPlansErr;
 
-  for (const table of DIRECT_USER_TABLES) {
-    const { error } = await admin.from(table).delete().eq('user_id', userId);
+  for (const [table, column] of USER_COLUMNS) {
+    const { error } = await admin.from(table).delete().eq(column, userId);
     if (error) throw error;
   }
+
+  // O registro de auditoria fica (é do admin), mas o conteúdo das ações sobre
+  // esta pessoa (ex.: campos de perfil editados) é dado pessoal: limpa.
+  const { error: auditErr } = await admin.from('admin_audit_log').update({ details: null }).eq('target_user_id', userId);
+  if (auditErr) throw auditErr;
 
   const { data: files, error: listErr } = await admin.storage.from('progress-photos').list(userId);
   if (listErr) throw listErr;

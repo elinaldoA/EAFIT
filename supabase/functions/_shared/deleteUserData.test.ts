@@ -9,9 +9,10 @@ import { deleteUserData } from './deleteUserData.ts';
 // deno-lint-ignore no-explicit-any
 type FakeChain = {
   select: () => FakeChain;
-  eq: () => FakeChain;
+  eq: (column?: string) => FakeChain;
   in: () => FakeChain;
   delete: () => FakeChain;
+  update: () => FakeChain;
   then: (resolve: (v: { data: any; error: any }) => void, reject?: (e: any) => void) => Promise<void>;
 };
 
@@ -19,12 +20,13 @@ type FakeChain = {
 // select().eq() (lista) ou delete().eq()/delete().in() (ignora o resultado,
 // só olha error) — sempre awaited direto, então só precisa ser "thenable".
 // deno-lint-ignore no-explicit-any
-function makeChain(result: { data: any; error: any }): FakeChain {
+function makeChain(result: { data: any; error: any }, onEq?: (column: string) => void): FakeChain {
   const chain: FakeChain = {
     select: () => chain,
-    eq: () => chain,
+    eq: (column?: string) => { if (column) onEq?.(column); return chain; },
     in: () => chain,
     delete: () => chain,
+    update: () => chain,
     then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
   };
   return chain;
@@ -39,15 +41,17 @@ type FakeAdminOpts = {
 
 function makeFakeAdmin(opts: FakeAdminOpts = {}) {
   const calledTables: string[] = [];
+  const eqCalls: string[] = [];
   let removedPaths: string[] = [];
 
   const admin = {
     from(table: string) {
       calledTables.push(table);
+      const onEq = (column: string) => eqCalls.push(`${table}.${column}`);
       if (table === 'workouts') return makeChain({ data: opts.workouts ?? [], error: null });
       if (table === 'workout_plans') return makeChain({ data: opts.plans ?? [], error: null });
       if (table === 'plan_days') return makeChain({ data: opts.days ?? [], error: null });
-      return makeChain({ data: null, error: null });
+      return makeChain({ data: null, error: null }, onEq);
     },
     storage: {
       from(_bucket: string) {
@@ -60,10 +64,16 @@ function makeFakeAdmin(opts: FakeAdminOpts = {}) {
     },
   };
 
-  return { admin, calledTables, getRemovedPaths: () => removedPaths };
+  return { admin, calledTables, eqCalls, getRemovedPaths: () => removedPaths };
 }
 
-const DIRECT_TABLES = ['progress_photos', 'water_logs', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort', 'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles'];
+const DIRECT_TABLES = [
+  'progress_photos', 'water_logs', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort',
+  'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles',
+  'friendships', 'feedback', 'user_notifications', 'notification_log', 'client_errors', 'admin_user_notes',
+  'appointment_reminder_log', 'trainer_appointments', 'trainer_alert_log', 'trainer_messages', 'trainer_notes',
+  'trainer_goals', 'trainer_clients', 'trainer_templates', 'trainer_settings', 'trainers',
+];
 
 Deno.test('deleteUserData apaga de todas as tabelas diretas, incluindo exercise_discomfort', async () => {
   const { admin, calledTables } = makeFakeAdmin();
@@ -137,4 +147,29 @@ Deno.test('deleteUserData propaga o erro e para a execução se uma exclusão fa
     threw = true;
   }
   assert(threw, 'esperava que o erro em progress_photos interrompesse deleteUserData');
+});
+
+Deno.test('deleteUserData limpa as duas pontas de quem é aluno e personal (e friendships)', async () => {
+  const { admin, eqCalls } = makeFakeAdmin();
+
+  await deleteUserData(admin as unknown as SupabaseClient, 'user-1');
+
+  for (const key of [
+    'trainer_clients.client_id', 'trainer_clients.trainer_id',
+    'trainer_messages.client_id', 'trainer_messages.trainer_id',
+    'trainer_appointments.client_id', 'trainer_appointments.trainer_id',
+    'friendships.requester_id', 'friendships.addressee_id',
+    'appointment_reminder_log.recipient', 'trainers.user_id',
+  ]) {
+    assert(eqCalls.includes(key), `esperava delete por ${key}`);
+  }
+});
+
+Deno.test('deleteUserData limpa o conteúdo do log de auditoria sobre o usuário', async () => {
+  const { admin, calledTables, eqCalls } = makeFakeAdmin();
+
+  await deleteUserData(admin as unknown as SupabaseClient, 'user-1');
+
+  assert(calledTables.includes('admin_audit_log'));
+  assert(eqCalls.includes('admin_audit_log.target_user_id'));
 });
