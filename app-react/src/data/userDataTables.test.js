@@ -76,3 +76,47 @@ describe('exclusão de conta cobre todas as tabelas do usuário', () => {
     expect(ghosts).toEqual([]);
   });
 });
+
+// O backup (lib/exportData.js) é a portabilidade dos dados: toda tabela que
+// guarda dado do usuário entra nele, ou está aqui com o motivo de ficar de fora.
+describe('backup cobre as tabelas do usuário', () => {
+  const exportSrc = fs.existsSync(path.resolve(process.cwd(), 'src/lib/exportData.js'))
+    ? fs.readFileSync(path.resolve(process.cwd(), 'src/lib/exportData.js'), 'utf8')
+    : '';
+  const libSrc = ['bodyMeasurements', 'checkin', 'challenges', 'friends', 'inbox', 'trainer', 'trainerInsights', 'trainerMessages', 'trainerAppointments', 'weightLog', 'waterLog', 'discomfort', 'achievements']
+    .map(f => fs.readFileSync(path.resolve(process.cwd(), `src/lib/${f}.js`), 'utf8')).join('\n');
+
+  // tabela -> motivo de não estar no backup
+  const NOT_IN_BACKUP = {
+    push_subscriptions: 'dado técnico do aparelho (chaves de push), não é conteúdo do usuário',
+    notification_log: 'controle interno de envio (as mensagens em si estão em notifications)',
+    client_errors: 'diagnóstico técnico de erros do navegador',
+    admin_user_notes: 'anotações internas da equipe sobre a conta',
+    feed_events: 'atividade já refletida em treinos/recordes; os amigos veem só apelido',
+    feed_reactions: 'reações em publicações de terceiros',
+    friendships: 'a lista de amigos (apelido e status) vai em friends',
+    friend_profiles: 'código e compartilhamento vão em friendProfile',
+    challenge_members: 'participação vai em challenges',
+    appointment_reminder_log: 'controle interno de lembretes enviados',
+    trainer_alert_log: 'controle interno de alertas do personal',
+    trainer_clients: 'o vínculo com o personal vai em trainer',
+    trainer_appointments: 'as aulas do aluno vão em appointments',
+    trainer_messages: 'a conversa vai em trainerMessages',
+    trainer_notes: 'notas do personal sobre o aluno (do personal)',
+    trainer_goals: 'as metas vão em trainerGoals',
+    trainer_templates: 'modelos do personal (modo personal)',
+    trainer_settings: 'ajustes do personal (modo personal)',
+    trainers: 'flag de acesso ao modo personal',
+  };
+
+  const tables = [...new Set([...listed].map(k => k.split('.')[0]))];
+
+  it('toda tabela da lista de exclusão está no backup ou tem motivo para ficar fora', () => {
+    const uncovered = tables.filter(t => !(t in NOT_IN_BACKUP) && !exportSrc.includes(`'${t}'`) && !libSrc.includes(`'${t}'`));
+    expect(uncovered).toEqual([]);
+  });
+
+  it('as exceções não citam tabelas que já não existem', () => {
+    expect(Object.keys(NOT_IN_BACKUP).filter(t => !tables.includes(t))).toEqual([]);
+  });
+});

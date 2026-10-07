@@ -3,6 +3,17 @@ import { fetchWeightLogs } from './weightLog';
 import { fetchWaterLogsRange } from './waterLog';
 import { fetchAllDiscomfort } from './discomfort';
 import { fetchUnlockedAchievements } from './achievements';
+import { fetchMeasurements } from './bodyMeasurements';
+import { fetchCheckins } from './checkin';
+import { fetchMyChallenges } from './challenges';
+import { fetchMyFriendProfile, fetchMyFriends } from './friends';
+import { fetchInbox } from './inbox';
+import { fetchMyTrainer } from './trainer';
+import { fetchMyGoals } from './trainerInsights';
+import { fetchMyThread } from './trainerMessages';
+import { fetchMyAppointments } from './trainerAppointments';
+
+const PHOTO_BACKUP_TTL = 7 * 24 * 3600; // links das fotos no backup valem 7 dias
 
 const EPOCH = '1970-01-01';
 
@@ -11,7 +22,7 @@ const EPOCH = '1970-01-01';
 export async function gatherUserData(userId) {
   const { data: workouts, error: wErr } = await db
     .from('workouts')
-    .select('id, workout_date, day_of_week, completed, started_at, finished_at, duration_seconds')
+    .select('id, workout_date, day_of_week, completed, notes, rating, started_at, finished_at, duration_seconds')
     .eq('user_id', userId)
     .order('workout_date', { ascending: true });
   if (wErr) throw wErr;
@@ -55,12 +66,13 @@ export async function gatherUserData(userId) {
     planExercises = data || [];
   }
 
-  const { data: photos, error: photosErr } = await db
+  const { data: photoRows, error: photosErr } = await db
     .from('progress_photos')
-    .select('photo_date, note')
+    .select('photo_date, note, storage_path, image_data')
     .eq('user_id', userId)
     .order('photo_date', { ascending: true });
   if (photosErr) throw photosErr;
+  const photos = await withPhotoLinks(photoRows || []);
 
   const [weightLogs, waterLogs, discomfortReports, achievements] = await Promise.all([
     fetchWeightLogs(userId),
@@ -69,13 +81,98 @@ export async function gatherUserData(userId) {
     fetchUnlockedAchievements(userId),
   ]);
 
+  // Seções extras: melhor esforço. Se uma falhar (offline, migration pendente),
+  // o backup sai sem ela e avisa em `incomplete` — nunca quebra o resto.
+  const incomplete = [];
+  const safe = async (name, fn, fallback) => {
+    try { return await fn(); } catch { incomplete.push(name); return fallback; }
+  };
+
+  const [
+    profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
+    friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments,
+  ] = await Promise.all([
+    safe('profile', fetchProfile, null),
+    safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
+    safe('bodyMeasurements', () => fetchMeasurements(userId), []),
+    safe('dailyCheckins', () => fetchCheckins(userId, EPOCH), []),
+    safe('challenges', fetchMyChallenges, []),
+    safe('friendProfile', fetchMyFriendProfile, null),
+    safe('friends', fetchMyFriends, []),
+    safe('feedback', () => fetchMyFeedback(userId), []),
+    safe('notifications', () => fetchInbox(1000), []),
+    safe('trainer', fetchMyTrainer, null),
+    safe('trainerGoals', fetchMyGoals, null),
+    safe('trainerMessages', () => fetchMyThread(1000), []),
+    safe('appointments', fetchMyAppointments, []),
+  ]);
+
   return {
     exportedAt: new Date().toISOString(),
-    workouts, exerciseSets,
+    profile,
+    workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
-    weightLogs, progressPhotos: photos || [], waterLogs,
+    weightLogs, bodyMeasurements, dailyCheckins,
+    progressPhotos: photos, waterLogs,
     discomfortReports, achievements,
+    challenges, friendProfile, friends,
+    trainer, trainerGoals, trainerMessages, appointments,
+    feedback, notifications,
+    incomplete,
   };
+}
+
+// Conta e dados de perfil (nome, peso, altura, meta, preferências). Fica de
+// fora tudo que é segredo (senha nunca chega ao app) — só o que o usuário preencheu.
+async function fetchProfile() {
+  const { data, error } = await db.auth.getUser();
+  if (error) throw error;
+  const u = data?.user;
+  if (!u) throw new Error('sem usuário');
+  return { email: u.email, createdAt: u.created_at, ...(u.user_metadata || {}) };
+}
+
+// Plano previsto de cada treino (séries/reps/descanso/técnica), em lotes.
+async function fetchWorkoutExercises(workoutIds) {
+  const out = [];
+  for (let i = 0; i < workoutIds.length; i += 200) {
+    const { data, error } = await db
+      .from('exercise_logs')
+      .select('workout_id, exercise_name, series, reps, rest_time, technique, is_post_workout')
+      .in('workout_id', workoutIds.slice(i, i + 200));
+    if (error) throw error;
+    out.push(...(data || []));
+  }
+  return out;
+}
+
+async function fetchMyFeedback(userId) {
+  const { data, error } = await db
+    .from('feedback')
+    .select('kind, message, created_at, admin_reply, replied_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Foto nova vive no Storage privado: o backup leva o caminho e um link que vale
+// 7 dias (baixe antes disso). Foto antiga já guarda a imagem no próprio registro.
+async function withPhotoLinks(rows) {
+  const paths = rows.filter(r => r.storage_path).map(r => r.storage_path);
+  const links = {};
+  if (paths.length) {
+    try {
+      const { data } = await db.storage.from('progress-photos').createSignedUrls(paths, PHOTO_BACKUP_TTL);
+      (data || []).forEach(x => { if (x.signedUrl) links[x.path] = x.signedUrl; });
+    } catch { /* sem link: o backup ainda traz data e nota */ }
+  }
+  return rows.map(r => ({
+    photo_date: r.photo_date,
+    note: r.note,
+    ...(r.storage_path ? { storage_path: r.storage_path, url: links[r.storage_path] || null } : {}),
+    ...(r.image_data ? { image_data: r.image_data } : {}),
+  }));
 }
 
 export function toCSV(rows) {
