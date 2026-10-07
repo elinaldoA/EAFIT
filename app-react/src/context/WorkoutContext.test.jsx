@@ -28,6 +28,7 @@ vi.mock('./useAuth', () => ({ useAuth: () => mockAuthState }));
 vi.mock('./useToast', () => ({ useToast: () => mockToast }));
 
 import { WorkoutProvider } from './WorkoutContext';
+import { getDateForWeekday } from '../lib/utils';
 import { useWorkout } from './useWorkout';
 
 function wrapper({ children }) {
@@ -40,7 +41,9 @@ const DAY = { dia: 'Segunda', foco: 'Peito', exercicios: [], pos: [] };
 // serve tanto pra chamadas que esperam um objeto (existing.id, w.completed)
 // quanto pra exercise_sets (sets.forEach), já que a fake DAY não tem exercícios.
 function okFrom() {
-  const data = Object.assign([], { id: 'w1', completed: false, started_at: null, finished_at: null, duration_seconds: null });
+  const row = { id: 'w1', workout_date: getDateForWeekday('Segunda'), completed: false, started_at: null, finished_at: null, duration_seconds: null };
+  // Array (consulta da semana) com os campos da linha espalhados (maybeSingle/single).
+  const data = Object.assign([row], row);
   return chain({ data, error: null });
 }
 
@@ -101,6 +104,15 @@ describe('WorkoutProvider — sincronização offline', () => {
     expect(result.current.syncStatus).toBe('ok');
     expect(mockToast).toHaveBeenCalledWith('✅ Dados sincronizados');
     expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toEqual([]);
+  });
+
+  it('sem rede, abre com o último plano salvo em vez de ficar sem treino', async () => {
+    await renderReady();
+    mockFetchActivePlan.mockRejectedValue(new Error('offline'));
+    const { result } = renderHook(() => useWorkout(), { wrapper });
+    await waitFor(() => expect(result.current.syncStatus).toBe('error'));
+    expect(result.current.activePlanDays).toEqual([DAY]);
+    expect(mockToast).toHaveBeenCalledWith('📴 Sem conexão — usando os dados salvos no aparelho');
   });
 
   it('sem usuário logado, não carrega plano nem chama o backend', async () => {

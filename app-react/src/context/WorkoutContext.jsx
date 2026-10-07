@@ -84,26 +84,58 @@ async function createExerciseLogs(workoutId, day) {
   if (error) console.error('createExerciseLogs:', error);
 }
 
-async function ensureWorkoutId(userId, day) {
-  const date = getDateForWeekday(day.dia);
-  const { data: existing, error } = await db
+async function findWorkoutId(userId, date) {
+  // order+limit: bancos que já tinham linhas duplicadas (antes do índice único
+  // de user_id+workout_date) devolvem sempre a mais antiga, em vez de errar.
+  const { data, error } = await db
     .from('workouts')
-    .select('id, completed')
+    .select('id')
     .eq('user_id', userId)
     .eq('workout_date', date)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (error) throw error;
+  return data?.id ?? null;
+}
 
-  if (existing) return existing.id;
+async function ensureWorkoutId(userId, day) {
+  const date = getDateForWeekday(day.dia);
+  const existing = await findWorkoutId(userId, date);
+  if (existing) return existing;
 
   const { data: created, error: insErr } = await db
     .from('workouts')
     .insert({ user_id: userId, workout_date: date, day_of_week: day.dia, completed: false })
     .select()
     .single();
-  if (insErr) throw insErr;
+  if (insErr) {
+    // 23505: outra aba/aparelho criou o treino do dia entre o select e o insert.
+    if (insErr.code === '23505') {
+      const winner = await findWorkoutId(userId, date);
+      if (winner) return winner;
+    }
+    throw insErr;
+  }
   await createExerciseLogs(created.id, day);
   return created.id;
+}
+
+// Cópia local do plano ativo: sem rede, o app abre com o último plano em vez de
+// uma tela de erro. Fica sob a chave 'plan_cache', apagada no logout.
+const PLAN_CACHE_KEY = 'plan_cache';
+
+function cachePlan(userId, plan) {
+  try { localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ userId, plan })); } catch { /* cota cheia: segue sem cache */ }
+}
+
+function readCachedPlan(userId) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PLAN_CACHE_KEY));
+    return raw?.userId === userId && Array.isArray(raw.plan?.days) ? raw.plan : null;
+  } catch {
+    return null;
+  }
 }
 
 export function WorkoutProvider({ children }) {
@@ -135,61 +167,101 @@ export function WorkoutProvider({ children }) {
     return () => window.removeEventListener('online', flushPending);
   }, [user, flushPending]);
 
+  const applyPlanMeta = useCallback((plan) => {
+    setPlanExpired(!!plan.expiredNoSuccessor);
+    setPlanByTrainer(!!plan.byTrainer);
+    setPlanStartDate(plan.startDate || null);
+    setPlanEndDate(plan.endDate || null);
+  }, []);
+
   const loadUserData = useCallback(async () => {
     if (!user) return;
     setSyncStatus('loading');
+
+    let plan;
     try {
-      const plan = await fetchActivePlan(user.id, user.user_metadata);
+      plan = await fetchActivePlan(user.id, user.user_metadata);
+      cachePlan(user.id, plan);
+    } catch (err) {
+      console.error('loadUserData:', err);
+      const cached = readCachedPlan(user.id);
+      if (cached) {
+        // Sem conexão (ou backend fora): segue com o último plano salvo; as
+        // marcações feitas agora entram na fila e sobem quando a rede voltar.
+        applyPlanMeta(cached);
+        setActivePlanDays(cached.days);
+        setSyncStatus('error');
+        toast(t('📴 Sem conexão — usando os dados salvos no aparelho'));
+        return;
+      }
+      setSyncStatus('error');
+      toast(t('⚠️ Erro ao sincronizar dados'));
+      return;
+    }
+
+    try {
       const days = plan.days;
-      setPlanExpired(!!plan.expiredNoSuccessor);
-      setPlanByTrainer(!!plan.byTrainer);
-      setPlanStartDate(plan.startDate || null);
-      setPlanEndDate(plan.endDate || null);
+      applyPlanMeta(plan);
       if (plan.switchInfo) {
         const verdictLabel = plan.switchInfo.verdict === 'positivo' ? t('progressão')
           : plan.switchInfo.verdict === 'negativo' ? t('recuperação') : 'continuidade';
         toast(t('🔄 Ciclo encerrado — ativamos "{toName}" automaticamente ({verdictLabel})', { toName: plan.switchInfo.toName, verdictLabel }));
       }
 
-      const entries = await Promise.all(days.map(async (day) => {
-        const wId = await ensureWorkoutId(user.id, day);
+      // Duas consultas para a semana toda (antes eram três por dia). O treino
+      // de um dia só é criado no primeiro registro (ensureWorkoutId), não aqui.
+      const dates = days.map(d => getDateForWeekday(d.dia));
+      const { data: weekRows, error: wErr } = await db
+        .from('workouts')
+        .select('id, workout_date, completed, started_at, finished_at, duration_seconds, rating, notes')
+        .eq('user_id', user.id)
+        .in('workout_date', dates)
+        .order('created_at', { ascending: true });
+      if (wErr) throw wErr;
 
-        const { data: w, error: wErr } = await db
-          .from('workouts')
-          .select('completed, started_at, finished_at, duration_seconds, rating, notes')
-          .eq('id', wId)
-          .single();
-        if (wErr) throw wErr;
+      const byDate = new Map();
+      (weekRows || []).forEach(w => { if (!byDate.has(w.workout_date)) byDate.set(w.workout_date, w); });
 
+      const wIds = [...byDate.values()].map(w => w.id);
+      let allSets = [];
+      if (wIds.length) {
         const { data: sets, error: sErr } = await db
           .from('exercise_sets')
-          .select('exercise_name, set_number, carga, completed, reps, duracao_min, distancia_km')
-          .eq('workout_id', wId);
+          .select('workout_id, exercise_name, set_number, carga, completed, reps, duracao_min, distancia_km')
+          .in('workout_id', wIds);
         if (sErr) throw sErr;
+        allSets = sets || [];
+      }
 
-        return { dayName: day.dia, wId, completed: w.completed, sets, timer: w };
-      }));
-
+      // Com escritas pendentes na fila o cache local é mais novo que o servidor:
+      // não o sobrescreve com "dia sem treino".
+      const canResetMissing = queueSize() === 0;
       const ids = {};
-      entries.forEach(({ dayName, wId, completed, sets, timer }) => {
-        ids[dayName] = wId;
-        localStorage.setItem(`treino_${dayName}`, completed);
-        sets.forEach(s => {
+      days.forEach(day => {
+        const dayName = day.dia;
+        const w = byDate.get(getDateForWeekday(dayName));
+        if (!w) {
+          if (canResetMissing) localStorage.setItem(`treino_${dayName}`, false);
+          return;
+        }
+        ids[dayName] = w.id;
+        localStorage.setItem(`treino_${dayName}`, w.completed);
+        allSets.filter(s => s.workout_id === w.id).forEach(s => {
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_carga`, s.carga ?? '');
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_done`, s.completed);
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_reps`, s.reps ?? '');
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_duracao`, s.duracao_min ?? '');
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_distancia`, s.distancia_km ?? '');
         });
-        if (timer.rating != null) localStorage.setItem(`treino_${dayName}_rating`, timer.rating);
-        if (timer.notes) localStorage.setItem(`treino_${dayName}_notes`, timer.notes);
-        if (timer.duration_seconds != null) {
+        if (w.rating != null) localStorage.setItem(`treino_${dayName}_rating`, w.rating);
+        if (w.notes) localStorage.setItem(`treino_${dayName}_notes`, w.notes);
+        if (w.duration_seconds != null) {
           localStorage.setItem(`treino_${dayName}_timer`, JSON.stringify({
             status: 'finished',
-            accumulatedMs: timer.duration_seconds * 1000,
+            accumulatedMs: w.duration_seconds * 1000,
             runningSince: null,
-            startedAt: timer.started_at ? new Date(timer.started_at).getTime() : null,
-            finishedAt: timer.finished_at ? new Date(timer.finished_at).getTime() : null,
+            startedAt: w.started_at ? new Date(w.started_at).getTime() : null,
+            finishedAt: w.finished_at ? new Date(w.finished_at).getTime() : null,
           }));
         }
       });
@@ -200,10 +272,12 @@ export function WorkoutProvider({ children }) {
       setDataVersion(v => v + 1);
     } catch (err) {
       console.error('loadUserData:', err);
+      // O plano já veio: mostra o treino mesmo assim; só as marcações falharam.
+      setActivePlanDays(plan.days);
       setSyncStatus('error');
       toast(t('⚠️ Erro ao sincronizar dados'));
     }
-  }, [user, toast]);
+  }, [user, toast, applyPlanMeta]);
 
   useEffect(() => {
     if (user) loadUserData();

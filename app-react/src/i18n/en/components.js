@@ -578,6 +578,7 @@ export default {
   'recuperação': 'recovery',
   '🔄 Ciclo encerrado — ativamos "{toName}" automaticamente ({verdictLabel})': '🔄 Cycle ended — we automatically activated "{toName}" ({verdictLabel})',
   '⚠️ Erro ao sincronizar dados': '⚠️ Error syncing data',
+  '📴 Sem conexão — usando os dados salvos no aparelho': '📴 No connection — using data saved on this device',
   '⚠️ Algumas alterações ainda não sincronizaram': '⚠️ Some changes have not synced yet',
   '✅ Dados sincronizados': '✅ Data synced',
   '🏅 Conquista desbloqueada: {title}': '🏅 Achievement unlocked: {title}',
