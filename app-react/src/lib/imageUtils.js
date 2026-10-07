@@ -1,3 +1,4 @@
+import { t } from './i18n';
 export const MAX_DIMENSION = 1024; // px — lado maior após redimensionar
 export const JPEG_QUALITY = 0.85;
 
@@ -5,7 +6,7 @@ export function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+    reader.onerror = () => reject(new Error(t('Não foi possível ler a imagem.')));
     reader.readAsDataURL(file);
   });
 }
@@ -14,7 +15,7 @@ export function loadImage(dataUrl) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Não foi possível processar a imagem.'));
+    img.onerror = () => reject(new Error(t('Não foi possível processar a imagem.')));
     img.src = dataUrl;
   });
 }
@@ -53,11 +54,11 @@ export async function compressImage(file, { maxDimension = MAX_DIMENSION, qualit
 export async function compressImageBlob(file, { maxDimension = MAX_DIMENSION, quality = JPEG_QUALITY } = {}) {
   const canvas = await resizeToCanvas(file, maxDimension);
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Não foi possível processar a imagem.'))), 'image/jpeg', quality);
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error(t('Não foi possível processar a imagem.')))), 'image/jpeg', quality);
   });
 }
 
 export function assertValidImage(file, maxUploadSize) {
-  if (!file.type.startsWith('image/')) throw new Error('Selecione um arquivo de imagem.');
-  if (file.size > maxUploadSize) throw new Error(`Imagem muito grande (máx. ${Math.round(maxUploadSize / (1024 * 1024))}MB).`);
+  if (!file.type.startsWith('image/')) throw new Error(t('Selecione um arquivo de imagem.'));
+  if (file.size > maxUploadSize) throw new Error(t('Imagem muito grande (máx. {v1}MB).', { v1: Math.round(maxUploadSize / (1024 * 1024)) }));
 }

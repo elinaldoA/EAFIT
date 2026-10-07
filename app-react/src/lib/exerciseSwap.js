@@ -1,6 +1,7 @@
 import { db } from './supabase';
 import { allowedNiveis } from '../data/exerciseLibrary';
 
+import { locale } from './i18n';
 // Troca de exercício "geral": qualquer exercício do plano pode ser trocado por
 // outro da biblioteca (public.exercise_library) do mesmo grupo muscular e tipo,
 // respeitando o nível do usuário e evitando o que já está no dia e o que já
@@ -36,7 +37,7 @@ export function pickAlternatives({ current, library, nivel, dayNames = [], avoid
     .sort((a, b) => {
       const sameA = a.equipamento === row.equipamento ? 0 : 1;
       const sameB = b.equipamento === row.equipamento ? 0 : 1;
-      return sameA - sameB || a.nome.localeCompare(b.nome, 'pt-BR');
+      return sameA - sameB || a.nome.localeCompare(b.nome, locale);
     })
     .slice(0, limit);
 

@@ -1,3 +1,4 @@
+import { locale } from './i18n';
 // Itens de cardio do plano (esteira, corrida, bike...) não têm séries: guardam
 // duração e distância numa linha de exercise_sets com set_number = 1.
 
@@ -33,8 +34,8 @@ export function formatCardioSummary(durationMin, distanceKm) {
   const d = toPositive(durationMin);
   const km = toPositive(distanceKm);
   const parts = [];
-  if (d) parts.push(`${d.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} min`);
-  if (km) parts.push(`${km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km`);
+  if (d) parts.push(`${d.toLocaleString(locale, { maximumFractionDigits: 1 })} min`);
+  if (km) parts.push(`${km.toLocaleString(locale, { maximumFractionDigits: 2 })} km`);
   const pace = formatPace(d, km);
   if (pace) parts.push(`${pace}/km`);
   return parts.join(' · ');

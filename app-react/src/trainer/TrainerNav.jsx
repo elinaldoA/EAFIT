@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n';
 const ICONS = {
   alunos: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -31,7 +32,7 @@ const ICONS = {
 // Barra inferior do modo personal (mesmo visual da do aluno).
 export default function TrainerNav({ items, active, onChange }) {
   return (
-    <nav className="bottom-nav" aria-label="Navegação do personal">
+    <nav className="bottom-nav" aria-label={t('Navegação do personal')}>
       {items.map(item => (
         <button
           key={item.key}

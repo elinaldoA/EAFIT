@@ -5,6 +5,7 @@ import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE, MUSCLE_LABELS } from '../data/bodyMuscleMap';
 import bodyAnatomyImg from '../assets/anatomia.jpg';
 
+import { t, locale } from './i18n';
 // Desenha os cards de compartilhamento num canvas offscreen (mesmo padrão de canvas
 // usado em lib/imageUtils.js para compressão de imagem) e retorna um Blob PNG pronto
 // pra compartilhar ou baixar.
@@ -249,17 +250,17 @@ function drawWeeklyGoal(ctx, x, y, w, h, weekDone, weekTotal) {
   ctx.font = `700 22px ${FONT}`;
   ctx.fillStyle = MUTED;
   setTracking(ctx, 2.5);
-  ctx.fillText('META DA SEMANA', tx, cy - 30);
+  ctx.fillText(t('META DA SEMANA'), tx, cy - 30);
   setTracking(ctx, 0);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 46px ${FONT}`;
-  ctx.fillText(`${weekDone} de ${weekTotal} treinos`, tx, cy + 22);
+  ctx.fillText(t('{weekDone} de {weekTotal} treinos', { weekDone, weekTotal }), tx, cy + 22);
 
   ctx.font = `600 26px ${FONT}`;
   ctx.fillStyle = reached ? EMERALD : MUTED;
   const faltam = Math.max(0, weekTotal - weekDone);
-  ctx.fillText(reached ? 'Meta batida!' : `Faltam ${faltam} para fechar a semana`, tx, cy + 62);
+  ctx.fillText(reached ? t('Meta batida!') : t('Faltam {faltam} para fechar a semana', { faltam }), tx, cy + 62);
 }
 
 // Recorta a metade (frente ou costas) de anatomia.jpg dentro de um box
@@ -357,12 +358,12 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
   ctx.font = `700 22px ${FONT}`;
   ctx.fillStyle = ORANGE_LIGHT;
   setTracking(ctx, 2.5);
-  ctx.fillText('MÚSCULOS TRABALHADOS', innerX, y + MUSCLE_PANEL_PAD + 24);
+  ctx.fillText(t('MÚSCULOS TRABALHADOS'), innerX, y + MUSCLE_PANEL_PAD + 24);
   setTracking(ctx, 0);
 
   const boxY = y + MUSCLE_PANEL_PAD + 44 + 20;
-  drawBodyView(ctx, img, innerX, boxY, BODY_BOX_W, BODY_BOX_H, 0, FRONT_MUSCLE_PATHS, activeGroups, 'Frente');
-  drawBodyView(ctx, img, innerX + BODY_BOX_W + BODY_BOX_GAP, boxY, BODY_BOX_W, BODY_BOX_H, BODY_IMG_HALF_SIZE.width, BACK_MUSCLE_PATHS, activeGroups, 'Costas');
+  drawBodyView(ctx, img, innerX, boxY, BODY_BOX_W, BODY_BOX_H, 0, FRONT_MUSCLE_PATHS, activeGroups, t('Frente'));
+  drawBodyView(ctx, img, innerX + BODY_BOX_W + BODY_BOX_GAP, boxY, BODY_BOX_W, BODY_BOX_H, BODY_IMG_HALF_SIZE.width, BACK_MUSCLE_PATHS, activeGroups, t('Costas'));
 
   const chipsX = innerX + BODY_BOX_W * 2 + BODY_BOX_GAP + 44;
   drawMuscleChips(ctx, chipsX, boxY, x + w - MUSCLE_PANEL_PAD - chipsX, BODY_BOX_H, activeGroups);
@@ -372,7 +373,7 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
 // não o conhece (a raiz do app abre direto no login).
 const SHARE_URL_LABEL = 'elinaldoa.github.io/EAFIT';
 
-export const SHARE_TEXT = `Treino concluído no EAFIT 💪 Monte o seu grátis: ${SHARE_CARD_URL}`;
+export const SHARE_TEXT = t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
 
 // Barra de marca no topo: logo + nome à esquerda, data à direita.
 async function drawTopBar(ctx, y, dateLabel) {
@@ -388,7 +389,7 @@ async function drawTopBar(ctx, y, dateLabel) {
   ctx.font = `600 24px ${FONT}`;
   ctx.fillStyle = MUTED;
   setTracking(ctx, 0);
-  ctx.fillText('Treino & evolução', textX, y + 74);
+  ctx.fillText(t('Treino & evolução'), textX, y + 74);
 
   if (dateLabel) {
     ctx.textAlign = 'right';
@@ -437,7 +438,7 @@ async function drawFooter(ctx, y, cta) {
 }
 
 function formatCardDate(date = new Date()) {
-  return date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '');
+  return date.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '');
 }
 
 export async function renderWorkoutSummaryCard(summary) {
@@ -461,10 +462,10 @@ export async function renderWorkoutSummaryCard(summary) {
   ctx.fillStyle = ORANGE_LIGHT;
   ctx.font = `800 30px ${FONT}`;
   setTracking(ctx, 4);
-  ctx.fillText('TREINO CONCLUÍDO', PAD_X + 64, y);
+  ctx.fillText(t('TREINO CONCLUÍDO'), PAD_X + 64, y);
   setTracking(ctx, 0);
 
-  const title = String(day?.foco || day?.dia || 'Treino').toUpperCase();
+  const title = String(day?.foco || day?.dia || t('Treino')).toUpperCase();
   // Diminui a fonte até o foco caber em 2 linhas sem cortar; só abaixo do
   // mínimo é que ele é abreviado com "…".
   let titlePx = 104;
@@ -499,11 +500,11 @@ export async function renderWorkoutSummaryCard(summary) {
 
   y += 56 + 44 + bonus;
   const boxW = (CONTENT_W - statsGap) / 2;
-  drawStatBox(ctx, PAD_X, y, boxW, statBoxH, formatDuration(durationMs), 'duração', ORANGE);
-  drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, `${(totalCarga || 0).toLocaleString('pt-BR')} kg`, 'carga total', SKY);
+  drawStatBox(ctx, PAD_X, y, boxW, statBoxH, formatDuration(durationMs), t('duração'), ORANGE);
+  drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, `${(totalCarga || 0).toLocaleString(locale)} kg`, t('carga total'), SKY);
   y += statBoxH + statsGap;
-  drawStatBox(ctx, PAD_X, y, boxW, statBoxH, `${totalSetsDone}/${totalPlannedSets}`, 'séries concluídas', EMERALD);
-  drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, String(exercises.length), 'exercícios', VIOLET);
+  drawStatBox(ctx, PAD_X, y, boxW, statBoxH, `${totalSetsDone}/${totalPlannedSets}`, t('séries concluídas'), EMERALD);
+  drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, String(exercises.length), t('exercícios'), VIOLET);
 
   y += statBoxH + 28 + bonus;
   drawWeeklyGoal(ctx, PAD_X, y, CONTENT_W, goalH, weekDone, weekTotal);
@@ -511,14 +512,14 @@ export async function renderWorkoutSummaryCard(summary) {
   y += goalH + 28 + bonus;
   await drawMusclesPanel(ctx, PAD_X, y, CONTENT_W, day);
 
-  await drawFooter(ctx, footerY, 'Monte o seu treino grátis');
+  await drawFooter(ctx, footerY, t('Monte o seu treino grátis'));
 
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
 // Compartilha a imagem pelo share nativo (quando suporta arquivos) ou baixa.
 async function shareImageBlob(blob, filename, title, text) {
-  if (!blob) throw new Error('Não foi possível gerar a imagem.');
+  if (!blob) throw new Error(t('Não foi possível gerar a imagem.'));
 
   const file = new File([blob], filename, { type: 'image/png' });
 
@@ -542,7 +543,7 @@ async function shareImageBlob(blob, filename, title, text) {
 
 export async function shareWorkoutSummary(summary) {
   const blob = await renderWorkoutSummaryCard(summary);
-  return shareImageBlob(blob, 'meu-treino.png', 'Meu treino', SHARE_TEXT);
+  return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), SHARE_TEXT);
 }
 
 // Cartão 9:16 da retrospectiva do mês (mesmo visual/marca do resumo do treino).
@@ -560,7 +561,7 @@ export async function renderMonthlyRecapCard(recap) {
   ctx.fillStyle = ORANGE_LIGHT;
   ctx.font = `800 30px ${FONT}`;
   setTracking(ctx, 4);
-  ctx.fillText('MEU MÊS NO EAFIT', PAD_X, 250);
+  ctx.fillText(t('MEU MÊS NO EAFIT'), PAD_X, 250);
   setTracking(ctx, 0);
 
   ctx.fillStyle = '#ffffff';
@@ -571,12 +572,12 @@ export async function renderMonthlyRecapCard(recap) {
   const boxH = 250;
   const boxW = (CONTENT_W - statsGap) / 2;
   const stats = [
-    [String(recap.treinos), 'treinos', ORANGE],
-    [formatMinutes(recap.minutes), 'de treino', SKY],
-    [`${recap.volume.toLocaleString('pt-BR')} kg`, 'volume total', EMERALD],
-    [String(recap.prCount), 'recordes batidos', VIOLET],
-    [recap.bestStreak ? `${recap.bestStreak} dia(s)` : '—', 'melhor sequência', ORANGE],
-    [recap.favWeekday || '—', 'dia favorito', SKY],
+    [String(recap.treinos), t('treinos'), ORANGE],
+    [formatMinutes(recap.minutes), t('de treino'), SKY],
+    [`${recap.volume.toLocaleString(locale)} kg`, t('volume total'), EMERALD],
+    [String(recap.prCount), t('recordes batidos'), VIOLET],
+    [recap.bestStreak ? `${recap.bestStreak} dia(s)` : '—', t('melhor sequência'), ORANGE],
+    [recap.favWeekday || '—', t('dia favorito'), SKY],
   ];
   let y = 430;
   stats.forEach(([value, label, accent], i) => {
@@ -602,18 +603,18 @@ export async function renderMonthlyRecapCard(recap) {
 
     ctx.fillStyle = '#ffffff';
     ctx.font = `700 34px ${FONT}`;
-    ctx.fillText('de treinos', PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 - 2);
+    ctx.fillText(t('de treinos'), PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 - 2);
     ctx.fillStyle = MUTED;
     ctx.font = `600 28px ${FONT}`;
-    ctx.fillText('em relação ao mês anterior', PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 + 38);
+    ctx.fillText(t('em relação ao mês anterior'), PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 + 38);
   }
 
-  await drawFooter(ctx, CARD_HEIGHT - 214, 'Monte o seu treino grátis');
+  await drawFooter(ctx, CARD_HEIGHT - 214, t('Monte o seu treino grátis'));
 
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
 export async function shareMonthlyRecap(recap) {
   const blob = await renderMonthlyRecapCard(recap);
-  return shareImageBlob(blob, 'meu-mes-eafit.png', 'Meu mês no EAFIT', `Meu mês no EAFIT 💪 Monte o seu grátis: ${SHARE_CARD_URL}`);
+  return shareImageBlob(blob, 'meu-mes-eafit.png', t('Meu mês no EAFIT'), t('Meu mês no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }));
 }

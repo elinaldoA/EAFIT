@@ -8,6 +8,7 @@ import { isNotifyEnabled } from '../lib/notifications';
 import { postActivity } from '../lib/friends';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 
+import { t } from '../lib/i18n';
 export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
   const { user } = useAuth();
   const { saveSetState, workoutIds } = useWorkout();
@@ -122,11 +123,11 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, st
               workoutId: wId ?? workoutIds[day.dia], setNumber: n,
             });
             if (pr) {
-              toast(`🏆 Novo recorde em ${ex.nome}!`);
-              postActivity('recorde', `Novo recorde em ${ex.nome}`, `${cargaNum}kg`);
+              toast(t('🏆 Novo recorde em {nome}!', { nome: ex.nome }));
+              postActivity('recorde', t('Novo recorde em {nome}', { nome: ex.nome }), `${cargaNum}kg`);
               if (isNotifyEnabled(user.user_metadata, 'notifyRecords')) {
                 sendPushToSelf({
-                  title: '🏆 Novo recorde!',
+                  title: t('🏆 Novo recorde!'),
                   body: `${ex.nome}: ${cargaNum}kg`,
                   tag: `pr-${ex.nome}`,
                 }).catch(err => console.error('sendPushToSelf:', err));
@@ -143,25 +144,25 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, st
   return (
     <div className="set-row-wrap">
       <div className="set-row">
-        <span className="set-row__label">Série {n}</span>
+        <span className="set-row__label">{t('Série {n}', { n })}</span>
         <input
           className={`set-row__carga${saved ? ' saved' : ''}`}
           type="text" inputMode="decimal" placeholder="kg" autoComplete="off"
           value={carga} onChange={handleCargaInput} onBlur={handleCargaBlur}
-          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
+          disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
         />
         <input
           className={`set-row__carga${saved ? ' saved' : ''}`}
           type="text" inputMode="numeric" placeholder="reps" autoComplete="off"
           value={reps} onChange={handleRepsInput} onBlur={handleRepsBlur}
-          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
+          disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
         />
         <button
           type="button"
           className={`set-row__check${done ? ' set-row__check--done' : ''}`}
           aria-pressed={done}
           onClick={handleCheck}
-          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
+          disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
         >✓</button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { todayDate, DAY_NAMES } from '../data/treinoData';
 import { pausedDaySet, addDays } from './pause';
 
+import { locale } from './i18n';
 // Parses a "YYYY-MM-DD" string as a local date at noon, avoiding the UTC
 // midnight parsing of `new Date(str)` shifting the day in negative-offset timezones.
 export function parseLocalDate(dateStr) {
@@ -17,7 +18,7 @@ export function toDateStr(d) {
 
 export function fmtDate(dateStr) {
   const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' });
 }
 
 // Dias restantes até endDate (negativo = já vencido). Compara datas puras

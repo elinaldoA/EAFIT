@@ -4,6 +4,7 @@ import { parseLocalDate, toDateStr } from './utils';
 import { evaluateCycleEvolution } from './planEvolution';
 import { generatePlan, NIVEIS } from '../data/workoutTemplates';
 
+import { t } from './i18n';
 // Ciclo positivo antecipa o próximo (mais 1 semana livre pra "subir de nível"
 // mais rápido); negativo estende (mais tempo pra consolidar antes de avançar).
 const DURATION_ADJUST_WEEKS = { positivo: -1, neutro: 0, negativo: 2 };
@@ -118,7 +119,7 @@ async function createPlanWithDays(userId, name, days, { activate = false, durati
 }
 
 async function seedDefaultPlan(userId, days = treinoData) {
-  return createPlanWithDays(userId, 'Meu plano', days, { activate: true, durationWeeks: DEFAULT_CYCLE_WEEKS });
+  return createPlanWithDays(userId, t('Meu plano'), days, { activate: true, durationWeeks: DEFAULT_CYCLE_WEEKS });
 }
 
 // Usado pela tela de onboarding para semear o plano já personalizado
@@ -181,7 +182,7 @@ export async function fetchPlanDays(planId) {
 
 const PLAN_CYCLE_FIELDS = 'id, name, created_at, start_date, end_date, duration_weeks, next_plan_id, regression_plan_id';
 
-const VERDICT_LABEL = { positivo: 'Progressão', negativo: 'Recuperação', neutro: 'Continuidade' };
+const VERDICT_LABEL = { positivo: t('Progressão'), negativo: t('Recuperação'), neutro: t('Continuidade') };
 
 // Sem sucessor configurado pro veredito: gera um novo ciclo automaticamente a
 // partir do perfil atual (mesma generatePlan do onboarding/regeneração manual
@@ -197,8 +198,8 @@ export async function autoGenerateNextCycle(userId, plan, evaluation, meta = {})
   const nivelAjustado = adjustNivelForVerdict(meta.nivel, evaluation.verdict);
   const generatedDays = await generatePlan({ peso: meta.peso, altura: meta.altura, meta: meta.meta, nivel: nivelAjustado });
 
-  const label = VERDICT_LABEL[evaluation.verdict] || 'Continuidade';
-  const name = `${label} automática (${todayDate()})`;
+  const label = VERDICT_LABEL[evaluation.verdict] || t('Continuidade');
+  const name = t('{label} automática ({v1})', { label, v1: todayDate() });
 
   const baseWeeks = plan.duration_weeks ?? DEFAULT_CYCLE_WEEKS;
   const durationWeeks = Math.max(1, baseWeeks + DURATION_ADJUST_WEEKS[evaluation.verdict]);

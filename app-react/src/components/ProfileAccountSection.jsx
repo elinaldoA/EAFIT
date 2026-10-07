@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { version as APP_VERSION } from '../../package.json';
 import CollapsibleCard from './CollapsibleCard';
 
-const DELETE_CONFIRM_WORD = 'EXCLUIR';
+import { t } from '../lib/i18n';
+const DELETE_CONFIRM_WORD = t('EXCLUIR');
 
 export default function ProfileAccountSection({
   user,
@@ -22,36 +23,36 @@ export default function ProfileAccountSection({
 
   return (
     <>
-      <CollapsibleCard icon="🔐" title="E-mail e senha" summary={user?.email}>
+      <CollapsibleCard icon="🔐" title={t('E-mail e senha')} summary={user?.email}>
             <div className="profile-field">
-              <label className="profile-field__label" htmlFor="newEmail">Novo e-mail</label>
+              <label className="profile-field__label" htmlFor="newEmail">{t('Novo e-mail')}</label>
               <input
                 type="email" id="newEmail" className="input input--sm" placeholder={user?.email}
                 value={newEmail} onChange={e => setNewEmail(e.target.value)}
               />
-              <button className="btn btn--outline btn--sm" onClick={onUpdateEmail}>Atualizar e-mail</button>
+              <button className="btn btn--outline btn--sm" onClick={onUpdateEmail}>{t('Atualizar e-mail')}</button>
             </div>
             <div className="profile-field">
-              <label className="profile-field__label" htmlFor="newPassword">Nova senha</label>
+              <label className="profile-field__label" htmlFor="newPassword">{t('Nova senha')}</label>
               <input
-                type="password" id="newPassword" className="input input--sm" placeholder="Mínimo 6 caracteres"
+                type="password" id="newPassword" className="input input--sm" placeholder={t('Mínimo 6 caracteres')}
                 value={newPassword} onChange={e => setNewPassword(e.target.value)}
               />
-              <button className="btn btn--outline btn--sm" onClick={onUpdatePassword}>Atualizar senha</button>
+              <button className="btn btn--outline btn--sm" onClick={onUpdatePassword}>{t('Atualizar senha')}</button>
             </div>
       </CollapsibleCard>
 
-      <button className="btn btn--outline btn--full" onClick={onLogout}>Sair da conta</button>
+      <button className="btn btn--outline btn--full" onClick={onLogout}>{t('Sair da conta')}</button>
 
       {!deleteOpen ? (
         <button
           type="button" className="link-btn link-btn--danger"
           onClick={() => setDeleteOpen(true)}
-        >Excluir minha conta</button>
+        >{t('Excluir minha conta')}</button>
       ) : (
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="deleteConfirm">
-            Isso apaga seus treinos e dados salvos e encerra a sessão — não pode ser desfeito. Digite <strong>{DELETE_CONFIRM_WORD}</strong> para confirmar.
+            {t('Isso apaga seus treinos e dados salvos e encerra a sessão — não pode ser desfeito. Digite')} <strong>{DELETE_CONFIRM_WORD}</strong> {t('para confirmar.')}
           </label>
           <input
             type="text" id="deleteConfirm" className="input input--sm"
@@ -63,16 +64,16 @@ export default function ProfileAccountSection({
               type="button" className="btn btn--danger btn--sm"
               disabled={deleteConfirmText.trim().toUpperCase() !== DELETE_CONFIRM_WORD}
               onClick={handleConfirmDelete}
-            >Excluir permanentemente</button>
+            >{t('Excluir permanentemente')}</button>
             <button
               type="button" className="btn btn--outline btn--sm"
               onClick={() => { setDeleteOpen(false); setDeleteConfirmText(''); }}
-            >Cancelar</button>
+            >{t('Cancelar')}</button>
           </div>
         </div>
       )}
 
-      <p className="app-version">EAFIT v{APP_VERSION}</p>
+      <p className="app-version">{t('EAFIT v{APP_VERSION}', { APP_VERSION })}</p>
     </>
   );
 }

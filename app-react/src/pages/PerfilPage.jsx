@@ -25,9 +25,11 @@ import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
 import { NotificationsSection, ExportSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
+import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
 import { startTutorial } from '../lib/tutorial';
 
+import { t, locale, lang } from '../lib/i18n';
 export default function PerfilPage({ active }) {
   const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
   const toast = useToast();
@@ -64,7 +66,7 @@ export default function PerfilPage({ active }) {
       await action(user.id);
     } catch (err) {
       console.error('export:', err);
-      toast(`⚠️ Erro ao gerar ${label}`);
+      toast(t('⚠️ Erro ao gerar {label}', { label }));
     } finally {
       setExporting(false);
     }
@@ -78,7 +80,7 @@ export default function PerfilPage({ active }) {
     try {
       const dataUrl = await saveAvatar(user.id, file);
       setAvatarData(dataUrl);
-      toast('✅ Foto de perfil atualizada');
+      toast(t('✅ Foto de perfil atualizada'));
     } catch (err) {
       toast(`⚠️ ${err.message}`);
     } finally {
@@ -88,16 +90,16 @@ export default function PerfilPage({ active }) {
 
   async function handleSavePersonal() {
     const { error } = await updateProfile({ nome, sobrenome, apelido });
-    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
+    if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_nome', nome);
     localStorage.setItem('profile_sobrenome', sobrenome);
     localStorage.setItem('profile_apelido', apelido);
-    toast('✅ Dados pessoais salvos!');
+    toast(t('✅ Dados pessoais salvos!'));
   }
 
   async function handleSave() {
     const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, pesoAlvo });
-    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
+    if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_sexo', sexo);
     localStorage.setItem('profile_idade', idade);
     localStorage.setItem('profile_peso', peso);
@@ -116,7 +118,7 @@ export default function PerfilPage({ active }) {
         markPending();
       }
     }
-    toast('Perfil salvo!');
+    toast(t('Perfil salvo!'));
   }
 
   async function handleRegeneratePlan() {
@@ -124,21 +126,21 @@ export default function PerfilPage({ active }) {
     const pesoNum = parseFloat(peso);
     const alturaNum = parseFloat(altura);
     if (!pesoNum || !alturaNum) {
-      toast('⚠️ Preencha peso e altura antes de gerar um novo treino');
+      toast(t('⚠️ Preencha peso e altura antes de gerar um novo treino'));
       return;
     }
-    if (planByTrainer && !window.confirm('Seu plano atual foi montado pelo seu personal. Gerar um novo treino automático vai substituí-lo (ele continua salvo em "Editar treino"). Continuar?')) return;
-    if (!window.confirm('Isso cria um novo plano de treino com base nos seus dados atuais e o ativa. Seus planos existentes continuam salvos e podem ser reativados em "Editar treino". Continuar?')) return;
+    if (planByTrainer && !window.confirm(t('Seu plano atual foi montado pelo seu personal. Gerar um novo treino automático vai substituí-lo (ele continua salvo em "Editar treino"). Continuar?'))) return;
+    if (!window.confirm(t('Isso cria um novo plano de treino com base nos seus dados atuais e o ativa. Seus planos existentes continuam salvos e podem ser reativados em "Editar treino". Continuar?'))) return;
 
     setRegenerating(true);
     try {
       const generatedDays = await generatePlan({ peso: pesoNum, altura: alturaNum, meta, nivel });
-      await createGeneratedPlan(user.id, `Plano gerado ${new Date().toLocaleDateString('pt-BR')}`, generatedDays);
+      await createGeneratedPlan(user.id, t('Plano gerado {v1}', { v1: new Date().toLocaleDateString(locale) }), generatedDays);
       await refreshPlan();
-      toast('✅ Novo treino gerado e ativado!');
+      toast(t('✅ Novo treino gerado e ativado!'));
     } catch (err) {
       console.error('regeneratePlan:', err);
-      toast('⚠️ Erro ao gerar novo treino');
+      toast(t('⚠️ Erro ao gerar novo treino'));
     } finally {
       setRegenerating(false);
     }
@@ -146,23 +148,23 @@ export default function PerfilPage({ active }) {
 
   async function handleSaveWeeklyGoal() {
     const { error } = await updateProfile({ weeklyGoal });
-    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
+    if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_weeklyGoal', weeklyGoal);
-    toast('📅 Meta semanal salva!');
+    toast(t('📅 Meta semanal salva!'));
   }
 
   async function handleSaveWaterGoal() {
     const { error } = await updateProfile({ macroAgua });
-    if (error) return toast('⚠️ Não foi possível salvar — tente novamente');
+    if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_macroAgua', macroAgua);
-    toast('🎯 Meta de água salva!');
+    toast(t('🎯 Meta de água salva!'));
   }
 
   async function handleUpdateEmail() {
     if (!newEmail) return;
     const { error } = await updateEmail(newEmail);
     if (error) return toast(`⚠️ ${error}`);
-    toast('✅ Confirme o e-mail enviado para a nova conta');
+    toast(t('✅ Confirme o e-mail enviado para a nova conta'));
     setNewEmail('');
   }
 
@@ -170,7 +172,7 @@ export default function PerfilPage({ active }) {
     if (!newPassword) return;
     const { error } = await updatePassword(newPassword);
     if (error) return toast(`⚠️ ${error}`);
-    toast('✅ Senha atualizada');
+    toast(t('✅ Senha atualizada'));
     setNewPassword('');
   }
 
@@ -188,8 +190,8 @@ export default function PerfilPage({ active }) {
   const suggestedWaterGoal = computedWaterGoalLiters(peso) ?? DEFAULT_WATER_GOAL;
   const waterGoalLabel = String(parseFloat(macroAgua) || suggestedWaterGoal).replace('.', ',');
   const fullName = [nome, sobrenome].filter(Boolean).join(' ');
-  const bodySummary = [peso && `${peso}kg`, altura && `${altura}cm`, imc && `IMC ${imc.value.replace('.', ',')}`]
-    .filter(Boolean).join(' · ') || 'Peso, altura, meta e nível';
+  const bodySummary = [peso && `${peso}kg`, altura && `${altura}cm`, imc && t('IMC {v1}', { v1: imc.value.replace('.', ',') })]
+    .filter(Boolean).join(' · ') || t('Peso, altura, meta e nível');
 
   // Peso e fotos moram na aba Corpo da Evolução (antes ficavam repetidos
   // aqui). Grava a aba e troca o hash — useHashTab ouve o hashchange.
@@ -200,8 +202,8 @@ export default function PerfilPage({ active }) {
 
   async function handleInvite() {
     const result = await shareInvite();
-    if (result === 'copied') toast('🔗 Link copiado — cole na conversa com seus amigos');
-    else if (result === 'failed') toast('⚠️ Não deu pra compartilhar. Mande o link elinaldoa.github.io/EAFIT/landing');
+    if (result === 'copied') toast(t('🔗 Link copiado — cole na conversa com seus amigos'));
+    else if (result === 'failed') toast(t('⚠️ Não deu pra compartilhar. Mande o link elinaldoa.github.io/EAFIT/landing'));
   }
 
   return (
@@ -212,16 +214,16 @@ export default function PerfilPage({ active }) {
       />
 
       <div className="section-group">
-        <div className="section-group__label">Meus dados</div>
+        <div className="section-group__label">{t('Meus dados')}</div>
 
-        <CollapsibleCard icon="👤" title="Dados pessoais" summary={fullName || apelido || 'Nome e apelido'}>
+        <CollapsibleCard icon="👤" title={t('Dados pessoais')} summary={fullName || apelido || t('Nome e apelido')}>
           <ProfilePersonalSection
             nome={nome} setNome={setNome} sobrenome={sobrenome} setSobrenome={setSobrenome}
             apelido={apelido} setApelido={setApelido} onSave={handleSavePersonal}
           />
         </CollapsibleCard>
 
-        <CollapsibleCard icon="📏" title="Meu corpo" summary={bodySummary}>
+        <CollapsibleCard icon="📏" title={t('Meu corpo')} summary={bodySummary}>
           <ProfileBodySection
             sexo={sexo} setSexo={setSexo} idade={idade} setIdade={setIdade}
             peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
@@ -232,7 +234,7 @@ export default function PerfilPage({ active }) {
           />
         </CollapsibleCard>
 
-        <CollapsibleCard icon="🎯" title="Metas" summary={`${weeklyGoalNum} treinos/semana · ${waterGoalLabel}L de água por dia`}>
+        <CollapsibleCard icon="🎯" title={t('Metas')} summary={t('{weekly} treinos/semana · {water}L de água por dia', { weekly: weeklyGoalNum, water: waterGoalLabel })}>
           <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
           <div className="collapse__divider" />
           <MacrosSection
@@ -245,9 +247,9 @@ export default function PerfilPage({ active }) {
         <button type="button" className="shortcut-card" onClick={openBodyProgress}>
           <span className="collapse__icon" aria-hidden="true">📈</span>
           <span className="collapse__text">
-            <span className="collapse__title">Peso e fotos de progresso</span>
+            <span className="collapse__title">{t('Peso e fotos de progresso')}</span>
             <span className="collapse__summary">
-              {weightLogs.length ? `${weightLogs.length} registros de peso · ver em Evolução` : 'Ver em Evolução'}
+              {weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
             </span>
           </span>
           <span className="collapse__chevron" aria-hidden="true">›</span>
@@ -256,12 +258,12 @@ export default function PerfilPage({ active }) {
 
       {isFlagOn(config.flags, 'convite_amigos') && (
         <div className="section-group">
-          <div className="section-group__label">Treine junto</div>
+          <div className="section-group__label">{t('Treine junto')}</div>
           <button type="button" className="shortcut-card" onClick={handleInvite}>
             <span className="collapse__icon" aria-hidden="true">🤝</span>
             <span className="collapse__text">
-              <span className="collapse__title">Convidar amigos</span>
-              <span className="collapse__summary">Mande o link do EAFIT pra quem treina com você</span>
+              <span className="collapse__title">{t('Convidar amigos')}</span>
+              <span className="collapse__summary">{t('Mande o link do EAFIT pra quem treina com você')}</span>
             </span>
             <span className="collapse__chevron" aria-hidden="true">›</span>
           </button>
@@ -270,49 +272,52 @@ export default function PerfilPage({ active }) {
 
       {isFlagOn(config.flags, 'feedback') && (
         <div className="section-group">
-          <div className="section-group__label">Ajude a melhorar</div>
-          <CollapsibleCard icon="💬" title="Enviar feedback" summary="Sugestão, problema ou elogio">
+          <div className="section-group__label">{t('Ajude a melhorar')}</div>
+          <CollapsibleCard icon="💬" title={t('Enviar feedback')} summary={t('Sugestão, problema ou elogio')}>
             <ProfileFeedbackSection userId={user.id} toast={toast} />
           </CollapsibleCard>
         </div>
       )}
 
       <div className="section-group">
-        <div className="section-group__label">Preferências</div>
-        <CollapsibleCard icon="🔔" title="Notificações" summary={remindersEnabled ? 'Ativadas' : 'Desativadas'}>
+        <div className="section-group__label">{t('Preferências')}</div>
+        <CollapsibleCard icon="🌐" title={t('Idioma')} summary={lang === 'en' ? 'English' : 'Português'}>
+          <LanguageSwitch />
+        </CollapsibleCard>
+        <CollapsibleCard icon="🔔" title={t('Notificações')} summary={remindersEnabled ? t('Ativadas') : t('Desativadas')}>
           <NotificationsSection
             user={user} updateProfile={updateProfile} toast={toast}
             remindersEnabled={remindersEnabled} toggleReminders={toggleReminders}
           />
         </CollapsibleCard>
         <CollapsibleCard
-          icon="⏸" title="Modo pausa"
-          summary={activePause(user.user_metadata, todayDate()) ? `Pausado até ${formatDayBR(activePause(user.user_metadata, todayDate()).to)}` : 'Viagem ou doença? Pause sem perder a sequência'}
+          icon="⏸" title={t('Modo pausa')}
+          summary={activePause(user.user_metadata, todayDate()) ? t('Pausado até {v1}', { v1: formatDayBR(activePause(user.user_metadata, todayDate()).to) }) : t('Viagem ou doença? Pause sem perder a sequência')}
         >
           <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
         </CollapsibleCard>
-        <CollapsibleCard icon="🤝" title="Meu personal" summary="Vincule-se ao seu personal trainer">
+        <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal trainer')}>
           <ProfileTrainerSection toast={toast} />
         </CollapsibleCard>
-        <CollapsibleCard icon="💾" title="Exportar e backup" summary="CSV, JSON ou relatório para imprimir">
+        <CollapsibleCard icon="💾" title={t('Exportar e backup')} summary={t('CSV, JSON ou relatório para imprimir')}>
           <ExportSection exporting={exporting} onExport={handleExport} />
         </CollapsibleCard>
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Ajuda</div>
+        <div className="section-group__label">{t('Ajuda')}</div>
         <button type="button" className="shortcut-card" onClick={startTutorial}>
           <span className="collapse__icon" aria-hidden="true">🎓</span>
           <span className="collapse__text">
-            <span className="collapse__title">Ver tutorial</span>
-            <span className="collapse__summary">Passo a passo de todas as funções do app</span>
+            <span className="collapse__title">{t('Ver tutorial')}</span>
+            <span className="collapse__summary">{t('Passo a passo de todas as funções do app')}</span>
           </span>
           <span className="collapse__chevron" aria-hidden="true">›</span>
         </button>
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Conta</div>
+        <div className="section-group__label">{t('Conta')}</div>
         <ProfileAccountSection
           user={user}
           newEmail={newEmail} setNewEmail={setNewEmail} onUpdateEmail={handleUpdateEmail}

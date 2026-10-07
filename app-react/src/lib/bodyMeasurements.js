@@ -1,11 +1,12 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 export const MEASURE_FIELDS = [
-  { key: 'cintura', label: 'Cintura' },
-  { key: 'quadril', label: 'Quadril' },
-  { key: 'peito', label: 'Peito' },
-  { key: 'braco', label: 'Braço' },
-  { key: 'coxa', label: 'Coxa' },
+  { key: 'cintura', label: t('Cintura') },
+  { key: 'quadril', label: t('Quadril') },
+  { key: 'peito', label: t('Peito') },
+  { key: 'braco', label: t('Braço') },
+  { key: 'coxa', label: t('Coxa') },
 ];
 
 // Converte o que o usuário digitou ("82,5", "", "abc") em número ou null.

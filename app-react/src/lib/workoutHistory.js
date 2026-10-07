@@ -1,9 +1,10 @@
 import { db } from './supabase';
 import { parseLocalDate, toDateStr } from './utils';
 
+import { locale, t } from './i18n';
 export const MONTH_NAMES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  t('Janeiro'), t('Fevereiro'), t('Março'), t('Abril'), t('Maio'), t('Junho'),
+  t('Julho'), t('Agosto'), t('Setembro'), t('Outubro'), t('Novembro'), t('Dezembro'),
 ];
 
 // Primeiro e último dia ("YYYY-MM-DD") do mês — month é 0-based, como no Date.
@@ -32,8 +33,8 @@ export function buildMonthGrid(year, month) {
 // Volume (Σ carga × reps) compacto: toneladas a partir de 10t.
 export function fmtVolume(kg) {
   return kg >= 10000
-    ? `${(kg / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}t`
-    : `${Math.round(kg).toLocaleString('pt-BR')}kg`;
+    ? `${(kg / 1000).toLocaleString(locale, { maximumFractionDigits: 1 })}t`
+    : `${Math.round(kg).toLocaleString(locale)}kg`;
 }
 
 function toNum(v) {

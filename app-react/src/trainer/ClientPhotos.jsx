@@ -3,6 +3,7 @@ import { fmtDate } from '../lib/utils';
 import { fetchClientPhotos, beforeAfter } from '../lib/trainerPhotos';
 import Skeleton from '../components/Skeleton';
 
+import { t } from '../lib/i18n';
 // Fotos de evolução que o aluno escolheu compartilhar (só leitura): antes e
 // depois no topo e a linha do tempo completa embaixo. Toque numa foto para ampliar.
 export default function ClientPhotos({ client }) {
@@ -21,14 +22,14 @@ export default function ClientPhotos({ client }) {
 
   return (
     <div className="dash-card">
-      <div className="dash-card__title">📸 Fotos de evolução</div>
+      <div className="dash-card__title">{t('📸 Fotos de evolução')}</div>
       {!state && <Skeleton height={80} />}
       {state && !state.shared && (
         <p className="dash-empty">
-          {state.failed ? 'Não foi possível carregar as fotos agora.' : `${client.name} não compartilhou as fotos de evolução com você.`}
+          {state.failed ? t('Não foi possível carregar as fotos agora.') : t('{name} não compartilhou as fotos de evolução com você.', { name: client.name })}
         </p>
       )}
-      {state && state.shared && state.photos.length === 0 && <p className="dash-empty">O aluno ainda não tem fotos.</p>}
+      {state && state.shared && state.photos.length === 0 && <p className="dash-empty">{t('O aluno ainda não tem fotos.')}</p>}
       {ba && (
         <div className="photo-compare">
           {[['Antes', ba.before], ['Depois', ba.after]].map(([label, p]) => (
@@ -42,7 +43,7 @@ export default function ClientPhotos({ client }) {
       {state && state.photos.length > 0 && (
         <div className="photo-strip">
           {state.photos.map(p => (
-            <button type="button" key={p.id} onClick={() => setOpen(p)} aria-label={`Foto de ${fmtDate(p.date)}`}>
+            <button type="button" key={p.id} onClick={() => setOpen(p)} aria-label={t('Foto de {v1}', { v1: fmtDate(p.date) })}>
               <img src={p.url} alt="" loading="lazy" />
               <small>{fmtDate(p.date)}</small>
             </button>
@@ -50,8 +51,8 @@ export default function ClientPhotos({ client }) {
         </div>
       )}
       {open && (
-        <button type="button" className="photo-zoom" onClick={() => setOpen(null)} aria-label="Fechar foto">
-          <img src={open.url} alt={`Foto de ${fmtDate(open.date)}`} />
+        <button type="button" className="photo-zoom" onClick={() => setOpen(null)} aria-label={t('Fechar foto')}>
+          <img src={open.url} alt={t('Foto de {v1}', { v1: fmtDate(open.date) })} />
           <span>{fmtDate(open.date)}{open.note ? ` · ${open.note}` : ''}</span>
         </button>
       )}

@@ -4,6 +4,7 @@ import { useToast } from '../context/useToast';
 import { todayDate } from '../data/treinoData';
 import { activePause, endPauseFields, formatDayBR } from '../lib/pause';
 
+import { t } from '../lib/i18n';
 // Faixa no topo do Treino enquanto o modo pausa está ativo.
 export default function PauseBanner() {
   const { user, updateProfile } = useAuth();
@@ -17,13 +18,13 @@ export default function PauseBanner() {
     setBusy(true);
     const { error } = await updateProfile(endPauseFields(meta, todayDate()));
     setBusy(false);
-    toast(error ? `❌ ${error.message}` : '▶️ Pausa encerrada. Bom treino!');
+    toast(error ? `❌ ${error.message}` : t('▶️ Pausa encerrada. Bom treino!'));
   }
 
   return (
     <div className="pause-banner" role="status">
-      <span>⏸ Modo pausa até {formatDayBR(active.to)} — sua sequência está protegida.</span>
-      <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleResume}>Retomar</button>
+      <span>{t('⏸ Modo pausa até {v1} — sua sequência está protegida.', { v1: formatDayBR(active.to) })}</span>
+      <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleResume}>{t('Retomar')}</button>
     </div>
   );
 }

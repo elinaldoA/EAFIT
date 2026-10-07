@@ -1,15 +1,16 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 export const INACTIVE_DAY_CHOICES = [3, 5, 7, 10, 14, 21];
 
 export const DEFAULT_SETTINGS = { inactive: true, pr: true, pain: true, weekly: true, days: 7 };
 
 // Frase de apoio sob cada opção de alerta.
 export const ALERT_OPTIONS = [
-  { key: 'inactive', label: 'Aluno sem treinar', hint: 'Avisa quando um aluno passa o prazo abaixo sem treinar.' },
-  { key: 'pr', label: 'Recorde de carga', hint: 'Avisa quando um aluno bate a maior carga dele num exercício.' },
-  { key: 'pain', label: 'Relato de dor forte ou lesão', hint: 'Avisa quando um aluno registra desconforto forte ou lesão.' },
-  { key: 'weekly', label: 'Resumo da semana', hint: 'Toda segunda, às 8h: quantos alunos treinaram e quem ficou parado.' },
+  { key: 'inactive', label: t('Aluno sem treinar'), hint: t('Avisa quando um aluno passa o prazo abaixo sem treinar.') },
+  { key: 'pr', label: t('Recorde de carga'), hint: t('Avisa quando um aluno bate a maior carga dele num exercício.') },
+  { key: 'pain', label: t('Relato de dor forte ou lesão'), hint: t('Avisa quando um aluno registra desconforto forte ou lesão.') },
+  { key: 'weekly', label: t('Resumo da semana'), hint: t('Toda segunda, às 8h: quantos alunos treinaram e quem ficou parado.') },
 ];
 
 export async function fetchTrainerSettings() {

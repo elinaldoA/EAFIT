@@ -8,6 +8,7 @@ import { MONTH_NAMES, buildMonthGrid, fetchMonthSessions, summarizeMonth, fmtVol
 import Skeleton from '../components/Skeleton';
 import SessionDetailModal from '../components/SessionDetailModal';
 
+import { t, locale } from '../lib/i18n';
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
 function currentMonth() {
@@ -16,7 +17,7 @@ function currentMonth() {
 }
 
 function fmtLongDate(dateStr) {
-  return parseLocalDate(dateStr).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+  return parseLocalDate(dateStr).toLocaleDateString(locale, { weekday: 'short', day: '2-digit', month: 'short' });
 }
 
 export default function HistoricoPage() {
@@ -55,7 +56,7 @@ export default function HistoricoPage() {
       })
       .catch(err => {
         console.error('fetchMonthSessions:', err);
-        if (!cancelled) toast('⚠️ Erro ao carregar o histórico');
+        if (!cancelled) toast(t('⚠️ Erro ao carregar o histórico'));
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -85,12 +86,12 @@ export default function HistoricoPage() {
     <section id="page-historico" className="page active">
       <div className="dash-card history-cal">
         <div className="history-cal__head">
-          <button type="button" className="icon-btn" aria-label="Mês anterior" onClick={() => shiftMonth(-1)}>‹</button>
+          <button type="button" className="icon-btn" aria-label={t('Mês anterior')} onClick={() => shiftMonth(-1)}>‹</button>
           <div className="history-cal__title">{MONTH_NAMES[cursor.month]} {cursor.year}</div>
-          <button type="button" className="icon-btn" aria-label="Próximo mês" disabled={isCurrentMonth} onClick={() => shiftMonth(1)}>›</button>
+          <button type="button" className="icon-btn" aria-label={t('Próximo mês')} disabled={isCurrentMonth} onClick={() => shiftMonth(1)}>›</button>
         </div>
 
-        <div className="history-cal__grid" role="grid" aria-label={`Treinos de ${MONTH_NAMES[cursor.month]}`}>
+        <div className="history-cal__grid" role="grid" aria-label={t('Treinos de {v1}', { v1: MONTH_NAMES[cursor.month] })}>
           {WEEKDAYS.map((w, i) => <span key={i} className="history-cal__weekday" aria-hidden="true">{w}</span>)}
           {weeks.flat().map((date, i) => {
             if (!date) return <span key={`e${i}`} className="history-cal__cell history-cal__cell--empty" />;
@@ -105,7 +106,7 @@ export default function HistoricoPage() {
               <button
                 key={date} type="button" className={cls} disabled={!s}
                 aria-pressed={date === selectedDate}
-                aria-label={`${parseLocalDate(date).getDate()}${s ? (s.completed ? ', treino concluído' : ', treino incompleto') : ''}`}
+                aria-label={`${parseLocalDate(date).getDate()}${s ? (s.completed ? t(', treino concluído') : t(', treino incompleto')) : ''}`}
                 onClick={() => handleDayClick(date)}
               >
                 {parseLocalDate(date).getDate()}
@@ -115,23 +116,23 @@ export default function HistoricoPage() {
         </div>
 
         <div className="history-cal__legend">
-          <span><i className="history-dot history-dot--done" /> Concluído</span>
-          <span><i className="history-dot history-dot--partial" /> Incompleto</span>
+          <span><i className="history-dot history-dot--done" /> {t('Concluído')}</span>
+          <span><i className="history-dot history-dot--partial" /> {t('Incompleto')}</span>
         </div>
       </div>
 
       <div className="history-stats">
-        <div className="stat-card"><span className="stat-card__value">{stats.treinos}</span><span className="stat-card__label">Treinos</span></div>
-        <div className="stat-card"><span className="stat-card__value">{stats.seconds ? formatDuration(stats.seconds * 1000) : '–'}</span><span className="stat-card__label">Tempo total</span></div>
-        <div className="stat-card"><span className="stat-card__value">{stats.sets}</span><span className="stat-card__label">Séries</span></div>
-        <div className="stat-card"><span className="stat-card__value">{stats.volume ? fmtVolume(stats.volume) : '–'}</span><span className="stat-card__label">Volume</span></div>
+        <div className="stat-card"><span className="stat-card__value">{stats.treinos}</span><span className="stat-card__label">{t('Treinos')}</span></div>
+        <div className="stat-card"><span className="stat-card__value">{stats.seconds ? formatDuration(stats.seconds * 1000) : '–'}</span><span className="stat-card__label">{t('Tempo total')}</span></div>
+        <div className="stat-card"><span className="stat-card__value">{stats.sets}</span><span className="stat-card__label">{t('Séries')}</span></div>
+        <div className="stat-card"><span className="stat-card__value">{stats.volume ? fmtVolume(stats.volume) : '–'}</span><span className="stat-card__label">{t('Volume')}</span></div>
       </div>
 
       <div className="section-group" ref={listRef}>
         <div className="section-group__label history-list__label">
-          {selectedDate ? `Treino de ${fmtLongDate(selectedDate)}` : 'Sessões do mês'}
+          {selectedDate ? t('Treino de {v1}', { v1: fmtLongDate(selectedDate) }) : t('Sessões do mês')}
           {selectedDate && (
-            <button type="button" className="link-btn" onClick={() => setSelectedDate(null)}>Ver todas</button>
+            <button type="button" className="link-btn" onClick={() => setSelectedDate(null)}>{t('Ver todas')}</button>
           )}
         </div>
 
@@ -143,9 +144,9 @@ export default function HistoricoPage() {
         ) : visible.length === 0 ? (
           <div className="empty-state">
             <span className="empty-state__icon" aria-hidden="true">📅</span>
-            <p className="empty-state__title">Nenhum treino registrado em {MONTH_NAMES[cursor.month].toLowerCase()}</p>
+            <p className="empty-state__title">{t('Nenhum treino registrado em {v1}', { v1: MONTH_NAMES[cursor.month].toLowerCase() })}</p>
             <p className="empty-state__text">
-              {isCurrentMonth ? 'Inicie um treino na aba Treino — ele aparece aqui assim que você marcar a primeira série.' : 'Use as setas para ver outros meses.'}
+              {isCurrentMonth ? t('Inicie um treino na aba Treino — ele aparece aqui assim que você marcar a primeira série.') : t('Use as setas para ver outros meses.')}
             </p>
           </div>
         ) : (
@@ -161,12 +162,10 @@ export default function HistoricoPage() {
                   <div className="history-item__main">
                     <div className="history-item__title">
                       {s.dayOfWeek}
-                      {!s.completed && <span className="history-item__tag">incompleto</span>}
+                      {!s.completed && <span className="history-item__tag">{t('incompleto')}</span>}
                     </div>
                     <div className="history-item__meta">
-                      {s.exercises.length} exerc. · {s.doneSets} séries
-                      {s.durationSeconds ? ` · ${formatDuration(s.durationSeconds * 1000)}` : ''}
-                      {s.volume ? ` · ${fmtVolume(s.volume)}` : ''}
+                      {t('{length} exerc. · {doneSets} séries {v1} {v2}', { length: s.exercises.length, doneSets: s.doneSets, v1: s.durationSeconds ? ` · ${formatDuration(s.durationSeconds * 1000)}` : '', v2: s.volume ? ` · ${fmtVolume(s.volume)}` : '' })}
                     </div>
                     {(rating || s.notes) && (
                       <div className="history-item__extra">

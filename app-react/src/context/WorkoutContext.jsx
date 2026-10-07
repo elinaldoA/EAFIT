@@ -9,6 +9,7 @@ import { useAuth } from './useAuth';
 import { useToast } from './useToast';
 import { WorkoutContext } from './useWorkout';
 
+import { t } from '../lib/i18n';
 // Reexecuta uma escrita que falhou (ex.: sem internet no momento) quando a fila é esvaziada.
 const SYNC_EXECUTORS = {
   workout_status: async ({ id, completed }) => {
@@ -145,9 +146,9 @@ export function WorkoutProvider({ children }) {
       setPlanStartDate(plan.startDate || null);
       setPlanEndDate(plan.endDate || null);
       if (plan.switchInfo) {
-        const verdictLabel = plan.switchInfo.verdict === 'positivo' ? 'progressão'
-          : plan.switchInfo.verdict === 'negativo' ? 'recuperação' : 'continuidade';
-        toast(`🔄 Ciclo encerrado — ativamos "${plan.switchInfo.toName}" automaticamente (${verdictLabel})`);
+        const verdictLabel = plan.switchInfo.verdict === 'positivo' ? t('progressão')
+          : plan.switchInfo.verdict === 'negativo' ? t('recuperação') : 'continuidade';
+        toast(t('🔄 Ciclo encerrado — ativamos "{toName}" automaticamente ({verdictLabel})', { toName: plan.switchInfo.toName, verdictLabel }));
       }
 
       const entries = await Promise.all(days.map(async (day) => {
@@ -200,7 +201,7 @@ export function WorkoutProvider({ children }) {
     } catch (err) {
       console.error('loadUserData:', err);
       setSyncStatus('error');
-      toast('⚠️ Erro ao sincronizar dados');
+      toast(t('⚠️ Erro ao sincronizar dados'));
     }
   }, [user, toast]);
 
@@ -327,7 +328,7 @@ export function WorkoutProvider({ children }) {
   async function syncNow() {
     const remaining = await flushPending();
     await loadUserData();
-    toast(remaining > 0 ? '⚠️ Algumas alterações ainda não sincronizaram' : '✅ Dados sincronizados');
+    toast(remaining > 0 ? t('⚠️ Algumas alterações ainda não sincronizaram') : t('✅ Dados sincronizados'));
   }
 
   return (

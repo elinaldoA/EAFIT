@@ -4,6 +4,7 @@ import { useToast } from '../context/useToast';
 import { todayDate } from '../data/treinoData';
 import { CHECKIN_FIELDS, fetchCheckins, saveCheckin, checkinTip } from '../lib/checkin';
 
+import { t } from '../lib/i18n';
 // Check-in de 3 toques no topo do Treino: energia, sono e humor de 1 a 5.
 // Depois de respondido vira uma linha com a dica do dia (dá pra refazer).
 export default function DailyCheckin() {
@@ -37,10 +38,10 @@ export default function DailyCheckin() {
       await saveCheckin(userId, todayDate(), draft);
       setSaved({ ...draft });
       setEditing(false);
-      toast('✅ Check-in registrado');
+      toast(t('✅ Check-in registrado'));
     } catch (err) {
       console.error('saveCheckin:', err);
-      toast('❌ Não foi possível salvar o check-in');
+      toast(t('❌ Não foi possível salvar o check-in'));
     } finally {
       setBusy(false);
     }
@@ -50,14 +51,14 @@ export default function DailyCheckin() {
     return (
       <div className="checkin checkin--done" role="status">
         <span>{checkinTip(saved)}</span>
-        <button type="button" className="btn btn--outline btn--sm" onClick={() => { setDraft({ ...saved }); setEditing(true); }}>Refazer</button>
+        <button type="button" className="btn btn--outline btn--sm" onClick={() => { setDraft({ ...saved }); setEditing(true); }}>{t('Refazer')}</button>
       </div>
     );
   }
 
   return (
     <div className="checkin">
-      <div className="checkin__title">Como você está hoje?</div>
+      <div className="checkin__title">{t('Como você está hoje?')}</div>
       {CHECKIN_FIELDS.map(({ key, label, emojis }) => (
         <div className="checkin__row" key={key}>
           <span className="checkin__label">{label}</span>
@@ -74,7 +75,7 @@ export default function DailyCheckin() {
         </div>
       ))}
       <button type="button" className="btn btn--primary btn--sm" disabled={!complete || busy} onClick={handleSave}>
-        {busy ? 'Salvando…' : 'Registrar'}
+        {busy ? t('Salvando…') : t('Registrar')}
       </button>
     </div>
   );

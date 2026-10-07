@@ -4,17 +4,18 @@ import { addDays } from './pause';
 import { measurementDeltas } from './bodyMeasurements';
 import { buildCheckinInsights } from './checkin';
 
+import { t, locale } from './i18n';
 const ERRORS = {
-  invalid_code: 'Código não encontrado. Confira com o seu personal.',
-  self_link: 'Você não pode se vincular a si mesmo.',
-  already_linked: 'Você já está vinculado a um personal. Encerre o vínculo atual antes de entrar em outro.',
-  not_authorized: 'Sem permissão para essa ação.',
+  invalid_code: t('Código não encontrado. Confira com o seu personal.'),
+  self_link: t('Você não pode se vincular a si mesmo.'),
+  already_linked: t('Você já está vinculado a um personal. Encerre o vínculo atual antes de entrar em outro.'),
+  not_authorized: t('Sem permissão para essa ação.'),
 };
 
 export function friendlyTrainerError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível concluir. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível concluir. Tente de novo.');
 }
 
 export function normalizeTrainerCode(raw) {
@@ -31,12 +32,12 @@ function daysBetween(a, b) {
 //  pausado: em modo pausa · novo: ainda não treinou · ok: treinou nos últimos 3
 //  dias · atencao: 4 a 7 dias parado · risco: mais de 7 dias parado.
 export function clientAttention(client, today) {
-  if (client.paused) return { level: 'pausado', label: 'Em pausa', days: null };
-  if (!client.last_day) return { level: 'novo', label: 'Ainda não treinou', days: null };
+  if (client.paused) return { level: 'pausado', label: t('Em pausa'), days: null };
+  if (!client.last_day) return { level: 'novo', label: t('Ainda não treinou'), days: null };
   const days = daysBetween(client.last_day, today);
-  if (days <= 3) return { level: 'ok', label: days === 0 ? 'Treinou hoje' : days === 1 ? 'Treinou ontem' : `Treinou há ${days} dias`, days };
-  if (days <= 7) return { level: 'atencao', label: `Parado há ${days} dias`, days };
-  return { level: 'risco', label: `Sumido há ${days} dias`, days };
+  if (days <= 3) return { level: 'ok', label: days === 0 ? t('Treinou hoje') : days === 1 ? t('Treinou ontem') : t('Treinou há {days} dias', { days }), days };
+  if (days <= 7) return { level: 'atencao', label: t('Parado há {days} dias', { days }), days };
+  return { level: 'risco', label: t('Sumido há {days} dias', { days }), days };
 }
 
 const ORDER = { risco: 0, atencao: 1, novo: 2, ok: 3, pausado: 4 };
@@ -45,7 +46,7 @@ const ORDER = { risco: 0, atencao: 1, novo: 2, ok: 3, pausado: 4 };
 export function sortClients(clients, today) {
   return [...clients]
     .map(c => ({ c, a: clientAttention(c, today) }))
-    .sort((x, y) => ORDER[x.a.level] - ORDER[y.a.level] || String(x.c.name).localeCompare(String(y.c.name), 'pt-BR'))
+    .sort((x, y) => ORDER[x.a.level] - ORDER[y.a.level] || String(x.c.name).localeCompare(String(y.c.name), locale))
     .map(x => x.c);
 }
 

@@ -1,9 +1,10 @@
+import { t } from '../lib/i18n';
 const ITEMS = [
-  { key: 'treino', label: 'Treino' },
-  { key: 'historico', label: 'Histórico' },
-  { key: 'hidratacao', label: 'Água' },
-  { key: 'dash', label: 'Evolução' },
-  { key: 'perfil', label: 'Perfil' },
+  { key: 'treino', label: t('Treino') },
+  { key: 'historico', label: t('Histórico') },
+  { key: 'hidratacao', label: t('Água') },
+  { key: 'dash', label: t('Evolução') },
+  { key: 'perfil', label: t('Perfil') },
 ];
 
 const ICONS = {
@@ -41,7 +42,7 @@ const ICONS = {
 
 export default function BottomNav({ active, onChange, badges = {} }) {
   return (
-    <nav className="bottom-nav" aria-label="Navegação principal">
+    <nav className="bottom-nav" aria-label={t('Navegação principal')}>
       {ITEMS.map(item => (
         <button
           key={item.key}
@@ -52,7 +53,7 @@ export default function BottomNav({ active, onChange, badges = {} }) {
         >
           <span className="nav-item__icon" aria-hidden="true">{ICONS[item.key]}</span>
           <span>{item.label}</span>
-          {badges[item.key] > 0 && <span className="trainer-badge" aria-label={`${badges[item.key]} não lido(s)`}>{badges[item.key]}</span>}
+          {badges[item.key] > 0 && <span className="trainer-badge" aria-label={t('{v1} não lido(s)', { v1: badges[item.key] })}>{badges[item.key]}</span>}
         </button>
       ))}
     </nav>

@@ -1,9 +1,10 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 export const CHECKIN_FIELDS = [
-  { key: 'energy', label: 'Energia', emojis: ['😴', '🥱', '🙂', '😃', '⚡'] },
-  { key: 'sleep', label: 'Sono', emojis: ['😵', '😪', '🙂', '😌', '😴'] },
-  { key: 'mood', label: 'Humor', emojis: ['😞', '😕', '😐', '🙂', '😄'] },
+  { key: 'energy', label: t('Energia'), emojis: ['😴', '🥱', '🙂', '😃', '⚡'] },
+  { key: 'sleep', label: t('Sono'), emojis: ['😵', '😪', '🙂', '😌', '😴'] },
+  { key: 'mood', label: t('Humor'), emojis: ['😞', '😕', '😐', '🙂', '😄'] },
 ];
 
 export async function fetchCheckins(userId, sinceDate) {
@@ -53,9 +54,9 @@ export function buildCheckinInsights(checkins, trainedDates) {
 
 // Sugestão leve pra tela de treino, a partir da resposta do dia.
 export function checkinTip({ energy, sleep }) {
-  if (energy <= 2 && sleep <= 2) return 'Dia puxado: considere um treino mais leve e hidrate-se bem.';
-  if (energy <= 2) return 'Energia baixa: aqueça um pouco mais e ajuste a carga se precisar.';
-  if (sleep <= 2) return 'Dormiu mal: cuidado com cargas máximas hoje.';
-  if (energy >= 4) return 'Energia alta: ótimo dia para buscar um recorde!';
-  return 'Tudo certo. Bom treino!';
+  if (energy <= 2 && sleep <= 2) return t('Dia puxado: considere um treino mais leve e hidrate-se bem.');
+  if (energy <= 2) return t('Energia baixa: aqueça um pouco mais e ajuste a carga se precisar.');
+  if (sleep <= 2) return t('Dormiu mal: cuidado com cargas máximas hoje.');
+  if (energy >= 4) return t('Energia alta: ótimo dia para buscar um recorde!');
+  return t('Tudo certo. Bom treino!');
 }

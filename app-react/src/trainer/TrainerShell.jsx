@@ -11,6 +11,7 @@ import MessagesPage from './MessagesPage';
 import ClassPage from './ClassPage';
 import TemplatesPage from './TemplatesPage';
 
+import { t } from '../lib/i18n';
 const TABS = ['alunos', 'modelos', 'turma', 'recados', 'conta'];
 
 // Casca do app no modo Personal: outra navegação e outras páginas, mas o mesmo
@@ -21,17 +22,17 @@ export default function TrainerShell({ onSwitchToStudent }) {
   const [attention, setAttention] = useState(0);
 
   const items = useMemo(() => [
-    { key: 'alunos', label: 'Alunos', badge: attention },
-    { key: 'modelos', label: 'Modelos' },
-    { key: 'turma', label: 'Turma' },
-    { key: 'recados', label: 'Recados' },
-    { key: 'conta', label: 'Conta' },
+    { key: 'alunos', label: t('Alunos'), badge: attention },
+    { key: 'modelos', label: t('Modelos') },
+    { key: 'turma', label: t('Turma') },
+    { key: 'recados', label: t('Recados') },
+    { key: 'conta', label: t('Conta') },
   ], [attention]);
 
   return (
     <div className="app-screen" style={{ display: 'flex' }}>
       <header className="topbar">
-        <div className="trainer-topbar__title">🧑‍🏫 EAFIT <span>Personal</span></div>
+        <div className="trainer-topbar__title">{t('🧑‍🏫 EAFIT')} <span>{t('Personal')}</span></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <ThemeToggle />
         </div>

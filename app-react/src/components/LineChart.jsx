@@ -1,5 +1,6 @@
 import { useId } from 'react';
 
+import { t, locale } from '../lib/i18n';
 export default function LineChart({ points: rawPoints, emptyMsg, singleMsg, valueSuffix = '' }) {
   const svgId = useId();
   // Um valor não numérico (coluna nula, texto) virava NaN nas coordenadas e
@@ -7,7 +8,7 @@ export default function LineChart({ points: rawPoints, emptyMsg, singleMsg, valu
   const points = rawPoints.filter(p => Number.isFinite(p.value));
 
   if (points.length < 2) {
-    const msg = points.length === 1 && singleMsg ? singleMsg(points[0].value) : (emptyMsg || 'Nenhum registro disponível');
+    const msg = points.length === 1 && singleMsg ? singleMsg(points[0].value) : (emptyMsg || t('Nenhum registro disponível'));
     return <p className="dash-empty">{msg}</p>;
   }
 
@@ -52,7 +53,7 @@ export default function LineChart({ points: rawPoints, emptyMsg, singleMsg, valu
         );
       })}
       <text x={mX.toFixed(1)} y={(mY - 8).toFixed(1)} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="var(--primary)">
-        {maxV.toLocaleString('pt-BR')}{valueSuffix}
+        {maxV.toLocaleString(locale)}{valueSuffix}
       </text>
     </svg>
   );

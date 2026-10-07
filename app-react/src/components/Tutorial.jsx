@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { TUTORIAL_EVENT, hasSeenTutorial, markTutorialSeen, stepsFor } from '../lib/tutorial';
 
+import { t } from '../lib/i18n';
 const PAD = 6;
 
 // Tutorial guiado: abre sozinho na primeira vez (por usuário e por modo) e
@@ -77,7 +78,7 @@ export default function Tutorial({ role, userId, onNavigate }) {
   const cardClass = `tutorial__card${rect ? (cardAtTop ? ' tutorial__card--top' : ' tutorial__card--bottom') : ''}`;
 
   return createPortal(
-    <div className="tutorial" role="dialog" aria-modal="true" aria-label="Tutorial do app">
+    <div className="tutorial" role="dialog" aria-modal="true" aria-label={t('Tutorial do app')}>
       {rect
         ? <div className="tutorial__spot" style={{ top: rect.top - PAD, left: rect.left - PAD, width: rect.width + PAD * 2, height: rect.height + PAD * 2 }} />
         : <div className="tutorial__dim" />}
@@ -91,11 +92,11 @@ export default function Tutorial({ role, userId, onNavigate }) {
         <div className="tutorial__actions">
           {last
             ? <span />
-            : <button type="button" className="btn btn--ghost btn--sm" onClick={close}>Pular</button>}
+            : <button type="button" className="btn btn--ghost btn--sm" onClick={close}>{t('Pular')}</button>}
           <div className="tutorial__nav">
-            {index > 0 && <button type="button" className="btn btn--outline btn--sm" onClick={() => setIndex(index - 1)}>Voltar</button>}
+            {index > 0 && <button type="button" className="btn btn--outline btn--sm" onClick={() => setIndex(index - 1)}>{t('Voltar')}</button>}
             <button type="button" className="btn btn--primary btn--sm" onClick={() => (last ? close() : setIndex(index + 1))}>
-              {last ? 'Concluir' : 'Próximo'}
+              {last ? t('Concluir') : t('Próximo')}
             </button>
           </div>
         </div>

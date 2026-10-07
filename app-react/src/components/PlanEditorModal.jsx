@@ -12,6 +12,7 @@ import {
 import { useBackToClose } from '../hooks/useBackToClose';
 import Loading from './Loading';
 
+import { t } from '../lib/i18n';
 const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
 function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSuccessors }) {
@@ -31,39 +32,39 @@ function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSucc
           onBlur={() => { if (name.trim() && name !== plan.name) onRename(name); }}
         />
         {plan.is_active ? (
-          <span className="plan-row__badge">Ativo</span>
+          <span className="plan-row__badge">{t('Ativo')}</span>
         ) : (
-          <button type="button" className="btn btn--outline btn--sm" onClick={onSetActive}>Ativar</button>
+          <button type="button" className="btn btn--outline btn--sm" onClick={onSetActive}>{t('Ativar')}</button>
         )}
-        <button type="button" className="plan-row__del" onClick={onDelete} aria-label="Excluir plano">✕</button>
+        <button type="button" className="plan-row__del" onClick={onDelete} aria-label={t('Excluir plano')}>✕</button>
       </div>
 
       {plan.end_date && (
         <p className="plan-row__cycle">
-          {daysLeft >= 0 ? `Ciclo termina em ${fmtDate(plan.end_date)} (faltam ${daysLeft}d)` : `Ciclo vencido em ${fmtDate(plan.end_date)}`}
+          {daysLeft >= 0 ? t('Ciclo termina em {v1} (faltam {daysLeft}d)', { v1: fmtDate(plan.end_date), daysLeft }) : t('Ciclo vencido em {v1}', { v1: fmtDate(plan.end_date) })}
         </p>
       )}
 
       <div className="plan-row__successors">
         <label className="plan-row__successor-field">
-          Próximo (progressão)
+          {t('Próximo (progressão)')}
           <select
             className="input input--sm"
             value={plan.next_plan_id || ''}
             onChange={e => onUpdateSuccessors({ nextPlanId: e.target.value, regressionPlanId: plan.regression_plan_id })}
           >
-            <option value="">Nenhum</option>
+            <option value="">{t('Nenhum')}</option>
             {otherPlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </label>
         <label className="plan-row__successor-field">
-          Recuperação (se estagnar)
+          {t('Recuperação (se estagnar)')}
           <select
             className="input input--sm"
             value={plan.regression_plan_id || ''}
             onChange={e => onUpdateSuccessors({ nextPlanId: plan.next_plan_id, regressionPlanId: e.target.value })}
           >
-            <option value="">Nenhum</option>
+            <option value="">{t('Nenhum')}</option>
             {otherPlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </label>
@@ -78,7 +79,7 @@ function FocoInput({ initial, onSave }) {
   return (
     <input
       className="input input--sm"
-      placeholder="Foco do dia (ex.: Peito / Ombro / Tríceps)"
+      placeholder={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')}
       value={value}
       onChange={e => setValue(e.target.value)}
       onBlur={() => onSave(value)}
@@ -89,8 +90,8 @@ function FocoInput({ initial, onSave }) {
 function MoveButtons({ canUp, canDown, onMove }) {
   return (
     <div className="plan-ex-row__move">
-      <button type="button" disabled={!canUp} onClick={() => onMove(-1)} aria-label="Mover para cima">▲</button>
-      <button type="button" disabled={!canDown} onClick={() => onMove(1)} aria-label="Mover para baixo">▼</button>
+      <button type="button" disabled={!canUp} onClick={() => onMove(-1)} aria-label={t('Mover para cima')}>▲</button>
+      <button type="button" disabled={!canDown} onClick={() => onMove(1)} aria-label={t('Mover para baixo')}>▼</button>
     </div>
   );
 }
@@ -111,20 +112,20 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete }) {
     <div className="plan-ex-row">
       <MoveButtons canUp={canUp} canDown={canDown} onMove={onMove} />
       <div className="plan-ex-row__fields">
-        <input className="input input--sm plan-ex-row__name" placeholder="Exercício" value={local.nome}
+        <input className="input input--sm plan-ex-row__name" placeholder={t('Exercício')} value={local.nome}
           onChange={e => setLocal(l => ({ ...l, nome: e.target.value }))} onBlur={() => save('nome')} />
         <div className="plan-ex-row__nums">
-          <input className="input input--sm" placeholder="Séries" value={local.series}
+          <input className="input input--sm" placeholder={t('Séries')} value={local.series}
             onChange={e => setLocal(l => ({ ...l, series: e.target.value }))} onBlur={() => save('series')} />
           <input className="input input--sm" placeholder="Reps" value={local.reps}
             onChange={e => setLocal(l => ({ ...l, reps: e.target.value }))} onBlur={() => save('reps')} />
-          <input className="input input--sm" placeholder="Descanso" value={local.descanso}
+          <input className="input input--sm" placeholder={t('Descanso')} value={local.descanso}
             onChange={e => setLocal(l => ({ ...l, descanso: e.target.value }))} onBlur={() => save('descanso')} />
         </div>
-        <input className="input input--sm" placeholder="Técnica" value={local.tecnica}
+        <input className="input input--sm" placeholder={t('Técnica')} value={local.tecnica}
           onChange={e => setLocal(l => ({ ...l, tecnica: e.target.value }))} onBlur={() => save('tecnica')} />
       </div>
-      <button type="button" className="plan-ex-row__del" onClick={() => onDelete(ex.id)} aria-label="Remover exercício">✕</button>
+      <button type="button" className="plan-ex-row__del" onClick={() => onDelete(ex.id)} aria-label={t('Remover exercício')}>✕</button>
     </div>
   );
 }
@@ -162,7 +163,7 @@ export default function PlanEditorModal({ onClose }) {
       if (target) setSelectedPlanId(target);
     } catch (err) {
       console.error('loadPlans:', err);
-      toast('⚠️ Erro ao carregar planos');
+      toast(t('⚠️ Erro ao carregar planos'));
     } finally {
       setLoadingPlans(false);
     }
@@ -189,7 +190,7 @@ export default function PlanEditorModal({ onClose }) {
         setDays(d);
       } catch (err) {
         console.error('fetchPlanDays:', err);
-        toast('⚠️ Erro ao carregar dias do plano');
+        toast(t('⚠️ Erro ao carregar dias do plano'));
       } finally {
         setLoadingDays(false);
       }
@@ -207,24 +208,24 @@ export default function PlanEditorModal({ onClose }) {
       setNewPlanName('');
       setShowNewPlanForm(false);
       await loadPlans(plan.id);
-      toast('✅ Plano criado');
+      toast(t('✅ Plano criado'));
     } catch (err) {
       console.error('createPlan:', err);
-      toast('⚠️ Erro ao criar plano');
+      toast(t('⚠️ Erro ao criar plano'));
     }
   }
 
   async function handleSetActive(planId) {
     const plan = plans.find(p => p.id === planId);
     const input = window.prompt(
-      'Duração deste ciclo em semanas (deixe em branco para sem prazo):',
+      t('Duração deste ciclo em semanas (deixe em branco para sem prazo):'),
       plan?.duration_weeks ?? ''
     );
     if (input === null) return;
 
     const weeks = input.trim() ? parseInt(input, 10) : null;
     if (input.trim() && (!Number.isFinite(weeks) || weeks <= 0)) {
-      toast('⚠️ Duração inválida');
+      toast(t('⚠️ Duração inválida'));
       return;
     }
 
@@ -232,10 +233,10 @@ export default function PlanEditorModal({ onClose }) {
       await setActivePlan(user.id, planId, weeks);
       await loadPlans(planId);
       await refreshPlan();
-      toast('✅ Plano ativado');
+      toast(t('✅ Plano ativado'));
     } catch (err) {
       console.error('setActivePlan:', err);
-      toast('⚠️ Erro ao ativar plano');
+      toast(t('⚠️ Erro ao ativar plano'));
     }
   }
 
@@ -245,7 +246,7 @@ export default function PlanEditorModal({ onClose }) {
       await loadPlans(selectedPlanId);
     } catch (err) {
       console.error('updatePlanSuccessors:', err);
-      toast('⚠️ Erro ao salvar encadeamento do plano');
+      toast(t('⚠️ Erro ao salvar encadeamento do plano'));
     }
   }
 
@@ -257,22 +258,22 @@ export default function PlanEditorModal({ onClose }) {
       if (wasActive) await refreshPlan();
     } catch (err) {
       console.error('renamePlan:', err);
-      toast('⚠️ Erro ao renomear plano');
+      toast(t('⚠️ Erro ao renomear plano'));
     }
   }
 
   async function handleDeletePlan(planId) {
     const plan = plans.find(p => p.id === planId);
-    if (plan?.is_active) { toast('Ative outro plano antes de excluir este'); return; }
-    if (plans.length <= 1) { toast('Você precisa de pelo menos um plano'); return; }
-    if (!window.confirm(`Excluir o plano "${plan?.name}"? Essa ação não pode ser desfeita.`)) return;
+    if (plan?.is_active) { toast(t('Ative outro plano antes de excluir este')); return; }
+    if (plans.length <= 1) { toast(t('Você precisa de pelo menos um plano')); return; }
+    if (!window.confirm(t('Excluir o plano "{name}"? Essa ação não pode ser desfeita.', { name: plan?.name }))) return;
     try {
       await deletePlan(planId, user.id);
       await loadPlans();
-      toast('🗑️ Plano excluído');
+      toast(t('🗑️ Plano excluído'));
     } catch (err) {
       console.error('deletePlan:', err);
-      toast('⚠️ Erro ao excluir plano');
+      toast(t('⚠️ Erro ao excluir plano'));
     }
   }
 
@@ -283,7 +284,7 @@ export default function PlanEditorModal({ onClose }) {
       await reloadDays();
     } catch (err) {
       console.error('updatePlanDay:', err);
-      toast('⚠️ Erro ao salvar foco do dia');
+      toast(t('⚠️ Erro ao salvar foco do dia'));
     }
   }
 
@@ -292,14 +293,14 @@ export default function PlanEditorModal({ onClose }) {
     try {
       const orderIndex = isPost ? day.pos.length : day.exercicios.length;
       await addExercise(day.id, {
-        nome: isPost ? 'Novo item' : 'Novo exercício',
+        nome: isPost ? t('Novo item') : t('Novo exercício'),
         series: '3', reps: isPost ? '12-15' : '10-12',
         descanso: isPost ? '45s' : '60s', tecnica: '', is_post_workout: isPost,
       }, orderIndex);
       await reloadDays();
     } catch (err) {
       console.error('addExercise:', err);
-      toast('⚠️ Erro ao adicionar exercício');
+      toast(t('⚠️ Erro ao adicionar exercício'));
     }
   }
 
@@ -309,7 +310,7 @@ export default function PlanEditorModal({ onClose }) {
       await reloadDays();
     } catch (err) {
       console.error('updateExercise:', err);
-      toast('⚠️ Erro ao salvar exercício');
+      toast(t('⚠️ Erro ao salvar exercício'));
     }
   }
 
@@ -319,7 +320,7 @@ export default function PlanEditorModal({ onClose }) {
       await reloadDays();
     } catch (err) {
       console.error('deleteExercise:', err);
-      toast('⚠️ Erro ao remover exercício');
+      toast(t('⚠️ Erro ao remover exercício'));
     }
   }
 
@@ -336,7 +337,7 @@ export default function PlanEditorModal({ onClose }) {
       await reloadDays();
     } catch (err) {
       console.error('reorderExercises:', err);
-      toast('⚠️ Erro ao reordenar');
+      toast(t('⚠️ Erro ao reordenar'));
     }
   }
 
@@ -345,13 +346,13 @@ export default function PlanEditorModal({ onClose }) {
       <div className="plan-modal__backdrop" onClick={onClose} />
       <div className="plan-modal__panel">
         <div className="plan-modal__header">
-          <h2 className="plan-modal__title">Editar treino</h2>
-          <button type="button" className="plan-modal__close" aria-label="Fechar" onClick={onClose}>✕</button>
+          <h2 className="plan-modal__title">{t('Editar treino')}</h2>
+          <button type="button" className="plan-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
         </div>
 
         <div className="plan-modal__tabs">
-          <button type="button" className={`plan-modal__tab${tab === 'planos' ? ' active' : ''}`} onClick={() => setTab('planos')}>Planos</button>
-          <button type="button" className={`plan-modal__tab${tab === 'editar' ? ' active' : ''}`} onClick={() => setTab('editar')}>Editar dia</button>
+          <button type="button" className={`plan-modal__tab${tab === 'planos' ? ' active' : ''}`} onClick={() => setTab('planos')}>{t('Planos')}</button>
+          <button type="button" className={`plan-modal__tab${tab === 'editar' ? ' active' : ''}`} onClick={() => setTab('editar')}>{t('Editar dia')}</button>
         </div>
 
         <div className="plan-modal__body">
@@ -370,17 +371,17 @@ export default function PlanEditorModal({ onClose }) {
               {showNewPlanForm ? (
                 <div className="plan-new-form">
                   <input
-                    className="input input--sm" placeholder="Nome do novo plano"
+                    className="input input--sm" placeholder={t('Nome do novo plano')}
                     value={newPlanName} onChange={e => setNewPlanName(e.target.value)}
                   />
                   <div className="plan-new-form__actions">
-                    <button type="button" className="btn btn--outline btn--sm" onClick={() => handleCreatePlan(false)}>Criar em branco</button>
-                    <button type="button" className="btn btn--primary btn--sm" onClick={() => handleCreatePlan(true)}>Duplicar atual</button>
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNewPlanForm(false)}>Cancelar</button>
+                    <button type="button" className="btn btn--outline btn--sm" onClick={() => handleCreatePlan(false)}>{t('Criar em branco')}</button>
+                    <button type="button" className="btn btn--primary btn--sm" onClick={() => handleCreatePlan(true)}>{t('Duplicar atual')}</button>
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNewPlanForm(false)}>{t('Cancelar')}</button>
                   </div>
                 </div>
               ) : (
-                <button type="button" className="btn btn--outline btn--full btn--sm" onClick={() => setShowNewPlanForm(true)}>+ Novo plano</button>
+                <button type="button" className="btn btn--outline btn--full btn--sm" onClick={() => setShowNewPlanForm(true)}>{t('+ Novo plano')}</button>
               )}
             </div>
           )}
@@ -402,12 +403,12 @@ export default function PlanEditorModal({ onClose }) {
               </div>
 
               {loadingDays ? <Loading /> : !day ? (
-                <p className="dash-empty">Dia não encontrado neste plano.</p>
+                <p className="dash-empty">{t('Dia não encontrado neste plano.')}</p>
               ) : (
                 <>
                   <FocoInput key={day.id} initial={day.foco} onSave={handleFocoBlur} />
 
-                  <div className="plan-editor__section-title">Exercícios</div>
+                  <div className="plan-editor__section-title">{t('Exercícios')}</div>
                   {day.exercicios.map((ex, i) => (
                     <ExerciseRow
                       key={ex.id} ex={ex}
@@ -416,9 +417,9 @@ export default function PlanEditorModal({ onClose }) {
                       onChange={handleUpdateExercise} onDelete={handleDeleteExercise}
                     />
                   ))}
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleAddExercise(false)}>+ Exercício</button>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleAddExercise(false)}>{t('+ Exercício')}</button>
 
-                  <div className="plan-editor__section-title">Pós-treino</div>
+                  <div className="plan-editor__section-title">{t('Pós-treino')}</div>
                   {day.pos.map((p, i) => (
                     <ExerciseRow
                       key={p.id} ex={p}
@@ -427,7 +428,7 @@ export default function PlanEditorModal({ onClose }) {
                       onChange={handleUpdateExercise} onDelete={handleDeleteExercise}
                     />
                   ))}
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleAddExercise(true)}>+ Item pós-treino</button>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleAddExercise(true)}>{t('+ Item pós-treino')}</button>
                 </>
               )}
             </div>

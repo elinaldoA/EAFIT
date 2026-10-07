@@ -14,6 +14,7 @@ import CardioRow from './CardioRow';
 import ExerciseDemo from './ExerciseDemo';
 import ExerciseSwap from './ExerciseSwap';
 
+import { t } from '../lib/i18n';
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
 // destaque no próprio cabeçalho, então o bloco omite os dele.
 export default function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll, onFillOthers, onApplySuggestion, started, hideName = false }) {
@@ -70,11 +71,11 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
         nome: alternative.nome, series: ex.series, reps: ex.reps,
         descanso: ex.descanso, tecnica: alternative.tecnica,
       });
-      toast(`🔄 Trocado por ${alternative.nome}`);
+      toast(t('🔄 Trocado por {nome}', { nome: alternative.nome }));
       await refreshPlan();
     } catch (err) {
       console.error('substituteExercise:', err);
-      toast('⚠️ Erro ao trocar o exercício');
+      toast(t('⚠️ Erro ao trocar o exercício'));
     } finally {
       setSubstituting(false);
     }
@@ -90,33 +91,33 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
           {!hideName && (
             <>
               <span className="ex-name">{ex.nome}</span>
-              <span className="ex-block__meta">{ex.reps} reps · desc. {ex.descanso}</span>
+              <span className="ex-block__meta">{t('{reps} reps · desc. {descanso}', { reps: ex.reps, descanso: ex.descanso })}</span>
               <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
           )}
           {plateau ? (
             <p className="ex-block__suggestion ex-block__suggestion--plateau">
-              ⚠️ Estagnado há {plateau.sessionsStuck} treinos em {plateau.lastCarga}kg
-              {' '}<span className="ex-block__suggestion-hint">— tente um deload pra {plateau.suggestedDeload}kg ou troque o exercício</span>
-              {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(plateau.suggestedDeload, null)}>🎯 Usar sugestão</button>
+              {t('⚠️ Estagnado há')} {plateau.sessionsStuck} {t('treinos em')} {plateau.lastCarga}kg
+              {' '}<span className="ex-block__suggestion-hint">{t('— tente um deload pra {suggestedDeload}kg ou troque o exercício', { suggestedDeload: plateau.suggestedDeload })}</span>
+              {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(plateau.suggestedDeload, null)}>{t('🎯 Usar sugestão')}</button>
             </p>
           ) : suggestion && (
             <p className="ex-block__suggestion">
               {suggestion.suggestedReps
-                ? <>💡 Sugestão: repita {suggestion.suggestedCarga}kg, mas tente {suggestion.suggestedReps} reps</>
-                : <>💡 Sugestão: {suggestion.suggestedCarga}kg</>}
-              {' '}<span className="ex-block__suggestion-hint">(última vez: {suggestion.lastCarga}kg × {suggestion.lastReps} reps)</span>
-              {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(suggestion.suggestedCarga, suggestion.suggestedReps)}>🎯 Usar sugestão</button>
+                ? <>{t('💡 Sugestão: repita {suggestedCarga}kg, mas tente {suggestedReps} reps', { suggestedCarga: suggestion.suggestedCarga, suggestedReps: suggestion.suggestedReps })}</>
+                : <>{t('💡 Sugestão: {suggestedCarga}kg', { suggestedCarga: suggestion.suggestedCarga })}</>}
+              {' '}<span className="ex-block__suggestion-hint">{t('(última vez: {lastCarga}kg × {lastReps} reps)', { lastCarga: suggestion.lastCarga, lastReps: suggestion.lastReps })}</span>
+              {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(suggestion.suggestedCarga, suggestion.suggestedReps)}>{t('🎯 Usar sugestão')}</button>
             </p>
           )}
         </div>
         <button
           type="button"
           className={`ex-block__mark-all${allDone ? ' ex-block__mark-all--done' : ''}`}
-          disabled={!started} title={started ? undefined : 'Inicie o treino para registrar as séries'}
+          disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
           onClick={onToggleAll}
         >
-          {allDone ? '✓ Todas' : 'Marcar todas'}
+          {allDone ? t('✓ Todas') : t('Marcar todas')}
         </button>
       </div>
 
@@ -129,7 +130,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
       {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
       {showSwap && (
         <button type="button" className="ex-block__swap-btn" disabled={substituting} onClick={handleSubstitute}>
-          {substituting ? 'Trocando…' : `🔄 Trocar por: ${alternative.nome}`}
+          {substituting ? t('Trocando…') : t('🔄 Trocar por: {nome}', { nome: alternative.nome })}
         </button>
       )}
       {canSwap && <ExerciseSwap ex={ex} day={day} user={user} toast={toast} onSwapped={refreshPlan} />}

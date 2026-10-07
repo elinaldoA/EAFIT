@@ -1,20 +1,21 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 export const MAX_MESSAGE = 500;
 // Disparado quando o aluno marca os recados como lidos (zera a bolinha na hora).
 export const MESSAGES_READ_EVENT = 'eafit:messages-read';
 
 const ERRORS = {
-  not_authorized: 'Sem permissão para enviar recados.',
-  invalid_body: `Escreva uma mensagem de até ${MAX_MESSAGE} caracteres.`,
-  no_recipients: 'Nenhum aluno vinculado para receber.',
-  rate_limited: 'Limite diário de recados atingido. Tente amanhã.',
+  not_authorized: t('Sem permissão para enviar recados.'),
+  invalid_body: t('Escreva uma mensagem de até {MAX_MESSAGE} caracteres.', { MAX_MESSAGE }),
+  no_recipients: t('Nenhum aluno vinculado para receber.'),
+  rate_limited: t('Limite diário de recados atingido. Tente amanhã.'),
 };
 
 export function friendlyMessageError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível enviar. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível enviar. Tente de novo.');
 }
 
 // O histórico vem uma linha por aluno; um envio para vários alunos tem o mesmo
@@ -35,9 +36,9 @@ export function unreadCount(messages) {
 
 // "Para 5 alunos", "Para Ana" ou "Para Ana e Bruno".
 export function recipientsLabel(recipients) {
-  if (recipients.length === 1) return `Para ${recipients[0].name}`;
-  if (recipients.length === 2) return `Para ${recipients[0].name} e ${recipients[1].name}`;
-  return `Para ${recipients.length} alunos`;
+  if (recipients.length === 1) return t('Para {name}', { name: recipients[0].name });
+  if (recipients.length === 2) return t('Para {name} e {v1}', { name: recipients[0].name, v1: recipients[1].name });
+  return t('Para {length} alunos', { length: recipients.length });
 }
 
 // Grava o recado (RPC) e dispara o push. O push é "melhor esforço": se a Edge
@@ -53,7 +54,7 @@ export async function sendMessage(clientIds, body, kind = 'recado') {
   const recipients = data || [];
   try {
     await db.functions.invoke('trainer-push', {
-      body: { client_ids: recipients, body, title: kind === 'treino' ? 'Novo treino do seu personal' : 'Recado do seu personal' },
+      body: { client_ids: recipients, body, title: kind === 'treino' ? t('Novo treino do seu personal') : t('Recado do seu personal') },
     });
   } catch (err) {
     console.warn('trainer-push:', err);
@@ -84,15 +85,15 @@ export async function markMessagesRead() {
 }
 
 const REPLY_ERRORS = {
-  no_trainer: 'Você não tem um personal vinculado.',
-  invalid_body: `Escreva uma mensagem de até ${MAX_MESSAGE} caracteres.`,
-  rate_limited: 'Limite diário de respostas atingido. Tente amanhã.',
+  no_trainer: t('Você não tem um personal vinculado.'),
+  invalid_body: t('Escreva uma mensagem de até {MAX_MESSAGE} caracteres.', { MAX_MESSAGE }),
+  rate_limited: t('Limite diário de respostas atingido. Tente amanhã.'),
 };
 
 export function friendlyReplyError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(REPLY_ERRORS).find(k => msg.includes(k));
-  return key ? REPLY_ERRORS[key] : 'Não foi possível enviar. Tente de novo.';
+  return key ? REPLY_ERRORS[key] : t('Não foi possível enviar. Tente de novo.');
 }
 
 function mapThread(rows) {

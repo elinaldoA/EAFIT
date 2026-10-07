@@ -8,6 +8,7 @@ import {
 } from '../lib/challenges';
 import Loading from './Loading';
 
+import { t } from '../lib/i18n';
 export function Leaderboard({ id }) {
   const [rows, setRows] = useState(null);
   useEffect(() => {
@@ -18,13 +19,13 @@ export function Leaderboard({ id }) {
     return () => { active = false; };
   }, [id]);
 
-  if (!rows) return <Loading label="Carregando placar…" />;
+  if (!rows) return <Loading label={t('Carregando placar…')} />;
   return (
     <ol className="challenge__board">
       {rows.map((r, i) => (
         <li key={i} className={r.isMe ? 'challenge__row challenge__row--me' : 'challenge__row'}>
-          <span>{r.rank}º {r.name}{r.isMe ? ' (você)' : ''}</span>
-          <strong>{r.score} dia(s)</strong>
+          <span>{r.rank}º {r.name}{r.isMe ? t('(você)') : ''}</span>
+          <strong>{t('{n} dia(s)', { n: r.score })}</strong>
         </li>
       ))}
     </ol>
@@ -67,39 +68,39 @@ export default function Challenges() {
   function handleCreate() {
     const check = validateChallenge(title, days);
     if (!check.ok) { setError(check.error); return; }
-    run(() => createChallenge(check.title, today, addDaysStr(today, days - 1)), '🏁 Desafio criado! Compartilhe o código.');
+    run(() => createChallenge(check.title, today, addDaysStr(today, days - 1)), t('🏁 Desafio criado! Compartilhe o código.'));
   }
 
   function handleJoin() {
     const c = normalizeCode(code);
-    if (c.length < 4) { setError('Digite o código do convite.'); return; }
-    run(() => joinChallenge(c), '🎉 Você entrou no desafio!');
+    if (c.length < 4) { setError(t('Digite o código do convite.')); return; }
+    run(() => joinChallenge(c), t('🎉 Você entrou no desafio!'));
   }
 
   async function handleShare(c) {
     const text = inviteText(c);
     try {
       if (navigator.share) await navigator.share({ title: c.title, text });
-      else { await navigator.clipboard.writeText(text); toast('📋 Convite copiado'); }
+      else { await navigator.clipboard.writeText(text); toast(t('📋 Convite copiado')); }
     } catch (err) {
-      if (err?.name !== 'AbortError') toast(`Código: ${c.invite_code}`);
+      if (err?.name !== 'AbortError') toast(t('Código: {invite_code}', { invite_code: c.invite_code }));
     }
   }
 
   async function handleLeave(c) {
-    if (!window.confirm(`Sair do desafio "${c.title}"?`)) return;
-    try { await leaveChallenge(c.id); toast('Você saiu do desafio'); setOpen(null); await reload(); }
-    catch { toast('❌ Não foi possível sair'); }
+    if (!window.confirm(t('Sair do desafio "{title}"?', { title: c.title }))) return;
+    try { await leaveChallenge(c.id); toast(t('Você saiu do desafio')); setOpen(null); await reload(); }
+    catch { toast(t('❌ Não foi possível sair')); }
   }
 
   if (!items) return null;
 
   return (
     <div className="dash-card">
-      <div className="dash-card__title">🏆 Desafios com amigos</div>
+      <div className="dash-card__title">{t('🏆 Desafios com amigos')}</div>
 
       {items.length === 0 && mode === null && (
-        <p className="dash-empty">Crie um desafio e mande o código para os amigos: vence quem treinar mais dias no período.</p>
+        <p className="dash-empty">{t('Crie um desafio e mande o código para os amigos: vence quem treinar mais dias no período.')}</p>
       )}
 
       {items.map(c => {
@@ -111,8 +112,8 @@ export default function Challenges() {
             <button type="button" className="challenge__head" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : c.id)}>
               <span className="challenge__title">{c.title}</span>
               <span className="challenge__meta">
-                {status === 'encerrado' ? 'Encerrado' : status === 'futuro' ? 'Ainda não começou' : left === 0 ? 'Último dia' : `${left} dia(s) restantes`}
-                {' · '}{c.members} pessoa(s){c.rank === null ? ' · você é o coach' : ` · você em ${c.rank}º (${c.score})`}
+                {status === 'encerrado' ? t('Encerrado') : status === 'futuro' ? t('Ainda não começou') : left === 0 ? t('Último dia') : t('{left} dia(s) restantes', { left })}
+                {' · '}{t('{n} pessoa(s)', { n: c.members })}{c.rank === null ? t('· você é o coach') : t('· você em {rank}º ({score})', { rank: c.rank, score: c.score })}
               </span>
             </button>
             {expanded && (
@@ -120,9 +121,9 @@ export default function Challenges() {
                 <Leaderboard id={c.id} />
                 <div className="challenge__actions">
                   {status !== 'encerrado' && (
-                    <button type="button" className="btn btn--outline btn--sm" onClick={() => handleShare(c)}>📤 Convidar · {c.invite_code}</button>
+                    <button type="button" className="btn btn--outline btn--sm" onClick={() => handleShare(c)}>{t('📤 Convidar · {invite_code}', { invite_code: c.invite_code })}</button>
                   )}
-                  <button type="button" className="btn btn--outline btn--sm" onClick={() => handleLeave(c)}>Sair</button>
+                  <button type="button" className="btn btn--outline btn--sm" onClick={() => handleLeave(c)}>{t('Sair')}</button>
                 </div>
               </div>
             )}
@@ -133,29 +134,29 @@ export default function Challenges() {
       {mode === 'create' && (
         <div className="challenge__form">
           <input
-            className="input input--sm" placeholder="Nome do desafio" maxLength={TITLE_MAX}
-            value={title} onChange={e => setTitle(e.target.value)} aria-label="Nome do desafio"
+            className="input input--sm" placeholder={t('Nome do desafio')} maxLength={TITLE_MAX}
+            value={title} onChange={e => setTitle(e.target.value)} aria-label={t('Nome do desafio')}
           />
-          <select className="input input--sm" value={days} onChange={e => setDays(Number(e.target.value))} aria-label="Duração">
-            {DURATION_OPTIONS.map(d => <option key={d} value={d}>{d} dias, começando hoje</option>)}
+          <select className="input input--sm" value={days} onChange={e => setDays(Number(e.target.value))} aria-label={t('Duração')}>
+            {DURATION_OPTIONS.map(d => <option key={d} value={d}>{t('{d} dias, começando hoje', { d })}</option>)}
           </select>
-          <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleCreate}>{busy ? 'Criando…' : 'Criar desafio'}</button>
+          <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleCreate}>{busy ? t('Criando…') : t('Criar desafio')}</button>
         </div>
       )}
       {mode === 'join' && (
         <div className="challenge__form">
           <input
-            className="input input--sm" placeholder="Código do convite" maxLength={12} autoCapitalize="characters"
-            value={code} onChange={e => setCode(e.target.value)} aria-label="Código do convite"
+            className="input input--sm" placeholder={t('Código do convite')} maxLength={12} autoCapitalize="characters"
+            value={code} onChange={e => setCode(e.target.value)} aria-label={t('Código do convite')}
           />
-          <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleJoin}>{busy ? 'Entrando…' : 'Entrar'}</button>
+          <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleJoin}>{busy ? t('Entrando…') : t('Entrar')}</button>
         </div>
       )}
       {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
 
       <div className="challenge__actions">
-        <button type="button" className="btn btn--outline btn--sm" onClick={() => { setMode(mode === 'create' ? null : 'create'); setError(''); }}>+ Criar desafio</button>
-        <button type="button" className="btn btn--outline btn--sm" onClick={() => { setMode(mode === 'join' ? null : 'join'); setError(''); }}>Entrar com código</button>
+        <button type="button" className="btn btn--outline btn--sm" onClick={() => { setMode(mode === 'create' ? null : 'create'); setError(''); }}>{t('+ Criar desafio')}</button>
+        <button type="button" className="btn btn--outline btn--sm" onClick={() => { setMode(mode === 'join' ? null : 'join'); setError(''); }}>{t('Entrar com código')}</button>
       </div>
     </div>
   );

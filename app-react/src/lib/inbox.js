@@ -1,5 +1,6 @@
 import { db } from './supabase';
 
+import { locale, t } from './i18n';
 // Central de avisos: o que o admin enviou e as notificações automáticas, para
 // reler dentro do app mesmo sem push (tabela user_notifications, só leitura
 // para o aluno; marcar como lido é pela RPC).
@@ -21,12 +22,12 @@ export async function markInboxRead() {
 export function timeAgo(iso, now = Date.now()) {
   const diff = Math.max(0, now - new Date(iso).getTime());
   const min = Math.floor(diff / 60000);
-  if (min < 1) return 'agora';
-  if (min < 60) return `há ${min} min`;
+  if (min < 1) return t('agora');
+  if (min < 60) return t('há {min} min', { min });
   const h = Math.floor(min / 60);
-  if (h < 24) return `há ${h} h`;
+  if (h < 24) return t('há {h} h', { h });
   const d = Math.floor(h / 24);
-  if (d === 1) return 'ontem';
-  if (d < 7) return `há ${d} dias`;
-  return new Date(iso).toLocaleDateString('pt-BR');
+  if (d === 1) return t('ontem');
+  if (d < 7) return t('há {d} dias', { d });
+  return new Date(iso).toLocaleDateString(locale);
 }

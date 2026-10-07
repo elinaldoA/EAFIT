@@ -29,3 +29,13 @@ describe('isEmailNotConfirmed', () => {
     expect(isEmailNotConfirmed({ code: 'invalid_credentials' })).toBe(false);
   });
 });
+
+describe('isSpecificAuthError', () => {
+  it('reconhece rede, limite e conta suspensa independente do idioma do texto', async () => {
+    const { isSpecificAuthError } = await import('./authErrors');
+    expect(isSpecificAuthError({ message: 'Failed to fetch' })).toBe(true);
+    expect(isSpecificAuthError({ code: 'over_request_rate_limit' })).toBe(true);
+    expect(isSpecificAuthError({ code: 'user_banned' })).toBe(true);
+    expect(isSpecificAuthError({ code: 'invalid_credentials', message: 'Invalid login credentials' })).toBe(false);
+  });
+});

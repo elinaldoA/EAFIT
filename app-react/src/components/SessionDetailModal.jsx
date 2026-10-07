@@ -8,15 +8,16 @@ import { compareExercise, fetchPreviousBests, fmtVolume } from '../lib/workoutHi
 import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
 
+import { t, locale } from '../lib/i18n';
 function fmtKg(n) {
-  return `${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}kg`;
+  return `${n.toLocaleString(locale, { maximumFractionDigits: 1 })}kg`;
 }
 
 function TrendBadge({ cmp }) {
   if (cmp.trend === 'none') return null;
-  if (cmp.trend === 'new') return <span className="trend trend--new">novo</span>;
+  if (cmp.trend === 'new') return <span className="trend trend--new">{t('novo')}</span>;
   const since = `vs ${fmtDate(cmp.previous.date)}`;
-  if (cmp.trend === 'same') return <span className="trend trend--same" title={since}>= igual</span>;
+  if (cmp.trend === 'same') return <span className="trend trend--same" title={since}>{t('= igual')}</span>;
   const text = cmp.deltaCarga !== 0
     ? `${cmp.deltaCarga > 0 ? '+' : ''}${fmtKg(cmp.deltaCarga)}`
     : `${cmp.deltaReps > 0 ? '+' : ''}${cmp.deltaReps} rep${Math.abs(cmp.deltaReps) === 1 ? '' : 's'}`;
@@ -51,7 +52,7 @@ export default function SessionDetailModal({ session, onClose }) {
     return () => { cancelled = true; };
   }, [user, session]);
 
-  const longDate = parseLocalDate(session.date).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+  const longDate = parseLocalDate(session.date).toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'long' });
   const title = longDate.charAt(0).toUpperCase() + longDate.slice(1);
 
   return createPortal(
@@ -60,43 +61,43 @@ export default function SessionDetailModal({ session, onClose }) {
       <div className="summary-modal__panel">
         <div className="summary-modal__header">
           <div>
-            <h2 className="summary-modal__title" id="session-detail-title">{session.completed ? '✅' : '⏳'} Treino de {session.dayOfWeek}</h2>
+            <h2 className="summary-modal__title" id="session-detail-title">{t('{v1} Treino de {dayOfWeek}', { v1: session.completed ? '✅' : '⏳', dayOfWeek: session.dayOfWeek })}</h2>
             <p className="summary-modal__subtitle">{title}</p>
           </div>
-          <button type="button" className="summary-modal__close" aria-label="Fechar" onClick={onClose}>✕</button>
+          <button type="button" className="summary-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
         </div>
 
         <div className="summary-modal__body">
           <div className="summary-stats">
             <div className="stat-card">
               <span className="stat-card__value">{session.durationSeconds ? formatDuration(session.durationSeconds * 1000) : '–'}</span>
-              <span className="stat-card__label">Duração</span>
+              <span className="stat-card__label">{t('Duração')}</span>
             </div>
             <div className="stat-card">
               <span className="stat-card__value">{session.doneSets}</span>
-              <span className="stat-card__label">Séries concluídas</span>
+              <span className="stat-card__label">{t('Séries concluídas')}</span>
             </div>
             <div className="stat-card">
               <span className="stat-card__value">{session.volume ? fmtVolume(session.volume) : '–'}</span>
-              <span className="stat-card__label">Volume (kg × reps)</span>
+              <span className="stat-card__label">{t('Volume (kg × reps)')}</span>
             </div>
             <div className="stat-card">
               <span className="stat-card__value">{rating ? rating.label : '–'}</span>
-              <span className="stat-card__label">Avaliação</span>
+              <span className="stat-card__label">{t('Avaliação')}</span>
             </div>
           </div>
 
           {session.notes && (
             <div className="summary-section">
-              <div className="summary-section__title">Notas</div>
+              <div className="summary-section__title">{t('Notas')}</div>
               <p className="session-notes">{session.notes}</p>
             </div>
           )}
 
           <div className="summary-section">
-            <div className="summary-section__title">Exercícios</div>
+            <div className="summary-section__title">{t('Exercícios')}</div>
             {session.exercises.length === 0 ? (
-              <p className="session-notes">Nenhuma série registrada nesse treino.</p>
+              <p className="session-notes">{t('Nenhuma série registrada nesse treino.')}</p>
             ) : (
               <div className="summary-table">
                 {session.exercises.map(ex => (
@@ -104,7 +105,7 @@ export default function SessionDetailModal({ session, onClose }) {
                     <div className="session-ex__head">
                       <div className="summary-table__name">{ex.nome}</div>
                       {previous === null
-                        ? (ex.best && <span className="trend trend--loading" aria-label="Comparando…">…</span>)
+                        ? (ex.best && <span className="trend trend--loading" aria-label={t('Comparando…')}>…</span>)
                         : <TrendBadge cmp={compareExercise(ex.best, previous.get(ex.nome))} />}
                     </div>
                     <div className="summary-table__sets">
@@ -119,13 +120,13 @@ export default function SessionDetailModal({ session, onClose }) {
               </div>
             )}
             {previous !== null && session.exercises.some(e => e.best) && (
-              <p className="session-hint">▲▼ comparam a melhor série de cada exercício com a última vez que você o fez.</p>
+              <p className="session-hint">{t('▲▼ comparam a melhor série de cada exercício com a última vez que você o fez.')}</p>
             )}
           </div>
         </div>
 
         <div className="summary-modal__footer">
-          <button type="button" className="btn btn--primary btn--full" onClick={onClose}>Fechar</button>
+          <button type="button" className="btn btn--primary btn--full" onClick={onClose}>{t('Fechar')}</button>
         </div>
       </div>
     </div>,

@@ -8,6 +8,7 @@ import { useBackToClose } from '../hooks/useBackToClose';
 import { getModalRoot } from '../lib/modalRoot';
 import { fetchInbox, markInboxRead, timeAgo } from '../lib/inbox';
 
+import { t } from '../lib/i18n';
 function InboxModal({ items, onClose, remindersEnabled, onToggleReminders }) {
   useBackToClose(onClose);
   useEffect(() => {
@@ -16,22 +17,22 @@ function InboxModal({ items, onClose, remindersEnabled, onToggleReminders }) {
   }, []);
 
   return createPortal(
-    <div className="inbox" role="dialog" aria-modal="true" aria-label="Avisos">
+    <div className="inbox" role="dialog" aria-modal="true" aria-label={t('Avisos')}>
       <div className="inbox__backdrop" onClick={onClose} />
       <div className="inbox__panel">
         <div className="inbox__head">
-          <strong>🔔 Avisos</strong>
-          <button type="button" className="icon-btn" aria-label="Fechar" onClick={onClose}>✕</button>
+          <strong>{t('🔔 Avisos')}</strong>
+          <button type="button" className="icon-btn" aria-label={t('Fechar')} onClick={onClose}>✕</button>
         </div>
         <label className="inbox__reminders">
           <input type="checkbox" checked={remindersEnabled} onChange={onToggleReminders} disabled={!isNotificationSupported()} />
           <span>
-            Lembretes neste aparelho
-            <small>{isNotificationSupported() ? 'Treino, água e incentivos, mesmo com o app fechado.' : 'Notificações não são suportadas neste navegador.'}</small>
+            {t('Lembretes neste aparelho')}
+            <small>{isNotificationSupported() ? t('Treino, água e incentivos, mesmo com o app fechado.') : t('Notificações não são suportadas neste navegador.')}</small>
           </span>
         </label>
         <div className="inbox__list">
-          {items.length === 0 && <p className="dash-empty">Nenhum aviso por enquanto.</p>}
+          {items.length === 0 && <p className="dash-empty">{t('Nenhum aviso por enquanto.')}</p>}
           {items.map(i => (
             <div key={i.id} className={`inbox__item${i.unread ? ' inbox__item--unread' : ''}`}>
               <div className="inbox__title">{i.title}</div>
@@ -86,7 +87,7 @@ export default function InboxBell() {
 
   return (
     <>
-      <button type="button" className="inbox-bell" title="Avisos" aria-label={unread ? `Avisos (${unread} novo(s))` : 'Avisos'} onClick={handleOpen}>
+      <button type="button" className="inbox-bell" title={t('Avisos')} aria-label={unread ? t('Avisos ({unread} novo(s))', { unread }) : t('Avisos')} onClick={handleOpen}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           {remindersEnabled || !isNotificationSupported()
             ? <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>

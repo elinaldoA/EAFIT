@@ -1,20 +1,21 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 const ERRORS = {
-  not_authorized: 'Sem permissão para essa ação.',
-  invalid_name: 'Dê um nome ao modelo (2 a 60 letras).',
-  invalid_days: 'O treino precisa de 1 a 7 dias.',
-  invalid_exercises: 'Cada dia precisa de 1 a 20 exercícios, todos com nome.',
-  invalid_duration: 'Duração inválida.',
-  too_many_templates: 'Você atingiu o limite de 50 modelos. Apague algum para salvar outro.',
-  no_recipients: 'Nenhum dos alunos escolhidos está vinculado a você.',
-  too_many_recipients: 'Escolha no máximo 50 alunos por envio.',
+  not_authorized: t('Sem permissão para essa ação.'),
+  invalid_name: t('Dê um nome ao modelo (2 a 60 letras).'),
+  invalid_days: t('O treino precisa de 1 a 7 dias.'),
+  invalid_exercises: t('Cada dia precisa de 1 a 20 exercícios, todos com nome.'),
+  invalid_duration: t('Duração inválida.'),
+  too_many_templates: t('Você atingiu o limite de 50 modelos. Apague algum para salvar outro.'),
+  no_recipients: t('Nenhum dos alunos escolhidos está vinculado a você.'),
+  too_many_recipients: t('Escolha no máximo 50 alunos por envio.'),
 };
 
 export function friendlyTemplateError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível concluir. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível concluir. Tente de novo.');
 }
 
 // Resumo de um modelo: "3 dias · 17 exercícios".
@@ -22,7 +23,7 @@ export function templateSummary(template) {
   const days = template.days || [];
   const exercises = days.reduce((n, d) => n + (d.exercicios || []).length, 0);
   const weeks = template.weeks ? ` · ${template.weeks} semanas` : '';
-  return `${days.length} dia(s) · ${exercises} exercício(s)${weeks}`;
+  return t('{length} dia(s) · {exercises} exercício(s){weeks}', { length: days.length, exercises, weeks });
 }
 
 // Formato que draftFromPlan (lib/trainerPlan) entende.

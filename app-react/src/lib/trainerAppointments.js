@@ -1,27 +1,28 @@
 import { db } from './supabase';
 
+import { t, locale } from './i18n';
 export const DURATIONS = [30, 45, 60, 90, 120];
 
 export const STATUS_LABEL = {
-  pending: 'Aguardando confirmação',
+  pending: t('Aguardando confirmação'),
   confirmed: 'Confirmada',
-  declined: 'Recusada pelo aluno',
+  declined: t('Recusada pelo aluno'),
   cancelled: 'Cancelada',
 };
 
 const ERRORS = {
-  not_authorized: 'Você não tem vínculo ativo com este aluno.',
-  invalid_time: 'Escolha uma data e hora no futuro.',
-  invalid_duration: 'Duração inválida.',
-  invalid_text: 'Local (até 120) ou observação (até 300 caracteres) grande demais.',
-  too_many: 'Muitas aulas futuras com este aluno. Cancele alguma antes.',
-  not_found: 'Esta aula não pode mais ser alterada.',
+  not_authorized: t('Você não tem vínculo ativo com este aluno.'),
+  invalid_time: t('Escolha uma data e hora no futuro.'),
+  invalid_duration: t('Duração inválida.'),
+  invalid_text: t('Local (até 120) ou observação (até 300 caracteres) grande demais.'),
+  too_many: t('Muitas aulas futuras com este aluno. Cancele alguma antes.'),
+  not_found: t('Esta aula não pode mais ser alterada.'),
 };
 
 export function friendlyAppointmentError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível concluir. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível concluir. Tente de novo.');
 }
 
 // Valor de <input type="datetime-local"> (hora local) -> ISO, ou null se inválido.
@@ -33,7 +34,7 @@ export function localInputToIso(value) {
 
 // "seg., 14/10, 18:00"
 export function formatWhen(iso) {
-  return new Date(iso).toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString(locale, { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 // Aulas que ainda vão acontecer (ou estão acontecendo) e seguem de pé.
@@ -60,13 +61,13 @@ export async function createAppointment(clientId, { startsIso, duration, place, 
     p_client: clientId, p_starts: startsIso, p_duration: duration, p_place: place || null, p_note: note || null,
   });
   if (error) throw error;
-  await pushToClient(clientId, 'Aula marcada', `${formatWhen(startsIso)}${place ? ` · ${place}` : ''}. Confirme no app.`);
+  await pushToClient(clientId, t('Aula marcada'), t('{v1}{v2}. Confirme no app.', { v1: formatWhen(startsIso), v2: place ? ` · ${place}` : '' }));
 }
 
 export async function cancelAppointment(appointment) {
   const { error } = await db.rpc('trainer_cancel_appointment', { p_id: appointment.id });
   if (error) throw error;
-  await pushToClient(appointment.clientId, 'Aula cancelada', `A aula de ${formatWhen(appointment.starts)} foi cancelada.`);
+  await pushToClient(appointment.clientId, t('Aula cancelada'), t('A aula de {v1} foi cancelada.', { v1: formatWhen(appointment.starts) }));
 }
 
 async function pushToClient(clientId, title, body) {

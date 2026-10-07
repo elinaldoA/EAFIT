@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth';
 import { sendNotification } from '../lib/notifications';
 import { isPushSupported } from '../lib/pushSubscriptions';
 
+import { t } from '../lib/i18n';
 // Mantenha em sincronia com WATER_REMINDER_TIMES em
 // supabase/functions/send-reminders/index.ts — duplicado de propósito porque
 // este bundle (Vite) e a Edge Function (Deno) não compartilham módulos, mas
@@ -36,8 +37,8 @@ export default function ReminderScheduler() {
         const goalMl = getWaterGoalLiters(user) * 1000;
         const currentMl = parseInt(localStorage.getItem(waterStorageKey()), 10) || 0;
         if (currentMl < goalMl) {
-          sendNotification('💧 Hora de beber água', {
-            body: `Você bebeu ${(currentMl / 1000).toFixed(1)}L de ${(goalMl / 1000).toFixed(1)}L hoje.`,
+          sendNotification(t('💧 Hora de beber água'), {
+            body: t('Você bebeu {v1}L de {v2}L hoje.', { v1: (currentMl / 1000).toFixed(1), v2: (goalMl / 1000).toFixed(1) }),
             tag: `water-${todayDate()}-${current}`,
           }).catch(err => console.error('sendNotification:', err));
         }

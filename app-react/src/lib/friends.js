@@ -1,19 +1,20 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 export const REACTIONS = ['💪', '🔥', '👏'];
 
 const ERRORS = {
-  invalid_code: 'Código não encontrado. Confira com seu amigo.',
-  self_code: 'Esse é o seu próprio código.',
-  too_many_requests: 'Você já tem 20 pedidos pendentes. Aguarde alguém aceitar.',
-  too_many_friends: 'Você chegou ao limite de 100 amigos.',
-  not_authorized: 'Sem permissão para essa ação.',
+  invalid_code: t('Código não encontrado. Confira com seu amigo.'),
+  self_code: t('Esse é o seu próprio código.'),
+  too_many_requests: t('Você já tem 20 pedidos pendentes. Aguarde alguém aceitar.'),
+  too_many_friends: t('Você chegou ao limite de 100 amigos.'),
+  not_authorized: t('Sem permissão para essa ação.'),
 };
 
 export function friendlyFriendError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível concluir. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível concluir. Tente de novo.');
 }
 
 export function normalizeFriendCode(raw) {
@@ -21,7 +22,7 @@ export function normalizeFriendCode(raw) {
 }
 
 export function friendInviteText(code) {
-  return `Bora treinar juntos? Me adiciona no EAFIT com o código ${code} (Dashboard → Amigos).`;
+  return t('Bora treinar juntos? Me adiciona no EAFIT com o código {code} (Dashboard → Amigos).', { code });
 }
 
 export async function fetchMyFriendProfile() {
@@ -89,7 +90,7 @@ export const KIND_ICON = { treino: '✅', recorde: '🏆', sequencia: '🔥' };
 // divide a mesma posição. Inclui o próprio usuário (myWeek = seus dias).
 export function weeklyRanking(friends, myWeek) {
   const rows = [
-    { name: 'Você', week: myWeek, isMe: true },
+    { name: t('Você'), week: myWeek, isMe: true },
     ...friends.filter(f => f.status === 'friend' && f.week !== null).map(f => ({ name: f.name, week: f.week, isMe: false })),
   ].sort((a, b) => b.week - a.week || Number(b.isMe) - Number(a.isMe) || a.name.localeCompare(b.name));
   let rank = 0;

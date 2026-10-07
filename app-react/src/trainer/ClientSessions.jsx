@@ -3,6 +3,7 @@ import { fmtDate } from '../lib/utils';
 import { buildSessions, formatSets, formatDurationMin, fetchClientSessions, progressionSuggestions } from '../lib/trainerInsights';
 import Loading from '../components/Loading';
 
+import { t } from '../lib/i18n';
 // Últimos treinos do aluno, série a série, com a evolução de carga em relação
 // à sessão anterior de cada exercício.
 export default function ClientSessions({ clientId }) {
@@ -26,16 +27,16 @@ export default function ClientSessions({ clientId }) {
     <>
     {suggestions.length > 0 && (
       <div className="dash-card">
-        <div className="dash-card__title">📈 Sugestões de carga</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>Baseadas nos últimos treinos. Você decide se faz sentido para o aluno.</p>
+        <div className="dash-card__title">{t('📈 Sugestões de carga')}</div>
+        <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Baseadas nos últimos treinos. Você decide se faz sentido para o aluno.')}</p>
         <ul className="measure-deltas">
           {suggestions.map(s => (
             <li key={s.name} className="session-ex">
               <span>
                 <strong>{s.name}</strong>
                 <small>{s.kind === 'subir'
-                  ? `Fez ${fmtKg(s.top)} kg com 12+ repetições nas últimas 2 vezes`
-                  : `Repetiu ${fmtKg(s.top)} kg nas últimas 3 vezes sem ganhar repetições`}</small>
+                  ? t('Fez {v1} kg com 12+ repetições nas últimas 2 vezes', { v1: fmtKg(s.top) })
+                  : t('Repetiu {v1} kg nas últimas 3 vezes sem ganhar repetições', { v1: fmtKg(s.top) })}</small>
               </span>
               <span className={s.kind === 'subir' ? 'measure-deltas__down' : 'measure-deltas__up'}>
                 {s.kind === 'subir' ? `↑ ${fmtKg(s.next)} kg` : 'estagnado'}
@@ -46,9 +47,9 @@ export default function ClientSessions({ clientId }) {
       </div>
     )}
     <div className="dash-card">
-      <div className="dash-card__title">Últimos treinos</div>
+      <div className="dash-card__title">{t('Últimos treinos')}</div>
       {!raw && <Loading />}
-      {raw && sessions.length === 0 && <p className="dash-empty">O aluno ainda não registrou treinos.</p>}
+      {raw && sessions.length === 0 && <p className="dash-empty">{t('O aluno ainda não registrou treinos.')}</p>}
 
       {sessions.map(s => {
         const expanded = open === s.id;
@@ -59,8 +60,8 @@ export default function ClientSessions({ clientId }) {
               <span className="challenge__title">{fmtDate(s.date)} · {s.day}{s.completed ? '' : ' (incompleto)'}</span>
               <span className="challenge__meta">
                 {[dur, s.rating ? `${'★'.repeat(s.rating)}` : null,
-                  s.improved ? `↑ ${s.improved} evoluíram` : null, s.dropped ? `↓ ${s.dropped} caíram` : null,
-                  s.notes ? '📝 com observação' : null].filter(Boolean).join(' · ') || 'Sem detalhes'}
+                  s.improved ? t('↑ {improved} evoluíram', { improved: s.improved }) : null, s.dropped ? t('↓ {dropped} caíram', { dropped: s.dropped }) : null,
+                  s.notes ? t('📝 com observação') : null].filter(Boolean).join(' · ') || t('Sem detalhes')}
               </span>
             </button>
             {expanded && (

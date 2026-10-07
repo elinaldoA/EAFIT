@@ -9,6 +9,7 @@ import { todayDate } from '../data/treinoData';
 import { useBackToClose } from '../hooks/useBackToClose';
 import Loading from './Loading';
 
+import { t } from '../lib/i18n';
 function PhotoViewer({ photos, index, onClose, onNavigate, onDelete }) {
   useBackToClose(onClose);
   useEffect(() => {
@@ -23,16 +24,16 @@ function PhotoViewer({ photos, index, onClose, onNavigate, onDelete }) {
     <div className="photo-modal" role="dialog" aria-modal="true">
       <div className="photo-modal__backdrop" onClick={onClose} />
       <div className="photo-modal__panel">
-        <button type="button" className="photo-modal__close" aria-label="Fechar" onClick={onClose}>✕</button>
-        <img className="photo-modal__img" src={photo.image_data} alt={`Foto de ${fmtDate(photo.photo_date)}`} />
+        <button type="button" className="photo-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
+        <img className="photo-modal__img" src={photo.image_data} alt={t('Foto de {v1}', { v1: fmtDate(photo.photo_date) })} />
         <div className="photo-modal__meta">
           <span className="photo-modal__date">{fmtDate(photo.photo_date)}</span>
           {photo.note && <span className="photo-modal__note">{photo.note}</span>}
         </div>
         <div className="photo-modal__nav">
-          <button type="button" className="btn btn--outline btn--sm" disabled={index <= 0} onClick={() => onNavigate(index - 1)}>‹ Anterior</button>
-          <button type="button" className="btn btn--outline btn--sm" onClick={() => onDelete(photo.id)}>🗑 Excluir</button>
-          <button type="button" className="btn btn--outline btn--sm" disabled={index >= photos.length - 1} onClick={() => onNavigate(index + 1)}>Próxima ›</button>
+          <button type="button" className="btn btn--outline btn--sm" disabled={index <= 0} onClick={() => onNavigate(index - 1)}>{t('‹ Anterior')}</button>
+          <button type="button" className="btn btn--outline btn--sm" onClick={() => onDelete(photo.id)}>{t('🗑 Excluir')}</button>
+          <button type="button" className="btn btn--outline btn--sm" disabled={index >= photos.length - 1} onClick={() => onNavigate(index + 1)}>{t('Próxima ›')}</button>
         </div>
       </div>
     </div>,
@@ -61,7 +62,7 @@ export default function ProgressPhotos() {
         setPhotos(data);
       } catch (err) {
         console.error('fetchPhotos:', err);
-        toast('⚠️ Erro ao carregar fotos');
+        toast(t('⚠️ Erro ao carregar fotos'));
       } finally {
         setLoading(false);
       }
@@ -79,25 +80,25 @@ export default function ProgressPhotos() {
       setPhotos(list => [...list, photo].sort((a, b) => a.photo_date.localeCompare(b.photo_date)));
       setNote('');
       setShowForm(false);
-      toast('✅ Foto adicionada');
+      toast(t('✅ Foto adicionada'));
     } catch (err) {
       console.error('addPhoto:', err);
-      toast(`⚠️ ${err.message || 'Erro ao salvar foto'}`);
+      toast(`⚠️ ${err.message || t('Erro ao salvar foto')}`);
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Excluir esta foto?')) return;
+    if (!window.confirm(t('Excluir esta foto?'))) return;
     try {
       await deletePhoto(id, user.id);
       setPhotos(list => list.filter(p => p.id !== id));
       setViewerIndex(null);
-      toast('🗑️ Foto excluída');
+      toast(t('🗑️ Foto excluída'));
     } catch (err) {
       console.error('deletePhoto:', err);
-      toast('⚠️ Erro ao excluir foto');
+      toast(t('⚠️ Erro ao excluir foto'));
     }
   }
 
@@ -110,13 +111,13 @@ export default function ProgressPhotos() {
           <>
             {photos.map((p, i) => (
               <button type="button" key={p.id} className="photo-thumb" onClick={() => setViewerIndex(i)}>
-                <img src={p.image_data} alt={`Foto de ${fmtDate(p.photo_date)}`} />
+                <img src={p.image_data} alt={t('Foto de {v1}', { v1: fmtDate(p.photo_date) })} />
                 <span className="photo-thumb__date">{fmtDate(p.photo_date)}</span>
               </button>
             ))}
             <button type="button" className="photo-thumb photo-thumb--add" onClick={() => setShowForm(f => !f)}>
               <span className="photo-thumb__plus">+</span>
-              <span className="photo-thumb__date">Adicionar</span>
+              <span className="photo-thumb__date">{t('Adicionar')}</span>
             </button>
           </>
         )}
@@ -125,12 +126,12 @@ export default function ProgressPhotos() {
       {showForm && (
         <div className="photo-add-form">
           <input className="input input--sm" type="date" value={date} max={todayDate()} onChange={e => setDate(e.target.value)} />
-          <input className="input input--sm" placeholder="Nota (opcional)" value={note} onChange={e => setNote(e.target.value)} />
+          <input className="input input--sm" placeholder={t('Nota (opcional)')} value={note} onChange={e => setNote(e.target.value)} />
           <button
             type="button" className="btn btn--primary btn--sm"
             disabled={saving}
             onClick={() => fileInputRef.current?.click()}
-          >{saving ? 'Salvando…' : '📷 Escolher foto'}</button>
+          >{saving ? t('Salvando…') : t('📷 Escolher foto')}</button>
           <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleFileChange} />
         </div>
       )}

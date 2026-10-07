@@ -6,6 +6,7 @@ import { isNotificationSupported } from '../lib/notifications';
 import { isPushSupported } from '../lib/pushSubscriptions';
 import { shouldOfferPush, readDismissedAt, markPushPromptDismissed } from '../lib/pushPrompt';
 
+import { t } from '../lib/i18n';
 // Convite dentro do resumo do treino: "quer ser lembrado de treinar?". Só
 // aparece se ainda faz sentido (ver shouldOfferPush). Ativar usa o mesmo fluxo
 // do Perfil (permissão do navegador + inscrição push no servidor).
@@ -36,13 +37,13 @@ export default function PushPrompt() {
 
   return (
     <div className="summary-section push-prompt">
-      <div className="summary-section__title">🔔 Quer ser lembrado de treinar?</div>
+      <div className="summary-section__title">{t('🔔 Quer ser lembrado de treinar?')}</div>
       <p className="push-prompt__text">
-        Ative os lembretes e receba um empurrãozinho no horário do treino, mesmo com o app fechado.
+        {t('Ative os lembretes e receba um empurrãozinho no horário do treino, mesmo com o app fechado.')}
       </p>
       <div className="push-prompt__actions">
-        <button type="button" className="btn btn--primary btn--sm" onClick={handleEnable}>Ativar lembretes</button>
-        <button type="button" className="btn btn--outline btn--sm" onClick={handleDismiss}>Agora não</button>
+        <button type="button" className="btn btn--primary btn--sm" onClick={handleEnable}>{t('Ativar lembretes')}</button>
+        <button type="button" className="btn btn--outline btn--sm" onClick={handleDismiss}>{t('Agora não')}</button>
       </div>
     </div>
   );

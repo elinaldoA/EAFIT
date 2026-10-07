@@ -2,6 +2,7 @@ import { useState } from 'react';
 import bodyAnatomyImg from '../assets/anatomia.jpg';
 import { MUSCLE_LABELS, FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE } from '../data/bodyMuscleMap';
 
+import { t } from '../lib/i18n';
 // Busca a figura assim que o módulo carrega (junto com a página de Treino/Evolução),
 // bem antes de o resumo do treino abrir: o modal já a encontra no cache do navegador.
 if (typeof Image !== 'undefined') new Image().src = bodyAnatomyImg;
@@ -32,7 +33,7 @@ function Muscle({ active, muscle, as: Tag, ...props }) {
 function FrontView({ active }) {
   return (
     <div className="body-avatar__view">
-      <AnatomyImg alt="Frente" className="body-avatar__img-bg body-avatar__img-bg--front" />
+      <AnatomyImg alt={t('Frente')} className="body-avatar__img-bg body-avatar__img-bg--front" />
       <svg viewBox={`0 0 ${BODY_VIEW_SIZE.width} ${BODY_VIEW_SIZE.height}`} className="body-avatar__svg">
         {FRONT_MUSCLE_PATHS.map((p, i) => (
           <Muscle key={`${p.muscle}-${i}`} active={active} muscle={p.muscle} as="path" d={p.d} />
@@ -45,7 +46,7 @@ function FrontView({ active }) {
 function BackView({ active }) {
   return (
     <div className="body-avatar__view">
-      <AnatomyImg alt="Costas" className="body-avatar__img-bg body-avatar__img-bg--back" />
+      <AnatomyImg alt={t('Costas')} className="body-avatar__img-bg body-avatar__img-bg--back" />
       <svg viewBox={`0 0 ${BODY_VIEW_SIZE.width} ${BODY_VIEW_SIZE.height}`} className="body-avatar__svg">
         {BACK_MUSCLE_PATHS.map((p, i) => (
           <Muscle key={`${p.muscle}-${i}`} active={active} muscle={p.muscle} as="path" d={p.d} />
@@ -61,18 +62,18 @@ export default function BodyAvatar({ activeGroups }) {
       <div className="body-avatar__figures">
         <div className="body-avatar__col">
           <FrontView active={activeGroups} />
-          <span className="body-avatar__label">Frente</span>
+          <span className="body-avatar__label">{t('Frente')}</span>
         </div>
         <div className="body-avatar__col">
           <BackView active={activeGroups} />
-          <span className="body-avatar__label">Costas</span>
+          <span className="body-avatar__label">{t('Costas')}</span>
         </div>
       </div>
       <div className="body-avatar__legend">
         <span className="body-avatar__legend-dot body-avatar__legend-dot--active" />
-        <span>Trabalhado hoje</span>
+        <span>{t('Trabalhado hoje')}</span>
         <span className="body-avatar__legend-dot" />
-        <span>Não trabalhado</span>
+        <span>{t('Não trabalhado')}</span>
       </div>
     </div>
   );

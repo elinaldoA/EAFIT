@@ -16,12 +16,13 @@ import ClientGoals from './ClientGoals';
 import ClientPhotos from './ClientPhotos';
 import ClientAppointments from './ClientAppointments';
 
+import { t } from '../lib/i18n';
 const GOALS = {
-  massa: 'Ganho de massa', forca: 'Força', emagrecer: 'Emagrecimento',
-  definicao: 'Definição', saude: 'Saúde e bem-estar', resistencia: 'Resistência',
+  massa: t('Ganho de massa'), forca: t('Aumento de força'), emagrecer: t('Emagrecimento'),
+  definicao: t('Definição muscular'), saude: t('Saúde e bem-estar'), resistencia: t('Resistência / Condicionamento'),
 };
-const LEVELS = { iniciante: 'Iniciante', intermediario: 'Intermediário', avancado: 'Avançado' };
-const SEVERITY = { leve: 'Leve', moderada: 'Moderada', forte: 'Forte', lesao: 'Lesão' };
+const LEVELS = { iniciante: t('Iniciante'), intermediario: t('Intermediário'), avancado: t('Avançado') };
+const SEVERITY = { leve: t('Leve'), moderada: t('Moderada'), forte: t('Forte'), lesao: t('Lesão') };
 const fmt = n => String(n).replace('.', ',');
 
 // Ficha de acompanhamento de um aluno (só leitura): frequência, peso, medidas,
@@ -52,8 +53,8 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
   const sendToClient = useCallback(body => sendMessage([client.id], body), [client.id]);
 
   async function handleRemove() {
-    if (!window.confirm(`Encerrar o acompanhamento de ${client.name}? Você deixa de ver os dados dele.`)) return;
-    try { await removeClient(client.id); toast('Vínculo encerrado'); onRemoved(); }
+    if (!window.confirm(t('Encerrar o acompanhamento de {name}? Você deixa de ver os dados dele.', { name: client.name }))) return;
+    try { await removeClient(client.id); toast(t('Vínculo encerrado')); onRemoved(); }
     catch (err) { toast(`❌ ${friendlyTrainerError(err)}`); }
   }
 
@@ -63,7 +64,7 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
 
   return (
     <section className="page active trainer-page">
-      <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>‹ Voltar aos alunos</button>
+      <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>{t('‹ Voltar aos alunos')}</button>
 
       <div className="dash-card">
         <div className="client-row__main">
@@ -77,26 +78,26 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
         </p>
         {(profile.peso || profile.altura || profile.idade) && (
           <p className="profile-field__hint" style={{ margin: '2px 0 0' }}>
-            {[profile.idade && `${profile.idade} anos`, profile.peso && `${fmt(profile.peso)} kg`, profile.altura && `${profile.altura} cm`, profile.pesoAlvo && `meta ${fmt(profile.pesoAlvo)} kg`].filter(Boolean).join(' · ')}
+            {[profile.idade && t('{n} anos', { n: profile.idade }), profile.peso && `${fmt(profile.peso)} kg`, profile.altura && `${profile.altura} cm`, profile.pesoAlvo && t('meta {kg} kg', { kg: fmt(profile.pesoAlvo) })].filter(Boolean).join(' · ')}
           </p>
         )}
         {profile.pausedUntil && profile.pausedUntil >= today && (
-          <p className="pause-status">⏸ Em pausa até {profile.pausedUntil.split('-').reverse().slice(0, 2).join('/')}</p>
+          <p className="pause-status">{t('⏸ Em pausa até {v1}', { v1: profile.pausedUntil.split('-').reverse().slice(0, 2).join('/') })}</p>
         )}
       </div>
 
-      {failed && <p className="dash-empty">Não foi possível carregar os dados deste aluno.</p>}
+      {failed && <p className="dash-empty">{t('Não foi possível carregar os dados deste aluno.')}</p>}
       {!detail && !failed && <Skeleton height={140} />}
 
       {summary && (
         <>
           <div className="dash-card">
-            <div className="dash-card__title">Frequência</div>
+            <div className="dash-card__title">{t('Frequência')}</div>
             <div className="recap__grid">
-              <div className="recap__stat"><span className="recap__value">{summary.last7}{goal ? `/${goal}` : ''}</span><span className="recap__label">treinos em 7 dias{goal ? ' (meta)' : ''}</span></div>
-              <div className="recap__stat"><span className="recap__value">{summary.last30}</span><span className="recap__label">treinos em 30 dias</span></div>
-              <div className="recap__stat"><span className="recap__value">{summary.streak ? `🔥 ${summary.streak}` : '—'}</span><span className="recap__label">dias de sequência</span></div>
-              <div className="recap__stat"><span className="recap__value">{summary.lastDay ? fmtDate(summary.lastDay) : '—'}</span><span className="recap__label">último treino</span></div>
+              <div className="recap__stat"><span className="recap__value">{summary.last7}{goal ? `/${goal}` : ''}</span><span className="recap__label">{t('treinos em 7 dias{v1}', { v1: goal ? ' (meta)' : '' })}</span></div>
+              <div className="recap__stat"><span className="recap__value">{summary.last30}</span><span className="recap__label">{t('treinos em 30 dias')}</span></div>
+              <div className="recap__stat"><span className="recap__value">{summary.streak ? `🔥 ${summary.streak}` : '—'}</span><span className="recap__label">{t('dias de sequência')}</span></div>
+              <div className="recap__stat"><span className="recap__value">{summary.lastDay ? fmtDate(summary.lastDay) : '—'}</span><span className="recap__label">{t('último treino')}</span></div>
             </div>
           </div>
 
@@ -104,21 +105,21 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
 
           <div className="dash-card">
             <div className="dash-card__title">
-              Peso{summary.weightDelta !== null && <span className="trainer-delta"> · {summary.weightDelta > 0 ? '+' : ''}{fmt(summary.weightDelta)} kg no período</span>}
+              {t('Peso')}{summary.weightDelta !== null && <span className="trainer-delta"> {t('· {v1}{v2} kg no período', { v1: summary.weightDelta > 0 ? '+' : '', v2: fmt(summary.weightDelta) })}</span>}
             </div>
             <div className="line-chart-wrap">
               <LineChart
                 points={summary.weights.map(w => ({ label: fmtDate(w.date), value: w.value }))}
                 valueSuffix="kg"
-                singleMsg={v => `1 registro: ${v}kg`}
-                emptyMsg="O aluno ainda não registrou o peso."
+                singleMsg={v => t('1 registro: {v}kg', { v })}
+                emptyMsg={t('O aluno ainda não registrou o peso.')}
               />
             </div>
           </div>
 
           {Object.keys(summary.measureDeltas).length > 0 && (
             <div className="dash-card">
-              <div className="dash-card__title">Medidas corporais (cm)</div>
+              <div className="dash-card__title">{t('Medidas corporais (cm)')}</div>
               <ul className="measure-deltas">
                 {MEASURE_FIELDS.filter(({ key }) => summary.measureDeltas[key]).map(({ key, label }) => {
                   const d = summary.measureDeltas[key];
@@ -135,12 +136,12 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
 
           {summary.checkins && (
             <div className="dash-card">
-              <div className="dash-card__title">Como ele tem se sentido (30 dias)</div>
+              <div className="dash-card__title">{t('Como ele tem se sentido (30 dias)')}</div>
               <div className="recap__grid">
                 {CHECKIN_FIELDS.map(({ key, label }) => (
                   <div className="recap__stat" key={key}>
                     <span className="recap__value">{fmt(summary.checkins[key])}/5</span>
-                    <span className="recap__label">{label} · média</span>
+                    <span className="recap__label">{t('{label} · média', { label })}</span>
                   </div>
                 ))}
               </div>
@@ -149,7 +150,7 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
 
           {detail.discomfort?.length > 0 && (
             <div className="dash-card">
-              <div className="dash-card__title">Desconfortos (30 dias)</div>
+              <div className="dash-card__title">{t('Desconfortos (30 dias)')}</div>
               <ul className="measure-deltas">
                 {detail.discomfort.slice(0, 8).map((x, i) => (
                   <li key={i}>
@@ -163,10 +164,10 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
 
           {detail.loads?.length > 0 && (
             <div className="dash-card">
-              <div className="dash-card__title">Cargas máximas (90 dias)</div>
+              <div className="dash-card__title">{t('Cargas máximas (90 dias)')}</div>
               <ul className="measure-deltas">
                 {detail.loads.map(l => (
-                  <li key={l.exercise}><span>{l.exercise}</span><span><strong>{fmt(l.max)} kg</strong> · {l.sessions} treino(s)</span></li>
+                  <li key={l.exercise}><span>{l.exercise}</span><span><strong>{fmt(l.max)} kg</strong> · {t('{n} treino(s)', { n: l.sessions })}</span></li>
                 ))}
               </ul>
             </div>
@@ -180,26 +181,26 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
           <ClientPhotos client={client} />
 
           <div className="dash-card">
-            <div className="dash-card__title">Plano atual</div>
+            <div className="dash-card__title">{t('Plano atual')}</div>
             <p className="profile-field__hint" style={{ margin: 0 }}>
-              {detail.plan ? `${detail.plan.name} · ${detail.plan.days} dia(s)` : 'O aluno ainda não tem plano ativo.'}
+              {detail.plan ? `${detail.plan.name} · ${detail.plan.days} dia(s)` : t('O aluno ainda não tem plano ativo.')}
             </p>
             <button type="button" className="btn btn--primary btn--sm" style={{ marginTop: 10 }} onClick={() => setBuilding(true)}>
-              📋 {detail.plan ? 'Editar / enviar novo treino' : 'Montar treino'}
+              📋 {detail.plan ? t('Editar / enviar novo treino') : t('Montar treino')}
             </button>
           </div>
 
           <div className="dash-card">
-            <div className="dash-card__title">💬 Conversa com {client.name}</div>
+            <div className="dash-card__title">{t('💬 Conversa com {name}', { name: client.name })}</div>
             <ChatThread
-              me="trainer" sendLabel="Enviar recado" onError={friendlyMessageError}
-              placeholder="Escreva um recado, incentivo ou orientação… (o aluno recebe uma notificação)"
+              me="trainer" sendLabel={t('Enviar recado')} onError={friendlyMessageError}
+              placeholder={t('Escreva um recado, incentivo ou orientação… (o aluno recebe uma notificação)')}
               load={loadThread} send={sendToClient}
               onLoaded={() => { markThreadRead(client.id).catch(() => { /* sem respostas / migration pendente */ }); }}
             />
           </div>
 
-          <button type="button" className="btn btn--outline btn--full" onClick={handleRemove}>Encerrar acompanhamento</button>
+          <button type="button" className="btn btn--outline btn--full" onClick={handleRemove}>{t('Encerrar acompanhamento')}</button>
         </>
       )}
     </section>

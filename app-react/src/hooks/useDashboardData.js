@@ -9,6 +9,7 @@ import { syncAchievements } from '../lib/achievements';
 import { isNotifyEnabled } from '../lib/notifications';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 
+import { t } from '../lib/i18n';
 // Busca e deriva os dados da tela de Evolução: treinos/séries dos últimos 60
 // dias (para gráficos), e separadamente o histórico completo (para PRs,
 // streak e conquistas, que dependem de todo o passado do usuário).
@@ -69,16 +70,16 @@ export function useDashboardData(active, user, toast) {
       setUnlockedBadges(unlockedIds);
       setWeightLogs(weights);
       newlyEarned.forEach(b => {
-        toast(`🏅 Conquista desbloqueada: ${b.title}`);
+        toast(t('🏅 Conquista desbloqueada: {title}', { title: b.title }));
         if (isNotifyEnabled(user.user_metadata, 'notifyRecords')) {
-          sendPushToSelf({ title: '🏅 Conquista desbloqueada!', body: b.title, tag: `badge-${b.id}` })
+          sendPushToSelf({ title: t('🏅 Conquista desbloqueada!'), body: b.title, tag: `badge-${b.id}` })
             .catch(err => console.error('sendPushToSelf:', err));
         }
       });
       hasLoadedAllTimeRef.current = true;
     } catch (err) {
       console.error('loadAllTimeLogs:', err);
-      toast('⚠️ Erro ao carregar recordes e conquistas');
+      toast(t('⚠️ Erro ao carregar recordes e conquistas'));
     } finally {
       setLoadingPR(false);
     }
@@ -130,7 +131,7 @@ export function useDashboardData(active, user, toast) {
         setDiscomfortHistory(await fetchAllDiscomfort(user.id));
       } catch (err) {
         console.error('loadDashboard:', err);
-        toast('⚠️ Erro ao carregar evolução');
+        toast(t('⚠️ Erro ao carregar evolução'));
       } finally {
         setLoading(false);
       }

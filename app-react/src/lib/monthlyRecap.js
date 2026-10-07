@@ -1,7 +1,8 @@
 import { db } from './supabase';
 
-const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+import { t } from './i18n';
+const MONTHS = [t('janeiro'), t('fevereiro'), t('março'), t('abril'), t('maio'), t('junho'), t('julho'), t('agosto'), t('setembro'), t('outubro'), t('novembro'), t('dezembro')];
+const WEEKDAYS = [t('domingo'), t('segunda'), t('terça'), t('quarta'), t('quinta'), t('sexta'), t('sábado')];
 
 const pad = n => String(n).padStart(2, '0');
 
@@ -31,7 +32,7 @@ export function monthBounds(today, offset = 0) {
   return {
     start: `${fy}-${pad(fm + 1)}-01`,
     end: `${fy}-${pad(fm + 1)}-${pad(last)}`,
-    label: `${MONTHS[fm]} de ${fy}`,
+    label: t('{month} de {year}', { month: MONTHS[fm], year: fy }),
   };
 }
 

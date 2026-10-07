@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 
+import { t } from '../lib/i18n';
 // Campo de senha com botão de mostrar/ocultar — no celular, sem ver o que foi
 // digitado, errar a senha no cadastro é o motivo nº 1 de "não consigo entrar".
 export default function PasswordInput({ label, value, onChange, autoComplete, autoFocus, minLength, hint }) {
@@ -25,10 +26,10 @@ export default function PasswordInput({ label, value, onChange, autoComplete, au
           type="button"
           className="password-input__toggle"
           onClick={() => setVisible(v => !v)}
-          aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
+          aria-label={visible ? t('Ocultar senha') : t('Mostrar senha')}
           aria-pressed={visible}
         >
-          {visible ? 'Ocultar' : 'Mostrar'}
+          {visible ? t('Ocultar') : t('Mostrar')}
         </button>
       </div>
       {hint && <p className="field__hint" id={`${id}-hint`}>{hint}</p>}

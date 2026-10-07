@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
+import { t } from '../lib/i18n';
 const CHECK_INTERVAL_MS = 60_000;
 const RELOAD_FALLBACK_MS = 5_000;
 // Depois de atualizar, não oferece outra atualização por um tempo. O GitHub
@@ -91,15 +92,15 @@ export default function UpdatePrompt({ aboveNav = false }) {
         </svg>
       </div>
       <div className="update-card__text">
-        <strong className="update-card__title">Nova versão disponível</strong>
-        <span className="update-card__desc">Atualize para usar as melhorias mais recentes.</span>
+        <strong className="update-card__title">{t('Nova versão disponível')}</strong>
+        <span className="update-card__desc">{t('Atualize para usar as melhorias mais recentes.')}</span>
       </div>
       <div className="update-card__actions">
         <button type="button" className="update-card__later" onClick={() => setDismissed(true)} disabled={updating}>
-          Depois
+          {t('Depois')}
         </button>
         <button type="button" className="btn btn--primary btn--sm" onClick={handleUpdate} disabled={updating}>
-          {updating ? 'Atualizando…' : 'Atualizar'}
+          {updating ? t('Atualizando…') : t('Atualizar')}
         </button>
       </div>
     </div>

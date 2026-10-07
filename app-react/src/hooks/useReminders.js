@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { requestNotificationPermission } from '../lib/notifications';
 import { subscribeToPush, unsubscribeFromPush } from '../lib/pushSubscriptions';
 
+import { t } from '../lib/i18n';
 export function useReminders(toast, user) {
   const [enabled, setEnabled] = useState(localStorage.getItem('reminders_enabled') === 'true');
 
@@ -9,14 +10,14 @@ export function useReminders(toast, user) {
     if (enabled) {
       localStorage.setItem('reminders_enabled', 'false');
       setEnabled(false);
-      toast('🔕 Lembretes desativados');
+      toast(t('🔕 Lembretes desativados'));
       unsubscribeFromPush().catch(err => console.error('unsubscribeFromPush:', err));
       return;
     }
 
     const perm = await requestNotificationPermission();
     if (perm !== 'granted') {
-      toast(perm === 'unsupported' ? '⚠️ Notificações não suportadas neste navegador' : '⚠️ Permissão de notificação negada');
+      toast(perm === 'unsupported' ? t('⚠️ Notificações não suportadas neste navegador') : t('⚠️ Permissão de notificação negada'));
       return;
     }
 
@@ -26,13 +27,13 @@ export function useReminders(toast, user) {
     if (user) {
       try {
         await subscribeToPush(user.id);
-        toast('🔔 Lembretes ativados (funcionam mesmo com o app fechado)');
+        toast(t('🔔 Lembretes ativados (funcionam mesmo com o app fechado)'));
       } catch (err) {
         console.error('subscribeToPush:', err);
-        toast('🔔 Lembretes ativados (só com o app aberto — push indisponível)');
+        toast(t('🔔 Lembretes ativados (só com o app aberto — push indisponível)'));
       }
     } else {
-      toast('🔔 Lembretes ativados');
+      toast(t('🔔 Lembretes ativados'));
     }
   }, [enabled, toast, user]);
 

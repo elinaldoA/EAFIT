@@ -1,8 +1,9 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 export const WEEK_DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 export const DURATION_CHOICES = [
-  { value: '', label: 'Sem prazo' },
+  { value: '', label: t('Sem prazo') },
   { value: '4', label: '4 semanas' },
   { value: '6', label: '6 semanas' },
   { value: '8', label: '8 semanas' },
@@ -11,17 +12,17 @@ export const DURATION_CHOICES = [
 export const MAX_EXERCISES = 20;
 
 const ERRORS = {
-  not_authorized: 'Você não tem vínculo ativo com este aluno.',
-  invalid_name: 'Dê um nome ao plano (2 a 60 letras).',
-  invalid_days: 'O plano precisa de 1 a 7 dias.',
-  invalid_exercises: 'Cada dia precisa de 1 a 20 exercícios, todos com nome.',
-  invalid_duration: 'Duração inválida.',
+  not_authorized: t('Você não tem vínculo ativo com este aluno.'),
+  invalid_name: t('Dê um nome ao plano (2 a 60 letras).'),
+  invalid_days: t('O plano precisa de 1 a 7 dias.'),
+  invalid_exercises: t('Cada dia precisa de 1 a 20 exercícios, todos com nome.'),
+  invalid_duration: t('Duração inválida.'),
 };
 
 export function friendlyPlanError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível enviar o treino. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível enviar o treino. Tente de novo.');
 }
 
 export function emptyExercise() {
@@ -74,8 +75,8 @@ export function draftFromPlan(plan) {
 // Valida o rascunho e devolve o payload limpo (sem exercícios em branco).
 export function buildPlanPayload(draft) {
   const name = String(draft.name || '').trim();
-  if (name.length < 2) return { ok: false, error: 'Dê um nome ao plano.' };
-  if (!draft.days.length) return { ok: false, error: 'Marque pelo menos um dia de treino.' };
+  if (name.length < 2) return { ok: false, error: t('Dê um nome ao plano.') };
+  if (!draft.days.length) return { ok: false, error: t('Marque pelo menos um dia de treino.') };
 
   const days = [];
   for (const d of draft.days) {
@@ -88,8 +89,8 @@ export function buildPlanPayload(draft) {
         tecnica: String(e.tecnica || '').trim(),
       }))
       .filter(e => e.nome);
-    if (!exercicios.length) return { ok: false, error: `${d.dia}: adicione pelo menos um exercício.` };
-    if (exercicios.length > MAX_EXERCISES) return { ok: false, error: `${d.dia}: no máximo ${MAX_EXERCISES} exercícios.` };
+    if (!exercicios.length) return { ok: false, error: t('{dia}: adicione pelo menos um exercício.', { dia: d.dia }) };
+    if (exercicios.length > MAX_EXERCISES) return { ok: false, error: t('{dia}: no máximo {MAX_EXERCISES} exercícios.', { dia: d.dia, MAX_EXERCISES }) };
     days.push({ dia: d.dia, foco: String(d.foco || '').trim(), exercicios });
   }
   const weeks = draft.weeks === '' ? null : Number(draft.weeks);

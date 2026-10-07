@@ -7,6 +7,7 @@ import {
 } from '../lib/bodyMeasurements';
 import LineChart from './LineChart';
 
+import { t } from '../lib/i18n';
 // Medidas corporais (cm) no Dashboard → Corpo: registro do dia, evolução de
 // cada medida e a diferença desde o primeiro registro.
 export default function BodyMeasurements({ userId }) {
@@ -32,7 +33,7 @@ export default function BodyMeasurements({ userId }) {
 
   async function handleSave() {
     const values = Object.fromEntries(MEASURE_FIELDS.map(({ key }) => [key, parseMeasure(form[key])]));
-    if (MEASURE_FIELDS.every(({ key }) => values[key] === null)) { toast('Preencha ao menos uma medida'); return; }
+    if (MEASURE_FIELDS.every(({ key }) => values[key] === null)) { toast(t('Preencha ao menos uma medida')); return; }
     const today = todayDate();
     // Mantém o que já foi salvo hoje nos campos deixados em branco.
     const prev = (rows || []).find(r => r.measured_on === today) || {};
@@ -42,10 +43,10 @@ export default function BodyMeasurements({ userId }) {
       await upsertMeasurement(userId, today, merged);
       setRows(await fetchMeasurements(userId));
       setForm({});
-      toast('📏 Medidas salvas');
+      toast(t('📏 Medidas salvas'));
     } catch (err) {
       console.error('upsertMeasurement:', err);
-      toast('❌ Não foi possível salvar. Confira os valores (em cm).');
+      toast(t('❌ Não foi possível salvar. Confira os valores (em cm).'));
     } finally {
       setSaving(false);
     }
@@ -56,7 +57,7 @@ export default function BodyMeasurements({ userId }) {
 
   return (
     <div className="dash-card">
-      <div className="dash-card__title">📏 Medidas corporais (cm)</div>
+      <div className="dash-card__title">{t('📏 Medidas corporais (cm)')}</div>
 
       <div className="measure-form">
         {MEASURE_FIELDS.map(({ key, label }) => (
@@ -70,7 +71,7 @@ export default function BodyMeasurements({ userId }) {
         ))}
       </div>
       <button type="button" className="btn btn--primary btn--sm" disabled={saving} onClick={handleSave}>
-        {saving ? 'Salvando…' : 'Salvar medidas de hoje'}
+        {saving ? t('Salvando…') : t('Salvar medidas de hoje')}
       </button>
 
       {hasDeltas && (
@@ -88,7 +89,7 @@ export default function BodyMeasurements({ userId }) {
         </ul>
       )}
 
-      <div className="measure-chips" role="group" aria-label="Medida do gráfico">
+      <div className="measure-chips" role="group" aria-label={t('Medida do gráfico')}>
         {MEASURE_FIELDS.map(({ key, label }) => (
           <button
             key={key} type="button" aria-pressed={field === key}
@@ -101,8 +102,8 @@ export default function BodyMeasurements({ userId }) {
         <LineChart
           points={points}
           valueSuffix="cm"
-          singleMsg={v => `1 registro: ${v}cm — registre de novo em outro dia para ver a evolução`}
-          emptyMsg="Nenhuma medida registrada ainda."
+          singleMsg={v => t('1 registro: {v}cm — registre de novo em outro dia para ver a evolução', { v })}
+          emptyMsg={t('Nenhuma medida registrada ainda.')}
         />
       </div>
     </div>

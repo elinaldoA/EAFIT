@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { fetchMyMessages, markMessagesRead, unreadCount } from '../lib/trainerMessages';
 
+import { t } from '../lib/i18n';
 // Faixa no topo do Treino com os recados novos do personal. Sem recado novo,
 // não aparece (o histórico fica em Perfil → Meu personal).
 export default function PersonalMessages() {
@@ -27,11 +28,11 @@ export default function PersonalMessages() {
 
   return (
     <div className="personal-msg" role="status">
-      <div className="personal-msg__title">💬 {unreadCount(messages) > 1 ? `${messages.length} recados do seu personal` : 'Recado do seu personal'}</div>
+      <div className="personal-msg__title">💬 {unreadCount(messages) > 1 ? t('{length} recados do seu personal', { length: messages.length }) : t('Recado do seu personal')}</div>
       {messages.slice(0, 3).map(m => <p key={m.id} className="personal-msg__body">{m.body}</p>)}
       <div className="personal-msg__actions">
-        <button type="button" className="btn btn--outline btn--sm" onClick={handleRead}>Entendi</button>
-        <button type="button" className="btn btn--ghost btn--sm" onClick={() => { window.location.hash = '#perfil'; }}>Ver histórico</button>
+        <button type="button" className="btn btn--outline btn--sm" onClick={handleRead}>{t('Entendi')}</button>
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => { window.location.hash = '#perfil'; }}>{t('Ver histórico')}</button>
       </div>
     </div>
   );

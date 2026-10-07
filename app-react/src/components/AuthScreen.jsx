@@ -2,13 +2,15 @@ import { useEffect, useId, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import logoMark from '../assets/app-icon.png';
 import PasswordInput from './PasswordInput';
+import LanguageSwitch from './LanguageSwitch';
 import { isKnownUser } from '../lib/knownUser';
 import { recordVisit } from '../lib/pageVisits';
+import { t } from '../lib/i18n';
 
 const MODES = {
-  login: { title: 'Entrar', submit: 'Entrar', busy: 'Entrando…' },
-  signup: { title: 'Criar conta', submit: 'Criar conta', busy: 'Criando conta…' },
-  forgot: { title: 'Recuperar senha', submit: 'Enviar link', busy: 'Enviando…' },
+  login: { title: t('Entrar'), submit: t('Entrar'), busy: t('Entrando…') },
+  signup: { title: t('Criar conta'), submit: t('Criar conta'), busy: t('Criando conta…') },
+  forgot: { title: t('Recuperar senha'), submit: t('Enviar link'), busy: t('Enviando…') },
 };
 
 export default function AuthScreen() {
@@ -34,9 +36,9 @@ export default function AuthScreen() {
   async function handleSubmit(e) {
     e.preventDefault();
     const cleanEmail = email.trim();
-    if (!cleanEmail) { setMsg({ text: 'Informe seu e-mail.', type: 'error' }); return; }
-    if (mode !== 'forgot' && !password) { setMsg({ text: 'Informe sua senha.', type: 'error' }); return; }
-    if (mode === 'signup' && !acceptedTerms) { setMsg({ text: 'Aceite os Termos de Uso para criar a conta.', type: 'error' }); return; }
+    if (!cleanEmail) { setMsg({ text: t('Informe seu e-mail.'), type: 'error' }); return; }
+    if (mode !== 'forgot' && !password) { setMsg({ text: t('Informe sua senha.'), type: 'error' }); return; }
+    if (mode === 'signup' && !acceptedTerms) { setMsg({ text: t('Aceite os Termos de Uso para criar a conta.'), type: 'error' }); return; }
 
     setBusy(true);
     setNeedsConfirmation(false);
@@ -72,23 +74,23 @@ export default function AuthScreen() {
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="" />
           <h1 className="auth-logo__name">EAFIT</h1>
-          <p className="auth-logo__tagline">Seu treino, sempre com você</p>
+          <p className="auth-logo__tagline">{t('Seu treino, sempre com você')}</p>
           {mode === 'signup' && (
             <p className="auth-logo__pitch">
-              Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Grátis e funciona offline.
+              {t('Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Grátis e funciona offline.')}
             </p>
           )}
-          <a className="auth-logo__more" href="landing/">Conheça o app →</a>
+          <a className="auth-logo__more" href="landing/">{t('Conheça o app →')}</a>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           {mode === 'forgot' ? (
             <div className="auth-form__intro">
               <h2 className="auth-form__title">{labels.title}</h2>
-              <p className="auth-form__subtitle">Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha.</p>
+              <p className="auth-form__subtitle">{t('Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha.')}</p>
             </div>
           ) : (
-            <div className="auth-tabs" role="tablist" aria-label="Acesso">
+            <div className="auth-tabs" role="tablist" aria-label={t('Acesso')}>
               {['login', 'signup'].map(key => (
                 <button
                   key={key}
@@ -105,7 +107,7 @@ export default function AuthScreen() {
           )}
 
           <div className="field">
-            <label className="field__label" htmlFor={emailId}>E-mail</label>
+            <label className="field__label" htmlFor={emailId}>{t('E-mail')}</label>
             <input
               id={emailId} type="email" className="input" inputMode="email"
               autoComplete={mode === 'signup' ? 'email' : 'username'} autoCapitalize="none" spellCheck={false}
@@ -116,18 +118,18 @@ export default function AuthScreen() {
           {mode !== 'forgot' && (
             <PasswordInput
               key={mode}
-              label="Senha"
+              label={t('Senha')}
               value={password}
               onChange={setPassword}
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
               minLength={mode === 'signup' ? 6 : undefined}
-              hint={mode === 'signup' ? 'Mínimo de 6 caracteres.' : undefined}
+              hint={mode === 'signup' ? t('Mínimo de 6 caracteres.') : undefined}
             />
           )}
 
           {mode === 'login' && (
             <button type="button" className="auth-form__link auth-form__link--right" onClick={() => switchMode('forgot')}>
-              Esqueci minha senha
+              {t('Esqueci minha senha')}
             </button>
           )}
 
@@ -135,8 +137,8 @@ export default function AuthScreen() {
             <label className="auth-form__terms">
               <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} />
               <span>
-                Li e aceito os <a href="legal/termos.html" target="_blank" rel="noopener noreferrer">Termos de Uso</a> e a{' '}
-                <a href="legal/privacidade.html" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>
+                {t('Li e aceito os')} <a href="legal/termos.html" target="_blank" rel="noopener noreferrer">{t('Termos de Uso')}</a> {t('e a')}{' '}
+                <a href="legal/privacidade.html" target="_blank" rel="noopener noreferrer">{t('Política de Privacidade')}</a>
               </span>
             </label>
           )}
@@ -151,16 +153,18 @@ export default function AuthScreen() {
 
           {needsConfirmation && (
             <button type="button" className="btn btn--outline btn--full" disabled={busy} onClick={handleResend}>
-              Reenviar link de confirmação
+              {t('Reenviar link de confirmação')}
             </button>
           )}
 
           {mode === 'forgot' && (
             <button type="button" className="auth-form__link" onClick={() => switchMode('login')}>
-              ← Voltar para o login
+              {t('← Voltar para o login')}
             </button>
           )}
         </form>
+
+        <LanguageSwitch id="authLang" />
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import {
 } from '../lib/trainerPlan';
 import Loading from '../components/Loading';
 
+import { t } from '../lib/i18n';
 // Montagem de treino: dias da semana, foco, exercícios (com sugestão da
 // biblioteca do app) e prazo. Com `client`, ao enviar vira o plano ativo do
 // aluno (RPC trainer_assign_plan; o plano anterior dele continua salvo) e dá
@@ -58,7 +59,7 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
   function handleLoadTemplate(id) {
     const tpl = templates.find(t => t.id === id);
     if (!tpl) return;
-    if (draft.days.length && !window.confirm('Carregar o modelo substitui o que você montou até agora. Continuar?')) return;
+    if (draft.days.length && !window.confirm(t('Carregar o modelo substitui o que você montou até agora. Continuar?'))) return;
     setDraft(draftFromPlan(templateToPlan(tpl)));
     setError('');
   }
@@ -69,7 +70,7 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
     setSending(true); setError('');
     try {
       await saveTemplate(payload);
-      toast('💾 Modelo salvo');
+      toast(t('💾 Modelo salvo'));
       if (!client) onSent();
       else fetchTemplates().then(setTemplates).catch(() => {});
     } catch (err) {
@@ -82,14 +83,14 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
   async function handleSend() {
     const payload = buildPlanPayload(draft);
     if (!payload.ok) { setError(payload.error); return; }
-    if (!window.confirm(`Enviar este treino para ${client.name}? Ele passa a ser o plano ativo do aluno.`)) return;
+    if (!window.confirm(t('Enviar este treino para {name}? Ele passa a ser o plano ativo do aluno.', { name: client.name }))) return;
     setSending(true); setError('');
     try {
       await assignPlan(client.id, payload);
       // aviso ao aluno (melhor esforço: o treino já foi enviado)
-      sendMessage([client.id], `Seu personal montou um novo treino para você: "${payload.name}". Bons treinos!`, 'treino')
+      sendMessage([client.id], t('Seu personal montou um novo treino para você: "{name}". Bons treinos!', { name: payload.name }), 'treino')
         .catch(err => console.warn('aviso de novo treino:', err));
-      toast('✅ Treino enviado para o aluno');
+      toast(t('✅ Treino enviado para o aluno'));
       onSent();
     } catch (err) {
       setError(friendlyPlanError(err));
@@ -100,32 +101,32 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
 
   return (
     <section className="page active trainer-page">
-      <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>{client ? '‹ Voltar à ficha' : '‹ Voltar aos modelos'}</button>
+      <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>{client ? t('‹ Voltar à ficha') : t('‹ Voltar aos modelos')}</button>
       <div className="dash-card">
-        <div className="dash-card__title">{client ? `📋 Treino de ${client.name}` : '🧩 Modelo de treino'}</div>
+        <div className="dash-card__title">{client ? t('📋 Treino de {name}', { name: client.name }) : t('🧩 Modelo de treino')}</div>
         {templates.length > 0 && (
           <div className="profile-field">
-            <label className="profile-field__label" htmlFor="loadTemplate">Começar de um modelo</label>
+            <label className="profile-field__label" htmlFor="loadTemplate">{t('Começar de um modelo')}</label>
             <select id="loadTemplate" className="input input--sm" value="" onChange={e => handleLoadTemplate(e.target.value)}>
-              <option value="">Escolher modelo…</option>
+              <option value="">{t('Escolher modelo…')}</option>
               {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </div>
         )}
         <div className="profile-field">
-          <label className="profile-field__label" htmlFor="planName">Nome do plano</label>
-          <input id="planName" className="input input--sm" placeholder="Ex: Hipertrofia — ciclo 1" maxLength={60}
+          <label className="profile-field__label" htmlFor="planName">{t('Nome do plano')}</label>
+          <input id="planName" className="input input--sm" placeholder={t('Ex: Hipertrofia — ciclo 1')} maxLength={60}
             value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} />
         </div>
         <div className="profile-field">
-          <label className="profile-field__label" htmlFor="planWeeks">Duração</label>
+          <label className="profile-field__label" htmlFor="planWeeks">{t('Duração')}</label>
           <select id="planWeeks" className="input input--sm" value={draft.weeks} onChange={e => setDraft(d => ({ ...d, weeks: e.target.value }))}>
             {DURATION_CHOICES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
-          <span className="profile-field__hint">Ao fim do prazo o app avisa o aluno para falar com você. O plano não é trocado sozinho.</span>
+          <span className="profile-field__hint">{t('Ao fim do prazo o app avisa o aluno para falar com você. O plano não é trocado sozinho.')}</span>
         </div>
-        <span className="profile-field__label">Dias de treino</span>
-        <div className="measure-chips" role="group" aria-label="Dias de treino">
+        <span className="profile-field__label">{t('Dias de treino')}</span>
+        <div className="measure-chips" role="group" aria-label={t('Dias de treino')}>
           {WEEK_DAYS.map(dia => (
             <button key={dia} type="button" aria-pressed={draft.days.some(d => d.dia === dia)}
               className={draft.days.some(d => d.dia === dia) ? 'recap__btn recap__btn--active' : 'recap__btn'}
@@ -141,46 +142,46 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
       {draft.days.map((day, di) => (
         <div className="dash-card" key={day.dia}>
           <div className="dash-card__title">{day.dia}</div>
-          <input className="input input--sm" placeholder="Foco do dia (ex.: Peito / Ombro / Tríceps)" value={day.foco}
+          <input className="input input--sm" placeholder={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')} value={day.foco}
             onChange={e => setDay(di, d => ({ ...d, foco: e.target.value }))} />
 
           {day.exercicios.map((ex, ei) => (
             <div className="plan-ex-row" key={ei}>
               <div className="plan-ex-row__move">
-                <button type="button" disabled={ei === 0} aria-label="Subir"
+                <button type="button" disabled={ei === 0} aria-label={t('Subir')}
                   onClick={() => setDay(di, d => ({ ...d, exercicios: moveItem(d.exercicios, ei, -1) }))}>▲</button>
-                <button type="button" disabled={ei === day.exercicios.length - 1} aria-label="Descer"
+                <button type="button" disabled={ei === day.exercicios.length - 1} aria-label={t('Descer')}
                   onClick={() => setDay(di, d => ({ ...d, exercicios: moveItem(d.exercicios, ei, 1) }))}>▼</button>
               </div>
               <div className="plan-ex-row__fields">
-                <input className="input input--sm plan-ex-row__name" list={listId} placeholder="Exercício" value={ex.nome}
+                <input className="input input--sm plan-ex-row__name" list={listId} placeholder={t('Exercício')} value={ex.nome}
                   onChange={e => handleName(di, ei, e.target.value)} />
                 <div className="plan-ex-row__nums">
-                  <input className="input input--sm" placeholder="Séries" value={ex.series} onChange={e => setEx(di, ei, { series: e.target.value })} />
+                  <input className="input input--sm" placeholder={t('Séries')} value={ex.series} onChange={e => setEx(di, ei, { series: e.target.value })} />
                   <input className="input input--sm" placeholder="Reps" value={ex.reps} onChange={e => setEx(di, ei, { reps: e.target.value })} />
-                  <input className="input input--sm" placeholder="Descanso" value={ex.descanso} onChange={e => setEx(di, ei, { descanso: e.target.value })} />
+                  <input className="input input--sm" placeholder={t('Descanso')} value={ex.descanso} onChange={e => setEx(di, ei, { descanso: e.target.value })} />
                 </div>
-                <input className="input input--sm" placeholder="Técnica / observação (opcional)" value={ex.tecnica}
+                <input className="input input--sm" placeholder={t('Técnica / observação (opcional)')} value={ex.tecnica}
                   onChange={e => setEx(di, ei, { tecnica: e.target.value })} />
               </div>
-              <button type="button" className="plan-row__del" aria-label="Remover exercício"
+              <button type="button" className="plan-row__del" aria-label={t('Remover exercício')}
                 onClick={() => setDay(di, d => ({ ...d, exercicios: d.exercicios.filter((_, i) => i !== ei) }))}>✕</button>
             </div>
           ))}
 
           <button type="button" className="btn btn--outline btn--sm" disabled={day.exercicios.length >= MAX_EXERCISES}
-            onClick={() => setDay(di, d => ({ ...d, exercicios: [...d.exercicios, emptyExercise()] }))}>+ Exercício</button>
+            onClick={() => setDay(di, d => ({ ...d, exercicios: [...d.exercicios, emptyExercise()] }))}>{t('+ Exercício')}</button>
         </div>
       ))}
 
       {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
       {client && (
         <button type="button" className="btn btn--primary btn--full" disabled={sending} onClick={handleSend}>
-          {sending ? 'Enviando…' : '📤 Enviar treino para o aluno'}
+          {sending ? t('Enviando…') : t('📤 Enviar treino para o aluno')}
         </button>
       )}
       <button type="button" className={client ? 'btn btn--outline btn--full' : 'btn btn--primary btn--full'} disabled={sending} onClick={handleSaveTemplate}>
-        {client ? '💾 Salvar como modelo' : (sending ? 'Salvando…' : '💾 Salvar modelo')}
+        {client ? t('💾 Salvar como modelo') : (sending ? t('Salvando…') : t('💾 Salvar modelo'))}
       </button>
     </section>
   );

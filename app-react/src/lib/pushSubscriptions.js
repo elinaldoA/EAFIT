@@ -1,5 +1,6 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
 function urlBase64ToUint8Array(base64String) {
@@ -16,8 +17,8 @@ export function isPushSupported() {
 // Cria (ou reaproveita) uma inscrição push do navegador e salva no Supabase,
 // para que o servidor consiga notificar este dispositivo com o app fechado.
 export async function subscribeToPush(userId) {
-  if (!isPushSupported()) throw new Error('Notificações push não suportadas neste navegador.');
-  if (!VAPID_PUBLIC_KEY) throw new Error('Push não configurado (VITE_VAPID_PUBLIC_KEY ausente).');
+  if (!isPushSupported()) throw new Error(t('Notificações push não suportadas neste navegador.'));
+  if (!VAPID_PUBLIC_KEY) throw new Error(t('Push não configurado (VITE_VAPID_PUBLIC_KEY ausente).'));
 
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();

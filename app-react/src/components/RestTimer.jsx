@@ -4,6 +4,7 @@ import { playRestDoneSound } from '../lib/sound';
 import { getModalRoot } from '../lib/modalRoot';
 import { useBackToClose } from '../hooks/useBackToClose';
 
+import { t } from '../lib/i18n';
 const RADIUS = 90;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -59,8 +60,8 @@ export default function RestTimer({ session, onClose }) {
     <div className="rest-modal" role="dialog" aria-modal="true">
       <div className="rest-modal__backdrop" />
       <div className="rest-modal__panel">
-        <button type="button" className="rest-modal__close" aria-label="Fechar timer" onClick={onClose}>✕</button>
-        <span className="rest-modal__label">Descanso · {session.label}</span>
+        <button type="button" className="rest-modal__close" aria-label={t('Fechar timer')} onClick={onClose}>✕</button>
+        <span className="rest-modal__label">{t('Descanso · {label}', { label: session.label })}</span>
 
         <div className="rest-modal__ring">
           <svg viewBox="0 0 200 200" className="rest-modal__svg">
@@ -82,7 +83,7 @@ export default function RestTimer({ session, onClose }) {
             <>
               <button type="button" className="rest-modal__btn" onClick={() => setLeft(l => l + 15)}>+15s</button>
               <button type="button" className="rest-modal__btn" onClick={() => setPaused(p => !p)}>
-                {paused ? '▶ Continuar' : '⏸ Pausar'}
+                {paused ? t('▶ Continuar') : t('⏸ Pausar')}
               </button>
             </>
           )}
@@ -94,7 +95,7 @@ export default function RestTimer({ session, onClose }) {
           disabled={!finished}
           onClick={onClose}
         >
-          {finished ? 'Continuando…' : 'Aguarde o descanso terminar'}
+          {finished ? t('Continuando…') : t('Aguarde o descanso terminar')}
         </button>
       </div>
     </div>,

@@ -4,6 +4,7 @@ import { useWorkout } from '../context/useWorkout';
 import { formatDuration } from '../lib/utils';
 import { formatPace, parsePlannedMinutes, readCardio, toPositive, writeCardioField } from '../lib/cardio';
 
+import { t } from '../lib/i18n';
 // Cronômetro guardado em localStorage (sobrevive ao modo ao vivo remontar o
 // bloco e a um F5): acumulado + instante em que voltou a correr.
 const timerKey = nome => `cardio_timer_${nome}`;
@@ -106,29 +107,29 @@ export default function CardioRow({ ex, day, bump, started }) {
 
   const pace = formatPace(vals.duracao, vals.distancia);
   const disabled = !started;
-  const hint = started ? undefined : 'Inicie o treino para registrar o cardio';
+  const hint = started ? undefined : t('Inicie o treino para registrar o cardio');
   const elapsed = elapsedOf(timer, now);
   const hasTimer = running || timer.accumulatedMs > 0;
 
   return (
     <div className="cardio-row">
       <div className="cardio-row__timer">
-        <span className={`cardio-row__clock${running ? ' cardio-row__clock--running' : ''}`} aria-label="Cronômetro do cardio">
+        <span className={`cardio-row__clock${running ? ' cardio-row__clock--running' : ''}`} aria-label={t('Cronômetro do cardio')}>
           {formatDuration(elapsed)}
         </span>
         {running ? (
-          <button type="button" className="btn btn--outline btn--sm" onClick={pauseTimer}>⏸ Pausar</button>
+          <button type="button" className="btn btn--outline btn--sm" onClick={pauseTimer}>{t('⏸ Pausar')}</button>
         ) : (
           <button type="button" className="btn btn--primary btn--sm" disabled={disabled} title={hint} onClick={startTimer}>
-            {hasTimer ? '▶ Continuar' : '▶ Iniciar'}
+            {hasTimer ? t('▶ Continuar') : t('▶ Iniciar')}
           </button>
         )}
-        {hasTimer && <button type="button" className="btn btn--ghost btn--sm" onClick={stopTimer}>⏹ Parar</button>}
+        {hasTimer && <button type="button" className="btn btn--ghost btn--sm" onClick={stopTimer}>{t('⏹ Parar')}</button>}
       </div>
 
       <div className="cardio-row__fields">
         <label className="cardio-row__field">
-          <span>Duração (min)</span>
+          <span>{t('Duração (min)')}</span>
           <input
             className="set-row__carga" type="text" inputMode="decimal" autoComplete="off"
             placeholder={planned ? String(planned) : 'min'} disabled={disabled} title={hint}
@@ -138,7 +139,7 @@ export default function CardioRow({ ex, day, bump, started }) {
           />
         </label>
         <label className="cardio-row__field">
-          <span>Distância (km)</span>
+          <span>{t('Distância (km)')}</span>
           <input
             className="set-row__carga" type="text" inputMode="decimal" autoComplete="off"
             placeholder="km" disabled={disabled} title={hint}
@@ -150,12 +151,12 @@ export default function CardioRow({ ex, day, bump, started }) {
         <button
           type="button"
           className={`set-row__check${vals.done ? ' set-row__check--done' : ''}`}
-          aria-pressed={vals.done} aria-label="Cardio concluído"
+          aria-pressed={vals.done} aria-label={t('Cardio concluído')}
           disabled={disabled} title={hint} onClick={toggleDone}
         >✓</button>
       </div>
 
-      {pace && <div className="cardio-row__pace">⚡ Ritmo médio: <strong>{pace}</strong> min/km</div>}
+      {pace && <div className="cardio-row__pace">{t('⚡ Ritmo médio:')} <strong>{pace}</strong> min/km</div>}
     </div>
   );
 }

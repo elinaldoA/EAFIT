@@ -12,6 +12,7 @@ import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
 
+import { t, locale } from '../lib/i18n';
 export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
   useBackToClose(onClose);
   const { day, durationMs, totalCarga, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets } = summary;
@@ -42,11 +43,11 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
     setSharing(true);
     try {
       const result = await shareWorkoutSummary(summary);
-      if (result === 'downloaded') toast('🖼️ Imagem baixada');
+      if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
     } catch (err) {
       if (err?.name !== 'AbortError') {
         console.error('shareWorkoutSummary:', err);
-        toast('⚠️ Erro ao gerar imagem de compartilhamento');
+        toast(t('⚠️ Erro ao gerar imagem de compartilhamento'));
       }
     } finally {
       setSharing(false);
@@ -61,17 +62,17 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
           <div className="summary-modal__panel">
             <div className="summary-modal__header">
               <div>
-                <h2 className="summary-modal__title">🏁 Resumo do treino</h2>
-                <p className="summary-modal__subtitle">{day.dia} · {day.foco}</p>
+                <h2 className="summary-modal__title">{t('🏁 Resumo do treino')}</h2>
+                <p className="summary-modal__subtitle">{t(day.dia)} · {day.foco}</p>
               </div>
-              <button type="button" className="summary-modal__close" aria-label="Fechar" onClick={onClose}>✕</button>
+              <button type="button" className="summary-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
             </div>
 
             <div className="summary-modal__body">
               <div className="summary-section">
-                <div className="summary-section__title">Como foi esse treino?</div>
+                <div className="summary-section__title">{t('Como foi esse treino?')}</div>
                 <button type="button" className="btn btn--outline btn--full" onClick={() => setRatingModalOpen(true)}>
-                  {rating ? `Avaliação: ${RATING_OPTIONS.find(opt => opt.value === rating)?.label}` : 'Avaliar treino'}
+                  {rating ? t('Avaliação: {label}', { label: RATING_OPTIONS.find(opt => opt.value === rating)?.label }) : t('Avaliar treino')}
                 </button>
               </div>
 
@@ -80,27 +81,27 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
               <div className="summary-stats">
                 <div className="stat-card">
                   <span className="stat-card__value">{formatDuration(durationMs)}</span>
-                  <span className="stat-card__label">Duração</span>
+                  <span className="stat-card__label">{t('Duração')}</span>
                 </div>
                 <div className="stat-card">
-                  <span className="stat-card__value">{totalCarga.toLocaleString('pt-BR')}kg</span>
-                  <span className="stat-card__label">Carga total</span>
+                  <span className="stat-card__value">{totalCarga.toLocaleString(locale)}kg</span>
+                  <span className="stat-card__label">{t('Carga total')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-card__value">{totalSetsDone}/{totalPlannedSets}</span>
-                  <span className="stat-card__label">Séries concluídas</span>
+                  <span className="stat-card__label">{t('Séries concluídas')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-card__value">{exercises.length}</span>
-                  <span className="stat-card__label">Exercícios</span>
+                  <span className="stat-card__label">{t('Exercícios')}</span>
                 </div>
               </div>
 
               <div className="summary-section">
-                <div className="summary-section__title">Meta da semana</div>
+                <div className="summary-section__title">{t('Meta da semana')}</div>
                 <div className="progress-card">
                   <div className="progress-card__row">
-                    <span className="progress-card__label">Treinos concluídos</span>
+                    <span className="progress-card__label">{t('Treinos concluídos')}</span>
                     <span className="progress-card__count">{weekDone}/{weekTotal}</span>
                   </div>
                   <div className="progress-card__bar">
@@ -110,13 +111,13 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
               </div>
 
               <div className="summary-section">
-                <div className="summary-section__title">Músculos trabalhados</div>
+                <div className="summary-section__title">{t('Músculos trabalhados')}</div>
                 <BodyAvatar activeGroups={activeGroups} />
               </div>
 
               {exercises.length > 0 && (
                 <div className="summary-section">
-                  <div className="summary-section__title">Detalhes das séries</div>
+                  <div className="summary-section__title">{t('Detalhes das séries')}</div>
                   <div className="summary-table">
                     {exercises.map(ex => (
                       <div className="summary-table__row" key={ex.nome}>
@@ -137,9 +138,9 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
 
             <div className="summary-modal__footer">
               <button type="button" className="btn btn--outline btn--full" disabled={sharing} onClick={handleShare}>
-                {sharing ? 'Gerando imagem…' : '📤 Compartilhar treino'}
+                {sharing ? t('Gerando imagem…') : t('📤 Compartilhar treino')}
               </button>
-              <button type="button" className="btn btn--primary btn--full" onClick={onClose}>Fechar</button>
+              <button type="button" className="btn btn--primary btn--full" onClick={onClose}>{t('Fechar')}</button>
             </div>
           </div>
         </div>,

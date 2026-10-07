@@ -15,6 +15,7 @@ import DailyCheckin from '../components/DailyCheckin';
 import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
 
+import { t } from '../lib/i18n';
 export default function TreinoPage() {
   const { user } = useAuth();
   const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating } = useWorkout();
@@ -41,7 +42,7 @@ export default function TreinoPage() {
   const todayDone = today && localStorage.getItem(`treino_${today.dia}`) === 'true';
 
   async function handleReset() {
-    if (!window.confirm('Limpar todos os checks e cargas salvas?')) return;
+    if (!window.confirm(t('Limpar todos os checks e cargas salvas?'))) return;
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith('treino_') || k.startsWith('carga_') || k.startsWith('set_')) localStorage.removeItem(k);
     });
@@ -52,10 +53,10 @@ export default function TreinoPage() {
         const { error } = await db.from('workouts').delete().eq('user_id', user.id).in('workout_date', dates);
         if (error) throw error;
         await syncNow();
-        toast('🧹 Checks e cargas limpos');
+        toast(t('🧹 Checks e cargas limpos'));
       } catch (err) {
         console.error('resetWorkouts:', err);
-        toast('⚠️ Limpou localmente, mas falhou ao sincronizar com o servidor — pode voltar ao reabrir o app');
+        toast(t('⚠️ Limpou localmente, mas falhou ao sincronizar com o servidor — pode voltar ao reabrir o app'));
       }
     }
   }
@@ -66,13 +67,13 @@ export default function TreinoPage() {
       <PersonalMessages />
       <MyAppointments onlyPending />
       <DailyCheckin />
-      {planByTrainer && !planExpired && <p className="trainer-plan-note">📋 Plano montado pelo seu personal</p>}
+      {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
         <div className="plan-expired-banner">
           <span>{planByTrainer
-            ? '⏳ O ciclo do plano do seu personal terminou — fale com ele para o próximo, ou escolha o que treinar agora.'
-            : '⏳ Seu plano venceu e não tem um próximo configurado — escolha o que treinar agora.'}</span>
-          <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowPlanEditor(true)}>Escolher plano</button>
+            ? t('⏳ O ciclo do plano do seu personal terminou — fale com ele para o próximo, ou escolha o que treinar agora.')
+            : t('⏳ Seu plano venceu e não tem um próximo configurado — escolha o que treinar agora.')}</span>
+          <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowPlanEditor(true)}>{t('Escolher plano')}</button>
         </div>
       )}
       {today && !loading && (
@@ -83,8 +84,8 @@ export default function TreinoPage() {
       )}
       <div className="progress-card">
         <div className="progress-card__row">
-          <span className="progress-card__label">Semana atual</span>
-          <span className="progress-card__count">{done}/{total} treinos</span>
+          <span className="progress-card__label">{t('Semana atual')}</span>
+          <span className="progress-card__count">{t('{done}/{total} treinos', { done, total })}</span>
         </div>
         <div className="week-strip">
           {workDays.map(d => {
@@ -94,27 +95,27 @@ export default function TreinoPage() {
               <div
                 key={d.dia}
                 className={`week-strip__day${isDone ? ' week-strip__day--done' : ''}${isToday ? ' week-strip__day--today' : ''}`}
-                title={`${d.dia} — ${d.foco}${isDone ? ' (concluído)' : ''}`}
+                title={`${t(d.dia)} — ${d.foco}${isDone ? t('(concluído)') : ''}`}
               >
                 <span className="week-strip__dot" aria-hidden="true">{isDone ? '✓' : ''}</span>
-                <span className="week-strip__label">{d.dia.slice(0, 3)}</span>
+                <span className="week-strip__label">{t(d.dia).slice(0, 3)}</span>
               </div>
             );
           })}
         </div>
         {planEndDate && !planExpired && (
           <p className="progress-card__cycle">
-            📅 Treino válido de {planStartDate ? fmtDate(planStartDate) : '—'} até {fmtDate(planEndDate)} ({Math.max(0, daysUntil(planEndDate))}d restantes){planByTrainer ? '' : ' · atualizado automaticamente ao vencer'}
+            {t('📅 Treino válido de {v1} até {v2} ({v3}d restantes){v4}', { v1: planStartDate ? fmtDate(planStartDate) : '—', v2: fmtDate(planEndDate), v3: Math.max(0, daysUntil(planEndDate)), v4: planByTrainer ? '' : ' · atualizado automaticamente ao vencer' })}
           </p>
         )}
       </div>
       <div className="toolbar">
         <p className="toolbar__hint">
-          {loading ? 'Carregando dados salvos…' : 'Marque os treinos · salva automático'}
+          {loading ? t('Carregando dados salvos…') : t('Marque os treinos · salva automático')}
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn--ghost btn--sm" onClick={() => setShowPlanEditor(true)}>⚙️ Editar treino</button>
-          <button className="btn btn--ghost btn--sm" onClick={handleReset} disabled={loading}>Limpar</button>
+          <button className="btn btn--ghost btn--sm" onClick={() => setShowPlanEditor(true)}>{t('⚙️ Editar treino')}</button>
+          <button className="btn btn--ghost btn--sm" onClick={handleReset} disabled={loading}>{t('Limpar')}</button>
         </div>
       </div>
       <div id="treinoContainer">
@@ -131,7 +132,7 @@ export default function TreinoPage() {
         </div>
       </div>
       <footer className="footer">
-        <strong>Progressão:</strong> aumente cargas toda semana &nbsp;·&nbsp; <strong>Deload</strong> na semana 6
+        <strong>{t('Progressão:')}</strong> {t('aumente cargas toda semana ·')}; <strong>{t('Deload')}</strong> {t('na semana 6')}
       </footer>
       {restSession && (
         <RestTimer session={restSession} onClose={() => setRestSession(null)} />
@@ -153,23 +154,22 @@ export default function TreinoPage() {
 function TodayCard({ day, sets, done, onStart }) {
   const hasSets = sets.total > 0;
   const pct = hasSets ? (sets.done / sets.total) * 100 : 0;
-  let cta = '⚡ Começar treino';
-  if (done) cta = '💪 Revisar treino';
-  else if (sets.done > 0) cta = '⚡ Continuar treino';
+  let cta = t('⚡ Começar treino');
+  if (done) cta = t('💪 Revisar treino');
+  else if (sets.done > 0) cta = t('⚡ Continuar treino');
 
   return (
     <div className={`today-card${done ? ' today-card--done' : ''}`}>
       <div className="today-card__top">
         <div>
-          <span className="today-card__kicker">{done ? 'Treino de hoje concluído' : 'Treino de hoje'}</span>
+          <span className="today-card__kicker">{done ? t('Treino de hoje concluído') : t('Treino de hoje')}</span>
           <h2 className="today-card__title">{day.foco}</h2>
           <span className="today-card__meta">
-            {day.dia} · {day.exercicios.length} exercícios
-            {hasSets && ` · ${sets.done}/${sets.total} séries`}
+            {t('{dia} · {length} exercícios {v1}', { dia: t(day.dia), length: day.exercicios.length, v1: hasSets && ` · ${sets.done}/${sets.total} séries` })}
           </span>
         </div>
         {hasSets && (
-          <div className="today-card__ring" style={{ '--pct': pct }} aria-label={`${Math.round(pct)}% das séries`}>
+          <div className="today-card__ring" style={{ '--pct': pct }} aria-label={t('{v1}% das séries', { v1: Math.round(pct) })}>
             <span>{Math.round(pct)}%</span>
           </div>
         )}
@@ -177,7 +177,7 @@ function TodayCard({ day, sets, done, onStart }) {
       {hasSets ? (
         <button type="button" className="btn btn--primary btn--full" onClick={onStart}>{cta}</button>
       ) : (
-        <p className="today-card__rest">Dia de recuperação — descanse bem ou faça um cardio leve. 🧘</p>
+        <p className="today-card__rest">{t('Dia de recuperação — descanse bem ou faça um cardio leve. 🧘')}</p>
       )}
     </div>
   );

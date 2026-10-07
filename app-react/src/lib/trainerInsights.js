@@ -1,15 +1,16 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 const ERRORS = {
-  not_authorized: 'Você não tem vínculo ativo com este aluno.',
-  invalid_body: 'Escreva a anotação (até 1000 caracteres).',
-  invalid_goals: 'Confira a meta: 1 a 7 treinos por semana e peso entre 30 e 300 kg.',
+  not_authorized: t('Você não tem vínculo ativo com este aluno.'),
+  invalid_body: t('Escreva a anotação (até 1000 caracteres).'),
+  invalid_goals: t('Confira a meta: 1 a 7 treinos por semana e peso entre 30 e 300 kg.'),
 };
 
 export function friendlyInsightError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível concluir. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível concluir. Tente de novo.');
 }
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));

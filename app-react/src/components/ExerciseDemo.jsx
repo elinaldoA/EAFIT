@@ -5,9 +5,10 @@ import { getExerciseMedia, MEDIA_CREDIT } from '../data/exerciseMedia';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useCustomExerciseMedia } from '../hooks/useCustomExerciseMedia';
 
+import { t } from '../lib/i18n';
 // Devagar o bastante pra acompanhar cada posição (troca com fade — ver live.css).
 const FRAME_MS = 1600;
-const SPEEDS = [{ rate: 1, label: 'Normal' }, { rate: 0.5, label: 'Câmera lenta' }];
+const SPEEDS = [{ rate: 1, label: t('Normal') }, { rate: 0.5, label: t('Câmera lenta') }];
 
 function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -29,7 +30,7 @@ async function enterFullscreen(video) {
   } catch { /* recusado pelo navegador: segue no modal */ }
 }
 
-const OFFLINE_MSG = 'Sem conexão — a demonstração aparece quando você estiver online (depois disso ela fica salva no aparelho).';
+const OFFLINE_MSG = t('Sem conexão — a demonstração aparece quando você estiver online (depois disso ela fica salva no aparelho).');
 
 // Padrão (Free Exercise DB): 2 quadros alternando; o toque pausa/continua.
 function FramesStage({ nome, frames }) {
@@ -56,12 +57,12 @@ function FramesStage({ nome, frames }) {
     <>
       <button
         type="button" className="demo-modal__stage"
-        aria-label={playing ? 'Pausar demonstração' : 'Continuar demonstração'}
+        aria-label={playing ? t('Pausar demonstração') : t('Continuar demonstração')}
         onClick={handleTap} disabled={failed}
       >
         {frames.map((src, i) => (
           <img
-            key={src} src={src} alt={`${nome} — quadro ${i + 1} de ${frames.length}`}
+            key={src} src={src} alt={t('{nome} — quadro {n} de {total}', { nome, n: i + 1, total: frames.length })}
             className={`demo-modal__frame${i === frame ? ' demo-modal__frame--on' : ''}`}
             onLoad={() => setLoaded(n => n + 1)} onError={() => setFailed(true)}
             draggable="false"
@@ -74,7 +75,7 @@ function FramesStage({ nome, frames }) {
       <div className="demo-modal__steps" aria-hidden="true">
         {/* O Free Exercise DB não garante qual quadro é o início do movimento — por isso só numera. */}
         {frames.map((src, i) => (
-          <span key={src} className={frame === i ? 'is-on' : undefined}>Quadro {i + 1}</span>
+          <span key={src} className={frame === i ? 'is-on' : undefined}>{t('Quadro {v1}', { v1: i + 1 })}</span>
         ))}
       </div>
     </>
@@ -114,7 +115,7 @@ function MediaStage({ nome, media }) {
     <div className="demo-modal__stage-wrap">
     <button
       type="button" className={`demo-modal__stage demo-modal__stage--custom${ready ? '' : ' demo-modal__stage--loading'}`}
-      aria-label={isVideo ? (playing ? 'Pausar vídeo' : 'Continuar vídeo') : `Demonstração de ${nome}`}
+      aria-label={isVideo ? (playing ? t('Pausar vídeo') : t('Continuar vídeo')) : t('Demonstração de {nome}', { nome })}
       onClick={handleTap} disabled={failed || !isVideo}
     >
       {isVideo ? (
@@ -125,7 +126,7 @@ function MediaStage({ nome, media }) {
         />
       ) : (
         <img
-          className="demo-modal__media" src={media.url} alt={`Demonstração de ${nome}`}
+          className="demo-modal__media" src={media.url} alt={t('Demonstração de {nome}', { nome })}
           onLoad={() => setReady(true)} onError={() => setFailed(true)} draggable="false"
         />
       )}
@@ -135,13 +136,13 @@ function MediaStage({ nome, media }) {
     </button>
     {isVideo && ready && !failed && canFullscreen() && (
       <button
-        type="button" className="demo-modal__fullscreen" aria-label="Ver em tela cheia"
+        type="button" className="demo-modal__fullscreen" aria-label={t('Ver em tela cheia')}
         onClick={() => enterFullscreen(videoRef.current)}
       >⛶</button>
     )}
     </div>
     {isVideo && (
-      <div className="demo-modal__steps demo-modal__speed" role="group" aria-label="Velocidade do vídeo">
+      <div className="demo-modal__steps demo-modal__speed" role="group" aria-label={t('Velocidade do vídeo')}>
         {SPEEDS.map(s => (
           <button
             key={s.rate} type="button" aria-pressed={rate === s.rate}
@@ -163,22 +164,22 @@ function ExerciseDemoModal({ nome, tecnica, media, onClose }) {
   }, []);
 
   return createPortal(
-    <div className="demo-modal" role="dialog" aria-modal="true" aria-label={`Execução: ${nome}`}>
+    <div className="demo-modal" role="dialog" aria-modal="true" aria-label={t('Execução: {nome}', { nome })}>
       <div className="demo-modal__backdrop" onClick={onClose} />
       <div className="demo-modal__panel">
         <div className="demo-modal__header">
           <div className="demo-modal__titles">
-            <span className="demo-modal__kicker">Como executar</span>
+            <span className="demo-modal__kicker">{t('Como executar')}</span>
             <h2 className="demo-modal__title">{nome}</h2>
           </div>
-          <button type="button" className="summary-modal__close" aria-label="Fechar" onClick={onClose}>✕</button>
+          <button type="button" className="summary-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
         </div>
 
         {media.frames ? <FramesStage nome={nome} frames={media.frames} /> : <MediaStage nome={nome} media={media} />}
 
         {tecnica && <p className="demo-modal__tip">💡 {tecnica}</p>}
         <p className="demo-modal__credit">
-          {media.custom ? 'Demonstração da equipe EAFIT' : media.stock ? media.credit : `Imagens: ${MEDIA_CREDIT}`}
+          {media.custom ? t('Demonstração da equipe EAFIT') : media.stock ? media.credit : t('Imagens: {MEDIA_CREDIT}', { MEDIA_CREDIT })}
         </p>
       </div>
     </div>,
@@ -197,7 +198,7 @@ export default function ExerciseDemo({ nome, tecnica, variant = 'link' }) {
   return (
     <>
       <button type="button" className={`demo-btn demo-btn--${variant}`} onClick={() => setOpen(true)}>
-        <span aria-hidden="true">▶</span> Ver execução
+        <span aria-hidden="true">▶</span> {t('Ver execução')}
       </button>
       {open && <ExerciseDemoModal nome={nome} tecnica={tecnica} media={media} onClose={() => setOpen(false)} />}
     </>

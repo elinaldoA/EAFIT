@@ -1,23 +1,24 @@
 import { db } from './supabase';
 
+import { t } from './i18n';
 export const TITLE_MIN = 3;
 export const TITLE_MAX = 50;
 export const MAX_DAYS = 60;
 export const DURATION_OPTIONS = [7, 14, 30];
 
 const ERRORS = {
-  invalid_code: 'Código não encontrado. Confira com quem te convidou.',
-  challenge_ended: 'Esse desafio já terminou.',
-  no_recipients: 'Nenhum aluno vinculado para participar.',
-  not_authorized: 'Sem permissão para essa ação.',
-  challenge_full: 'Esse desafio já está com 20 participantes.',
-  too_many_challenges: 'Você já tem 5 desafios em andamento. Aguarde algum terminar.',
+  invalid_code: t('Código não encontrado. Confira com quem te convidou.'),
+  challenge_ended: t('Esse desafio já terminou.'),
+  no_recipients: t('Nenhum aluno vinculado para participar.'),
+  not_authorized: t('Sem permissão para essa ação.'),
+  challenge_full: t('Esse desafio já está com 20 participantes.'),
+  too_many_challenges: t('Você já tem 5 desafios em andamento. Aguarde algum terminar.'),
 };
 
 export function friendlyChallengeError(err) {
   const msg = String(err?.message || '');
   const key = Object.keys(ERRORS).find(k => msg.includes(k));
-  return key ? ERRORS[key] : 'Não foi possível concluir. Tente de novo.';
+  return key ? ERRORS[key] : t('Não foi possível concluir. Tente de novo.');
 }
 
 export function normalizeCode(raw) {
@@ -31,11 +32,11 @@ export function addDaysStr(dateStr, n) {
 
 // Valida o formulário de criação. Período: começa hoje, dura `days` dias.
 export function validateChallenge(title, days) {
-  const t = String(title || '').trim();
-  if (t.length < TITLE_MIN) return { ok: false, error: `Dê um nome com pelo menos ${TITLE_MIN} letras.` };
-  if (t.length > TITLE_MAX) return { ok: false, error: `Nome com no máximo ${TITLE_MAX} letras.` };
-  if (!Number.isInteger(days) || days < 1 || days > MAX_DAYS) return { ok: false, error: 'Duração inválida.' };
-  return { ok: true, title: t };
+  const name = String(title || '').trim();
+  if (name.length < TITLE_MIN) return { ok: false, error: t('Dê um nome com pelo menos {TITLE_MIN} letras.', { TITLE_MIN }) };
+  if (name.length > TITLE_MAX) return { ok: false, error: t('Nome com no máximo {TITLE_MAX} letras.', { TITLE_MAX }) };
+  if (!Number.isInteger(days) || days < 1 || days > MAX_DAYS) return { ok: false, error: t('Duração inválida.') };
+  return { ok: true, title: name };
 }
 
 // 'futuro' | 'ativo' | 'encerrado' (datas YYYY-MM-DD, comparação lexical vale).
@@ -54,11 +55,11 @@ export function daysLeft(c, today) {
 // Recado que avisa a turma de um desafio criado pelo personal.
 export function classChallengeMessage(title, endDate) {
   const [, m, d] = endDate.split('-');
-  return `Novo desafio da turma: "${title}", até ${d}/${m}. Vence quem treinar mais dias! Acompanhe em Dashboard → Treinos → Desafios.`;
+  return t('Novo desafio da turma: "{title}", até {d}/{m}. Vence quem treinar mais dias! Acompanhe em Dashboard → Treinos → Desafios.', { title, d, m });
 }
 
 export function inviteText(c) {
-  return `Bora treinar juntos? Entra no desafio "${c.title}" no meu app de treino com o código ${c.invite_code} (Dashboard → Treinos → Desafios).`;
+  return t('Bora treinar juntos? Entra no desafio "{title}" no meu app de treino com o código {invite_code} (Dashboard → Treinos → Desafios).', { title: c.title, invite_code: c.invite_code });
 }
 
 function mapChallenge(r) {

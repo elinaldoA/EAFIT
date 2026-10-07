@@ -1,3 +1,5 @@
+import { t } from '../lib/i18n';
+
 // Coordenadas dos hotspots de músculo sobre a imagem anatomia.jpg (350x615 por
 // vista, frente e costas lado a lado numa imagem 700x615). Cada forma foi
 // extraída independentemente (flood-fill a partir de um ponto dentro do
@@ -8,16 +10,16 @@
 export const BODY_VIEW_SIZE = { width: 204, height: 358.5 };
 
 export const MUSCLE_LABELS = {
-  chest: 'Peitoral',
-  shoulders: 'Ombros',
-  triceps: 'Tríceps',
-  back: 'Costas',
-  biceps: 'Bíceps',
-  abs: 'Abdômen',
-  quads: 'Quadríceps',
-  calves: 'Panturrilhas',
-  hamstrings: 'Posterior de coxa',
-  glutes: 'Glúteos',
+  chest: t('Peitoral'),
+  shoulders: t('Ombros'),
+  triceps: t('Tríceps'),
+  back: t('Costas'),
+  biceps: t('Bíceps'),
+  abs: t('Abdômen'),
+  quads: t('Quadríceps'),
+  calves: t('Panturrilhas'),
+  hamstrings: t('Posterior de coxa'),
+  glutes: t('Glúteos'),
 };
 
 export const FRONT_MUSCLE_PATHS = [

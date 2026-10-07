@@ -8,14 +8,15 @@ import { fetchTrainerAppointments, upcomingAppointments, formatWhen } from '../l
 import Skeleton from '../components/Skeleton';
 import ClientDetail from './ClientDetail';
 
+import { t } from '../lib/i18n';
 const FILTERS = [
-  { key: 'todos', label: 'Todos' },
-  { key: 'atencao', label: 'Precisam de atenção' },
-  { key: 'ok', label: 'Em dia' },
+  { key: 'todos', label: t('Todos') },
+  { key: 'atencao', label: t('Precisam de atenção') },
+  { key: 'ok', label: t('Em dia') },
 ];
 
 function inviteText(code) {
-  return `Quer treinar comigo pelo EAFIT? Abra o app, vá em Perfil → Meu personal e digite o código ${code}.`;
+  return t('Quer treinar comigo pelo EAFIT? Abra o app, vá em Perfil → Meu personal e digite o código {code}.', { code });
 }
 
 // Lista de alunos do personal, com quem precisa de atenção no topo.
@@ -61,9 +62,9 @@ export default function AlunosPage({ onClientsLoaded }) {
     const text = inviteText(code);
     try {
       if (navigator.share) await navigator.share({ title: 'EAFIT', text });
-      else { await navigator.clipboard.writeText(text); toast('📋 Convite copiado'); }
+      else { await navigator.clipboard.writeText(text); toast(t('📋 Convite copiado')); }
     } catch (err) {
-      if (err?.name !== 'AbortError') toast(`Seu código: ${code}`);
+      if (err?.name !== 'AbortError') toast(t('Seu código: {code}', { code }));
     }
   }
 
@@ -81,20 +82,20 @@ export default function AlunosPage({ onClientsLoaded }) {
     <section className="page active trainer-page">
       <div className="dash-card trainer-code">
         <div>
-          <span className="trainer-code__label">Seu código de convite</span>
+          <span className="trainer-code__label">{t('Seu código de convite')}</span>
           <strong className="trainer-code__value">{code || '…'}</strong>
         </div>
-        <button type="button" className="btn btn--primary btn--sm" disabled={!code} onClick={handleShare}>📤 Convidar aluno</button>
+        <button type="button" className="btn btn--primary btn--sm" disabled={!code} onClick={handleShare}>{t('📤 Convidar aluno')}</button>
       </div>
-      <p className="profile-field__hint">O aluno digita esse código em Perfil → Meu personal e autoriza você a acompanhar o treino dele.</p>
+      <p className="profile-field__hint">{t('O aluno digita esse código em Perfil → Meu personal e autoriza você a acompanhar o treino dele.')}</p>
 
       {appts.length > 0 && (
         <div className="dash-card">
-          <div className="dash-card__title">📅 Próximas aulas</div>
+          <div className="dash-card__title">{t('📅 Próximas aulas')}</div>
           {appts.slice(0, 5).map(a => (
             <div className="appt" key={a.id}>
               <div><strong>{formatWhen(a.starts)}</strong> · {a.name}
-                <span className={`appt__status appt__status--${a.status}`}>{a.status === 'confirmed' ? 'Confirmada' : 'Aguardando'}</span>
+                <span className={`appt__status appt__status--${a.status}`}>{a.status === 'confirmed' ? t('Confirmada') : t('Aguardando')}</span>
               </div>
             </div>
           ))}
@@ -104,18 +105,18 @@ export default function AlunosPage({ onClientsLoaded }) {
       {clients && clients.length > 0 && (
         <>
           <div className="dash-card">
-            <div className="dash-card__title">Esta semana</div>
+            <div className="dash-card__title">{t('Esta semana')}</div>
             <div className="recap__grid">
-              <div className="recap__stat"><span className="recap__value">{week.active}/{week.total}</span><span className="recap__label">alunos treinaram (7 dias)</span></div>
-              <div className="recap__stat"><span className="recap__value">{week.sessions}</span><span className="recap__label">treinos no total</span></div>
-              <div className="recap__stat"><span className="recap__value">{week.idle}</span><span className="recap__label">sem treinar na semana</span></div>
+              <div className="recap__stat"><span className="recap__value">{week.active}/{week.total}</span><span className="recap__label">{t('alunos treinaram (7 dias)')}</span></div>
+              <div className="recap__stat"><span className="recap__value">{week.sessions}</span><span className="recap__label">{t('treinos no total')}</span></div>
+              <div className="recap__stat"><span className="recap__value">{week.idle}</span><span className="recap__label">{t('sem treinar na semana')}</span></div>
             </div>
           </div>
           <div className="trainer-summary">
-            <span><strong>{clients.length}</strong> aluno(s)</span>
-            <span className={needAttention ? 'trainer-summary__warn' : ''}><strong>{needAttention}</strong> precisam de atenção</span>
+            <span><strong>{clients.length}</strong> {t('aluno(s)')}</span>
+            <span className={needAttention ? 'trainer-summary__warn' : ''}><strong>{needAttention}</strong> {t('precisam de atenção')}</span>
           </div>
-          <div className="measure-chips" role="group" aria-label="Filtro de alunos">
+          <div className="measure-chips" role="group" aria-label={t('Filtro de alunos')}>
             {FILTERS.map(f => (
               <button
                 key={f.key} type="button" aria-pressed={filter === f.key}
@@ -129,9 +130,9 @@ export default function AlunosPage({ onClientsLoaded }) {
 
       {!clients && <Skeleton height={86} />}
       {clients && clients.length === 0 && (
-        <div className="dash-card"><p className="dash-empty">Nenhum aluno vinculado ainda. Compartilhe seu código para começar.</p></div>
+        <div className="dash-card"><p className="dash-empty">{t('Nenhum aluno vinculado ainda. Compartilhe seu código para começar.')}</p></div>
       )}
-      {clients && clients.length > 0 && visible.length === 0 && <p className="dash-empty">Nenhum aluno neste filtro.</p>}
+      {clients && clients.length > 0 && visible.length === 0 && <p className="dash-empty">{t('Nenhum aluno neste filtro.')}</p>}
 
       {visible.map(c => {
         const att = clientAttention(c, today);
@@ -141,10 +142,10 @@ export default function AlunosPage({ onClientsLoaded }) {
               <strong>{c.name}</strong>
               <span className={`client-badge client-badge--${att.level}`}>{att.label}</span>
             </div>
-            {replies[c.id] > 0 && <span className="client-row__reply">💬 {replies[c.id]} resposta(s) nova(s)</span>}
+            {replies[c.id] > 0 && <span className="client-row__reply">💬 {replies[c.id]} {t('resposta(s) nova(s)')}</span>}
             <div className="client-row__meta">
-              <span>{c.days7} treino(s) nos últimos 7 dias</span>
-              <span>{c.days30} em 30 dias</span>
+              <span>{t('{days7} treino(s) nos últimos 7 dias', { days7: c.days7 })}</span>
+              <span>{c.days30} {t('em 30 dias')}</span>
             </div>
           </button>
         );

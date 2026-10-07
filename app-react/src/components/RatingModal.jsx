@@ -3,6 +3,7 @@ import { getModalRoot } from '../lib/modalRoot';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { useBackToClose } from '../hooks/useBackToClose';
 
+import { t } from '../lib/i18n';
 export default function RatingModal({ value, onSelect, onClose }) {
   useBackToClose(onClose);
   return createPortal(
@@ -10,8 +11,8 @@ export default function RatingModal({ value, onSelect, onClose }) {
       <div className="rating-modal__backdrop" onClick={onClose} />
       <div className="rating-modal__panel">
         <div className="rating-modal__header">
-          <h3 className="rating-modal__title">Como foi esse treino?</h3>
-          <button type="button" className="rating-modal__close" aria-label="Fechar" onClick={onClose}>✕</button>
+          <h3 className="rating-modal__title">{t('Como foi esse treino?')}</h3>
+          <button type="button" className="rating-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
         </div>
         <div className="rating-modal__options">
           {RATING_OPTIONS.map(opt => (

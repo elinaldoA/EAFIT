@@ -3,7 +3,8 @@ import { todayDate } from '../data/treinoData';
 import { fmtDate } from '../lib/utils';
 import { fetchRecentDiscomfort, logDiscomfort, summarizeDiscomfortByExercise } from '../lib/discomfort';
 
-const DISCOMFORT_LABELS = { leve: 'Leve', moderada: 'Moderada', forte: 'Forte', lesao: 'Lesão' };
+import { t } from '../lib/i18n';
+const DISCOMFORT_LABELS = { leve: t('Leve'), moderada: t('Moderada'), forte: t('Forte'), lesao: t('Lesão') };
 
 export function DiscomfortPanel({ userId, exerciseName, toast }) {
   const [discomfort, setDiscomfort] = useState(null);
@@ -29,10 +30,10 @@ export function DiscomfortPanel({ userId, exerciseName, toast }) {
       setDiscomfort({ severity, note: note.trim() || null, log_date: todayDate() });
       setReportOpen(false);
       setNote('');
-      toast('✅ Desconforto registrado');
+      toast(t('✅ Desconforto registrado'));
     } catch (err) {
       console.error('logDiscomfort:', err);
-      toast('❌ Erro ao registrar desconforto');
+      toast(t('❌ Erro ao registrar desconforto'));
     } finally {
       setSaving(false);
     }
@@ -42,27 +43,27 @@ export function DiscomfortPanel({ userId, exerciseName, toast }) {
     <div className="discomfort-panel">
       {discomfort && (
         <p className="discomfort-panel__alert">
-          🩹 Desconforto {DISCOMFORT_LABELS[discomfort.severity]} relatado em {fmtDate(discomfort.log_date)}
-          {' '}<span className="discomfort-panel__hint">— considere reduzir a carga ou trocar o exercício</span>
+          {t('🩹 Desconforto')} {DISCOMFORT_LABELS[discomfort.severity]} {t('relatado em')} {fmtDate(discomfort.log_date)}
+          {' '}<span className="discomfort-panel__hint">{t('— considere reduzir a carga ou trocar o exercício')}</span>
         </p>
       )}
       <button type="button" className="discomfort-panel__toggle" onClick={() => setReportOpen(o => !o)}>
-        {reportOpen ? 'Cancelar' : '⚠️ Reportar desconforto neste exercício'}
+        {reportOpen ? t('Cancelar') : t('⚠️ Reportar desconforto neste exercício')}
       </button>
       {reportOpen && (
         <div className="discomfort-panel__form">
           <select className="input input--sm" value={severity} onChange={e => setSeverity(e.target.value)}>
-            <option value="leve">Leve</option>
-            <option value="moderada">Moderada</option>
-            <option value="forte">Forte</option>
-            <option value="lesao">Lesão</option>
+            <option value="leve">{t('Leve')}</option>
+            <option value="moderada">{t('Moderada')}</option>
+            <option value="forte">{t('Forte')}</option>
+            <option value="lesao">{t('Lesão')}</option>
           </select>
           <input
-            type="text" className="input input--sm" placeholder="Nota (opcional)"
+            type="text" className="input input--sm" placeholder={t('Nota (opcional)')}
             value={note} onChange={e => setNote(e.target.value)}
           />
           <button type="button" className="btn btn--primary btn--sm" disabled={saving} onClick={handleSave}>
-            Salvar
+            {t('Salvar')}
           </button>
         </div>
       )}
@@ -75,7 +76,7 @@ export function DiscomfortPanel({ userId, exerciseName, toast }) {
 // selecionado no picker), fica sempre visível pra evidenciar reincidência.
 export function DiscomfortHistory({ reports }) {
   if (!reports.length) {
-    return <p className="dash-empty">Nenhum desconforto relatado ainda.</p>;
+    return <p className="dash-empty">{t('Nenhum desconforto relatado ainda.')}</p>;
   }
 
   const countByExercise = new Map(

@@ -10,6 +10,7 @@ import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
 
+import { t, locale } from '../lib/i18n';
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
 // TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
 // que é quem tem o cronômetro e as ações de série do dia.
@@ -99,13 +100,13 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (!result) return;
     const { accumulatedMs, startedAt, finishedAt } = result;
     playWorkoutFinishedSound();
-    toast(`🏁 Treino finalizado em ${formatDuration(accumulatedMs)}!`);
+    toast(t('🏁 Treino finalizado em {v1}!', { v1: formatDuration(accumulatedMs) }));
     if (!checked) markDone(true);
     if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) });
     bump();
     const summary = buildSummary(accumulatedMs);
     if (user && summary.totalSetsDone > 0) {
-      postActivity('treino', `Concluiu o treino de ${day.foco}`, `${formatDuration(accumulatedMs)} · ${summary.totalSetsDone} séries`);
+      postActivity('treino', t('Concluiu o treino de {foco}', { foco: day.foco }), t('{v1} · {totalSetsDone} séries', { v1: formatDuration(accumulatedMs), totalSetsDone: summary.totalSetsDone }));
     }
     onFinish(summary);
   }
@@ -140,7 +141,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     }
     setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
     bump();
-    toast(next ? '✅ Todas as séries marcadas!' : 'Séries desmarcadas');
+    toast(next ? t('✅ Todas as séries marcadas!') : t('Séries desmarcadas'));
     if (user) {
       await Promise.all(
         Array.from({ length: setCount }, (_, i) => i + 1)
@@ -167,7 +168,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     });
     setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
     bump();
-    toast('✅ Carga e reps repetidas nas outras séries');
+    toast(t('✅ Carga e reps repetidas nas outras séries'));
     if (user) {
       await Promise.all(
         toFill.map(n => saveSetState(day.dia, ex.nome, n, { carga: cargaNum, reps: parseFloat(reps) }))
@@ -184,7 +185,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (reps != null) localStorage.setItem(`set_${ex.nome}_1_reps`, reps);
     setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
     bump();
-    toast('🎯 Sugestão aplicada na Série 1');
+    toast(t('🎯 Sugestão aplicada na Série 1'));
     if (user) {
       const patch = { carga: parseFloat(carga) };
       if (reps != null) patch.reps = parseFloat(reps);
@@ -203,7 +204,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     setChecked(next);
     localStorage.setItem(`treino_${day.dia}`, next);
     bump();
-    toast(next ? '✅ Treino marcado!' : 'Treino desmarcado');
+    toast(next ? t('✅ Treino marcado!') : t('Treino desmarcado'));
     if (user) await saveWorkoutStatus(day.dia, next);
   }
 
@@ -240,23 +241,23 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         <div className="day-card__left">
           <input
             type="checkbox" className="day-card__check"
-            aria-label={`Marcar treino de ${day.dia} como concluído`}
+            aria-label={t('Marcar treino de {dia} como concluído', { dia: t(day.dia) })}
             checked={checked} onChange={handleCheckbox} onClick={e => e.stopPropagation()}
           />
           <div className="day-card__info">
-            <div className="day-card__name">{day.dia}</div>
+            <div className="day-card__name">{t(day.dia)}</div>
             <div className="day-card__focus">{day.foco}</div>
           </div>
         </div>
         <div className="day-card__right">
-          {isToday && <span className="today-badge">Hoje</span>}
+          {isToday && <span className="today-badge">{t('Hoje')}</span>}
           {(timer.status === 'running' || timer.status === 'paused') && (
             <span className={`timer-badge${timer.status === 'paused' ? ' timer-badge--paused' : ''}`}>
               {timer.status === 'paused' ? '⏸' : '⏱'} {formatDuration(timer.elapsedMs)}
             </span>
           )}
           <span className="day-card__count">
-            {setsDone > 0 ? `${setsDone}/${setsTotal} séries` : `${day.exercicios.length} exerc.`}
+            {setsDone > 0 ? t('{setsDone}/{setsTotal} séries', { setsDone, setsTotal }) : `${day.exercicios.length} exerc.`}
           </span>
           <span className="chevron" aria-hidden="true">▼</span>
         </div>
@@ -271,59 +272,59 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         <div className="session-timer">
           <div className="session-timer__clock">
             {formatDuration(timer.elapsedMs)}
-            {timer.status === 'finished' && <span className="session-timer__done"> · concluído</span>}
+            {timer.status === 'finished' && <span className="session-timer__done"> {t('· concluído')}</span>}
           </div>
           <div className="session-timer__actions">
             {timer.status === 'idle' && (
               <>
-                <button type="button" className="btn btn--outline btn--sm" onClick={handleStartWorkout}>▶ Iniciar</button>
+                <button type="button" className="btn btn--outline btn--sm" onClick={handleStartWorkout}>{t('▶ Iniciar')}</button>
                 {setsTotal > 0 && (
-                  <button type="button" className="btn btn--primary btn--sm" onClick={onOpenLive}>⚡ Modo treino</button>
+                  <button type="button" className="btn btn--primary btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
                 )}
               </>
             )}
             {timer.status === 'running' && (
               <>
-                <button type="button" className="btn btn--outline btn--sm" aria-label="Pausar" onClick={timer.pause}>⏸</button>
+                <button type="button" className="btn btn--outline btn--sm" aria-label={t('Pausar')} onClick={timer.pause}>⏸</button>
                 {setsTotal > 0 && (
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>⚡ Modo treino</button>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
                 )}
-                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>🏁 Finalizar</button>
+                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>{t('🏁 Finalizar')}</button>
               </>
             )}
             {timer.status === 'paused' && (
               <>
-                <button type="button" className="btn btn--outline btn--sm" aria-label="Continuar" onClick={timer.resume}>▶</button>
+                <button type="button" className="btn btn--outline btn--sm" aria-label={t('Continuar')} onClick={timer.resume}>▶</button>
                 {setsTotal > 0 && (
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>⚡ Modo treino</button>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
                 )}
-                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>🏁 Finalizar</button>
+                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>{t('🏁 Finalizar')}</button>
               </>
             )}
             {timer.status === 'finished' && (
               <>
-                <button type="button" className="btn btn--outline btn--sm" onClick={handleShowSummary}>📋 Ver resumo</button>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={handleResetTimer}>↺ Refazer treino</button>
+                <button type="button" className="btn btn--outline btn--sm" onClick={handleShowSummary}>{t('📋 Ver resumo')}</button>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={handleResetTimer}>{t('↺ Refazer treino')}</button>
               </>
             )}
           </div>
           {timer.status === 'idle' && (
-            <span className="session-timer__hint">Inicie o treino para registrar as séries</span>
+            <span className="session-timer__hint">{t('Inicie o treino para registrar as séries')}</span>
           )}
         </div>
 
         <div className="day-card__total">
-          Carga total do treino: {calcDayTotalCarga(day).toLocaleString('pt-BR')} kg
+          {t('Carga total do treino: {v1} kg', { v1: calcDayTotalCarga(day).toLocaleString(locale) })}
         </div>
 
         <div className="workout-notes">
           <button type="button" className="workout-notes__toggle" onClick={() => setNotesOpen(o => !o)}>
-            📝 Notas do treino {notesOpen ? '▲' : '▼'}
+            {t('📝 Notas do treino {v1}', { v1: notesOpen ? '▲' : '▼' })}
           </button>
           {notesOpen && (
             <textarea
               className="workout-notes__textarea"
-              placeholder="Como foi o treino? Alguma observação pra próxima vez…"
+              placeholder={t('Como foi o treino? Alguma observação pra próxima vez…')}
               value={notes} onChange={handleNotesInput} onBlur={handleNotesBlur}
             />
           )}
@@ -333,7 +334,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
 
         {day.pos.length > 0 && (
           <div className="post-section">
-            <div className="post-title">🏁 Pós-treino — Cardio + Abdômen</div>
+            <div className="post-title">{t('🏁 Pós-treino — Cardio + Abdômen')}</div>
             {day.pos.map(p => renderExerciseBlock(p))}
           </div>
         )}

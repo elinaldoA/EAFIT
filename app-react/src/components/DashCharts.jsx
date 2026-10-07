@@ -2,6 +2,7 @@ import { todayDate } from '../data/treinoData';
 import { fmtDate, parseLocalDate, toDateStr, getWeekStart } from '../lib/utils';
 import { estimateOneRepMax } from '../lib/records';
 
+import { t, locale } from '../lib/i18n';
 export function Heatmap({ workouts }) {
   const dateMap = {};
   workouts.forEach(w => { dateMap[w.workout_date] = w.completed ? 'done' : 'miss'; });
@@ -53,7 +54,7 @@ export function WeeklyBars({ workouts, weeklyGoal }) {
     sun.setDate(mon.getDate() + 6);
     const mStr = toDateStr(mon);
     const sStr = toDateStr(sun);
-    const label = w === 0 ? 'Esta' : w === 1 ? 'Ant.' :
+    const label = w === 0 ? t('Esta') : w === 1 ? t('Ant.') :
       `${String(mon.getDate()).padStart(2, '0')}/${String(mon.getMonth() + 1).padStart(2, '0')}`;
     buckets.push({ mStr, sStr, label, done: 0 });
   }
@@ -80,7 +81,7 @@ export function WeeklyBars({ workouts, weeklyGoal }) {
 
 export function PRList({ logs }) {
   if (!logs.length) {
-    return <p className="dash-empty">Nenhuma carga registrada ainda. Registre cargas na aba Treino.</p>;
+    return <p className="dash-empty">{t('Nenhuma carga registrada ainda. Registre cargas na aba Treino.')}</p>;
   }
 
   const prMap = {};
@@ -97,7 +98,7 @@ export function PRList({ logs }) {
 
   const sorted = Object.entries(prMap).sort((a, b) => b[1].val - a[1].val).slice(0, 12);
   const top = sorted[0]?.[1].val || 1;
-  if (!sorted.length) return <p className="dash-empty">Nenhuma carga numérica registrada ainda.</p>;
+  if (!sorted.length) return <p className="dash-empty">{t('Nenhuma carga numérica registrada ainda.')}</p>;
 
   return (
     <div id="dashPRList" className="pr-list">
@@ -108,9 +109,9 @@ export function PRList({ logs }) {
             <div className="pr-row__bar"><div style={{ width: `${(val / top) * 100}%` }} /></div>
           </div>
           <div className="pr-row__right">
-            <span className="pr-row__val">{val.toLocaleString('pt-BR')}kg</span>
+            <span className="pr-row__val">{val.toLocaleString(locale)}kg</span>
             <span className="pr-row__meta">
-              {oneRm != null && <>1RM ~{Math.round(oneRm).toLocaleString('pt-BR')}kg · </>}{fmtDate(date)}
+              {oneRm != null && <>1RM ~{Math.round(oneRm).toLocaleString(locale)}kg · </>}{fmtDate(date)}
             </span>
           </div>
         </div>
@@ -134,19 +135,19 @@ export function WeekCompare({ logs, exercise }) {
   let diffMsg = null;
   if (bestThis !== null && bestLast !== null) {
     const delta = bestThis - bestLast;
-    if (delta > 0) diffMsg = `📈 +${delta.toFixed(1)}kg em relação à semana passada`;
-    else if (delta < 0) diffMsg = `📉 ${delta.toFixed(1)}kg em relação à semana passada`;
-    else diffMsg = '➡️ Mesma carga da semana passada';
+    if (delta > 0) diffMsg = t('📈 +{v1}kg em relação à semana passada', { v1: delta.toFixed(1) });
+    else if (delta < 0) diffMsg = t('📉 {v1}kg em relação à semana passada', { v1: delta.toFixed(1) });
+    else diffMsg = t('➡️ Mesma carga da semana passada');
   }
 
   return (
     <div className="week-compare">
       <div className="week-compare__row">
-        <span>Semana passada</span>
+        <span>{t('Semana passada')}</span>
         <strong>{bestLast !== null ? `${bestLast}kg` : '–'}</strong>
       </div>
       <div className="week-compare__row">
-        <span>Esta semana</span>
+        <span>{t('Esta semana')}</span>
         <strong>{bestThis !== null ? `${bestThis}kg` : '–'}</strong>
       </div>
       {diffMsg && <p className="week-compare__diff">{diffMsg}</p>}

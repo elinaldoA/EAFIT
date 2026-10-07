@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import DumbbellSpinner from './DumbbellSpinner';
 
+import { t } from '../lib/i18n';
 // Não há progresso real de uma requisição: a porcentagem sobe suave até 95% e
 // o overlay some quando o carregamento termina (componente desmonta).
 function useProgress() {
@@ -14,7 +15,7 @@ function useProgress() {
 
 // Tela cheia, centralizado e bloqueia toda interação (cliques, scroll, foco)
 // enquanto estiver montado.
-export default function Loading({ label = 'Carregando…' }) {
+export default function Loading({ label = t('Carregando…') }) {
   const pct = useProgress();
 
   useEffect(() => {

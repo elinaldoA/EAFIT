@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import { isChunkLoadError, reloadOnceForChunkError } from '../lib/chunkReload';
 
+import { t } from '../lib/i18n';
 // Troca a tela branca de um erro de renderização por uma tela de recuperação.
 // `variant="page"` é usado em volta de cada aba: um erro numa página mantém o
 // topo e a navegação funcionando.
@@ -24,20 +25,20 @@ export default class ErrorBoundary extends Component {
     return (
       <div className={`error-screen${isPage ? ' error-screen--page' : ''}`} role="alert">
         <div className="error-screen__icon" aria-hidden="true">⚠️</div>
-        <h1 className="error-screen__title">Algo deu errado</h1>
+        <h1 className="error-screen__title">{t('Algo deu errado')}</h1>
         <p className="error-screen__text">
           {isPage
-            ? 'Não foi possível abrir esta tela. Seus dados estão salvos — tente de novo.'
-            : 'O app encontrou um erro inesperado. Seus dados estão salvos.'}
+            ? t('Não foi possível abrir esta tela. Seus dados estão salvos — tente de novo.')
+            : t('O app encontrou um erro inesperado. Seus dados estão salvos.')}
         </p>
         <div className="error-screen__actions">
           {isPage && (
             <button type="button" className="btn btn--outline" onClick={() => this.setState({ error: null })}>
-              Tentar de novo
+              {t('Tentar de novo')}
             </button>
           )}
           <button type="button" className="btn btn--primary" onClick={() => window.location.reload()}>
-            Recarregar o app
+            {t('Recarregar o app')}
           </button>
         </div>
       </div>

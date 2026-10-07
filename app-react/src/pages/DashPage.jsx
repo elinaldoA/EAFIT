@@ -21,11 +21,12 @@ import Skeleton from '../components/Skeleton';
 import { Heatmap, WeeklyBars, PRList, WeekCompare, LoadHistory } from '../components/DashCharts';
 import { DiscomfortPanel, DiscomfortHistory } from '../components/DiscomfortWidgets';
 
+import { t } from '../lib/i18n';
 const TABS = [
-  { key: 'treinos', label: 'Treinos' },
-  { key: 'recordes', label: 'Recordes' },
-  { key: 'corpo', label: 'Corpo' },
-  { key: 'amigos', label: 'Amigos' },
+  { key: 'treinos', label: t('Treinos') },
+  { key: 'recordes', label: t('Recordes') },
+  { key: 'corpo', label: t('Corpo') },
+  { key: 'amigos', label: t('Amigos') },
 ];
 const TAB_STORAGE_KEY = 'dash_tab';
 
@@ -70,8 +71,8 @@ export default function DashPage({ active }) {
     if (selectedView === 'today') {
       const active = day && todayCompleted ? getMuscleGroupsForDay(day) : new Set();
       const subtitle = day
-        ? (todayCompleted ? `Foco: ${day.foco}` : `${day.foco} — treino de hoje ainda não concluído (sem marcações)`)
-        : 'Sem treino planejado para hoje';
+        ? (todayCompleted ? t('Foco: {foco}', { foco: day.foco }) : t('{foco} — treino de hoje ainda não concluído (sem marcações)', { foco: day.foco }))
+        : t('Sem treino planejado para hoje');
       return { viewActiveGroups: active, selectedSubtitle: subtitle };
     }
 
@@ -82,8 +83,8 @@ export default function DashPage({ active }) {
         const planDay = activePlanDays.find(d => d.dia === w.day_of_week);
         const active = w.completed && planDay ? getMuscleGroupsForDay(planDay) : new Set();
         const subtitle = w.completed
-          ? `Treino concluído em ${fmtDate(w.workout_date)} (Foco: ${planDay?.foco || 'Geral'})`
-          : `Treino de ${w.day_of_week} (${fmtDate(w.workout_date)}) não foi concluído (sem marcações)`;
+          ? t('Treino concluído em {v1} (Foco: {v2})', { v1: fmtDate(w.workout_date), v2: planDay?.foco || 'Geral' })
+          : t('Treino de {day_of_week} ({v1}) não foi concluído (sem marcações)', { day_of_week: w.day_of_week, v1: fmtDate(w.workout_date) });
         return { viewActiveGroups: active, selectedSubtitle: subtitle };
       }
     }
@@ -138,23 +139,23 @@ export default function DashPage({ active }) {
       <div className="dash-kpis">
         <div className="dash-kpi">
           <span className="dash-kpi__value">{loading ? '–' : summary.treinos30}</span>
-          <span className="dash-kpi__label">Treinos<br />30 dias</span>
+          <span className="dash-kpi__label">{t('Treinos')}<br />{t('30 dias')}</span>
         </div>
         <div className="dash-kpi">
           <span className="dash-kpi__value">{loading ? '–' : `${summary.streak}d`}</span>
-          <span className="dash-kpi__label">Sequência<br />atual</span>
+          <span className="dash-kpi__label">{t('Sequência')}<br />{t('atual')}</span>
         </div>
         <div className="dash-kpi">
           <span className="dash-kpi__value">{loadingPR ? '–' : summary.recordes}</span>
-          <span className="dash-kpi__label">Exercícios<br />com recorde</span>
+          <span className="dash-kpi__label">{t('Exercícios')}<br />{t('com recorde')}</span>
         </div>
         <div className="dash-kpi">
           <span className="dash-kpi__value">{unlockedBadges.size}/{BADGES.length}</span>
-          <span className="dash-kpi__label">Conquistas</span>
+          <span className="dash-kpi__label">{t('Conquistas')}</span>
         </div>
       </div>
 
-      <div className="seg" role="tablist" aria-label="Seções da evolução">
+      <div className="seg" role="tablist" aria-label={t('Seções da evolução')}>
         {TABS.map(t => (
           <button
             key={t.key} type="button" role="tab" aria-selected={tab === t.key}
@@ -169,14 +170,14 @@ export default function DashPage({ active }) {
       <Challenges />
       <div className="dash-card">
         <div className="dash-card__title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-          <div className="dash-card__title" style={{ marginBottom: 0 }}>Visualização Anatômica</div>
+          <div className="dash-card__title" style={{ marginBottom: 0 }}>{t('Visualização Anatômica')}</div>
           <select
             className="input input--sm"
             style={{ width: 'auto', minWidth: '180px', padding: '4px 8px' }}
             value={selectedView}
             onChange={e => setSelectedView(e.target.value)}
           >
-            <option value="today">Hoje ({day ? day.dia : 'Sem treino'})</option>
+            <option value="today">{t('Hoje ({v1})', { v1: day ? t(day.dia) : t('Sem treino') })}</option>
             {workouts.filter(w => w.completed).reverse().map(w => {
               const planDay = activePlanDays.find(d => d.dia === w.day_of_week);
               return (
@@ -195,49 +196,49 @@ export default function DashPage({ active }) {
 
       <div className="section-group">
         <div className="dash-card">
-          <div className="dash-card__title">Soma de cargas por treino</div>
-          <p className="dash-card__subtitle">Soma do peso de todas as séries concluídas em cada treino (não considera repetições)</p>
+          <div className="dash-card__title">{t('Soma de cargas por treino')}</div>
+          <p className="dash-card__subtitle">{t('Soma do peso de todas as séries concluídas em cada treino (não considera repetições)')}</p>
           <div className="line-chart-wrap">
             {loading ? <Skeleton height={130} /> : (
               <LineChart
                 points={volumePoints}
                 valueSuffix="kg"
-                singleMsg={v => `1 treino registrado: ${v}kg — treine mais vezes para ver a evolução`}
-                emptyMsg="Nenhum volume registrado ainda. Marque séries como concluídas na aba Treino."
+                singleMsg={v => t('1 treino registrado: {v}kg — treine mais vezes para ver a evolução', { v })}
+                emptyMsg={t('Nenhum volume registrado ainda. Marque séries como concluídas na aba Treino.')}
               />
             )}
           </div>
         </div>
 
         <div className="dash-card">
-          <div className="dash-card__title">Últimos 35 dias</div>
+          <div className="dash-card__title">{t('Últimos 35 dias')}</div>
           {loading ? <Skeleton height={140} /> : (
             <>
               <div className="heatmap-wrap">
                 <div className="heatmap-days">
-                  <span>Seg</span><span>Ter</span><span>Qua</span>
-                  <span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+                  <span>{t('Seg')}</span><span>{t('Ter')}</span><span>{t('Qua')}</span>
+                  <span>{t('Qui')}</span><span>{t('Sex')}</span><span>{t('Sáb')}</span><span>{t('Dom')}</span>
                 </div>
                 <Heatmap workouts={workouts} />
               </div>
               <div className="heatmap-legend">
-                <span className="heatmap-legend__dot heatmap-legend__dot--done" /><span>Concluído</span>
-                <span className="heatmap-legend__dot heatmap-legend__dot--miss" /><span>Não feito</span>
-                <span className="heatmap-legend__dot heatmap-legend__dot--none" /><span>Sem registro</span>
+                <span className="heatmap-legend__dot heatmap-legend__dot--done" /><span>{t('Concluído')}</span>
+                <span className="heatmap-legend__dot heatmap-legend__dot--miss" /><span>{t('Não feito')}</span>
+                <span className="heatmap-legend__dot heatmap-legend__dot--none" /><span>{t('Sem registro')}</span>
               </div>
             </>
           )}
         </div>
 
         <div className="dash-card">
-          <div className="dash-card__title">Treinos concluídos por semana</div>
+          <div className="dash-card__title">{t('Treinos concluídos por semana')}</div>
           {loading ? <Skeleton height={110} /> : <WeeklyBars workouts={workouts} weeklyGoal={weeklyGoal} />}
         </div>
 
         <div className="dash-card">
-          <div className="dash-card__title">Evolução de carga</div>
-          <select className="input input--sm" value={exercise} onChange={e => setSelectedExercise(e.target.value)} aria-label="Exercício">
-            {!exercise && <option value="">Selecione um exercício</option>}
+          <div className="dash-card__title">{t('Evolução de carga')}</div>
+          <select className="input input--sm" value={exercise} onChange={e => setSelectedExercise(e.target.value)} aria-label={t('Exercício')}>
+            {!exercise && <option value="">{t('Selecione um exercício')}</option>}
             {exercises.map(name => <option key={name} value={name}>{name}</option>)}
           </select>
           <div className="line-chart-wrap">
@@ -245,8 +246,8 @@ export default function DashPage({ active }) {
               <LineChart
                 points={loadPoints}
                 valueSuffix="kg"
-                singleMsg={v => `1 registro: ${v}kg — treine mais vezes para ver a evolução`}
-                emptyMsg={exercise ? 'Nenhum registro para este exercício' : 'Registre cargas na aba Treino para ver a evolução'}
+                singleMsg={v => t('1 registro: {v}kg — treine mais vezes para ver a evolução', { v })}
+                emptyMsg={exercise ? t('Nenhum registro para este exercício') : t('Registre cargas na aba Treino para ver a evolução')}
               />
             )}
           </div>
@@ -261,11 +262,11 @@ export default function DashPage({ active }) {
 
       {tab === 'recordes' && (<>
       <div className="section-group">
-        <div className="section-group__label">Recordes pessoais</div>
+        <div className="section-group__label">{t('Recordes pessoais')}</div>
         <div className="dash-card">
           <div className="dash-card__title-row">
-            <div className="dash-card__title">Maior carga por exercício</div>
-            <button type="button" className="icon-btn" aria-label="Atualizar recordes" disabled={loadingPR} onClick={handleRefreshRecords}>
+            <div className="dash-card__title">{t('Maior carga por exercício')}</div>
+            <button type="button" className="icon-btn" aria-label={t('Atualizar recordes')} disabled={loadingPR} onClick={handleRefreshRecords}>
               ↻
             </button>
           </div>
@@ -274,7 +275,7 @@ export default function DashPage({ active }) {
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Conquistas · {unlockedBadges.size} de {BADGES.length}</div>
+        <div className="section-group__label">{t('Conquistas · {size} de {length}', { size: unlockedBadges.size, length: BADGES.length })}</div>
         <div className="dash-card">
           <div className="badge-grid">
             {BADGES.map(b => {
@@ -292,9 +293,9 @@ export default function DashPage({ active }) {
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Desconforto</div>
+        <div className="section-group__label">{t('Desconforto')}</div>
         <div className="dash-card">
-          <div className="dash-card__title">Histórico de desconforto</div>
+          <div className="dash-card__title">{t('Histórico de desconforto')}</div>
           {loading ? <Skeleton height={100} /> : <DiscomfortHistory reports={discomfortHistory} />}
         </div>
       </div>
@@ -302,23 +303,23 @@ export default function DashPage({ active }) {
 
       {tab === 'corpo' && (
       <div className="section-group">
-        <div className="section-group__label">Peso e fotos de progresso</div>
+        <div className="section-group__label">{t('Peso e fotos de progresso')}</div>
         <div className="dash-card">
-          <div className="dash-card__title">Evolução do peso</div>
+          <div className="dash-card__title">{t('Evolução do peso')}</div>
           <div className="line-chart-wrap">
             {loadingPR ? <Skeleton height={130} /> : (
               <LineChart
                 points={weightPoints}
                 valueSuffix="kg"
-                singleMsg={v => `1 registro: ${v}kg — registre seu peso novamente em outro dia para ver a evolução`}
-                emptyMsg="Nenhum peso registrado ainda. Registre em Perfil para começar."
+                singleMsg={v => t('1 registro: {v}kg — registre seu peso novamente em outro dia para ver a evolução', { v })}
+                emptyMsg={t('Nenhum peso registrado ainda. Registre em Perfil para começar.')}
               />
             )}
           </div>
         </div>
         {isFlagOn(config.flags, 'fotos_progresso') && (
           <div className="dash-card">
-            <div className="dash-card__title">Fotos de progresso</div>
+            <div className="dash-card__title">{t('Fotos de progresso')}</div>
             <ProgressPhotos />
           </div>
         )}

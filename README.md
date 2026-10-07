@@ -66,6 +66,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   de context e o hook (`useX`) ficam em `context/useX.js`. Arquivo `.jsx` que
   exporta componente e não-componente juntos perde o Fast Refresh (o lint
   avisa).
+- **Idiomas (pt/en)**: a interface usa o próprio texto em português como chave de tradução: `t('Iniciar treino')` (de `lib/i18n.js`). O inglês fica em `app-react/src/i18n/en/`; texto sem tradução cai no português. Ao criar texto novo na interface, envolva em `t()` e adicione a entrada em `i18n/en/` — o teste `lib/i18n.test.js` falha se faltar. Datas e números usam `locale`. O idioma é escolhido em Perfil → Idioma (ou na tela de acesso) e recarrega o app. **Fora do escopo por enquanto** (continuam em português): nomes e técnicas dos exercícios e dos planos prontos, notificações push do servidor, landing, termos legais e o painel admin. Nomes de dia (`Segunda`…) são chaves do plano: só a exibição passa por `t()`.
 - **Duplicação entre app-react e as Edge Functions (Deno)**: como os dois
   ambientes não compartilham build, algumas lógicas (geração de plano por
   IMC/nível, exclusão de dados do usuário) são portadas manualmente em vez de

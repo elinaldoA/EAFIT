@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { fetchSwapContext, pickAlternatives } from '../lib/exerciseSwap';
 import { substituteExercise } from '../lib/workoutPlans';
 
+import { t } from '../lib/i18n';
 // "Trocar exercício": lista alternativas da biblioteca (mesmo grupo muscular e
 // tipo, no nível do usuário, fora do dia e sem o que já machucou) e troca no
 // plano. A prescrição (séries/reps/descanso) do dia é mantida; o histórico de
@@ -24,7 +25,7 @@ export default function ExerciseSwap({ ex, day, user, toast, onSwapped }) {
       setState({ loading: false, known, options, error: '' });
     } catch (err) {
       console.error('fetchSwapContext:', err);
-      setState({ loading: false, known: true, options: [], error: 'Não foi possível carregar as alternativas.' });
+      setState({ loading: false, known: true, options: [], error: t('Não foi possível carregar as alternativas.') });
     }
   }
 
@@ -35,12 +36,12 @@ export default function ExerciseSwap({ ex, day, user, toast, onSwapped }) {
       await substituteExercise(ex.id, {
         nome: option.nome, series: ex.series, reps: ex.reps, descanso: ex.descanso, tecnica: option.tecnica || '',
       });
-      toast(`🔄 Trocado por ${option.nome}`);
+      toast(t('🔄 Trocado por {nome}', { nome: option.nome }));
       setOpen(false);
       await onSwapped();
     } catch (err) {
       console.error('substituteExercise:', err);
-      toast('⚠️ Erro ao trocar o exercício');
+      toast(t('⚠️ Erro ao trocar o exercício'));
     } finally {
       setSwapping('');
     }
@@ -49,29 +50,29 @@ export default function ExerciseSwap({ ex, day, user, toast, onSwapped }) {
   return (
     <div className="ex-swap">
       <button type="button" className="ex-swap__toggle" aria-expanded={open} onClick={handleToggle}>
-        🔄 Trocar exercício
+        {t('🔄 Trocar exercício')}
       </button>
       {open && (
         <div className="ex-swap__panel">
-          {state.loading && <p className="ex-swap__hint">Buscando alternativas…</p>}
+          {state.loading && <p className="ex-swap__hint">{t('Buscando alternativas…')}</p>}
           {state.error && <p className="ex-swap__hint">{state.error}</p>}
           {!state.loading && !state.error && !state.known && (
-            <p className="ex-swap__hint">Este exercício é personalizado, então não há alternativas automáticas. Edite-o no editor do seu plano.</p>
+            <p className="ex-swap__hint">{t('Este exercício é personalizado, então não há alternativas automáticas. Edite-o no editor do seu plano.')}</p>
           )}
           {!state.loading && !state.error && state.known && state.options.length === 0 && (
-            <p className="ex-swap__hint">Sem alternativas para o seu nível agora.</p>
+            <p className="ex-swap__hint">{t('Sem alternativas para o seu nível agora.')}</p>
           )}
           {state.options.map(o => (
             <button
               key={o.nome} type="button" className="ex-swap__option"
               disabled={!!swapping} onClick={() => handlePick(o)}
             >
-              <span className="ex-swap__name">{swapping === o.nome ? 'Trocando…' : o.nome}</span>
+              <span className="ex-swap__name">{swapping === o.nome ? t('Trocando…') : o.nome}</span>
               {o.equipamento && <span className="ex-swap__meta">{o.equipamento}</span>}
             </button>
           ))}
           {state.options.length > 0 && (
-            <p className="ex-swap__hint">A troca vale daqui pra frente; o histórico do exercício atual fica guardado.</p>
+            <p className="ex-swap__hint">{t('A troca vale daqui pra frente; o histórico do exercício atual fica guardado.')}</p>
           )}
         </div>
       )}

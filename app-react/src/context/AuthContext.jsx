@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import { AuthContext } from './useAuth';
-import { translateAuthError, isEmailNotConfirmed } from '../lib/authErrors';
+import { translateAuthError, isEmailNotConfirmed, isSpecificAuthError } from '../lib/authErrors';
 
+import { t } from '../lib/i18n';
 const MIN_PASSWORD = 6;
 
 // Links de e-mail (confirmação de cadastro, redefinição de senha) voltam pra
@@ -51,16 +52,14 @@ export function AuthProvider({ children }) {
       if (isEmailNotConfirmed(error)) return { error: translateAuthError(error), needsConfirmation: true };
       // Qualquer outra falha de credencial vira a mesma mensagem (não revela
       // se o e-mail existe); rede/limite de tentativas ganham texto próprio.
-      const translated = translateAuthError(error);
-      const specific = /conexão|Aguarde|suspensa/.test(translated);
-      return { error: specific ? translated : 'E-mail ou senha inválidos.' };
+      return { error: isSpecificAuthError(error) ? translateAuthError(error) : t('E-mail ou senha inválidos.') };
     }
     setUser(data.user);
     return {};
   }
 
   async function signup(email, password) {
-    if (password.length < MIN_PASSWORD) return { error: `Senha: mínimo ${MIN_PASSWORD} caracteres.` };
+    if (password.length < MIN_PASSWORD) return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
     const { data, error } = await db.auth.signUp({
       email, password,
       options: { data: { termsAcceptedAt: new Date().toISOString() }, emailRedirectTo: appUrl() },
@@ -75,20 +74,20 @@ export function AuthProvider({ children }) {
       setUser(data.user);
       return {};
     }
-    return { success: 'Conta criada! Enviamos um link de confirmação para o seu e-mail.' };
+    return { success: t('Conta criada! Enviamos um link de confirmação para o seu e-mail.') };
   }
 
   async function requestPasswordReset(email) {
     const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: appUrl() });
     if (error) return { error: translateAuthError(error) };
     // Mesma resposta exista ou não a conta — não revela quais e-mails estão cadastrados.
-    return { success: 'Se houver uma conta com este e-mail, você vai receber um link para criar uma nova senha.' };
+    return { success: t('Se houver uma conta com este e-mail, você vai receber um link para criar uma nova senha.') };
   }
 
   async function resendConfirmation(email) {
     const { error } = await db.auth.resend({ type: 'signup', email, options: { emailRedirectTo: appUrl() } });
     if (error) return { error: translateAuthError(error) };
-    return { success: 'Link de confirmação reenviado. Confira também a caixa de spam.' };
+    return { success: t('Link de confirmação reenviado. Confira também a caixa de spam.') };
   }
 
   function finishRecovery() {
@@ -112,15 +111,15 @@ export function AuthProvider({ children }) {
   }
 
   async function updatePassword(password) {
-    if (password.length < MIN_PASSWORD) return { error: `Senha: mínimo ${MIN_PASSWORD} caracteres.` };
+    if (password.length < MIN_PASSWORD) return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
     const { error } = await db.auth.updateUser({ password });
     return { error: error ? translateAuthError(error) : undefined };
   }
 
   async function deleteAccount() {
-    if (!user) return { error: 'Não autenticado.' };
+    if (!user) return { error: t('Não autenticado.') };
     const { error } = await db.functions.invoke('delete-account');
-    if (error) return { error: 'Não foi possível excluir a conta agora. Tente de novo em instantes.' };
+    if (error) return { error: t('Não foi possível excluir a conta agora. Tente de novo em instantes.') };
     await db.auth.signOut();
     setUser(null);
     return {};

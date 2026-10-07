@@ -8,13 +8,14 @@ import {
 } from '../lib/friends';
 import Loading from './Loading';
 
+import { t } from '../lib/i18n';
 function FeedItem({ ev, onReact }) {
   return (
     <li className="feed__item">
       <span className="feed__icon" aria-hidden="true">{KIND_ICON[ev.kind]}</span>
       <div className="feed__main">
         <div className="feed__text">
-          <strong>{ev.isMe ? 'Você' : ev.name}</strong> · {ev.title}
+          <strong>{ev.isMe ? t('Você') : ev.name}</strong> · {ev.title}
         </div>
         <div className="feed__meta">{ev.detail ? `${ev.detail} · ` : ''}{timeAgo(ev.at)}</div>
         <div className="feed__reactions">
@@ -23,7 +24,7 @@ function FeedItem({ ev, onReact }) {
             return (
               <button
                 key={emoji} type="button" aria-pressed={ev.mine === emoji}
-                aria-label={`Reagir com ${emoji}`}
+                aria-label={t('Reagir com {emoji}', { emoji })}
                 className={`feed__react${ev.mine === emoji ? ' feed__react--on' : ''}`}
                 onClick={() => onReact(ev.id, emoji)}
               >{emoji}{n > 0 && <span>{n}</span>}</button>
@@ -68,12 +69,12 @@ export default function Friends({ myWeek }) {
 
   async function handleAdd() {
     const c = normalizeFriendCode(code);
-    if (c.length < 4) { setError('Digite o código do seu amigo.'); return; }
+    if (c.length < 4) { setError(t('Digite o código do seu amigo.')); return; }
     setBusy(true); setError('');
     try {
       const res = await requestFriend(c);
       setCode('');
-      toast(res === 'accepted' ? '🎉 Vocês agora são amigos!' : res === 'already' ? 'Pedido já enviado ou já são amigos' : '📨 Pedido enviado!');
+      toast(res === 'accepted' ? t('🎉 Vocês agora são amigos!') : res === 'already' ? t('Pedido já enviado ou já são amigos') : t('📨 Pedido enviado!'));
       await reload();
     } catch (err) {
       setError(friendlyFriendError(err));
@@ -86,9 +87,9 @@ export default function Friends({ myWeek }) {
     const text = friendInviteText(profile.code);
     try {
       if (navigator.share) await navigator.share({ title: 'EAFIT', text });
-      else { await navigator.clipboard.writeText(text); toast('📋 Convite copiado'); }
+      else { await navigator.clipboard.writeText(text); toast(t('📋 Convite copiado')); }
     } catch (err) {
-      if (err?.name !== 'AbortError') toast(`Código: ${profile.code}`);
+      if (err?.name !== 'AbortError') toast(t('Código: {code}', { code: profile.code }));
     }
   }
 
@@ -99,40 +100,40 @@ export default function Friends({ myWeek }) {
 
   function handleToggleShare() {
     const next = !profile.share;
-    act(() => setShareActivity(next), next ? '👀 Seus amigos voltam a ver sua atividade' : '🙈 Sua atividade ficou oculta');
+    act(() => setShareActivity(next), next ? t('👀 Seus amigos voltam a ver sua atividade') : t('🙈 Sua atividade ficou oculta'));
   }
 
-  if (!friends || !feed) return <div className="dash-card"><Loading label="Carregando amigos…" /></div>;
+  if (!friends || !feed) return <div className="dash-card"><Loading label={t('Carregando amigos…')} /></div>;
 
   return (<>
     <div className="dash-card">
-      <div className="dash-card__title">👥 Amigos</div>
+      <div className="dash-card__title">{t('👥 Amigos')}</div>
       {profile && (
         <div className="friends__me">
-          <span>Seu código: <strong className="friends__code">{profile.code}</strong></span>
-          <button type="button" className="btn btn--outline btn--sm" onClick={handleShareCode}>📤 Convidar</button>
+          <span>{t('Seu código:')} <strong className="friends__code">{profile.code}</strong></span>
+          <button type="button" className="btn btn--outline btn--sm" onClick={handleShareCode}>{t('📤 Convidar')}</button>
         </div>
       )}
       <div className="challenge__form">
         <input
-          className="input input--sm" placeholder="Código do seu amigo" maxLength={12} autoCapitalize="characters"
-          value={code} onChange={e => setCode(e.target.value)} aria-label="Código do seu amigo"
+          className="input input--sm" placeholder={t('Código do seu amigo')} maxLength={12} autoCapitalize="characters"
+          value={code} onChange={e => setCode(e.target.value)} aria-label={t('Código do seu amigo')}
         />
         <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleAdd}>
-          {busy ? 'Enviando…' : 'Adicionar amigo'}
+          {busy ? t('Enviando…') : t('Adicionar amigo')}
         </button>
       </div>
       {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
 
       {incoming.length > 0 && (
         <div className="friends__block">
-          <div className="friends__label">Pedidos recebidos</div>
+          <div className="friends__label">{t('Pedidos recebidos')}</div>
           {incoming.map(f => (
             <div className="friends__row" key={f.id}>
               <span>{f.name}</span>
               <span className="friends__actions">
-                <button type="button" className="btn btn--primary btn--sm" onClick={() => act(() => respondFriend(f.id, true), '🎉 Amigo adicionado!')}>Aceitar</button>
-                <button type="button" className="btn btn--outline btn--sm" onClick={() => act(() => respondFriend(f.id, false))}>Recusar</button>
+                <button type="button" className="btn btn--primary btn--sm" onClick={() => act(() => respondFriend(f.id, true), t('🎉 Amigo adicionado!'))}>{t('Aceitar')}</button>
+                <button type="button" className="btn btn--outline btn--sm" onClick={() => act(() => respondFriend(f.id, false))}>{t('Recusar')}</button>
               </span>
             </div>
           ))}
@@ -141,39 +142,39 @@ export default function Friends({ myWeek }) {
 
       {outgoing.length > 0 && (
         <div className="friends__block">
-          <div className="friends__label">Aguardando resposta</div>
+          <div className="friends__label">{t('Aguardando resposta')}</div>
           {outgoing.map(f => (
             <div className="friends__row" key={f.id}>
               <span>{f.name}</span>
-              <button type="button" className="btn btn--outline btn--sm" onClick={() => act(() => removeFriendship(f.id))}>Cancelar</button>
+              <button type="button" className="btn btn--outline btn--sm" onClick={() => act(() => removeFriendship(f.id))}>{t('Cancelar')}</button>
             </div>
           ))}
         </div>
       )}
 
       {accepted.length === 0 && incoming.length === 0 && outgoing.length === 0 && (
-        <p className="dash-empty">Passe seu código para um amigo (ou digite o dele) e acompanhem os treinos um do outro.</p>
+        <p className="dash-empty">{t('Passe seu código para um amigo (ou digite o dele) e acompanhem os treinos um do outro.')}</p>
       )}
 
       {accepted.length > 0 && (
         <div className="friends__block">
-          <div className="friends__label">Ranking da semana (dias treinados em 7 dias)</div>
+          <div className="friends__label">{t('Ranking da semana (dias treinados em 7 dias)')}</div>
           <ol className="challenge__board">
             {ranking.map((r, i) => (
               <li key={i} className={r.isMe ? 'challenge__row challenge__row--me' : 'challenge__row'}>
-                <span>{r.rank}º {r.name}</span><strong>{r.week} dia(s)</strong>
+                <span>{t('{rank}º {name}', { rank: r.rank, name: r.name })}</span><strong>{t('{n} dia(s)', { n: r.week })}</strong>
               </li>
             ))}
           </ol>
           <details className="friends__manage">
-            <summary>Gerenciar amigos</summary>
+            <summary>{t('Gerenciar amigos')}</summary>
             {accepted.map(f => (
               <div className="friends__row" key={f.id}>
-                <span>{f.name}{f.week === null ? ' · atividade oculta' : ''}</span>
+                <span>{f.name}{f.week === null ? t('· atividade oculta') : ''}</span>
                 <button
                   type="button" className="btn btn--outline btn--sm"
-                  onClick={() => { if (window.confirm(`Remover ${f.name} dos amigos?`)) act(() => removeFriendship(f.id), 'Amigo removido'); }}
-                >Remover</button>
+                  onClick={() => { if (window.confirm(t('Remover {name} dos amigos?', { name: f.name }))) act(() => removeFriendship(f.id), t('Amigo removido')); }}
+                >{t('Remover')}</button>
               </div>
             ))}
           </details>
@@ -182,16 +183,16 @@ export default function Friends({ myWeek }) {
     </div>
 
     <div className="dash-card">
-      <div className="dash-card__title">📣 Atividade dos amigos</div>
+      <div className="dash-card__title">{t('📣 Atividade dos amigos')}</div>
       {feed.length === 0 ? (
-        <p className="dash-empty">Quando você ou seus amigos concluírem treinos e baterem recordes, aparece aqui.</p>
+        <p className="dash-empty">{t('Quando você ou seus amigos concluírem treinos e baterem recordes, aparece aqui.')}</p>
       ) : (
         <ul className="feed">{feed.map(ev => <FeedItem key={ev.id} ev={ev} onReact={handleReact} />)}</ul>
       )}
       {profile && (
         <label className="friends__privacy">
           <input type="checkbox" checked={profile.share} onChange={handleToggleShare} />
-          Compartilhar minha atividade com os amigos
+          {t('Compartilhar minha atividade com os amigos')}
         </label>
       )}
     </div>

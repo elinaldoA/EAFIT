@@ -10,13 +10,14 @@ import { buildDailySeries, waterStats } from '../lib/waterStats';
 import WaterBars from '../components/WaterBars';
 import Skeleton from '../components/Skeleton';
 
+import { t, locale } from '../lib/i18n';
 const HISTORY_DAYS = 14;
 
 const QUICK_ADD = [
-  { ml: 200, icon: '🥛', label: 'Copo' },
-  { ml: 300, icon: '☕', label: 'Caneca' },
-  { ml: 500, icon: '🥤', label: 'Garrafa' },
-  { ml: 750, icon: '🍶', label: 'Squeeze' },
+  { ml: 200, icon: '🥛', label: t('Copo') },
+  { ml: 300, icon: '☕', label: t('Caneca') },
+  { ml: 500, icon: '🥤', label: t('Garrafa') },
+  { ml: 750, icon: '🍶', label: t('Squeeze') },
 ];
 
 function getWaterMl() {
@@ -24,7 +25,7 @@ function getWaterMl() {
 }
 
 function fmtLiters(ml) {
-  return (ml / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return (ml / 1000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 export default function HidratacaoPage({ active }) {
@@ -65,7 +66,7 @@ export default function HidratacaoPage({ active }) {
         bump();
       } catch (err) {
         console.error('loadHidratacao:', err);
-        toast('⚠️ Erro ao carregar dados de hidratação');
+        toast(t('⚠️ Erro ao carregar dados de hidratação'));
       } finally {
         setLoading(false);
       }
@@ -99,7 +100,7 @@ export default function HidratacaoPage({ active }) {
     const next = Math.max(0, water + deltaMl);
     if (deltaMl > 0) {
       setUndoStack(s => [...s, deltaMl].slice(-10));
-      if (next >= goalMl && water < goalMl) toast('🎉 Meta de hidratação do dia atingida!');
+      if (next >= goalMl && water < goalMl) toast(t('🎉 Meta de hidratação do dia atingida!'));
     }
     saveWater(next);
   }
@@ -111,7 +112,7 @@ export default function HidratacaoPage({ active }) {
   }
 
   function handleResetWater() {
-    if (!window.confirm('Zerar a água registrada hoje?')) return;
+    if (!window.confirm(t('Zerar a água registrada hoje?'))) return;
     setUndoStack([]);
     saveWater(0);
   }
@@ -124,21 +125,21 @@ export default function HidratacaoPage({ active }) {
   return (
     <section id="page-hidratacao" className="page active">
       <div className={`water-hero${done ? ' water-hero--done' : ''}`}>
-        <div className="water-hero__ring" style={{ '--pct': pct }} role="img" aria-label={`${Math.round(pct)}% da meta de água`}>
+        <div className="water-hero__ring" style={{ '--pct': pct }} role="img" aria-label={t('{v1}% da meta de água', { v1: Math.round(pct) })}>
           <div className="water-hero__inner">
             <span className="water-hero__value">{fmtLiters(water)}<small>L</small></span>
-            <span className="water-hero__goal">de {fmtLiters(goalMl)}L</span>
+            <span className="water-hero__goal">{t('de {liters}L', { liters: fmtLiters(goalMl) })}</span>
           </div>
         </div>
         <div className="water-hero__info">
-          <span className="water-hero__kicker">Hidratação hoje</span>
+          <span className="water-hero__kicker">{t('Hidratação hoje')}</span>
           <strong className="water-hero__status">
-            {done ? 'Meta batida! 🎉' : `Faltam ${fmtLiters(remaining)}L`}
+            {done ? t('Meta batida! 🎉') : t('Faltam {v1}L', { v1: fmtLiters(remaining) })}
           </strong>
           <span className="water-hero__hint">
             {done
-              ? `${Math.round(pct)}% da meta · continue se hidratando`
-              : `≈ ${Math.ceil(remaining / 250)} ${Math.ceil(remaining / 250) === 1 ? 'copo' : 'copos'} de 250ml`}
+              ? t('{v1}% da meta · continue se hidratando', { v1: Math.round(pct) })
+              : (Math.ceil(remaining / 250) === 1 ? t('≈ 1 copo de 250ml') : t('≈ {n} copos de 250ml', { n: Math.ceil(remaining / 250) }))}
           </span>
         </div>
       </div>
@@ -155,34 +156,34 @@ export default function HidratacaoPage({ active }) {
 
       <div className="water-actions">
         <button type="button" className="btn btn--ghost btn--sm" disabled={water === 0} onClick={handleUndo}>
-          ↶ {undoAmount ? `Desfazer +${undoAmount}ml` : '−200ml'}
+          ↶ {undoAmount ? t('Desfazer +{undoAmount}ml', { undoAmount }) : '−200ml'}
         </button>
         <button type="button" className="link-btn water-actions__reset" disabled={water === 0} onClick={handleResetWater}>
-          Zerar o dia
+          {t('Zerar o dia')}
         </button>
       </div>
 
       <div className="history-stats water-stats">
         <div className="stat-card">
           <span className="stat-card__value">{stats.avg7 ? fmtLiters(stats.avg7) : '–'}</span>
-          <span className="stat-card__label">Média 7 dias (L)</span>
+          <span className="stat-card__label">{t('Média 7 dias (L)')}</span>
         </div>
         <div className="stat-card">
           <span className="stat-card__value">{stats.streak}</span>
-          <span className="stat-card__label">Dias seguidos na meta</span>
+          <span className="stat-card__label">{t('Dias seguidos na meta')}</span>
         </div>
         <div className="stat-card">
           <span className="stat-card__value">{stats.daysHit}/{HISTORY_DAYS}</span>
-          <span className="stat-card__label">Dias na meta</span>
+          <span className="stat-card__label">{t('Dias na meta')}</span>
         </div>
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">Últimos {HISTORY_DAYS} dias</div>
+        <div className="section-group__label">{t('Últimos {HISTORY_DAYS} dias', { HISTORY_DAYS })}</div>
         <div className="dash-card">
           {loading ? <Skeleton height={150} /> : <WaterBars series={series} goalMl={goalMl} />}
           <p className="dash-card__subtitle">
-            Meta de {fmtLiters(goalMl)}L por dia · melhor dia: {stats.bestMl ? `${fmtLiters(stats.bestMl)}L` : '–'} · ajuste a meta em Perfil
+            {t('Meta de {v1}L por dia · melhor dia: {v2} · ajuste a meta em Perfil', { v1: fmtLiters(goalMl), v2: stats.bestMl ? `${fmtLiters(stats.bestMl)}L` : '–' })}
           </p>
         </div>
       </div>

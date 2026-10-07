@@ -29,6 +29,7 @@ import { useTrainerMode } from './hooks/useTrainerMode';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
 import { useTrainerGoalsSync } from './hooks/useTrainerGoalsSync';
 
+import { t } from './lib/i18n';
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
 const HidratacaoPage = lazy(() => import('./pages/HidratacaoPage'));
@@ -87,7 +88,7 @@ function Shell() {
                 <TopbarProfile />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {isTrainer && (
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>🧑‍🏫 Personal</button>
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>{t('🧑‍🏫 Personal')}</button>
                   )}
                   <InboxBell />
                   <ThemeToggle />
