@@ -1,5 +1,8 @@
 import { isNotificationSupported, isIosSafariNotInstalled, sendNotification, isNotifyEnabled } from '../lib/notifications';
 import { exportSummaryCSV, exportBackupJSON, printReport } from '../lib/exportData';
+import { useEffect, useState } from 'react';
+import { getCoachPrefs, saveCoachPrefs, coachSample, coachStop, coachName } from '../lib/coach';
+import { genderAvailable } from '../lib/voice';
 
 import { t } from '../lib/i18n';
 const NOTIFY_PREFS = [
@@ -81,6 +84,98 @@ export function ExportSection({ exporting, onExport }) {
         <button className="btn btn--outline btn--sm" disabled={exporting} onClick={() => onExport(exportBackupJSON, t('o backup (JSON)'))}>{t('💾 Backup completo (JSON)')}</button>
         <button className="btn btn--outline btn--sm" disabled={exporting} onClick={() => onExport(printReport, t('o relatório'))}>{t('🖨️ Relatório para imprimir')}</button>
       </div>
+    </>
+  );
+}
+
+const RATES = [
+  { value: 0.9, label: t('Mais lenta') },
+  { value: 1, label: t('Normal') },
+  { value: 1.1, label: t('Mais rápida') },
+];
+
+// Treinador por voz do modo treino. Cada escolha vale na hora neste aparelho
+// (a amostra usa ela) e vai para o perfil para acompanhar a conta.
+export function CoachSection({ updateProfile, toast }) {
+  const [prefs, setPrefs] = useState(getCoachPrefs);
+  const [missingVoice, setMissingVoice] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    genderAvailable(prefs.gender).then(r => { if (alive) setMissingVoice(r.supported && !r.matched); });
+    return () => { alive = false; };
+  }, [prefs.gender]);
+
+  useEffect(() => coachStop, []);
+
+  function change(patch, profilePatch) {
+    setPrefs(saveCoachPrefs(patch));
+    updateProfile(profilePatch).then(({ error }) => error && toast(`❌ ${error.message}`));
+  }
+
+  function toggle(e) {
+    const enabled = e.target.checked;
+    change({ enabled }, { coachEnabled: enabled });
+    if (enabled) coachSample();
+    else coachStop();
+  }
+
+  return (
+    <>
+      <p className="profile-field__hint">{t('O treinador fala durante o modo treino: apresenta os exercícios, conta o descanso e comemora seus recordes. Use fone ou aumente o volume de mídia.')}</p>
+      <div className="profile-field profile-field--row">
+        <label className="profile-field__label" htmlFor="coachEnabled">{t('Falar durante o treino')}</label>
+        <input type="checkbox" id="coachEnabled" checked={prefs.enabled} onChange={toggle} />
+      </div>
+
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="coachGender">{t('Voz')}</label>
+        <select
+          id="coachGender" className="input input--sm" value={prefs.gender}
+          onChange={e => change({ gender: e.target.value }, { coachGender: e.target.value })}
+        >
+          <option value="female">{`${t('Feminina')} · ${coachName('female')}`}</option>
+          <option value="male">{`${t('Masculina')} · ${coachName('male')}`}</option>
+        </select>
+        {missingVoice && (
+          <span className="profile-field__hint">{t('Este aparelho não tem uma voz {genero} em português; vamos usar outra.', { genero: prefs.gender === 'male' ? t('masculina') : t('feminina') })}</span>
+        )}
+      </div>
+
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="coachTone">{t('Jeito de falar')}</label>
+        <select
+          id="coachTone" className="input input--sm" value={prefs.tone}
+          onChange={e => change({ tone: e.target.value }, { coachTone: e.target.value })}
+        >
+          <option value="animado">{t('Animado')}</option>
+          <option value="zoeira">{t('Zoeira')}</option>
+          <option value="calmo">{t('Calmo')}</option>
+        </select>
+      </div>
+
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="coachFrequency">{t('Quanto ele fala')}</label>
+        <select
+          id="coachFrequency" className="input input--sm" value={prefs.frequency}
+          onChange={e => change({ frequency: e.target.value }, { coachFrequency: e.target.value })}
+        >
+          <option value="full">{t('Tudo (exercícios, descanso e recordes)')}</option>
+          <option value="light">{t('Só o essencial (início, recordes e fim)')}</option>
+        </select>
+      </div>
+
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="coachRate">{t('Velocidade da fala')}</label>
+        <select
+          id="coachRate" className="input input--sm" value={prefs.rate}
+          onChange={e => change({ rate: Number(e.target.value) }, { coachRate: Number(e.target.value) })}
+        >
+          {RATES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select>
+      </div>
+
+      <button type="button" className="btn btn--outline btn--sm" onClick={coachSample}>{t('🔊 Ouvir amostra')}</button>
     </>
   );
 }

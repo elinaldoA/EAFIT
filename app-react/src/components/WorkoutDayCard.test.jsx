@@ -8,12 +8,14 @@ const h = vi.hoisted(() => ({
   toast: vi.fn(),
   postActivity: vi.fn(),
   finishedSound: vi.fn(),
+  coachSay: vi.fn(),
 }));
 
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
 vi.mock('../context/useWorkout', () => ({ useWorkout: () => h.workout }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../lib/friends', () => ({ postActivity: (...a) => h.postActivity(...a) }));
+vi.mock('../lib/coach', () => ({ coachSay: (...a) => h.coachSay(...a) }));
 vi.mock('../lib/sound', () => ({ playWorkoutFinishedSound: h.finishedSound }));
 // O bloco de exercício e o modo ao vivo têm testes próprios: aqui viram stubs
 // que expõem os callbacks que o cartão entrega a eles.
@@ -62,6 +64,7 @@ beforeEach(() => {
   h.toast.mockReset();
   h.postActivity.mockReset();
   h.finishedSound.mockReset();
+  h.coachSay.mockReset();
   h.workout = {
     activePlanDays: [DAY, { dia: 'Terça' }, { dia: 'Sábado' }, { dia: 'Domingo' }],
     saveWorkoutStatus: vi.fn().mockResolvedValue(undefined),
@@ -144,6 +147,7 @@ describe('DayCard — cronômetro do treino', () => {
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
 
     expect(h.finishedSound).toHaveBeenCalled();
+    expect(h.coachSay).toHaveBeenCalledWith('finish', { feitos: 1, meta: 2 }, { delayMs: 900 });
     expect(localStorage.getItem('treino_Segunda')).toBe('true');
     expect(h.workout.saveWorkoutTimer).toHaveBeenLastCalledWith('Segunda', expect.objectContaining({ durationSeconds: 60 }));
     expect(bump).toHaveBeenCalled();

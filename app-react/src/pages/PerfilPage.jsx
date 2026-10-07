@@ -23,7 +23,8 @@ import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
 import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
-import { NotificationsSection, ExportSection } from '../components/ProfilePreferencesSection';
+import { isCoachAvailable, coachName } from '../lib/coach';
+import { NotificationsSection, ExportSection, CoachSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
 import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
@@ -290,6 +291,14 @@ export default function PerfilPage({ active }) {
             remindersEnabled={remindersEnabled} toggleReminders={toggleReminders}
           />
         </CollapsibleCard>
+        {isCoachAvailable() && (
+          <CollapsibleCard
+            icon="🎙️" title={t('Treinador por voz')}
+            summary={user.user_metadata?.coachEnabled ? t('Ativado · {nome}', { nome: coachName(user.user_metadata?.coachGender) }) : t('Desativado')}
+          >
+            <CoachSection updateProfile={updateProfile} toast={toast} />
+          </CollapsibleCard>
+        )}
         <CollapsibleCard
           icon="⏸" title={t('Modo pausa')}
           summary={activePause(user.user_metadata, todayDate()) ? t('Pausado até {v1}', { v1: formatDayBR(activePause(user.user_metadata, todayDate()).to) }) : t('Viagem ou doença? Pause sem perder a sequência')}

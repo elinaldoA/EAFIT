@@ -6,6 +6,7 @@ import { formatDuration } from '../lib/utils';
 import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { postActivity } from '../lib/friends';
+import { coachSay } from '../lib/coach';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
@@ -105,6 +106,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) });
     bump();
     const summary = buildSummary(accumulatedMs);
+    coachSay('finish', { feitos: summary.weekDone, meta: summary.weekTotal }, { delayMs: 900 });
     if (user && summary.totalSetsDone > 0) {
       postActivity('treino', t('Concluiu o treino de {foco}', { foco: day.foco }), t('{v1} · {totalSetsDone} séries', { v1: formatDuration(accumulatedMs), totalSetsDone: summary.totalSetsDone }));
     }

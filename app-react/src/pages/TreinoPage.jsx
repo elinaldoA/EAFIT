@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { todayName } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
@@ -14,6 +14,7 @@ import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
 import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
+import { syncCoachPrefs } from '../lib/coach';
 
 import { t, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
@@ -28,6 +29,9 @@ export default function TreinoPage() {
   const [showPlanEditor, setShowPlanEditor] = useState(false);
   const [summary, setSummary] = useState(null);
   const [liveDay, setLiveDay] = useState(null);
+
+  // Traz as preferências do treinador por voz da conta para este aparelho.
+  useEffect(() => { syncCoachPrefs(user); }, [user]);
 
   function handleRestStart(label, seconds) {
     restKey.current += 1;

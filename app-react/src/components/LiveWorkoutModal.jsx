@@ -7,6 +7,7 @@ import { allSetsDone, countSets, gatherExerciseDetails, setCountOf } from '../li
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { isCardioItem } from '../lib/cardio';
+import { coachSay, coachStop, speechTime, speechDetail, speechExercise } from '../lib/coach';
 import ExerciseDemo from './ExerciseDemo';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
@@ -44,6 +45,22 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
     bodyRef.current?.scrollTo({ top: 0 });
   }, [index]);
 
+  // Treinador por voz (opcional, ver lib/coach.js): abertura do treino e a
+  // apresentação de cada exercício. O primeiro entra na fila depois da abertura.
+  const coachOpened = useRef(false);
+  useEffect(() => {
+    const first = !coachOpened.current;
+    if (first) {
+      coachOpened.current = true;
+      coachSay('start', { foco: speechExercise(day.foco) });
+    }
+    const item = items[index];
+    coachSay('exercise', { exercicio: speechExercise(item.nome), detalhe: speechDetail(item) }, { queue: first });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+
+  useEffect(() => () => coachStop({ keep: ['finish'] }), []);
+
   // Conta o descanso pelo horário de término (não por decremento a cada
   // segundo): com a tela bloqueada ou o app em segundo plano o setInterval
   // atrasa, mas o tempo restante continua certo ao voltar.
@@ -57,8 +74,14 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
   const restDone = !!rest && restLeft === 0;
 
   useEffect(() => {
+    if (rest && restLeft === 10 && rest.total > 10) coachSay('rest10');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restLeft, rest?.id]);
+
+  useEffect(() => {
     if (!restDone) return;
     playRestDoneSound();
+    coachSay('restDone', {}, { delayMs: 3900 }); // depois do alarme, sem sobrepor
     const id = setTimeout(() => setRest(null), 1500);
     return () => clearTimeout(id);
   }, [restDone, rest?.id]);
@@ -68,6 +91,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
     const start = Date.now();
     setNow(start);
     setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000 });
+    coachSay('rest', { tempo: speechTime(seconds) });
   }
 
   function addRest(seconds) {

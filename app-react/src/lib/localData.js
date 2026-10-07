@@ -5,7 +5,7 @@
 // Tema e idioma não entram: são do aparelho, não da conta.
 const OWNER_KEY = 'eafit_data_owner';
 const PREFIXES = ['treino_', 'set_', 'carga_', 'profile_'];
-const EXACT = ['pendingSyncQueue', 'plan_cache', 'dash_tab', 'reminders_enabled'];
+const EXACT = ['pendingSyncQueue', 'plan_cache', 'dash_tab', 'reminders_enabled', 'coach_prefs'];
 
 function safe(fn) {
   try { return fn(); } catch { return undefined; }
