@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { isChunkLoadError, reloadOnceForChunkError } from '../lib/chunkReload';
+import { reportError } from '../lib/errorReporter';
 
 import { t } from '../lib/i18n';
 // Troca a tela branca de um erro de renderização por uma tela de recuperação.
@@ -14,6 +15,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('ErrorBoundary:', error, info?.componentStack);
+    reportError('boundary', error);
     if (isChunkLoadError(error)) reloadOnceForChunkError();
   }
 

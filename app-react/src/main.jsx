@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { clearChunkReloadFlag, reloadOnceForChunkError } from './lib/chunkReload'
+import { installErrorReporter } from './lib/errorReporter'
 
 // Import dinâmico que falha no preload (chunk de uma versão antiga que não
 // existe mais depois de um deploy) — recarrega uma vez pra pegar a versão nova.
@@ -11,6 +12,7 @@ window.addEventListener('vite:preloadError', event => {
   if (reloadOnceForChunkError()) event.preventDefault()
 })
 clearChunkReloadFlag()
+installErrorReporter()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
