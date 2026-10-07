@@ -17,7 +17,8 @@ export function metaProgress(pesoAtual, pesoAlvo, weightLogs) {
 
   const first = weightLogs[0]?.peso ?? pesoAtual;
   const totalSpan = Math.abs(first - pesoAlvo) || 1;
-  const covered = Math.abs(first - pesoAtual);
+  // Quanto já se aproximou da meta: afastar-se dela (ganhar peso quem quer perder) vale 0%, não progresso.
+  const covered = totalSpan - Math.abs(diff);
   const pct = Math.max(0, Math.min(100, (covered / totalSpan) * 100));
   const msg = t('Faltam {v1}kg para a meta de {pesoAlvo}kg', { v1: Math.abs(diff).toFixed(1), pesoAlvo });
   return { done: false, pct, msg };
