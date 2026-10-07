@@ -5,6 +5,7 @@ import { useToast } from '../context/useToast';
 import { formatDuration } from '../lib/utils';
 import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
+import { postActivity } from '../lib/friends';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
@@ -102,7 +103,11 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (!checked) markDone(true);
     if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) });
     bump();
-    onFinish(buildSummary(accumulatedMs));
+    const summary = buildSummary(accumulatedMs);
+    if (user && summary.totalSetsDone > 0) {
+      postActivity('treino', `Concluiu o treino de ${day.foco}`, `${formatDuration(accumulatedMs)} · ${summary.totalSetsDone} séries`);
+    }
+    onFinish(summary);
   }
 
   function handleShowSummary() {

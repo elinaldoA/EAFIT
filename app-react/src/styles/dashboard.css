@@ -635,3 +635,24 @@
 .challenge__row--me { background: var(--surface-2); }
 .challenge__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .challenge__form { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+
+/* Amigos e feed de atividade */
+.friends__me { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; font-size: 0.85rem; }
+.friends__code { font-size: 1.05rem; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
+.friends__block { margin-top: 12px; }
+.friends__label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; }
+.friends__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; font-size: 0.85rem; }
+.friends__actions { display: flex; gap: 6px; }
+.friends__manage { margin-top: 8px; font-size: 0.8rem; }
+.friends__manage summary { cursor: pointer; color: var(--text-muted); margin-bottom: 4px; }
+.friends__privacy { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.78rem; color: var(--text-muted); }
+.feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.feed__item { display: flex; gap: 10px; align-items: flex-start; }
+.feed__icon { font-size: 1.2rem; line-height: 1.3; }
+.feed__main { flex: 1; min-width: 0; }
+.feed__text { font-size: 0.85rem; overflow-wrap: anywhere; }
+.feed__meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.feed__reactions { display: flex; gap: 6px; margin-top: 6px; }
+.feed__react { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-full); border: 1px solid var(--border-2); background: transparent; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; }
+.feed__react span { font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+.feed__react--on { border-color: var(--primary); background: var(--surface-2); color: var(--text); }

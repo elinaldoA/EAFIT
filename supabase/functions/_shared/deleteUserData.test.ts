@@ -63,7 +63,7 @@ function makeFakeAdmin(opts: FakeAdminOpts = {}) {
   return { admin, calledTables, getRemovedPaths: () => removedPaths };
 }
 
-const DIRECT_TABLES = ['progress_photos', 'water_logs', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort', 'body_measurements', 'daily_checkins', 'challenge_members'];
+const DIRECT_TABLES = ['progress_photos', 'water_logs', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort', 'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles'];
 
 Deno.test('deleteUserData apaga de todas as tabelas diretas, incluindo exercise_discomfort', async () => {
   const { admin, calledTables } = makeFakeAdmin();

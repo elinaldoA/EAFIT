@@ -12,6 +12,7 @@ const DIRECT_USER_TABLES = [
   'progress_photos', 'water_logs',
   'weight_logs', 'achievements', 'push_subscriptions',
   'exercise_discomfort', 'body_measurements', 'daily_checkins', 'challenge_members',
+  'feed_reactions', 'feed_events', 'friend_profiles',
 ];
 
 export async function deleteUserData(admin: SupabaseClient, userId: string): Promise<void> {

@@ -13,6 +13,8 @@ import LineChart from '../components/LineChart';
 import ProgressPhotos from '../components/ProgressPhotos';
 import MonthlyRecap from '../components/MonthlyRecap';
 import Challenges from '../components/Challenges';
+import Friends from '../components/Friends';
+import { addDays } from '../lib/pause';
 import BodyMeasurements from '../components/BodyMeasurements';
 import CheckinInsights from '../components/CheckinInsights';
 import Skeleton from '../components/Skeleton';
@@ -23,6 +25,7 @@ const TABS = [
   { key: 'treinos', label: 'Treinos' },
   { key: 'recordes', label: 'Recordes' },
   { key: 'corpo', label: 'Corpo' },
+  { key: 'amigos', label: 'Amigos' },
 ];
 const TAB_STORAGE_KEY = 'dash_tab';
 
@@ -57,6 +60,8 @@ export default function DashPage({ active }) {
   }
   const weeklyGoal = getWeeklyGoal(user);
   const day = activePlanDays.find(d => d.dia === todayName());
+  const weekStart = addDays(todayDate(), -6);
+  const myWeek = new Set(workouts.filter(w => w.completed && w.workout_date >= weekStart).map(w => w.workout_date)).size;
   const todayCompleted = workouts.find(w => w.workout_date === todayDate())?.completed ?? false;
 
   const [selectedView, setSelectedView] = useState('today');
@@ -251,6 +256,8 @@ export default function DashPage({ active }) {
         </div>
       </div>
       </>)}
+
+      {tab === 'amigos' && <Friends myWeek={myWeek} />}
 
       {tab === 'recordes' && (<>
       <div className="section-group">

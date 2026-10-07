@@ -5,6 +5,7 @@ import { useToast } from '../context/useToast';
 import { parseRestSeconds } from '../lib/utils';
 import { checkForNewPR } from '../lib/records';
 import { isNotifyEnabled } from '../lib/notifications';
+import { postActivity } from '../lib/friends';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 
 export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
@@ -122,6 +123,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, st
             });
             if (pr) {
               toast(`🏆 Novo recorde em ${ex.nome}!`);
+              postActivity('recorde', `Novo recorde em ${ex.nome}`, `${cargaNum}kg`);
               if (isNotifyEnabled(user.user_metadata, 'notifyRecords')) {
                 sendPushToSelf({
                   title: '🏆 Novo recorde!',
