@@ -61,3 +61,26 @@ describe('flushQueue', () => {
     expect(queueSize()).toBe(1);
   });
 });
+
+describe('coalescência e limites', () => {
+  it('várias edições da mesma série viram uma operação só, com o patch mesclado', () => {
+    enqueue('set_state', { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 10 } });
+    enqueue('set_state', { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 12, completed: true } });
+    enqueue('set_state', { workout_id: 'w1', exercise_name: 'Supino', set_number: 2, patch: { carga: 12 } });
+    expect(queueSize()).toBe(2);
+    const first = JSON.parse(localStorage.getItem('pendingSyncQueue'))[0];
+    expect(first.payload.patch).toEqual({ carga: 12, completed: true });
+  });
+
+  it('a última escrita de status do mesmo treino vence', () => {
+    enqueue('workout_status', { id: 'w1', completed: true });
+    enqueue('workout_status', { id: 'w1', completed: false });
+    expect(queueSize()).toBe(1);
+    expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))[0].payload.completed).toBe(false);
+  });
+
+  it('a fila é limitada em 500 operações (descarta as mais antigas)', () => {
+    for (let i = 0; i < 520; i++) enqueue('weight_log', { userId: 'u', date: `d${i}`, peso: 80 });
+    expect(queueSize()).toBe(500);
+  });
+});
