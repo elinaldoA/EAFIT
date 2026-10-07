@@ -21,6 +21,7 @@ import Broadcast from './pages/Broadcast';
 import BroadcastHistory from './pages/BroadcastHistory';
 import Templates from './pages/Templates';
 import AuditLog from './pages/AuditLog';
+import ClientErrors from './pages/ClientErrors';
 import Safety from './pages/Safety';
 import Trainers from './pages/Trainers';
 import Profile from './pages/Profile';
@@ -54,6 +55,7 @@ function AppShell() {
             <Route path="/historico-envios" element={<BroadcastHistory />} />
             <Route path="/conteudo" element={<Templates />} />
             <Route path="/auditoria" element={<AuditLog />} />
+            <Route path="/erros" element={<ClientErrors />} />
             <Route path="/seguranca" element={<Safety />} />
             <Route path="/personais" element={<Trainers />} />
             <Route path="/landing" element={<LandingEditor />} />
