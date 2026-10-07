@@ -81,15 +81,6 @@
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-/* ============================================================
-   USER CHIP (topbar)
-============================================================ */
-.user-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 /* ── Theme toggle ── */
 .theme-toggle {
   width: 32px;

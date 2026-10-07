@@ -11,7 +11,6 @@ import AuthScreen from './components/AuthScreen';
 import { markKnownUser } from './lib/knownUser';
 import OnboardingScreen from './components/OnboardingScreen';
 import ThemeToggle from './components/ThemeToggle';
-import UserChip from './components/UserChip';
 import TopbarProfile from './components/TopbarProfile';
 import BottomNav from './components/BottomNav';
 import Tutorial from './components/Tutorial';
@@ -92,7 +91,6 @@ function Shell() {
                   )}
                   <InboxBell />
                   <ThemeToggle />
-                  <div className="topbar__auth"><UserChip /></div>
                 </div>
               </header>
 

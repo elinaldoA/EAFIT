@@ -61,7 +61,6 @@
   white-space: nowrap;
 }
 
-.topbar__auth { display: flex; align-items: center; }
 
 /* ── Páginas scrolláveis ── */
 .pages {
