@@ -15,7 +15,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        // jpg: só a anatomia.jpg (≈70KB), usada no avatar corporal do resumo do
+        // treino e da Evolução — sem ela no precache a figura falha offline.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,jpg}'],
         // og-image.png só é lida por crawlers de prévia de link (WhatsApp,
         // redes sociais), nunca pelo app — não precisa ir pro precache.
         globIgnores: ['landing/**', 'og-image.png'],
