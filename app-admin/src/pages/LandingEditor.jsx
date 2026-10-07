@@ -38,6 +38,8 @@ const ICON_OPTIONS = [
   { value: 'camera', label: 'Câmera (fotos)' },
   { value: 'users', label: 'Pessoas (desafios)' },
   { value: 'pause', label: 'Pausa (modo pausa)' },
+  { value: 'bell', label: 'Sino (avisos)' },
+  { value: 'globe', label: 'Globo (idiomas)' },
   { value: 'repeat', label: 'Troca (exercício)' },
 ];
 
