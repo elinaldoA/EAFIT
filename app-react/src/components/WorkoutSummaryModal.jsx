@@ -9,6 +9,7 @@ import BodyAvatar from './BodyAvatar';
 import RatingModal from './RatingModal';
 import PushPrompt from './PushPrompt';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
+import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
 
 export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
@@ -123,7 +124,7 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
                         <div className="summary-table__sets">
                           {ex.sets.map(s => (
                             <span key={s.n} className={`summary-table__chip${s.done ? ' summary-table__chip--done' : ''}`}>
-                              {s.reps ?? '–'}× {s.carga ?? '–'}kg
+                              {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : <>{s.reps ?? '–'}× {s.carga ?? '–'}kg</>}
                             </span>
                           ))}
                         </div>

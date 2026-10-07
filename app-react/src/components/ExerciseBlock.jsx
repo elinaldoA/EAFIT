@@ -8,7 +8,9 @@ import { substituteExercise } from '../lib/workoutPlans';
 import { getSaferAlternative } from '../data/workoutTemplates';
 import { allSetsDone } from '../lib/workoutSets';
 import { DiscomfortPanel } from './DiscomfortWidgets';
+import { isCardioItem } from '../lib/cardio';
 import SetRow from './SetRow';
+import CardioRow from './CardioRow';
 import ExerciseDemo from './ExerciseDemo';
 import ExerciseSwap from './ExerciseSwap';
 
@@ -52,6 +54,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
           </div>
           {!hideName && <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />}
         </div>
+        {isCardioItem(ex) && <CardioRow ex={ex} day={day} bump={bump} started={started} />}
       </div>
     );
   }

@@ -656,3 +656,48 @@
 .checkin__opt--on { opacity: 1; border-color: var(--accent, currentColor); background: var(--surface-2, rgba(255,255,255,.06)); }
 
 .trainer-plan-note { margin: 0; font-size: 0.8rem; color: var(--primary-ink, var(--primary)); font-weight: 700; }
+
+/* Registro de cardio (itens do plano sem séries) */
+.cardio-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.cardio-row__timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cardio-row__clock {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  min-width: 78px;
+}
+
+.cardio-row__clock--running { color: var(--primary-h); }
+
+.cardio-row__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 40px;
+  gap: 6px;
+  align-items: end;
+}
+
+.cardio-row__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.cardio-row__pace {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

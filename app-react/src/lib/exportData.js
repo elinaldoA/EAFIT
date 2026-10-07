@@ -21,7 +21,7 @@ export async function gatherUserData(userId) {
   if (workoutIds.length) {
     const { data, error } = await db
       .from('exercise_sets')
-      .select('workout_id, exercise_name, set_number, carga, reps, completed')
+      .select('workout_id, exercise_name, set_number, carga, reps, completed, duracao_min, distancia_km')
       .in('workout_id', workoutIds);
     if (error) throw error;
     exerciseSets = data || [];

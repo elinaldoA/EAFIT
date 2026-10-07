@@ -3,14 +3,11 @@ import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { formatDuration } from '../lib/utils';
 import { playRestDoneSound } from '../lib/sound';
-import { allSetsDone, countSets, gatherExerciseDetails } from '../lib/workoutSets';
+import { allSetsDone, countSets, gatherExerciseDetails, setCountOf } from '../lib/workoutSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
+import { isCardioItem } from '../lib/cardio';
 import ExerciseDemo from './ExerciseDemo';
-
-function setCountOf(ex) {
-  return parseInt(ex.series, 10) || 0;
-}
 
 function isExerciseDone(ex) {
   const n = setCountOf(ex);
@@ -132,8 +129,8 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
           </span>
           <h2 className="live__ex-name">{ex.nome}</h2>
           <div className="live__chips">
-            {setCountOf(ex) > 0 && <span className="live__chip">{ex.series} séries</span>}
-            <span className="live__chip">{ex.reps}{setCountOf(ex) > 0 ? ' reps' : ''}</span>
+            {setCountOf(ex) > 0 && !isCardioItem(ex) && <span className="live__chip">{ex.series} séries</span>}
+            <span className="live__chip">{ex.reps}{setCountOf(ex) > 0 && !isCardioItem(ex) ? ' reps' : ''}</span>
             {ex.descanso && ex.descanso !== '-' && <span className="live__chip">⏱ {ex.descanso}</span>}
             <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} variant="chip" />
           </div>

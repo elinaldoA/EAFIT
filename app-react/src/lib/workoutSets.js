@@ -1,3 +1,10 @@
+import { isCardioItem } from './cardio';
+
+// Itens de cardio não têm séries no plano, mas contam como 1 registro.
+export function setCountOf(ex) {
+  return isCardioItem(ex) ? 1 : (parseInt(ex.series, 10) || 0);
+}
+
 export function calcDayTotalCarga(day) {
   let total = 0;
   [...day.exercicios, ...day.pos].forEach(ex => {
@@ -15,7 +22,8 @@ export function calcDayTotalCarga(day) {
 export function gatherExerciseDetails(day) {
   return [...day.exercicios, ...day.pos]
     .map(ex => {
-      const count = parseInt(ex.series, 10) || 0;
+      const count = setCountOf(ex);
+      const cardio = isCardioItem(ex);
       const sets = Array.from({ length: count }, (_, i) => {
         const n = i + 1;
         return {
@@ -23,9 +31,13 @@ export function gatherExerciseDetails(day) {
           done: localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true',
           carga: localStorage.getItem(`set_${ex.nome}_${n}_carga`) || null,
           reps: localStorage.getItem(`set_${ex.nome}_${n}_reps`) || null,
+          ...(cardio && {
+            duracao: localStorage.getItem(`set_${ex.nome}_${n}_duracao`) || null,
+            distancia: localStorage.getItem(`set_${ex.nome}_${n}_distancia`) || null,
+          }),
         };
       });
-      return { nome: ex.nome, sets };
+      return { nome: ex.nome, cardio, sets };
     })
     .filter(ex => ex.sets.length > 0);
 }

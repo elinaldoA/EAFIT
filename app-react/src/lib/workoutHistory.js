@@ -73,6 +73,7 @@ export function buildSessions(workouts, sets) {
           if (!byExercise.has(s.exercise_name)) byExercise.set(s.exercise_name, []);
           byExercise.get(s.exercise_name).push({
             n: s.set_number, carga: toNum(s.carga), reps: toNum(s.reps), done: !!s.completed,
+            duracao: toNum(s.duracao_min), distancia: toNum(s.distancia_km),
           });
         });
 
@@ -89,9 +90,9 @@ export function buildSessions(workouts, sets) {
               if (s.reps !== null) volume += s.carga * s.reps;
             }
           });
-          return { nome, sets: exSets, best: bestSet(exSets) };
+          return { nome, sets: exSets, best: bestSet(exSets), cardio: exSets.some(s => s.duracao !== null || s.distancia !== null) };
         })
-        .filter(ex => ex.sets.some(s => s.done || s.carga !== null || s.reps !== null));
+        .filter(ex => ex.sets.some(s => s.done || s.carga !== null || s.reps !== null || s.duracao !== null || s.distancia !== null));
 
       return {
         id: w.id,
@@ -167,7 +168,7 @@ export async function fetchMonthSessions(userId, year, month) {
 
   const { data: sets, error: sErr } = await db
     .from('exercise_sets')
-    .select('workout_id, exercise_name, set_number, carga, reps, completed')
+    .select('workout_id, exercise_name, set_number, carga, reps, completed, duracao_min, distancia_km')
     .in('workout_id', ids);
   if (sErr) throw sErr;
 

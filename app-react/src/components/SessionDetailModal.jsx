@@ -5,6 +5,7 @@ import { getModalRoot } from '../lib/modalRoot';
 import { fmtDate, formatDuration, parseLocalDate } from '../lib/utils';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { compareExercise, fetchPreviousBests, fmtVolume } from '../lib/workoutHistory';
+import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
 
 function fmtKg(n) {
@@ -109,7 +110,7 @@ export default function SessionDetailModal({ session, onClose }) {
                     <div className="summary-table__sets">
                       {ex.sets.map(s => (
                         <span key={s.n} className={`summary-table__chip${s.done ? ' summary-table__chip--done' : ''}`}>
-                          {s.reps ?? '–'}× {s.carga === null ? '–kg' : fmtKg(s.carga)}
+                          {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : <>{s.reps ?? '–'}× {s.carga === null ? '–kg' : fmtKg(s.carga)}</>}
                         </span>
                       ))}
                     </div>
