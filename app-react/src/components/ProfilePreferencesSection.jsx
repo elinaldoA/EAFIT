@@ -1,8 +1,8 @@
 import { isNotificationSupported, isIosSafariNotInstalled, sendNotification, isNotifyEnabled } from '../lib/notifications';
 import { exportSummaryCSV, exportBackupJSON, printReport } from '../lib/exportData';
 import { useEffect, useState } from 'react';
-import { getCoachPrefs, saveCoachPrefs, coachSample, coachStop, coachName } from '../lib/coach';
-import { genderAvailable, listPtVoices } from '../lib/voice';
+import { getCoachPrefs, saveCoachPrefs, coachSample, coachStop } from '../lib/coach';
+import { listPtVoices } from '../lib/voice';
 
 import { t } from '../lib/i18n';
 const NOTIFY_PREFS = [
@@ -98,7 +98,6 @@ const RATES = [
 // (a amostra usa ela) e vai para o perfil para acompanhar a conta.
 export function CoachSection({ updateProfile, toast }) {
   const [prefs, setPrefs] = useState(getCoachPrefs);
-  const [missingVoice, setMissingVoice] = useState(false);
   const [voices, setVoices] = useState([]);
 
   useEffect(() => {
@@ -106,12 +105,6 @@ export function CoachSection({ updateProfile, toast }) {
     listPtVoices().then(list => { if (alive) setVoices(list); });
     return () => { alive = false; };
   }, []);
-
-  useEffect(() => {
-    let alive = true;
-    genderAvailable(prefs.gender).then(r => { if (alive) setMissingVoice(r.supported && !r.matched); });
-    return () => { alive = false; };
-  }, [prefs.gender]);
 
   useEffect(() => coachStop, []);
 
@@ -135,20 +128,6 @@ export function CoachSection({ updateProfile, toast }) {
         <input type="checkbox" id="coachEnabled" checked={prefs.enabled} onChange={toggle} />
       </div>
 
-      <div className="profile-field">
-        <label className="profile-field__label" htmlFor="coachGender">{t('Voz')}</label>
-        <select
-          id="coachGender" className="input input--sm" value={prefs.gender}
-          onChange={e => change({ gender: e.target.value, voiceName: '' }, { coachGender: e.target.value })}
-        >
-          <option value="female">{`${t('Feminina')} · ${coachName('female')}`}</option>
-          <option value="male">{`${t('Masculina')} · ${coachName('male')}`}</option>
-        </select>
-        {missingVoice && (
-          <span className="profile-field__hint">{t('Este aparelho não tem uma voz {genero} em português; vamos usar outra. Em "Voz do aparelho" você pode escolher uma manualmente.', { genero: prefs.gender === 'male' ? t('masculina') : t('feminina') })}</span>
-        )}
-      </div>
-
       {voices.length > 1 && (
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="coachVoice">{t('Voz do aparelho')}</label>
@@ -156,7 +135,7 @@ export function CoachSection({ updateProfile, toast }) {
             id="coachVoice" className="input input--sm" value={prefs.voiceName}
             onChange={e => { setPrefs(saveCoachPrefs({ voiceName: e.target.value })); coachSample(); }}
           >
-            <option value="">{t('Automática (pelo gênero)')}</option>
+            <option value="">{t('Automática (a melhor do aparelho)')}</option>
             {voices.map(v => (
               <option key={v.name} value={v.name}>
                 {v.gender ? `${v.name} · ${v.gender === 'male' ? t('masculina') : t('feminina')}` : v.name}

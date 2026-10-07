@@ -7,12 +7,12 @@
 // preenchida por syncCoachPrefs().
 import { speak, cancelSpeech, isVoiceSupported } from './voice';
 import { lang } from './i18n';
-import { PHRASES, LIGHT_EVENTS, TONES, COACH_NAMES } from '../data/coachPhrases';
+import { PHRASES, LIGHT_EVENTS, TONES } from '../data/coachPhrases';
 
 const STORAGE_KEY = 'coach_prefs';
 // voiceName: voz escolhida à mão neste aparelho ('' = automática pelo gênero). Os nomes das
 // vozes mudam de aparelho para aparelho, por isso não vai para a conta.
-const DEFAULTS = { enabled: false, gender: 'female', voiceName: '', tone: 'animado', frequency: 'full', rate: 1, name: '' };
+const DEFAULTS = { enabled: false, voiceName: '', tone: 'animado', frequency: 'full', rate: 1, name: '' };
 // Ajuste fino de timbre por tom: o animado é mais agudo e rápido, o calmo mais lento.
 const DELIVERY = {
   animado: { rate: 1.05, pitch: 1.08 },
@@ -52,16 +52,11 @@ export function syncCoachPrefs(user) {
   const next = {
     name: spokenName(md),
     ...(md.coachEnabled !== undefined && { enabled: !!md.coachEnabled }),
-    ...(md.coachGender && { gender: md.coachGender }),
     ...(TONES.includes(md.coachTone) && { tone: md.coachTone }),
     ...(md.coachFrequency && { frequency: md.coachFrequency }),
     ...(Number.isFinite(md.coachRate) && { rate: md.coachRate }),
   };
   return saveCoachPrefs(next);
-}
-
-export function coachName(gender) {
-  return COACH_NAMES[gender] || COACH_NAMES.female;
 }
 
 export function greeting(date = new Date()) {
@@ -135,7 +130,6 @@ export function buildLine(event, data = {}, prefs = getCoachPrefs(), random = Ma
   if (!lines) return null;
   const vars = {
     nome: prefs.name,
-    coach: coachName(prefs.gender),
     saudacao: greeting(),
     ...data,
   };
@@ -156,7 +150,7 @@ export function coachSay(event, data = {}, { delayMs = 0, force = false, queue =
   const text = buildLine(event, data, prefs);
   if (!text) return false;
   const delivery = DELIVERY[prefs.tone] || DELIVERY.animado;
-  const run = () => speak(text, { gender: prefs.gender, voiceName: prefs.voiceName, rate: delivery.rate * prefs.rate, pitch: delivery.pitch, queue });
+  const run = () => speak(text, { voiceName: prefs.voiceName, rate: delivery.rate * prefs.rate, pitch: delivery.pitch, queue });
   if (delayMs > 0) {
     const id = setTimeout(() => { pending.delete(id); run(); }, delayMs);
     pending.set(id, event);

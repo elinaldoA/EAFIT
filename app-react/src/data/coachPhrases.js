@@ -3,7 +3,7 @@
 // não interface. Escritas de forma neutra de gênero — servem tanto para a voz
 // feminina quanto para a masculina.
 //
-// Placeholders: {nome} {coach} {saudacao} {foco} {exercicio} {detalhe}
+// Placeholders: {nome} {saudacao} {foco} {exercicio} {detalhe}
 // {tempo} {carga} {feitos} {meta} {dia}.
 //
 // Aberturas: start = treino do dia ainda por fazer; startOther = treino de outro
@@ -18,7 +18,7 @@ export const LIGHT_EVENTS = ['start', 'startOther', 'review', 'restDone', 'pr', 
 export const PHRASES = {
   animado: {
     start: [
-      '{saudacao}, {nome}! Aqui é {coach}. Hoje é dia de {foco}. Bora?',
+      '{saudacao}, {nome}! Hoje é dia de {foco}. Bora?',
       '{saudacao}! {foco} hoje. Respira fundo, que a gente vai com tudo!',
       'Partiu {foco}! Eu tô contigo do começo ao fim.',
       '{saudacao}, {nome}! Treino de {foco} na área. Vamos fazer valer!',
@@ -76,7 +76,7 @@ export const PHRASES = {
 
   zoeira: {
     start: [
-      '{saudacao}, {nome}! {coach} na área. Hoje é {foco}, e o sofá que se vire sem você.',
+      '{saudacao}, {nome}! Hoje é {foco}, e o sofá que se vire sem você.',
       '{saudacao}! {foco} hoje. Prometo que dói só um pouquinho. Mentira, dói bastante.',
       'Bora de {foco}! O ferro não vai levantar sozinho, e eu já tentei.',
       '{saudacao}, {nome}! Hora do {foco}. Deixa a preguiça no vestiário.',
@@ -184,6 +184,3 @@ export const PHRASES = {
     ],
   },
 };
-
-// Nome do treinador por voz.
-export const COACH_NAMES = { female: 'Bia', male: 'Beto' };

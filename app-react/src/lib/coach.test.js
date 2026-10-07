@@ -9,7 +9,7 @@ vi.mock('./voice', () => ({
 
 import {
   getCoachPrefs, saveCoachPrefs, syncCoachPrefs, buildLine, coachSay, coachStop, coachSample,
-  pickLine, greeting, speechTime, speechReps, speechExercise, speechDetail, coachName, isCoachAvailable,
+  pickLine, greeting, speechTime, speechReps, speechExercise, speechDetail, isCoachAvailable,
 } from './coach';
 import { PHRASES, TONES } from '../data/coachPhrases';
 
@@ -23,12 +23,12 @@ beforeEach(() => {
 
 describe('preferências', () => {
   it('padrão: desligado, voz feminina, tom animado', () => {
-    expect(getCoachPrefs()).toMatchObject({ enabled: false, gender: 'female', tone: 'animado', frequency: 'full', rate: 1 });
+    expect(getCoachPrefs()).toMatchObject({ enabled: false, voiceName: '', tone: 'animado', frequency: 'full', rate: 1 });
   });
 
   it('saveCoachPrefs mescla e persiste', () => {
-    saveCoachPrefs({ enabled: true, gender: 'male' });
-    expect(getCoachPrefs()).toMatchObject({ enabled: true, gender: 'male', tone: 'animado' });
+    saveCoachPrefs({ enabled: true, voiceName: 'Luciana' });
+    expect(getCoachPrefs()).toMatchObject({ enabled: true, voiceName: 'Luciana', tone: 'animado' });
   });
 
   it('JSON inválido volta ao padrão', () => {
@@ -37,8 +37,8 @@ describe('preferências', () => {
   });
 
   it('syncCoachPrefs traz o perfil da conta e usa só o primeiro nome (apelido primeiro)', () => {
-    syncCoachPrefs({ user_metadata: { nome: 'Maria Souza', apelido: '', coachEnabled: true, coachGender: 'male', coachTone: 'zoeira', coachFrequency: 'light', coachRate: 1.1 } });
-    expect(getCoachPrefs()).toMatchObject({ name: 'Maria', enabled: true, gender: 'male', tone: 'zoeira', frequency: 'light', rate: 1.1 });
+    syncCoachPrefs({ user_metadata: { nome: 'Maria Souza', apelido: '', coachEnabled: true, coachTone: 'zoeira', coachFrequency: 'light', coachRate: 1.1 } });
+    expect(getCoachPrefs()).toMatchObject({ name: 'Maria', enabled: true, tone: 'zoeira', frequency: 'light', rate: 1.1 });
     syncCoachPrefs({ user_metadata: { nome: 'Maria', apelido: 'Mari' } });
     expect(getCoachPrefs().name).toBe('Mari');
   });
@@ -51,10 +51,7 @@ describe('preferências', () => {
     expect(getCoachPrefs().enabled).toBe(true);
   });
 
-  it('coachName e disponibilidade', () => {
-    expect(coachName('female')).toBe('Bia');
-    expect(coachName('male')).toBe('Beto');
-    expect(coachName('x')).toBe('Bia');
+  it('disponibilidade depende do suporte do navegador', () => {
     expect(isCoachAvailable()).toBe(true);
     h.supported = false;
     expect(isCoachAvailable()).toBe(false);
@@ -106,7 +103,7 @@ describe('frases', () => {
   });
 
   it('todo placeholder usado nas frases é conhecido', () => {
-    const known = new Set(['dia', 'nome', 'coach', 'saudacao', 'foco', 'exercicio', 'detalhe', 'tempo', 'carga', 'feitos', 'meta']);
+    const known = new Set(['dia', 'nome', 'saudacao', 'foco', 'exercicio', 'detalhe', 'tempo', 'carga', 'feitos', 'meta']);
     for (const tone of TONES) for (const lines of Object.values(PHRASES[tone])) for (const l of lines) {
       for (const m of l.matchAll(/\{(\w+)\}/g)) expect(known.has(m[1]), `${m[1]} em "${l}"`).toBe(true);
     }
@@ -132,7 +129,7 @@ describe('frases', () => {
   });
 
   it('buildLine preenche os dados e devolve null para situação desconhecida', () => {
-    const prefs = { ...getCoachPrefs(), tone: 'animado', gender: 'male', name: 'Ana' };
+    const prefs = { ...getCoachPrefs(), tone: 'animado', name: 'Ana' };
     const line = buildLine('rest', { tempo: '60 segundos' }, prefs, () => 0);
     expect(line).toContain('60 segundos');
     expect(line).not.toMatch(/[{}]/);
@@ -162,11 +159,12 @@ describe('coachSay', () => {
   });
 
   it('fala com a voz e o tom escolhidos', () => {
-    saveCoachPrefs({ enabled: true, gender: 'male', tone: 'calmo', rate: 1.1 });
+    saveCoachPrefs({ enabled: true, voiceName: 'Luciana', tone: 'calmo', rate: 1.1 });
     expect(coachSay('rest', { tempo: '30 segundos' })).toBe(true);
     const [text, opts] = h.speak.mock.calls[0];
     expect(text).toContain('30 segundos');
-    expect(opts).toMatchObject({ gender: 'male', voiceName: '', queue: false });
+    expect(opts).toMatchObject({ voiceName: 'Luciana', queue: false });
+    expect(opts).not.toHaveProperty('gender');
     expect(opts.rate).toBeCloseTo(0.95 * 1.1);
   });
 

@@ -26,20 +26,15 @@ function langScore(voice) {
   return 0;
 }
 
-// Melhor voz para o gênero pedido. Sem nenhuma do gênero, cai na melhor voz
-// pt-BR disponível (matched=false). Sem voz em português, devolve null.
-export function pickVoice(voices, gender, voiceName = '') {
+// Voz escolhida à mão (voiceName) ou, sem escolha, a melhor em português do
+// aparelho: pt-BR e "natural/neural" primeiro. Sem voz em português, null.
+export function pickVoice(voices, voiceName = '') {
   const pt = (voices || []).filter(v => langScore(v) > 0);
   if (!pt.length) return null;
-  // Voz escolhida à mão na configuração: vale sobre o gênero.
   const chosen = voiceName && pt.find(v => v.name === voiceName);
-  if (chosen) return { voice: chosen, matched: true };
+  if (chosen) return chosen;
   const rank = v => langScore(v) * 10 + (NATURAL.test(v.name) ? 5 : 0) + (v.localService ? 0 : 1);
-  const byRank = (a, b) => rank(b) - rank(a);
-  const same = pt.filter(v => voiceGender(v) === gender).sort(byRank);
-  if (same.length) return { voice: same[0], matched: true };
-  const rest = [...pt].sort(byRank);
-  return { voice: rest[0], matched: false };
+  return [...pt].sort((a, b) => rank(b) - rank(a))[0];
 }
 
 function loadVoices() {
@@ -52,13 +47,6 @@ function loadVoices() {
     synth.addEventListener('voiceschanged', done);
     setTimeout(done, 1500);
   });
-}
-
-// Diz se o aparelho tem voz do gênero (para avisar na configuração).
-export async function genderAvailable(gender) {
-  if (!isVoiceSupported()) return { supported: false, matched: false };
-  const picked = pickVoice(await loadVoices(), gender);
-  return { supported: !!picked, matched: !!picked?.matched };
 }
 
 // Vozes em português do aparelho, para escolha manual (melhores primeiro).
@@ -76,14 +64,14 @@ export function cancelSpeech() {
 
 // Fala o texto; por padrão uma fala nova interrompe a anterior (evita fila
 // atrasada). Com queue=true entra na fila e espera a atual terminar.
-export async function speak(text, { gender = 'female', voiceName = '', rate = 1, pitch = 1, volume = 1, queue = false } = {}) {
+export async function speak(text, { voiceName = '', rate = 1, pitch = 1, volume = 1, queue = false } = {}) {
   if (!isVoiceSupported() || !text) return false;
   try {
-    const picked = pickVoice(await loadVoices(), gender, voiceName);
-    if (!picked) return false;
+    const voice = pickVoice(await loadVoices(), voiceName);
+    if (!voice) return false;
     const u = new SpeechSynthesisUtterance(text);
-    u.voice = picked.voice;
-    u.lang = picked.voice.lang || 'pt-BR';
+    u.voice = voice;
+    u.lang = voice.lang || 'pt-BR';
     u.rate = rate;
     u.pitch = pitch;
     u.volume = volume;

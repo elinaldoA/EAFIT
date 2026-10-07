@@ -23,7 +23,7 @@ import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
 import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
-import { isCoachAvailable, coachName } from '../lib/coach';
+import { isCoachAvailable } from '../lib/coach';
 import { NotificationsSection, ExportSection, CoachSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
 import LanguageSwitch from '../components/LanguageSwitch';
@@ -294,7 +294,7 @@ export default function PerfilPage({ active }) {
         {isCoachAvailable() && (
           <CollapsibleCard
             icon="🎙️" title={t('Treinador por voz')}
-            summary={user.user_metadata?.coachEnabled ? t('Ativado · {nome}', { nome: coachName(user.user_metadata?.coachGender) }) : t('Desativado')}
+            summary={user.user_metadata?.coachEnabled ? t('Ativado') : t('Desativado')}
           >
             <CoachSection updateProfile={updateProfile} toast={toast} />
           </CollapsibleCard>
