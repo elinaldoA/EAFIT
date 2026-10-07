@@ -49,7 +49,7 @@ jobs:
       - name: Testes (_shared)
         run: deno test supabase/functions/_shared/
 
-      # send-reminders, send-push e admin-users ainda têm erros de tipagem
+      # send-reminders e admin-users ainda têm erros de tipagem
       # antigos (JS sem tipos / generics do supabase-js) — entram aqui quando
       # forem tipados.
       - name: Checagem de tipos
@@ -64,6 +64,7 @@ jobs:
           supabase/functions/reply-push/index.ts
           supabase/functions/send-appointment-reminders/index.ts
           supabase/functions/send-trainer-alerts/index.ts
+          supabase/functions/send-push/index.ts
 
   push-migrations:
     needs: test
