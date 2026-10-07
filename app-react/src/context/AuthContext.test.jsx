@@ -20,6 +20,7 @@ vi.mock('../lib/supabase', () => ({
   db: { auth: mockAuth, functions: mockFunctions },
 }));
 
+import * as adminGuard from '../lib/adminGuard';
 import { AuthProvider } from './AuthContext';
 import { useAuth } from './useAuth';
 
@@ -157,7 +158,7 @@ describe('AuthProvider', () => {
 
     act(() => authCallback('PASSWORD_RECOVERY', { user: { id: 'u1' } }));
     expect(result.current.recoveryMode).toBe(true);
-    expect(result.current.user).toEqual({ id: 'u1' });
+    await waitFor(() => expect(result.current.user).toEqual({ id: 'u1' }));
 
     act(() => result.current.finishRecovery());
     expect(result.current.recoveryMode).toBe(false);
@@ -187,5 +188,31 @@ describe('AuthProvider', () => {
 
     expect(response).toEqual({ error: 'Não autenticado.' });
     expect(mockFunctions.invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthProvider — conta de administrador', () => {
+  it('login de admin derruba a sessão e não entra no app', async () => {
+    vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(true);
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signInWithPassword.mockResolvedValue({ data: { user: { id: 'adm' } }, error: null });
+    let response;
+    await act(async () => { response = await result.current.login('adm@b.com', 'segredo123'); });
+
+    expect(response.error).toMatch(/administrador/);
+    expect(mockAuth.signOut).toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+  });
+
+  it('sessão de admin já existente no aparelho é encerrada ao abrir o app', async () => {
+    vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(true);
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: { id: 'adm' } } } });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+    expect(mockAuth.signOut).toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
   });
 });

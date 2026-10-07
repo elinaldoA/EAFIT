@@ -568,6 +568,7 @@ export default {
 
   // Contextos e hooks
   'E-mail ou senha inválidos.': 'Invalid email or password.',
+  'Esta conta é de administrador e acessa apenas o painel admin.': 'This is an administrator account and can only access the admin panel.',
   'Senha: mínimo {MIN_PASSWORD} caracteres.': 'Password: at least {MIN_PASSWORD} characters.',
   'Conta criada! Enviamos um link de confirmação para o seu e-mail.': 'Account created! We sent a confirmation link to your email.',
   'Se houver uma conta com este e-mail, você vai receber um link para criar uma nova senha.': 'If an account exists for this email, you will receive a link to create a new password.',
