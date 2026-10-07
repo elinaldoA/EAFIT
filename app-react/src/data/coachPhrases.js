@@ -4,13 +4,16 @@
 // feminina quanto para a masculina.
 //
 // Placeholders: {nome} {coach} {saudacao} {foco} {exercicio} {detalhe}
-// {tempo} {carga} {feitos} {meta}. Linha com {nome} só é sorteada quando o
+// {tempo} {carga} {feitos} {meta} {dia}.
+//
+// Aberturas: start = treino do dia ainda por fazer; startOther = treino de outro
+// dia da semana (nunca dizer "hoje"); review = treino que já foi concluído. Linha com {nome} só é sorteada quando o
 // usuário tem nome cadastrado.
 //
 // 'light' = falas que ainda saem no modo "só o essencial".
 export const TONES = ['animado', 'zoeira', 'calmo'];
 
-export const LIGHT_EVENTS = ['start', 'restDone', 'pr', 'finish'];
+export const LIGHT_EVENTS = ['start', 'startOther', 'review', 'restDone', 'pr', 'finish'];
 
 export const PHRASES = {
   animado: {
@@ -20,6 +23,16 @@ export const PHRASES = {
       'Partiu {foco}! Eu tô contigo do começo ao fim.',
       '{saudacao}, {nome}! Treino de {foco} na área. Vamos fazer valer!',
       'Chegou a hora! {foco} hoje. Foco total e boa energia!',
+    ],
+    startOther: [
+      '{saudacao}! Treino de {dia}: {foco}. Bora?',
+      'Vamos de {foco}, o treino de {dia}. Estou contigo!',
+      'Treino de {dia} aberto: {foco}. Foco e boa energia!',
+    ],
+    review: [
+      'Esse treino de {foco} você já fechou! Vamos revisar, sem pressa.',
+      'Revendo o treino de {foco}. Esse já está no bolso!',
+      'Treino de {foco} já concluído. Bora dar uma olhada?',
     ],
     exercise: [
       'Agora é {exercicio}. {detalhe}.',
@@ -69,6 +82,16 @@ export const PHRASES = {
       '{saudacao}, {nome}! Hora do {foco}. Deixa a preguiça no vestiário.',
       'Chegou o grande momento: {foco}. Respira, alonga, e vem!',
     ],
+    startOther: [
+      '{saudacao}! Treino de {dia}: {foco}. Sem choro, hein!',
+      'Vamos de {foco}, o treino de {dia}. Aqui ninguém foge do ferro!',
+      'Treino de {dia} aberto: {foco}. Respira e vai.',
+    ],
+    review: [
+      'Esse treino de {foco} você já fechou! Quer rever? Gostei da dedicação.',
+      'Treino de {foco} já feito. Vai repetir por saudade?',
+      'Revendo o treino de {foco}. Esse já tá no currículo!',
+    ],
     exercise: [
       '{exercicio}. {detalhe}. Sem choro, hein!',
       'Agora é {exercicio}. {detalhe}. Segura a cara de dor, que a gente tá filmando. Mentira.',
@@ -115,6 +138,16 @@ export const PHRASES = {
       '{saudacao}. Vamos de {foco}. Respire fundo e comece quando quiser.',
       'Treino de {foco}. Foco na execução e na respiração.',
       '{saudacao}, {nome}. Estou aqui com você. Vamos começar.',
+    ],
+    startOther: [
+      '{saudacao}. Treino de {dia}: {foco}. No seu ritmo.',
+      'Vamos de {foco}, o treino de {dia}. Com calma e atenção.',
+      'Treino de {dia} aberto: {foco}. Respire fundo.',
+    ],
+    review: [
+      'Você já concluiu esse treino de {foco}. Vamos revisar com calma.',
+      'Treino de {foco} já feito. Dê uma olhada com tranquilidade.',
+      'Revisando o treino de {foco}. Bom trabalho por ter concluído.',
     ],
     exercise: [
       'Próximo exercício: {exercicio}. {detalhe}.',

@@ -10,7 +10,9 @@ import { lang } from './i18n';
 import { PHRASES, LIGHT_EVENTS, TONES, COACH_NAMES } from '../data/coachPhrases';
 
 const STORAGE_KEY = 'coach_prefs';
-const DEFAULTS = { enabled: false, gender: 'female', tone: 'animado', frequency: 'full', rate: 1, name: '' };
+// voiceName: voz escolhida à mão neste aparelho ('' = automática pelo gênero). Os nomes das
+// vozes mudam de aparelho para aparelho, por isso não vai para a conta.
+const DEFAULTS = { enabled: false, gender: 'female', voiceName: '', tone: 'animado', frequency: 'full', rate: 1, name: '' };
 // Ajuste fino de timbre por tom: o animado é mais agudo e rápido, o calmo mais lento.
 const DELIVERY = {
   animado: { rate: 1.05, pitch: 1.08 },
@@ -154,7 +156,7 @@ export function coachSay(event, data = {}, { delayMs = 0, force = false, queue =
   const text = buildLine(event, data, prefs);
   if (!text) return false;
   const delivery = DELIVERY[prefs.tone] || DELIVERY.animado;
-  const run = () => speak(text, { gender: prefs.gender, rate: delivery.rate * prefs.rate, pitch: delivery.pitch, queue });
+  const run = () => speak(text, { gender: prefs.gender, voiceName: prefs.voiceName, rate: delivery.rate * prefs.rate, pitch: delivery.pitch, queue });
   if (delayMs > 0) {
     const id = setTimeout(() => { pending.delete(id); run(); }, delayMs);
     pending.set(id, event);

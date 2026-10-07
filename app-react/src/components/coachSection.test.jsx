@@ -4,6 +4,7 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 
 const h = vi.hoisted(() => ({
   genderAvailable: vi.fn(),
+  listPtVoices: vi.fn(),
   coachSample: vi.fn(),
   coachStop: vi.fn(),
   updateProfile: vi.fn(),
@@ -13,6 +14,7 @@ const h = vi.hoisted(() => ({
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../lib/voice', () => ({
   genderAvailable: (...a) => h.genderAvailable(...a),
+  listPtVoices: (...a) => h.listPtVoices(...a),
   isVoiceSupported: () => true,
   speak: vi.fn(),
   cancelSpeech: vi.fn(),
@@ -28,6 +30,7 @@ import { getCoachPrefs } from '../lib/coach';
 
 beforeEach(() => {
   localStorage.clear();
+  h.listPtVoices.mockReset().mockResolvedValue([]);
   h.genderAvailable.mockReset().mockResolvedValue({ supported: true, matched: true });
   h.updateProfile.mockReset().mockResolvedValue({ error: null });
   h.toast.mockReset();
@@ -95,6 +98,30 @@ describe('CoachSection', () => {
     setup();
     fireEvent.change(screen.getByLabelText('Jeito de falar'), { target: { value: 'calmo' } });
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ falhou'));
+  });
+
+  it('com várias vozes no aparelho, permite escolher uma à mão e volta ao automático ao trocar o gênero', async () => {
+    h.listPtVoices.mockResolvedValue([
+      { name: 'Microsoft Antonio Online (Natural)', lang: 'pt-BR', gender: 'male' },
+      { name: 'Voz Qualquer', lang: 'pt-BR', gender: null },
+    ]);
+    setup();
+    const select = await screen.findByLabelText('Voz do aparelho');
+    expect(screen.getByRole('option', { name: 'Microsoft Antonio Online (Natural) · masculina' })).toBeTruthy();
+    expect(screen.getByRole('option', { name: 'Voz Qualquer' })).toBeTruthy();
+    fireEvent.change(select, { target: { value: 'Voz Qualquer' } });
+    expect(getCoachPrefs().voiceName).toBe('Voz Qualquer');
+    expect(h.coachSample).toHaveBeenCalled();
+    expect(h.updateProfile).not.toHaveBeenCalled(); // vale só neste aparelho
+    fireEvent.change(screen.getByLabelText('Voz'), { target: { value: 'male' } });
+    expect(getCoachPrefs().voiceName).toBe('');
+  });
+
+  it('com uma voz só, não mostra o seletor manual', async () => {
+    h.listPtVoices.mockResolvedValue([{ name: 'Luciana', lang: 'pt-BR', gender: 'female' }]);
+    setup();
+    await waitFor(() => expect(h.listPtVoices).toHaveBeenCalled());
+    expect(screen.queryByLabelText('Voz do aparelho')).toBeNull();
   });
 
   it('o botão de amostra fala com as escolhas atuais', () => {

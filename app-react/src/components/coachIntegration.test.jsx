@@ -11,6 +11,7 @@ vi.mock('../lib/coach', async orig => ({
   coachSay: (...a) => h.coachSay(...a),
   coachStop: (...a) => h.coachStop(...a),
 }));
+vi.mock('../data/treinoData', async orig => ({ ...(await orig()), todayName: () => 'Segunda' }));
 vi.mock('../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
 vi.mock('../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('./ExerciseDemo', () => ({ default: () => null }));
@@ -50,8 +51,25 @@ afterEach(() => {
 describe('treinador por voz no modo treino', () => {
   it('abre falando o dia e apresenta o primeiro exercício na fila', () => {
     setup();
-    expect(h.coachSay).toHaveBeenNthCalledWith(1, 'start', { foco: 'Peito' });
+    expect(h.coachSay).toHaveBeenNthCalledWith(1, 'start', { foco: 'Peito', dia: 'Segunda' });
     expect(h.coachSay).toHaveBeenNthCalledWith(2, 'exercise', { exercicio: 'Supino Reto', detalhe: '3 séries de 8 a 10' }, { queue: true });
+  });
+
+  it('treino de outro dia da semana não é chamado de "hoje"', () => {
+    const outro = { ...DAY, dia: 'Domingo' };
+    render(<LiveWorkoutModal day={outro} timer={timer} renderExercise={() => null} onFinish={vi.fn()} onClose={vi.fn()} />);
+    expect(h.coachSay).toHaveBeenNthCalledWith(1, 'startOther', { foco: 'Peito', dia: 'Domingo' });
+  });
+
+  it('treino já concluído abre como revisão, não como convite para treinar', () => {
+    localStorage.setItem('treino_Segunda', 'true');
+    setup();
+    expect(h.coachSay).toHaveBeenNthCalledWith(1, 'review', { foco: 'Peito', dia: 'Segunda' });
+  });
+
+  it('treino cujo cronômetro já terminou também abre como revisão', () => {
+    render(<LiveWorkoutModal day={DAY} timer={{ ...timer, status: 'finished' }} renderExercise={() => null} onFinish={vi.fn()} onClose={vi.fn()} />);
+    expect(h.coachSay).toHaveBeenNthCalledWith(1, 'review', { foco: 'Peito', dia: 'Segunda' });
   });
 
   it('ao trocar de exercício, apresenta o novo (sem fila)', () => {

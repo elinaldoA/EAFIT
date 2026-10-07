@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
+import { todayName } from '../data/treinoData';
 import { formatDuration } from '../lib/utils';
 import { playRestDoneSound } from '../lib/sound';
 import { allSetsDone, countSets, gatherExerciseDetails, setCountOf } from '../lib/workoutSets';
@@ -52,7 +53,11 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
     const first = !coachOpened.current;
     if (first) {
       coachOpened.current = true;
-      coachSay('start', { foco: speechExercise(day.foco) });
+      // Não chamar de "hoje" um treino de outro dia, nem convidar a treinar de novo
+      // um treino que já foi concluído.
+      const concluido = timer.status === 'finished' || localStorage.getItem(`treino_${day.dia}`) === 'true';
+      const abertura = concluido ? 'review' : day.dia === todayName() ? 'start' : 'startOther';
+      coachSay(abertura, { foco: speechExercise(day.foco), dia: day.dia });
     }
     const item = items[index];
     coachSay('exercise', { exercicio: speechExercise(item.nome), detalhe: speechDetail(item) }, { queue: first });

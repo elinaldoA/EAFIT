@@ -99,14 +99,14 @@ describe('formatação para a fala', () => {
 
 describe('frases', () => {
   it('todo tom tem todas as situações com ao menos 3 variações', () => {
-    const events = ['start', 'exercise', 'rest', 'rest10', 'restDone', 'pr', 'finish'];
+    const events = ['start', 'startOther', 'review', 'exercise', 'rest', 'rest10', 'restDone', 'pr', 'finish'];
     for (const tone of TONES) {
       for (const ev of events) expect(PHRASES[tone][ev].length, `${tone}.${ev}`).toBeGreaterThanOrEqual(3);
     }
   });
 
   it('todo placeholder usado nas frases é conhecido', () => {
-    const known = new Set(['nome', 'coach', 'saudacao', 'foco', 'exercicio', 'detalhe', 'tempo', 'carga', 'feitos', 'meta']);
+    const known = new Set(['dia', 'nome', 'coach', 'saudacao', 'foco', 'exercicio', 'detalhe', 'tempo', 'carga', 'feitos', 'meta']);
     for (const tone of TONES) for (const lines of Object.values(PHRASES[tone])) for (const l of lines) {
       for (const m of l.matchAll(/\{(\w+)\}/g)) expect(known.has(m[1]), `${m[1]} em "${l}"`).toBe(true);
     }
@@ -142,7 +142,7 @@ describe('frases', () => {
   it('buildLine nunca deixa placeholder sem preencher em nenhuma frase', () => {
     for (const tone of TONES) for (const ev of Object.keys(PHRASES[tone])) {
       for (let i = 0; i < 12; i++) {
-        const text = buildLine(ev, { foco: 'Peito', exercicio: 'Supino', detalhe: '3 séries', tempo: '60 segundos', carga: 40, feitos: 2, meta: 5 }, { ...getCoachPrefs(), tone, name: i % 2 ? 'Ana' : '' });
+        const text = buildLine(ev, { foco: 'Peito', dia: 'Segunda', exercicio: 'Supino', detalhe: '3 séries', tempo: '60 segundos', carga: 40, feitos: 2, meta: 5 }, { ...getCoachPrefs(), tone, name: i % 2 ? 'Ana' : '' });
         expect(text, `${tone}.${ev}`).not.toMatch(/[{}]/);
       }
     }
@@ -166,7 +166,7 @@ describe('coachSay', () => {
     expect(coachSay('rest', { tempo: '30 segundos' })).toBe(true);
     const [text, opts] = h.speak.mock.calls[0];
     expect(text).toContain('30 segundos');
-    expect(opts).toMatchObject({ gender: 'male', queue: false });
+    expect(opts).toMatchObject({ gender: 'male', voiceName: '', queue: false });
     expect(opts.rate).toBeCloseTo(0.95 * 1.1);
   });
 

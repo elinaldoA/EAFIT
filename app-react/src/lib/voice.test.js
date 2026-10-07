@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { pickVoice, voiceGender, isVoiceSupported, speak, genderAvailable, cancelSpeech } from './voice';
+import { pickVoice, voiceGender, isVoiceSupported, speak, genderAvailable, cancelSpeech, listPtVoices } from './voice';
 
 const v = (name, lang = 'pt-BR', localService = true) => ({ name, lang, localService });
 
@@ -42,6 +42,13 @@ describe('pickVoice', () => {
     const r = pickVoice([v('Daniel'), v('Joana', 'pt-PT')], 'female');
     expect(r.voice.name).toBe('Daniel');
     expect(r.matched).toBe(false);
+  });
+
+  it('voz escolhida à mão vale sobre o gênero; nome inexistente é ignorado', () => {
+    const r = pickVoice(voices, 'male', 'Luciana');
+    expect(r.voice.name).toBe('Luciana');
+    expect(r.matched).toBe(true);
+    expect(pickVoice(voices, 'male', 'Não existe').voice.name).toBe('Microsoft Antonio Online (Natural)');
   });
 
   it('aceita lang com underscore (Android)', () => {
@@ -90,6 +97,23 @@ describe('speak', () => {
     stubSynth([v('Samantha', 'en-US')]);
     expect(await speak('Oi')).toBe(false);
     expect(await genderAvailable('female')).toEqual({ supported: false, matched: false });
+  });
+
+  it('speak usa a voz escolhida pelo nome', async () => {
+    const synth = stubSynth([v('Luciana'), v('Felipe')]);
+    await speak('Oi', { gender: 'male', voiceName: 'Luciana' });
+    expect(synth.speak.mock.calls[0][0].voice.name).toBe('Luciana');
+  });
+
+  it('listPtVoices lista só as de português, pt-BR e naturais primeiro, com o gênero', async () => {
+    stubSynth([v('Joana', 'pt-PT'), v('Samantha', 'en-US'), v('Daniel'), v('Microsoft Francisca Online (Natural)', 'pt-BR', false)]);
+    expect(await listPtVoices()).toEqual([
+      { name: 'Microsoft Francisca Online (Natural)', lang: 'pt-BR', gender: 'female' },
+      { name: 'Daniel', lang: 'pt-BR', gender: 'male' },
+      { name: 'Joana', lang: 'pt-PT', gender: null },
+    ]);
+    vi.stubGlobal('window', {});
+    expect(await listPtVoices()).toEqual([]);
   });
 
   it('genderAvailable informa se há voz do gênero', async () => {
