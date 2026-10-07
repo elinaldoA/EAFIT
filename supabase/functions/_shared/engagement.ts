@@ -7,6 +7,9 @@ export type EngagementRule = {
   per_user_hour?: boolean;
   title: string;
   body: string;
+  // Versão em inglês (null = cai no texto em português).
+  title_en?: string | null;
+  body_en?: string | null;
 };
 
 // Hora (0-23) e dia da semana (0=domingo) em Brasília, mais a data YYYY-MM-DD.
@@ -38,6 +41,12 @@ export function isRuleDue(
   if (!rule.per_user_hour && rule.send_hour !== hour) return false;
   if (!rule.weekdays || rule.weekdays.length === 0) return true;
   return rule.weekdays.includes(dow);
+}
+
+// Texto da regra no idioma do usuário; sem versão em inglês, usa o português.
+export function pickRuleText(rule: Pick<EngagementRule, 'title' | 'body' | 'title_en' | 'body_en'>, lang: 'pt' | 'en'): { title: string; body: string } {
+  if (lang === 'en' && rule.title_en && rule.body_en) return { title: rule.title_en, body: rule.body_en };
+  return { title: rule.title, body: rule.body };
 }
 
 // Troca {chave} pelo valor. Chave sem valor vira string vazia, e espaços

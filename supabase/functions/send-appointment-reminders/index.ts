@@ -11,6 +11,7 @@ import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { nowInSaoPaulo } from '../_shared/engagement.ts';
 import { buildReminderPush, canSendNow, type ReminderRow } from '../_shared/appointmentReminders.ts';
+import { loadLangs } from '../_shared/lang.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -49,6 +50,8 @@ Deno.serve(async (req) => {
     return json({ error: subsErr.message }, 500);
   }
 
+  const langs = await loadLangs(supabase, userIds);
+
   const subsByUser = new Map<string, Sub[]>();
   for (const s of (subsData || []) as Sub[]) {
     if (!subsByUser.has(s.user_id)) subsByUser.set(s.user_id, []);
@@ -62,7 +65,7 @@ Deno.serve(async (req) => {
     const subs = subsByUser.get(r.ar_user) || [];
     if (!subs.length) continue;
 
-    const push = buildReminderPush(r);
+    const push = buildReminderPush(r, langs.get(r.ar_user) ?? 'pt');
     let delivered = false;
     for (const sub of subs) {
       const result = await sendWebPush(sub, { ...push, tag: `appt-${r.ar_appt}-${r.ar_kind}` });

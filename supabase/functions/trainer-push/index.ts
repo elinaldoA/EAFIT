@@ -6,7 +6,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { corsHeadersFor } from '../_shared/cors.ts';
-import { MAX_BODY, pickRecipients, previewText } from '../_shared/trainerPush.ts';
+import { defaultMessageTitle, MAX_BODY, pickRecipients, previewText } from '../_shared/trainerPush.ts';
+import { loadLangs } from '../_shared/lang.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -42,7 +43,7 @@ Deno.serve(async (req) => {
   }
   const text = typeof payload.body === 'string' ? payload.body.trim() : '';
   if (!text || text.length > MAX_BODY) return json({ error: 'Mensagem inválida.' }, 400);
-  const title = typeof payload.title === 'string' && payload.title.trim() ? payload.title.trim().slice(0, 60) : 'Recado do seu personal';
+  const customTitle = typeof payload.title === 'string' && payload.title.trim() ? payload.title.trim().slice(0, 60) : null;
 
   const { data: links, error: linksErr } = await admin
     .from('trainer_clients')
@@ -56,12 +57,16 @@ Deno.serve(async (req) => {
 
   const { data: subs, error: subsErr } = await admin
     .from('push_subscriptions')
-    .select('endpoint, p256dh, auth')
+    .select('user_id, endpoint, p256dh, auth')
     .in('user_id', recipients);
   if (subsErr) return json({ error: subsErr.message }, 500);
 
+  // título padrão no idioma de cada aluno (título digitado pelo personal vale pra todos)
+  const langs = customTitle ? new Map() : await loadLangs(admin, recipients);
+
   let sent = 0;
   for (const sub of subs || []) {
+    const title = customTitle ?? defaultMessageTitle(langs.get(sub.user_id) ?? 'pt');
     const result = await sendWebPush(sub, { title, body: previewText(text), tag: 'trainer-message' });
     if (result === 'sent') sent++;
     else if (result === 'stale') await admin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);

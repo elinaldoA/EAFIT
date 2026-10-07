@@ -10,7 +10,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { saveInbox } from '../_shared/inbox.ts';
-import { isRuleDue, nowInSaoPaulo, renderTemplate, type EngagementRule } from '../_shared/engagement.ts';
+import { isRuleDue, nowInSaoPaulo, pickRuleText, renderTemplate, type EngagementRule } from '../_shared/engagement.ts';
+import { loadLangs, trVars } from '../_shared/lang.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
 
   const { data: rules, error: rulesErr } = await supabase
     .from('engagement_rules')
-    .select('kind, send_hour, weekdays, per_user_hour, title, body')
+    .select('kind, send_hour, weekdays, per_user_hour, title, body, title_en, body_en')
     .eq('enabled', true)
     .order('priority', { ascending: true });
   if (rulesErr) return json({ error: rulesErr.message }, 500);
@@ -71,11 +72,16 @@ Deno.serve(async (req) => {
       subsByUser.get(s.user_id)!.push(s);
     }
 
+    const langs = await loadLangs(supabase, list.map((c) => c.user_id));
+
     let sentUsers = 0;
     for (const c of list) {
-      const values = { nome: c.nome, ...c.vars };
-      const title = renderTemplate(rule.title, values);
-      const body = renderTemplate(rule.body, values);
+      const lang = langs.get(c.user_id) ?? 'pt';
+      const text = pickRuleText(rule, lang);
+      // sem versão em inglês da regra, o texto sai em português (vars também)
+      const values = { nome: c.nome, ...(text.title === rule.title ? c.vars : trVars(lang, c.vars)) };
+      const title = renderTemplate(text.title, values);
+      const body = renderTemplate(text.body, values);
 
       let delivered = false;
       for (const sub of subsByUser.get(c.user_id) || []) {

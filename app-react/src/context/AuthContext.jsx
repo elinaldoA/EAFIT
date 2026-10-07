@@ -5,7 +5,7 @@ import { translateAuthError, isEmailNotConfirmed, isSpecificAuthError } from '..
 import { claimLocalData, clearUserLocalData } from '../lib/localData';
 import { isAdminAccount } from '../lib/adminGuard';
 
-import { t } from '../lib/i18n';
+import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 6;
 
 // Links de e-mail (confirmação de cadastro, redefinição de senha) voltam pra
@@ -89,7 +89,7 @@ export function AuthProvider({ children }) {
     if (password.length < MIN_PASSWORD) return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
     const { data, error } = await db.auth.signUp({
       email, password,
-      options: { data: { termsAcceptedAt: new Date().toISOString() }, emailRedirectTo: appUrl() },
+      options: { data: { termsAcceptedAt: new Date().toISOString(), lang }, emailRedirectTo: appUrl() },
     });
     if (error) return { error: translateAuthError(error) };
     // Com proteção contra enumeração de e-mail ligada, cadastrar um e-mail que

@@ -40,3 +40,14 @@ Deno.test('buildResponsePush: confirmou e recusou', () => {
   assert(buildResponsePush('confirmed', 'Ana', '2026-10-20T21:30:00Z').body.includes('Ana confirmou'));
   assertEquals(buildResponsePush('declined', 'Ana', '2026-10-20T21:30:00Z').title, 'Aula recusada');
 });
+
+Deno.test('lembretes e respostas em inglês', () => {
+  const day = buildReminderPush(row(), 'en');
+  assertEquals(day.title, 'Session tomorrow 📅');
+  assert(day.body.includes('Session with Carlos'));
+  assert(day.body.includes('6:30'));
+  assert(buildReminderPush(row({ ar_status: 'pending' }), 'en').body.includes('Confirm in the app'));
+  assertEquals(buildReminderPush(row({ ar_kind: 'hour' }), 'en').title, 'Your session starts soon ⏰');
+  assertEquals(buildResponsePush('confirmed', 'Ana', '2026-10-20T21:30:00Z', 'en').title, 'Session confirmed ✅');
+  assert(buildResponsePush('declined', 'Ana', '2026-10-20T21:30:00Z', 'en').body.includes('Ana can’t make'));
+});

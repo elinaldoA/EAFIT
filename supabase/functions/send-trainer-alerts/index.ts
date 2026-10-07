@@ -10,6 +10,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
+import { loadLangs } from '../_shared/lang.ts';
 import { nowInSaoPaulo } from '../_shared/engagement.ts';
 import {
   buildAlertPush, buildWeeklyPush, groupBy, inAlertWindow, isWeeklySummaryTime, type AlertItem,
@@ -88,12 +89,13 @@ Deno.serve(async (req) => {
     const rows = (alerts || []) as AlertRow[];
     const byTrainer = groupBy(rows, (r) => r.al_trainer);
     const subs = await subsByTrainer([...byTrainer.keys()]);
+    const langs = await loadLangs(supabase, [...byTrainer.keys()]);
 
     for (const [trainerId, list] of byTrainer) {
       const trainerSubs = subs.get(trainerId) || [];
       if (!trainerSubs.length) continue;
 
-      const push = buildAlertPush(list.map((r) => ({ kind: r.al_kind, name: r.al_name, detail: r.al_detail })));
+      const push = buildAlertPush(list.map((r) => ({ kind: r.al_kind, name: r.al_name, detail: r.al_detail })), langs.get(trainerId) ?? 'pt');
       if (await pushToTrainer(trainerSubs, { ...push, tag: `trainer-alerts-${date}-${hour}` })) {
         alertsSent++;
         await markLogged(list.map((r) => ({ trainer_id: trainerId, client_id: r.al_client, kind: r.al_kind, ref: r.al_ref })));
@@ -109,12 +111,13 @@ Deno.serve(async (req) => {
     } else {
       const rows = (weekly || []) as WeeklyRow[];
       const subs = await subsByTrainer(rows.map((r) => r.wk_trainer));
+      const langs = await loadLangs(supabase, rows.map((r) => r.wk_trainer));
       for (const r of rows) {
         const trainerSubs = subs.get(r.wk_trainer) || [];
         if (!trainerSubs.length) continue;
         const push = buildWeeklyPush({
           clients: r.wk_clients, active: r.wk_active, sessions: r.wk_sessions, inactive: r.wk_inactive, top: r.wk_top,
-        });
+        }, langs.get(r.wk_trainer) ?? 'pt');
         if (await pushToTrainer(trainerSubs, { ...push, tag: `trainer-weekly-${r.wk_ref}` })) {
           weeklySent++;
           // o resumo é do próprio personal: client_id = trainer_id

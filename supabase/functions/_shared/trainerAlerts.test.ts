@@ -48,3 +48,27 @@ Deno.test('groupBy agrupa mantendo a ordem', () => {
   assertEquals([...g.keys()], ['a', 'b']);
   assertEquals(g.get('a')!.map((r) => r.n), [1, 3]);
 });
+
+Deno.test('buildAlertPush em inglês: título, detalhe e exercício traduzidos', () => {
+  assertEquals(buildAlertPush([{ kind: 'inactive', name: 'Ana', detail: 'há 5 dias' }], 'en'), {
+    title: 'Client not training',
+    body: 'Ana hasn’t trained for 5 days.',
+  });
+  assertEquals(buildAlertPush([{ kind: 'pr', name: 'Bia', detail: 'Supino Reto com Barra 80 kg' }], 'en').body, 'Bia hit a PR: Barbell Bench Press 80 kg.');
+  assertEquals(buildAlertPush([{ kind: 'pain', name: 'Caio', detail: 'Agachamento Livre (dor forte)' }], 'en').body, 'Caio reported pain: Barbell Back Squat (strong pain).');
+});
+
+Deno.test('buildAlertPush em inglês: vários alertas e "mais N"', () => {
+  const items = ['A', 'B', 'C', 'D', 'E'].map((name) => ({ kind: 'inactive' as const, name, detail: 'há 3 dias' }));
+  const p = buildAlertPush(items, 'en');
+  assertEquals(p.title, '5 alerts from your clients');
+  assertEquals(p.body.endsWith('; and 2 more.'), true);
+});
+
+Deno.test('buildWeeklyPush em inglês', () => {
+  assertEquals(buildWeeklyPush({ clients: 4, active: 3, sessions: 1, inactive: 1, top: 'Ana' }, 'en'), {
+    title: 'Your clients’ weekly summary',
+    body: '3/4 clients trained (1 workout). 1 didn’t train. Top: Ana.',
+  });
+  assertEquals(buildWeeklyPush({ clients: 2, active: 2, sessions: 5, inactive: 0, top: null }, 'en').body, '2/2 clients trained (5 workouts). Nobody skipped!');
+});

@@ -12,7 +12,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { corsHeadersFor } from '../_shared/cors.ts';
-import { previewText } from '../_shared/trainerPush.ts';
+import { previewText, replyTitle } from '../_shared/trainerPush.ts';
+import { loadLangs } from '../_shared/lang.ts';
 import { buildResponsePush } from '../_shared/appointmentReminders.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -78,7 +79,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!apptLink) return json({ sent: 0 });
 
-    const push = buildResponsePush(appt.status as 'confirmed' | 'declined', name, appt.starts_at);
+    const trainerLang = (await loadLangs(admin, [appt.trainer_id])).get(appt.trainer_id) ?? 'pt';
+    const push = buildResponsePush(appt.status as 'confirmed' | 'declined', name, appt.starts_at, trainerLang);
     return await pushToTrainer(appt.trainer_id, { ...push, tag: `appt-response-${payload.appointment_id}` });
   }
 
@@ -103,8 +105,9 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!link) return json({ sent: 0 });
 
+  const replyLang = (await loadLangs(admin, [link.trainer_id])).get(link.trainer_id) ?? 'pt';
   return await pushToTrainer(link.trainer_id, {
-    title: `Resposta de ${name}`,
+    title: replyTitle(name, replyLang),
     body: previewText(String(reply.body)),
     tag: `trainer-reply-${caller.id}`,
   });

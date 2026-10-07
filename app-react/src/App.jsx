@@ -28,6 +28,7 @@ import TrainerShell from './trainer/TrainerShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
 import { useTrainerGoalsSync } from './hooks/useTrainerGoalsSync';
+import { useSyncLang } from './hooks/useSyncLang';
 
 import { t } from './lib/i18n';
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
@@ -55,6 +56,7 @@ function Shell() {
   const { isTrainer, mode, setMode } = useTrainerMode(user?.id);
   const unreadMessages = useUnreadMessages(user?.id);
   useTrainerGoalsSync(user?.id);
+  useSyncLang(user);
   useDayRollover();
 
   // Este aparelho já teve conta logada: a tela de acesso abre em "Entrar".

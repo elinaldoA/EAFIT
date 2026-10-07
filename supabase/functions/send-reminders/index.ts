@@ -12,6 +12,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
+import { langOf } from '../_shared/lang.ts';
+import {
+  discomfortFollowupText, inactivityText, streakRiskText, waterText, weeklySummaryText, weightUpdateText,
+} from '../_shared/reminderTexts.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -199,6 +203,7 @@ Deno.serve(async (req) => {
     const meta = metaById.get(userId) || {};
     const macroAgua = Number(meta.macroAgua) > 0 ? Number(meta.macroAgua) : DEFAULT_MACRO_AGUA;
     const userSubs = subs.filter((s) => s.user_id === userId);
+    const lang = langOf(meta);
 
     const payloads = [];
 
@@ -211,11 +216,7 @@ Deno.serve(async (req) => {
       const currentMl = waterLog?.amount_ml || 0;
       const goalMl = macroAgua * 1000;
       if (currentMl < goalMl) {
-        payloads.push({
-          title: '💧 Hora de beber água',
-          body: `Você bebeu ${(currentMl / 1000).toFixed(1)}L de ${(goalMl / 1000).toFixed(1)}L hoje.`,
-          tag: `water-${date}-${time}`,
-        });
+        payloads.push({ ...waterText(lang, currentMl, goalMl), tag: `water-${date}-${time}` });
       }
     }
 
@@ -224,11 +225,7 @@ Deno.serve(async (req) => {
       if (!dates.includes(date)) {
         const streak = calcStreakEndingYesterday(dates, date);
         if (streak >= STREAK_RISK_MIN) {
-          payloads.push({
-            title: '🔥 Sua sequência está em risco!',
-            body: `Você está numa sequência de ${streak} dias. Treine hoje antes da meia-noite pra não perdê-la.`,
-            tag: `streak-risk-${date}`,
-          });
+          payloads.push({ ...streakRiskText(lang, streak), tag: `streak-risk-${date}` });
         }
       }
     }
@@ -237,11 +234,7 @@ Deno.serve(async (req) => {
       const dates = historyByUser.get(userId) || [];
       const gap = daysSinceLastWorkout(dates, date);
       if (gap !== null && gap >= INACTIVITY_MIN_GAP && gap <= INACTIVITY_MAX_GAP) {
-        payloads.push({
-          title: '💤 Sentimos sua falta',
-          body: `Já fazem ${gap} dias sem treino. Que tal voltar hoje?`,
-          tag: `inactivity-${date}`,
-        });
+        payloads.push({ ...inactivityText(lang, gap), tag: `inactivity-${date}` });
       }
     }
 
@@ -249,11 +242,7 @@ Deno.serve(async (req) => {
       const count = weeklyCountByUser.get(userId) || 0;
       const volume = Math.round(weeklyVolumeByUser.get(userId) || 0);
       const goal = Number(meta.weeklyGoal) > 0 ? Number(meta.weeklyGoal) : DEFAULT_WEEKLY_GOAL;
-      payloads.push({
-        title: count >= goal ? '🎉 Meta semanal batida!' : '📊 Resumo da semana',
-        body: `${count}/${goal} treinos concluídos · ${volume}kg de volume total.`,
-        tag: `weekly-summary-${date}`,
-      });
+      payloads.push({ ...weeklySummaryText(lang, count, goal, volume), tag: `weekly-summary-${date}` });
     }
 
     if (isWeeklySummarySlot && isNotifyEnabled(meta, 'notifyWeightUpdate')) {
@@ -263,21 +252,13 @@ Deno.serve(async (req) => {
         .eq('user_id', userId).eq('log_date', date)
         .maybeSingle();
       if (!weightLog) {
-        payloads.push({
-          title: '⚖️ Hora de atualizar seu peso',
-          body: 'Registre seu peso desta semana no Perfil pra acompanhar sua evolução.',
-          tag: `weight-update-${date}`,
-        });
+        payloads.push({ ...weightUpdateText(lang), tag: `weight-update-${date}` });
       }
     }
 
     if (isDiscomfortFollowupSlot && isNotifyEnabled(meta, 'notifyDiscomfortFollowup')) {
       for (const d of discomfortByUser.get(userId) || []) {
-        payloads.push({
-          title: '🩹 Ainda sente essa dor?',
-          body: `Você relatou desconforto ${d.severity === 'lesao' ? '(lesão)' : 'forte'} em ${d.exercise_name} há alguns dias. Ainda sente?`,
-          tag: `discomfort-followup-${d.id}`,
-        });
+        payloads.push({ ...discomfortFollowupText(lang, d.severity, d.exercise_name), tag: `discomfort-followup-${d.id}` });
       }
     }
 

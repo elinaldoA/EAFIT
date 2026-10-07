@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { isRuleDue, nowInSaoPaulo, renderTemplate } from './engagement.ts';
+import { isRuleDue, nowInSaoPaulo, pickRuleText, renderTemplate } from './engagement.ts';
 
 Deno.test('nowInSaoPaulo converte de UTC para Brasília (UTC-3)', () => {
   // 2026-10-07 02:30 UTC = 2026-10-06 23:30 em Brasília (terça-feira)
@@ -39,4 +39,12 @@ Deno.test('isRuleDue: per_user_hour roda em qualquer hora, respeitando o dia da 
   assertEquals(isRuleDue({ send_hour: 17, weekdays: null, per_user_hour: true }, 9, 3), true);
   assertEquals(isRuleDue({ send_hour: 17, weekdays: [1, 2], per_user_hour: true }, 9, 3), false);
   assertEquals(isRuleDue({ send_hour: 17, weekdays: [1, 2], per_user_hour: true }, 9, 2), true);
+});
+
+Deno.test('pickRuleText: inglês só quando a regra tem as duas versões', () => {
+  const rule = { title: 'Oi', body: 'Corpo', title_en: 'Hi', body_en: 'Body' };
+  assertEquals(pickRuleText(rule, 'en'), { title: 'Hi', body: 'Body' });
+  assertEquals(pickRuleText(rule, 'pt'), { title: 'Oi', body: 'Corpo' });
+  assertEquals(pickRuleText({ ...rule, body_en: null }, 'en'), { title: 'Oi', body: 'Corpo' });
+  assertEquals(pickRuleText({ title: 'Oi', body: 'Corpo' }, 'en'), { title: 'Oi', body: 'Corpo' });
 });

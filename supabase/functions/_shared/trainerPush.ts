@@ -1,5 +1,7 @@
 // Regras puras da Edge Function trainer-push (testáveis sem rede).
 
+import type { Lang } from './lang.ts';
+
 export const MAX_BODY = 500;
 export const MAX_RECIPIENTS = 200;
 
@@ -20,4 +22,13 @@ export function pickRecipients(requested: unknown, activeClientIds: string[]): s
     if (out.size >= MAX_RECIPIENTS) break;
   }
   return [...out];
+}
+
+// Títulos das notificações do personal, no idioma de quem recebe.
+export function replyTitle(name: string, lang: Lang = 'pt'): string {
+  return lang === 'en' ? `Reply from ${name}` : `Resposta de ${name}`;
+}
+
+export function defaultMessageTitle(lang: Lang = 'pt'): string {
+  return lang === 'en' ? 'Message from your trainer' : 'Recado do seu personal';
 }
