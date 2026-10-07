@@ -1,3 +1,6 @@
+// Ganho do alarme de descanso (0–1). Era 0.16; acima de ~0.6 a onda quadrada distorce.
+const REST_ALARM_GAIN = 0.55;
+
 function tone(ctx, freq, startTime, duration, gainValue = 0.15, type = 'sine') {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -12,11 +15,15 @@ function tone(ctx, freq, startTime, duration, gainValue = 0.15, type = 'sine') {
 
 function getAudioCtx() {
   const Ctx = window.AudioContext || window.webkitAudioContext;
-  return new Ctx();
+  const ctx = new Ctx();
+  // Em alguns navegadores móveis o contexto nasce suspenso e o alarme sairia mudo.
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
 }
 
 // Alarme de despertador: rajadas de bips curtos em onda quadrada (mais "áspera"
-// que uma senoide), duas rodadas de 3 bips como um despertador digital tocando.
+// que uma senoide), três rodadas de 3 bips como um despertador digital tocando.
+// Volume alto de propósito: o celular costuma estar na bancada ou no bolso.
 export function playRestDoneSound() {
   try {
     const ctx = getAudioCtx();
@@ -24,11 +31,11 @@ export function playRestDoneSound() {
     const gap = 0.09;
     const roundGap = 0.22;
     const beepsPerRound = 3;
-    const rounds = 2;
+    const rounds = 3;
     let t = ctx.currentTime;
     for (let r = 0; r < rounds; r++) {
       for (let b = 0; b < beepsPerRound; b++) {
-        tone(ctx, 1046.5, t, beepDur, 0.16, 'square');
+        tone(ctx, 1046.5, t, beepDur, REST_ALARM_GAIN, 'square');
         t += beepDur + gap;
       }
       t += roundGap;

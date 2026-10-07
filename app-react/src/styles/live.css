@@ -175,8 +175,8 @@
   margin: 0 14px 10px;
   border-radius: var(--r-lg);
   background: var(--surface-2);
-  border: 1px solid var(--primary);
-  box-shadow: 0 6px 24px var(--primary-glow);
+  border: 1px solid var(--rest-accent);
+  box-shadow: 0 6px 24px var(--rest-accent-glow);
   animation: fadeUp 0.2s ease both;
 }
 .live__rest--done { border-color: var(--success); }
@@ -184,7 +184,7 @@
 .live__rest-bar {
   position: absolute;
   inset: 0 auto 0 0;
-  background: var(--primary-glow);
+  background: var(--rest-accent-glow);
   transition: width 0.25s linear;
 }
 .live__rest--done .live__rest-bar { background: rgba(74, 222, 128, .15); }
@@ -207,6 +207,7 @@
   color: var(--text-muted);
 }
 .live__rest-time {
+  color: var(--rest-accent);
   font-size: 1.6rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;

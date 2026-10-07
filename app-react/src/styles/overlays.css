@@ -59,9 +59,9 @@ body.modal-open { overflow: hidden; }
   align-items: center;
   gap: 18px;
   background: var(--surface-2);
-  border: 1px solid var(--border-2);
+  border: 1px solid var(--rest-accent);
   border-radius: var(--r-lg, 20px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), 0 0 36px var(--rest-accent-glow);
   padding: 28px 24px;
   width: 100%;
   max-width: 320px;
@@ -111,9 +111,10 @@ body.modal-open { overflow: hidden; }
 
 .rest-modal__progress {
   fill: none;
-  stroke: var(--primary);
+  stroke: var(--rest-accent);
   stroke-width: 12;
   stroke-linecap: round;
+  filter: drop-shadow(0 0 6px var(--rest-accent-glow));
   transition: stroke-dashoffset 1s linear;
 }
 
@@ -164,7 +165,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .rest-modal__release:not(:disabled) {
-  background: var(--primary);
+  background: var(--rest-accent);
   color: #fff;
   cursor: pointer;
 }
