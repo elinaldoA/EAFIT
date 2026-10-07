@@ -12,7 +12,7 @@ import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
 
-import { t, locale } from '../lib/i18n';
+import { t, locale, tEx, tFoco } from '../lib/i18n';
 export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
   useBackToClose(onClose);
   const { day, durationMs, totalCarga, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets } = summary;
@@ -63,7 +63,7 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
             <div className="summary-modal__header">
               <div>
                 <h2 className="summary-modal__title">{t('🏁 Resumo do treino')}</h2>
-                <p className="summary-modal__subtitle">{t(day.dia)} · {day.foco}</p>
+                <p className="summary-modal__subtitle">{t(day.dia)} · {tFoco(day.foco)}</p>
               </div>
               <button type="button" className="summary-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
             </div>
@@ -121,7 +121,7 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
                   <div className="summary-table">
                     {exercises.map(ex => (
                       <div className="summary-table__row" key={ex.nome}>
-                        <div className="summary-table__name">{ex.nome}</div>
+                        <div className="summary-table__name">{tEx(ex.nome)}</div>
                         <div className="summary-table__sets">
                           {ex.sets.map(s => (
                             <span key={s.n} className={`summary-table__chip${s.done ? ' summary-table__chip--done' : ''}`}>

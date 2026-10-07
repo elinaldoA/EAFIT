@@ -3,7 +3,7 @@ import { todayDate } from '../data/treinoData';
 import { fmtDate } from '../lib/utils';
 import { fetchRecentDiscomfort, logDiscomfort, summarizeDiscomfortByExercise } from '../lib/discomfort';
 
-import { t } from '../lib/i18n';
+import { t, tEx } from '../lib/i18n';
 const DISCOMFORT_LABELS = { leve: t('Leve'), moderada: t('Moderada'), forte: t('Forte'), lesao: t('Lesão') };
 
 export function DiscomfortPanel({ userId, exerciseName, toast }) {
@@ -91,7 +91,7 @@ export function DiscomfortHistory({ reports }) {
           <div className="discomfort-history__row" key={r.id}>
             <div className="discomfort-history__top">
               <span className="discomfort-history__name">
-                {r.exercise_name}
+                {tEx(r.exercise_name)}
                 {count > 1 && <span className="discomfort-history__badge">×{count}</span>}
               </span>
               <span className={`discomfort-history__severity discomfort-history__severity--${r.severity}`}>

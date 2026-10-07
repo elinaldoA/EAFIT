@@ -10,7 +10,7 @@ import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
 
-import { t, locale } from '../lib/i18n';
+import { t, locale, tFoco } from '../lib/i18n';
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
 // TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
 // que é quem tem o cronômetro e as ações de série do dia.
@@ -246,7 +246,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
           />
           <div className="day-card__info">
             <div className="day-card__name">{t(day.dia)}</div>
-            <div className="day-card__focus">{day.foco}</div>
+            <div className="day-card__focus">{tFoco(day.foco)}</div>
           </div>
         </div>
         <div className="day-card__right">

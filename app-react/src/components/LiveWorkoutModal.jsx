@@ -9,7 +9,7 @@ import { useWakeLock } from '../hooks/useWakeLock';
 import { isCardioItem } from '../lib/cardio';
 import ExerciseDemo from './ExerciseDemo';
 
-import { t } from '../lib/i18n';
+import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
 function isExerciseDone(ex) {
   const n = setCountOf(ex);
   return n > 0 && allSetsDone(ex, n);
@@ -90,7 +90,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
         <button type="button" className="live__icon-btn" aria-label={t('Sair do modo treino')} onClick={onClose}>✕</button>
         <div className="live__heading">
           <span className="live__day">{t(day.dia)}</span>
-          <span className="live__focus">{day.foco}</span>
+          <span className="live__focus">{tFoco(day.foco)}</span>
         </div>
         <div className="live__top-right">
           <div className={`live__clock${timer.status === 'paused' ? ' live__clock--paused' : ''}`} aria-label={t('Tempo de treino')}>
@@ -110,7 +110,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
         {items.map((item, i) => (
           <button
             key={item.nome} type="button" role="tab"
-            aria-selected={i === index} aria-label={item.nome}
+            aria-selected={i === index} aria-label={tEx(item.nome)}
             className={[
               'live__step',
               i === index && 'live__step--current',
@@ -127,14 +127,14 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
           <span className="live__kicker">
             {t('{v1} {v2}{setsDone}/{setsTotal} séries no total', { v1: isPos ? 'Pós-treino' : `Exercício ${index + 1} de ${day.exercicios.length}`, v2: ' · ', setsDone, setsTotal })}
           </span>
-          <h2 className="live__ex-name">{ex.nome}</h2>
+          <h2 className="live__ex-name">{tEx(ex.nome)}</h2>
           <div className="live__chips">
             {setCountOf(ex) > 0 && !isCardioItem(ex) && <span className="live__chip">{t('{series} séries', { series: ex.series })}</span>}
-            <span className="live__chip">{ex.reps}{setCountOf(ex) > 0 && !isCardioItem(ex) ? ' reps' : ''}</span>
+            <span className="live__chip">{tReps(ex.reps)}{setCountOf(ex) > 0 && !isCardioItem(ex) ? ' reps' : ''}</span>
             {ex.descanso && ex.descanso !== '-' && <span className="live__chip">⏱ {ex.descanso}</span>}
             <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} variant="chip" />
           </div>
-          {ex.tecnica && <p className="live__tecnica">💡 {ex.tecnica}</p>}
+          {ex.tecnica && <p className="live__tecnica">💡 {tTec(ex.tecnica)}</p>}
         </div>
 
         {setCountOf(ex) > 0 ? (
@@ -147,7 +147,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
 
         {exDone && (
           <div className="live__done-note" role="status">
-            {t('✅ Exercício concluído')}{next ? <> {t('· próximo:')} <strong>{next.nome}</strong></> : ''}
+            {t('✅ Exercício concluído')}{next ? <> {t('· próximo:')} <strong>{tEx(next.nome)}</strong></> : ''}
           </div>
         )}
       </main>

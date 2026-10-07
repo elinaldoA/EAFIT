@@ -16,7 +16,7 @@ import ClientGoals from './ClientGoals';
 import ClientPhotos from './ClientPhotos';
 import ClientAppointments from './ClientAppointments';
 
-import { t } from '../lib/i18n';
+import { t, tEx } from '../lib/i18n';
 const GOALS = {
   massa: t('Ganho de massa'), forca: t('Aumento de força'), emagrecer: t('Emagrecimento'),
   definicao: t('Definição muscular'), saude: t('Saúde e bem-estar'), resistencia: t('Resistência / Condicionamento'),
@@ -154,7 +154,7 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
               <ul className="measure-deltas">
                 {detail.discomfort.slice(0, 8).map((x, i) => (
                   <li key={i}>
-                    <span>{x.exercise} <small>({fmtDate(x.d)})</small></span>
+                    <span>{tEx(x.exercise)} <small>({fmtDate(x.d)})</small></span>
                     <strong className={x.severity === 'forte' || x.severity === 'lesao' ? 'measure-deltas__up' : ''}>{SEVERITY[x.severity] || x.severity}</strong>
                   </li>
                 ))}
@@ -167,7 +167,7 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
               <div className="dash-card__title">{t('Cargas máximas (90 dias)')}</div>
               <ul className="measure-deltas">
                 {detail.loads.map(l => (
-                  <li key={l.exercise}><span>{l.exercise}</span><span><strong>{fmt(l.max)} kg</strong> · {t('{n} treino(s)', { n: l.sessions })}</span></li>
+                  <li key={l.exercise}><span>{tEx(l.exercise)}</span><span><strong>{fmt(l.max)} kg</strong> · {t('{n} treino(s)', { n: l.sessions })}</span></li>
                 ))}
               </ul>
             </div>

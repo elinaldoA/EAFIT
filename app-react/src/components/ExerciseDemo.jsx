@@ -5,7 +5,7 @@ import { getExerciseMedia, MEDIA_CREDIT } from '../data/exerciseMedia';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useCustomExerciseMedia } from '../hooks/useCustomExerciseMedia';
 
-import { t } from '../lib/i18n';
+import { t, tEx, tTec } from '../lib/i18n';
 // Devagar o bastante pra acompanhar cada posição (troca com fade — ver live.css).
 const FRAME_MS = 1600;
 const SPEEDS = [{ rate: 1, label: t('Normal') }, { rate: 0.5, label: t('Câmera lenta') }];
@@ -155,7 +155,9 @@ function MediaStage({ nome, media }) {
   );
 }
 
-function ExerciseDemoModal({ nome, tecnica, media, onClose }) {
+function ExerciseDemoModal({ nome: nomePt, tecnica: tecnicaPt, media, onClose }) {
+  const nome = tEx(nomePt);
+  const tecnica = tTec(tecnicaPt);
   useBackToClose(onClose);
 
   useEffect(() => {

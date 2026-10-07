@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { fetchSwapContext, pickAlternatives } from '../lib/exerciseSwap';
 import { substituteExercise } from '../lib/workoutPlans';
 
-import { t } from '../lib/i18n';
+import { t, tEx } from '../lib/i18n';
 // "Trocar exercício": lista alternativas da biblioteca (mesmo grupo muscular e
 // tipo, no nível do usuário, fora do dia e sem o que já machucou) e troca no
 // plano. A prescrição (séries/reps/descanso) do dia é mantida; o histórico de
@@ -36,7 +36,7 @@ export default function ExerciseSwap({ ex, day, user, toast, onSwapped }) {
       await substituteExercise(ex.id, {
         nome: option.nome, series: ex.series, reps: ex.reps, descanso: ex.descanso, tecnica: option.tecnica || '',
       });
-      toast(t('🔄 Trocado por {nome}', { nome: option.nome }));
+      toast(t('🔄 Trocado por {nome}', { nome: tEx(option.nome) }));
       setOpen(false);
       await onSwapped();
     } catch (err) {
@@ -67,7 +67,7 @@ export default function ExerciseSwap({ ex, day, user, toast, onSwapped }) {
               key={o.nome} type="button" className="ex-swap__option"
               disabled={!!swapping} onClick={() => handlePick(o)}
             >
-              <span className="ex-swap__name">{swapping === o.nome ? t('Trocando…') : o.nome}</span>
+              <span className="ex-swap__name">{swapping === o.nome ? t('Trocando…') : tEx(o.nome)}</span>
               {o.equipamento && <span className="ex-swap__meta">{o.equipamento}</span>}
             </button>
           ))}

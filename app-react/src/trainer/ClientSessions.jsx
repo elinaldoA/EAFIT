@@ -3,7 +3,7 @@ import { fmtDate } from '../lib/utils';
 import { buildSessions, formatSets, formatDurationMin, fetchClientSessions, progressionSuggestions } from '../lib/trainerInsights';
 import Loading from '../components/Loading';
 
-import { t } from '../lib/i18n';
+import { t, tEx } from '../lib/i18n';
 // Últimos treinos do aluno, série a série, com a evolução de carga em relação
 // à sessão anterior de cada exercício.
 export default function ClientSessions({ clientId }) {
@@ -33,7 +33,7 @@ export default function ClientSessions({ clientId }) {
           {suggestions.map(s => (
             <li key={s.name} className="session-ex">
               <span>
-                <strong>{s.name}</strong>
+                <strong>{tEx(s.name)}</strong>
                 <small>{s.kind === 'subir'
                   ? t('Fez {v1} kg com 12+ repetições nas últimas 2 vezes', { v1: fmtKg(s.top) })
                   : t('Repetiu {v1} kg nas últimas 3 vezes sem ganhar repetições', { v1: fmtKg(s.top) })}</small>
@@ -70,7 +70,7 @@ export default function ClientSessions({ clientId }) {
                 <ul className="measure-deltas">
                   {s.exercises.map(e => (
                     <li key={e.name} className="session-ex">
-                      <span><strong>{e.name}</strong><small>{formatSets(e.sets)}</small></span>
+                      <span><strong>{tEx(e.name)}</strong><small>{formatSets(e.sets)}</small></span>
                       {e.delta !== null && e.delta !== 0 && (
                         <span className={e.delta > 0 ? 'measure-deltas__down' : 'measure-deltas__up'}>
                           {e.delta > 0 ? '↑' : '↓'} {String(Math.abs(e.delta)).replace('.', ',')} kg

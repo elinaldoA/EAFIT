@@ -5,7 +5,7 @@ import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE, MUSCLE_LABELS } from '../data/bodyMuscleMap';
 import bodyAnatomyImg from '../assets/anatomia.jpg';
 
-import { t, locale } from './i18n';
+import { t, locale, tFoco } from './i18n';
 // Desenha os cards de compartilhamento num canvas offscreen (mesmo padrão de canvas
 // usado em lib/imageUtils.js para compressão de imagem) e retorna um Blob PNG pronto
 // pra compartilhar ou baixar.
@@ -465,7 +465,7 @@ export async function renderWorkoutSummaryCard(summary) {
   ctx.fillText(t('TREINO CONCLUÍDO'), PAD_X + 64, y);
   setTracking(ctx, 0);
 
-  const title = String(day?.foco || day?.dia || t('Treino')).toUpperCase();
+  const title = String(tFoco(day?.foco) || t(day?.dia) || t('Treino')).toUpperCase();
   // Diminui a fonte até o foco caber em 2 linhas sem cortar; só abaixo do
   // mínimo é que ele é abreviado com "…".
   let titlePx = 104;

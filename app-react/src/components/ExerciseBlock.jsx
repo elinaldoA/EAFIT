@@ -14,7 +14,7 @@ import CardioRow from './CardioRow';
 import ExerciseDemo from './ExerciseDemo';
 import ExerciseSwap from './ExerciseSwap';
 
-import { t } from '../lib/i18n';
+import { t, tEx, tReps } from '../lib/i18n';
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
 // destaque no próprio cabeçalho, então o bloco omite os dele.
 export default function ExerciseBlock({ ex, day, bump, onRestStart, open, version, onToggleAll, onFillOthers, onApplySuggestion, started, hideName = false }) {
@@ -50,8 +50,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
       <div className="ex-block">
         <div className="ex-block__header">
           <div className="ex-block__titles">
-            <span className="ex-name">{ex.nome}</span>
-            <span className="ex-block__meta">{ex.reps}</span>
+            <span className="ex-name">{tEx(ex.nome)}</span>
+            <span className="ex-block__meta">{tReps(ex.reps)}</span>
           </div>
           {!hideName && <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />}
         </div>
@@ -71,7 +71,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
         nome: alternative.nome, series: ex.series, reps: ex.reps,
         descanso: ex.descanso, tecnica: alternative.tecnica,
       });
-      toast(t('🔄 Trocado por {nome}', { nome: alternative.nome }));
+      toast(t('🔄 Trocado por {nome}', { nome: tEx(alternative.nome) }));
       await refreshPlan();
     } catch (err) {
       console.error('substituteExercise:', err);
@@ -90,8 +90,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
         <div className="ex-block__titles">
           {!hideName && (
             <>
-              <span className="ex-name">{ex.nome}</span>
-              <span className="ex-block__meta">{t('{reps} reps · desc. {descanso}', { reps: ex.reps, descanso: ex.descanso })}</span>
+              <span className="ex-name">{tEx(ex.nome)}</span>
+              <span className="ex-block__meta">{t('{reps} reps · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso })}</span>
               <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
           )}
@@ -130,7 +130,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
       {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
       {showSwap && (
         <button type="button" className="ex-block__swap-btn" disabled={substituting} onClick={handleSubstitute}>
-          {substituting ? t('Trocando…') : t('🔄 Trocar por: {nome}', { nome: alternative.nome })}
+          {substituting ? t('Trocando…') : t('🔄 Trocar por: {nome}', { nome: tEx(alternative.nome) })}
         </button>
       )}
       {canSwap && <ExerciseSwap ex={ex} day={day} user={user} toast={toast} onSwapped={refreshPlan} />}

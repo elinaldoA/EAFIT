@@ -8,7 +8,7 @@ import { isNotifyEnabled } from '../lib/notifications';
 import { postActivity } from '../lib/friends';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 
-import { t } from '../lib/i18n';
+import { t, tEx } from '../lib/i18n';
 export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
   const { user } = useAuth();
   const { saveSetState, workoutIds } = useWorkout();
@@ -123,12 +123,12 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, st
               workoutId: wId ?? workoutIds[day.dia], setNumber: n,
             });
             if (pr) {
-              toast(t('🏆 Novo recorde em {nome}!', { nome: ex.nome }));
+              toast(t('🏆 Novo recorde em {nome}!', { nome: tEx(ex.nome) }));
               postActivity('recorde', t('Novo recorde em {nome}', { nome: ex.nome }), `${cargaNum}kg`);
               if (isNotifyEnabled(user.user_metadata, 'notifyRecords')) {
                 sendPushToSelf({
                   title: t('🏆 Novo recorde!'),
-                  body: `${ex.nome}: ${cargaNum}kg`,
+                  body: `${tEx(ex.nome)}: ${cargaNum}kg`,
                   tag: `pr-${ex.nome}`,
                 }).catch(err => console.error('sendPushToSelf:', err));
               }

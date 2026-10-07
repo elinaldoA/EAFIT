@@ -21,7 +21,7 @@ import Skeleton from '../components/Skeleton';
 import { Heatmap, WeeklyBars, PRList, WeekCompare, LoadHistory } from '../components/DashCharts';
 import { DiscomfortPanel, DiscomfortHistory } from '../components/DiscomfortWidgets';
 
-import { t } from '../lib/i18n';
+import { t, tEx, tFoco } from '../lib/i18n';
 const TABS = [
   { key: 'treinos', label: t('Treinos') },
   { key: 'recordes', label: t('Recordes') },
@@ -71,7 +71,7 @@ export default function DashPage({ active }) {
     if (selectedView === 'today') {
       const active = day && todayCompleted ? getMuscleGroupsForDay(day) : new Set();
       const subtitle = day
-        ? (todayCompleted ? t('Foco: {foco}', { foco: day.foco }) : t('{foco} — treino de hoje ainda não concluído (sem marcações)', { foco: day.foco }))
+        ? (todayCompleted ? t('Foco: {foco}', { foco: tFoco(day.foco) }) : t('{foco} — treino de hoje ainda não concluído (sem marcações)', { foco: tFoco(day.foco) }))
         : t('Sem treino planejado para hoje');
       return { viewActiveGroups: active, selectedSubtitle: subtitle };
     }
@@ -83,7 +83,7 @@ export default function DashPage({ active }) {
         const planDay = activePlanDays.find(d => d.dia === w.day_of_week);
         const active = w.completed && planDay ? getMuscleGroupsForDay(planDay) : new Set();
         const subtitle = w.completed
-          ? t('Treino concluído em {v1} (Foco: {v2})', { v1: fmtDate(w.workout_date), v2: planDay?.foco || 'Geral' })
+          ? t('Treino concluído em {v1} (Foco: {v2})', { v1: fmtDate(w.workout_date), v2: tFoco(planDay?.foco || 'Geral') })
           : t('Treino de {day_of_week} ({v1}) não foi concluído (sem marcações)', { day_of_week: w.day_of_week, v1: fmtDate(w.workout_date) });
         return { viewActiveGroups: active, selectedSubtitle: subtitle };
       }
@@ -182,7 +182,7 @@ export default function DashPage({ active }) {
               const planDay = activePlanDays.find(d => d.dia === w.day_of_week);
               return (
                 <option key={w.id} value={`workout-${w.id}`}>
-                  {fmtDate(w.workout_date)} · {w.day_of_week}{planDay ? ` (${planDay.foco})` : ''}
+                  {fmtDate(w.workout_date)} · {w.day_of_week}{planDay ? ` (${tFoco(planDay.foco)})` : ''}
                 </option>
               );
             })}
@@ -239,7 +239,7 @@ export default function DashPage({ active }) {
           <div className="dash-card__title">{t('Evolução de carga')}</div>
           <select className="input input--sm" value={exercise} onChange={e => setSelectedExercise(e.target.value)} aria-label={t('Exercício')}>
             {!exercise && <option value="">{t('Selecione um exercício')}</option>}
-            {exercises.map(name => <option key={name} value={name}>{name}</option>)}
+            {exercises.map(name => <option key={name} value={name}>{tEx(name)}</option>)}
           </select>
           <div className="line-chart-wrap">
             {loading ? <Skeleton height={130} /> : (

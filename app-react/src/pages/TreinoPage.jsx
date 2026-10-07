@@ -15,7 +15,7 @@ import DailyCheckin from '../components/DailyCheckin';
 import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
 
-import { t } from '../lib/i18n';
+import { t, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
   const { user } = useAuth();
   const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating } = useWorkout();
@@ -95,7 +95,7 @@ export default function TreinoPage() {
               <div
                 key={d.dia}
                 className={`week-strip__day${isDone ? ' week-strip__day--done' : ''}${isToday ? ' week-strip__day--today' : ''}`}
-                title={`${t(d.dia)} — ${d.foco}${isDone ? t('(concluído)') : ''}`}
+                title={`${t(d.dia)} — ${tFoco(d.foco)}${isDone ? t('(concluído)') : ''}`}
               >
                 <span className="week-strip__dot" aria-hidden="true">{isDone ? '✓' : ''}</span>
                 <span className="week-strip__label">{t(d.dia).slice(0, 3)}</span>
@@ -163,7 +163,7 @@ function TodayCard({ day, sets, done, onStart }) {
       <div className="today-card__top">
         <div>
           <span className="today-card__kicker">{done ? t('Treino de hoje concluído') : t('Treino de hoje')}</span>
-          <h2 className="today-card__title">{day.foco}</h2>
+          <h2 className="today-card__title">{tFoco(day.foco)}</h2>
           <span className="today-card__meta">
             {t('{dia} · {length} exercícios {v1}', { dia: t(day.dia), length: day.exercicios.length, v1: hasSets && ` · ${sets.done}/${sets.total} séries` })}
           </span>

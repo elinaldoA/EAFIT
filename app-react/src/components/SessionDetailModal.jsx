@@ -8,7 +8,7 @@ import { compareExercise, fetchPreviousBests, fmtVolume } from '../lib/workoutHi
 import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
 
-import { t, locale } from '../lib/i18n';
+import { t, locale, tEx } from '../lib/i18n';
 function fmtKg(n) {
   return `${n.toLocaleString(locale, { maximumFractionDigits: 1 })}kg`;
 }
@@ -103,7 +103,7 @@ export default function SessionDetailModal({ session, onClose }) {
                 {session.exercises.map(ex => (
                   <div className="summary-table__row" key={ex.nome}>
                     <div className="session-ex__head">
-                      <div className="summary-table__name">{ex.nome}</div>
+                      <div className="summary-table__name">{tEx(ex.nome)}</div>
                       {previous === null
                         ? (ex.best && <span className="trend trend--loading" aria-label={t('Comparando…')}>…</span>)
                         : <TrendBadge cmp={compareExercise(ex.best, previous.get(ex.nome))} />}

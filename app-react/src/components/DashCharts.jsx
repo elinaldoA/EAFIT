@@ -2,7 +2,7 @@ import { todayDate } from '../data/treinoData';
 import { fmtDate, parseLocalDate, toDateStr, getWeekStart } from '../lib/utils';
 import { estimateOneRepMax } from '../lib/records';
 
-import { t, locale } from '../lib/i18n';
+import { t, locale, tEx } from '../lib/i18n';
 export function Heatmap({ workouts }) {
   const dateMap = {};
   workouts.forEach(w => { dateMap[w.workout_date] = w.completed ? 'done' : 'miss'; });
@@ -105,7 +105,7 @@ export function PRList({ logs }) {
       {sorted.map(([name, { val, date, oneRm }]) => (
         <div className="pr-row" key={name}>
           <div className="pr-row__left">
-            <div className="pr-row__name">{name}</div>
+            <div className="pr-row__name">{tEx(name)}</div>
             <div className="pr-row__bar"><div style={{ width: `${(val / top) * 100}%` }} /></div>
           </div>
           <div className="pr-row__right">
