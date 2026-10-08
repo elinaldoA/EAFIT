@@ -1,0 +1,8 @@
+recovery:
+{{ if eq (printf "%v" .Data.lang) "en" }}Reset your EAFIT password{{ else }}Redefinir sua senha do EAFIT{{ end }}
+
+confirmation:
+{{ if eq (printf "%v" .Data.lang) "en" }}Confirm your email on EAFIT{{ else }}Confirme seu e-mail no EAFIT{{ end }}
+
+email_change:
+{{ if eq (printf "%v" .Data.lang) "en" }}Confirm your new email on EAFIT{{ else }}Confirme seu novo e-mail no EAFIT{{ end }}

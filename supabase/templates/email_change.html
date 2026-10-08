@@ -1,0 +1,125 @@
+{{ if eq (printf "%v" .Data.lang) "en" }}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light dark" />
+<meta name="supported-color-schemes" content="light dark" />
+<title>Confirm your new email on EAFIT</title>
+<style>
+@media (prefers-color-scheme: dark) {
+  .page { background: #0b0b0f !important; }
+  .card { background: #16161a !important; border-color: #26262b !important; }
+  .heading { color: #ececef !important; }
+  .text { color: #d4d4d8 !important; }
+  .eyebrow { color: #fb923c !important; }
+  .muted, .rule, .footer, .footer a { color: #a1a1aa !important; }
+  .rule { border-color: #26262b !important; }
+  .linkbox { background: #1c1c21 !important; }
+  .linkbox, .linkbox a { color: #a1a1aa !important; }
+}
+@media (max-width: 480px) {
+  .pad { padding-left: 22px !important; padding-right: 22px !important; }
+  .heading { font-size: 22px !important; }
+}
+</style>
+</head>
+<body class="page" style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;">
+<div class="preheader" style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f4f4f5;">Confirm the email change for your account.</div>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f5">
+<tr><td align="center" style="padding:32px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+<tr><td class="pad" bgcolor="#0e0e12" style="padding:22px 32px;background:#0e0e12;border-radius:18px 18px 0 0;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+<td style="padding:0 14px 0 0;"><a href="https://eafit.com.br/"><img src="https://eafit.com.br/app/icon-192.png" width="48" height="48" alt="" style="display:block;border:0;border-radius:12px;" /></a></td>
+<td style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<div style="font-size:20px;line-height:1.2;font-weight:800;letter-spacing:.14em;color:#ffffff;">EAFIT</div>
+<div style="font-size:12.5px;line-height:1.4;color:#a1a1aa;">Your training, your way</div>
+</td>
+</tr></table>
+</td></tr>
+<tr><td bgcolor="#f97316" height="4" style="height:4px;font-size:0;line-height:0;background:#f97316;">&nbsp;</td></tr>
+<tr><td class="card pad" bgcolor="#ffffff" style="padding:34px 32px 30px;background:#ffffff;border:1px solid #e4e4e7;border-top:0;border-radius:0 0 18px 18px;">
+<p class="eyebrow" style="margin:0 0 10px;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c2410c;">Account security</p>
+<h1 class="heading" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:800;color:#18181b;">Confirm your new email</h1>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">You asked to change the email of your EAFIT account from {{ .Email }} to {{ .NewEmail }}.</p>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">Tap the button below to confirm the change.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="#f97316" style="border-radius:12px;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=email_change" style="display:inline-block;padding:15px 30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.2;font-weight:700;color:#0e0e12;text-decoration:none;border-radius:12px;">Confirm new email</a></td></tr></table>
+<p class="muted" style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">If the button does not work, copy and paste this address into your browser:</p>
+<p class="linkbox" style="margin:0 0 24px;padding:12px 14px;font-size:12px;line-height:1.5;color:#52525b;background:#f4f4f5;border-radius:10px;word-break:break-all;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=email_change" style="color:#52525b;text-decoration:none;">{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=email_change</a></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule" style="padding:18px 0 0;border-top:1px solid #e4e4e7;font-size:13px;line-height:1.55;color:#71717a;">Did not request this? Ignore this email: nothing changes in your account.</td></tr></table>
+</td></tr>
+<tr><td class="footer pad" align="center" style="padding:24px 32px 0;font-size:12.5px;line-height:1.7;color:#71717a;">
+<a href="https://eafit.com.br/app/" style="color:#71717a;">Open the app</a> &nbsp;·&nbsp;
+<a href="https://eafit.com.br/app/legal/termos.html" style="color:#71717a;">Terms of Use</a> &nbsp;·&nbsp;
+<a href="https://eafit.com.br/app/legal/privacidade.html" style="color:#71717a;">Privacy</a><br />
+Need help? Write to <a href="mailto:contato.eafit@gmail.com" style="color:#71717a;">contato.eafit@gmail.com</a><br />
+You are receiving this email because you have an EAFIT account.
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>{{ else }}<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light dark" />
+<meta name="supported-color-schemes" content="light dark" />
+<title>Confirme seu novo e-mail no EAFIT</title>
+<style>
+@media (prefers-color-scheme: dark) {
+  .page { background: #0b0b0f !important; }
+  .card { background: #16161a !important; border-color: #26262b !important; }
+  .heading { color: #ececef !important; }
+  .text { color: #d4d4d8 !important; }
+  .eyebrow { color: #fb923c !important; }
+  .muted, .rule, .footer, .footer a { color: #a1a1aa !important; }
+  .rule { border-color: #26262b !important; }
+  .linkbox { background: #1c1c21 !important; }
+  .linkbox, .linkbox a { color: #a1a1aa !important; }
+}
+@media (max-width: 480px) {
+  .pad { padding-left: 22px !important; padding-right: 22px !important; }
+  .heading { font-size: 22px !important; }
+}
+</style>
+</head>
+<body class="page" style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;">
+<div class="preheader" style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f4f4f5;">Confirme a troca do e-mail da sua conta.</div>
+<table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f5">
+<tr><td align="center" style="padding:32px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+<tr><td class="pad" bgcolor="#0e0e12" style="padding:22px 32px;background:#0e0e12;border-radius:18px 18px 0 0;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+<td style="padding:0 14px 0 0;"><a href="https://eafit.com.br/"><img src="https://eafit.com.br/app/icon-192.png" width="48" height="48" alt="" style="display:block;border:0;border-radius:12px;" /></a></td>
+<td style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<div style="font-size:20px;line-height:1.2;font-weight:800;letter-spacing:.14em;color:#ffffff;">EAFIT</div>
+<div style="font-size:12.5px;line-height:1.4;color:#a1a1aa;">Seu treino, do seu jeito</div>
+</td>
+</tr></table>
+</td></tr>
+<tr><td bgcolor="#f97316" height="4" style="height:4px;font-size:0;line-height:0;background:#f97316;">&nbsp;</td></tr>
+<tr><td class="card pad" bgcolor="#ffffff" style="padding:34px 32px 30px;background:#ffffff;border:1px solid #e4e4e7;border-top:0;border-radius:0 0 18px 18px;">
+<p class="eyebrow" style="margin:0 0 10px;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c2410c;">Segurança da conta</p>
+<h1 class="heading" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:800;color:#18181b;">Confirme seu novo e-mail</h1>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">Você pediu para trocar o e-mail da sua conta no EAFIT de {{ .Email }} para {{ .NewEmail }}.</p>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">Toque no botão abaixo para confirmar a troca.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="#f97316" style="border-radius:12px;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=email_change" style="display:inline-block;padding:15px 30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.2;font-weight:700;color:#0e0e12;text-decoration:none;border-radius:12px;">Confirmar novo e-mail</a></td></tr></table>
+<p class="muted" style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">Se o botão não funcionar, copie e cole este endereço no navegador:</p>
+<p class="linkbox" style="margin:0 0 24px;padding:12px 14px;font-size:12px;line-height:1.5;color:#52525b;background:#f4f4f5;border-radius:10px;word-break:break-all;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=email_change" style="color:#52525b;text-decoration:none;">{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=email_change</a></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule" style="padding:18px 0 0;border-top:1px solid #e4e4e7;font-size:13px;line-height:1.55;color:#71717a;">Não pediu isso? Ignore este e-mail: nada muda na sua conta.</td></tr></table>
+</td></tr>
+<tr><td class="footer pad" align="center" style="padding:24px 32px 0;font-size:12.5px;line-height:1.7;color:#71717a;">
+<a href="https://eafit.com.br/app/" style="color:#71717a;">Abrir o app</a> &nbsp;·&nbsp;
+<a href="https://eafit.com.br/app/legal/termos.html" style="color:#71717a;">Termos de Uso</a> &nbsp;·&nbsp;
+<a href="https://eafit.com.br/app/legal/privacidade.html" style="color:#71717a;">Privacidade</a><br />
+Precisa de ajuda? Escreva para <a href="mailto:contato.eafit@gmail.com" style="color:#71717a;">contato.eafit@gmail.com</a><br />
+Você está recebendo este e-mail porque tem uma conta no EAFIT.
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>{{ end }}

@@ -125,8 +125,23 @@ passos manuais:
 - **Leaked password protection**: ativar em Authentication → Policies no dashboard do
   Supabase (não dá pra fazer via CLI sem risco de sobrescrever outras configs de Auth).
 - **E-mail transacional**: o SMTP embutido do Supabase tem limite baixo de e-mails/hora.
-  Se confirmação de cadastro ou reset de senha começarem a falhar silenciosamente com
-  mais gente se cadastrando, configurar um provedor próprio (Resend, SES, etc.) em
-  Authentication → Email Templates → SMTP.
+  O envio passa a ser pela conta Gmail do projeto (`contato.eafit@gmail.com`, limite de
+  ~500 destinatários/dia), o que exige três passos manuais:
+  1. Na conta Google: ligar a verificação em duas etapas e criar uma **senha de app**
+     (Segurança → Senhas de app).
+  2. No dashboard do Supabase, Authentication → SMTP Settings: host `smtp.gmail.com`,
+     porta `465`, usuário e remetente = o endereço do Gmail, senha = a senha de app,
+     nome do remetente `EAFIT`. Depois, em Authentication → Email Templates, colar os
+     arquivos de `supabase/templates/` (`recovery.html` em Reset Password,
+     `confirmation.html` em Confirm signup, `email_change.html` em Change Email
+     Address). O botão deles aponta pro próprio app (`?token_hash=...`, lido por
+     `lib/emailLink.js`), então só cole uma versão nova depois que o app correspondente
+     estiver publicado. Eles escolhem português ou inglês pelo `lang` da conta; o
+     campo Subject de cada um está em `supabase/templates/subjects.txt`. Os arquivos
+     são gerados do layout compartilhado (`_shared/emailLayout.ts`): para mudar texto
+     ou visual, edite `supabase/templates/build.ts` e rode
+     `deno run --allow-write=supabase/templates supabase/templates/build.ts`.
+  3. Nos secrets das Edge Functions: `GMAIL_USER` e `GMAIL_APP_PASSWORD`, usados por
+     `supabase/functions/_shared/email.ts` (sem eles, as funções só não enviam e-mail).
 - **Custo/escala**: checar os limites do plano atual do Supabase (linhas de banco,
   storage de fotos, invocações de Edge Function) antes de divulgar amplamente.

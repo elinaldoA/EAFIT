@@ -65,6 +65,7 @@ jobs:
           supabase/functions/send-appointment-reminders/index.ts
           supabase/functions/send-trainer-alerts/index.ts
           supabase/functions/send-push/index.ts
+          supabase/functions/_shared/email.ts
 
   push-migrations:
     needs: test
