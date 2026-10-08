@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppConfig } from '../context/useAppConfig';
-import { dismissBanner, isBannerDismissed } from '../lib/appConfig';
+import { dismissBanner, isBannerDismissed, linksToHere } from '../lib/appConfig';
 
 import { t } from '../lib/i18n';
 // Aviso do admin no topo do app. Dispensável: some até o admin publicar um
@@ -10,7 +10,7 @@ export default function AnnouncementBanner() {
   const { banner } = config;
   const [dismissedVersion, setDismissedVersion] = useState(null);
 
-  if (!banner.enabled) return null;
+  if (!banner.enabled || linksToHere(banner.linkUrl)) return null;
   if (dismissedVersion === banner.version || isBannerDismissed(banner.version)) return null;
 
   function handleDismiss() {

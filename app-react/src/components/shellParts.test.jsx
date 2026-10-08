@@ -106,6 +106,12 @@ describe('AnnouncementBanner', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
+  it('aviso cujo link aponta pra esta mesma página não aparece', () => {
+    h.config = { banner: banner({ linkUrl: window.location.origin + window.location.pathname }) };
+    const { container } = render(<AnnouncementBanner />);
+    expect(container.firstChild).toBeNull();
+  });
+
   it('dispensar esconde até o admin publicar uma versão nova', () => {
     const { unmount } = render(<AnnouncementBanner />);
     fireEvent.click(screen.getByRole('button', { name: 'Fechar aviso' }));

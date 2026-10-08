@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
-import { normalizeConfig, isFlagOn, safeLink, movedTarget, DEFAULT_CONFIG } from './appConfig';
+import { normalizeConfig, isFlagOn, safeLink, movedTarget, linksToHere, DEFAULT_CONFIG } from './appConfig';
 
 describe('normalizeConfig', () => {
   it('sem linhas devolve o padrão (tudo liberado)', () => {
@@ -57,6 +57,23 @@ describe('mudança de endereço', () => {
     expect(movedTarget(on, 'localhost')).toBe('');
     expect(movedTarget({ enabled: false, url: on.url }, 'elinaldoa.github.io')).toBe('');
     expect(movedTarget(undefined, 'elinaldoa.github.io')).toBe('');
+  });
+});
+
+describe('linksToHere', () => {
+  const here = { origin: 'https://eafit.com.br', pathname: '/app/' };
+
+  it('só é "aqui" o link absoluto pra mesma página, sem âncora', () => {
+    expect(linksToHere('https://eafit.com.br/app/', here)).toBe(true);
+    expect(linksToHere('https://eafit.com.br/app/?origem=aviso', here)).toBe(true);
+    expect(linksToHere('https://eafit.com.br/app/#perfil', here)).toBe(false);
+    expect(linksToHere('https://eafit.com.br/', here)).toBe(false);
+    expect(linksToHere('/app/', here)).toBe(false);
+    expect(linksToHere('', here)).toBe(false);
+  });
+
+  it('no endereço antigo o mesmo link continua valendo', () => {
+    expect(linksToHere('https://eafit.com.br/app/', { origin: 'https://elinaldoa.github.io', pathname: '/EAFIT/' })).toBe(false);
   });
 });
 

@@ -69,6 +69,18 @@ export function movedTarget(moved, hostname = window.location.hostname) {
   }
 }
 
+// Aviso cujo link (absoluto) aponta pra página onde a pessoa já está não tem o
+// que mostrar — ex.: "mudamos de endereço" visto por quem já abriu o novo.
+export function linksToHere(url, loc = window.location) {
+  if (!/^https?:\/\//i.test(url || '')) return false;
+  try {
+    const target = new URL(url);
+    return target.origin === loc.origin && target.pathname === loc.pathname && !target.hash;
+  } catch {
+    return false;
+  }
+}
+
 // Recurso sem chave definida conta como ligado.
 export function isFlagOn(flags, name) {
   return flags?.[name] !== false;
