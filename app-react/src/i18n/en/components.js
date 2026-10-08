@@ -15,6 +15,7 @@ export default {
   'No app instalado, entre de novo com o mesmo e-mail e senha.': 'In the installed app, sign in again with the same email and password.',
   'App instalado!': 'App installed!',
   'Feche esta aba e abra o EAFIT pelo ícone do app.': 'Close this tab and open EAFIT from the app icon.',
+  'Depois de instalar, remova o ícone antigo do EAFIT: ele não atualiza mais.': 'After installing, remove the old EAFIT icon: it no longer updates.',
   'Continuar no navegador': 'Continue in the browser',
   'Desafio oficial do EAFIT': 'Official EAFIT challenge',
   'Participar': 'Join',

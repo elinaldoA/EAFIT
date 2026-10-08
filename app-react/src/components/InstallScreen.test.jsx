@@ -41,6 +41,17 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('InstallScreen', () => {
+  it('quem veio do endereço antigo é lembrado de remover o ícone antigo', () => {
+    render(<InstallScreen />);
+    expect(screen.queryByText(/remova o ícone antigo/)).toBeNull();
+    cleanup();
+
+    window.history.replaceState(null, '', '/?origem=mudanca');
+    render(<InstallScreen />);
+    expect(screen.getByText(/remova o ícone antigo/)).toBeTruthy();
+    window.history.replaceState(null, '', '/');
+  });
+
   it('no navegador mostra o passo a passo da plataforma', () => {
     render(<InstallScreen />);
     expect(screen.getByRole('dialog')).toBeTruthy();

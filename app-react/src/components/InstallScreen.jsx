@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { readClientInfo, detectDisplayMode } from '../lib/clientInfo';
 import {
-  subscribeInstall, getInstallState, promptInstall, installSteps, isInstallSkipped, skipInstall,
+  subscribeInstall, getInstallState, promptInstall, installSteps, isInstallSkipped, skipInstall, cameFromOldAddress,
 } from '../lib/installPrompt';
 
 import { t } from '../lib/i18n';
@@ -14,6 +14,7 @@ export default function InstallScreen() {
   const [standalone] = useState(() => detectDisplayMode(window) === 'standalone');
   const [skipped, setSkipped] = useState(isInstallSkipped);
   const [busy, setBusy] = useState(false);
+  const [fromOldAddress] = useState(cameFromOldAddress);
 
   if (standalone || skipped) return null;
   const steps = installSteps(client);
@@ -31,6 +32,11 @@ export default function InstallScreen() {
   }
 
   const icon = <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />;
+  // Quem veio do app do endereço antigo fica com dois ícones iguais: o site
+  // não consegue remover o antigo, só avisar.
+  const removeOld = fromOldAddress && (
+    <p className="maintenance__text">{t('Depois de instalar, remova o ícone antigo do EAFIT: ele não atualiza mais.')}</p>
+  );
 
   if (state === 'installed') {
     return (
@@ -38,6 +44,7 @@ export default function InstallScreen() {
         {icon}
         <h1 className="maintenance__title" id="install-title">{t('App instalado!')}</h1>
         <p className="maintenance__text">{t('Feche esta aba e abra o EAFIT pelo ícone do app.')}</p>
+        {removeOld}
         <button type="button" className="btn btn--ghost btn--sm" onClick={handleSkip}>{t('Continuar no navegador')}</button>
       </div>
     );
@@ -57,6 +64,7 @@ export default function InstallScreen() {
           {steps.map(step => <li key={step}>{step}</li>)}
         </ol>
       )}
+      {removeOld}
       {client.os === 'ios' && (
         <p className="maintenance__text">{t('No app instalado, entre de novo com o mesmo e-mail e senha.')}</p>
       )}
