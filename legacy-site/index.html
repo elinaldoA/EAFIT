@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#0e0e12" />
+  <title>EAFIT — Mudamos de endereço</title>
+  <link rel="icon" href="/EAFIT/favicon.ico" />
+  <link rel="canonical" href="https://eafit.com.br/" />
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; box-sizing: border-box; text-align: center; background: #0e0e12; color: #e4e4e7; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    img { width: 88px; height: 88px; border-radius: 22px; }
+    .name { font-size: 22px; font-weight: 800; letter-spacing: .12em; }
+    h1 { margin: 4px 0 0; font-size: 1.15rem; }
+    p { margin: 0; max-width: 34ch; font-size: .9rem; line-height: 1.45; opacity: .8; }
+    ol { margin: 0; padding-left: 1.2em; max-width: 34ch; text-align: left; font-size: .9rem; line-height: 1.6; opacity: .9; }
+    a.btn { display: inline-flex; padding: 13px 24px; border-radius: 999px; background: #f97316; color: #09090b; font-weight: 700; font-size: .9rem; text-decoration: none; }
+    [hidden] { display: none; }
+    @media (prefers-color-scheme: light) { body { background: #f4f4f5; color: #18181b; } }
+  </style>
+</head>
+<body>
+  <!--
+    Página do endereço antigo (elinaldoa.github.io/EAFIT/). No navegador,
+    redireciona direto pro endereço novo. No app instalado (que continua
+    preso a este endereço) mostra o passo a passo pra instalar o novo.
+    404.html é cópia deste arquivo: cobre /EAFIT/landing/, /EAFIT/legal/ etc.
+  -->
+  <img src="/EAFIT/icon-maskable-192.png" alt="" />
+  <div class="name">EAFIT</div>
+  <h1 id="title" hidden data-en="EAFIT has moved">O EAFIT mudou de endereço</h1>
+  <p id="intro" hidden data-en="This installed app no longer receives updates. Your workouts and data are still saved in your account.">Este app instalado não recebe mais atualizações. Seus treinos e dados continuam salvos na sua conta.</p>
+  <ol id="steps" hidden>
+    <li data-en="Tap the button below to open the new address.">Toque no botão abaixo para abrir o novo endereço.</li>
+    <li data-en="Sign in with the same email and password.">Entre com o mesmo e-mail e senha.</li>
+    <li data-en="Install the app again and remove this old one.">Instale o app de novo e remova este antigo.</li>
+  </ol>
+  <a id="go" class="btn" hidden target="_blank" rel="noopener" data-en="Open the new address">Abrir o novo endereço</a>
+  <noscript><p>O EAFIT mudou para <a href="https://eafit.com.br/">eafit.com.br</a>.</p></noscript>
+  <script>
+    (function () {
+      var path = location.pathname.replace(/^\/EAFIT/i, '') || '/';
+      var target = '/app/';
+      if (path.indexOf('/landing') === 0) target = '/';
+      else if (path.indexOf('/legal/') === 0) target = '/app' + path;
+      else if (path.indexOf('/admin') === 0) target = '/admin/';
+      var dest = 'https://eafit.com.br' + target + location.search + location.hash;
+
+      var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+      // No navegador não há o que explicar: vai direto pro endereço novo.
+      if (!standalone) { location.replace(dest); return; }
+
+      var en = false;
+      try { en = localStorage.getItem('app_lang') === 'en'; } catch (e) { en = false; }
+      if (en) {
+        document.documentElement.lang = 'en';
+        var nodes = document.querySelectorAll('[data-en]');
+        for (var i = 0; i < nodes.length; i++) nodes[i].textContent = nodes[i].getAttribute('data-en');
+      }
+      var go = document.getElementById('go');
+      go.href = dest;
+      ['title', 'intro', 'steps', 'go'].forEach(function (id) { document.getElementById(id).hidden = false; });
+
+      // Quem segue pro endereço novo deixa de receber os lembretes por aqui
+      // (vai reativar lá), pra não chegar tudo em dobro.
+      go.addEventListener('click', function () {
+        if (!('serviceWorker' in navigator)) return;
+        navigator.serviceWorker.getRegistration().then(function (reg) {
+          return reg && reg.pushManager && reg.pushManager.getSubscription();
+        }).then(function (sub) { if (sub) sub.unsubscribe(); }).catch(function () {});
+      });
+    })();
+  </script>
+</body>
+</html>
