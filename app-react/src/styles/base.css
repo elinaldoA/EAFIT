@@ -15,6 +15,8 @@ html, body {
 
 button, input { font-family: inherit; }
 
+#root { height: 100%; }
+
 /* Sem o atraso/zoom de toque duplo em botões; a pinça continua dando zoom. */
 html { touch-action: manipulation; }
 
@@ -24,6 +26,16 @@ html { touch-action: manipulation; }
    não existe nos outros navegadores. */
 @supports (-webkit-touch-callout: none) {
   input, select, textarea { font-size: 16px !important; }
+
+  /* Campos de data/hora no iOS: sem isso ignoram a largura do layout, centralizam
+     o texto e encolhem quando vazios. */
+  input[type="date"], input[type="time"], input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.75em;
+    text-align: left;
+  }
+  input::-webkit-date-and-time-value { text-align: left; }
 }
 
 /* ============================================================
@@ -38,6 +50,7 @@ html { touch-action: manipulation; }
      app. svh usa sempre a menor altura possível, garantindo que o bottom-nav
      nunca fique atrás da barra de sistema.
   */
+  height: 100%; /* Safari anterior ao 15.4 não conhece svh: sem altura o app some */
   height: 100svh;
   /* App instalado no iPhone (status bar black-translucent + viewport-fit=cover)
      desenha por baixo do relógio/notch: sem isso a barra superior fica atrás

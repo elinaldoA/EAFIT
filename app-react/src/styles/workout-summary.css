@@ -150,6 +150,9 @@
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--surface-3);
+  /* Sem cor explícita o Safari do iOS pinta o texto do botão de azul. */
+  color: var(--text);
+  font: inherit;
   font-weight: 600;
   cursor: pointer;
   text-align: center;

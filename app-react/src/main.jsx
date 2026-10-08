@@ -14,6 +14,17 @@ window.addEventListener('vite:preloadError', event => {
 clearChunkReloadFlag()
 installErrorReporter()
 
+// O Safari do iOS rola o documento pra mostrar o campo acima do teclado e às
+// vezes não volta ao fechar. Como o app não rola (html/body com
+// overflow:hidden), a tela ficaria deslocada sem como arrastar de volta.
+window.addEventListener('focusout', () => {
+  setTimeout(() => {
+    const el = document.activeElement
+    if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return
+    if (window.scrollY || window.scrollX) window.scrollTo(0, 0)
+  }, 120)
+})
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>

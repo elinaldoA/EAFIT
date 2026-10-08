@@ -932,6 +932,16 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
    -webkit-touch-callout não existe nos outros navegadores. */
 @supports (-webkit-touch-callout: none) {
   input, select, textarea { font-size: 16px !important; }
+
+  /* Campos de data/hora no iOS: sem isso ignoram a largura do layout, centralizam
+     o texto e encolhem quando vazios. */
+  input[type="date"], input[type="time"], input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.75em;
+    text-align: left;
+  }
+  input::-webkit-date-and-time-value { text-align: left; }
 }
 
 /* Dedo em vez de mouse: alvos de toque maiores. */
