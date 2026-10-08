@@ -24,6 +24,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import BootSplash from './components/BootSplash';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
+import MovedScreen from './components/MovedScreen';
+import { movedTarget } from './lib/appConfig';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import TermsUpdateScreen from './components/TermsUpdateScreen';
 import InstallScreen from './components/InstallScreen';
@@ -89,6 +91,11 @@ function Shell() {
   useEffect(() => {
     if (trackedPage) trackEvent('page', trackedPage);
   }, [trackedPage, user]);
+
+  // Mudança de endereço ligada no painel admin: quem está no endereço antigo
+  // só vê o aviso com o link do novo.
+  const movedUrl = movedTarget(config.moved);
+  if (movedUrl) return <MovedScreen url={movedUrl} />;
 
   // Manutenção ligada no painel admin: bloqueia o app inteiro (antes até do login).
   if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;

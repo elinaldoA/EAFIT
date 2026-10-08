@@ -7,6 +7,7 @@ export const DEFAULT_CONFIG = {
   maintenance: { enabled: false, message: '' },
   banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 0 },
   flags: {},
+  moved: { enabled: false, url: '' },
 };
 
 const BANNER_LEVELS = ['info', 'warning', 'success'];
@@ -40,6 +41,8 @@ export function normalizeConfig(rows, today = todayInAppZone()) {
     if (typeof v === 'boolean') flags[k] = v;
   }
   const bannerMessage = str(b.message);
+  const mv = map.moved || {};
+  const movedUrl = /^https:\/\//i.test(str(mv.url)) ? str(mv.url) : '';
   return {
     maintenance: { enabled: m.enabled === true, message: str(m.message) },
     banner: {
@@ -51,7 +54,19 @@ export function normalizeConfig(rows, today = todayInAppZone()) {
       version: Number.isFinite(Number(b.version)) ? Number(b.version) : 0,
     },
     flags,
+    moved: { enabled: mv.enabled === true && movedUrl !== '', url: movedUrl },
   };
+}
+
+// Mudança de endereço ligada no painel admin: devolve o endereço novo só pra
+// quem ainda está no antigo (quem já abriu o novo, ou está em dev, segue normal).
+export function movedTarget(moved, hostname = window.location.hostname) {
+  if (!moved?.enabled || hostname === 'localhost') return '';
+  try {
+    return new URL(moved.url).hostname === hostname ? '' : moved.url;
+  } catch {
+    return '';
+  }
 }
 
 // Recurso sem chave definida conta como ligado.

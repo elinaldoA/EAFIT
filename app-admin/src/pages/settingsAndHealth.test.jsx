@@ -25,6 +25,7 @@ describe('AppSettings', () => {
     maintenance: { enabled: false, message: '' },
     banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 2 },
     flags: { feedback: false },
+    moved: { enabled: false, url: '' },
   };
 
   beforeEach(() => {

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
-import { normalizeSettings, isValidLink, nextBannerVersion, DEFAULT_SETTINGS } from './appSettings';
+import { normalizeSettings, isValidLink, isValidMovedUrl, nextBannerVersion, DEFAULT_SETTINGS } from './appSettings';
 
 describe('normalizeSettings', () => {
   it('sem linhas devolve o padrão', () => {
@@ -21,6 +21,20 @@ describe('normalizeSettings', () => {
     ]);
     expect(s.maintenance).toEqual({ enabled: true, message: 'Volto já' });
     expect(s.flags).toEqual({ fotos_progresso: false });
+  });
+});
+
+describe('mudança de endereço', () => {
+  it('lê a chave moved e mantém o endereço mesmo desligado', () => {
+    const s = normalizeSettings([{ key: 'moved', value: { enabled: false, url: 'https://eafit.com.br/app/' } }]);
+    expect(s.moved).toEqual({ enabled: false, url: 'https://eafit.com.br/app/' });
+  });
+
+  it('endereço novo precisa ser https completo', () => {
+    expect(isValidMovedUrl(' https://eafit.com.br/app/ ')).toBe(true);
+    expect(isValidMovedUrl('http://eafit.com.br/')).toBe(false);
+    expect(isValidMovedUrl('/app/')).toBe(false);
+    expect(isValidMovedUrl('')).toBe(false);
   });
 });
 

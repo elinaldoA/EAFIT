@@ -24,6 +24,7 @@ export const DEFAULT_SETTINGS = {
   maintenance: { enabled: false, message: '' },
   banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', startsOn: '', endsOn: '', version: 0 },
   flags: {},
+  moved: { enabled: false, url: '' },
 };
 
 const isDay = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
@@ -43,6 +44,7 @@ export function normalizeSettings(rows) {
   const map = Object.fromEntries((rows || []).map(r => [r.key, r.value && typeof r.value === 'object' ? r.value : {}]));
   const m = map.maintenance || {};
   const b = map.banner || {};
+  const mv = map.moved || {};
   const flags = {};
   for (const [k, v] of Object.entries(map.flags || {})) {
     if (typeof v === 'boolean') flags[k] = v;
@@ -60,7 +62,13 @@ export function normalizeSettings(rows) {
       version: Number.isFinite(Number(b.version)) ? Number(b.version) : 0,
     },
     flags,
+    moved: { enabled: mv.enabled === true, url: String(mv.url || '') },
   };
+}
+
+// O app só aceita endereço novo absoluto em https (ver movedTarget em app-react).
+export function isValidMovedUrl(url) {
+  return /^https:\/\/\S+$/i.test(String(url || '').trim());
 }
 
 // O app só abre link http(s) ou caminho relativo; avisa o admin antes de salvar.

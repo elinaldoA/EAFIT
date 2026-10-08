@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
-import { normalizeConfig, isFlagOn, safeLink, DEFAULT_CONFIG } from './appConfig';
+import { normalizeConfig, isFlagOn, safeLink, movedTarget, DEFAULT_CONFIG } from './appConfig';
 
 describe('normalizeConfig', () => {
   it('sem linhas devolve o padrão (tudo liberado)', () => {
@@ -37,6 +37,26 @@ describe('normalizeConfig', () => {
 
   it('nível inválido volta para info', () => {
     expect(normalizeConfig([{ key: 'banner', value: { enabled: true, message: 'x', level: 'neon' } }]).banner.level).toBe('info');
+  });
+});
+
+describe('mudança de endereço', () => {
+  const moved = (value) => normalizeConfig([{ key: 'moved', value }]).moved;
+
+  it('só liga com "true" literal e endereço https', () => {
+    expect(moved({ enabled: true, url: ' https://eafit.com.br/app/ ' })).toEqual({ enabled: true, url: 'https://eafit.com.br/app/' });
+    expect(moved({ enabled: true, url: '/app/' }).enabled).toBe(false);
+    expect(moved({ enabled: true, url: 'javascript:alert(1)' }).enabled).toBe(false);
+    expect(moved({ enabled: 'true', url: 'https://eafit.com.br/' }).enabled).toBe(false);
+  });
+
+  it('movedTarget só devolve o endereço novo pra quem está no antigo', () => {
+    const on = { enabled: true, url: 'https://eafit.com.br/app/' };
+    expect(movedTarget(on, 'elinaldoa.github.io')).toBe('https://eafit.com.br/app/');
+    expect(movedTarget(on, 'eafit.com.br')).toBe('');
+    expect(movedTarget(on, 'localhost')).toBe('');
+    expect(movedTarget({ enabled: false, url: on.url }, 'elinaldoa.github.io')).toBe('');
+    expect(movedTarget(undefined, 'elinaldoa.github.io')).toBe('');
   });
 });
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
-  KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, nextBannerVersion, bannerWindow,
+  KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
 } from '../lib/appSettings';
 import { todayStr } from '../lib/community';
 import Loading from '../components/Loading';
@@ -213,6 +213,62 @@ function FlagsCard({ saved, adminId, onSaved }) {
   );
 }
 
+function MovedCard({ saved, adminId, onSaved }) {
+  const [draft, setDraft] = useState(saved);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const dirty = draft.enabled !== saved.enabled || draft.url !== saved.url;
+  const urlOk = isValidMovedUrl(draft.url);
+  const valid = urlOk || (!draft.enabled && !draft.url.trim());
+
+  async function handleSave() {
+    if (draft.enabled && !saved.enabled
+      && !window.confirm('Ligar a mudança de endereço BLOQUEIA o app para quem abrir por qualquer endereço diferente do novo. Confirme que o endereço novo já está no ar. Continuar?')) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      await saveSetting('moved', { enabled: draft.enabled, url: draft.url.trim() }, adminId);
+      setMsg('Salvo.');
+      await onSaved();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card stack" style={{ gap: 14, ...(saved.enabled ? { borderColor: 'var(--danger)' } : {}) }}>
+      <div className="card-head" style={{ marginBottom: 0 }}>
+        <div>
+          <h2 className="section-title" style={{ margin: 0 }}>
+            Mudança de endereço
+            <span className={`badge ${saved.enabled ? 'badge--danger' : 'badge--ok'}`}>{saved.enabled ? 'endereço antigo bloqueado' : 'desligado'}</span>
+          </h2>
+          <p className="user-detail__meta" style={{ margin: '4px 0 0' }}>
+            Quando ligado, quem abrir o app por um endereço diferente do novo vê a tela "O EAFIT mudou de endereço" com um botão para o endereço abaixo.
+            Quem já está no endereço novo não vê nada. Ligue só depois que o endereço novo estiver funcionando.
+          </p>
+        </div>
+        <label className="switch-row">
+          <input type="checkbox" checked={draft.enabled} onChange={e => setDraft({ ...draft, enabled: e.target.checked })} />
+          <span>Ligado</span>
+        </label>
+      </div>
+      <label className="field">
+        <span className="field__label">Endereço novo do app (https://…)</span>
+        <input className="input" placeholder="https://eafit.com.br/app/" value={draft.url} onChange={e => setDraft({ ...draft, url: e.target.value })} />
+      </label>
+      {!valid && <p className="form-msg form-msg--error">Informe o endereço completo, começando com https://.</p>}
+      <div className="actions-row">
+        <button className={`btn btn--small ${draft.enabled ? 'btn--danger' : 'btn--primary'}`} disabled={busy || !dirty || !valid} onClick={handleSave}>Salvar</button>
+        <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(saved); setMsg(''); }}>Desfazer</button>
+        <SectionMessage msg={msg} />
+      </div>
+    </div>
+  );
+}
+
 export default function AppSettings() {
   const { adminUser } = useAdminAuth();
   const [settings, setSettings] = useState(null);
@@ -242,6 +298,7 @@ export default function AppSettings() {
       <MaintenanceCard key={`m-${JSON.stringify(settings.maintenance)}`} saved={settings.maintenance} adminId={adminUser?.id} onSaved={load} />
       <BannerCard key={`b-${settings.banner.version}-${settings.banner.enabled}`} saved={settings.banner} adminId={adminUser?.id} onSaved={load} />
       <FlagsCard saved={settings.flags} adminId={adminUser?.id} onSaved={load} />
+      <MovedCard key={`mv-${JSON.stringify(settings.moved)}`} saved={settings.moved} adminId={adminUser?.id} onSaved={load} />
     </div>
   );
 }

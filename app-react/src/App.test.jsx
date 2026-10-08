@@ -21,6 +21,8 @@ vi.mock('./context/WorkoutContext', () => ({ WorkoutProvider: ({ children }) => 
 vi.mock('./context/AppConfigContext', () => ({ AppConfigProvider: ({ children }) => <>{children}</> }));
 vi.mock('./context/useAppConfig', () => ({ useAppConfig: () => ({ config: h.config }) }));
 vi.mock('./context/AvatarContext', () => ({ AvatarProvider: ({ children }) => <>{children}</> }));
+// O jsdom roda em localhost, que o movedTarget de verdade ignora (dev).
+vi.mock('./lib/appConfig', () => ({ movedTarget: moved => (moved?.enabled ? moved.url : '') }));
 vi.mock('./lib/knownUser', () => ({ markKnownUser: (...a) => h.markKnownUser(...a) }));
 vi.mock('./hooks/useHashTab', () => ({ useHashTab: () => [h.tab.page, h.tab.setPage] }));
 vi.mock('./hooks/useTrainerMode', () => ({ useTrainerMode: () => h.trainer }));
@@ -80,6 +82,14 @@ describe('App', () => {
     h.auth = { user: null, authLoading: false, recoveryMode: false };
     render(<App />);
     expect(screen.getByText('manutencao:Voltamos às 14h')).toBeTruthy();
+    expect(screen.queryByText('tela-auth')).toBeNull();
+  });
+
+  it('mudança de endereço ligada bloqueia tudo e aponta pro endereço novo', () => {
+    h.config = { maintenance: { enabled: false, message: '' }, moved: { enabled: true, url: 'https://eafit.com.br/app/' } };
+    h.auth = { user: null, authLoading: false, recoveryMode: false };
+    render(<App />);
+    expect(screen.getByRole('link', { name: 'Abrir o novo endereço' }).getAttribute('href')).toBe('https://eafit.com.br/app/');
     expect(screen.queryByText('tela-auth')).toBeNull();
   });
 
