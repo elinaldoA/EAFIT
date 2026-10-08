@@ -6,7 +6,7 @@ vi.mock('../lib/supabase', () => ({
   db: { rpc: mockRpc },
 }));
 
-import { fetchDashboardStats, fetchSignupsByDay, fetchFunnel, fetchRetentionCohorts, fetchVisitSources } from '../lib/dashboardStats';
+import { fetchDashboardStats, fetchSignupsByDay, fetchFunnel, fetchRetentionCohorts, fetchVisitSources, fetchVisitOs } from '../lib/dashboardStats';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -63,6 +63,14 @@ describe('fetchRetentionCohorts', () => {
     mockRpc.mockResolvedValue({ data: null, error: null });
     expect(await fetchRetentionCohorts(8)).toEqual([]);
     expect(mockRpc).toHaveBeenCalledWith('admin_retention_cohorts', { weeks: 8 });
+  });
+});
+
+describe('fetchVisitOs', () => {
+  it('chama admin_visit_os com o período', async () => {
+    mockRpc.mockResolvedValue({ data: [{ page: 'landing', os: 'android', visits: 2 }], error: null });
+    expect(await fetchVisitOs(7)).toEqual([{ page: 'landing', os: 'android', visits: 2 }]);
+    expect(mockRpc).toHaveBeenCalledWith('admin_visit_os', { days_back: 7 });
   });
 });
 

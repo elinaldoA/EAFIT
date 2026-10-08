@@ -2,13 +2,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
-const { mockFunnel, mockRetention, mockSources, mockEvents } = vi.hoisted(() => ({ mockFunnel: vi.fn(), mockRetention: vi.fn(), mockSources: vi.fn(), mockEvents: vi.fn() }));
+const { mockFunnel, mockRetention, mockSources, mockEvents, mockOs } = vi.hoisted(() => ({ mockFunnel: vi.fn(), mockRetention: vi.fn(), mockSources: vi.fn(), mockEvents: vi.fn(), mockOs: vi.fn() }));
 
 vi.mock('../lib/dashboardStats', () => ({
   fetchFunnel: mockFunnel,
   fetchRetentionCohorts: mockRetention,
   fetchVisitSources: mockSources,
   fetchLandingEvents: mockEvents,
+  fetchVisitOs: mockOs,
 }));
 
 import ActivationFunnel from './ActivationFunnel';
@@ -16,6 +17,7 @@ import RetentionCohorts from './RetentionCohorts';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockOs.mockResolvedValue([]);
 });
 
 describe('ActivationFunnel', () => {
@@ -27,9 +29,12 @@ describe('ActivationFunnel', () => {
       { event: 'reach', place: 'faq', total: '20' },
       { event: 'install_click', place: 'install', total: '3' },
     ]);
+    mockOs.mockResolvedValue([{ page: 'landing', os: 'android', visits: '6' }, { page: 'acesso', os: 'windows', visits: '2' }]);
     render(<ActivationFunnel />);
 
     expect(await screen.findByText('Fizeram o 1º treino')).toBeTruthy();
+    expect(screen.getByText('Android').closest('tr').textContent).toContain('75%');
+    expect(screen.getByText(/Celular/).textContent).toContain('75%');
     expect(screen.getByText('30% da etapa anterior')).toBeTruthy();
     expect(screen.getByText('maior perda').closest('li').textContent).toContain('1º treino');
     expect(mockFunnel).toHaveBeenCalledWith(30);

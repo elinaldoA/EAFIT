@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchFunnel, fetchVisitSources, fetchLandingEvents } from '../lib/dashboardStats';
-import { buildFunnel, groupVisitSources, groupLandingEvents } from '../lib/activation';
+import { fetchFunnel, fetchVisitSources, fetchVisitOs, fetchLandingEvents } from '../lib/dashboardStats';
+import { buildFunnel, groupVisitSources, groupVisitOs, groupLandingEvents } from '../lib/activation';
 import Loading from './Loading';
 
 const PERIODS = [
@@ -20,6 +20,7 @@ export default function ActivationFunnel() {
   const [row, setRow] = useState(null);
   const [sources, setSources] = useState([]);
   const [events, setEvents] = useState(null);
+  const [systems, setSystems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -27,8 +28,13 @@ export default function ActivationFunnel() {
     let active = true;
     setLoading(true);
     setError('');
-    Promise.all([fetchFunnel(days), fetchVisitSources(days), fetchLandingEvents(days)])
-      .then(([r, s, e]) => { if (active) { setRow(r); setSources(groupVisitSources(s)); setEvents(groupLandingEvents(e)); } })
+    // Sistema operacional depende de uma migration mais nova: se a consulta
+    // falhar, o resto do funil continua aparecendo.
+    Promise.all([fetchFunnel(days), fetchVisitSources(days), fetchLandingEvents(days), fetchVisitOs(days).catch(() => null)])
+      .then(([r, s, e, o]) => {
+        if (!active) return;
+        setRow(r); setSources(groupVisitSources(s)); setEvents(groupLandingEvents(e)); setSystems(o ? groupVisitOs(o) : null);
+      })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -92,6 +98,37 @@ export default function ActivationFunnel() {
                 </tbody>
               </table>
             </div>
+          ) : <p className="card-note" style={{ marginTop: 0 }}>Nenhuma visita registrada no período.</p>}
+
+          <h3 className="subsection-title">De qual sistema acessam</h3>
+          {!systems ? (
+            <p className="card-note" style={{ marginTop: 0 }}>Dados de sistema indisponíveis no momento.</p>
+          ) : systems.total ? (
+            <>
+              {(systems.mobile.total > 0 || systems.desktop.total > 0) && (
+                <p className="card-note" style={{ margin: '0 0 8px' }}>
+                  Celular <strong>{systems.mobile.pct}%</strong> ({systems.mobile.total}) · Desktop <strong>{systems.desktop.pct}%</strong> ({systems.desktop.total})
+                </p>
+              )}
+              <div className="table-wrap">
+                <table className="source-table">
+                  <thead>
+                    <tr><th scope="col">Sistema</th><th scope="col">Landing</th><th scope="col">Tela de acesso</th><th scope="col">Total</th><th scope="col">%</th></tr>
+                  </thead>
+                  <tbody>
+                    {systems.systems.map(s => (
+                      <tr key={s.os}>
+                        <th scope="row">{s.label}</th>
+                        <td>{s.landing}</td>
+                        <td>{s.acesso}</td>
+                        <td><strong>{s.total}</strong></td>
+                        <td>{s.pct}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : <p className="card-note" style={{ marginTop: 0 }}>Nenhuma visita registrada no período.</p>}
 
           <h3 className="subsection-title">O que fazem na landing</h3>

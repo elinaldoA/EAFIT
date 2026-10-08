@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildFunnel, pivotRetention, groupVisitSources, sourceLabel } from './activation';
+import { buildFunnel, pivotRetention, groupVisitSources, groupVisitOs, sourceLabel } from './activation';
 
 describe('buildFunnel', () => {
   it('calcula % do total e da etapa anterior e aponta a maior perda', () => {
@@ -49,6 +49,29 @@ describe('pivotRetention', () => {
 
   it('sem linhas, tabela vazia', () => {
     expect(pivotRetention([])).toEqual({ weekIndexes: [], cohorts: [], average: [] });
+  });
+});
+
+describe('groupVisitOs', () => {
+  it('soma por sistema, calcula % e resume celular × desktop sem contar o não registrado', () => {
+    const out = groupVisitOs([
+      { page: 'landing', os: 'android', visits: '5' },
+      { page: 'acesso', os: 'android', visits: 1 },
+      { page: 'acesso', os: 'ios', visits: 2 },
+      { page: 'landing', os: 'windows', visits: 2 },
+      { page: 'landing', os: 'desconhecido', visits: 10 },
+    ]);
+    expect(out.total).toBe(20);
+    expect(out.systems.map(s => [s.os, s.total, s.pct])).toEqual([
+      ['desconhecido', 10, 50], ['android', 6, 30], ['ios', 2, 10], ['windows', 2, 10],
+    ]);
+    expect(out.systems[1]).toMatchObject({ label: 'Android', landing: 5, acesso: 1 });
+    expect(out.mobile).toEqual({ total: 8, pct: 80 });
+    expect(out.desktop).toEqual({ total: 2, pct: 20 });
+  });
+
+  it('sem linhas não quebra', () => {
+    expect(groupVisitOs(null)).toEqual({ systems: [], total: 0, mobile: { total: 0, pct: null }, desktop: { total: 0, pct: null } });
   });
 });
 

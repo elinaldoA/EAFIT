@@ -31,6 +31,13 @@ export async function fetchVisitSources(days = 30) {
   return data || [];
 }
 
+// Migration 20261026010000_page_visits_os.sql.
+export async function fetchVisitOs(days = 30) {
+  const { data, error } = await db.rpc('admin_visit_os', { days_back: days });
+  if (error) throw error;
+  return data || [];
+}
+
 export async function fetchLandingEvents(days = 30) {
   const { data, error } = await db.rpc('admin_landing_events', { days_back: days });
   if (error) throw error;

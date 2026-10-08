@@ -2333,7 +2333,7 @@
       }
 
       // ---------- contagem anônima de visitas (public.page_visits) ----------
-      // Cópia da regra de app-react/src/lib/pageVisits.js (detectSource) —
+      // Cópia da regra de app-react/src/lib/pageVisits.js (detectSource e detectOS) —
       // mudou lá, mude aqui. 1 visita por dia por navegador, sem identificar
       // ninguém; falha em silêncio.
       var REFERRER_SOURCES = [
@@ -2357,6 +2357,18 @@
         }
         return 'outro-site';
       }
+      function detectOS() {
+        var ua = String(navigator.userAgent || '').toLowerCase();
+        if (!ua) return 'outro';
+        if (ua.indexOf('android') !== -1) return 'android';
+        if (/iphone|ipad|ipod/.test(ua)) return 'ios';
+        var mac = ua.indexOf('macintosh') !== -1 || ua.indexOf('mac os x') !== -1 || /^mac/i.test(navigator.platform || '');
+        if (mac) return navigator.maxTouchPoints > 1 ? 'ios' : 'mac';
+        if (ua.indexOf('windows') !== -1) return 'windows';
+        if (ua.indexOf('cros') !== -1) return 'outro';
+        if (ua.indexOf('linux') !== -1 || ua.indexOf('x11') !== -1) return 'linux';
+        return 'outro';
+      }
       (function recordVisit() {
         var key = 'eafit_visit_landing';
         var today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
@@ -2364,15 +2376,22 @@
           if (localStorage.getItem(key) === today) return;
           localStorage.setItem(key, today);
         } catch (e) { /* sem armazenamento: conta mesmo assim */ }
-        fetch(SUPABASE_URL + '/rest/v1/page_visits', {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-            'Content-Type': 'application/json', Prefer: 'return=minimal',
-          },
-          body: JSON.stringify({ page: 'landing', source: detectSource() }),
-          keepalive: true,
-        }).catch(function () {});
+        var source = detectSource();
+        function send(row) {
+          return fetch(SUPABASE_URL + '/rest/v1/page_visits', {
+            method: 'POST',
+            headers: {
+              apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+              'Content-Type': 'application/json', Prefer: 'return=minimal',
+            },
+            body: JSON.stringify(row),
+            keepalive: true,
+          });
+        }
+        // Banco ainda sem a coluna `os` (migration não aplicada): grava como antes.
+        send({ page: 'landing', source: source, os: detectOS() })
+          .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source }); })
+          .catch(function () {});
       })();
 
       fetch(SUPABASE_URL + '/rest/v1/landing_content?select=content&id=eq.1', {

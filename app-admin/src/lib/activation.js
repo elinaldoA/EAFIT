@@ -75,6 +75,49 @@ export function groupVisitSources(rows) {
   return [...bySource.values()].sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
 }
 
+// Sistema operacional gravado por detectOS (app e landing). 'desconhecido' =
+// visita anterior à coluna existir.
+const OS_LABELS = {
+  android: 'Android',
+  ios: 'iOS (iPhone/iPad)',
+  windows: 'Windows',
+  mac: 'Mac',
+  linux: 'Linux',
+  outro: 'Outro',
+  desconhecido: 'Não registrado',
+};
+const OS_KIND = { android: 'celular', ios: 'celular', windows: 'desktop', mac: 'desktop', linux: 'desktop' };
+
+// Linhas (page, os, visits) → uma linha por sistema com landing, tela de
+// acesso, total e % do total, mais o resumo celular × desktop (% só sobre as
+// visitas com sistema identificado).
+export function groupVisitOs(rows) {
+  const byOs = new Map();
+  (rows || []).forEach(r => {
+    const item = byOs.get(r.os) || { os: r.os, label: OS_LABELS[r.os] || r.os, landing: 0, acesso: 0, total: 0 };
+    const n = Number(r.visits) || 0;
+    if (r.page === 'landing') item.landing += n;
+    else if (r.page === 'acesso') item.acesso += n;
+    item.total += n;
+    byOs.set(r.os, item);
+  });
+  const all = [...byOs.values()];
+  const grand = all.reduce((t, i) => t + i.total, 0);
+  const systems = all
+    .map(i => ({ ...i, pct: pct(i.total, grand) }))
+    .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
+
+  const kinds = { celular: 0, desktop: 0 };
+  all.forEach(i => { if (OS_KIND[i.os]) kinds[OS_KIND[i.os]] += i.total; });
+  const known = kinds.celular + kinds.desktop;
+  return {
+    systems,
+    total: grand,
+    mobile: { total: kinds.celular, pct: pct(kinds.celular, known) },
+    desktop: { total: kinds.desktop, pct: pct(kinds.desktop, known) },
+  };
+}
+
 // Nome legível de cada lugar gravado por landing_events (ver
 // supabase/migrations/20261018010000_landing_events.sql).
 const EVENT_PLACES = {
