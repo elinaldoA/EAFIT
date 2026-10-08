@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 
 import { t } from './i18n';
 export const TITLE_MIN = 3;
@@ -77,6 +78,7 @@ export async function fetchMyChallenges() {
 }
 
 export async function createChallenge(title, start, end) {
+  trackFeature('challenges');
   const { data, error } = await db.rpc('create_challenge', { p_title: title, p_start: start, p_end: end });
   if (error) throw error;
   return data;
@@ -97,6 +99,7 @@ export async function deleteClassChallenge(id) {
 }
 
 export async function joinChallenge(code) {
+  trackFeature('challenges');
   const { data, error } = await db.rpc('join_challenge', { p_code: code });
   if (error) throw error;
   return data;

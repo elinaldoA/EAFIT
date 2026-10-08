@@ -1,7 +1,8 @@
 import EmptyState from '../components/EmptyState';
+import UserClientCard from '../components/UserClientCard';
 import { METAS, NIVEIS, BADGE_LABELS, formatDate } from '../lib/userDetailHelpers';
 
-export default function UserProfileTab({ form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
+export default function UserProfileTab({ userId, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
   return (
     <div className="stack">
       <form className="card form-grid" onSubmit={onSaveProfile}>
@@ -57,6 +58,8 @@ export default function UserProfileTab({ form, setForm, busy, onSaveProfile, ach
           <button className="btn btn--primary" type="submit" disabled={busy}>Salvar perfil</button>
         </div>
       </form>
+
+      <UserClientCard userId={userId} />
 
       <section>
         <h2 className="section-title">Conquistas</h2>

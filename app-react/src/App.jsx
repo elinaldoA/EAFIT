@@ -9,6 +9,7 @@ import { useAppConfig } from './context/useAppConfig';
 import { AvatarProvider } from './context/AvatarContext';
 import AuthScreen from './components/AuthScreen';
 import { markKnownUser } from './lib/knownUser';
+import { setTrackingUser, trackClient, trackEvent, flushPushOpen } from './lib/tracking';
 import OnboardingScreen from './components/OnboardingScreen';
 import ThemeToggle from './components/ThemeToggle';
 import TopbarProfile from './components/TopbarProfile';
@@ -61,8 +62,21 @@ function Shell() {
 
   // Este aparelho já teve conta logada: a tela de acesso abre em "Entrar".
   useEffect(() => {
-    if (user) markKnownUser();
+    setTrackingUser(user?.id);
+    if (!user) return;
+    markKnownUser();
+    trackClient();
+    flushPushOpen();
   }, [user]);
+
+  // Métrica de uso: qual aba cada usuário abre (1 vez por dia por aba). Antes
+  // do onboarding não há aba; no modo Personal conta como uma tela só.
+  const trackedPage = !user ? null
+    : (isTrainer && mode === 'trainer') ? 'personal'
+      : user.user_metadata?.peso ? page : null;
+  useEffect(() => {
+    if (trackedPage) trackEvent('page', trackedPage);
+  }, [trackedPage, user]);
 
   // Manutenção ligada no painel admin: bloqueia o app inteiro (antes até do login).
   if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;

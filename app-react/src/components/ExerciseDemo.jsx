@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { trackFeature } from '../lib/tracking';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { getExerciseMedia, MEDIA_CREDIT } from '../data/exerciseMedia';
@@ -161,6 +162,7 @@ function ExerciseDemoModal({ nome: nomePt, tecnica: tecnicaPt, media, onClose })
   useBackToClose(onClose);
 
   useEffect(() => {
+    trackFeature('exercise_demo');
     document.body.classList.add('modal-open');
     return () => document.body.classList.remove('modal-open');
   }, []);

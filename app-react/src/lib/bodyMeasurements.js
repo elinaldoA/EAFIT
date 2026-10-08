@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 
 import { t } from './i18n';
 export const MEASURE_FIELDS = [
@@ -44,6 +45,7 @@ export async function fetchMeasurements(userId) {
 }
 
 export async function upsertMeasurement(userId, measuredOn, values) {
+  trackFeature('measurements');
   const { error } = await db
     .from('body_measurements')
     .upsert({ user_id: userId, measured_on: measuredOn, ...values }, { onConflict: 'user_id,measured_on' });

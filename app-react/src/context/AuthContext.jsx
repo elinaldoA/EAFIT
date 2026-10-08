@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import { AuthContext } from './useAuth';
 import { translateAuthError, isEmailNotConfirmed, isSpecificAuthError } from '../lib/authErrors';
+import { trackAuthEvent } from '../lib/tracking';
 import { claimLocalData, clearUserLocalData } from '../lib/localData';
 import { isAdminAccount } from '../lib/adminGuard';
 
@@ -71,6 +72,7 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const { data, error } = await db.auth.signInWithPassword({ email, password });
     if (error) {
+      trackAuthEvent('login_error', isEmailNotConfirmed(error) ? 'email_not_confirmed' : error.code || 'outro');
       if (isEmailNotConfirmed(error)) return { error: translateAuthError(error), needsConfirmation: true };
       // Qualquer outra falha de credencial vira a mesma mensagem (não revela
       // se o e-mail existe); rede/limite de tentativas ganham texto próprio.
@@ -86,17 +88,25 @@ export function AuthProvider({ children }) {
   }
 
   async function signup(email, password) {
-    if (password.length < MIN_PASSWORD) return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
+    if (password.length < MIN_PASSWORD) {
+      trackAuthEvent('signup_error', 'senha_curta');
+      return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
+    }
     const { data, error } = await db.auth.signUp({
       email, password,
       options: { data: { termsAcceptedAt: new Date().toISOString(), lang }, emailRedirectTo: appUrl() },
     });
-    if (error) return { error: translateAuthError(error) };
+    if (error) {
+      trackAuthEvent('signup_error', error.code || 'outro');
+      return { error: translateAuthError(error) };
+    }
     // Com proteção contra enumeração de e-mail ligada, cadastrar um e-mail que
     // já tem conta confirmada não dá erro — volta um usuário sem identities.
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      trackAuthEvent('signup_error', 'user_already_exists');
       return { error: translateAuthError({ code: 'user_already_exists' }) };
     }
+    trackAuthEvent('signup_ok');
     if (data.session) {
       claimLocalData(data.user.id);
       setUser(data.user);

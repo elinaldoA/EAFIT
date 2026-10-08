@@ -14,6 +14,7 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/engajamento', label: 'Engajamento' },
           { to: '/analise-planos', label: 'Análise dos planos' },
+          { to: '/comportamento', label: 'Comportamento' },
         ],
       },
     ],

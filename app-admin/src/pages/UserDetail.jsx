@@ -271,6 +271,7 @@ export default function UserDetail() {
 
       {tab === 'perfil' && (
         <UserProfileTab
+          userId={id}
           form={form} setForm={setForm} busy={busy} onSaveProfile={handleSaveProfile}
           achievements={achievements} progressPhotos={progressPhotos}
           weightLogs={weightLogs} waterLogs={waterLogs}

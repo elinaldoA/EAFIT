@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 
 import { t } from './i18n';
 export const REACTIONS = ['💪', '🔥', '👏'];
@@ -39,12 +40,14 @@ export async function setShareActivity(share) {
 
 // 'sent' | 'accepted' | 'already'
 export async function requestFriend(code) {
+  trackFeature('friends');
   const { data, error } = await db.rpc('request_friend', { p_code: code });
   if (error) throw error;
   return data;
 }
 
 export async function respondFriend(id, accept) {
+  trackFeature('friends');
   const { error } = await db.rpc('respond_friend', { p_id: id, p_accept: accept });
   if (error) throw error;
 }
@@ -72,6 +75,7 @@ export async function fetchFeed(limit = 30) {
 }
 
 export async function reactToEvent(eventId, emoji) {
+  trackFeature('friends');
   const { error } = await db.rpc('react_to_event', { p_event: eventId, p_emoji: emoji });
   if (error) throw error;
 }

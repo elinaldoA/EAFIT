@@ -134,11 +134,13 @@ describe('service worker: clique na notificação', () => {
 
   it('foca a janela já aberta do app', async () => {
     const focus = vi.fn().mockResolvedValue('focused');
-    clientsApi.matchAll.mockResolvedValue([{ url: 'https://x/other' }, { url: 'https://app.test/EAFIT/#treino', focus }]);
+    const postMessage = vi.fn();
+    clientsApi.matchAll.mockResolvedValue([{ url: 'https://x/other' }, { url: 'https://app.test/EAFIT/#treino', focus, postMessage }]);
     const { event, done } = click({ url: '/EAFIT/#perfil' });
     await done;
     expect(event.notification.close).toHaveBeenCalled();
     expect(focus).toHaveBeenCalled();
+    expect(postMessage).toHaveBeenCalledWith({ type: 'eafit-push-open' });
     expect(clientsApi.openWindow).not.toHaveBeenCalled();
     expect(clientsApi.matchAll).toHaveBeenCalledWith({ type: 'window', includeUncontrolled: true });
   });
@@ -146,12 +148,12 @@ describe('service worker: clique na notificação', () => {
   it('abre uma janela nova na URL da notificação quando não há nenhuma', async () => {
     clientsApi.matchAll.mockResolvedValue([]);
     await click({ url: '/EAFIT/#historico' }).done;
-    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/#historico');
+    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/?push=1#historico');
   });
 
   it('sem URL nos dados abre a raiz do app', async () => {
     clientsApi.matchAll.mockResolvedValue([]);
     await click(undefined).done;
-    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/');
+    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/?push=1');
   });
 });

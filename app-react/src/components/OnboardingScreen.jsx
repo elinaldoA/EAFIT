@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
+import { trackEvent } from '../lib/tracking';
 
 import { t } from '../lib/i18n';
 export default function OnboardingScreen() {
@@ -18,20 +19,32 @@ export default function OnboardingScreen() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
 
+  // Métrica do painel: até onde cada pessoa chega no preenchimento.
+  useEffect(() => { trackEvent('onboarding', 'view'); }, []);
+  useEffect(() => {
+    Object.entries({ sexo, idade, peso, altura }).forEach(([field, value]) => {
+      if (value) trackEvent('onboarding', field);
+    });
+  }, [sexo, idade, peso, altura]);
+
   async function handleSubmit() {
+    trackEvent('onboarding', 'submit');
     const idadeNum = parseInt(idade, 10);
     const pesoNum = parseFloat(peso);
     const alturaNum = parseFloat(altura);
 
     if (!sexo || !idadeNum || idadeNum < 14 || idadeNum > 100) {
+      trackEvent('onboarding', 'erro_idade');
       setMsg(t('Preencha sexo e uma idade válida (14–100).'));
       return;
     }
     if (!pesoNum || pesoNum < 30 || pesoNum > 300) {
+      trackEvent('onboarding', 'erro_peso');
       setMsg(t('Informe um peso válido (kg).'));
       return;
     }
     if (!alturaNum || alturaNum < 100 || alturaNum > 250) {
+      trackEvent('onboarding', 'erro_altura');
       setMsg(t('Informe uma altura válida (cm).'));
       return;
     }
@@ -50,7 +63,9 @@ export default function OnboardingScreen() {
 
       const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel });
       if (error) throw error;
+      trackEvent('onboarding', 'done');
     } catch (err) {
+      trackEvent('onboarding', 'erro_plano');
       console.error('onboarding:', err);
       setMsg(t('⚠️ Não foi possível gerar seu plano — tente novamente.'));
       toast(t('⚠️ Erro ao criar seu plano personalizado'));

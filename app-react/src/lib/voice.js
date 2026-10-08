@@ -1,3 +1,4 @@
+import { trackFeature } from './tracking';
 // Camada de voz do treinador: só fala (speechSynthesis) e escolhe a melhor voz
 // pt-BR do aparelho. Não conhece treino nem frases — isso fica em coach.js.
 //
@@ -77,6 +78,7 @@ export async function speak(text, { voiceName = '', rate = 1, pitch = 1, volume 
     u.volume = volume;
     if (!queue) window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
+    trackFeature('voice_coach');
     return true;
   } catch {
     return false;

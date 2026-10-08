@@ -1,4 +1,5 @@
 import { formatDuration } from './utils';
+import { trackFeature } from './tracking';
 import { formatMinutes } from './monthlyRecap';
 import { SHARE_CARD_URL } from './links';
 import { getMuscleGroupsForDay } from '../data/treinoData';
@@ -542,6 +543,7 @@ async function shareImageBlob(blob, filename, title, text) {
 }
 
 export async function shareWorkoutSummary(summary) {
+  trackFeature('share_card');
   const blob = await renderWorkoutSummaryCard(summary);
   return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), SHARE_TEXT);
 }
@@ -615,6 +617,7 @@ export async function renderMonthlyRecapCard(recap) {
 }
 
 export async function shareMonthlyRecap(recap) {
+  trackFeature('share_card');
   const blob = await renderMonthlyRecapCard(recap);
   return shareImageBlob(blob, 'meu-mes-eafit.png', t('Meu mês no EAFIT'), t('Meu mês no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }));
 }

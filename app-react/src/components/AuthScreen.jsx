@@ -5,6 +5,7 @@ import PasswordInput from './PasswordInput';
 import LanguageSwitch from './LanguageSwitch';
 import { isKnownUser } from '../lib/knownUser';
 import { recordVisit } from '../lib/pageVisits';
+import { trackAuthEvent } from '../lib/tracking';
 import { t } from '../lib/i18n';
 
 const MODES = {
@@ -27,6 +28,11 @@ export default function AuthScreen() {
   // Topo do funil do painel admin: quem chega aqui sem sessão.
   useEffect(() => { recordVisit('acesso'); }, []);
 
+  // Começou a preencher o cadastro (1 vez por sessão; ver lib/tracking.js).
+  useEffect(() => {
+    if (mode === 'signup' && (email || password)) trackAuthEvent('signup_start');
+  }, [mode, email, password]);
+
   function switchMode(next) {
     setMode(next);
     setMsg({ text: '', type: '' });
@@ -36,9 +42,20 @@ export default function AuthScreen() {
   async function handleSubmit(e) {
     e.preventDefault();
     const cleanEmail = email.trim();
-    if (!cleanEmail) { setMsg({ text: t('Informe seu e-mail.'), type: 'error' }); return; }
-    if (mode !== 'forgot' && !password) { setMsg({ text: t('Informe sua senha.'), type: 'error' }); return; }
-    if (mode === 'signup' && !acceptedTerms) { setMsg({ text: t('Aceite os Termos de Uso para criar a conta.'), type: 'error' }); return; }
+    const signingUp = mode === 'signup';
+    if (signingUp) trackAuthEvent('signup_submit');
+    if (!cleanEmail) {
+      if (signingUp) trackAuthEvent('signup_error', 'sem_email');
+      setMsg({ text: t('Informe seu e-mail.'), type: 'error' }); return;
+    }
+    if (mode !== 'forgot' && !password) {
+      if (signingUp) trackAuthEvent('signup_error', 'sem_senha');
+      setMsg({ text: t('Informe sua senha.'), type: 'error' }); return;
+    }
+    if (signingUp && !acceptedTerms) {
+      trackAuthEvent('signup_error', 'termos');
+      setMsg({ text: t('Aceite os Termos de Uso para criar a conta.'), type: 'error' }); return;
+    }
 
     setBusy(true);
     setNeedsConfirmation(false);

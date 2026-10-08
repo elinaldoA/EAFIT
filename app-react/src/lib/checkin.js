@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 
 import { t } from './i18n';
 export const CHECKIN_FIELDS = [
@@ -19,6 +20,7 @@ export async function fetchCheckins(userId, sinceDate) {
 }
 
 export async function saveCheckin(userId, checkinDate, { energy, sleep, mood }) {
+  trackFeature('checkin');
   const { error } = await db
     .from('daily_checkins')
     .upsert({ user_id: userId, checkin_date: checkinDate, energy, sleep, mood }, { onConflict: 'user_id,checkin_date' });

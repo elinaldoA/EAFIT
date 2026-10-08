@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { trackFeature } from '../lib/tracking';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { todayName } from '../data/treinoData';
@@ -38,6 +39,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
 
   useEffect(() => {
     // live-open: sobe o toast pro topo, longe do descanso e do rodapé (live.css)
+    trackFeature('live_mode');
     document.body.classList.add('modal-open', 'live-open');
     return () => document.body.classList.remove('modal-open', 'live-open');
   }, []);

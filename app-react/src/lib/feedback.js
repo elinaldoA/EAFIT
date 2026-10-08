@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 
 import { t } from './i18n';
 export const FEEDBACK_KINDS = [
@@ -28,6 +29,7 @@ export function friendlyFeedbackError(err) {
 }
 
 export async function sendFeedback(userId, kind, message) {
+  trackFeature('feedback');
   const { error } = await db.from('feedback').insert({
     user_id: userId,
     kind,

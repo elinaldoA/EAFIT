@@ -91,6 +91,8 @@ describe('backup cobre as tabelas do usuário', () => {
     push_subscriptions: 'dado técnico do aparelho (chaves de push), não é conteúdo do usuário',
     notification_log: 'controle interno de envio (as mensagens em si estão em notifications)',
     client_errors: 'diagnóstico técnico de erros do navegador',
+    user_events: 'métrica de uso do app (telas e funcionalidades abertas), não é conteúdo do usuário',
+    user_client: 'retrato técnico do aparelho (sistema, navegador, versão do app)',
     admin_user_notes: 'anotações internas da equipe sobre a conta',
     feed_events: 'atividade já refletida em treinos/recordes; os amigos veem só apelido',
     feed_reactions: 'reações em publicações de terceiros',

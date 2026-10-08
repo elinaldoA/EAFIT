@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { trackFeature } from '../lib/tracking';
 import { createPortal } from 'react-dom';
 import { playRestDoneSound } from '../lib/sound';
 import { getModalRoot } from '../lib/modalRoot';
@@ -37,6 +38,7 @@ export default function RestTimer({ session, onClose }) {
 
   // Prevent the page behind the modal from scrolling while it's open.
   useEffect(() => {
+    trackFeature('rest_timer');
     document.body.classList.add('modal-open');
     return () => document.body.classList.remove('modal-open');
   }, []);

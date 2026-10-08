@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { trackFeature } from '../lib/tracking';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { useAuth } from '../context/useAuth';
@@ -148,6 +149,7 @@ export default function PlanEditorModal({ onClose }) {
   const [selectedDay, setSelectedDay] = useState('Segunda');
 
   useEffect(() => {
+    trackFeature('plan_editor');
     document.body.classList.add('modal-open');
     return () => document.body.classList.remove('modal-open');
   }, []);

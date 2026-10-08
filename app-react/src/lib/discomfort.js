@@ -1,10 +1,12 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 import { parseLocalDate, toDateStr } from './utils';
 import { todayDate } from '../data/treinoData';
 
 const RECENT_DAYS = 14;
 
 export async function logDiscomfort(userId, exerciseName, logDate, severity, note) {
+  trackFeature('discomfort');
   const { error } = await db.from('exercise_discomfort').insert({
     user_id: userId,
     exercise_name: exerciseName,

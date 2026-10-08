@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 
 export async function fetchWaterLog(userId, date) {
   const { data, error } = await db
@@ -12,6 +13,7 @@ export async function fetchWaterLog(userId, date) {
 }
 
 export async function upsertWaterLog(userId, date, amountMl) {
+  trackFeature('water');
   const { error } = await db
     .from('water_logs')
     .upsert(

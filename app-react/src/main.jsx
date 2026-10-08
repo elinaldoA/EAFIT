@@ -5,6 +5,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { clearChunkReloadFlag, reloadOnceForChunkError } from './lib/chunkReload'
 import { installErrorReporter } from './lib/errorReporter'
+import { enableTracking, capturePushOpen } from './lib/tracking'
 
 // Import dinâmico que falha no preload (chunk de uma versão antiga que não
 // existe mais depois de um deploy) — recarrega uma vez pra pegar a versão nova.
@@ -13,6 +14,8 @@ window.addEventListener('vite:preloadError', event => {
 })
 clearChunkReloadFlag()
 installErrorReporter()
+enableTracking()
+capturePushOpen()
 
 // O Safari do iOS rola o documento pra mostrar o campo acima do teclado e às
 // vezes não volta ao fechar. Como o app não rola (html/body com

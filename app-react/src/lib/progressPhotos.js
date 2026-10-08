@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 import { compressImageBlob, assertValidImage } from './imageUtils';
 
 const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5MB — tamanho máximo aceito do arquivo original
@@ -36,6 +37,7 @@ export async function fetchPhotos(userId) {
 }
 
 export async function addPhoto(userId, { file, date, note }) {
+  trackFeature('photos');
   assertValidImage(file, MAX_UPLOAD_SIZE);
 
   const blob = await compressImageBlob(file);

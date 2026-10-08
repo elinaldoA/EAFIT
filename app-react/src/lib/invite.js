@@ -1,4 +1,5 @@
 import { INVITE_URL } from './links';
+import { trackFeature } from './tracking';
 
 import { t } from './i18n';
 // Convite avulso (botão em Perfil): leva pra landing com ?origem=convite, pra
@@ -9,6 +10,7 @@ export const INVITE_TEXT = t('Tô usando o EAFIT pra montar e registrar meus tre
 // nativo: link na área de transferência), 'cancelled' (fechou o menu) ou
 // 'failed' (nem compartilhar nem copiar funcionou).
 export async function shareInvite() {
+  trackFeature('invite');
   if (navigator.share) {
     try {
       await navigator.share({ title: 'EAFIT', text: INVITE_TEXT, url: INVITE_URL });

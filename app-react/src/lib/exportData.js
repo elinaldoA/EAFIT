@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { trackFeature } from './tracking';
 import { fetchWeightLogs } from './weightLog';
 import { fetchWaterLogsRange } from './waterLog';
 import { fetchAllDiscomfort } from './discomfort';
@@ -200,11 +201,13 @@ export function downloadBlob(content, filename, mime) {
 }
 
 export async function exportBackupJSON(userId) {
+  trackFeature('export');
   const data = await gatherUserData(userId);
   downloadBlob(JSON.stringify(data, null, 2), `meu-plano-backup-${data.exportedAt.slice(0, 10)}.json`, 'application/json');
 }
 
 export async function exportSummaryCSV(userId) {
+  trackFeature('export');
   const data = await gatherUserData(userId);
 
   const byDate = {};
@@ -232,6 +235,7 @@ function escapeHtml(value) {
 }
 
 export async function printReport(userId) {
+  trackFeature('export');
   const data = await gatherUserData(userId);
   const totalTreinos = data.workouts.filter(w => w.completed).length;
 

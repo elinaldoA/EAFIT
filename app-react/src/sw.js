@@ -71,11 +71,18 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = event.notification.data?.url || APP_URL;
 
+  // Métrica "abriu o app por uma notificação" (lib/tracking.js): app já aberto
+  // recebe uma mensagem; janela nova recebe ?push=1 na URL (antes do #aba).
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsArr) => {
       const existing = clientsArr.find((c) => c.url.includes(APP_URL));
-      if (existing) return existing.focus();
-      return self.clients.openWindow(url);
+      if (existing) {
+        existing.postMessage?.({ type: 'eafit-push-open' });
+        return existing.focus();
+      }
+      const [base, hash] = url.split('#');
+      const marked = `${base}${base.includes('?') ? '&' : '?'}push=1${hash === undefined ? '' : `#${hash}`}`;
+      return self.clients.openWindow(marked);
     })
   );
 });

@@ -1,9 +1,13 @@
 import { db } from './supabase';
 import { todayDate } from '../data/treinoData';
+import { lang } from './i18n';
+import { readClientInfo } from './clientInfo';
+
+export { detectOS } from './clientInfo';
 
 // Contagem anônima de visitas (tabela public.page_visits — ver
 // supabase/migrations/20261002030000_page_visits.sql). A MESMA regra de origem
-// e de sistema operacional está copiada no <script> de public/landing/index.html, que não tem build:
+// e de aparelho (lib/clientInfo.js) está copiada no <script> de public/landing/index.html, que não tem build:
 // mudou aqui, mude lá.
 
 const REFERRER_SOURCES = [
@@ -34,21 +38,10 @@ export function detectSource(search, referrer, ownHost) {
   return match ? match[1] : 'outro-site';
 }
 
-// Família do sistema operacional, só pra estatística agregada do painel (o
-// user-agent em si nunca é gravado). Android antes de Linux: todo Android se
-// declara Linux. iPad recente se apresenta como Mac — o que o diferencia é ter
-// tela de toque.
-export function detectOS(userAgent, platform, maxTouchPoints) {
-  const ua = String(userAgent || '').toLowerCase();
-  if (!ua) return 'outro';
-  if (ua.includes('android')) return 'android';
-  if (/iphone|ipad|ipod/.test(ua)) return 'ios';
-  const mac = ua.includes('macintosh') || ua.includes('mac os x') || /^mac/i.test(platform || '');
-  if (mac) return maxTouchPoints > 1 ? 'ios' : 'mac';
-  if (ua.includes('windows')) return 'windows';
-  if (ua.includes('cros')) return 'outro';
-  if (ua.includes('linux') || ua.includes('x11')) return 'linux';
-  return 'outro';
+// ?utm_campaign= no formato aceito pelo banco (vazio = sem campanha).
+export function detectCampaign(search) {
+  const raw = new URLSearchParams(search || '').get('utm_campaign') || '';
+  return raw.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 }
 
 // No máximo 1 visita por página por dia neste navegador (aproxima
@@ -63,12 +56,21 @@ export async function recordVisit(page) {
   } catch { /* sem armazenamento: conta mesmo assim */ }
 
   const source = detectSource(window.location.search, document.referrer, window.location.hostname);
-  const nav = typeof navigator === 'undefined' ? {} : navigator;
-  const os = detectOS(nav.userAgent, nav.platform, nav.maxTouchPoints);
+  const { os, browser, device } = readClientInfo();
+  const campaign = detectCampaign(window.location.search);
+  // Do mais completo pro mais simples: banco sem as colunas novas (migration
+  // ainda não aplicada) recusa a linha, e a visita é gravada sem elas.
+  const attempts = [
+    { page, source, os, browser, device, lang, campaign },
+    { page, source, os },
+    { page, source },
+  ];
   try {
-    let { error } = await db.from('page_visits').insert({ page, source, os });
-    // Banco ainda sem a coluna `os` (migration não aplicada): grava como antes.
-    if (error) ({ error } = await db.from('page_visits').insert({ page, source }));
+    let error;
+    for (const row of attempts) {
+      ({ error } = await db.from('page_visits').insert(row));
+      if (!error) break;
+    }
     if (error) throw error;
     return true;
   } catch (err) {

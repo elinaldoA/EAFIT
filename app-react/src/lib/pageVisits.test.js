@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const { mockInsert } = vi.hoisted(() => ({ mockInsert: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { from: () => ({ insert: mockInsert }) } }));
 
-import { detectSource, detectOS, recordVisit } from './pageVisits';
+import { detectSource, detectOS, detectCampaign, recordVisit } from './pageVisits';
 
 const HOST = 'elinaldoa.github.io';
 
@@ -61,11 +61,19 @@ describe('detectOS', () => {
   });
 });
 
+describe('detectCampaign', () => {
+  it('lê utm_campaign no formato do banco', () => {
+    expect(detectCampaign('?utm_source=instagram&utm_campaign=Lançamento Outubro!')).toBe('lanamentooutubro');
+    expect(detectCampaign('?utm_campaign=black-friday_2026')).toBe('black-friday_2026');
+    expect(detectCampaign('')).toBe('');
+  });
+});
+
 describe('recordVisit', () => {
   beforeEach(() => {
     localStorage.clear();
     mockInsert.mockReset().mockResolvedValue({ error: null });
-    globalThis.window = { location: { search: '?origem=convite', hostname: HOST } };
+    globalThis.window = { location: { search: '?origem=convite&utm_campaign=outubro', hostname: HOST } };
     globalThis.document = { referrer: '' };
     vi.stubGlobal('navigator', { userAgent: 'Mozilla/5.0 (Linux; Android 14) Chrome/126.0', platform: 'Linux armv81', maxTouchPoints: 5 });
   });
@@ -74,11 +82,19 @@ describe('recordVisit', () => {
     expect(await recordVisit('acesso')).toBe(true);
     expect(await recordVisit('acesso')).toBe(false);
     expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledWith({ page: 'acesso', source: 'convite', os: 'android' });
+    expect(mockInsert).toHaveBeenCalledWith({ page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro' });
   });
 
-  it('banco sem a coluna de sistema: grava sem ela', async () => {
-    mockInsert.mockResolvedValueOnce({ error: { message: 'column "os" does not exist' } });
+  it('banco sem as colunas novas: cai pra linha mais simples que ele aceita', async () => {
+    mockInsert.mockResolvedValueOnce({ error: { message: 'column "browser" does not exist' } });
+    expect(await recordVisit('acesso')).toBe(true);
+    expect(mockInsert).toHaveBeenLastCalledWith({ page: 'acesso', source: 'convite', os: 'android' });
+
+    localStorage.clear();
+    mockInsert.mockReset()
+      .mockResolvedValueOnce({ error: { message: 'x' } })
+      .mockResolvedValueOnce({ error: { message: 'x' } })
+      .mockResolvedValue({ error: null });
     expect(await recordVisit('acesso')).toBe(true);
     expect(mockInsert).toHaveBeenLastCalledWith({ page: 'acesso', source: 'convite' });
   });
