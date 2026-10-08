@@ -26,6 +26,7 @@ import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import TermsUpdateScreen from './components/TermsUpdateScreen';
+import InstallScreen from './components/InstallScreen';
 import TrainerShell from './trainer/TrainerShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
@@ -92,6 +93,7 @@ function Shell() {
     <div className="shell">
       <AnnouncementBanner />
       {user && <TermsUpdateScreen />}
+      {user && <InstallScreen />}
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}

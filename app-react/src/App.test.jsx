@@ -50,6 +50,7 @@ vi.mock('./components/BootSplash', () => ({ default: () => <div>splash</div> }))
 vi.mock('./components/PasswordRecoveryScreen', () => ({ default: () => <div>tela-recuperacao</div> }));
 vi.mock('./components/MaintenanceScreen', () => ({ default: ({ message }) => <div>manutencao:{message}</div> }));
 vi.mock('./components/AnnouncementBanner', () => ({ default: () => <div>aviso</div> }));
+vi.mock('./components/InstallScreen', () => ({ default: () => <div>tela-instalar</div> }));
 vi.mock('./trainer/TrainerShell', () => ({
   default: ({ onSwitchToStudent }) => <div>painel-personal<button onClick={onSwitchToStudent}>usar-como-aluno</button></div>,
 }));
@@ -96,11 +97,21 @@ describe('App', () => {
     expect(screen.getByText('aviso')).toBeTruthy();
     expect(screen.getByText('update-prompt:false')).toBeTruthy();
     expect(h.markKnownUser).not.toHaveBeenCalled();
+    expect(screen.queryByText('tela-instalar')).toBeNull();
   });
 
   it('usuário logado marca o aparelho como conhecido', () => {
     render(<App />);
     expect(h.markKnownUser).toHaveBeenCalled();
+  });
+
+  it('usuário logado recebe a tela de instalar o app; na recuperação de senha, não', () => {
+    const a = render(<App />);
+    expect(screen.getByText('tela-instalar')).toBeTruthy();
+    a.unmount();
+    h.auth = { user: loggedIn(), authLoading: false, recoveryMode: true };
+    render(<App />);
+    expect(screen.queryByText('tela-instalar')).toBeNull();
   });
 
   it('modo recuperação de senha substitui o app', () => {

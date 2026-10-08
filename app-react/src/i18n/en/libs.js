@@ -97,6 +97,20 @@ export default {
   'Notificações push não suportadas neste navegador.': 'Push notifications are not supported in this browser.',
   'Push não configurado (VITE_VAPID_PUBLIC_KEY ausente).': 'Push not configured (VITE_VAPID_PUBLIC_KEY missing).',
 
+  // instalação do app
+  'Toque em Compartilhar no navegador (o quadrado com a seta para cima).': 'Tap Share in the browser (the square with the arrow pointing up).',
+  'Escolha "Adicionar à Tela de Início".': 'Choose "Add to Home Screen".',
+  'Toque em "Adicionar" e abra o EAFIT pelo ícone.': 'Tap "Add" and open EAFIT from the icon.',
+  'Toque no menu do navegador (⋮).': 'Tap the browser menu (⋮).',
+  'Escolha "Instalar app" ou "Adicionar à tela inicial".': 'Choose "Install app" or "Add to Home screen".',
+  'Confirme e abra o EAFIT pelo ícone.': 'Confirm and open EAFIT from the icon.',
+  'No Safari, abra o menu Arquivo (ou o botão Compartilhar).': 'In Safari, open the File menu (or the Share button).',
+  'Escolha "Adicionar ao Dock".': 'Choose "Add to Dock".',
+  'Abra o EAFIT pelo Dock.': 'Open EAFIT from the Dock.',
+  'Clique no ícone de instalar na barra de endereço (ou abra o menu do navegador).': 'Click the install icon in the address bar (or open the browser menu).',
+  'Escolha "Instalar EAFIT".': 'Choose "Install EAFIT".',
+  'Abra o EAFIT pelo atalho criado.': 'Open EAFIT from the shortcut that was created.',
+
   // perfil / avaliação
   'Abaixo do peso': 'Underweight',
   'Peso normal': 'Normal weight',

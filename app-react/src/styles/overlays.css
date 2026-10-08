@@ -272,3 +272,16 @@ body.modal-open { overflow: hidden; }
 .maintenance { z-index: 2000; padding: 24px; text-align: center; }
 .maintenance__title { margin: 4px 0 0; font-size: 1.15rem; }
 .maintenance__text { margin: 0; max-width: 32ch; font-size: 0.9rem; line-height: 1.45; opacity: .8; }
+
+/* Passo a passo da tela de instalação (InstallScreen) */
+.install__steps {
+  margin: 0;
+  padding-left: 1.3em;
+  max-width: 32ch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
