@@ -68,3 +68,54 @@ export async function callGeneratePlan(targetUserId) {
   if (data?.error) throw new Error(data.error);
   return data;
 }
+
+// Fotos novas ficam no Storage privado (storage_path) e precisam de URL
+// assinada; as antigas trazem a imagem em image_data. Devolve as fotos com
+// image_data pronto para o <img>; sem URL (falha ao assinar), fica null.
+const PHOTO_URL_TTL = 3600;
+
+export async function withSignedPhotos(rows) {
+  const list = rows || [];
+  const paths = list.filter(r => r.storage_path).map(r => r.storage_path);
+  const links = {};
+  if (paths.length) {
+    try {
+      const { data } = await db.storage.from('progress-photos').createSignedUrls(paths, PHOTO_URL_TTL);
+      (data || []).forEach(x => { if (x.signedUrl) links[x.path] = x.signedUrl; });
+    } catch { /* sem link: a foto aparece só com data e nota */ }
+  }
+  return list.map(r => ({ ...r, image_data: r.storage_path ? links[r.storage_path] || null : r.image_data }));
+}
+
+// Correções de suporte no histórico de treino. O admin já tem acesso total a
+// workouts/exercise_sets pela policy "admin full access"; aqui só se garante
+// que toda correção fica na auditoria.
+async function audit(adminId, userId, action, details) {
+  const { error } = await db.from('admin_audit_log').insert({ admin_id: adminId, target_user_id: userId, action, details });
+  if (error) console.error('audit log:', error.message);
+}
+
+// Aceita vírgula decimal; vazio vira null (apaga o valor); inválido/negativo é recusado.
+export function parseSetNumber(raw) {
+  const s = String(raw ?? '').trim().replace(',', '.');
+  if (s === '') return { ok: true, value: null };
+  const n = Number(s);
+  return Number.isFinite(n) && n >= 0 && n <= 2000 ? { ok: true, value: n } : { ok: false };
+}
+
+export async function fixWorkoutSet(set, fields, adminId, userId) {
+  const { error } = await db.from('exercise_sets')
+    .update({ ...fields, updated_at: new Date().toISOString() }).eq('id', set.id);
+  if (error) throw error;
+  await audit(adminId, userId, 'fixWorkoutSet', {
+    exercise: set.exercise_name, set: set.set_number,
+    from: { carga: set.carga, reps: set.reps }, to: fields,
+  });
+}
+
+// Apaga o treino e as séries dele (exercise_sets/exercise_logs caem em cascata).
+export async function deleteWorkout(workout, adminId, userId) {
+  const { error } = await db.from('workouts').delete().eq('id', workout.id);
+  if (error) throw error;
+  await audit(adminId, userId, 'deleteWorkout', { workout_date: workout.workout_date, day: workout.day_of_week });
+}

@@ -136,6 +136,31 @@ export async function fetchTermsAcceptance(since = null) {
 }
 
 // ---------------------------------------------------------------------------
+// Limpeza de dados técnicos antigos
+// ---------------------------------------------------------------------------
+export const PURGE_DAYS = 180;
+export const PURGE_KINDS = {
+  page_visits: 'Visitas à landing e à tela de acesso',
+  auth_events: 'Eventos da tela de acesso',
+  user_events: 'Telas e funcionalidades abertas',
+  notification_log: 'Controle de notificações automáticas',
+  client_errors: 'Erros do app',
+};
+
+export async function fetchPurgeStats(days = PURGE_DAYS) {
+  return (await rpcRows('admin_purge_stats', { p_days: days })).map(r => ({
+    kind: r.pg_kind, label: PURGE_KINDS[r.pg_kind] || r.pg_kind, total: Number(r.pg_total), old: Number(r.pg_old),
+  }));
+}
+
+// Devolve quantas linhas foram apagadas.
+export async function purgeOld(kind, days = PURGE_DAYS) {
+  const { data, error } = await db.rpc('admin_purge_old', { p_kind: kind, p_days: days });
+  if (error) throw error;
+  return Number(data || 0);
+}
+
+// ---------------------------------------------------------------------------
 // Storage
 // ---------------------------------------------------------------------------
 export function mapStorage(rows) {

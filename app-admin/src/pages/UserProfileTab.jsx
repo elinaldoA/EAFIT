@@ -1,6 +1,7 @@
 import EmptyState from '../components/EmptyState';
 import UserClientCard from '../components/UserClientCard';
 import UserWellbeingCard from '../components/UserWellbeingCard';
+import UserFriendsCard from '../components/UserFriendsCard';
 import { METAS, NIVEIS, BADGE_LABELS, formatDate } from '../lib/userDetailHelpers';
 
 export default function UserProfileTab({ userId, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
@@ -62,6 +63,7 @@ export default function UserProfileTab({ userId, form, setForm, busy, onSaveProf
 
       <UserClientCard userId={userId} />
       <UserWellbeingCard userId={userId} />
+      <UserFriendsCard userId={userId} />
 
       <section>
         <h2 className="section-title">Conquistas</h2>
@@ -84,10 +86,14 @@ export default function UserProfileTab({ userId, form, setForm, busy, onSaveProf
           <div className="actions-row" style={{ flexWrap: 'wrap' }}>
             {progressPhotos.map(p => (
               <div key={p.id} style={{ width: 120 }}>
-                <img
-                  src={p.image_data} alt={`Foto de progresso de ${p.photo_date}`}
-                  style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }}
-                />
+                {p.image_data ? (
+                  <img
+                    src={p.image_data} alt={`Foto de progresso de ${p.photo_date}`}
+                    style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 8 }}
+                  />
+                ) : (
+                  <div className="card" style={{ height: 120, display: 'grid', placeItems: 'center', fontSize: 12 }}>foto indisponível</div>
+                )}
                 <p className="user-detail__meta">{p.photo_date}</p>
                 {p.note && <p className="user-detail__meta">{p.note}</p>}
               </div>

@@ -2,10 +2,12 @@ import { Link, useLocation } from 'react-router-dom';
 import logoMark from '../../assets/logo-mark.png';
 import { NAV_GROUPS, sectionForPath } from './nav';
 import NavIcon from './NavIcon';
+import { useAttention } from '../../lib/attention';
 
 export default function Sidebar({ open, onClose }) {
   const { pathname } = useLocation();
   const current = sectionForPath(pathname);
+  const attention = useAttention();
 
   return (
     <>
@@ -34,6 +36,11 @@ export default function Sidebar({ open, onClose }) {
                   >
                     <span className="sidebar__link-icon"><NavIcon name={section.icon} /></span>
                     <span>{section.label}</span>
+                    {attention[section.key] && (
+                      <span className="sidebar__count" title={attention[section.key].title}>
+                        {attention[section.key].total > 99 ? '99+' : attention[section.key].total}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

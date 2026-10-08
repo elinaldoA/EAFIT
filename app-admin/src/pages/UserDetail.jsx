@@ -4,7 +4,10 @@ import { db } from '../lib/supabase';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
-import { formatDate, callAdminAction, computePersonalRecords, callGeneratePlan } from '../lib/userDetailHelpers';
+import {
+  formatDate, callAdminAction, computePersonalRecords, callGeneratePlan, withSignedPhotos, fixWorkoutSet, deleteWorkout,
+} from '../lib/userDetailHelpers';
+import { downloadUserExport } from '../lib/userExport';
 import UserProfileTab from './UserProfileTab';
 import UserWorkoutsTab from './UserWorkoutsTab';
 import UserActionsTab from './UserActionsTab';
@@ -52,7 +55,7 @@ export default function UserDetail() {
         db.from('workouts').select('id').eq('user_id', id),
         db.from('exercise_discomfort').select('id, exercise_name, log_date, severity, note').eq('user_id', id).order('log_date', { ascending: false }).limit(30),
         db.from('achievements').select('id, badge_id, unlocked_at').eq('user_id', id).order('unlocked_at', { ascending: false }),
-        db.from('progress_photos').select('id, photo_date, image_data, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
+        db.from('progress_photos').select('id, photo_date, image_data, storage_path, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
         db.from('push_subscriptions').select('id', { count: 'exact', head: true }).eq('user_id', id),
       ]);
       if (userErr) throw userErr;
@@ -88,7 +91,7 @@ export default function UserDetail() {
       setPersonalRecords(personalRecordsComputed);
       setDiscomfortLogs(disc.data || []);
       setAchievements(ach.data || []);
-      setProgressPhotos(photos.data || []);
+      setProgressPhotos(await withSignedPhotos(photos.data));
       setPushCount(push.count || 0);
       setExpandedWorkoutId(null);
       setWorkoutSets({});
@@ -223,6 +226,43 @@ export default function UserDetail() {
     }
   }
 
+  // Suporte: corrige a carga/reps de uma série digitada errada.
+  async function handleFixSet(workoutId, set, fields) {
+    setActionMsg('');
+    try {
+      await fixWorkoutSet(set, fields, adminUser?.id, id);
+      setWorkoutSets(prev => ({ ...prev, [workoutId]: prev[workoutId].map(s => (s.id === set.id ? { ...s, ...fields } : s)) }));
+      setActionMsg('Série corrigida.');
+    } catch (err) {
+      setActionMsg(`Erro: ${err.message}`);
+    }
+  }
+
+  async function handleDeleteWorkout(workout) {
+    if (!window.confirm(`Apagar o treino de ${workout.workout_date} e todas as séries dele? Não dá para desfazer.`)) return;
+    setActionMsg('');
+    try {
+      await deleteWorkout(workout, adminUser?.id, id);
+      setActionMsg('Treino apagado.');
+      await load();
+    } catch (err) {
+      setActionMsg(`Erro: ${err.message}`);
+    }
+  }
+
+  async function handleExportData() {
+    setBusy(true);
+    setActionMsg('');
+    try {
+      const incomplete = await downloadUserExport(id, detail, adminUser?.id);
+      setActionMsg(incomplete.length ? `Arquivo gerado, mas sem: ${incomplete.join(', ')}.` : 'Arquivo gerado.');
+    } catch (err) {
+      setActionMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function exportTreinos() {
     downloadCsv(`treinos_${id}.csv`, toCsv(workouts, [
       { key: 'workout_date', label: 'Data' }, { key: 'day_of_week', label: 'Dia' },
@@ -285,6 +325,7 @@ export default function UserDetail() {
           expandedWorkoutId={expandedWorkoutId} workoutSets={workoutSets} setsLoading={setsLoading}
           onToggleWorkoutDetail={toggleWorkoutDetail} onExportTreinos={exportTreinos}
           personalRecords={personalRecords} discomfortLogs={discomfortLogs}
+          onFixSet={handleFixSet} onDeleteWorkout={handleDeleteWorkout}
         />
       )}
 
@@ -296,6 +337,7 @@ export default function UserDetail() {
           isBanned={isBanned} hasProfile={hasProfile}
           onRunAction={runAction} onToggleAdmin={handleToggleAdmin} onGeneratePlan={handleGeneratePlan}
           trainerCode={trainerCode} onToggleTrainer={handleToggleTrainer}
+          onExportData={handleExportData}
         />
       )}
     </div>

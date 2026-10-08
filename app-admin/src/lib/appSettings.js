@@ -21,9 +21,19 @@ export const BANNER_LEVELS = [
 
 export const DEFAULT_SETTINGS = {
   maintenance: { enabled: false, message: '' },
-  banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 0 },
+  banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', startsOn: '', endsOn: '', version: 0 },
   flags: {},
 };
+
+const isDay = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
+// Situação do aviso hoje, pelo período (datas YYYY-MM-DD no fuso do app;
+// vazio = sem limite). 'agendado' | 'no_ar' | 'encerrado'.
+export function bannerWindow(banner, today) {
+  if (banner.startsOn && today < banner.startsOn) return 'agendado';
+  if (banner.endsOn && today > banner.endsOn) return 'encerrado';
+  return 'no_ar';
+}
 
 // Mesma leitura de normalizeConfig em app-react/src/lib/appConfig.js (os dois
 // apps não compartilham build, então é duplicada). Aqui o banner mantém o
@@ -44,6 +54,8 @@ export function normalizeSettings(rows) {
       level: BANNER_LEVELS.some(l => l.value === b.level) ? b.level : 'info',
       linkUrl: String(b.linkUrl || ''),
       linkLabel: String(b.linkLabel || ''),
+      startsOn: isDay(b.startsOn) ? b.startsOn : '',
+      endsOn: isDay(b.endsOn) ? b.endsOn : '',
       version: Number.isFinite(Number(b.version)) ? Number(b.version) : 0,
     },
     flags,
@@ -58,6 +70,7 @@ export function isValidLink(url) {
 
 // Banner novo/editado muda de "versão": quem já fechou o aviso anterior volta a vê-lo.
 export function nextBannerVersion(current, next) {
+  // Mudar só o período não reabre o aviso para quem já fechou.
   const same = ['enabled', 'message', 'level', 'linkUrl', 'linkLabel'].every(k => current[k] === next[k]);
   return same ? current.version : current.version + 1;
 }

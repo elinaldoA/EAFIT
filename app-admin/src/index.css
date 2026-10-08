@@ -197,6 +197,7 @@ a { color: var(--primary); }
 
 .sidebar__link-icon { display: grid; place-items: center; width: 18px; height: 18px; flex-shrink: 0; }
 .sidebar__link-icon svg { width: 18px; height: 18px; }
+.sidebar__count { margin-left: auto; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 700; line-height: 1.5; text-align: center; font-variant-numeric: tabular-nums; }
 
 .sidebar__footer { display: flex; flex-direction: column; gap: 4px; }
 .sidebar__footer a { color: var(--text-muted); text-decoration: none; font-weight: 500; }

@@ -315,11 +315,11 @@ describe('AuditLog', () => {
   it('traduz ações conhecidas e mantém as desconhecidas', async () => {
     mockRpc.mockResolvedValue({ data: rows, error: null });
     wrap(<AuditLog />);
-    expect(await screen.findByText('Baniu')).toBeTruthy();
+    expect(await screen.findByRole('cell', { name: 'Baniu' })).toBeTruthy();
     expect(screen.getByText('acaoNova')).toBeTruthy();
     expect(screen.getByText('adm@x.com')).toBeTruthy();
     expect(screen.getByText(/"reason": "spam"/)).toBeTruthy();
-    expect(mockRpc).toHaveBeenCalledWith('admin_list_audit_log', { page_size: 50, page_offset: 0 });
+    expect(mockRpc).toHaveBeenCalledWith('admin_search_audit_log', { page_size: 50, page_offset: 0, p_action: null, p_search: null });
   });
 
   it('pagina usando total_count', async () => {
@@ -327,9 +327,22 @@ describe('AuditLog', () => {
     wrap(<AuditLog />);
     expect(await screen.findByText(/60 registro\(s\)/)).toBeTruthy();
     fireEvent.click(screen.getByText('Próxima'));
-    await waitFor(() => expect(mockRpc).toHaveBeenLastCalledWith('admin_list_audit_log', { page_size: 50, page_offset: 50 }));
+    await waitFor(() => expect(mockRpc).toHaveBeenLastCalledWith('admin_search_audit_log', { page_size: 50, page_offset: 50, p_action: null, p_search: null }));
     await screen.findByText(/página 2 de 2/);
     expect(screen.getByText('Próxima').disabled).toBe(true);
+  });
+
+  it('filtra por ação e por e-mail, voltando à primeira página', async () => {
+    mockRpc.mockResolvedValue({ data: rows, error: null });
+    wrap(<AuditLog />);
+    await screen.findByRole('cell', { name: 'Baniu' });
+    fireEvent.change(screen.getByLabelText('Filtrar por ação'), { target: { value: 'deleteUser' } });
+    await waitFor(() => expect(mockRpc).toHaveBeenLastCalledWith('admin_search_audit_log', { page_size: 50, page_offset: 0, p_action: 'deleteUser', p_search: null }));
+    fireEvent.change(screen.getByLabelText('Buscar por e-mail'), { target: { value: ' ana@ ' } });
+    await waitFor(() => expect(mockRpc).toHaveBeenLastCalledWith('admin_search_audit_log', { page_size: 50, page_offset: 0, p_action: 'deleteUser', p_search: 'ana@' }));
+    mockRpc.mockResolvedValue({ data: [], error: null });
+    fireEvent.change(screen.getByLabelText('Filtrar por ação'), { target: { value: 'ban' } });
+    expect(await screen.findByText('Nenhuma ação com esse filtro.')).toBeTruthy();
   });
 
   it('estado vazio', async () => {

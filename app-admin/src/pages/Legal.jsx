@@ -18,6 +18,7 @@ function VersionForm({ onPublished }) {
     e.preventDefault();
     const problem = validateLegalVersion(form);
     if (problem) { setMsg(`Erro: ${problem}`); return; }
+    if (!window.confirm('Registrar esta versão? A partir da data de entrada em vigor, o app pede um novo aceite a quem aceitou antes dela.')) return;
     setBusy(true);
     setMsg('');
     try {
@@ -38,7 +39,9 @@ function VersionForm({ onPublished }) {
         <h2 className="section-title" style={{ margin: 0 }}>Registrar nova versão</h2>
         <p className="user-detail__meta" style={{ margin: '4px 0 0' }}>
           Faça isso sempre que o texto publicado mudar. O registro não altera o texto: ele continua nos arquivos do app
-          e precisa de uma nova publicação para mudar.
+          e precisa de uma nova publicação para mudar. <strong>A partir da data de entrada em vigor, o app pede um novo
+          aceite a todo usuário que aceitou antes dela</strong> (ou que não tem aceite registrado).
+          Para só documentar a versão que já está no ar, use a data em que ela foi publicada.
         </p>
       </div>
       <div className="form-grid">
@@ -135,9 +138,9 @@ export default function Legal() {
             <div className="tile"><div className="tile__value">{acceptance.never}</div><div className="tile__label">sem registro de aceite</div></div>
           </div>
           <p className="card-note">
-            O aceite é gravado no cadastro (checkbox obrigatório) e vale para os dois documentos. O app ainda não pede
-            um novo aceite quando o texto muda: quem aparece em "aceitaram antes da versão atual" concordou com o texto
-            anterior. Contas "sem registro" foram criadas antes do checkbox existir.
+            O aceite é gravado no cadastro (checkbox obrigatório) e vale para os dois documentos. Quando uma versão
+            entra em vigor, o app mostra uma tela pedindo novo aceite a quem aparece em "aceitaram antes da versão
+            atual" e "sem registro", na próxima vez que abrirem o app; os números caem conforme as pessoas aceitam.
           </p>
         </div>
       )}

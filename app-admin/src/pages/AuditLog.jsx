@@ -23,6 +23,13 @@ const ACTION_LABEL = {
   demoteTrainer: 'Removeu o acesso de personal trainer',
   demoteAdmin: 'Removeu admin',
   generateWorkout: 'Gerou novo treino',
+  confirmUser: 'Confirmou e-mail',
+  fixWorkoutSet: 'Corrigiu série de treino',
+  deleteWorkout: 'Apagou treino',
+  exportUserData: 'Exportou dados do usuário',
+  purgeOldData: 'Limpou dados antigos',
+  revokeTrainerLink: 'Encerrou vínculo com personal',
+  removeFriendship: 'Removeu amizade',
   createOfficialChallenge: 'Criou desafio oficial',
   deleteChallenge: 'Apagou desafio',
   deleteFeedEvent: 'Removeu publicação do feed',
@@ -35,13 +42,24 @@ export default function AuditLog() {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
+  const [action, setAction] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // A busca só dispara depois de uma pausa na digitação.
+  useEffect(() => {
+    const timer = setTimeout(() => { setSearch(searchInput.trim()); setPage(0); }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    db.rpc('admin_list_audit_log', { page_size: PAGE_SIZE, page_offset: page * PAGE_SIZE })
+    db.rpc('admin_search_audit_log', {
+      page_size: PAGE_SIZE, page_offset: page * PAGE_SIZE, p_action: action || null, p_search: search || null,
+    })
       .then(({ data, error }) => {
         if (!active) return;
         if (error) throw error;
@@ -51,7 +69,7 @@ export default function AuditLog() {
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [page]);
+  }, [page, action, search]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -59,6 +77,18 @@ export default function AuditLog() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Auditoria</h1>
+        <div className="actions-row">
+          <select className="input" aria-label="Filtrar por ação" value={action} onChange={e => { setAction(e.target.value); setPage(0); }}>
+            <option value="">Todas as ações</option>
+            {Object.entries(ACTION_LABEL).sort((a, b) => a[1].localeCompare(b[1])).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+          <input
+            className="input" type="search" aria-label="Buscar por e-mail" placeholder="E-mail do admin ou do alvo"
+            value={searchInput} onChange={e => setSearchInput(e.target.value)}
+          />
+        </div>
       </div>
 
       {loading && <Loading />}
@@ -87,7 +117,7 @@ export default function AuditLog() {
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={5}><EmptyState icon="🕒" label="Nenhuma ação registrada ainda." /></td></tr>}
+              {rows.length === 0 && <tr><td colSpan={5}><EmptyState icon="🕒" label={action || search ? 'Nenhuma ação com esse filtro.' : 'Nenhuma ação registrada ainda.'} /></td></tr>}
             </tbody>
           </table>
 

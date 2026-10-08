@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { evaluateJobs, summarizeHttp, fetchHealth, formatBytes } from '../lib/health';
-import { mapStorage } from '../lib/ops';
+import { mapStorage, PURGE_DAYS, fetchPurgeStats, purgeOld } from '../lib/ops';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 
@@ -13,6 +13,65 @@ function StateBadge({ state }) {
 
 function BlockError({ message }) {
   return <p className="form-msg form-msg--error">Não foi possível carregar: {message}</p>;
+}
+
+// Limpeza de dados técnicos antigos (métricas e controle de envio). Carrega
+// sozinha: se a consulta falhar, o bloco não aparece.
+function PurgeCard() {
+  const [rows, setRows] = useState(null);
+  const [busy, setBusy] = useState('');
+  const [msg, setMsg] = useState('');
+
+  const load = useCallback(() => {
+    Promise.resolve().then(() => fetchPurgeStats()).then(setRows).catch(() => {});
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function handlePurge(r) {
+    if (!window.confirm(`Apagar ${r.old.toLocaleString('pt-BR')} registro(s) de "${r.label}" com mais de ${PURGE_DAYS} dias? Não dá para desfazer.`)) return;
+    setBusy(r.kind);
+    setMsg('');
+    try {
+      const removed = await purgeOld(r.kind);
+      setMsg(`${removed.toLocaleString('pt-BR')} registro(s) apagado(s).`);
+      load();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  if (!rows) return null;
+
+  return (
+    <div className="card">
+      <h2 className="section-title">Dados antigos</h2>
+      <div className="table-wrap">
+        <table className="resp-table">
+          <thead><tr><th>Tipo</th><th>Registros</th><th>Com mais de {PURGE_DAYS} dias</th><th /></tr></thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.kind}>
+                <td data-label="Tipo">{r.label}</td>
+                <td data-label="Registros">{r.total.toLocaleString('pt-BR')}</td>
+                <td data-label={`Com mais de ${PURGE_DAYS} dias`}>{r.old.toLocaleString('pt-BR')}</td>
+                <td data-label="">
+                  <button className="btn btn--small" disabled={r.old === 0 || busy === r.kind} onClick={() => handlePurge(r)}>Limpar</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} style={{ marginTop: 12 }}>{msg}</p>}
+      <p className="card-note">
+        Métricas de uso e controle de envio, que crescem sem parar. Nada aqui é conteúdo criado pelo usuário
+        (treinos, peso, fotos). Depois de limpar, o período "Todos" de Comportamento e do funil do Dashboard passa a
+        cobrir só os últimos {PURGE_DAYS} dias; os períodos de 7, 30 e 90 dias não mudam.
+      </p>
+    </div>
+  );
 }
 
 export default function SystemHealth() {
@@ -251,6 +310,8 @@ export default function SystemHealth() {
           )}
         </div>
       )}
+
+      <PurgeCard />
     </div>
   );
 }

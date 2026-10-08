@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
-  KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, nextBannerVersion,
+  KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, nextBannerVersion, bannerWindow,
 } from '../lib/appSettings';
+import { todayStr } from '../lib/community';
 import Loading from '../components/Loading';
 
 function SectionMessage({ msg }) {
@@ -71,9 +72,13 @@ function BannerCard({ saved, adminId, onSaved }) {
   const [draft, setDraft] = useState(saved);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
-  const dirty = ['enabled', 'message', 'level', 'linkUrl', 'linkLabel'].some(k => draft[k] !== saved[k]);
+  const dirty = ['enabled', 'message', 'level', 'linkUrl', 'linkLabel', 'startsOn', 'endsOn'].some(k => (draft[k] || '') !== (saved[k] || ''));
   const linkOk = isValidLink(draft.linkUrl);
-  const valid = linkOk && (!draft.enabled || draft.message.trim());
+  const periodOk = !draft.startsOn || !draft.endsOn || draft.startsOn <= draft.endsOn;
+  const valid = linkOk && periodOk && (!draft.enabled || draft.message.trim());
+  const live = saved.enabled && saved.message;
+  const period = bannerWindow(saved, todayStr());
+  const statusLabel = !live ? 'desligado' : period === 'agendado' ? 'agendado' : period === 'encerrado' ? 'período encerrado' : 'no ar';
 
   async function handleSave() {
     setBusy(true);
@@ -82,6 +87,7 @@ function BannerCard({ saved, adminId, onSaved }) {
       const next = {
         enabled: draft.enabled, message: draft.message.trim(), level: draft.level,
         linkUrl: draft.linkUrl.trim(), linkLabel: draft.linkLabel.trim(),
+        startsOn: draft.startsOn || '', endsOn: draft.endsOn || '',
       };
       await saveSetting('banner', { ...next, version: nextBannerVersion(saved, next) }, adminId);
       setMsg('Salvo.');
@@ -99,7 +105,7 @@ function BannerCard({ saved, adminId, onSaved }) {
         <div>
           <h2 className="section-title" style={{ margin: 0 }}>
             Aviso no app
-            <span className={`badge ${saved.enabled && saved.message ? 'badge--ok' : 'badge--warning'}`}>{saved.enabled && saved.message ? 'no ar' : 'desligado'}</span>
+            <span className={`badge ${statusLabel === 'no ar' ? 'badge--ok' : 'badge--warning'}`}>{statusLabel}</span>
           </h2>
           <p className="user-detail__meta" style={{ margin: '4px 0 0' }}>
             Faixa no topo do app para comunicar novidades ou avisos. O usuário pode fechar; ao editar o aviso, ele volta a aparecer para todos.
@@ -133,6 +139,18 @@ function BannerCard({ saved, adminId, onSaved }) {
         </label>
       </div>
       {!linkOk && <p className="form-msg form-msg--error">O link precisa começar com https://, http:// ou /.</p>}
+
+      <div className="form-grid">
+        <label className="field">
+          <span className="field__label">Mostrar a partir de (opcional)</span>
+          <input className="input" type="date" value={draft.startsOn || ''} onChange={e => setDraft({ ...draft, startsOn: e.target.value })} />
+        </label>
+        <label className="field">
+          <span className="field__label">Mostrar até (opcional)</span>
+          <input className="input" type="date" value={draft.endsOn || ''} onChange={e => setDraft({ ...draft, endsOn: e.target.value })} />
+        </label>
+      </div>
+      {!periodOk && <p className="form-msg form-msg--error">A data final não pode ser antes da inicial.</p>}
 
       <div className={`banner-preview banner-preview--${draft.level}`} aria-label="Pré-visualização">
         <span>

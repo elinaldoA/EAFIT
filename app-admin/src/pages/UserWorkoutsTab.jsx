@@ -1,11 +1,59 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
-import { SEVERITY_BADGE, SEVERITY_LABEL } from '../lib/userDetailHelpers';
+import { SEVERITY_BADGE, SEVERITY_LABEL, parseSetNumber } from '../lib/userDetailHelpers';
+
+// Linha de uma série, com correção de carga/reps pelo suporte (quando o admin
+// recebe onFix). Campo vazio apaga o valor.
+function SetRow({ set, onFix }) {
+  const [editing, setEditing] = useState(false);
+  const [carga, setCarga] = useState('');
+  const [reps, setReps] = useState('');
+  const [busy, setBusy] = useState(false);
+  const c = parseSetNumber(carga);
+  const r = parseSetNumber(reps);
+
+  function start() {
+    setCarga(set.carga ?? '');
+    setReps(set.reps ?? '');
+    setEditing(true);
+  }
+
+  async function save() {
+    setBusy(true);
+    await onFix(set, { carga: c.value, reps: r.value });
+    setBusy(false);
+    setEditing(false);
+  }
+
+  return (
+    <tr>
+      <td data-label="Exercício">{set.exercise_name}</td>
+      <td data-label="Série">{set.set_number}</td>
+      <td data-label="Carga">
+        {editing ? <input className="input" style={{ width: 90 }} aria-label="Carga" value={carga} onChange={e => setCarga(e.target.value)} /> : set.carga ?? '—'}
+      </td>
+      <td data-label="Reps">
+        {editing ? <input className="input" style={{ width: 90 }} aria-label="Reps" value={reps} onChange={e => setReps(e.target.value)} /> : set.reps ?? '—'}
+      </td>
+      <td data-label="Concluída">{set.completed ? 'sim' : 'não'}</td>
+      {onFix && (
+        <td data-label="">
+          {editing ? (
+            <div className="actions-row">
+              <button className="btn btn--primary btn--small" disabled={busy || !c.ok || !r.ok} onClick={save}>Salvar</button>
+              <button className="btn btn--ghost btn--small" disabled={busy} onClick={() => setEditing(false)}>Cancelar</button>
+            </div>
+          ) : <button className="btn btn--ghost btn--small" onClick={start}>Corrigir</button>}
+        </td>
+      )}
+    </tr>
+  );
+}
 
 export default function UserWorkoutsTab({
   activePlan, workouts, expandedWorkoutId, workoutSets, setsLoading,
-  onToggleWorkoutDetail, onExportTreinos, personalRecords, discomfortLogs,
+  onToggleWorkoutDetail, onExportTreinos, personalRecords, discomfortLogs, onFixSet, onDeleteWorkout,
 }) {
   return (
     <div className="stack">
@@ -62,6 +110,9 @@ export default function UserWorkoutsTab({
                     <button className="btn btn--ghost btn--small" onClick={() => onToggleWorkoutDetail(w.id)}>
                       {expandedWorkoutId === w.id ? 'Ocultar séries' : 'Ver séries'}
                     </button>
+                    {onDeleteWorkout && (
+                      <button className="btn btn--ghost btn--small" onClick={() => onDeleteWorkout(w)}>Apagar treino</button>
+                    )}
                   </td>
                 </tr>
                 {expandedWorkoutId === w.id && (
@@ -73,16 +124,10 @@ export default function UserWorkoutsTab({
                       )}
                       {workoutSets[w.id]?.length > 0 && (
                         <table className="resp-table">
-                          <thead><tr><th>Exercício</th><th>Série</th><th>Carga</th><th>Reps</th><th>Concluída</th></tr></thead>
+                          <thead><tr><th>Exercício</th><th>Série</th><th>Carga</th><th>Reps</th><th>Concluída</th>{onFixSet && <th />}</tr></thead>
                           <tbody>
                             {workoutSets[w.id].map(s => (
-                              <tr key={s.id}>
-                                <td data-label="Exercício">{s.exercise_name}</td>
-                                <td data-label="Série">{s.set_number}</td>
-                                <td data-label="Carga">{s.carga ?? '—'}</td>
-                                <td data-label="Reps">{s.reps ?? '—'}</td>
-                                <td data-label="Concluída">{s.completed ? 'sim' : 'não'}</td>
-                              </tr>
+                              <SetRow key={s.id} set={s} onFix={onFixSet && ((set, fields) => onFixSet(w.id, set, fields))} />
                             ))}
                           </tbody>
                         </table>

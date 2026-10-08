@@ -1,6 +1,6 @@
 export default function UserActionsTab({
   detail, adminUser, busy, recoveryLink, isBanned, hasProfile,
-  onRunAction, onToggleAdmin, onGeneratePlan, trainerCode, onToggleTrainer,
+  onRunAction, onToggleAdmin, onGeneratePlan, trainerCode, onToggleTrainer, onExportData,
 }) {
   return (
     <div className="card stack">
@@ -33,6 +33,19 @@ export default function UserActionsTab({
           Excluir conta
         </button>
       </div>
+
+      {onExportData && (
+        <div>
+          <h2 className="section-title">Dados do usuário (LGPD)</h2>
+          <p className="user-detail__meta" style={{ margin: '0 0 10px' }}>
+            Gera um arquivo JSON com tudo o que a conta guarda, para atender um pedido de acesso ou portabilidade.
+            Contém dados pessoais e de saúde: envie só para o próprio titular.
+          </p>
+          <div className="actions-row">
+            <button className="btn" disabled={busy} onClick={onExportData}>Baixar dados do usuário</button>
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 className="section-title">Gerar plano (suporte)</h2>

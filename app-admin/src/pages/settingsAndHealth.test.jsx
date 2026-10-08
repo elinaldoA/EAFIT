@@ -109,7 +109,7 @@ describe('AppSettings', () => {
     expect(screen.getByLabelText('Pré-visualização').textContent).toContain('Saiba mais');
     fireEvent.click(saveButtons()[1]);
     await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('banner', {
-      enabled: true, message: 'Novidade!', level: 'success', linkUrl: '/novo', linkLabel: '', version: 3,
+      enabled: true, message: 'Novidade!', level: 'success', linkUrl: '/novo', linkLabel: '', startsOn: '', endsOn: '', version: 3,
     }, 'adm1'));
   });
 

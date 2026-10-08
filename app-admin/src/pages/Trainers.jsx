@@ -11,6 +11,15 @@ function TrainerClients({ trainerId }) {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
 
+  // Encerra o vínculo (o mesmo que o aluno faz pelo app): o personal deixa de
+  // ver os dados dele. Fica na auditoria.
+  async function handleRevoke(r) {
+    if (!window.confirm(`Encerrar o vínculo com ${r.tcl_name}? O personal deixa de ver o treino e os dados desse aluno.`)) return;
+    const { error: err } = await db.rpc('admin_revoke_trainer_link', { p_trainer: trainerId, p_client: r.tcl_user });
+    if (err) { setError(err.message); return; }
+    setRows(prev => prev.filter(x => x.tcl_user !== r.tcl_user));
+  }
+
   useEffect(() => {
     let active = true;
     db.rpc('admin_trainer_clients', { p_trainer: trainerId })
@@ -29,13 +38,14 @@ function TrainerClients({ trainerId }) {
 
   return (
     <table className="resp-table">
-      <thead><tr><th>Aluno</th><th>Vinculado em</th><th>Dias treinados (30d)</th></tr></thead>
+      <thead><tr><th>Aluno</th><th>Vinculado em</th><th>Dias treinados (30d)</th><th /></tr></thead>
       <tbody>
         {rows.map(r => (
           <tr key={r.tcl_user}>
             <td data-label="Aluno"><Link className="btn btn--ghost btn--small" to={`/users/${r.tcl_user}`}>{r.tcl_name}</Link></td>
             <td data-label="Vinculado em">{fmtDate(r.tcl_since)}</td>
             <td data-label="Dias treinados (30d)">{r.tcl_days30}</td>
+            <td data-label=""><button className="btn btn--ghost btn--small" onClick={() => handleRevoke(r)}>Encerrar vínculo</button></td>
           </tr>
         ))}
       </tbody>
