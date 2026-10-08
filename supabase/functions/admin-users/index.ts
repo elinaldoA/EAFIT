@@ -7,6 +7,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { deleteUserData } from '../_shared/deleteUserData.ts';
+import { countWorkouts, logAccountDeletion } from '../_shared/accountDeletion.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -105,11 +106,14 @@ Deno.serve(async (req) => {
       }
 
       case 'deleteUser': {
+        const { data: target } = await admin.auth.admin.getUserById(targetUserId);
+        const workouts = await countWorkouts(admin, targetUserId);
         await deleteUserData(admin, targetUserId);
 
         const { error: authErr } = await admin.auth.admin.deleteUser(targetUserId);
         if (authErr) throw authErr;
 
+        await logAccountDeletion(admin, 'admin', target?.user?.created_at, workouts);
         await logAudit(admin, callerId, targetUserId, 'deleteUser', null);
         return json({ ok: true });
       }
