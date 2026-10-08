@@ -71,6 +71,20 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
           />
         </div>
       ))}
+
+      {/* E-mail não depende do push: vale mesmo com os lembretes desligados. */}
+      <div className="profile-field profile-field--row">
+        <label className="profile-field__label" htmlFor="notifyEmail">
+          {t('E-mails de resumo semanal, convites para voltar a treinar e novidades')}
+        </label>
+        <input
+          type="checkbox" id="notifyEmail"
+          checked={isNotifyEnabled(user.user_metadata, 'notifyEmail')}
+          onChange={e => updateProfile({ notifyEmail: e.target.checked })
+            .then(({ error }) => error && toast(`❌ ${error.message}`))}
+        />
+      </div>
+      <span className="profile-field__hint">{t('E-mails sobre a sua conta, como redefinição de senha, continuam sendo enviados.')}</span>
     </>
   );
 }

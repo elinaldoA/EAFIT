@@ -25,6 +25,8 @@ import BootSplash from './components/BootSplash';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import MovedScreen from './components/MovedScreen';
+import EmailUnsubscribeScreen from './components/EmailUnsubscribeScreen';
+import { takeUnsubscribeToken } from './lib/emailUnsubscribe';
 import { movedTarget } from './lib/appConfig';
 import { cameFromOldAddress } from './lib/installPrompt';
 import AnnouncementBanner from './components/AnnouncementBanner';
@@ -70,6 +72,8 @@ function Shell() {
   // abrir: remonta a página pra valer mesmo se já era a aba atual.
   const [navSeq, setNavSeq] = useState(0);
   const [fromOldAddress] = useState(cameFromOldAddress);
+  // Aberto pelo link de descadastro de um e-mail (lib/emailUnsubscribe.js).
+  const [unsubscribeToken, setUnsubscribeToken] = useState(takeUnsubscribeToken);
   useEffect(() => {
     const onNav = event => { if (event.detail?.remount) setNavSeq(n => n + 1); };
     window.addEventListener(NAV_EVENT, onNav);
@@ -101,6 +105,8 @@ function Shell() {
 
   // Manutenção ligada no painel admin: bloqueia o app inteiro (antes até do login).
   if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;
+
+  if (unsubscribeToken) return <EmailUnsubscribeScreen token={unsubscribeToken} onClose={() => setUnsubscribeToken(null)} />;
 
   if (authLoading) return <BootSplash />;
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;
