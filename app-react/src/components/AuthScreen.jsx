@@ -15,13 +15,13 @@ const MODES = {
 };
 
 export default function AuthScreen() {
-  const { login, signup, requestPasswordReset, resendConfirmation } = useAuth();
+  const { login, signup, requestPasswordReset, resendConfirmation, linkError } = useAuth();
   const emailId = useId();
   const [mode, setMode] = useState(() => (isKnownUser() ? 'login' : 'signup'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [msg, setMsg] = useState({ text: '', type: '' });
+  const [msg, setMsg] = useState(() => (linkError ? { text: linkError, type: 'error' } : { text: '', type: '' }));
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [busy, setBusy] = useState(false);
 

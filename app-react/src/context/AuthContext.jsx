@@ -5,6 +5,7 @@ import { translateAuthError, isEmailNotConfirmed, isSpecificAuthError } from '..
 import { trackAuthEvent } from '../lib/tracking';
 import { claimLocalData, clearUserLocalData } from '../lib/localData';
 import { isAdminAccount } from '../lib/adminGuard';
+import { takeEmailLink } from '../lib/emailLink';
 
 import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 6;
@@ -24,6 +25,9 @@ export function AuthProvider({ children }) {
   // válida e dispara PASSWORD_RECOVERY — o Shell mostra a tela de nova senha
   // antes de liberar o app (mesmo padrão de app-admin/AdminAuthContext).
   const [recoveryMode, setRecoveryMode] = useState(false);
+  // Link de e-mail que não valeu (expirado ou já usado): a tela de acesso
+  // abre mostrando o motivo.
+  const [linkError, setLinkError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -42,12 +46,22 @@ export function AuthProvider({ children }) {
       setAuthLoading(false);
     }
 
+    // Aberto por um link de e-mail (?token_hash=..., ver lib/emailLink.js):
+    // troca o código pela sessão antes de olhar a sessão guardada. Dando certo,
+    // o supabase-js dispara PASSWORD_RECOVERY/SIGNED_IN no listener abaixo.
+    const link = takeEmailLink();
+    const verified = link
+      ? db.auth.verifyOtp(link)
+        .then(({ error }) => { if (error && active) setLinkError(translateAuthError(error)); })
+        .catch(err => console.error('verifyOtp:', err))
+      : Promise.resolve();
+
     // Sem .catch(), uma falha aqui (comum logo após o reload forçado pelo
     // service worker no update do PWA, quando rede/sessão ainda estão se
     // reestabilizando) deixava authLoading travado em true pra sempre — e
     // como Shell só renderiza o app com authLoading=false, a tela (incluindo
     // o menu) sumia até fechar e reabrir o app.
-    db.auth.getSession()
+    verified.then(() => db.auth.getSession())
       .then(({ data: { session } }) => acceptSession(session))
       .catch(err => {
         console.error('getSession:', err);
@@ -56,6 +70,9 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = db.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      // Com link de e-mail, quem libera a tela é o getSession depois do
+      // verifyOtp — senão a tela de acesso piscava antes da de nova senha.
+      if (link && event === 'INITIAL_SESSION') return;
       if (!session) {
         if (event === 'SIGNED_OUT') clearUserLocalData();
         setUser(null);
@@ -167,7 +184,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, authLoading, recoveryMode,
+      user, authLoading, recoveryMode, linkError,
       login, signup, logout, requestPasswordReset, resendConfirmation, finishRecovery,
       updateProfile, updateEmail, updatePassword, deleteAccount,
     }}>

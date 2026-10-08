@@ -12,6 +12,7 @@ const { mockAuth, mockFunctions } = vi.hoisted(() => ({
     updateUser: vi.fn(),
     resetPasswordForEmail: vi.fn(),
     resend: vi.fn(),
+    verifyOtp: vi.fn(),
   },
   mockFunctions: { invoke: vi.fn() },
 }));
@@ -30,6 +31,7 @@ function wrapper({ children }) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.history.replaceState(null, '', '/');
   mockAuth.getSession.mockResolvedValue({ data: { session: null } });
   mockAuth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
 });
@@ -162,6 +164,46 @@ describe('AuthProvider', () => {
 
     act(() => result.current.finishRecovery());
     expect(result.current.recoveryMode).toBe(false);
+  });
+
+  it('link de e-mail: troca o código pela sessão antes de liberar a tela', async () => {
+    window.history.replaceState(null, '', '/app/?token_hash=abc&type=recovery');
+    let authCallback;
+    mockAuth.onAuthStateChange.mockImplementation(cb => {
+      authCallback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    let finishVerify;
+    mockAuth.verifyOtp.mockReturnValue(new Promise(resolve => { finishVerify = resolve; }));
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    expect(mockAuth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'abc', type: 'recovery' });
+    expect(window.location.search).toBe('');
+    // A sessão inicial (vazia) não libera a tela de acesso antes da hora.
+    act(() => authCallback('INITIAL_SESSION', null));
+    expect(result.current.authLoading).toBe(true);
+    expect(mockAuth.getSession).not.toHaveBeenCalled();
+
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    await act(async () => {
+      authCallback('PASSWORD_RECOVERY', { user: { id: 'u1' } });
+      finishVerify({ error: null });
+    });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+    expect(result.current.recoveryMode).toBe(true);
+    expect(result.current.user).toEqual({ id: 'u1' });
+    expect(result.current.linkError).toBe('');
+  });
+
+  it('link de e-mail expirado: fica sem sessão e guarda o motivo', async () => {
+    window.history.replaceState(null, '', '/app/?token_hash=velho&type=recovery');
+    mockAuth.verifyOtp.mockResolvedValue({ error: { code: 'otp_expired', message: 'Email link is invalid or has expired' } });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+    expect(result.current.user).toBeNull();
+    expect(result.current.recoveryMode).toBe(false);
+    expect(result.current.linkError).toMatch(/expirou ou já foi usado/);
   });
 
   it('logout limpa o usuário', async () => {
