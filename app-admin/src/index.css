@@ -146,6 +146,8 @@ a { color: var(--primary); }
   gap: 18px;
   padding: 8px 12px 16px;
   overflow-y: auto;
+  /* no fim do menu, o gesto não passa a rolar a página atrás da gaveta */
+  overscroll-behavior: contain;
   flex: 1;
 }
 
@@ -333,7 +335,10 @@ a { color: var(--primary); }
   margin-bottom: 20px;
 }
 
-.page-title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin: 0; }
+/* sem isso um título longo (e-mail do usuário) empurra a página pro lado */
+.page-header > * { min-width: 0; }
+
+.page-title { font-size: 24px; font-weight: 700; letter-spacing: -.02em; margin: 0; overflow-wrap: anywhere; }
 
 .card {
   background: var(--surface);
@@ -409,6 +414,7 @@ a { color: var(--primary); }
 }
 
 select.input { width: auto; max-width: 100%; }
+textarea.input { resize: vertical; }
 
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field__label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
@@ -473,7 +479,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   font-weight: 600;
 }
 
-.user-detail__meta { color: var(--text-muted); font-size: 12.5px; }
+.user-detail__meta { color: var(--text-muted); font-size: 12.5px; overflow-wrap: anywhere; }
 
 .actions-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
@@ -508,6 +514,11 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   font-size: 13.5px;
   vertical-align: middle;
 }
+
+/* Tabela solta na página (sem .table-wrap) não tem como rolar de lado: as
+   células quebram texto longo (e-mail, JSON) em vez de alargar a página. */
+.resp-table td { overflow-wrap: anywhere; }
+.table-wrap > .resp-table td { overflow-wrap: normal; }
 
 .resp-table thead th {
   font-size: 11px;
@@ -547,6 +558,15 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
     text-align: left;
   }
   .resp-table td:empty::before { content: none; }
+  .table-wrap > .resp-table td { overflow-wrap: anywhere; }
+
+  /* Linha de célula única (estado vazio, tabela aninhada): ocupa a largura toda. */
+  .resp-table td[colspan] { display: block; text-align: left; }
+
+  /* Cabeçalho que é título da tabela (dia do plano) continua visível. */
+  .resp-table thead.resp-table__title { display: block; }
+  .resp-table__title tr { display: block; padding: 0; }
+  .resp-table__title th { display: block; white-space: normal; }
 }
 
 /* ---------- auth screen ---------- */
@@ -658,7 +678,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
 .card-note { font-size: 12px; color: var(--text-dim); margin: 12px 0 0; line-height: 1.5; }
 
-.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--border); }
+.seg { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: 2px; padding: 3px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--border); }
 .seg__btn { padding: 5px 11px; border: 0; border-radius: 6px; background: none; color: var(--text-muted); font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
 .seg__btn:hover { color: var(--text); }
 .seg__btn--active { background: var(--primary); color: #fff; font-weight: 600; box-shadow: var(--shadow-sm); }
@@ -723,6 +743,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 
 .landing-section__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
@@ -773,6 +794,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   max-height: 240px;
   overflow: auto;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   margin-top: 8px;
 }
 
@@ -803,6 +825,8 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .delta--flat { color: var(--text-dim); font-weight: 500; }
 
 .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 20px; align-items: start; }
+/* item de grid não encolhe abaixo do conteúdo: tabela larga estourava a coluna */
+.two-col > *, .tile-grid > *, .form-grid > * { min-width: 0; }
 
 .dist { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .dist__row { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 10px; font-size: 12.5px; }
@@ -813,7 +837,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 
 .note { padding: 12px 0; border-bottom: 1px solid var(--border); }
 .note:last-child { border-bottom: none; }
-.note__text { margin: 0 0 4px; white-space: pre-wrap; line-height: 1.5; }
+.note__text { margin: 0 0 4px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
 
 /* ---------- notificações automáticas ---------- */
 
@@ -859,7 +883,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 
 /* ---------- feedback ---------- */
 
-.feedback-message { margin: 0; white-space: pre-wrap; line-height: 1.55; font-size: 14px; }
+.feedback-message { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; font-size: 14px; }
 
 .preview-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
 .preview-list li { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text-muted); }
@@ -957,6 +981,10 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 
 @media (max-width: 640px) {
   .page-title, .section-title-main { font-size: 20px; }
+  /* Filtros do cabeçalho: busca em linha própria, seletores dividindo a largura. */
+  .page-header > .actions-row { width: 100%; }
+  .page-header > .actions-row > .search-input { width: 100%; }
+  .page-header > .actions-row > select.input { flex: 1 1 140px; }
   .card { padding: 16px; }
   /* Indicadores em duas colunas (uma só deixava a página muito longa). */
   .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px; }

@@ -96,6 +96,15 @@ describe('EmptyState e Loading', () => {
     unmount();
     expect(document.body.style.overflow).not.toBe('hidden');
   });
+
+  it('Loading devolve o scroll quando vários overlays saem fora de ordem', () => {
+    const first = render(<Loading label="Primeiro" />);
+    const second = render(<Loading label="Segundo" />);
+    first.unmount();
+    expect(document.body.style.overflow).toBe('hidden');
+    second.unmount();
+    expect(document.body.style.overflow).not.toBe('hidden');
+  });
 });
 
 describe('ThemeProvider e ThemeToggle', () => {

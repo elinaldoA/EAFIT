@@ -12,16 +12,28 @@ function useProgress() {
   return Math.floor(pct);
 }
 
+// Várias telas montam mais de um overlay ao mesmo tempo (um por card). Contador
+// compartilhado: se cada um guardasse o overflow "anterior", o segundo guardaria
+// 'hidden' e devolveria isso ao sair, deixando a página sem scroll pra sempre.
+let locks = 0;
+let overflowBefore = '';
+
+function lockScroll() {
+  if (locks++ === 0) {
+    overflowBefore = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+  return () => {
+    if (--locks === 0) document.body.style.overflow = overflowBefore;
+  };
+}
+
 // Tela cheia, centralizado e bloqueia toda interação (cliques, scroll, foco)
 // enquanto estiver montado.
 export default function Loading({ label = 'Carregando…' }) {
   const pct = useProgress();
 
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+  useEffect(lockScroll, []);
 
   return (
     <div

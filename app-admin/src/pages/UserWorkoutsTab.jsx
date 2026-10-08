@@ -24,7 +24,7 @@ export default function UserWorkoutsTab({
             )}
             {activePlan.plan_days.map(day => (
               <table className="resp-table" key={day.id}>
-                <thead><tr><th colSpan={4}>{day.dia} — {day.foco}</th></tr></thead>
+                <thead className="resp-table__title"><tr><th colSpan={4}>{day.dia} — {day.foco}</th></tr></thead>
                 <thead><tr><th>Exercício</th><th>Séries</th><th>Reps</th><th>Descanso</th></tr></thead>
                 <tbody>
                   {day.plan_exercises.map(ex => (
