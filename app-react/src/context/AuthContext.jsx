@@ -18,6 +18,12 @@ function appUrl() {
   return window.location.origin + window.location.pathname;
 }
 
+// E-mail de boas-vindas (melhor esforço). A função send-welcome só envia pra
+// conta recém-criada e uma vez só, então chamar de novo não duplica.
+async function sendWelcomeEmail() {
+  try { await db.functions.invoke('send-welcome'); } catch { /* sem e-mail, o cadastro segue */ }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -52,7 +58,11 @@ export function AuthProvider({ children }) {
     const link = takeEmailLink();
     const verified = link
       ? db.auth.verifyOtp(link)
-        .then(({ error }) => { if (error && active) setLinkError(translateAuthError(error)); })
+        .then(({ error }) => {
+          if (error) { if (active) setLinkError(translateAuthError(error)); return; }
+          // Cadastro com confirmação por e-mail: a conta só passa a valer aqui.
+          if (link.type === 'signup') sendWelcomeEmail();
+        })
         .catch(err => console.error('verifyOtp:', err))
       : Promise.resolve();
 
@@ -127,6 +137,7 @@ export function AuthProvider({ children }) {
     if (data.session) {
       claimLocalData(data.user.id);
       setUser(data.user);
+      sendWelcomeEmail();
       return {};
     }
     return { success: t('Conta criada! Enviamos um link de confirmação para o seu e-mail.') };

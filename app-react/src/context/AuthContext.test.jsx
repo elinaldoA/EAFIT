@@ -106,6 +106,24 @@ describe('AuthProvider', () => {
 
     expect(response).toEqual({ success: 'Conta criada! Enviamos um link de confirmação para o seu e-mail.' });
     expect(result.current.user).toBeNull();
+    expect(mockFunctions.invoke).not.toHaveBeenCalled();
+  });
+
+  it('signup com sessão imediata seta o usuário e pede o e-mail de boas-vindas', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signUp.mockResolvedValue({ data: { session: { user: { id: 'u3' } }, user: { id: 'u3' } }, error: null });
+    // Falha no e-mail não atrapalha o cadastro.
+    mockFunctions.invoke.mockRejectedValue(new Error('offline'));
+    let response;
+    await act(async () => {
+      response = await result.current.signup('a@b.com', 'segredo123');
+    });
+
+    expect(response).toEqual({});
+    expect(result.current.user).toEqual({ id: 'u3' });
+    expect(mockFunctions.invoke).toHaveBeenCalledWith('send-welcome');
   });
 
   it('signup com e-mail que já tem conta (identities vazio) avisa em vez de fingir sucesso', async () => {
