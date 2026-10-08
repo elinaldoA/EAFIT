@@ -11,6 +11,7 @@ import { useWakeLock } from '../hooks/useWakeLock';
 import { isCardioItem } from '../lib/cardio';
 import { coachSay, coachStop, speechTime, speechDetail, speechExercise } from '../lib/coach';
 import ExerciseDemo from './ExerciseDemo';
+import CoachPrompt from './CoachPrompt';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
 function isExerciseDone(ex) {
@@ -50,11 +51,10 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
 
   // Treinador por voz (opcional, ver lib/coach.js): abertura do treino e a
   // apresentação de cada exercício. O primeiro entra na fila depois da abertura.
+  // Também é o que a voz diz ao ser ligada pelo convite (CoachPrompt).
   const coachOpened = useRef(false);
-  useEffect(() => {
-    const first = !coachOpened.current;
+  function announce(first) {
     if (first) {
-      coachOpened.current = true;
       // Não chamar de "hoje" um treino de outro dia, nem convidar a treinar de novo
       // um treino que já foi concluído.
       const concluido = timer.status === 'finished' || localStorage.getItem(`treino_${day.dia}`) === 'true';
@@ -63,6 +63,11 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
     }
     const item = items[index];
     coachSay('exercise', { exercicio: speechExercise(item.nome), detalhe: speechDetail(item) }, { queue: first });
+  }
+  useEffect(() => {
+    const first = !coachOpened.current;
+    coachOpened.current = true;
+    announce(first);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
@@ -154,6 +159,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
       </div>
 
       <main className="live__body" ref={bodyRef}>
+        <CoachPrompt onEnabled={() => announce(true)} />
         <div className="live__ex-head">
           <span className="live__kicker">
             {t('{v1} {v2}{setsDone}/{setsTotal} séries no total', { v1: isPos ? 'Pós-treino' : `Exercício ${index + 1} de ${day.exercicios.length}`, v2: ' · ', setsDone, setsTotal })}

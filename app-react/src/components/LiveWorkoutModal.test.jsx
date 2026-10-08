@@ -6,6 +6,8 @@ const { playSound } = vi.hoisted(() => ({ playSound: vi.fn() }));
 
 vi.mock('../lib/sound', () => ({ playRestDoneSound: playSound }));
 vi.mock('../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
+vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: null }) }));
+vi.mock('../context/useToast', () => ({ useToast: () => () => {} }));
 vi.mock('../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('./ExerciseDemo', () => ({ default: () => null }));
 

@@ -168,6 +168,20 @@
   animation: fadeUp 0.2s ease both;
 }
 
+/* Convite pra ligar o treinador por voz */
+.live__coach-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--primary);
+  border-radius: var(--r-md);
+  padding: 12px;
+}
+.live__coach-prompt p { margin: 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted); }
+.live__coach-prompt-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+
 /* ── Descanso embutido ── */
 .live__rest {
   position: relative;

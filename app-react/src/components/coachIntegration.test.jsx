@@ -13,6 +13,8 @@ vi.mock('../lib/coach', async orig => ({
 }));
 vi.mock('../data/treinoData', async orig => ({ ...(await orig()), todayName: () => 'Segunda' }));
 vi.mock('../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
+vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: null }) }));
+vi.mock('../context/useToast', () => ({ useToast: () => () => {} }));
 vi.mock('../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('./ExerciseDemo', () => ({ default: () => null }));
 
