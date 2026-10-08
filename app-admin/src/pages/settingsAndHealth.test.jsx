@@ -187,6 +187,29 @@ describe('SystemHealth', () => {
     expect(screen.getByText('Lembretes (água, sequência, resumo)')).toBeTruthy();
   });
 
+  it('mostra o uso do Storage por bucket; sem o bloco, a tela segue normal', async () => {
+    const h = healthy();
+    h.storage = { data: [
+      { su_bucket: 'progress-photos', su_public: false, su_objects: 1200, su_bytes: 3 * 1024 * 1024 },
+      { su_bucket: 'exercise-media', su_public: true, su_objects: 4, su_bytes: 1024 * 1024 },
+    ] };
+    hl.fetchHealth.mockResolvedValue(h);
+    render(<SystemHealth />);
+    expect(await screen.findByText('Arquivos (Storage)')).toBeTruthy();
+    expect(screen.getByText('4.0 MB')).toBeTruthy();
+    expect(screen.getByText(/3\.0 MB · 1\.200 arquivo\(s\) · privado/)).toBeTruthy();
+    expect(screen.getByText(/1\.0 MB · 4 arquivo\(s\) · público/)).toBeTruthy();
+  });
+
+  it('erro no Storage fica só no bloco dele', async () => {
+    const h = healthy();
+    h.storage = { error: 'sem acesso ao storage' };
+    hl.fetchHealth.mockResolvedValue(h);
+    render(<SystemHealth />);
+    expect(await screen.findByText('Não foi possível carregar: sem acesso ao storage')).toBeTruthy();
+    expect(screen.getByText('Tudo funcionando.')).toBeTruthy();
+  });
+
   it('Atualizar recarrega os dados', async () => {
     hl.fetchHealth.mockResolvedValue(healthy());
     render(<SystemHealth />);

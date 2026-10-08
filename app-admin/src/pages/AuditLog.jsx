@@ -23,6 +23,12 @@ const ACTION_LABEL = {
   demoteTrainer: 'Removeu o acesso de personal trainer',
   demoteAdmin: 'Removeu admin',
   generateWorkout: 'Gerou novo treino',
+  createOfficialChallenge: 'Criou desafio oficial',
+  deleteChallenge: 'Apagou desafio',
+  deleteFeedEvent: 'Removeu publicação do feed',
+  blockFeed: 'Bloqueou no feed',
+  unblockFeed: 'Desbloqueou no feed',
+  publishLegalVersion: 'Registrou versão de documento legal',
 };
 
 export default function AuditLog() {

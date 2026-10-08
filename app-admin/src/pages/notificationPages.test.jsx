@@ -99,8 +99,26 @@ describe('AutoNotifications', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
     await waitFor(() => expect(an.saveRule).toHaveBeenCalledWith('streak', {
       enabled: true, send_hour: 18, weekdays: [1, 3], cooldown_days: 3, title: 'Novo', body: 'Faltam {faltam} dias',
+      title_en: null, body_en: null,
     }));
     expect(await screen.findByText('Salvo.')).toBeTruthy();
+  });
+
+  it('versão em inglês: exige título e mensagem juntos e salva aparada', async () => {
+    wrap(<AutoNotifications />);
+    await screen.findByRole('heading', { name: /Sequência em risco/ });
+    expect(screen.getByText('sem tradução')).toBeTruthy();
+    const save = screen.getByRole('button', { name: 'Salvar' });
+    fireEvent.change(screen.getByLabelText('Título em inglês'), { target: { value: ' Hi {nome} ' } });
+    expect(save.disabled).toBe(true);
+    expect(screen.getByText(/Preencha o título e a mensagem em inglês/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Mensagem em inglês'), { target: { value: '{faltam} days left' } });
+    expect(save.disabled).toBe(false);
+    expect(screen.getByText('traduzida')).toBeTruthy();
+    fireEvent.click(save);
+    await waitFor(() => expect(an.saveRule).toHaveBeenCalledWith('streak', expect.objectContaining({
+      title_en: 'Hi {nome}', body_en: '{faltam} days left',
+    })));
   });
 
   it('desmarcar o último dia volta para "todos" (null)', async () => {

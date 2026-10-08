@@ -1,5 +1,6 @@
 import EmptyState from '../components/EmptyState';
 import UserClientCard from '../components/UserClientCard';
+import UserWellbeingCard from '../components/UserWellbeingCard';
 import { METAS, NIVEIS, BADGE_LABELS, formatDate } from '../lib/userDetailHelpers';
 
 export default function UserProfileTab({ userId, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
@@ -60,6 +61,7 @@ export default function UserProfileTab({ userId, form, setForm, busy, onSaveProf
       </form>
 
       <UserClientCard userId={userId} />
+      <UserWellbeingCard userId={userId} />
 
       <section>
         <h2 className="section-title">Conquistas</h2>

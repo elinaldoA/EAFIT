@@ -15,7 +15,12 @@ function RuleCard({ rule, stats, onSaved }) {
   const [preview, setPreview] = useState(null); // null | { loading } | { rows } | { error }
 
   const dirty = ['enabled', 'send_hour', 'cooldown_days', 'title', 'body'].some(k => draft[k] !== rule[k])
+    || ['title_en', 'body_en'].some(k => (draft[k] || '') !== (rule[k] || ''))
     || JSON.stringify(draft.weekdays || []) !== JSON.stringify(rule.weekdays || []);
+  const titleEn = (draft.title_en || '').trim();
+  const bodyEn = (draft.body_en || '').trim();
+  // O envio só usa o inglês quando título E mensagem estão preenchidos.
+  const enOk = !!titleEn === !!bodyEn;
 
   function toggleDay(d) {
     const current = draft.weekdays || [];
@@ -34,6 +39,8 @@ function RuleCard({ rule, stats, onSaved }) {
         cooldown_days: Number(draft.cooldown_days),
         title: draft.title.trim(),
         body: draft.body.trim(),
+        title_en: titleEn || null,
+        body_en: bodyEn || null,
       });
       setMsg('Salvo.');
       await onSaved();
@@ -53,7 +60,7 @@ function RuleCard({ rule, stats, onSaved }) {
     }
   }
 
-  const valid = draft.title.trim() && draft.body.trim() && Number(draft.cooldown_days) >= 1;
+  const valid = draft.title.trim() && draft.body.trim() && Number(draft.cooldown_days) >= 1 && enOk;
 
   return (
     <div className="card stack" style={{ gap: 14 }}>
@@ -115,6 +122,30 @@ function RuleCard({ rule, stats, onSaved }) {
         <span className="field__label">Mensagem — variáveis: {rule.variables}</span>
         <textarea className="input" rows={2} maxLength={200} value={draft.body} onChange={e => setDraft({ ...draft, body: e.target.value })} />
       </label>
+
+      <details>
+        <summary style={{ cursor: 'pointer' }}>
+          Versão em inglês{' '}
+          <span className={`badge ${titleEn && bodyEn ? 'badge--ok' : 'badge--warning'}`}>
+            {titleEn && bodyEn ? 'traduzida' : 'sem tradução'}
+          </span>
+        </summary>
+        <div className="stack" style={{ gap: 14, marginTop: 12 }}>
+          <p className="user-detail__meta" style={{ margin: 0 }}>
+            Vai para quem escolheu English no app. Sem tradução, essas pessoas recebem o texto em português.
+            Use as mesmas variáveis.
+          </p>
+          <label className="field">
+            <span className="field__label">Título em inglês</span>
+            <input className="input" maxLength={80} value={draft.title_en || ''} onChange={e => setDraft({ ...draft, title_en: e.target.value })} />
+          </label>
+          <label className="field">
+            <span className="field__label">Mensagem em inglês</span>
+            <textarea className="input" rows={2} maxLength={200} value={draft.body_en || ''} onChange={e => setDraft({ ...draft, body_en: e.target.value })} />
+          </label>
+          {!enOk && <p className="form-msg form-msg--error">Preencha o título e a mensagem em inglês, ou deixe os dois em branco.</p>}
+        </div>
+      </details>
 
       <div className="push-preview" aria-label="Pré-visualização">
         <div className="push-preview__title">{renderTemplate(draft.title) || '—'}</div>

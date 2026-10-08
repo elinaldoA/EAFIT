@@ -7,6 +7,10 @@ export const KNOWN_FLAGS = [
   { key: 'fotos_progresso', label: 'Fotos de progresso', hint: 'Card no Dashboard do app.' },
   { key: 'convite_amigos', label: 'Convidar amigos', hint: 'Atalho no Perfil do app.' },
   { key: 'feedback', label: 'Enviar feedback', hint: 'Formulário de sugestão/problema/elogio no Perfil do app.' },
+  { key: 'desafios', label: 'Desafios', hint: 'Card de desafios em Dashboard → Treinos.' },
+  { key: 'amigos', label: 'Amigos e feed', hint: 'Aba Amigos do Dashboard (lista de amigos, ranking semanal e feed).' },
+  { key: 'checkin_diario', label: 'Check-in diário', hint: 'Pergunta de energia, sono e humor na tela de Treino e o resumo em Dashboard → Corpo.' },
+  { key: 'medidas_corporais', label: 'Medidas corporais', hint: 'Registro de cintura, quadril, peito, braço e coxa em Dashboard → Corpo.' },
 ];
 
 export const BANNER_LEVELS = [

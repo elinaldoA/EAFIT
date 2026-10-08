@@ -28,6 +28,13 @@ import Trainers from './pages/Trainers';
 import Profile from './pages/Profile';
 import LandingEditor from './pages/LandingEditor';
 import ExerciseMedia from './pages/ExerciseMedia';
+import Challenges from './pages/Challenges';
+import SocialFeed from './pages/SocialFeed';
+import Wellbeing from './pages/Wellbeing';
+import Achievements from './pages/Achievements';
+import Admins from './pages/Admins';
+import AccountDeletions from './pages/AccountDeletions';
+import Legal from './pages/Legal';
 
 // Fora do HashRouter de propósito: o link de "esqueci minha senha" volta com
 // um token no fragmento da URL (#access_token=...&type=recovery), que
@@ -63,6 +70,13 @@ function AppShell() {
             <Route path="/landing" element={<LandingEditor />} />
             <Route path="/biblioteca" element={<ExerciseLibrary />} />
             <Route path="/demonstracoes" element={<ExerciseMedia />} />
+            <Route path="/desafios" element={<Challenges />} />
+            <Route path="/amigos" element={<SocialFeed />} />
+            <Route path="/bem-estar" element={<Wellbeing />} />
+            <Route path="/conquistas" element={<Achievements />} />
+            <Route path="/admins" element={<Admins />} />
+            <Route path="/exclusoes" element={<AccountDeletions />} />
+            <Route path="/termos" element={<Legal />} />
             <Route path="/perfil" element={<Profile />} />
           </Route>
         </Route>

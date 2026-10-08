@@ -246,6 +246,7 @@ export default function UserDetail() {
             Criado em {formatDate(detail.created_at)} · Último login {formatDate(detail.last_sign_in_at)}
             {' · '}{pushCount > 0 ? `📲 ${pushCount} dispositivo(s) com push ativo` : '📴 sem push ativo'}
             {md.trainingHour !== undefined && md.trainingHour !== null && <>{' · '}⏰ treina por volta das {String(md.trainingHour).padStart(2, '0')}h</>}
+            {' · '}{md.termsAcceptedAt ? `Aceitou os termos em ${formatDate(md.termsAcceptedAt)}` : 'Sem registro de aceite dos termos'}
             {md.pausedUntil && md.pausedUntil >= new Date().toISOString().slice(0, 10) && (
               <span className="badge badge--warning">⏸ pausado até {md.pausedUntil.split('-').reverse().slice(0, 2).join('/')}</span>
             )}

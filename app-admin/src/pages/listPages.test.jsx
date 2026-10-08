@@ -168,6 +168,28 @@ describe('Trainers', () => {
     expect(screen.queryByText('Aluno Nove')).toBeNull();
   });
 
+  it('mostra aulas, taxa de confirmação, recados e as próximas aulas', async () => {
+    mockRpc.mockImplementation(async fn => {
+      if (fn === 'admin_list_trainers') return { data: trainers, error: null };
+      if (fn === 'admin_trainer_activity') {
+        return { data: [{ ta_user: 't1', ta_appts: 10, ta_confirmed: 6, ta_declined: 2, ta_cancelled: 2, ta_pending: 0, ta_upcoming: 3, ta_messages: 9, ta_read: 7, ta_last_message: '2026-03-01T12:00:00Z' }], error: null };
+      }
+      if (fn === 'admin_upcoming_appointments') {
+        return { data: [{ ua_id: 'a1', ua_trainer: 't1', ua_trainer_name: 'Carlos P.', ua_client: 'u9', ua_client_name: 'Aluno Nove', ua_starts: '2026-03-10T12:00:00Z', ua_duration: 60, ua_status: 'pending' }], error: null };
+      }
+      return { data: [], error: null };
+    });
+    wrap(<Trainers />);
+    await screen.findByText('Carlos');
+    expect(await screen.findByText('· 75% confirmadas')).toBeTruthy();
+    expect(screen.getByText('3 marcada(s) à frente')).toBeTruthy();
+    expect(screen.getByText('· 7 lido(s)')).toBeTruthy();
+    expect(mockRpc).toHaveBeenCalledWith('admin_trainer_activity', { days_back: 30 });
+    expect(await screen.findByText('Próximas aulas')).toBeTruthy();
+    expect(screen.getByText('Aluno Nove').getAttribute('href')).toBe('/users/u9');
+    expect(screen.getByText('aguardando aluno')).toBeTruthy();
+  });
+
   it('personal sem alunos ativos', async () => {
     mockRpc.mockImplementation(async fn => (fn === 'admin_list_trainers' ? { data: trainers, error: null } : { data: [], error: null }));
     wrap(<Trainers />);

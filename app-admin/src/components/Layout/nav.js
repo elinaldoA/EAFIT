@@ -15,6 +15,8 @@ export const NAV_GROUPS = [
           { to: '/engajamento', label: 'Engajamento' },
           { to: '/analise-planos', label: 'Análise dos planos' },
           { to: '/comportamento', label: 'Comportamento' },
+          { to: '/bem-estar', label: 'Bem-estar' },
+          { to: '/conquistas', label: 'Conquistas e recordes' },
         ],
       },
     ],
@@ -35,6 +37,13 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/feedback', label: 'Feedback' },
           { to: '/seguranca', label: 'Segurança' },
+        ],
+      },
+      {
+        key: 'comunidade', label: 'Comunidade', icon: 'message',
+        tabs: [
+          { to: '/desafios', label: 'Desafios' },
+          { to: '/amigos', label: 'Amigos e feed' },
         ],
       },
       {
@@ -71,6 +80,9 @@ export const NAV_GROUPS = [
           { to: '/saude', label: 'Saúde do sistema' },
           { to: '/auditoria', label: 'Auditoria' },
           { to: '/erros', label: 'Erros do app' },
+          { to: '/admins', label: 'Administradores' },
+          { to: '/exclusoes', label: 'Exclusões de conta' },
+          { to: '/termos', label: 'Termos e privacidade' },
         ],
       },
     ],

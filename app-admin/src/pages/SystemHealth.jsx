@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { evaluateJobs, summarizeHttp, fetchHealth, formatBytes } from '../lib/health';
+import { mapStorage } from '../lib/ops';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 
@@ -43,6 +44,9 @@ export default function SystemHealth() {
   const total = usage.find(u => u.table_name === '__total__');
   const tables = usage.filter(u => u.table_name !== '__total__');
   const maxSize = Math.max(1, ...tables.map(t => Number(t.size_bytes)));
+  const buckets = mapStorage(health.storage?.data);
+  const storageTotal = buckets.reduce((n, b) => n + b.bytes, 0);
+  const maxBucket = Math.max(1, ...buckets.map(b => b.bytes));
 
   const problems = [
     ...jobs.filter(j => j.state === 'bad').map(j => `${j.label}: ${j.reason}`),
@@ -61,7 +65,7 @@ export default function SystemHealth() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Saúde do sistema</h1>
-          <p className="page-subtitle">Jobs agendados, envio de notificações, alcance do push e uso do banco. Atualiza a cada minuto.</p>
+          <p className="page-subtitle">Jobs agendados, envio de notificações, alcance do push e uso do banco e dos arquivos. Atualiza a cada minuto.</p>
         </div>
         <div className="actions-row">
           {updatedAt && <span className="user-detail__meta">Atualizado às {updatedAt.toLocaleTimeString('pt-BR')}</span>}
@@ -219,6 +223,34 @@ export default function SystemHealth() {
           </>
         )}
       </div>
+
+      {health.storage && (
+        <div className="card">
+          <h2 className="section-title">Arquivos (Storage)</h2>
+          {health.storage.error ? <BlockError message={health.storage.error} /> : !buckets.length ? (
+            <p className="card-note" style={{ marginTop: 0 }}>Nenhum bucket encontrado.</p>
+          ) : (
+            <>
+              <p style={{ margin: '0 0 12px' }}>Tamanho total: <strong>{formatBytes(storageTotal)}</strong></p>
+              <ul className="dist">
+                {buckets.map(b => (
+                  <li key={b.bucket} className="dist__row" style={{ gridTemplateColumns: '160px 1fr auto' }}>
+                    <span className="dist__label" title={b.bucket}>{b.bucket}</span>
+                    <span className="dist__track"><span className="dist__fill" style={{ width: `${Math.max(2, (b.bytes / maxBucket) * 100)}%` }} /></span>
+                    <span className="dist__value">
+                      {formatBytes(b.bytes)} · {b.objects.toLocaleString('pt-BR')} arquivo(s) · {b.isPublic ? 'público' : 'privado'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="card-note">
+                Fotos de progresso e mídias de exercício ficam aqui e não entram no tamanho do banco. O plano do
+                Supabase tem um limite próprio para arquivos.
+              </p>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

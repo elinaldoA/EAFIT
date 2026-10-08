@@ -4,6 +4,7 @@ import {
   WEEKDAYS, fetchPlanSummary, fetchPlanBreakdown, fetchTrainingRhythm,
   buildBreakdown, fillBuckets, topBuckets, MIN_USERS_FOR_FLAG,
 } from '../lib/planAnalytics';
+import { fetchCardio } from '../lib/insights';
 import Loading from '../components/Loading';
 
 const DIMENSIONS = [
@@ -62,6 +63,54 @@ function Bars({ buckets, label, ariaLabel }) {
           <span className="bar-chart__day">{label(b.bucket)}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// Cardio é registrado à parte das séries de força (duração e distância), então
+// tem bloco próprio. Carrega sozinho: se falhar, o resto da página continua.
+function CardioCard() {
+  const [cardio, setCardio] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchCardio(30).then(c => { if (active) setCardio(c); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  if (!cardio) return null;
+  const { total, exercises } = cardio;
+
+  return (
+    <div className="card">
+      <h2 className="section-title">Cardio (30 dias)</h2>
+      {total.sessions === 0 ? <p className="card-note" style={{ marginTop: 0 }}>Nenhum cardio registrado no período.</p> : (
+        <>
+          <div className="tile-grid">
+            <div className="tile"><div className="tile__value">{total.sessions}</div><div className="tile__label">treinos com cardio</div></div>
+            <div className="tile"><div className="tile__value">{total.users}</div><div className="tile__label">usuários</div></div>
+            <div className="tile"><div className="tile__value">{total.minutes} min</div><div className="tile__label">tempo total</div></div>
+            <div className="tile"><div className="tile__value">{String(total.km).replace('.', ',')} km</div><div className="tile__label">distância total</div></div>
+          </div>
+          <div className="table-wrap" style={{ marginTop: 14 }}>
+            <table className="resp-table">
+              <thead><tr><th>Atividade</th><th>Treinos</th><th>Usuários</th><th>Minutos</th><th>Km</th></tr></thead>
+              <tbody>
+                {exercises.map(e => (
+                  <tr key={e.exercise}>
+                    <td data-label="Atividade">{e.exercise}</td>
+                    <td data-label="Treinos">{e.sessions}</td>
+                    <td data-label="Usuários">{e.users}</td>
+                    <td data-label="Minutos">{e.minutes}</td>
+                    <td data-label="Km">{String(e.km).replace('.', ',')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      <p className="card-note">Itens do plano registrados com duração ou distância (esteira, corrida, bike…).</p>
     </div>
   );
 }
@@ -155,6 +204,8 @@ export default function PlanAnalytics() {
           </p>
         </div>
       </div>
+
+      <CardioCard />
     </div>
   );
 }

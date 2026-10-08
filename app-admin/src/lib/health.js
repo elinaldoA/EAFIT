@@ -81,6 +81,7 @@ export async function fetchHealth() {
     push: () => db.rpc('admin_push_health'),
     notifications: () => db.rpc('admin_notification_activity'),
     usage: () => db.rpc('admin_db_usage'),
+    storage: () => db.rpc('admin_storage_usage'),
     overdue: () => db.from('scheduled_broadcasts').select('id', { count: 'exact', head: true })
       .is('sent_at', null).lt('scheduled_at', new Date(Date.now() - 10 * 60000).toISOString()),
   };
