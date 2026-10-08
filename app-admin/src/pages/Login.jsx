@@ -4,10 +4,10 @@ import { useAdminAuth } from '../context/useAdminAuth';
 import logoMark from '../assets/logo-mark.png';
 
 export default function Login() {
-  const { adminUser, login, requestPasswordReset } = useAdminAuth();
+  const { adminUser, login, requestPasswordReset, linkError } = useAdminAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(linkError || '');
   const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
 

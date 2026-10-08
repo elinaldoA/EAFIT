@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import { AdminAuthContext } from './useAdminAuth';
+import { takeEmailLink } from '../lib/emailLink';
 
 // Só existe um papel aqui: super admin. O login usa o mesmo Supabase Auth do
 // app do aluno — a diferença é que, depois de autenticar, checamos
@@ -16,6 +17,9 @@ export function AdminAuthProvider({ children }) {
   // aqui pra travar o app na tela de "definir nova senha" antes de deixar o
   // usuário navegar normalmente com essa sessão.
   const [recoveryMode, setRecoveryMode] = useState(false);
+  // Link de e-mail que não valeu (expirado ou já usado): o login abre
+  // mostrando o motivo.
+  const [linkError, setLinkError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -35,13 +39,26 @@ export function AdminAuthProvider({ children }) {
       }
     }
 
-    db.auth.getSession()
+    // Aberto pelo link do e-mail (?token_hash=..., ver lib/emailLink.js): troca
+    // o código pela sessão antes de olhar a sessão guardada. Dando certo, o
+    // supabase-js dispara PASSWORD_RECOVERY no listener abaixo.
+    const link = takeEmailLink();
+    const verified = link
+      ? db.auth.verifyOtp(link)
+        .then(({ error }) => { if (error && active) setLinkError('Este link expirou ou já foi usado. Peça um novo.'); })
+        .catch(err => console.error('verifyOtp:', err))
+      : Promise.resolve();
+
+    verified.then(() => db.auth.getSession())
       .then(({ data: { session } }) => resolveSession(session))
       .catch(err => console.error('getSession:', err))
       .finally(() => { if (active) setAuthLoading(false); });
 
     const { data: { subscription } } = db.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      // Com link de e-mail, quem libera a tela é o getSession depois do
+      // verifyOtp — senão o login piscava antes da tela de nova senha.
+      if (link && event === 'INITIAL_SESSION') return;
       resolveSession(session).finally(() => { if (active) setAuthLoading(false); });
     });
 
@@ -101,7 +118,7 @@ export function AdminAuthProvider({ children }) {
   return (
     <AdminAuthContext.Provider value={{
       adminUser, authLoading, login, logout, updateProfile, updatePassword,
-      recoveryMode, requestPasswordReset, finishRecovery,
+      recoveryMode, requestPasswordReset, finishRecovery, linkError,
     }}>
       {children}
     </AdminAuthContext.Provider>

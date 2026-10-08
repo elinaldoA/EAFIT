@@ -9,6 +9,7 @@ const { mockAuth, mockFrom } = vi.hoisted(() => ({
     signInWithPassword: vi.fn(),
     signOut: vi.fn(),
     updateUser: vi.fn(),
+    verifyOtp: vi.fn(),
   },
   mockFrom: vi.fn(),
 }));
@@ -36,6 +37,7 @@ function mockProfile(isAdmin) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.history.replaceState(null, '', '/');
   mockAuth.getSession.mockResolvedValue({ data: { session: null } });
   mockAuth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
   mockAuth.signOut.mockResolvedValue({});
@@ -94,6 +96,45 @@ describe('AdminAuthProvider', () => {
 
     expect(response).toEqual({ error: 'E-mail ou senha inválidos.' });
     expect(result.current.adminUser).toBeNull();
+  });
+
+  it('link de e-mail: troca o código pela sessão e entra em recoveryMode', async () => {
+    window.history.replaceState(null, '', '/admin/?token_hash=abc&type=recovery');
+    mockProfile(true);
+    let authCallback;
+    mockAuth.onAuthStateChange.mockImplementation(cb => {
+      authCallback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    let finishVerify;
+    mockAuth.verifyOtp.mockReturnValue(new Promise(resolve => { finishVerify = resolve; }));
+    const { result } = renderHook(() => useAdminAuth(), { wrapper });
+
+    expect(mockAuth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'abc', type: 'recovery' });
+    expect(window.location.search).toBe('');
+    // A sessão inicial (vazia) não libera o login antes da hora.
+    act(() => authCallback('INITIAL_SESSION', null));
+    expect(result.current.authLoading).toBe(true);
+
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: { id: 'a1' } } } });
+    await act(async () => {
+      authCallback('PASSWORD_RECOVERY', { user: { id: 'a1' } });
+      finishVerify({ error: null });
+    });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+    expect(result.current.recoveryMode).toBe(true);
+    expect(result.current.adminUser).toEqual({ id: 'a1' });
+    expect(result.current.linkError).toBe('');
+  });
+
+  it('link de e-mail expirado: fica sem sessão e guarda o motivo', async () => {
+    window.history.replaceState(null, '', '/admin/?token_hash=velho&type=recovery');
+    mockAuth.verifyOtp.mockResolvedValue({ error: { code: 'otp_expired' } });
+    const { result } = renderHook(() => useAdminAuth(), { wrapper });
+
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+    expect(result.current.adminUser).toBeNull();
+    expect(result.current.linkError).toMatch(/expirou ou já foi usado/);
   });
 
   it('logout limpa o adminUser', async () => {
