@@ -14,6 +14,7 @@ vi.mock('../lib/challenges', async (importActual) => ({
   joinChallenge: (...a) => h.api.joinChallenge(...a),
   leaveChallenge: (...a) => h.api.leaveChallenge(...a),
   fetchLeaderboard: (...a) => h.api.fetchLeaderboard(...a),
+  fetchOfficialChallenges: (...a) => h.api.fetchOfficialChallenges(...a),
 }));
 
 import Challenges, { Leaderboard } from './Challenges';
@@ -29,6 +30,7 @@ beforeEach(() => {
     createChallenge: vi.fn().mockResolvedValue(undefined),
     joinChallenge: vi.fn().mockResolvedValue(undefined),
     leaveChallenge: vi.fn().mockResolvedValue(undefined),
+    fetchOfficialChallenges: vi.fn().mockResolvedValue([]),
     fetchLeaderboard: vi.fn().mockResolvedValue([
       { rank: 1, name: 'Carol', score: 5, isMe: false },
       { rank: 2, name: 'Ana', score: 3, isMe: true },
@@ -48,6 +50,25 @@ async function setup() {
 }
 
 describe('Challenges — lista', () => {
+  it('lista o desafio oficial aberto e entra com um toque', async () => {
+    h.api.fetchOfficialChallenges.mockResolvedValue([
+      { id: 'o1', title: 'Outubro EAFIT', invite_code: 'OFI001', start_date: '2026-10-01', end_date: '2026-10-31', members: 40 },
+    ]);
+    await setup();
+    expect(screen.getByText('⭐ Outubro EAFIT')).toBeTruthy();
+    expect(screen.getByText(/Desafio oficial do EAFIT/).textContent).toMatch(/24 dia\(s\) restantes · 40 pessoa\(s\)/);
+    fireEvent.click(screen.getByText('Participar'));
+    await waitFor(() => expect(h.api.joinChallenge).toHaveBeenCalledWith('OFI001'));
+    expect(h.toast).toHaveBeenCalledWith('🎉 Você entrou no desafio!');
+  });
+
+  it('sem os oficiais (consulta falhou), a lista segue normal', async () => {
+    h.api.fetchOfficialChallenges.mockRejectedValue(new Error('função não existe'));
+    await setup();
+    expect(screen.getByRole('button', { name: /Outubro firme/ })).toBeTruthy();
+    expect(screen.queryByText('Participar')).toBeNull();
+  });
+
   it('mostra título, dias restantes, pessoas e a minha posição', async () => {
     await setup();
     const head = screen.getByRole('button', { name: /Outubro firme/ });

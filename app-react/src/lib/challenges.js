@@ -77,6 +77,16 @@ export async function fetchMyChallenges() {
   return (data || []).map(mapChallenge);
 }
 
+// Desafios oficiais do EAFIT abertos em que a pessoa ainda não entrou.
+export async function fetchOfficialChallenges() {
+  const { data, error } = await db.rpc('official_challenges');
+  if (error) throw error;
+  return (data || []).map(r => ({
+    id: r.oc_id, title: r.oc_title, invite_code: r.oc_code,
+    start_date: r.oc_start, end_date: r.oc_end, members: Number(r.oc_members),
+  }));
+}
+
 export async function createChallenge(title, start, end) {
   trackFeature('challenges');
   const { data, error } = await db.rpc('create_challenge', { p_title: title, p_start: start, p_end: end });

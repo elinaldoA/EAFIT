@@ -4,7 +4,7 @@ import { useToast } from '../context/useToast';
 import {
   DURATION_OPTIONS, TITLE_MAX, normalizeCode, validateChallenge, challengeStatus, daysLeft, addDaysStr,
   friendlyChallengeError, inviteText, fetchMyChallenges, createChallenge, joinChallenge, leaveChallenge,
-  fetchLeaderboard,
+  fetchLeaderboard, fetchOfficialChallenges,
 } from '../lib/challenges';
 import Loading from './Loading';
 
@@ -37,6 +37,7 @@ export function Leaderboard({ id }) {
 export default function Challenges() {
   const toast = useToast();
   const [items, setItems] = useState(null);
+  const [official, setOfficial] = useState([]);
   const [open, setOpen] = useState(null);
   const [mode, setMode] = useState(null); // 'create' | 'join' | null
   const [title, setTitle] = useState('');
@@ -48,6 +49,8 @@ export default function Challenges() {
 
   const reload = useCallback(async () => {
     try { setItems(await fetchMyChallenges()); } catch (err) { console.error('fetchMyChallenges:', err); setItems([]); }
+    // Complemento: sem os oficiais (offline, função ainda não publicada), a lista segue normal.
+    try { setOfficial(await fetchOfficialChallenges()); } catch { setOfficial([]); }
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
@@ -99,7 +102,26 @@ export default function Challenges() {
     <div className="dash-card">
       <div className="dash-card__title">{t('🏆 Desafios com amigos')}</div>
 
-      {items.length === 0 && mode === null && (
+      {official.map(c => (
+        <div className="challenge" key={c.id}>
+          <div className="challenge__head" style={{ cursor: 'default' }}>
+            <span className="challenge__title">⭐ {c.title}</span>
+            <span className="challenge__meta">
+              {t('Desafio oficial do EAFIT')}{' · '}
+              {challengeStatus(c, today) === 'futuro' ? t('Ainda não começou') : t('{left} dia(s) restantes', { left: daysLeft(c, today) })}
+              {' · '}{t('{n} pessoa(s)', { n: c.members })}
+            </span>
+          </div>
+          <div className="challenge__actions">
+            <button
+              type="button" className="btn btn--primary btn--sm" disabled={busy}
+              onClick={() => run(() => joinChallenge(c.invite_code), t('🎉 Você entrou no desafio!'))}
+            >{t('Participar')}</button>
+          </div>
+        </div>
+      ))}
+
+      {items.length === 0 && official.length === 0 && mode === null && (
         <p className="dash-empty">{t('Crie um desafio e mande o código para os amigos: vence quem treinar mais dias no período.')}</p>
       )}
 

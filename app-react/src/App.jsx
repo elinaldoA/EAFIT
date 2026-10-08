@@ -25,6 +25,7 @@ import BootSplash from './components/BootSplash';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import AnnouncementBanner from './components/AnnouncementBanner';
+import TermsUpdateScreen from './components/TermsUpdateScreen';
 import TrainerShell from './trainer/TrainerShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
@@ -90,6 +91,7 @@ function Shell() {
   return (
     <div className="shell">
       <AnnouncementBanner />
+      {user && <TermsUpdateScreen />}
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}

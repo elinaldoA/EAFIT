@@ -13,6 +13,17 @@ const BANNER_LEVELS = ['info', 'warning', 'success'];
 const FETCH_TIMEOUT_MS = 4000;
 
 const str = (v) => (typeof v === 'string' ? v.trim() : '');
+const day = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(str(v)) ? str(v) : '');
+
+// Hoje no fuso do app (America/Sao_Paulo), em YYYY-MM-DD.
+export function todayInAppZone(now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(now);
+}
+
+// Período do aviso (definido no painel admin): fora dele, o aviso não aparece.
+export function inBannerWindow(startsOn, endsOn, today = todayInAppZone()) {
+  return (!startsOn || today >= startsOn) && (!endsOn || today <= endsOn);
+}
 
 // Só aceita link absoluto http(s) ou caminho relativo — nada de javascript:.
 export function safeLink(url) {
@@ -20,7 +31,7 @@ export function safeLink(url) {
   return /^(https?:\/\/|\/)/i.test(u) ? u : '';
 }
 
-export function normalizeConfig(rows) {
+export function normalizeConfig(rows, today = todayInAppZone()) {
   const map = Object.fromEntries((rows || []).map(r => [r.key, r.value && typeof r.value === 'object' ? r.value : {}]));
   const m = map.maintenance || {};
   const b = map.banner || {};
@@ -32,7 +43,7 @@ export function normalizeConfig(rows) {
   return {
     maintenance: { enabled: m.enabled === true, message: str(m.message) },
     banner: {
-      enabled: b.enabled === true && bannerMessage !== '',
+      enabled: b.enabled === true && bannerMessage !== '' && inBannerWindow(day(b.startsOn), day(b.endsOn), today),
       message: bannerMessage,
       level: BANNER_LEVELS.includes(b.level) ? b.level : 'info',
       linkUrl: safeLink(b.linkUrl),

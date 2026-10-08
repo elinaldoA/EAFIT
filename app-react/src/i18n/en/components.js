@@ -3,6 +3,14 @@ export default {
   // App / shell
   '🧑‍🏫 Personal': '🧑‍🏫 Trainer',
   'Saiba mais': 'Learn more',
+  'Atualizamos nossos termos': 'We updated our terms',
+  'Para continuar usando o EAFIT, leia e aceite a versão atual dos': 'To keep using EAFIT, please read and accept the current version of the',
+  'e da': 'and the',
+  'Li e aceito': 'I have read and accept',
+  'Registrando…': 'Saving…',
+  'Não foi possível registrar. Verifique a conexão e tente de novo.': 'Could not save. Check your connection and try again.',
+  'Desafio oficial do EAFIT': 'Official EAFIT challenge',
+  'Participar': 'Join',
   'Fechar aviso': 'Dismiss notice',
   'Idioma': 'Language',
 
