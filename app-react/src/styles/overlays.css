@@ -16,9 +16,12 @@
   pointer-events: none;
   z-index: 999;
   opacity: 0;
-  white-space: nowrap;
+  /* max-content + max-width: uma linha quando cabe, quebra quando não cabe
+     (com nowrap o texto longo vazava da pílula em tela estreita). */
+  width: max-content;
+  max-width: min(calc(100vw - 40px), 440px);
+  line-height: 1.35;
   box-shadow: var(--shadow-md);
-  max-width: calc(100vw - 40px);
   text-align: center;
   transition: transform 0.22s cubic-bezier(.4,0,.2,1), opacity 0.22s;
 }
@@ -35,13 +38,11 @@ body.modal-open { overflow: hidden; }
 .rest-modal {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100dvh;
   z-index: 998;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top, 0px)) 20px max(20px, env(safe-area-inset-bottom, 0px));
   overflow: hidden;
 }
 
@@ -66,6 +67,7 @@ body.modal-open { overflow: hidden; }
   width: 100%;
   max-width: 320px;
   max-height: 100%;
+  overflow-y: auto;
 }
 
 .rest-modal__label {

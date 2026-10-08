@@ -1,17 +1,35 @@
 /* ============================================================
-   DESKTOP — moldura de celular centralizada
+   TELAS LARGAS — tablet, celular deitado e desktop
 ============================================================ */
+/* Coluna centralizada ocupando a altura toda. Tablet e celular deitado ficam
+   assim: é o app de verdade, sem enfeite roubando espaço. Sem height:100vh no
+   body — no Safari do iPad ele é maior que a área visível e, centralizando,
+   empurrava a navegação inferior pra fora da tela. */
 @media (min-width: 480px) {
   body {
-    background: #070709;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
     overflow: hidden;
   }
 
+  /* O item flex do body é o #root, não o shell: sem largura ele encolhe até o
+     conteúdo e a coluna muda de tamanho de uma tela pra outra. */
+  #root { width: 100%; }
+
   .shell {
+    width: 100%;
+    max-width: 600px;
+    border-inline: 1px solid var(--border);
+  }
+}
+
+/* Moldura de celular: só em desktop (mouse) com janela alta o bastante. */
+@media (min-width: 480px) and (min-height: 700px) and (hover: hover) and (pointer: fine) {
+  body { background: #070709; }
+
+  .shell {
+    max-width: 480px;
     border: 1px solid var(--border);
     border-radius: 40px;
     overflow: hidden;

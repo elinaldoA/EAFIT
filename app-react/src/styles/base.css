@@ -15,6 +15,17 @@ html, body {
 
 button, input { font-family: inherit; }
 
+/* Sem o atraso/zoom de toque duplo em botões; a pinça continua dando zoom. */
+html { touch-action: manipulation; }
+
+/* iOS amplia a página ao focar um campo com fonte menor que 16px — e como o
+   app não rola (html/body com overflow:hidden), ela fica ampliada e cortada
+   até a pessoa desfazer o zoom com os dedos. Só no iOS: -webkit-touch-callout
+   não existe nos outros navegadores. */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
 /* ============================================================
    SHELL — frame do app
 ============================================================ */
@@ -28,6 +39,11 @@ button, input { font-family: inherit; }
      nunca fique atrás da barra de sistema.
   */
   height: 100svh;
+  /* App instalado no iPhone (status bar black-translucent + viewport-fit=cover)
+     desenha por baixo do relógio/notch: sem isso a barra superior fica atrás
+     deles. Os modais (position:fixed dentro do shell) continuam cobrindo a
+     faixa e tratam o próprio recuo. */
+  padding-top: env(safe-area-inset-top, 0px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -37,6 +53,11 @@ button, input { font-family: inherit; }
   /* Faz do shell o "viewport" dos modais portados para dentro dele (ver lib/modalRoot.js) —
      sem isso, position:fixed nos modais ignora a moldura de celular do preview desktop. */
   transform: translateZ(0);
+}
+
+/* Com a barra superior na tela, a faixa do status bar ganha a cor dela. */
+.shell:has(> .app-screen) {
+  background: linear-gradient(var(--surface), var(--surface)) top / 100% env(safe-area-inset-top, 0px) no-repeat;
 }
 
 /* Quem pediu menos animação no sistema: sem entradas deslizando, shimmer,

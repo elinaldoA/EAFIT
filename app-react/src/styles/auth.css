@@ -3,16 +3,25 @@
 ============================================================ */
 .auth-screen {
   flex: 1;
+  /* O shell tem altura fixa e overflow:hidden: sem rolagem própria, o que não
+     cabe na tela (cadastro em iPhone, teclado aberto) é cortado e o botão de
+     enviar fica inalcançável. */
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  padding: 32px 28px 48px;
+  padding: 32px 28px calc(48px + env(safe-area-inset-bottom, 0px));
 }
 
 .auth-inner {
   width: 100%;
   max-width: 360px;
+  /* Centraliza quando sobra espaço; quando falta, as margens zeram e o conteúdo
+     começa do topo (justify-content:center cortaria o topo sem dar como rolar). */
+  margin: auto 0;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 36px;
@@ -106,6 +115,18 @@
 }
 
 h1.auth-logo__name { margin: 0; }
+
+/* Telas baixas (iPhone SE/8, Android compacto): compacta o topo pra o botão
+   de enviar aparecer sem precisar rolar. */
+@media (max-height: 720px) {
+  .auth-screen { padding-top: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .auth-inner { gap: 20px; }
+  .auth-logo { gap: 4px; }
+  .auth-logo__icon { width: 64px; height: 64px; margin-bottom: 4px; border-radius: 18px; }
+  .auth-logo__name { font-size: 2rem; }
+  .auth-logo__pitch { margin-top: 6px; }
+  .auth-logo__more { margin-top: 2px; padding: 4px; }
+}
 
 .auth-form__intro { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
 .auth-form__title { margin: 0; font-size: 1.15rem; font-weight: 700; }

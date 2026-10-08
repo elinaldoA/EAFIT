@@ -139,6 +139,22 @@
   outline-offset: 2px;
 }
 
+/* Botões redondos pequenos (26–32px): amplia só a área de toque, sem mexer
+   no visual. */
+.theme-toggle,
+.plan-modal__close,
+.summary-modal__close,
+.rating-modal__close,
+.announce__close { position: relative; }
+.theme-toggle::after,
+.inbox-bell::after,
+.plan-modal__close::after,
+.summary-modal__close::after,
+.rating-modal__close::after,
+.photo-modal__close::after,
+.rest-modal__close::after,
+.announce__close::after { content: ''; position: absolute; inset: -7px; }
+
 /* Botão redondo só com ícone (setas do calendário etc.) */
 .icon-btn {
   width: 34px;

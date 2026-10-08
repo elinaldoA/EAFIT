@@ -173,7 +173,7 @@ export default function DashPage({ active }) {
           <div className="dash-card__title" style={{ marginBottom: 0 }}>{t('Visualização Anatômica')}</div>
           <select
             className="input input--sm"
-            style={{ width: 'auto', minWidth: '180px', padding: '4px 8px' }}
+            style={{ width: 'auto', minWidth: '180px', maxWidth: '100%', padding: '4px 8px' }}
             value={selectedView}
             onChange={e => setSelectedView(e.target.value)}
           >

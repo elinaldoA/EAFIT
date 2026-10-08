@@ -54,7 +54,12 @@ export default function Tutorial({ role, userId, onNavigate }) {
       if (el) {
         el.scrollIntoView({ block: 'center' });
         const r = el.getBoundingClientRect();
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+        // O destaque é position:fixed dentro do shell (que tem transform), então
+        // as coordenadas são relativas a ele, não à janela — na moldura do
+        // desktop o shell não começa em 0,0.
+        const root = getModalRoot();
+        const base = root.getBoundingClientRect();
+        setRect({ top: r.top - base.top - root.clientTop, left: r.left - base.left - root.clientLeft, width: r.width, height: r.height });
       } else if (tries++ < 8) {
         timer = setTimeout(measure, 150);
       }

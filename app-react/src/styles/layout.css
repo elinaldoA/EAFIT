@@ -74,6 +74,7 @@
   position: absolute;
   inset: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 14px 14px 24px;
   display: none;

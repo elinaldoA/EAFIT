@@ -46,9 +46,14 @@
   display: flex;
   justify-content: center;
   gap: 24px;
+  width: 100%;
 }
 
+/* Até 140px cada, encolhendo juntas: as duas figuras lado a lado (304px) não
+   cabiam no card em telas de 360px e criavam rolagem horizontal na página. */
 .body-avatar__col {
+  flex: 0 1 140px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -58,7 +63,7 @@
 /* Novo contêiner de imagem recortado */
 .body-avatar__view {
   position: relative;
-  width: 140px;
+  width: 100%;
   aspect-ratio: 204 / 358.5;
   overflow: hidden;
   border-radius: 8px;
