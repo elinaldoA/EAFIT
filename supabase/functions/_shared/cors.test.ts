@@ -8,6 +8,11 @@ function reqWithOrigin(origin: string | null) {
 }
 
 Deno.test('corsHeadersFor ecoa a origem quando está na allowlist (produção)', () => {
+  const headers = corsHeadersFor(reqWithOrigin('https://eafit.com.br'));
+  assertEquals(headers['Access-Control-Allow-Origin'], 'https://eafit.com.br');
+});
+
+Deno.test('corsHeadersFor ainda aceita o endereço antigo (app instalado que não migrou)', () => {
   const headers = corsHeadersFor(reqWithOrigin('https://elinaldoa.github.io'));
   assertEquals(headers['Access-Control-Allow-Origin'], 'https://elinaldoa.github.io');
 });
@@ -19,10 +24,10 @@ Deno.test('corsHeadersFor ecoa localhost de dev do app-react e do app-admin', ()
 
 Deno.test('corsHeadersFor cai pro domínio de produção quando a origem não está na allowlist', () => {
   const headers = corsHeadersFor(reqWithOrigin('https://site-nao-autorizado.com'));
-  assertEquals(headers['Access-Control-Allow-Origin'], 'https://elinaldoa.github.io');
+  assertEquals(headers['Access-Control-Allow-Origin'], 'https://eafit.com.br');
 });
 
 Deno.test('corsHeadersFor cai pro domínio de produção quando não há header Origin', () => {
   const headers = corsHeadersFor(reqWithOrigin(null));
-  assertEquals(headers['Access-Control-Allow-Origin'], 'https://elinaldoa.github.io');
+  assertEquals(headers['Access-Control-Allow-Origin'], 'https://eafit.com.br');
 });

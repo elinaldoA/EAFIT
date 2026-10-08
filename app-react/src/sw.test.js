@@ -79,11 +79,11 @@ describe('service worker: rotas de cache', () => {
     expect(wb.ExpirationPlugin).toHaveBeenCalledWith({ maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 180 });
   });
 
-  it('demonstrações do app: só mesma origem e caminho /EAFIT/exercicios/', () => {
+  it('demonstrações do app: só mesma origem e caminho /app/exercicios/', () => {
     const [match] = wb.registerRoute.mock.calls[0];
-    expect(match({ url: new URL('https://app.test/EAFIT/exercicios/abc/0.webp') })).toBe(true);
-    expect(match({ url: new URL('https://outra.test/EAFIT/exercicios/abc/0.webp') })).toBe(false);
-    expect(match({ url: new URL('https://app.test/EAFIT/index.html') })).toBe(false);
+    expect(match({ url: new URL('https://app.test/app/exercicios/abc/0.webp') })).toBe(true);
+    expect(match({ url: new URL('https://outra.test/app/exercicios/abc/0.webp') })).toBe(false);
+    expect(match({ url: new URL('https://app.test/app/index.html') })).toBe(false);
   });
 
   it('mídia própria: só imagens do bucket público; vídeo fica na rede', () => {
@@ -97,17 +97,17 @@ describe('service worker: rotas de cache', () => {
 
 describe('service worker: push', () => {
   it('mostra a notificação com título, corpo, tag e URL', () => {
-    const { waits } = pushEvent({ title: 'Oi', body: 'Corpo', tag: 't1', url: '/EAFIT/#perfil' });
+    const { waits } = pushEvent({ title: 'Oi', body: 'Corpo', tag: 't1', url: '/app/#perfil' });
     expect(registration.showNotification).toHaveBeenCalledWith('Oi', expect.objectContaining({
-      body: 'Corpo', tag: 't1', data: { url: '/EAFIT/#perfil' },
-      icon: '/EAFIT/icon-192.png', badge: '/EAFIT/icon-192.png',
+      body: 'Corpo', tag: 't1', data: { url: '/app/#perfil' },
+      icon: '/app/icon-192.png', badge: '/app/icon-192.png',
     }));
     expect(waits).toHaveLength(1);
   });
 
   it('usa padrões quando faltam campos ou não há dados', () => {
     pushEvent(undefined);
-    expect(registration.showNotification).toHaveBeenCalledWith('EAFIT', expect.objectContaining({ body: '', data: { url: '/EAFIT/' } }));
+    expect(registration.showNotification).toHaveBeenCalledWith('EAFIT', expect.objectContaining({ body: '', data: { url: '/app/' } }));
   });
 
   it('payload que não é JSON vira corpo de texto', () => {
@@ -135,8 +135,8 @@ describe('service worker: clique na notificação', () => {
   it('foca a janela já aberta do app', async () => {
     const focus = vi.fn().mockResolvedValue('focused');
     const postMessage = vi.fn();
-    clientsApi.matchAll.mockResolvedValue([{ url: 'https://x/other' }, { url: 'https://app.test/EAFIT/#treino', focus, postMessage }]);
-    const { event, done } = click({ url: '/EAFIT/#perfil' });
+    clientsApi.matchAll.mockResolvedValue([{ url: 'https://x/other' }, { url: 'https://app.test/app/#treino', focus, postMessage }]);
+    const { event, done } = click({ url: '/app/#perfil' });
     await done;
     expect(event.notification.close).toHaveBeenCalled();
     expect(focus).toHaveBeenCalled();
@@ -147,26 +147,26 @@ describe('service worker: clique na notificação', () => {
 
   it('abre uma janela nova na URL da notificação quando não há nenhuma', async () => {
     clientsApi.matchAll.mockResolvedValue([]);
-    await click({ url: '/EAFIT/#historico' }).done;
-    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/?push=1#historico');
+    await click({ url: '/app/#historico' }).done;
+    expect(clientsApi.openWindow).toHaveBeenCalledWith('/app/?push=1#historico');
   });
 
   it('notificação com assunto abre o app já no destino', async () => {
     clientsApi.matchAll.mockResolvedValue([]);
-    await click({ url: '/EAFIT/' }, { tag: 'water-2026-10-08-10:00' }).done;
-    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/?push=agua');
+    await click({ url: '/app/' }, { tag: 'water-2026-10-08-10:00' }).done;
+    expect(clientsApi.openWindow).toHaveBeenCalledWith('/app/?push=agua');
   });
 
   it('com o app aberto manda o destino na mensagem', async () => {
     const postMessage = vi.fn();
-    clientsApi.matchAll.mockResolvedValue([{ url: 'https://app.test/EAFIT/#treino', focus: vi.fn(), postMessage }]);
-    await click({ url: '/EAFIT/' }, { tag: 'engagement-invite_friends-2026-10-08' }).done;
+    clientsApi.matchAll.mockResolvedValue([{ url: 'https://app.test/app/#treino', focus: vi.fn(), postMessage }]);
+    await click({ url: '/app/' }, { tag: 'engagement-invite_friends-2026-10-08' }).done;
     expect(postMessage).toHaveBeenCalledWith({ type: 'eafit-push-open', target: 'amigos' });
   });
 
   it('sem URL nos dados abre a raiz do app', async () => {
     clientsApi.matchAll.mockResolvedValue([]);
     await click(undefined).done;
-    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/?push=1');
+    expect(clientsApi.openWindow).toHaveBeenCalledWith('/app/?push=1');
   });
 });

@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/EAFIT/',
+  base: '/app/',
   test: {
     setupFiles: ['./src/test/setupTests.js'],
   },
@@ -24,15 +24,15 @@ export default defineConfig({
       },
       includeAssets: ['icon.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        id: '/EAFIT/',
+        id: '/app/',
         name: 'EAFIT — Treino',
         short_name: 'EAFIT',
         description: 'Plano de treino personalizado, registro de cargas e recordes, hidratação e evolução — funciona offline.',
         lang: 'pt-BR',
         dir: 'ltr',
         categories: ['health', 'fitness', 'lifestyle'],
-        start_url: '/EAFIT/',
-        scope: '/EAFIT/',
+        start_url: '/app/',
+        scope: '/app/',
         display: 'standalone',
         background_color: '#0e0e12',
         theme_color: '#0e0e12',
@@ -50,10 +50,10 @@ export default defineConfig({
         // Atalhos do ícone instalado (toque longo) — abrem direto na aba,
         // via hash (ver hooks/useHashTab.js).
         shortcuts: [
-          { name: 'Treino de hoje', short_name: 'Treino', url: '/EAFIT/#treino', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
-          { name: 'Histórico de treinos', short_name: 'Histórico', url: '/EAFIT/#historico', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
-          { name: 'Registrar água', short_name: 'Água', url: '/EAFIT/#hidratacao', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
-          { name: 'Minha evolução', short_name: 'Evolução', url: '/EAFIT/#dash', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Treino de hoje', short_name: 'Treino', url: '/app/#treino', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Histórico de treinos', short_name: 'Histórico', url: '/app/#historico', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Registrar água', short_name: 'Água', url: '/app/#hidratacao', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
+          { name: 'Minha evolução', short_name: 'Evolução', url: '/app/#dash', icons: [{ src: 'icon-96.png', sizes: '96x96', type: 'image/png' }] },
         ],
       },
     }),

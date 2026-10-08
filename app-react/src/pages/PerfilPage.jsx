@@ -207,7 +207,7 @@ export default function PerfilPage({ active }) {
   async function handleInvite() {
     const result = await shareInvite();
     if (result === 'copied') toast(t('🔗 Link copiado — cole na conversa com seus amigos'));
-    else if (result === 'failed') toast(t('⚠️ Não deu pra compartilhar. Mande o link elinaldoa.github.io/EAFIT/landing'));
+    else if (result === 'failed') toast(t('⚠️ Não deu pra compartilhar. Mande o link eafit.com.br'));
   }
 
   return (

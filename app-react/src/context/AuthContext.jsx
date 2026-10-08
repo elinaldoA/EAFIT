@@ -10,7 +10,7 @@ import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 6;
 
 // Links de e-mail (confirmação de cadastro, redefinição de senha) voltam pra
-// esta mesma página do app (ex.: https://.../EAFIT/), não pra Site URL raiz
+// esta mesma página do app (ex.: https://eafit.com.br/app/), não pra Site URL raiz
 // do projeto Supabase. A URL precisa estar em Authentication → URL
 // Configuration → Redirect URLs no dashboard.
 function appUrl() {

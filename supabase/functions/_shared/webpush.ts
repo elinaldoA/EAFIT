@@ -21,9 +21,12 @@ export async function sendWebPush(
   payload: { title: string; body: string; tag?: string; url?: string }
 ): Promise<'sent' | 'stale' | 'error'> {
   try {
+    // Sem `url` no payload, o service worker abre o endereço do próprio app
+    // (APP_URL em app-react/src/sw.js) — vale pro app instalado no endereço
+    // antigo (/EAFIT/) e no novo (/app/).
     await webpush.sendNotification(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-      JSON.stringify({ url: '/EAFIT/', ...payload })
+      JSON.stringify(payload)
     );
     return 'sent';
   } catch (err) {

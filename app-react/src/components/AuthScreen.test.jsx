@@ -22,7 +22,7 @@ describe('AuthScreen', () => {
     render(<AuthScreen />);
     expect(screen.getByRole('tab', { name: 'Criar conta' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByText(/Plano de treino pro seu objetivo/)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Conheça o app/ }).getAttribute('href')).toBe('landing/');
+    expect(screen.getByRole('link', { name: /Conheça o app/ }).getAttribute('href')).toBe('../');
   });
 
   it('aparelho que já teve conta abre em "Entrar", sem o convite', () => {

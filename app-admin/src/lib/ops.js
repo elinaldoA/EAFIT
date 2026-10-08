@@ -107,10 +107,10 @@ export function currentVersions(versions) {
   return out;
 }
 
-// Link público do documento: os arquivos ficam no app (/legal), uma pasta
-// acima do painel (/admin).
+// Link público do documento: os arquivos ficam no app (/app/legal), ao lado
+// do painel (/admin).
 export function legalUrl(file, base = import.meta.env.BASE_URL || '/') {
-  return `${base.replace(/\/$/, '').replace(/\/admin$/, '')}/legal/${file}`;
+  return `${base.replace(/\/$/, '').replace(/\/admin$/, '')}/app/legal/${file}`;
 }
 
 export async function fetchLegalVersions() {

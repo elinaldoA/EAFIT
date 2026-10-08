@@ -6,6 +6,7 @@ on:
     paths:
       - 'app-react/**'
       - 'app-admin/**'
+      - 'site-root/**'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -55,14 +56,18 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # app-react vira a raiz do site (/EAFIT/) e app-admin fica em /EAFIT/admin/ —
-      # os dois "base" dos vite.config.js já apontam pra esses caminhos.
+      # Domínio próprio (eafit.com.br): a landing é a raiz do site, app-react
+      # fica em /app/ e app-admin em /admin/ — os dois "base" dos vite.config.js
+      # já apontam pra esses caminhos. A landing sai do build do app-react
+      # (public/landing) e sobe pra raiz junto com os arquivos de site-root/.
       - name: Combine sites
         run: |
-          mkdir -p combined
-          cp -r app-react/dist/. combined/
-          mkdir -p combined/admin
+          mkdir -p combined/app combined/admin
+          cp -r app-react/dist/. combined/app/
           cp -r app-admin/dist/. combined/admin/
+          mv combined/app/landing/* combined/
+          rmdir combined/app/landing
+          cp -r site-root/. combined/
 
       - uses: actions/upload-pages-artifact@v3
         with:

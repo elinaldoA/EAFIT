@@ -14,7 +14,7 @@ describe('shareInvite', () => {
     setNavigator({ share });
     expect(await shareInvite()).toBe('shared');
     expect(share).toHaveBeenCalledWith({ title: 'EAFIT', text: INVITE_TEXT, url: INVITE_URL });
-    expect(INVITE_URL).toMatch(/\/landing\/\?origem=convite$/);
+    expect(INVITE_URL).toBe('https://eafit.com.br/?origem=convite');
   });
 
   it('fechar o menu não é erro', async () => {

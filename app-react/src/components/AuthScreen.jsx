@@ -97,7 +97,7 @@ export default function AuthScreen() {
               {t('Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Grátis e funciona offline.')}
             </p>
           )}
-          <a className="auth-logo__more" href="landing/">{t('Conheça o app →')}</a>
+          <a className="auth-logo__more" href="../">{t('Conheça o app →')}</a>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>

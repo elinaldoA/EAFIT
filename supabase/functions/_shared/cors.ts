@@ -13,7 +13,8 @@
 // que um site qualquer consiga ao menos tentar a chamada a partir do
 // navegador de um usuário/admin logado.
 const ALLOWED_ORIGINS = [
-  'https://elinaldoa.github.io', // produção (app-react em /EAFIT/, app-admin em /EAFIT/admin/)
+  'https://eafit.com.br', // produção (landing na raiz, app-react em /app/, app-admin em /admin/)
+  'https://elinaldoa.github.io', // endereço antigo: app instalado que ainda não migrou (remover depois da transição)
   'http://localhost:5173', // app-react em dev (porta padrão do Vite)
   'http://localhost:5174', // app-admin em dev (vite.config.js define essa porta)
 ];

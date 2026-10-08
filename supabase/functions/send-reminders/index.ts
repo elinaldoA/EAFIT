@@ -272,7 +272,7 @@ Deno.serve(async (req) => {
         try {
           await webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            JSON.stringify({ title: payload.title, body: payload.body, tag: payload.tag, url: '/EAFIT/' })
+            JSON.stringify({ title: payload.title, body: payload.body, tag: payload.tag })
           );
           sent++;
         } catch (err) {

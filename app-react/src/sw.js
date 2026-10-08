@@ -16,7 +16,7 @@ self.addEventListener('message', (event) => {
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
-const APP_URL = '/EAFIT/';
+const APP_URL = '/app/';
 
 // Demonstrações de execução (public/exercicios, ≈3,4MB): fora do precache pra
 // não pesar a instalação — cada uma é baixada na primeira vez que o usuário

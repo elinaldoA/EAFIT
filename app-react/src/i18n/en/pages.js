@@ -104,7 +104,7 @@ export default {
   'IMC {v1}': 'BMI {v1}',
   'Peso, altura, meta e nível': 'Weight, height, goal and level',
   '🔗 Link copiado — cole na conversa com seus amigos': '🔗 Link copied — paste it in your chat with friends',
-  '⚠️ Não deu pra compartilhar. Mande o link elinaldoa.github.io/EAFIT/landing': '⚠️ Could not share. Send the link elinaldoa.github.io/EAFIT/landing',
+  '⚠️ Não deu pra compartilhar. Mande o link eafit.com.br': '⚠️ Could not share. Send the link eafit.com.br',
   'Meus dados': 'My data',
   'Dados pessoais': 'Personal data',
   'Nome e apelido': 'Name and nickname',

@@ -372,7 +372,7 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
 
 // Link público que acompanha o card: a landing explica o app pra quem ainda
 // não o conhece (a raiz do app abre direto no login).
-const SHARE_URL_LABEL = 'elinaldoa.github.io/EAFIT';
+const SHARE_URL_LABEL = 'eafit.com.br';
 
 export const SHARE_TEXT = t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
 

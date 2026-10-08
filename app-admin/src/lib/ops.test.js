@@ -106,9 +106,9 @@ describe('documentos legais', () => {
     expect(Object.keys(cur)).toEqual(['termos', 'privacidade']);
   });
 
-  it('legalUrl aponta para /legal do app, uma pasta acima do painel', () => {
-    expect(legalUrl('termos.html', '/EAFIT/admin/')).toBe('/EAFIT/legal/termos.html');
-    expect(legalUrl('termos.html', '/')).toBe('/legal/termos.html');
+  it('legalUrl aponta para /app/legal, ao lado do painel', () => {
+    expect(legalUrl('termos.html', '/admin/')).toBe('/app/legal/termos.html');
+    expect(legalUrl('termos.html', '/')).toBe('/app/legal/termos.html');
   });
 
   it('publishLegalVersion apara os textos', async () => {

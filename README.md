@@ -2,8 +2,8 @@
 
 PWA (Progressive Web App) para acompanhamento de treino, hidratação e evolução física, com sincronização em nuvem e uso offline.
 
-🔗 **App em produção:** https://elinaldoa.github.io/EAFIT/
-📣 **Landing page:** https://elinaldoa.github.io/EAFIT/landing/
+🔗 **App em produção:** https://eafit.com.br/app/
+📣 **Landing page:** https://eafit.com.br/
 
 <img src="app-react/public/landing/img/app-treino.webp" alt="Tela de Treino do EAFIT" width="240" /> <img src="app-react/public/landing/img/app-agua.webp" alt="Tela de Água do EAFIT" width="240" />
 
@@ -39,7 +39,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 .
 ├── app-react/          # código-fonte do app (React + Vite)
 │   ├── public/
-│   │   └── landing/      # landing page estática de divulgação (/landing)
+│   │   └── landing/      # landing page estática de divulgação (raiz do domínio)
 │   ├── src/
 │   │   ├── components/  # componentes de UI reutilizáveis
 │   │   ├── context/      # estado global (auth, tema, toast, treino)
@@ -49,6 +49,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 │   │   └── styles/       # CSS por área, importado em ordem por index.css
 │   └── vite.config.js
 ├── app-admin/          # backoffice (React + Vite), publicado em /admin
+├── site-root/          # arquivos da raiz do domínio (404, robots.txt, sitemap.xml)
 ├── supabase/
 │   ├── functions/       # Edge Functions (Deno); _shared/ tem código + testes
 │   └── migrations/      # schema, RLS e RPCs
@@ -107,7 +108,7 @@ npm run build    # build de produção em app-react/dist
 
 ## Deploy
 
-O deploy é automático: qualquer push em `main` que altere arquivos dentro de `app-react/` dispara o workflow `.github/workflows/deploy.yml`, que builda o projeto e publica no GitHub Pages.
+O deploy é automático: qualquer push em `main` que altere arquivos dentro de `app-react/` dispara o workflow `.github/workflows/deploy.yml`, que builda o projeto e publica no GitHub Pages, no domínio próprio `eafit.com.br`: a landing na raiz, o app em `/app/` e o painel em `/admin/`.
 
 Backend (Supabase): o workflow `.github/workflows/supabase.yml` roda os testes e a checagem de tipos das Edge Functions em todo push/PR que mexe em `supabase/`. Aplicar migrations e implantar funções em produção é **manual**, em Actions → Supabase → Run workflow (marque "Aplicar migrations" e/ou "Implantar todas as Edge Functions"; migrations rodam antes das funções). Precisa dos secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID` e `SUPABASE_DB_PASSWORD` no repositório. Localmente, `supabase db push` (com o CLI linkado) continua funcionando.
 

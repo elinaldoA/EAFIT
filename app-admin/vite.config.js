@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: '/EAFIT/admin/',
+  base: '/admin/',
   server: {
     port: 5174,
     // lib/exerciseMedia.js lê o mapeamento de demonstrações padrão do app-react

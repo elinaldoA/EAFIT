@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { from: () => ({ insert: mockInsert }) } }));
 
 import { detectSource, detectOS, detectCampaign, recordVisit } from './pageVisits';
 
-const HOST = 'elinaldoa.github.io';
+const HOST = 'eafit.com.br';
 
 describe('detectSource', () => {
   it('prioriza ?origem= e depois ?utm_source=', () => {
@@ -26,7 +26,7 @@ describe('detectSource', () => {
   });
 
   it('mesmo site = veio da landing; sem referrer = direto', () => {
-    expect(detectSource('', 'https://elinaldoa.github.io/EAFIT/landing/', HOST)).toBe('landing');
+    expect(detectSource('', 'https://eafit.com.br/', HOST)).toBe('landing');
     expect(detectSource('', '', HOST)).toBe('direto');
     expect(detectSource('', 'não é url', HOST)).toBe('direto');
   });

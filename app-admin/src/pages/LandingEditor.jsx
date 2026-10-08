@@ -107,7 +107,7 @@ export default function LandingEditor() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Landing page</h1>
-        <a className="btn btn--ghost btn--small" href="https://elinaldoa.github.io/EAFIT/landing/" target="_blank" rel="noreferrer">
+        <a className="btn btn--ghost btn--small" href="https://eafit.com.br/" target="_blank" rel="noreferrer">
           Ver landing page ↗
         </a>
       </div>
