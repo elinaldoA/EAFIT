@@ -52,8 +52,13 @@ export default function DashPage({ active }) {
     exercises, volumePoints, handleRefreshRecords,
   } = useDashboardData(active, user, toast);
 
-  const [tab, setTabState] = useState(readTab);
+  const [savedTab, setTabState] = useState(readTab);
   const [selectedExercise, setSelectedExercise] = useState('');
+
+  // Aba Amigos desligada no painel admin: some do menu e, se era a aba
+  // lembrada, a tela abre em Treinos.
+  const tabs = isFlagOn(config.flags, 'amigos') ? TABS : TABS.filter(x => x.key !== 'amigos');
+  const tab = tabs.some(x => x.key === savedTab) ? savedTab : 'treinos';
 
   function setTab(next) {
     setTabState(next);
@@ -156,7 +161,7 @@ export default function DashPage({ active }) {
       </div>
 
       <div className="seg" role="tablist" aria-label={t('Seções da evolução')}>
-        {TABS.map(t => (
+        {tabs.map(t => (
           <button
             key={t.key} type="button" role="tab" aria-selected={tab === t.key}
             className={`seg__btn${tab === t.key ? ' seg__btn--active' : ''}`}
@@ -167,7 +172,7 @@ export default function DashPage({ active }) {
 
       {tab === 'treinos' && (<>
       <MonthlyRecap userId={user.id} allTimeLogs={allTimeLogs} loadingLogs={loadingPR} />
-      <Challenges />
+      {isFlagOn(config.flags, 'desafios') && <Challenges />}
       <div className="dash-card">
         <div className="dash-card__title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
           <div className="dash-card__title" style={{ marginBottom: 0 }}>{t('Visualização Anatômica')}</div>
@@ -323,8 +328,8 @@ export default function DashPage({ active }) {
             <ProgressPhotos />
           </div>
         )}
-        <BodyMeasurements userId={user.id} />
-        <CheckinInsights userId={user.id} trainedDates={trainedDates} />
+        {isFlagOn(config.flags, 'medidas_corporais') && <BodyMeasurements userId={user.id} />}
+        {isFlagOn(config.flags, 'checkin_diario') && <CheckinInsights userId={user.id} trainedDates={trainedDates} />}
       </div>
       )}
     </section>

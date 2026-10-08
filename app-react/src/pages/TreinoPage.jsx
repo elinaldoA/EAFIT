@@ -3,6 +3,8 @@ import { todayName } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
+import { useAppConfig } from '../context/useAppConfig';
+import { isFlagOn } from '../lib/appConfig';
 import { getDateForWeekday, fmtDate, daysUntil } from '../lib/utils';
 import { db } from '../lib/supabase';
 import { countSets, gatherExerciseDetails } from '../lib/workoutSets';
@@ -19,6 +21,7 @@ import { syncCoachPrefs } from '../lib/coach';
 import { t, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
   const { user } = useAuth();
+  const { config } = useAppConfig();
   const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating } = useWorkout();
   const toast = useToast();
   const loading = syncStatus === 'loading';
@@ -70,7 +73,7 @@ export default function TreinoPage() {
       <PauseBanner />
       <PersonalMessages />
       <MyAppointments onlyPending />
-      <DailyCheckin />
+      {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
         <div className="plan-expired-banner">

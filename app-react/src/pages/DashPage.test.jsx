@@ -170,6 +170,15 @@ describe('DashPage', () => {
       expect(within(screen.getByTestId('friends')).getByText('semana 2')).toBeTruthy();
     });
 
+    it('Amigos desligado no painel admin: a aba some e a lembrada cai em Treinos', () => {
+      localStorage.setItem('dash_tab', 'amigos');
+      appConfig.config = { flags: { amigos: false } };
+      render(<DashPage active />);
+      expect(screen.queryByRole('tab', { name: 'Amigos' })).toBeNull();
+      expect(screen.queryByTestId('friends')).toBeNull();
+      expect(screen.getByRole('tab', { name: 'Treinos' }).getAttribute('aria-selected')).toBe('true');
+    });
+
     it('valor inválido guardado no storage cai em Treinos', () => {
       localStorage.setItem('dash_tab', 'xyz');
       render(<DashPage active />);
