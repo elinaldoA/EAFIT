@@ -6,10 +6,13 @@ import { useReminders } from '../hooks/useReminders';
 import { isNotificationSupported } from '../lib/notifications';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { getModalRoot } from '../lib/modalRoot';
-import { fetchInbox, markInboxRead, markInboxItemRead, timeAgo } from '../lib/inbox';
+import {
+  INBOX_PAGE, fetchInbox, markInboxRead, markInboxItemRead, timeAgo, inboxTarget,
+} from '../lib/inbox';
+import { goTo } from '../lib/appNav';
 
 import { t } from '../lib/i18n';
-function InboxModal({ items, onClose, onReadOne, onReadAll, remindersEnabled, onToggleReminders }) {
+function InboxModal({ items, hasMore, onMore, onClose, onReadOne, onReadAll, onGo, remindersEnabled, onToggleReminders }) {
   useBackToClose(onClose);
   useEffect(() => {
     document.body.classList.add('modal-open');
@@ -39,18 +42,29 @@ function InboxModal({ items, onClose, onReadOne, onReadAll, remindersEnabled, on
         )}
         <div className="inbox__list">
           {items.length === 0 && <p className="dash-empty">{t('Nenhum aviso por enquanto.')}</p>}
-          {items.map(i => (
-            <div key={i.id} className={`inbox__item${i.unread ? ' inbox__item--unread' : ''}`}>
-              <div className="inbox__title">{i.title}</div>
-              <p className="inbox__body">{i.body}</p>
-              <div className="inbox__foot">
-                <span className="inbox__time">{timeAgo(i.created_at)}</span>
-                {i.unread && (
-                  <button type="button" className="link-btn" onClick={() => onReadOne(i.id)}>{t('Marcar como lido')}</button>
-                )}
+          {items.map(i => {
+            const target = inboxTarget(i);
+            return (
+              <div key={i.id} className={`inbox__item${i.unread ? ' inbox__item--unread' : ''}`}>
+                <div className="inbox__title">{i.title}</div>
+                <p className="inbox__body">{i.body}</p>
+                <div className="inbox__foot">
+                  <span className="inbox__time">{timeAgo(i.created_at)}</span>
+                  <span className="inbox__actions">
+                    {i.unread && (
+                      <button type="button" className="link-btn" onClick={() => onReadOne(i.id)}>{t('Marcar como lido')}</button>
+                    )}
+                    {target && (
+                      <button type="button" className="link-btn inbox__go" onClick={() => onGo(i, target)}>{target.label} ›</button>
+                    )}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+          {hasMore && (
+            <button type="button" className="btn btn--ghost btn--sm" onClick={onMore}>{t('Ver avisos mais antigos')}</button>
+          )}
         </div>
       </div>
     </div>,
@@ -70,11 +84,12 @@ export default function InboxBell() {
   const userId = user?.id;
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
+  const [limit, setLimit] = useState(INBOX_PAGE);
 
   const refresh = useCallback(() => {
     if (!userId) return;
-    fetchInbox().then(rows => setItems(rows.map(r => ({ ...r, unread: !r.read_at })))).catch(() => {});
-  }, [userId]);
+    fetchInbox(limit).then(rows => setItems(rows.map(r => ({ ...r, unread: !r.read_at })))).catch(() => {});
+  }, [userId, limit]);
 
   useEffect(() => {
     refresh();
@@ -101,6 +116,24 @@ export default function InboxBell() {
   const handleReadOne = id => markRead([id], () => markInboxItemRead(id));
   const handleReadAll = () => markRead(items.filter(i => i.unread).map(i => i.id), markInboxRead);
 
+  // Abre a tela do aviso (e o dá como lido). Fechar o modal desfaz a entrada
+  // que ele empilhou no histórico (useBackToClose) com um history.back()
+  // assíncrono: trocar de aba antes disso seria desfeito por esse "voltar",
+  // então a troca espera o popstate dele (com um prazo, se ele não vier).
+  function handleGo(item, target) {
+    if (item.unread) handleReadOne(item.id);
+    setOpen(false);
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('popstate', go);
+      goTo(target);
+    };
+    window.addEventListener('popstate', go);
+    setTimeout(go, 400);
+  }
+
   return (
     <>
       <button type="button" className="inbox-bell" title={t('Avisos')} aria-label={unread ? t('Avisos ({unread} novo(s))', { unread }) : t('Avisos')} onClick={() => setOpen(true)}>
@@ -113,7 +146,8 @@ export default function InboxBell() {
       </button>
       {open && (
         <InboxModal
-          items={items} onClose={() => setOpen(false)} onReadOne={handleReadOne} onReadAll={handleReadAll}
+          items={items} hasMore={items.length >= limit} onMore={() => setLimit(n => n + INBOX_PAGE)}
+          onClose={() => setOpen(false)} onReadOne={handleReadOne} onReadAll={handleReadAll} onGo={handleGo}
           remindersEnabled={remindersEnabled} onToggleReminders={toggleReminders}
         />
       )}

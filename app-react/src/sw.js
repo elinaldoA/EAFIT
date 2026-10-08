@@ -3,6 +3,7 @@ import { clientsClaim } from 'workbox-core';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { pushTargetKey } from './lib/pushTarget';
 
 clientsClaim();
 
@@ -70,18 +71,22 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = event.notification.data?.url || APP_URL;
+  // Tela do assunto da notificação (lib/pushTarget.js), pela tag — vale pro
+  // push do servidor e pros lembretes que o próprio app dispara.
+  const target = pushTargetKey({ tag: event.notification.tag, title: event.notification.title });
 
-  // Métrica "abriu o app por uma notificação" (lib/tracking.js): app já aberto
-  // recebe uma mensagem; janela nova recebe ?push=1 na URL (antes do #aba).
+  // App já aberto recebe uma mensagem; janela nova recebe ?push= na URL (antes
+  // do #aba), com o destino ou 1. O app navega (lib/appNav.js) e conta a
+  // métrica "abriu por uma notificação" (lib/tracking.js).
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsArr) => {
       const existing = clientsArr.find((c) => c.url.includes(APP_URL));
       if (existing) {
-        existing.postMessage?.({ type: 'eafit-push-open' });
+        existing.postMessage?.(target ? { type: 'eafit-push-open', target } : { type: 'eafit-push-open' });
         return existing.focus();
       }
       const [base, hash] = url.split('#');
-      const marked = `${base}${base.includes('?') ? '&' : '?'}push=1${hash === undefined ? '' : `#${hash}`}`;
+      const marked = `${base}${base.includes('?') ? '&' : '?'}push=${target || 1}${hash === undefined ? '' : `#${hash}`}`;
       return self.clients.openWindow(marked);
     })
   );

@@ -125,9 +125,9 @@ describe('service worker: push', () => {
 });
 
 describe('service worker: clique na notificação', () => {
-  const click = data => {
+  const click = (data, extra = {}) => {
     const waits = [];
-    const event = { notification: { close: vi.fn(), data }, waitUntil: p => waits.push(p) };
+    const event = { notification: { close: vi.fn(), data, ...extra }, waitUntil: p => waits.push(p) };
     listeners.notificationclick(event);
     return { event, done: Promise.all(waits) };
   };
@@ -149,6 +149,19 @@ describe('service worker: clique na notificação', () => {
     clientsApi.matchAll.mockResolvedValue([]);
     await click({ url: '/EAFIT/#historico' }).done;
     expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/?push=1#historico');
+  });
+
+  it('notificação com assunto abre o app já no destino', async () => {
+    clientsApi.matchAll.mockResolvedValue([]);
+    await click({ url: '/EAFIT/' }, { tag: 'water-2026-10-08-10:00' }).done;
+    expect(clientsApi.openWindow).toHaveBeenCalledWith('/EAFIT/?push=agua');
+  });
+
+  it('com o app aberto manda o destino na mensagem', async () => {
+    const postMessage = vi.fn();
+    clientsApi.matchAll.mockResolvedValue([{ url: 'https://app.test/EAFIT/#treino', focus: vi.fn(), postMessage }]);
+    await click({ url: '/EAFIT/' }, { tag: 'engagement-invite_friends-2026-10-08' }).done;
+    expect(postMessage).toHaveBeenCalledWith({ type: 'eafit-push-open', target: 'amigos' });
   });
 
   it('sem URL nos dados abre a raiz do app', async () => {

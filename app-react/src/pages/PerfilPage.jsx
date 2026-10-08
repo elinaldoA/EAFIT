@@ -28,6 +28,7 @@ import { NotificationsSection, ExportSection, CoachSection } from '../components
 import ProfileAccountSection from '../components/ProfileAccountSection';
 import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
+import { takeProfileCardToOpen } from '../lib/appNav';
 import { startTutorial } from '../lib/tutorial';
 
 import { t, locale, lang } from '../lib/i18n';
@@ -35,6 +36,8 @@ export default function PerfilPage({ active }) {
   const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
   const toast = useToast();
   const { config } = useAppConfig();
+  // Atalho vindo de uma notificação ou de um aviso do sino (ex.: resposta a um feedback).
+  const [cardToOpen] = useState(takeProfileCardToOpen);
   const { markPending, refreshPlan, planByTrainer } = useWorkout();
 
   const md = user?.user_metadata || {};
@@ -224,7 +227,7 @@ export default function PerfilPage({ active }) {
           />
         </CollapsibleCard>
 
-        <CollapsibleCard icon="📏" title={t('Meu corpo')} summary={bodySummary}>
+        <CollapsibleCard icon="📏" title={t('Meu corpo')} summary={bodySummary} defaultOpen={cardToOpen === 'corpo'}>
           <ProfileBodySection
             sexo={sexo} setSexo={setSexo} idade={idade} setIdade={setIdade}
             peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
@@ -274,7 +277,7 @@ export default function PerfilPage({ active }) {
       {isFlagOn(config.flags, 'feedback') && (
         <div className="section-group">
           <div className="section-group__label">{t('Ajude a melhorar')}</div>
-          <CollapsibleCard icon="💬" title={t('Enviar feedback')} summary={t('Sugestão, problema ou elogio')}>
+          <CollapsibleCard icon="💬" title={t('Enviar feedback')} summary={t('Sugestão, problema ou elogio')} defaultOpen={cardToOpen === 'feedback'}>
             <ProfileFeedbackSection userId={user.id} toast={toast} />
           </CollapsibleCard>
         </div>

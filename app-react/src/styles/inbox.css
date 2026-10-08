@@ -63,6 +63,8 @@
 .inbox__body { margin: 4px 0; font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; }
 .inbox__time { font-size: 0.72rem; color: var(--text-dim); }
 .inbox__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.inbox__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 14px; }
+.inbox__go { color: var(--primary); }
 .inbox__bar {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 8px 16px; border-bottom: 1px solid var(--border);

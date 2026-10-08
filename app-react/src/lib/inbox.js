@@ -1,10 +1,13 @@
 import { db } from './supabase';
 
 import { locale, t } from './i18n';
+import { FEEDBACK_REPLY_TITLE, NAV_TARGETS, kindTargetKey } from './pushTarget';
 // Central de avisos: o que o admin enviou e as notificações automáticas, para
 // reler dentro do app mesmo sem push (tabela user_notifications, só leitura
 // para o aluno; marcar como lido é pela RPC).
-export async function fetchInbox(limit = 30) {
+export const INBOX_PAGE = 30;
+
+export async function fetchInbox(limit = INBOX_PAGE) {
   const { data, error } = await db.from('user_notifications')
     .select('id, kind, title, body, created_at, read_at')
     .order('created_at', { ascending: false })
@@ -22,6 +25,22 @@ export async function markInboxRead() {
 export async function markInboxItemRead(id) {
   const { error } = await db.rpc('mark_notification_read', { p_id: id });
   if (error) throw error;
+}
+
+const TARGET_LABELS = {
+  feedback: t('Ver resposta'),
+  amigos: t('Abrir Amigos'),
+  treino: t('Ir para o treino'),
+};
+
+// Pra onde o aviso leva (destino de lib/pushTarget.js + o texto do link) ou
+// null quando é só um comunicado, sem tela associada.
+export function inboxTarget(item) {
+  if (!item) return null;
+  const key = item.kind === 'aviso'
+    ? (item.title === FEEDBACK_REPLY_TITLE ? 'feedback' : null)
+    : kindTargetKey(item.kind);
+  return key ? { ...NAV_TARGETS[key], label: TARGET_LABELS[key] } : null;
 }
 
 // "agora", "há 5 min", "há 3 h", "ontem" ou a data.

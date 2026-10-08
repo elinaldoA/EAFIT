@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { ThemeProvider } from './context/ThemeContext';
@@ -32,6 +32,7 @@ import { useTrainerMode } from './hooks/useTrainerMode';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
 import { useTrainerGoalsSync } from './hooks/useTrainerGoalsSync';
 import { useSyncLang } from './hooks/useSyncLang';
+import { NAV_EVENT } from './lib/appNav';
 
 import { t } from './lib/i18n';
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
@@ -61,6 +62,15 @@ function Shell() {
   useTrainerGoalsSync(user?.id);
   useSyncLang(user);
   useDayRollover();
+
+  // Navegação vinda de notificação ou aviso (lib/appNav.js) com aba/cartão a
+  // abrir: remonta a página pra valer mesmo se já era a aba atual.
+  const [navSeq, setNavSeq] = useState(0);
+  useEffect(() => {
+    const onNav = event => { if (event.detail?.remount) setNavSeq(n => n + 1); };
+    window.addEventListener(NAV_EVENT, onNav);
+    return () => window.removeEventListener(NAV_EVENT, onNav);
+  }, []);
 
   // Este aparelho já teve conta logada: a tela de acesso abre em "Entrar".
   useEffect(() => {
@@ -117,7 +127,7 @@ function Shell() {
 
               <main className="pages">
                 {/* key={page}: trocar de aba limpa o erro da aba anterior */}
-                <ErrorBoundary variant="page" key={page}>
+                <ErrorBoundary variant="page" key={`${page}:${navSeq}`}>
                 <Suspense fallback={<PageFallback />}>
                   {page === 'treino' && <TreinoPage />}
                   {page === 'historico' && <HistoricoPage />}

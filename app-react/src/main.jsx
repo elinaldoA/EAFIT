@@ -7,6 +7,7 @@ import { clearChunkReloadFlag, reloadOnceForChunkError } from './lib/chunkReload
 import { installErrorReporter } from './lib/errorReporter'
 import { enableTracking, capturePushOpen } from './lib/tracking'
 import { captureInstallPrompt } from './lib/installPrompt'
+import { capturePushTarget } from './lib/appNav'
 
 // Import dinâmico que falha no preload (chunk de uma versão antiga que não
 // existe mais depois de um deploy) — recarrega uma vez pra pegar a versão nova.
@@ -16,6 +17,7 @@ window.addEventListener('vite:preloadError', event => {
 clearChunkReloadFlag()
 installErrorReporter()
 enableTracking()
+capturePushTarget()
 capturePushOpen()
 captureInstallPrompt()
 

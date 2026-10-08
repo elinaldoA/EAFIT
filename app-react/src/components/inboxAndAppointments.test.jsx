@@ -115,6 +115,22 @@ describe('InboxBell', () => {
     expect(document.querySelector('.inbox-bell__badge')).toBeNull();
   });
 
+  it('aviso com destino abre a tela certa, fecha o sino e fica lido', async () => {
+    window.location.hash = '';
+    await openWith([item(1, { kind: 'workout_today' }), item(2, { kind: 'aviso' })]);
+    expect(screen.getAllByRole('button', { name: /›$/ })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Ir para o treino ›' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(h.api.markInboxItemRead).toHaveBeenCalledWith(1);
+    await waitFor(() => expect(window.location.hash).toBe('#treino'));
+  });
+
+  it('com a página cheia oferece os avisos mais antigos', async () => {
+    await openWith(Array.from({ length: 30 }, (_, i) => item(i + 1)));
+    fireEvent.click(screen.getByRole('button', { name: 'Ver avisos mais antigos' }));
+    await waitFor(() => expect(h.api.fetchInbox).toHaveBeenLastCalledWith(60));
+  });
+
   it('falha ao marcar devolve o destaque e avisa', async () => {
     h.api.markInboxItemRead.mockRejectedValue(new Error('offline'));
     await openWith([item(1)]);

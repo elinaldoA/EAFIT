@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { timeAgo } from './inbox';
+import { timeAgo, inboxTarget } from './inbox';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
@@ -17,5 +17,24 @@ describe('timeAgo', () => {
 
   it('não quebra com horário no futuro', () => {
     expect(timeAgo(new Date(now + 60_000).toISOString(), now)).toBe('agora');
+  });
+});
+
+describe('inboxTarget', () => {
+  it('lembretes de treino levam à tela de treino', () => {
+    for (const kind of ['workout_today', 'plan_expiring', 'comeback', 'no_plan']) {
+      expect(inboxTarget({ kind, title: 'x' })).toMatchObject({ tab: 'treino' });
+    }
+  });
+
+  it('convite de amigos leva à aba Amigos e resposta de feedback ao Perfil', () => {
+    expect(inboxTarget({ kind: 'invite_friends', title: 'x' })).toMatchObject({ tab: 'dash', dashTab: 'amigos' });
+    expect(inboxTarget({ kind: 'aviso', title: '💬 Resposta ao seu feedback' })).toMatchObject({ tab: 'perfil', profileCard: 'feedback' });
+  });
+
+  it('comunicado comum ou tipo desconhecido não leva a lugar nenhum', () => {
+    expect(inboxTarget({ kind: 'aviso', title: 'Novidade no app' })).toBeNull();
+    expect(inboxTarget({ kind: 'outro', title: 'x' })).toBeNull();
+    expect(inboxTarget(null)).toBeNull();
   });
 });
