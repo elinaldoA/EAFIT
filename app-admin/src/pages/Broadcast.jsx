@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
+import { emailResult, testResult } from '../lib/broadcastResult';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { fetchUsers } from '../lib/users';
 import EmptyState from '../components/EmptyState';
@@ -16,11 +17,6 @@ function formatDate(value) {
 function toLocalInputValue(date) {
   const pad = n => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-// Trecho da mensagem de resultado quando o envio também foi por e-mail.
-function emailResult(data) {
-  return data?.emailTargetCount == null ? '' : ` E-mail: ${data.emailSent} de ${data.emailTargetCount}.`;
 }
 
 export default function Broadcast() {
@@ -194,9 +190,7 @@ export default function Broadcast() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setMsg(data.targetCount === 0 && !data.emailSent
-        ? 'Erro: você não tem push ativo em nenhum aparelho. Ative os lembretes no app (Perfil → Notificações) logado com esta conta.'
-        : `Teste enviado: ${data.sent} de ${data.targetCount} dispositivo(s).${emailResult(data)}`);
+      setMsg(testResult(data));
       await loadExtras();
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
