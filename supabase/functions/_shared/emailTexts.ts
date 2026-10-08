@@ -61,16 +61,138 @@ export function accountDeletedEmail(lang: Lang): EmailContent {
     };
 }
 
+// Resumo da semana passada (mesmos números do push de segunda de manhã:
+// treinos concluídos, meta semanal e soma das cargas).
+export function weeklySummaryEmail(lang: Lang, count: number, goal: number, volume: number): EmailContent {
+  const hit = count >= goal;
+  return lang === 'en'
+    ? {
+      subject: hit ? 'Weekly goal hit! Your week on EAFIT' : 'Your week on EAFIT',
+      preheader: `${count} of ${goal} workouts completed last week.`,
+      eyebrow: 'Weekly summary',
+      heading: hit ? 'Weekly goal hit!' : 'Your week in numbers',
+      paragraphs: [
+        `Last week you completed ${count} of the ${goal} workouts in your weekly goal, with ${volume} kg of total volume.`,
+        hit ? 'Great work. Keep the pace this week.' : 'A new week is starting: how about one more workout than last week?',
+      ],
+      cta: { label: 'See my progress', url: `${APP_URL}#dash` },
+    }
+    : {
+      subject: hit ? 'Meta semanal batida! Sua semana no EAFIT' : 'Sua semana no EAFIT',
+      preheader: `${count} de ${goal} treinos concluídos na semana passada.`,
+      eyebrow: 'Resumo semanal',
+      heading: hit ? 'Meta semanal batida!' : 'Sua semana em números',
+      paragraphs: [
+        `Na semana passada você concluiu ${count} dos ${goal} treinos da sua meta semanal, com ${volume} kg de volume total.`,
+        hit ? 'Ótimo trabalho. Mantenha o ritmo nesta semana.' : 'Uma semana nova está começando: que tal um treino a mais que na anterior?',
+      ],
+      cta: { label: 'Ver minha evolução', url: `${APP_URL}#dash` },
+    };
+}
+
+// Convite pra voltar: quem parou há 1 a 4 semanas, ou criou a conta e ainda
+// não fez o primeiro treino.
+export function comebackEmail(lang: Lang, days: number, neverTrained: boolean): EmailContent {
+  if (neverTrained) {
+    return lang === 'en'
+      ? {
+        subject: 'Your first workout is waiting',
+        preheader: 'It only takes a few minutes to start.',
+        eyebrow: 'Getting started',
+        heading: 'Your first workout is waiting',
+        paragraphs: [
+          'You created your EAFIT account, but have not logged a workout yet. In a few minutes the app builds your plan and you can do the first one.',
+        ],
+        cta: { label: 'Start my first workout', url: `${APP_URL}#treino` },
+      }
+      : {
+        subject: 'Seu primeiro treino está esperando',
+        preheader: 'Leva poucos minutos pra começar.',
+        eyebrow: 'Primeiros passos',
+        heading: 'Seu primeiro treino está esperando',
+        paragraphs: [
+          'Você criou sua conta no EAFIT, mas ainda não registrou nenhum treino. Em poucos minutos o app monta o seu plano e você já faz o primeiro.',
+        ],
+        cta: { label: 'Começar meu primeiro treino', url: `${APP_URL}#treino` },
+      };
+  }
+  return lang === 'en'
+    ? {
+      subject: 'We miss you at EAFIT',
+      preheader: `It has been ${days} days since your last workout.`,
+      eyebrow: 'Come back',
+      heading: 'How about getting back to it today?',
+      paragraphs: [
+        `It has been ${days} days since your last workout. Your plan, your loads and your history are right where you left them.`,
+        'One short workout is enough to get back into the rhythm.',
+      ],
+      cta: { label: 'Open the workout of the day', url: `${APP_URL}#treino` },
+    }
+    : {
+      subject: 'Sentimos sua falta no EAFIT',
+      preheader: `Já são ${days} dias desde o seu último treino.`,
+      eyebrow: 'Hora de voltar',
+      heading: 'Que tal voltar hoje?',
+      paragraphs: [
+        `Já são ${days} dias desde o seu último treino. Seu plano, suas cargas e seu histórico estão do jeito que você deixou.`,
+        'Um treino curto já basta pra retomar o ritmo.',
+      ],
+      cta: { label: 'Abrir o treino de hoje', url: `${APP_URL}#treino` },
+    };
+}
+
+// Comunicado escrito pelo admin: título e mensagem saem como foram digitados
+// (cada linha vira um parágrafo); só a moldura acompanha o idioma da conta.
+export function broadcastEmail(lang: Lang, title: string, message: string): EmailContent {
+  const paragraphs = message.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  return {
+    subject: title,
+    preheader: paragraphs[0],
+    eyebrow: lang === 'en' ? 'News from EAFIT' : 'Novidades do EAFIT',
+    heading: title,
+    paragraphs,
+    cta: { label: lang === 'en' ? 'Open the app' : 'Abrir o app', url: APP_URL },
+  };
+}
+
+// Resposta da equipe a um feedback que a própria pessoa mandou pelo app.
+export function feedbackReplyEmail(lang: Lang, reply: string): EmailContent {
+  const paragraphs = reply.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  return lang === 'en'
+    ? {
+      subject: 'We replied to your feedback',
+      preheader: paragraphs[0],
+      eyebrow: 'Feedback',
+      heading: 'We replied to your feedback',
+      paragraphs: ['Thank you for writing to us. Here is our reply:', ...paragraphs],
+      cta: { label: 'Open the app', url: `${APP_URL}#perfil` },
+      footnote: 'To continue the conversation, just reply to this email.',
+    }
+    : {
+      subject: 'Respondemos o seu feedback',
+      preheader: paragraphs[0],
+      eyebrow: 'Feedback',
+      heading: 'Respondemos o seu feedback',
+      paragraphs: ['Obrigado por escrever pra gente. Segue a nossa resposta:', ...paragraphs],
+      cta: { label: 'Abrir o app', url: `${APP_URL}#perfil` },
+      footnote: 'Para continuar a conversa, é só responder a este e-mail.',
+    };
+}
+
 // Boas-vindas só pra conta recém-criada e uma vez só: a função é chamada pelo
-// app, então conta antiga (ou chamada repetida) não recebe nada.
+// app, então conta antiga (ou chamada repetida) não recebe nada. Com
+// confirmação de e-mail ligada, o prazo conta da confirmação (quem confirma
+// dias depois do cadastro ainda recebe).
 const WELCOME_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export function shouldSendWelcome(
-  user: { created_at?: string | null; app_metadata?: unknown },
+  user: { created_at?: string | null; email_confirmed_at?: string | null; app_metadata?: unknown },
   now: Date = new Date(),
 ): boolean {
   if ((user.app_metadata as { welcome_email_at?: unknown } | null | undefined)?.welcome_email_at) return false;
-  const created = user.created_at ? new Date(user.created_at).getTime() : NaN;
-  if (!Number.isFinite(created)) return false;
-  return now.getTime() - created <= WELCOME_WINDOW_MS;
+  const since = [user.created_at, user.email_confirmed_at]
+    .map((d) => (d ? new Date(d).getTime() : NaN))
+    .filter(Number.isFinite);
+  if (!since.length) return false;
+  return now.getTime() - Math.max(...since) <= WELCOME_WINDOW_MS;
 }

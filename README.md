@@ -144,7 +144,11 @@ passos manuais:
      `deno run --allow-write=supabase/templates supabase/templates/build.ts`.
   3. Nos secrets das Edge Functions: `GMAIL_USER` e `GMAIL_APP_PASSWORD`, usados por
      `supabase/functions/_shared/email.ts` (sem eles, as funções só não enviam e-mail).
-     Hoje enviam e-mail: `send-welcome` (boas-vindas, chamada pelo app no cadastro) e
-     `delete-account` (confirmação de conta excluída).
+     Hoje enviam e-mail: `send-welcome` (boas-vindas, chamada pelo app no cadastro),
+     `delete-account` (confirmação de conta excluída), `send-weekly-emails` (resumo da
+     semana ou convite pra voltar, toda segunda pelo cron) e `admin-broadcast` (comunicado
+     com "enviar também por e-mail" e resposta a feedback). Resumo, convite e comunicado
+     respeitam o descadastro (`user_metadata.notifyEmail`, chave no Perfil e link no
+     rodapé, atendido por `email-unsubscribe`) e o teto de 300 destinatários por envio.
 - **Custo/escala**: checar os limites do plano atual do Supabase (linhas de banco,
   storage de fotos, invocações de Edge Function) antes de divulgar amplamente.

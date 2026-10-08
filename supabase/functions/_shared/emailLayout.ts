@@ -26,6 +26,9 @@ export type EmailContent = {
   footnote?: string;
   // Troca a frase do rodapé "você recebe este e-mail porque tem uma conta".
   reason?: string;
+  // Link de descadastro no rodapé: obrigatório nos e-mails que não são de
+  // conta/segurança (resumo, volta, comunicado). Ver emailPrefs.ts.
+  unsubscribeUrl?: string;
 };
 
 export type RenderedEmail = { subject: string; html: string; text: string };
@@ -48,6 +51,7 @@ const STRINGS = {
     terms: 'Termos de Uso',
     privacy: 'Privacidade',
     help: 'Precisa de ajuda? Escreva para',
+    unsubscribe: 'Parar de receber estes e-mails',
   },
   en: {
     tagline: 'Your training, your way',
@@ -57,11 +61,12 @@ const STRINGS = {
     terms: 'Terms of Use',
     privacy: 'Privacy',
     help: 'Need help? Write to',
+    unsubscribe: 'Stop receiving these emails',
   },
 };
 
 export function renderEmail(lang: Lang, content: EmailContent): RenderedEmail {
-  const { subject, preheader, eyebrow, heading, paragraphs, cta, footnote } = content;
+  const { subject, preheader, eyebrow, heading, paragraphs, cta, footnote, unsubscribeUrl } = content;
   const s = { ...STRINGS[lang], ...(content.reason ? { reason: content.reason } : {}) };
 
   // Texto invisível: sem ele, a lista de e-mails mostra o começo do HTML
@@ -83,6 +88,10 @@ export function renderEmail(lang: Lang, content: EmailContent): RenderedEmail {
     : '';
   const note = footnote
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule" style="padding:18px 0 0;border-top:1px solid #e4e4e7;font-size:13px;line-height:1.55;color:#71717a;">${escapeHtml(footnote)}</td></tr></table>`
+    : '';
+
+  const unsubscribe = unsubscribeUrl
+    ? `<br />\n<a href="${escapeHtml(unsubscribeUrl)}" style="color:#71717a;">${escapeHtml(s.unsubscribe)}</a>`
     : '';
 
   const html = `<!doctype html>
@@ -138,7 +147,7 @@ ${note}
 <a href="${APP_URL}legal/termos.html" style="color:#71717a;">${escapeHtml(s.terms)}</a> &nbsp;·&nbsp;
 <a href="${APP_URL}legal/privacidade.html" style="color:#71717a;">${escapeHtml(s.privacy)}</a><br />
 ${escapeHtml(s.help)} <a href="mailto:${CONTACT_EMAIL}" style="color:#71717a;">${CONTACT_EMAIL}</a><br />
-${escapeHtml(s.reason)}
+${escapeHtml(s.reason)}${unsubscribe}
 </td></tr>
 </table>
 </td></tr>
@@ -157,6 +166,7 @@ ${escapeHtml(s.reason)}
     'EAFIT',
     `${s.help} ${CONTACT_EMAIL}`,
     s.reason,
+    ...(unsubscribeUrl ? [`${s.unsubscribe}: ${unsubscribeUrl}`] : []),
     APP_URL,
   ].join('\n');
 

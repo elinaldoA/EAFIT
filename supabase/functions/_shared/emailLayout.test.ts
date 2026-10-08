@@ -50,6 +50,15 @@ Deno.test('renderEmail: título, parágrafos, botão e rodapé no idioma', () =>
   assertStringIncludes(en.html, 'You are receiving this email');
 });
 
+Deno.test('renderEmail: link de descadastro no rodapé, em HTML e em texto', () => {
+  const url = 'https://eafit.com.br/app/?descadastro=id.abc';
+  const { html, text } = renderEmail('pt', { subject: 'S', heading: 'H', paragraphs: ['P'], unsubscribeUrl: url });
+  assertStringIncludes(html, `<a href="${url}" style="color:#71717a;">Parar de receber estes e-mails</a>`);
+  assertStringIncludes(text, `Parar de receber estes e-mails: ${url}`);
+  assertStringIncludes(renderEmail('en', { subject: 'S', heading: 'H', paragraphs: ['P'], unsubscribeUrl: url }).html, 'Stop receiving these emails');
+  assert(!renderEmail('pt', { subject: 'S', heading: 'H', paragraphs: ['P'] }).html.includes('Parar de receber'));
+});
+
 Deno.test('renderEmail: sem os opcionais, não sobra marcação deles', () => {
   const { html, text } = renderEmail('pt', { subject: 'S', heading: 'H', paragraphs: ['P'] });
   for (const cls of ['preheader', 'eyebrow', 'linkbox', 'rule']) assert(!html.includes(`class="${cls}"`), cls);

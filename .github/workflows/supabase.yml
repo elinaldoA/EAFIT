@@ -66,6 +66,8 @@ jobs:
           supabase/functions/send-trainer-alerts/index.ts
           supabase/functions/send-push/index.ts
           supabase/functions/send-welcome/index.ts
+          supabase/functions/send-weekly-emails/index.ts
+          supabase/functions/email-unsubscribe/index.ts
           supabase/functions/_shared/email.ts
 
   push-migrations:
@@ -110,6 +112,9 @@ jobs:
           deploy send-engagement --no-verify-jwt
           deploy send-trainer-alerts --no-verify-jwt
           deploy send-appointment-reminders --no-verify-jwt
+          deploy send-weekly-emails --no-verify-jwt
+          # email-unsubscribe: aberto de propósito, quem autoriza é o código assinado do e-mail.
+          deploy email-unsubscribe --no-verify-jwt
           for fn in send-push send-welcome delete-account admin-users admin-broadcast admin-generate-plan trainer-push reply-push; do
             deploy "$fn"
           done
