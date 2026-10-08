@@ -282,7 +282,7 @@
     .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
     .btn-ghost:hover { border-color: var(--border-2); }
     .btn-sm { min-height: 40px; padding: 8px 16px; font-size: 14px; box-shadow: none; }
-    .nav-actions { display: flex; align-items: center; gap: 8px; }
+    .nav-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .lang-btn { min-height: 40px; min-width: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-2); background: transparent; color: var(--text-muted); font: inherit; font-size: 13.5px; font-weight: 700; letter-spacing: .04em; cursor: pointer; }
     .lang-btn:hover { color: var(--text); background: var(--surface-2); }
     .lang-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -303,7 +303,7 @@
     .logo img { width: 30px; height: 30px; border-radius: 8px; }
     .nav-inner > nav { margin-left: auto; }
     .nav-links { display: flex; gap: 4px; list-style: none; padding: 0; margin: 0; }
-    .nav-links a { display: block; padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-size: 14.5px; font-weight: 600; text-decoration: none; }
+    .nav-links a { display: block; white-space: nowrap; padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-size: 14.5px; font-weight: 600; text-decoration: none; }
     .nav-links a:hover { color: var(--text); background: var(--surface-2); }
     .nav-inner > .btn { margin-left: 8px; }
 
@@ -773,17 +773,23 @@
       .show-row { grid-template-columns: 1fr; }
       .show-row:nth-child(even) .show-copy { order: 0; }
       .show-copy { max-width: 600px; }
+      /* Visual em coluna única ocupa a largura toda: os selos flutuantes
+         passam a se ancorar no celular centralizado, não na borda da tela. */
+      .float-chip--pr { left: max(0px, calc(50% - 260px)); top: 2%; }
+      .float-chip--water { right: max(0px, calc(50% - 260px)); }
     }
-    @media (max-width: 760px) {
+    /* Os 6 links + idioma + botão só cabem acima de ~1020px; abaixo disso
+       (tablet) quebravam linha e empurravam "Abrir app" pra fora da tela. */
+    @media (max-width: 1020px) {
       .nav-links { display: none; }
       .nav-inner > .btn { margin-left: auto; }
+    }
+    @media (max-width: 760px) {
       .compare, .steps { grid-template-columns: 1fr; }
       .highlight { flex-basis: 50%; font-size: 14px; padding: 18px 8px; }
       .highlight + .highlight { border-left: 0; }
       .highlight:nth-child(even) { border-left: 1px solid var(--border); }
       .highlight:nth-child(n+3) { border-top: 1px solid var(--border); }
-      .float-chip--pr { left: -4%; top: 2%; }
-      .float-chip--water { right: -4%; }
       .show-visual { min-height: 0; }
     }
     @media (max-width: 560px) {
