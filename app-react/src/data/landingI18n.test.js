@@ -18,7 +18,7 @@ const norm = s => s.replace(/\s+/g, ' ').trim();
 const doc = new DOMParser().parseFromString(html, 'text/html');
 
 const SAME = new Set([
-  'EAFIT', 'EA', 'wger.de', 'Free Exercise DB', 'naldoads17@gmail.com', 'P7K2QX',
+  'EAFIT', 'EA', 'wger.de', 'Free Exercise DB', 'naldoads17@gmail.com', 'eafit.com.br/app', 'P7K2QX',
   'Rafael', 'Mariana', 'Carlos', 'Rafa', 'Bruno', 'Carol', 'Lia',
   'EN', '26 kg', '140 kg', '110 kg', '36 kg', '+200ml', '+300ml', '+500ml', '+750ml', '· CC BY-SA 4.0',
 ]);
