@@ -8,6 +8,7 @@ import { useToast } from '../context/useToast';
 import BodyAvatar from './BodyAvatar';
 import RatingModal from './RatingModal';
 import PushPrompt from './PushPrompt';
+import FriendsPrompt from './FriendsPrompt';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
@@ -109,6 +110,8 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
                   </div>
                 </div>
               </div>
+
+              <FriendsPrompt myWeek={weekDone} />
 
               <div className="summary-section">
                 <div className="summary-section__title">{t('Músculos trabalhados')}</div>

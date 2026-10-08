@@ -183,6 +183,67 @@
 
 .app-rating__star--on { color: var(--primary); }
 
+/* Convite pra função Amigos (FriendsPrompt) */
+.friends-invite {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--primary);
+  border-radius: var(--r-lg);
+  background: linear-gradient(160deg, var(--primary-glow), transparent 60%), var(--surface-2);
+}
+
+.friends-invite__head { display: flex; align-items: center; gap: 12px; }
+.friends-invite__avatars { display: flex; flex-shrink: 0; }
+.friends-invite__avatar {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-full);
+  border: 2px solid var(--surface-2);
+  background: var(--primary);
+  font-size: 1.2rem;
+}
+.friends-invite__avatar--empty {
+  margin-left: -12px;
+  border: 2px dashed var(--primary);
+  background: var(--surface-3);
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.friends-invite__title { font-size: 1rem; font-weight: 800; }
+.friends-invite__text { margin: 2px 0 0; font-size: 0.8rem; line-height: 1.4; color: var(--text-muted); }
+
+.friends-invite__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 0.85rem;
+}
+.friends-invite__label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); }
+.friends-invite__rank { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border-radius: var(--r-sm); }
+.friends-invite__rank--me { background: var(--surface-3); }
+.friends-invite__rank--empty { border: 1px dashed var(--border-2); color: var(--text-dim); }
+
+.friends-invite__benefits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; }
+.friends-invite__benefits li { display: flex; align-items: center; gap: 8px; }
+
+.friends-invite__code { display: flex; align-items: baseline; justify-content: center; gap: 8px; font-size: 0.8rem; color: var(--text-muted); }
+.friends-invite__code strong { color: var(--text); }
+
+.friends-invite__add { display: flex; gap: 8px; }
+.friends-invite__add .input { flex: 1; min-width: 0; }
+
+.friends-invite__links { display: flex; justify-content: space-between; gap: 12px; }
+.friends-invite__later { margin-left: auto; color: var(--text-muted); }
+
 .summary-table { display: flex; flex-direction: column; gap: 10px; }
 
 .summary-table__row {

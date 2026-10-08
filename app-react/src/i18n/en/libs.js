@@ -84,7 +84,7 @@ export default {
   'Esse é o seu próprio código.': 'That is your own code.',
   'Você já tem 20 pedidos pendentes. Aguarde alguém aceitar.': 'You already have 20 pending requests. Wait for someone to accept.',
   'Você chegou ao limite de 100 amigos.': 'You have reached the limit of 100 friends.',
-  'Bora treinar juntos? Me adiciona no EAFIT com o código {code} (Dashboard → Amigos).': 'Want to train together? Add me on EAFIT with the code {code} (Dashboard → Friends).',
+  'Bora treinar juntos? 💪 Me adiciona no EAFIT com o código {code} (Dashboard → Amigos) e a gente disputa o ranking da semana. Ainda não tem o app? É grátis: {url}': "Want to train together? 💪 Add me on EAFIT with the code {code} (Dashboard → Friends) and let's compete in the weekly ranking. Don't have the app yet? It's free: {url}",
 
   // imagem / convite / notificações / push
   'Não foi possível ler a imagem.': 'Could not read the image.',

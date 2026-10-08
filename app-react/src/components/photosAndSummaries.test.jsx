@@ -19,6 +19,7 @@ vi.mock('../lib/shareCard', () => h.share);
 vi.mock('../data/treinoData', async orig => ({ ...(await orig()), todayDate: () => '2026-10-07' }));
 vi.mock('./BodyAvatar', () => ({ default: ({ activeGroups }) => <div data-testid="avatar">{[...activeGroups].sort().join(',')}</div> }));
 vi.mock('./PushPrompt', () => ({ default: () => <div data-testid="push-prompt" /> }));
+vi.mock('./FriendsPrompt', () => ({ default: () => null }));
 vi.mock('./Loading', () => ({ default: () => <div data-testid="loading" /> }));
 
 import ProgressPhotos from './ProgressPhotos';

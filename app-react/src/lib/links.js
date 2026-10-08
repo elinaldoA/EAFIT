@@ -3,3 +3,4 @@
 export const LANDING_URL = 'https://elinaldoa.github.io/EAFIT/landing/';
 export const SHARE_CARD_URL = `${LANDING_URL}?origem=card`;
 export const INVITE_URL = `${LANDING_URL}?origem=convite`;
+export const FRIEND_INVITE_URL = `${LANDING_URL}?origem=amigos`;

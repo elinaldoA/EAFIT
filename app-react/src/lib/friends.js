@@ -1,5 +1,6 @@
 import { db } from './supabase';
 import { trackFeature } from './tracking';
+import { FRIEND_INVITE_URL } from './links';
 
 import { t } from './i18n';
 export const REACTIONS = ['💪', '🔥', '👏'];
@@ -23,7 +24,23 @@ export function normalizeFriendCode(raw) {
 }
 
 export function friendInviteText(code) {
-  return t('Bora treinar juntos? Me adiciona no EAFIT com o código {code} (Dashboard → Amigos).', { code });
+  return t('Bora treinar juntos? 💪 Me adiciona no EAFIT com o código {code} (Dashboard → Amigos) e a gente disputa o ranking da semana. Ainda não tem o app? É grátis: {url}', { code, url: FRIEND_INVITE_URL });
+}
+
+// Manda o convite com o código pelo compartilhar do sistema ou, sem ele, copia.
+// 'shared' | 'copied' | 'cancelled' (fechou o menu) | 'failed'.
+export async function shareFriendCode(code) {
+  const text = friendInviteText(code);
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: 'EAFIT', text });
+      return 'shared';
+    }
+    await navigator.clipboard.writeText(text);
+    return 'copied';
+  } catch (err) {
+    return err?.name === 'AbortError' ? 'cancelled' : 'failed';
+  }
 }
 
 export async function fetchMyFriendProfile() {

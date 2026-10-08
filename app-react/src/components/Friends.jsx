@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useToast } from '../context/useToast';
 import { timeAgo } from '../lib/inbox';
 import {
-  REACTIONS, KIND_ICON, friendlyFriendError, normalizeFriendCode, friendInviteText, weeklyRanking,
+  REACTIONS, KIND_ICON, friendlyFriendError, normalizeFriendCode, shareFriendCode, weeklyRanking,
   fetchMyFriendProfile, setShareActivity, requestFriend, respondFriend, removeFriendship,
   fetchMyFriends, fetchFeed, reactToEvent,
 } from '../lib/friends';
@@ -84,13 +84,9 @@ export default function Friends({ myWeek }) {
   }
 
   async function handleShareCode() {
-    const text = friendInviteText(profile.code);
-    try {
-      if (navigator.share) await navigator.share({ title: 'EAFIT', text });
-      else { await navigator.clipboard.writeText(text); toast(t('📋 Convite copiado')); }
-    } catch (err) {
-      if (err?.name !== 'AbortError') toast(t('Código: {code}', { code: profile.code }));
-    }
+    const result = await shareFriendCode(profile.code);
+    if (result === 'copied') toast(t('📋 Convite copiado'));
+    else if (result === 'failed') toast(t('Código: {code}', { code: profile.code }));
   }
 
   async function handleReact(id, emoji) {
