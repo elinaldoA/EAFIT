@@ -6,10 +6,10 @@ import { useReminders } from '../hooks/useReminders';
 import { isNotificationSupported } from '../lib/notifications';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { getModalRoot } from '../lib/modalRoot';
-import { fetchInbox, markInboxRead, timeAgo } from '../lib/inbox';
+import { fetchInbox, markInboxRead, markInboxItemRead, timeAgo } from '../lib/inbox';
 
 import { t } from '../lib/i18n';
-function InboxModal({ items, onClose, remindersEnabled, onToggleReminders }) {
+function InboxModal({ items, onClose, onReadOne, onReadAll, remindersEnabled, onToggleReminders }) {
   useBackToClose(onClose);
   useEffect(() => {
     document.body.classList.add('modal-open');
@@ -31,13 +31,24 @@ function InboxModal({ items, onClose, remindersEnabled, onToggleReminders }) {
             <small>{isNotificationSupported() ? t('Treino, água e incentivos, mesmo com o app fechado.') : t('Notificações não são suportadas neste navegador.')}</small>
           </span>
         </label>
+        {items.some(i => i.unread) && (
+          <div className="inbox__bar">
+            <span>{t('{n} não lido(s)', { n: items.filter(i => i.unread).length })}</span>
+            <button type="button" className="link-btn" onClick={onReadAll}>{t('Marcar todos como lidos')}</button>
+          </div>
+        )}
         <div className="inbox__list">
           {items.length === 0 && <p className="dash-empty">{t('Nenhum aviso por enquanto.')}</p>}
           {items.map(i => (
             <div key={i.id} className={`inbox__item${i.unread ? ' inbox__item--unread' : ''}`}>
               <div className="inbox__title">{i.title}</div>
               <p className="inbox__body">{i.body}</p>
-              <span className="inbox__time">{timeAgo(i.created_at)}</span>
+              <div className="inbox__foot">
+                <span className="inbox__time">{timeAgo(i.created_at)}</span>
+                {i.unread && (
+                  <button type="button" className="link-btn" onClick={() => onReadOne(i.id)}>{t('Marcar como lido')}</button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -49,8 +60,9 @@ function InboxModal({ items, onClose, remindersEnabled, onToggleReminders }) {
 
 // Sino na barra superior: avisos que o admin enviou e notificações
 // automáticas, para reler mesmo sem push, e o liga/desliga dos lembretes (o
-// sino fica cortado quando estão desligados). Falha (offline, migration pendente)
-// conta como "sem avisos", sem barulho.
+// sino fica cortado quando estão desligados). Abrir não marca nada como lido:
+// o aluno marca um aviso ou todos. Falha ao carregar (offline, migration
+// pendente) conta como "sem avisos", sem barulho.
 export default function InboxBell() {
   const { user } = useAuth();
   const toast = useToast();
@@ -74,20 +86,24 @@ export default function InboxBell() {
 
   const unread = items.filter(i => i.unread).length;
 
-  function handleOpen() {
-    setOpen(true);
-    if (unread > 0) markInboxRead().catch(err => console.error('markInboxRead:', err));
+  // O destaque some na hora; se o servidor recusar, volta como estava.
+  async function markRead(ids, request) {
+    setItems(list => list.map(i => (ids.includes(i.id) ? { ...i, unread: false } : i)));
+    try {
+      await request();
+    } catch (err) {
+      console.error('markInboxRead:', err);
+      setItems(list => list.map(i => (ids.includes(i.id) ? { ...i, unread: true } : i)));
+      toast(t('⚠️ Não foi possível marcar como lido. Tente de novo.'));
+    }
   }
 
-  function handleClose() {
-    setOpen(false);
-    // Só agora some o destaque: enquanto aberto, o aluno ainda vê o que era novo.
-    setItems(list => list.map(i => ({ ...i, unread: false })));
-  }
+  const handleReadOne = id => markRead([id], () => markInboxItemRead(id));
+  const handleReadAll = () => markRead(items.filter(i => i.unread).map(i => i.id), markInboxRead);
 
   return (
     <>
-      <button type="button" className="inbox-bell" title={t('Avisos')} aria-label={unread ? t('Avisos ({unread} novo(s))', { unread }) : t('Avisos')} onClick={handleOpen}>
+      <button type="button" className="inbox-bell" title={t('Avisos')} aria-label={unread ? t('Avisos ({unread} novo(s))', { unread }) : t('Avisos')} onClick={() => setOpen(true)}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           {remindersEnabled || !isNotificationSupported()
             ? <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>
@@ -95,7 +111,12 @@ export default function InboxBell() {
         </svg>
         {unread > 0 && <span className="inbox-bell__badge">{unread > 9 ? '9+' : unread}</span>}
       </button>
-      {open && <InboxModal items={items} onClose={handleClose} remindersEnabled={remindersEnabled} onToggleReminders={toggleReminders} />}
+      {open && (
+        <InboxModal
+          items={items} onClose={() => setOpen(false)} onReadOne={handleReadOne} onReadAll={handleReadAll}
+          remindersEnabled={remindersEnabled} onToggleReminders={toggleReminders}
+        />
+      )}
     </>
   );
 }

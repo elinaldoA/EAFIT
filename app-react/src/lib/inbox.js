@@ -18,6 +18,12 @@ export async function markInboxRead() {
   if (error) throw error;
 }
 
+// Um aviso só (supabase/migrations/20261030010000_notification_read_one.sql).
+export async function markInboxItemRead(id) {
+  const { error } = await db.rpc('mark_notification_read', { p_id: id });
+  if (error) throw error;
+}
+
 // "agora", "há 5 min", "há 3 h", "ontem" ou a data.
 export function timeAgo(iso, now = Date.now()) {
   const diff = Math.max(0, now - new Date(iso).getTime());

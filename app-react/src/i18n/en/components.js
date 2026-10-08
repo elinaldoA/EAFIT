@@ -254,6 +254,10 @@ export default {
   'Treino, água e incentivos, mesmo com o app fechado.': 'Workouts, water and nudges, even with the app closed.',
   'Notificações não são suportadas neste navegador.': 'Notifications are not supported in this browser.',
   'Nenhum aviso por enquanto.': 'No notices for now.',
+  '{n} não lido(s)': '{n} unread',
+  'Marcar todos como lidos': 'Mark all as read',
+  'Marcar como lido': 'Mark as read',
+  '⚠️ Não foi possível marcar como lido. Tente de novo.': '⚠️ Could not mark as read. Try again.',
   'Avisos ({unread} novo(s))': 'Notices ({unread} new)',
   'Nenhum registro disponível': 'No data available',
 

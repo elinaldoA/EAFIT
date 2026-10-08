@@ -18,6 +18,7 @@ vi.mock('../lib/inbox', async (importActual) => ({
   ...(await importActual()),
   fetchInbox: (...a) => h.api.fetchInbox(...a),
   markInboxRead: (...a) => h.api.markInboxRead(...a),
+  markInboxItemRead: (...a) => h.api.markInboxItemRead(...a),
 }));
 vi.mock('../lib/trainerAppointments', async (importActual) => ({
   ...(await importActual()),
@@ -38,6 +39,7 @@ beforeEach(() => {
   h.api = {
     fetchInbox: vi.fn().mockResolvedValue([]),
     markInboxRead: vi.fn().mockResolvedValue(undefined),
+    markInboxItemRead: vi.fn().mockResolvedValue(undefined),
     fetchMyAppointments: vi.fn().mockResolvedValue([]),
     respondAppointment: vi.fn().mockResolvedValue(undefined),
   };
@@ -69,22 +71,56 @@ describe('InboxBell', () => {
     await waitFor(() => expect(document.querySelector('.inbox-bell__badge')?.textContent).toBe('9+'));
   });
 
-  it('abrir lista os avisos e marca como lidos; fechar tira o destaque', async () => {
-    h.api.fetchInbox.mockResolvedValue([item(1), item(2)]);
+  const openWith = async (rows) => {
+    h.api.fetchInbox.mockResolvedValue(rows);
     render(<InboxBell />);
     await waitFor(() => expect(document.querySelector('.inbox-bell__badge')).toBeTruthy());
     fireEvent.click(screen.getByRole('button', { name: /Avisos/ }));
+  };
+
+  it('abrir lista os avisos sem marcar nada; fechar mantém os não lidos', async () => {
+    await openWith([item(1), item(2)]);
 
     expect(screen.getByRole('dialog')).toBeTruthy();
     expect(screen.getByText('Aviso 1')).toBeTruthy();
     expect(document.querySelectorAll('.inbox__item--unread')).toHaveLength(2);
-    expect(h.api.markInboxRead).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('2 não lido(s)')).toBeTruthy();
+    expect(h.api.markInboxRead).not.toHaveBeenCalled();
     expect(document.body.classList.contains('modal-open')).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.body.classList.contains('modal-open')).toBe(false);
+    expect(document.querySelector('.inbox-bell__badge').textContent).toBe('2');
+  });
+
+  it('marca um aviso como lido e o contador desce', async () => {
+    await openWith([item(1), item(2), item(3, { read_at: 'x' })]);
+    const buttons = screen.getAllByRole('button', { name: 'Marcar como lido' });
+    expect(buttons).toHaveLength(2);
+    fireEvent.click(buttons[1]);
+    await flush();
+    expect(h.api.markInboxItemRead).toHaveBeenCalledWith(2);
+    expect(document.querySelectorAll('.inbox__item--unread')).toHaveLength(1);
+    expect(document.querySelector('.inbox-bell__badge').textContent).toBe('1');
+  });
+
+  it('marca todos como lidos e some com o contador', async () => {
+    await openWith([item(1), item(2)]);
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar todos como lidos' }));
+    await flush();
+    expect(h.api.markInboxRead).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('.inbox__item--unread')).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Marcar todos como lidos' })).toBeNull();
     expect(document.querySelector('.inbox-bell__badge')).toBeNull();
+  });
+
+  it('falha ao marcar devolve o destaque e avisa', async () => {
+    h.api.markInboxItemRead.mockRejectedValue(new Error('offline'));
+    await openWith([item(1)]);
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar como lido' }));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Não foi possível marcar como lido. Tente de novo.'));
+    expect(document.querySelectorAll('.inbox__item--unread')).toHaveLength(1);
   });
 
   it('sem avisos novos, abrir não marca nada e mostra o vazio', async () => {
