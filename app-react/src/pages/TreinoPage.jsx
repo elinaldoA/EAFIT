@@ -11,6 +11,8 @@ import { countSets, gatherExerciseDetails } from '../lib/workoutSets';
 import RestTimer from '../components/RestTimer';
 import PlanEditorModal from '../components/PlanEditorModal';
 import WorkoutSummaryModal from '../components/WorkoutSummaryModal';
+import AppRatingModal from '../components/AppRatingModal';
+import { noteWorkoutFinished } from '../lib/appRating';
 import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
@@ -32,6 +34,13 @@ export default function TreinoPage() {
   const [showPlanEditor, setShowPlanEditor] = useState(false);
   const [summary, setSummary] = useState(null);
   const [liveDay, setLiveDay] = useState(null);
+  const [askAppRating, setAskAppRating] = useState(false);
+
+  // Fechou o resumo do treino: bom momento pra pedir a avaliação do app.
+  function handleSummaryClose() {
+    setSummary(null);
+    if (noteWorkoutFinished() && isFlagOn(config.flags, 'avaliar_app')) setAskAppRating(true);
+  }
 
   // Traz as preferências do treinador por voz da conta para este aparelho.
   useEffect(() => { syncCoachPrefs(user); }, [user]);
@@ -150,9 +159,12 @@ export default function TreinoPage() {
       {summary && (
         <WorkoutSummaryModal
           summary={summary}
-          onClose={() => setSummary(null)}
+          onClose={handleSummaryClose}
           onRate={value => saveWorkoutRating(summary.day.dia, value)}
         />
+      )}
+      {askAppRating && user && (
+        <AppRatingModal userId={user.id} onClose={() => setAskAppRating(false)} />
       )}
     </section>
   );

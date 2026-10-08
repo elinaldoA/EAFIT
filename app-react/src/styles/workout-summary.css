@@ -164,6 +164,25 @@
   color: var(--primary);
 }
 
+/* Avaliação do app: reaproveita o painel do .rating-modal */
+.app-rating__text { margin: 0; font-size: 0.88rem; line-height: 1.45; color: var(--text-muted); }
+
+.app-rating__stars { display: flex; justify-content: center; gap: 6px; }
+
+.app-rating__star {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--border-2);
+  font-size: 2.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-rating__star--on { color: var(--primary); }
+
 .summary-table { display: flex; flex-direction: column; gap: 10px; }
 
 .summary-table__row {
