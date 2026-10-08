@@ -74,7 +74,9 @@ a { color: var(--primary); }
 
 .shell {
   display: flex;
+  /* dvh: no celular, 100vh inclui a área atrás da barra do navegador. */
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .shell__main {
@@ -92,7 +94,7 @@ a { color: var(--primary); }
   margin: 0 auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .shell__content { padding: 18px 16px 40px; }
 }
 
@@ -115,6 +117,7 @@ a { color: var(--primary); }
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
 }
 
 .sidebar__brand {
@@ -205,10 +208,13 @@ a { color: var(--primary); }
 
 .sidebar__backdrop { display: none; }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .sidebar {
     position: fixed;
     inset: 0 20% 0 0;
+    /* inset já define a altura; com height fixo o rodapé ficava atrás da
+       barra do navegador no celular. */
+    height: auto;
     z-index: 40;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
@@ -290,9 +296,13 @@ a { color: var(--primary); }
   white-space: nowrap;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .topbar { padding: 0 16px; }
-  .topbar__menu-btn { display: block; }
+  .topbar__menu-btn { display: block; padding: 8px; margin-left: -8px; }
+  .topbar__crumb { min-width: 0; }
+  .topbar__crumb strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+@media (max-width: 640px) {
   .topbar__user { display: none; }
 }
 
@@ -513,7 +523,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .resp-table tbody tr { transition: background-color .15s ease; }
 .resp-table tbody tr:hover { background: var(--surface-2); }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .resp-table thead { display: none; }
   .resp-table, .resp-table tbody, .resp-table tr, .resp-table td { display: block; width: 100%; }
   .resp-table tr {
@@ -526,12 +536,15 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
     display: flex;
     justify-content: space-between;
     gap: 12px;
+    text-align: right;
+    overflow-wrap: anywhere;
   }
   .resp-table td[data-label]::before {
     content: attr(data-label);
     font-weight: 600;
     color: var(--text-muted);
     flex-shrink: 0;
+    text-align: left;
   }
   .resp-table td:empty::before { content: none; }
 }
@@ -540,6 +553,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 
 .auth-screen {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 20px;
@@ -700,11 +714,12 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 
 .day-editor__head {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 10px;
 }
 
-.day-editor__head .field { flex: 1; }
+.day-editor__head .field { flex: 1 1 160px; min-width: 0; }
 
 .landing-section__head {
   display: flex;
@@ -787,7 +802,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .delta--down { color: var(--danger); }
 .delta--flat { color: var(--text-dim); font-weight: 500; }
 
-.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; align-items: start; }
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 20px; align-items: start; }
 
 .dist { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .dist__row { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 10px; font-size: 12.5px; }
@@ -910,3 +925,35 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .loading-overlay__bar { width: 100%; height: 4px; border-radius: 4px; background: var(--surface-3, #27272a); overflow: hidden; }
 .loading-overlay__bar > span { display: block; height: 100%; background: var(--primary, #f97316); border-radius: 4px; transition: width .12s linear; }
 .loading-overlay__label { font-size: .8rem; color: var(--text-muted, #a1a1aa); }
+
+/* ---------- celular e toque ---------- */
+
+/* iOS amplia a página ao focar um campo com fonte menor que 16px. Só no iOS:
+   -webkit-touch-callout não existe nos outros navegadores. */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Dedo em vez de mouse: alvos de toque maiores. */
+@media (pointer: coarse) {
+  .btn { min-height: 40px; }
+  .btn--small { min-height: 36px; padding: 6px 12px; }
+  .icon-btn { width: 36px; height: 36px; font-size: 14px; }
+  .theme-toggle { width: 40px; height: 40px; }
+  .tabs__btn { padding: 12px 16px; }
+  .sidebar__link { padding: 11px 10px; }
+  .seg__btn { padding: 8px 12px; }
+}
+
+@media (max-width: 640px) {
+  .page-title, .section-title-main { font-size: 20px; }
+  .card { padding: 16px; }
+  /* Indicadores em duas colunas (uma só deixava a página muito longa). */
+  .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px; }
+  .tile { padding: 14px; }
+  .tile__value { font-size: 22px; overflow-wrap: anywhere; }
+  .auth-card { padding: 22px 18px; }
+  .flag-row { flex-wrap: wrap; }
+  .media-thumb { width: 96px; }
+  .dist__row { grid-template-columns: minmax(0, 96px) 1fr auto !important; }
+}
