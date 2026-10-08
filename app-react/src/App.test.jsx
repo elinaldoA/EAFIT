@@ -110,6 +110,15 @@ describe('App', () => {
     expect(screen.queryByText('tela-instalar')).toBeNull();
   });
 
+  it('quem chega pelo aviso de mudança de endereço vê a tela de instalar antes do login', () => {
+    window.history.replaceState(null, '', '/?origem=mudanca');
+    h.auth = { user: null, authLoading: false, recoveryMode: false };
+    render(<App />);
+    expect(screen.getByText('tela-instalar')).toBeTruthy();
+    expect(screen.getByText('tela-auth')).toBeTruthy();
+    window.history.replaceState(null, '', '/');
+  });
+
   it('usuário logado marca o aparelho como conhecido', () => {
     render(<App />);
     expect(h.markKnownUser).toHaveBeenCalled();

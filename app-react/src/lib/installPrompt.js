@@ -93,6 +93,15 @@ export function installSteps({ os, browser }) {
   return null;
 }
 
+// Link do aviso de mudança de endereço (painel admin → Aviso no app /
+// Mudança de endereço): https://eafit.com.br/app/?origem=mudanca. Quem chega
+// por ele tinha o app instalado no endereço antigo, então a tela de instalar
+// aparece antes mesmo do login. O mesmo ?origem= entra na contagem de visitas
+// (lib/pageVisits.js).
+export function cameFromOldAddress(search = window.location.search) {
+  return new URLSearchParams(search || '').get('origem') === 'mudanca';
+}
+
 // "Agora não" vale só pra esta sessão do navegador: na próxima vez que a
 // pessoa abrir o EAFIT pela aba, a tela volta.
 export function isInstallSkipped() {

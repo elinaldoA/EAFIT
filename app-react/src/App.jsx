@@ -26,6 +26,7 @@ import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import MovedScreen from './components/MovedScreen';
 import { movedTarget } from './lib/appConfig';
+import { cameFromOldAddress } from './lib/installPrompt';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import TermsUpdateScreen from './components/TermsUpdateScreen';
 import InstallScreen from './components/InstallScreen';
@@ -68,6 +69,7 @@ function Shell() {
   // Navegação vinda de notificação ou aviso (lib/appNav.js) com aba/cartão a
   // abrir: remonta a página pra valer mesmo se já era a aba atual.
   const [navSeq, setNavSeq] = useState(0);
+  const [fromOldAddress] = useState(cameFromOldAddress);
   useEffect(() => {
     const onNav = event => { if (event.detail?.remount) setNavSeq(n => n + 1); };
     window.addEventListener(NAV_EVENT, onNav);
@@ -110,7 +112,7 @@ function Shell() {
     <div className="shell">
       <AnnouncementBanner />
       {user && <TermsUpdateScreen />}
-      {user && <InstallScreen />}
+      {(user || fromOldAddress) && <InstallScreen />}
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}
