@@ -18,6 +18,11 @@ function toLocalInputValue(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+// Trecho da mensagem de resultado quando o envio também foi por e-mail.
+function emailResult(data) {
+  return data?.emailTargetCount == null ? '' : ` E-mail: ${data.emailSent} de ${data.emailTargetCount}.`;
+}
+
 export default function Broadcast() {
   const { adminUser } = useAdminAuth();
   const [users, setUsers] = useState([]);
@@ -26,6 +31,8 @@ export default function Broadcast() {
   const [scope, setScope] = useState('all');
   const [selectedIds, setSelectedIds] = useState([]);
   const [scheduleAt, setScheduleAt] = useState('');
+  // Também por e-mail: só no envio imediato (o agendado segue só por push).
+  const [alsoEmail, setAlsoEmail] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [history, setHistory] = useState([]);
@@ -129,17 +136,18 @@ export default function Broadcast() {
         await loadExtras();
       } else {
         const { data, error } = await db.functions.invoke('admin-broadcast', {
-          body: { title, body, targetUserIds: scope !== 'all' ? selectedIds : undefined },
+          body: { title, body, targetUserIds: scope !== 'all' ? selectedIds : undefined, email: alsoEmail ? 'aviso' : undefined },
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
-        setMsg(`Enviado: ${data.sent} de ${data.targetCount} dispositivo(s).`);
+        setMsg(`Enviado: ${data.sent} de ${data.targetCount} dispositivo(s).${emailResult(data)}`);
         await loadExtras();
       }
       setTitle('');
       setBody('');
       setSelectedIds([]);
       setScheduleAt('');
+      setAlsoEmail(false);
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
     } finally {
@@ -182,13 +190,13 @@ export default function Broadcast() {
     setMsg('');
     try {
       const { data, error } = await db.functions.invoke('admin-broadcast', {
-        body: { title, body, targetUserIds: [adminUser.id] },
+        body: { title, body, targetUserIds: [adminUser.id], email: alsoEmail ? 'aviso' : undefined },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setMsg(data.targetCount === 0
+      setMsg(data.targetCount === 0 && !data.emailSent
         ? 'Erro: você não tem push ativo em nenhum aparelho. Ative os lembretes no app (Perfil → Notificações) logado com esta conta.'
-        : `Teste enviado: ${data.sent} de ${data.targetCount} dispositivo(s).`);
+        : `Teste enviado: ${data.sent} de ${data.targetCount} dispositivo(s).${emailResult(data)}`);
       await loadExtras();
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
@@ -275,6 +283,21 @@ export default function Broadcast() {
             min={toLocalInputValue(new Date())}
             onChange={e => setScheduleAt(e.target.value)}
           />
+        </label>
+
+        <label style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+          <input
+            type="checkbox" checked={alsoEmail && !scheduleAt} disabled={!!scheduleAt}
+            onChange={e => setAlsoEmail(e.target.checked)}
+          />
+          <span>
+            Enviar também por e-mail{' '}
+            <span className="field__label">
+              {scheduleAt
+                ? '(indisponível no envio agendado)'
+                : '(só para quem aceita e-mails de novidades; até 300 por envio)'}
+            </span>
+          </span>
         </label>
 
         {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}

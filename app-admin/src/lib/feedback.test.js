@@ -81,7 +81,7 @@ describe('replyToFeedback', () => {
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ admin_reply: 'Já corrigimos!', status: 'resolvido' }));
     expect(mockEq).toHaveBeenCalledWith('id', 'f1');
     expect(mockInvoke).toHaveBeenCalledWith('admin-broadcast', {
-      body: expect.objectContaining({ body: 'Já corrigimos!', targetUserIds: ['u1'] }),
+      body: expect.objectContaining({ body: 'Já corrigimos!', targetUserIds: ['u1'], email: 'resposta' }),
     });
     expect(out).toEqual({ notified: true });
   });

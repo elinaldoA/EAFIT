@@ -238,7 +238,7 @@ describe('Feedback', () => {
     fireEvent.change(screen.getByLabelText(/Responder ao usuário/), { target: { value: 'Já corrigimos!' } });
     fireEvent.click(send);
     await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('admin-broadcast', {
-      body: { title: '💬 Resposta ao seu feedback', body: 'Já corrigimos!', targetUserIds: ['u1'] },
+      body: { title: '💬 Resposta ao seu feedback', body: 'Já corrigimos!', targetUserIds: ['u1'], email: 'resposta' },
     }));
     const patch = mockFrom.mock.results[0].value.update.mock.calls[0][0];
     expect(patch).toMatchObject({ admin_reply: 'Já corrigimos!', status: 'resolvido' });

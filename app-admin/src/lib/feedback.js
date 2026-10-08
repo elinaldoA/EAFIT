@@ -62,8 +62,8 @@ export function replyValue(draft) {
   return v.length >= 1 && v.length <= REPLY_MAX ? v : null;
 }
 
-// Grava a resposta no feedback e avisa o usuário (push + central de avisos,
-// via admin-broadcast). A resposta é salva primeiro: se o aviso falhar, ela
+// Grava a resposta no feedback e avisa o usuário (push, central de avisos e
+// e-mail, via admin-broadcast). A resposta é salva primeiro: se o aviso falhar, ela
 // continua visível para o usuário no Perfil e o admin é informado.
 export async function replyToFeedback(item, text, { resolve = false } = {}) {
   const reply = replyValue(text);
@@ -74,7 +74,7 @@ export async function replyToFeedback(item, text, { resolve = false } = {}) {
   await updateFeedback(item.id, fields);
 
   const { data, error } = await db.functions.invoke('admin-broadcast', {
-    body: { title: '💬 Resposta ao seu feedback', body: reply, targetUserIds: [item.user_id] },
+    body: { title: '💬 Resposta ao seu feedback', body: reply, targetUserIds: [item.user_id], email: 'resposta' },
   });
   if (error || data?.error) return { notified: false };
   return { notified: true };
