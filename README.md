@@ -134,7 +134,8 @@ passos manuais:
      nome do remetente `EAFIT`. Depois, em Authentication → Email Templates, colar os
      arquivos de `supabase/templates/` (`recovery.html` em Reset Password,
      `confirmation.html` em Confirm signup, `email_change.html` em Change Email
-     Address). O botão deles aponta pro próprio app (`?token_hash=...`, lido por
+     Address; e, na parte de avisos de segurança, `password_changed_notification.html`
+     e `email_changed_notification.html`, ligando cada aviso). O botão deles aponta pro próprio app (`?token_hash=...`, lido por
      `lib/emailLink.js`), então só cole uma versão nova depois que o app correspondente
      estiver publicado. Eles escolhem português ou inglês pelo `lang` da conta; o
      campo Subject de cada um está em `supabase/templates/subjects.txt`. Os arquivos
@@ -143,5 +144,7 @@ passos manuais:
      `deno run --allow-write=supabase/templates supabase/templates/build.ts`.
   3. Nos secrets das Edge Functions: `GMAIL_USER` e `GMAIL_APP_PASSWORD`, usados por
      `supabase/functions/_shared/email.ts` (sem eles, as funções só não enviam e-mail).
+     Hoje enviam e-mail: `send-welcome` (boas-vindas, chamada pelo app no cadastro) e
+     `delete-account` (confirmação de conta excluída).
 - **Custo/escala**: checar os limites do plano atual do Supabase (linhas de banco,
   storage de fotos, invocações de Edge Function) antes de divulgar amplamente.

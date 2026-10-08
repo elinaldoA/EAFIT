@@ -24,6 +24,8 @@ export type EmailContent = {
   cta?: { label: string; url: string };
   // Linha miúda no fim do cartão (ex.: "se não foi você, ignore este e-mail").
   footnote?: string;
+  // Troca a frase do rodapé "você recebe este e-mail porque tem uma conta".
+  reason?: string;
 };
 
 export type RenderedEmail = { subject: string; html: string; text: string };
@@ -60,7 +62,7 @@ const STRINGS = {
 
 export function renderEmail(lang: Lang, content: EmailContent): RenderedEmail {
   const { subject, preheader, eyebrow, heading, paragraphs, cta, footnote } = content;
-  const s = STRINGS[lang];
+  const s = { ...STRINGS[lang], ...(content.reason ? { reason: content.reason } : {}) };
 
   // Texto invisível: sem ele, a lista de e-mails mostra o começo do HTML
   // ("EAFIT Seu treino…") no lugar de um resumo.

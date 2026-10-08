@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light dark" />
 <meta name="supported-color-schemes" content="light dark" />
-<title>Confirm your email on EAFIT</title>
+<title>The email of your EAFIT account was changed</title>
 <style>
 @media (prefers-color-scheme: dark) {
   .page { background: #0b0b0f !important; }
@@ -25,7 +25,7 @@
 </style>
 </head>
 <body class="page" style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;">
-<div class="preheader" style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f4f4f5;">Just one more step to start training.</div>
+<div class="preheader" style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f4f4f5;">If this was you, there is nothing to do.</div>
 <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f5">
 <tr><td align="center" style="padding:32px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
@@ -40,13 +40,14 @@
 </td></tr>
 <tr><td bgcolor="#f97316" height="4" style="height:4px;font-size:0;line-height:0;background:#f97316;">&nbsp;</td></tr>
 <tr><td class="card pad" bgcolor="#ffffff" style="padding:34px 32px 30px;background:#ffffff;border:1px solid #e4e4e7;border-top:0;border-radius:0 0 18px 18px;">
-<p class="eyebrow" style="margin:0 0 10px;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c2410c;">Welcome</p>
-<h1 class="heading" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:800;color:#18181b;">Confirm your email</h1>
-<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">Your EAFIT account is almost ready. Confirm that {{ .Email }} is yours to start training.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="#f97316" style="border-radius:12px;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=signup" style="display:inline-block;padding:15px 30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.2;font-weight:700;color:#0e0e12;text-decoration:none;border-radius:12px;">Confirm email</a></td></tr></table>
+<p class="eyebrow" style="margin:0 0 10px;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c2410c;">Account security</p>
+<h1 class="heading" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:800;color:#18181b;">Your sign-in email was changed</h1>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">The email of your EAFIT account was changed from {{ .OldEmail }} to {{ .Email }}.</p>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">If this was you, there is nothing to do. From now on, use the new address to sign in.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="#f97316" style="border-radius:12px;"><a href="https://eafit.com.br/app/" style="display:inline-block;padding:15px 30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.2;font-weight:700;color:#0e0e12;text-decoration:none;border-radius:12px;">Open the app</a></td></tr></table>
 <p class="muted" style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">If the button does not work, copy and paste this address into your browser:</p>
-<p class="linkbox" style="margin:0 0 24px;padding:12px 14px;font-size:12px;line-height:1.5;color:#52525b;background:#f4f4f5;border-radius:10px;word-break:break-all;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=signup" style="color:#52525b;text-decoration:none;">{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=signup</a></p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule" style="padding:18px 0 0;border-top:1px solid #e4e4e7;font-size:13px;line-height:1.55;color:#71717a;">Did not create an EAFIT account? Ignore this email and nothing happens.</td></tr></table>
+<p class="linkbox" style="margin:0 0 24px;padding:12px 14px;font-size:12px;line-height:1.5;color:#52525b;background:#f4f4f5;border-radius:10px;word-break:break-all;"><a href="https://eafit.com.br/app/" style="color:#52525b;text-decoration:none;">https://eafit.com.br/app/</a></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule" style="padding:18px 0 0;border-top:1px solid #e4e4e7;font-size:13px;line-height:1.55;color:#71717a;">Was this not you? Reply to this email as soon as possible so we can recover your account.</td></tr></table>
 </td></tr>
 <tr><td class="footer pad" align="center" style="padding:24px 32px 0;font-size:12.5px;line-height:1.7;color:#71717a;">
 <a href="https://eafit.com.br/app/" style="color:#71717a;">Open the app</a> &nbsp;·&nbsp;
@@ -66,7 +67,7 @@ You are receiving this email because you have an EAFIT account.
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="color-scheme" content="light dark" />
 <meta name="supported-color-schemes" content="light dark" />
-<title>Confirme seu e-mail no EAFIT</title>
+<title>O e-mail da sua conta no EAFIT foi alterado</title>
 <style>
 @media (prefers-color-scheme: dark) {
   .page { background: #0b0b0f !important; }
@@ -86,7 +87,7 @@ You are receiving this email because you have an EAFIT account.
 </style>
 </head>
 <body class="page" style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%;">
-<div class="preheader" style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f4f4f5;">Falta só um passo para começar a treinar.</div>
+<div class="preheader" style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#f4f4f5;">Se foi você, não precisa fazer nada.</div>
 <table role="presentation" class="page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f5">
 <tr><td align="center" style="padding:32px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
@@ -101,13 +102,14 @@ You are receiving this email because you have an EAFIT account.
 </td></tr>
 <tr><td bgcolor="#f97316" height="4" style="height:4px;font-size:0;line-height:0;background:#f97316;">&nbsp;</td></tr>
 <tr><td class="card pad" bgcolor="#ffffff" style="padding:34px 32px 30px;background:#ffffff;border:1px solid #e4e4e7;border-top:0;border-radius:0 0 18px 18px;">
-<p class="eyebrow" style="margin:0 0 10px;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c2410c;">Boas-vindas</p>
-<h1 class="heading" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:800;color:#18181b;">Confirme seu e-mail</h1>
-<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">Sua conta no EAFIT está quase pronta. Confirme que o endereço {{ .Email }} é seu para começar a treinar.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="#f97316" style="border-radius:12px;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=signup" style="display:inline-block;padding:15px 30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.2;font-weight:700;color:#0e0e12;text-decoration:none;border-radius:12px;">Confirmar e-mail</a></td></tr></table>
+<p class="eyebrow" style="margin:0 0 10px;font-size:12px;line-height:1.4;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c2410c;">Segurança da conta</p>
+<h1 class="heading" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:800;color:#18181b;">Seu e-mail de acesso foi alterado</h1>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">O e-mail da sua conta no EAFIT foi alterado de {{ .OldEmail }} para {{ .Email }}.</p>
+<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">Se foi você, não precisa fazer nada. A partir de agora, use o novo endereço para entrar.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="#f97316" style="border-radius:12px;"><a href="https://eafit.com.br/app/" style="display:inline-block;padding:15px 30px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.2;font-weight:700;color:#0e0e12;text-decoration:none;border-radius:12px;">Abrir o app</a></td></tr></table>
 <p class="muted" style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#71717a;">Se o botão não funcionar, copie e cole este endereço no navegador:</p>
-<p class="linkbox" style="margin:0 0 24px;padding:12px 14px;font-size:12px;line-height:1.5;color:#52525b;background:#f4f4f5;border-radius:10px;word-break:break-all;"><a href="{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=signup" style="color:#52525b;text-decoration:none;">{{ if .RedirectTo }}{{ .RedirectTo }}{{ else }}{{ .SiteURL }}{{ end }}?token_hash={{ .TokenHash }}&amp;type=signup</a></p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule" style="padding:18px 0 0;border-top:1px solid #e4e4e7;font-size:13px;line-height:1.55;color:#71717a;">Não criou uma conta no EAFIT? Ignore este e-mail e nada acontece.</td></tr></table>
+<p class="linkbox" style="margin:0 0 24px;padding:12px 14px;font-size:12px;line-height:1.5;color:#52525b;background:#f4f4f5;border-radius:10px;word-break:break-all;"><a href="https://eafit.com.br/app/" style="color:#52525b;text-decoration:none;">https://eafit.com.br/app/</a></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="rule" style="padding:18px 0 0;border-top:1px solid #e4e4e7;font-size:13px;line-height:1.55;color:#71717a;">Não foi você? Responda a este e-mail o quanto antes para a gente recuperar a sua conta.</td></tr></table>
 </td></tr>
 <tr><td class="footer pad" align="center" style="padding:24px 32px 0;font-size:12.5px;line-height:1.7;color:#71717a;">
 <a href="https://eafit.com.br/app/" style="color:#71717a;">Abrir o app</a> &nbsp;·&nbsp;

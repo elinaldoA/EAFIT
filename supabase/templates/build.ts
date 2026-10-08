@@ -1,5 +1,5 @@
-// Gera os modelos de e-mail do login (recovery.html, confirmation.html,
-// email_change.html) a partir do layout compartilhado, pra terem o mesmo
+// Gera os modelos de e-mail do login (redefinição de senha, confirmação,
+// troca de e-mail e os avisos de segurança) a partir do layout compartilhado, pra terem o mesmo
 // visual dos e-mails enviados pelas Edge Functions. Os arquivos gerados são
 // colados no dashboard do Supabase (Authentication → Emails → Templates).
 //
@@ -7,7 +7,7 @@
 //
 // Os textos levam marcações de template do Supabase ({{ ... }}); elas não
 // podem ter aspas nem < >, que o layout escaparia.
-import { type EmailContent, renderEmail } from '../functions/_shared/emailLayout.ts';
+import { APP_URL, type EmailContent, renderEmail } from '../functions/_shared/emailLayout.ts';
 import type { Lang } from '../functions/_shared/lang.ts';
 
 // O botão aponta pro próprio app, que troca o código pela sessão (ver
@@ -95,13 +95,71 @@ const TEMPLATES: Record<string, Record<Lang, EmailContent>> = {
   },
 };
 
+// Avisos de segurança (Authentication → Emails → Security no dashboard): saem
+// depois que a mudança já aconteceu, então não levam link com código.
+const NOTIFICATIONS: Record<string, Record<Lang, EmailContent>> = {
+  password_changed_notification: {
+    pt: {
+      subject: 'Sua senha do EAFIT foi alterada',
+      preheader: 'Se foi você, não precisa fazer nada.',
+      eyebrow: 'Segurança da conta',
+      heading: 'Sua senha foi alterada',
+      paragraphs: [
+        'A senha da conta {{ .Email }} no EAFIT acabou de ser alterada.',
+        'Se foi você, não precisa fazer nada.',
+      ],
+      cta: { label: 'Abrir o app', url: APP_URL },
+      footnote: 'Não foi você? Abra o app, toque em Esqueci minha senha para criar uma nova e responda a este e-mail para avisar a gente.',
+    },
+    en: {
+      subject: 'Your EAFIT password was changed',
+      preheader: 'If this was you, there is nothing to do.',
+      eyebrow: 'Account security',
+      heading: 'Your password was changed',
+      paragraphs: [
+        'The password for the EAFIT account {{ .Email }} has just been changed.',
+        'If this was you, there is nothing to do.',
+      ],
+      cta: { label: 'Open the app', url: APP_URL },
+      footnote: 'Was this not you? Open the app, tap Forgot my password to create a new one and reply to this email to let us know.',
+    },
+  },
+  email_changed_notification: {
+    pt: {
+      subject: 'O e-mail da sua conta no EAFIT foi alterado',
+      preheader: 'Se foi você, não precisa fazer nada.',
+      eyebrow: 'Segurança da conta',
+      heading: 'Seu e-mail de acesso foi alterado',
+      paragraphs: [
+        'O e-mail da sua conta no EAFIT foi alterado de {{ .OldEmail }} para {{ .Email }}.',
+        'Se foi você, não precisa fazer nada. A partir de agora, use o novo endereço para entrar.',
+      ],
+      cta: { label: 'Abrir o app', url: APP_URL },
+      footnote: 'Não foi você? Responda a este e-mail o quanto antes para a gente recuperar a sua conta.',
+    },
+    en: {
+      subject: 'The email of your EAFIT account was changed',
+      preheader: 'If this was you, there is nothing to do.',
+      eyebrow: 'Account security',
+      heading: 'Your sign-in email was changed',
+      paragraphs: [
+        'The email of your EAFIT account was changed from {{ .OldEmail }} to {{ .Email }}.',
+        'If this was you, there is nothing to do. From now on, use the new address to sign in.',
+      ],
+      cta: { label: 'Open the app', url: APP_URL },
+      footnote: 'Was this not you? Reply to this email as soon as possible so we can recover your account.',
+    },
+  },
+};
+
 // Idioma da conta (user_metadata.lang); sem valor, português. O printf evita
-// erro de comparação quando o campo não existe.
-const IS_EN = `eq (printf "%v" .Data.lang) "en"`;
+// erro de comparação quando o campo não existe; o `and .Data` cobre os avisos
+// de segurança, caso o Supabase não mande os dados da conta neles.
+const IS_EN = `and .Data (eq (printf "%v" .Data.lang) "en")`;
 
 const dir = new URL('.', import.meta.url);
 const subjects: string[] = [];
-for (const [name, byLang] of Object.entries(TEMPLATES)) {
+for (const [name, byLang] of Object.entries({ ...TEMPLATES, ...NOTIFICATIONS })) {
   const pt = renderEmail('pt', byLang.pt);
   const en = renderEmail('en', byLang.en);
   await Deno.writeTextFile(new URL(`${name}.html`, dir), `{{ if ${IS_EN} }}${en.html}{{ else }}${pt.html}{{ end }}\n`);

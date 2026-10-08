@@ -1,8 +1,14 @@
 recovery:
-{{ if eq (printf "%v" .Data.lang) "en" }}Reset your EAFIT password{{ else }}Redefinir sua senha do EAFIT{{ end }}
+{{ if and .Data (eq (printf "%v" .Data.lang) "en") }}Reset your EAFIT password{{ else }}Redefinir sua senha do EAFIT{{ end }}
 
 confirmation:
-{{ if eq (printf "%v" .Data.lang) "en" }}Confirm your email on EAFIT{{ else }}Confirme seu e-mail no EAFIT{{ end }}
+{{ if and .Data (eq (printf "%v" .Data.lang) "en") }}Confirm your email on EAFIT{{ else }}Confirme seu e-mail no EAFIT{{ end }}
 
 email_change:
-{{ if eq (printf "%v" .Data.lang) "en" }}Confirm your new email on EAFIT{{ else }}Confirme seu novo e-mail no EAFIT{{ end }}
+{{ if and .Data (eq (printf "%v" .Data.lang) "en") }}Confirm your new email on EAFIT{{ else }}Confirme seu novo e-mail no EAFIT{{ end }}
+
+password_changed_notification:
+{{ if and .Data (eq (printf "%v" .Data.lang) "en") }}Your EAFIT password was changed{{ else }}Sua senha do EAFIT foi alterada{{ end }}
+
+email_changed_notification:
+{{ if and .Data (eq (printf "%v" .Data.lang) "en") }}The email of your EAFIT account was changed{{ else }}O e-mail da sua conta no EAFIT foi alterado{{ end }}
