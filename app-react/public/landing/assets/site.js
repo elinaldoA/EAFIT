@@ -51,6 +51,21 @@
     });
   }
 
+  // ---------- tema claro/escuro ----------
+  // Sem escolha salva, o CSS segue o sistema. O clique grava em "theme", a
+  // mesma chave do app (context/ThemeContext.jsx), então site e app andam juntos.
+  var themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      var root = document.documentElement;
+      var current = root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      var next = current === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch { /* sem storage: vale só nesta página */ }
+    });
+  }
+
   // Âncoras da landing de página única que mudaram de página.
   var MOVED = { '#recursos': '/recursos/', '#instalar': '/ajuda/#instalar' };
   if (here === '/' && MOVED[location.hash]) location.replace(MOVED[location.hash]);
@@ -474,6 +489,59 @@
         band.hidden = false;
       })
       .catch(function () {});
+  })();
+
+  // ---------- formulário de contato (/sobre/#contato → public.contact_messages) ----------
+  // O visitante só insere (RLS); quem lê é o painel admin. Os limites de
+  // tamanho aqui repetem os checks da tabela
+  // (supabase/migrations/20261101010000_contact_messages.sql).
+  (function () {
+    var form = document.getElementById('contact-form');
+    var status = document.getElementById('contact-status');
+    if (!form || !status) return;
+    // form.name é o nome do próprio <form>: os campos saem de form.elements.
+    function field(name) { return form.elements.namedItem(name); }
+
+    // /sobre/?assunto=personal#contato já abre com o assunto escolhido.
+    var wanted = new URLSearchParams(location.search).get('assunto');
+    if (wanted && field('topic').querySelector('option[value="' + wanted.replace(/[^a-z]/g, '') + '"]')) field('topic').value = wanted;
+
+    function say(kind, text) {
+      status.className = 'form-status' + (kind ? ' ' + kind : '');
+      status.textContent = text;
+      status.hidden = false;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (field('website').value) { form.reset(); return; } // campo isca preenchido: robô
+      var button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      say('', 'Enviando…');
+      fetch(SUPABASE_URL + '/rest/v1/contact_messages', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json', Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          name: field('name').value.trim(),
+          email: field('email').value.trim(),
+          topic: field('topic').value,
+          message: field('message').value.trim(),
+          lang: window.LANDING_LANG === 'en' ? 'en' : 'pt',
+        }),
+      })
+        .then(function (r) {
+          if (!r.ok) throw new Error(String(r.status));
+          form.reset();
+          say('ok', 'Mensagem enviada. A resposta chega no seu e-mail.');
+        })
+        .catch(function () {
+          say('err', 'Não deu pra enviar agora. Tente de novo ou escreva para contato.eafit@gmail.com.');
+        })
+        .then(function () { button.disabled = false; });
+    });
   })();
 
   // ---------- eventos anônimos (public.landing_events) ----------

@@ -3,14 +3,14 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Guarda: todo texto visível das páginas escritas à mão do site (a home e
-// cada pasta de public/landing com index.html) tem inglês em
+// Guarda: todo texto visível das páginas escritas à mão do site (a home, a
+// 404 e cada pasta de public/landing com index.html) tem inglês em
 // public/landing/i18n-en.js, ou está na lista dos que não mudam: nomes,
 // números, e-mail. Vale também pro título e pras descrições do <head>.
 // Texto novo sem tradução faz o teste falhar. As páginas geradas da biblioteca
 // de exercícios têm dicionário próprio (scripts/build-site.test.js).
 const dir = path.resolve(process.cwd(), 'public/landing');
-const pages = ['index.html', ...fs.readdirSync(dir, { withFileTypes: true })
+const pages = ['index.html', '404.html', ...fs.readdirSync(dir, { withFileTypes: true })
   .filter(d => d.isDirectory() && d.name !== 'exercicios' && fs.existsSync(path.join(dir, d.name, 'index.html')))
   .map(d => `${d.name}/index.html`)];
 const dictSrc = fs.readFileSync(path.join(dir, 'i18n-en.js'), 'utf8');
@@ -77,7 +77,8 @@ describe('site em inglês', () => {
     const empty = Object.entries(dict.text).filter(([, v]) => !v || !v.trim()).map(([k]) => k);
     expect(empty).toEqual([]);
     // textos que só aparecem via JS (faixa de números, botão do vídeo) ou vindos do admin
-    const dynamic = new Set(['pessoas treinando', 'treinos concluídos', 'séries registradas', '▶ Reproduzir', 'Perfil']);
+    const dynamic = new Set(['pessoas treinando', 'treinos concluídos', 'séries registradas', '▶ Reproduzir', 'Perfil',
+      'Enviando…', 'Mensagem enviada. A resposta chega no seu e-mail.', 'Não deu pra enviar agora. Tente de novo ou escreva para contato.eafit@gmail.com.']);
     const orphans = Object.keys(dict.text).filter(k => !texts.has(k) && !dynamic.has(k));
     expect(orphans).toEqual([]);
   });

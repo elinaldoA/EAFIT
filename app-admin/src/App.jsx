@@ -17,6 +17,7 @@ import ExerciseLibrary from './pages/ExerciseLibrary';
 import PlanAnalytics from './pages/PlanAnalytics';
 import Behavior from './pages/Behavior';
 import Feedback from './pages/Feedback';
+import ContactMessages from './pages/ContactMessages';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import BroadcastHistory from './pages/BroadcastHistory';
@@ -55,6 +56,7 @@ function AppShell() {
             <Route path="/analise-planos" element={<PlanAnalytics />} />
             <Route path="/comportamento" element={<Behavior />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/contato" element={<ContactMessages />} />
             <Route path="/engajamento" element={<Engagement />} />
             <Route path="/automacoes" element={<AutoNotifications />} />
             <Route path="/configuracoes" element={<AppSettings />} />

@@ -3,7 +3,7 @@
 PWA (Progressive Web App) para acompanhamento de treino, hidratação e evolução física, com sincronização em nuvem e uso offline.
 
 🔗 **App em produção:** https://eafit.com.br/app/
-📣 **Site:** https://eafit.com.br/ (home, Recursos, Para personais, Biblioteca de exercícios, Ajuda e Sobre)
+📣 **Site:** https://eafit.com.br/ (home, Recursos, Como funciona, Para personais, Biblioteca de exercícios, Ajuda, Sobre, Segurança e privacidade e Novidades)
 
 <img src="app-react/public/landing/img/app-treino.webp" alt="Tela de Treino do EAFIT" width="240" /> <img src="app-react/public/landing/img/app-agua.webp" alt="Tela de Água do EAFIT" width="240" />
 
@@ -50,7 +50,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 │   │   └── styles/       # CSS por área, importado em ordem por index.css
 │   └── vite.config.js
 ├── app-admin/          # backoffice (React + Vite), publicado em /admin
-├── site-root/          # arquivos da raiz do domínio (404, robots.txt)
+├── site-root/          # arquivos da raiz do domínio (robots.txt)
 ├── supabase/
 │   ├── functions/       # Edge Functions (Deno); _shared/ tem código + testes
 │   └── migrations/      # schema, RLS e RPCs
@@ -80,7 +80,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   replique no outro — os testes dos dois lados rodam no CI.
 
 - **Site (`app-react/public/landing/`)**: HTML estático, sem framework. Cada
-  página é uma pasta com `index.html` (`recursos/`, `personal/`, `ajuda/`,
+  página é uma pasta com `index.html` (`recursos/`, `como-funciona/`, `personal/`, `ajuda/`, `seguranca/`, `novidades/`,
   `sobre/`) e todas usam `assets/site.css` e `assets/site.js`. Os blocos
   `site-head`, `site-header` e `site-footer` são repetidos em cada página e
   precisam ser idênticos (o teste `scripts/build-site.test.js` falha se
@@ -94,6 +94,15 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   migrations e das demonstrações de `exerciseMedia.js`/`exerciseVideos.js`.
   Página nova escrita à mão: crie a pasta, copie os três blocos da home,
   adicione o inglês em `landing/i18n-en.js` e, se for o caso, o link no menu.
+
+  O tema claro/escuro segue o sistema até o visitante escolher no botão do
+  menu (chave `theme` do localStorage, a mesma do app). `novidades/` é escrita
+  à mão: ao lançar algo que o usuário percebe, acrescente no topo. O
+  **formulário de contato** (`/sobre/#contato`) grava em
+  `public.contact_messages` com a chave anon (só insere; migration
+  `20261101010000_contact_messages.sql`, que precisa estar aplicada pro envio
+  funcionar) e as mensagens aparecem em Painel admin → Acompanhamento →
+  Contato do site, de onde a resposta sai por e-mail.
 
 ## Rodando localmente
 

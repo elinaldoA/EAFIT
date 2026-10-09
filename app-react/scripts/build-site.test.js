@@ -19,7 +19,7 @@ describe('casca do site', () => {
   // Cabeçalho, rodapé e <head> comuns são repetidos em cada página escrita à
   // mão (não há build): mudou num lugar, tem que mudar em todos.
   it('os blocos compartilhados são idênticos em todas as páginas', () => {
-    for (const p of handPages) {
+    for (const p of [...handPages, '404.html']) {
       const page = read(p);
       for (const [name, block] of Object.entries(shell)) {
         expect(page.includes(block), `${p}: bloco site-${name} diferente do da home`).toBe(true);
