@@ -27,10 +27,12 @@ const STORAGE_KEY = 'coach_prefs';
 // vozes mudam de aparelho para aparelho, por isso não vai para a conta.
 const DEFAULTS = { enabled: false, voiceName: '', tone: 'animado', frequency: 'full', rate: 1, name: '' };
 // Ajuste fino de timbre por tom: o animado é mais agudo e rápido, o calmo mais lento.
+// De propósito perto de 1: forçar o tom deixa a voz do aparelho metálica. A
+// entonação de cada frase fica por conta da camada de voz (prosody em voice.js).
 const DELIVERY = {
-  animado: { rate: 1.05, pitch: 1.08 },
-  zoeira: { rate: 1.1, pitch: 1.12 },
-  calmo: { rate: 0.95, pitch: 1 },
+  animado: { rate: 1.03, pitch: 1.03 },
+  zoeira: { rate: 1.06, pitch: 1.05 },
+  calmo: { rate: 0.94, pitch: 0.98 },
 };
 const RECENT_MEMORY = 2;
 

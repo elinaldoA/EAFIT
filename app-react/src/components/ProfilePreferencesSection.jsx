@@ -152,10 +152,11 @@ export function CoachSection({ updateProfile, toast }) {
             <option value="">{t('Automática (a melhor do aparelho)')}</option>
             {voices.map(v => (
               <option key={v.name} value={v.name}>
-                {v.gender ? `${v.name} · ${v.gender === 'male' ? t('masculina') : t('feminina')}` : v.name}
+                {[v.name, v.gender && (v.gender === 'male' ? t('masculina') : t('feminina')), v.natural && t('mais natural')].filter(Boolean).join(' · ')}
               </option>
             ))}
           </select>
+          <p className="profile-field__hint">{t('A voz é a do seu aparelho. Para soar mais humana, escolha uma marcada como "mais natural" ou baixe uma voz em português de alta qualidade nas configurações de fala do aparelho.')}</p>
         </div>
       )}
 

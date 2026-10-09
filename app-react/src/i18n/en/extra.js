@@ -50,6 +50,8 @@ export default {
   'masculina': 'male',
   'Voz do aparelho': 'Device voice',
   'Automática (a melhor do aparelho)': 'Automatic (best on this device)',
+  'mais natural': 'more natural',
+  'A voz é a do seu aparelho. Para soar mais humana, escolha uma marcada como "mais natural" ou baixe uma voz em português de alta qualidade nas configurações de fala do aparelho.': 'The voice comes from your device. To sound more human, pick one marked "more natural" or download a high-quality Portuguese voice in your device\'s speech settings.',
   'Jeito de falar': 'Style',
   'Animado': 'Upbeat',
   'Zoeira': 'Playful',

@@ -231,7 +231,7 @@ describe('coachSay', () => {
     expect(text).toContain('30 segundos');
     expect(opts).toMatchObject({ voiceName: 'Luciana', queue: false });
     expect(opts).not.toHaveProperty('gender');
-    expect(opts.rate).toBeCloseTo(0.95 * 1.1);
+    expect(opts.rate).toBeCloseTo(0.94 * 1.1);
   });
 
   it('modo "só o essencial" pula exercício e descanso, mas fala recorde', () => {
