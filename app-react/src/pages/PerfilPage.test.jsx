@@ -164,6 +164,46 @@ describe('PerfilPage', () => {
       expect(localStorage.getItem('profile_peso')).toBe('72.5');
     });
 
+    it('peso novo na mesma faixa de IMC não mexe no treino', async () => {
+      render(<PerfilPage active />);
+      type('peso', '72.5');
+      fireEvent.click(screen.getByText('salvar corpo'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Perfil salvo!'));
+      expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
+    });
+
+    it('peso novo que muda a faixa de IMC gera e ativa o treino sozinho, sem confirmação', async () => {
+      const confirm = vi.spyOn(window, 'confirm');
+      render(<PerfilPage active />);
+      type('peso', '80'); // 175cm: IMC 22,9 (normal) -> 26,1 (sobrepeso)
+      fireEvent.click(screen.getByText('salvar corpo'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente'));
+      expect(confirm).not.toHaveBeenCalled();
+      expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 80, altura: 175, meta: 'massa', nivel: 'intermediario' });
+      expect(plans.createGeneratedPlan).toHaveBeenCalledWith('u1', expect.any(String), [{ dia: 'Segunda' }]);
+      expect(workout.refreshPlan).toHaveBeenCalled();
+      expect(weight.upsertWeightLog).toHaveBeenCalledWith('u1', '2026-10-07', 80);
+    });
+
+    it('plano do personal não é trocado mesmo mudando a faixa de IMC', async () => {
+      workout.planByTrainer = true;
+      render(<PerfilPage active />);
+      type('peso', '80');
+      fireEvent.click(screen.getByText('salvar corpo'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Perfil salvo!'));
+      expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
+    });
+
+    it('falha ao atualizar o treino: o perfil fica salvo e avisa', async () => {
+      plans.createGeneratedPlan.mockRejectedValue(new Error('rpc'));
+      render(<PerfilPage active />);
+      type('peso', '80');
+      fireEvent.click(screen.getByText('salvar corpo'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('⚠️ Perfil salvo, mas não deu pra atualizar o treino — use "Gerar novo treino com esses dados"'));
+      expect(localStorage.getItem('profile_peso')).toBe('80');
+      expect(workout.refreshPlan).not.toHaveBeenCalled();
+    });
+
     it('falha ao registrar o peso: enfileira para sincronizar depois', async () => {
       weight.upsertWeightLog.mockRejectedValue(new Error('offline'));
       render(<PerfilPage active />);

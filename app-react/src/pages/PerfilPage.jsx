@@ -14,6 +14,7 @@ import { todayDate, DEFAULT_WEEKLY_GOAL, computedWaterGoalLiters, DEFAULT_WATER_
 import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
+import { computeImcBracket } from '../data/workoutAdjustments';
 import { createGeneratedPlan } from '../lib/workoutPlans';
 import { useReminders } from '../hooks/useReminders';
 import { useProfileData } from '../hooks/useProfileData';
@@ -101,7 +102,23 @@ export default function PerfilPage({ active }) {
     toast(t('✅ Dados pessoais salvos!'));
   }
 
+  async function generateAndActivatePlan() {
+    const generatedDays = await generatePlan({ peso: parseFloat(peso), altura: parseFloat(altura), meta, nivel });
+    await createGeneratedPlan(user.id, t('Plano gerado {v1}', { v1: new Date().toLocaleDateString(locale) }), generatedDays);
+    await refreshPlan();
+  }
+
   async function handleSave() {
+    // O peso só muda o treino pela faixa de IMC (applyImcAdjustment). Como
+    // generatePlan sorteia os exercícios da biblioteca, regenerar a cada
+    // pesagem trocaria o treino inteiro toda semana e zeraria a progressão —
+    // por isso o treino só é refeito quando o peso novo muda de faixa.
+    // Plano do personal nunca é trocado sozinho (mesma regra do ciclo
+    // automático em lib/workoutPlans.js).
+    const prevBracket = parseFloat(md.peso) && parseFloat(md.altura) ? computeImcBracket(md.peso, md.altura) : null;
+    const bracketChanged = !!prevBracket && !!parseFloat(peso) && !!parseFloat(altura)
+      && computeImcBracket(peso, altura) !== prevBracket;
+
     const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, pesoAlvo });
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_sexo', sexo);
@@ -122,6 +139,20 @@ export default function PerfilPage({ active }) {
         markPending();
       }
     }
+
+    if (user && bracketChanged && !planByTrainer && !regenerating) {
+      setRegenerating(true);
+      try {
+        await generateAndActivatePlan();
+        toast(t('✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente'));
+      } catch (err) {
+        console.error('autoRegeneratePlan:', err);
+        toast(t('⚠️ Perfil salvo, mas não deu pra atualizar o treino — use "Gerar novo treino com esses dados"'));
+      } finally {
+        setRegenerating(false);
+      }
+      return;
+    }
     toast(t('Perfil salvo!'));
   }
 
@@ -138,9 +169,7 @@ export default function PerfilPage({ active }) {
 
     setRegenerating(true);
     try {
-      const generatedDays = await generatePlan({ peso: pesoNum, altura: alturaNum, meta, nivel });
-      await createGeneratedPlan(user.id, t('Plano gerado {v1}', { v1: new Date().toLocaleDateString(locale) }), generatedDays);
-      await refreshPlan();
+      await generateAndActivatePlan();
       toast(t('✅ Novo treino gerado e ativado!'));
     } catch (err) {
       console.error('regeneratePlan:', err);

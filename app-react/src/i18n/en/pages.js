@@ -91,6 +91,8 @@ export default {
   '⚠️ Não foi possível salvar — tente novamente': '⚠️ Could not save — try again',
   '✅ Dados pessoais salvos!': '✅ Personal data saved!',
   'Perfil salvo!': 'Profile saved!',
+  '✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente': '✅ Profile saved — your BMI moved to a new range and your workout was updated automatically',
+  '⚠️ Perfil salvo, mas não deu pra atualizar o treino — use "Gerar novo treino com esses dados"': '⚠️ Profile saved, but the workout could not be updated — use "Generate a new workout with this data"',
   '⚠️ Preencha peso e altura antes de gerar um novo treino': '⚠️ Fill in your weight and height before generating a new workout',
   'Seu plano atual foi montado pelo seu personal. Gerar um novo treino automático vai substituí-lo (ele continua salvo em "Editar treino"). Continuar?': 'Your current plan was built by your trainer. Generating a new automatic workout will replace it (it stays saved in "Edit workout"). Continue?',
   'Isso cria um novo plano de treino com base nos seus dados atuais e o ativa. Seus planos existentes continuam salvos e podem ser reativados em "Editar treino". Continuar?': 'This creates a new workout plan based on your current data and activates it. Your existing plans stay saved and can be reactivated in "Edit workout". Continue?',
