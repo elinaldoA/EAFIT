@@ -31,12 +31,14 @@ export const GROUPS = [
   { id: 'ombro', label: 'Ombros', en: 'Shoulders' },
   { id: 'biceps', label: 'Bíceps', en: 'Biceps' },
   { id: 'triceps', label: 'Tríceps', en: 'Triceps' },
+  { id: 'antebraco', label: 'Antebraço', en: 'Forearms' },
   { id: 'quadriceps', label: 'Quadríceps', en: 'Quads' },
   { id: 'posterior_coxa', label: 'Posterior de coxa', en: 'Hamstrings' },
   { id: 'gluteos', label: 'Glúteos', en: 'Glutes' },
   { id: 'panturrilha', label: 'Panturrilha', en: 'Calves' },
   { id: 'core', label: 'Abdômen e core', en: 'Abs and core' },
   { id: 'cardio', label: 'Cardio', en: 'Cardio' },
+  { id: 'mobilidade', label: 'Mobilidade e alongamento', en: 'Mobility and stretching' },
 ];
 // [rótulo da linha, inglês, rótulo depois do número no card do grupo, inglês]
 const TIPOS = {
@@ -55,6 +57,11 @@ const EQUIPAMENTOS = {
   caneleira: ['Caneleira', 'Ankle weights'],
   bola: ['Bola', 'Exercise ball'],
   piscina: ['Piscina', 'Pool'],
+  anilha: ['Anilha', 'Weight plate'],
+  'fita de suspensão': ['Fita de suspensão', 'Suspension trainer'],
+  'medicine ball': ['Medicine ball', 'Medicine ball'],
+  'trenó': ['Trenó', 'Sled'],
+  rolo: ['Rolo de liberação', 'Foam roller'],
 };
 const SEM_EQUIPAMENTO = ['Sem equipamento', 'No equipment'];
 const NIVEIS = {

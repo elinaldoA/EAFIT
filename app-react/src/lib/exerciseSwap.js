@@ -46,15 +46,27 @@ export function pickAlternatives({ current, library, nivel, dayNames = [], avoid
 
 let libraryPromise = null;
 
+// O PostgREST devolve no máximo 1000 linhas por consulta e a biblioteca já tem
+// isso: busca em páginas (ordenadas pelo nome, que é único) até acabar.
+const LIBRARY_PAGE_SIZE = 500;
+
+async function fetchAllLibraryRows() {
+  const rows = [];
+  for (let from = 0; ; from += LIBRARY_PAGE_SIZE) {
+    const { data, error } = await db.from('exercise_library')
+      .select('nome, grupo_muscular, tipo, equipamento, series, reps, descanso, tecnica, is_post_workout, nivel_minimo')
+      .order('nome')
+      .range(from, from + LIBRARY_PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < LIBRARY_PAGE_SIZE) return rows;
+  }
+}
+
 // A biblioteca muda raramente: busca uma vez por sessão (e refaz se falhar).
 export function fetchLibrary() {
   if (!libraryPromise) {
-    libraryPromise = db.from('exercise_library')
-      .select('nome, grupo_muscular, tipo, equipamento, series, reps, descanso, tecnica, is_post_workout, nivel_minimo')
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return data || [];
-      })
+    libraryPromise = fetchAllLibraryRows()
       .catch(err => {
         libraryPromise = null;
         throw err;

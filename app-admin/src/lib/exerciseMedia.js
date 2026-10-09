@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { fetchAllLibraryRows } from './exerciseLibrary';
 // Demonstração padrão que o app já mostra sem mídia própria (vídeo curto ou 2
 // quadros) — mesma fonte do app, pra não divergir.
 import { EXERCISE_VIDEOS } from '../../../app-react/src/data/exerciseVideos.js';
@@ -70,12 +71,11 @@ export function publicUrl(path) {
 
 export async function fetchMediaScreen() {
   const [lib, media] = await Promise.all([
-    db.from('exercise_library').select('nome, grupo_muscular').order('nome'),
+    fetchAllLibraryRows('nome, grupo_muscular'),
     db.from('exercise_media').select('nome, storage_path, media_type, updated_at'),
   ]);
-  if (lib.error) throw lib.error;
   if (media.error) throw media.error;
-  return buildRows(lib.data, media.data);
+  return buildRows(lib, media.data);
 }
 
 async function audit(adminId, action, details) {

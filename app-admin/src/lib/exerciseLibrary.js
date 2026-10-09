@@ -65,18 +65,34 @@ export function friendlyLibraryError(err) {
   return err?.message || 'Erro desconhecido.';
 }
 
+// O PostgREST devolve no máximo 1000 linhas por consulta e a biblioteca já tem
+// isso: busca em páginas até acabar. `columns` e `order` (colunas de ordenação,
+// terminando numa única — o nome — pra página não repetir nem pular linha).
+const LIBRARY_PAGE_SIZE = 500;
+
+export async function fetchAllLibraryRows(columns, order = ['nome']) {
+  const rows = [];
+  for (let from = 0; ; from += LIBRARY_PAGE_SIZE) {
+    let query = db.from('exercise_library').select(columns);
+    for (const col of order) query = query.order(col);
+    const { data, error } = await query.range(from, from + LIBRARY_PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < LIBRARY_PAGE_SIZE) return rows;
+  }
+}
+
 // Junta a biblioteca com mídia própria e uso (planos e relatos de dor).
 export async function fetchLibrary() {
   const [lib, media, usage] = await Promise.all([
-    db.from('exercise_library').select('*').order('grupo_muscular').order('nome'),
+    fetchAllLibraryRows('*', ['grupo_muscular', 'nome']),
     db.from('exercise_media').select('nome'),
     db.rpc('admin_exercise_usage'),
   ]);
-  if (lib.error) throw lib.error;
   // Mídia e uso são complementares: se falharem, a lista ainda abre.
   const withMedia = new Set((media.data || []).map(m => m.nome));
   const usageByName = new Map((usage.data || []).map(u => [u.nome, u]));
-  return (lib.data || []).map(r => ({
+  return lib.map(r => ({
     ...r,
     has_media: withMedia.has(r.nome),
     plans_count: Number(usageByName.get(r.nome)?.plans_count || 0),
