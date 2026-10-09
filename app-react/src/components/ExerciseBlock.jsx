@@ -9,6 +9,7 @@ import { getSaferAlternative } from '../data/workoutTemplates';
 import { allSetsDone } from '../lib/workoutSets';
 import { DiscomfortPanel } from './DiscomfortWidgets';
 import { isCardioItem } from '../lib/cardio';
+import { coachSuggest } from '../lib/coach';
 import SetRow from './SetRow';
 import CardioRow from './CardioRow';
 import ExerciseDemo from './ExerciseDemo';
@@ -30,12 +31,17 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
   useEffect(() => {
     if (!user || !open || !setCount) return;
     let cancelled = false;
-    fetchProgressionSuggestion(user.id, ex.nome, ex.reps)
-      .then(s => { if (!cancelled) setSuggestion(s); })
-      .catch(err => console.error('fetchProgressionSuggestion:', err));
-    fetchPlateauStatus(user.id, ex.nome, ex.reps)
-      .then(p => { if (!cancelled) setPlateau(p); })
-      .catch(err => console.error('fetchPlateauStatus:', err));
+    const suggested = fetchProgressionSuggestion(user.id, ex.nome, ex.reps)
+      .then(s => { if (!cancelled) setSuggestion(s); return s; })
+      .catch(err => { console.error('fetchProgressionSuggestion:', err); return null; });
+    const stuck = fetchPlateauStatus(user.id, ex.nome, ex.reps)
+      .then(p => { if (!cancelled) setPlateau(p); return p; })
+      .catch(err => { console.error('fetchPlateauStatus:', err); return null; });
+    // No modo ao vivo (hideName) o treinador por voz também fala a sugestão,
+    // logo depois de apresentar o exercício — menos em exercício já concluído.
+    if (hideName && !allSetsDone(ex, setCount)) {
+      Promise.all([suggested, stuck]).then(([s, p]) => { if (!cancelled) coachSuggest(s, p); });
+    }
     // Duplica a mesma consulta que o DiscomfortPanel já faz internamente —
     // aqui só precisamos saber se dá pra mostrar o botão de troca de exercício,
     // sem acoplar os dois componentes.
@@ -43,7 +49,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, open, versio
       .then(d => { if (!cancelled) setDiscomfort(d); })
       .catch(err => console.error('fetchRecentDiscomfort:', err));
     return () => { cancelled = true; };
-  }, [user, open, setCount, ex.nome, ex.reps]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, open, setCount, ex.nome, ex.reps, hideName]);
 
   if (!setCount) {
     return (

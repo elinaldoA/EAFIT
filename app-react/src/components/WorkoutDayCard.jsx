@@ -6,7 +6,7 @@ import { formatDuration } from '../lib/utils';
 import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { postActivity } from '../lib/friends';
-import { coachSay } from '../lib/coach';
+import { coachSay, speechTime } from '../lib/coach';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
@@ -85,14 +85,19 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt: null, durationSeconds: null });
   }
 
+  function weekProgress() {
+    const workDays = activePlanDays.filter(d => d.dia !== 'Sábado' && d.dia !== 'Domingo');
+    const done = workDays.filter(d => localStorage.getItem(`treino_${d.dia}`) === 'true').length;
+    return { done, total: workDays.length };
+  }
+
   function buildSummary(durationMs) {
     const exercises = gatherExerciseDetails(day);
     const { done: totalSetsDone, total: totalPlannedSets } = countSets(exercises);
-    const workDays = activePlanDays.filter(d => d.dia !== 'Sábado' && d.dia !== 'Domingo');
-    const weekDone = workDays.filter(d => localStorage.getItem(`treino_${d.dia}`) === 'true').length;
+    const { done: weekDone, total: weekTotal } = weekProgress();
     return {
       day, durationMs, totalCarga: calcDayTotalCarga(day),
-      exercises, totalSetsDone, totalPlannedSets, weekDone, weekTotal: workDays.length,
+      exercises, totalSetsDone, totalPlannedSets, weekDone, weekTotal,
     };
   }
 
@@ -107,6 +112,14 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     bump();
     const summary = buildSummary(accumulatedMs);
     coachSay('finish', { feitos: summary.weekDone, meta: summary.weekTotal }, { delayMs: 900 });
+    // Depois do fecho, o treinador comenta os números do treino e a semana.
+    const minutes = Math.round(accumulatedMs / 60000);
+    if (summary.totalSetsDone > 0 && minutes > 0) {
+      coachSay('finishStats', { series: summary.totalSetsDone, duracao: speechTime(minutes * 60) }, { delayMs: 950, queue: true });
+    }
+    if (summary.weekTotal > 1 && summary.weekDone === summary.weekTotal) {
+      coachSay('weekGoal', {}, { delayMs: 1000, queue: true });
+    }
     if (user && summary.totalSetsDone > 0) {
       postActivity('treino', t('Concluiu o treino de {foco}', { foco: day.foco }), t('{v1} · {totalSetsDone} séries', { v1: formatDuration(accumulatedMs), totalSetsDone: summary.totalSetsDone }));
     }
@@ -346,6 +359,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         <LiveWorkoutModal
           day={day}
           timer={timer}
+          week={weekProgress()}
           renderExercise={(ex, onLiveRest) => renderExerciseBlock(ex, { onRestStart: onLiveRest })}
           onFinish={finishFromLive}
           onClose={closeLive}

@@ -179,7 +179,9 @@ export function CoachSection({ updateProfile, toast }) {
         >
           <option value="full">{t('Tudo (exercícios, descanso e recordes)')}</option>
           <option value="light">{t('Só o essencial (início, recordes e fim)')}</option>
+          <option value="free">{t('À vontade (também dá dicas e te chama se o treino parar)')}</option>
         </select>
+        <p className="profile-field__hint">{t('Ele comenta sua evolução: a carga da última vez, a metade do treino, a meta da semana.')}</p>
       </div>
 
       <div className="profile-field">

@@ -10,9 +10,11 @@ const h = vi.hoisted(() => ({
   fetchPlateauStatus: vi.fn(),
   fetchRecentDiscomfort: vi.fn(),
   substituteExercise: vi.fn(),
+  coachSuggest: vi.fn(),
 }));
 
 vi.mock('../lib/supabase', () => ({ db: {} }));
+vi.mock('../lib/coach', () => ({ coachSuggest: (...a) => h.coachSuggest(...a) }));
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
 vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ refreshPlan: h.refreshPlan }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
@@ -49,6 +51,7 @@ beforeEach(() => {
   h.fetchPlateauStatus.mockReset().mockResolvedValue(null);
   h.fetchRecentDiscomfort.mockReset().mockResolvedValue(null);
   h.substituteExercise.mockReset().mockResolvedValue(undefined);
+  h.coachSuggest.mockReset();
 });
 afterEach(cleanup);
 
@@ -168,5 +171,25 @@ describe('ExerciseBlock', () => {
     cleanup();
     setup({ ex: { nome: 'Alongar', series: '-', reps: '5min', descanso: '-' } });
     expect(screen.queryByTestId('cardio-row')).toBeNull();
+  });
+
+  it('no modo ao vivo o treinador fala a sugestão; na lista e em exercício concluído, não', async () => {
+    const suggestion = { lastCarga: 80, lastReps: 10, suggestedCarga: 82.5, suggestedReps: null };
+    h.fetchProgressionSuggestion.mockResolvedValue(suggestion);
+    setup({ hideName: true });
+    await waitFor(() => expect(h.coachSuggest).toHaveBeenCalledWith(suggestion, null));
+
+    cleanup();
+    h.coachSuggest.mockClear();
+    setup();
+    await screen.findByText(/Sugestão: 82.5kg/);
+    expect(h.coachSuggest).not.toHaveBeenCalled();
+
+    cleanup();
+    for (const n of [1, 2, 3]) localStorage.setItem(`set_${EX.nome}_${n}_done`, 'true');
+    setup({ hideName: true });
+    await waitFor(() => expect(h.fetchPlateauStatus).toHaveBeenCalledTimes(3));
+    await Promise.resolve();
+    expect(h.coachSuggest).not.toHaveBeenCalled();
   });
 });

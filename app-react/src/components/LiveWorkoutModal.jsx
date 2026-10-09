@@ -9,7 +9,9 @@ import { allSetsDone, countSets, gatherExerciseDetails, setCountOf } from '../li
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { isCardioItem } from '../lib/cardio';
-import { coachSay, coachStop, speechTime, speechDetail, speechExercise } from '../lib/coach';
+import {
+  coachSay, coachStop, coachRestTip, setDoneEvent, weekEvent, speechTime, speechDetail, speechExercise, FINISH_EVENTS,
+} from '../lib/coach';
 import ExerciseDemo from './ExerciseDemo';
 import CoachPrompt from './CoachPrompt';
 
@@ -19,13 +21,17 @@ function isExerciseDone(ex) {
   return n > 0 && allSetsDone(ex, n);
 }
 
+// Tempo sem marcar série (fora do descanso) até o treinador chamar de volta.
+const IDLE_NUDGE_MS = 3 * 60 * 1000;
+
 // Modo treino ao vivo: um exercício por vez em tela cheia, com o descanso
 // embutido (sem modal bloqueando a próxima série) e a tela sempre acesa.
 // Os blocos de exercício vêm prontos do DayCard (renderExercise) — o mesmo
 // ExerciseBlock/SetRow da lista, então salvar, sugestões e recordes funcionam
 // igual nos dois modos. Re-renderiza a cada bump() da TreinoPage e a cada
 // tique do cronômetro do DayCard.
-export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish, onClose }) {
+// week: { done, total } treinos da semana, para o treinador comentar na abertura.
+export default function LiveWorkoutModal({ day, timer, week, renderExercise, onFinish, onClose }) {
   useBackToClose(onClose);
   useWakeLock();
   const items = [...day.exercicios, ...day.pos];
@@ -60,6 +66,8 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
       const concluido = timer.status === 'finished' || localStorage.getItem(`treino_${day.dia}`) === 'true';
       const abertura = concluido ? 'review' : day.dia === todayName() ? 'start' : 'startOther';
       coachSay(abertura, { foco: speechExercise(day.foco), dia: day.dia });
+      const semana = !concluido && week && weekEvent(week);
+      if (semana) coachSay(semana, {}, { queue: true });
     }
     const item = items[index];
     coachSay('exercise', { exercicio: speechExercise(item.nome), detalhe: speechDetail(item) }, { queue: first });
@@ -71,7 +79,7 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
-  useEffect(() => () => coachStop({ keep: ['finish'] }), []);
+  useEffect(() => () => coachStop({ keep: FINISH_EVENTS }), []);
 
   // Conta o descanso pelo horário de término (não por decremento a cada
   // segundo): com a tela bloqueada ou o app em segundo plano o setInterval
@@ -86,24 +94,49 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
   const restDone = !!rest && restLeft === 0;
 
   useEffect(() => {
-    if (rest && restLeft === 10 && rest.total > 10) coachSay('rest10');
+    if (rest && !rest.final && restLeft === 10 && rest.total > 10) coachSay('rest10');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restLeft, rest?.id]);
 
   useEffect(() => {
     if (!restDone) return;
     playRestDoneSound();
-    coachSay('restDone', {}, { delayMs: 3900 }); // depois do alarme, sem sobrepor
+    if (!rest.final) coachSay('restDone', {}, { delayMs: 3900 }); // depois do alarme, sem sobrepor
     const id = setTimeout(() => setRest(null), 1500);
     return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restDone, rest?.id]);
 
   function handleRestStart(label, seconds) {
     restSeq.current += 1;
     const start = Date.now();
     setNow(start);
-    setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000 });
-    coachSay('rest', { tempo: speechTime(seconds) });
+    // Depois da última série do treino não há "próxima" para a voz anunciar.
+    const final = announceSetDone(seconds) === 'allDone';
+    setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000, final });
+  }
+
+  // A série acabou de ser marcada (o localStorage já tem o check): em vez de só
+  // contar o descanso, o treinador comenta em que pé o treino está.
+  function announceSetDone(seconds) {
+    const details = gatherExerciseDetails(day);
+    const { done, total } = countSets(details);
+    const sets = details.find(d => d.nome === ex.nome)?.sets || [];
+    const event = setDoneEvent({
+      leftInExercise: sets.filter(s => !s.done).length,
+      leftInWorkout: total - done,
+      crossedHalf: !halfSaid.current && done * 2 >= total,
+    });
+    if (event === 'halfway') halfSaid.current = true;
+    coachSay(event, {
+      tempo: speechTime(seconds),
+      ...(event === 'exerciseDone' && next && { proximo: speechExercise(next.nome) }),
+    });
+    if (event === 'rest' || event === 'lastSet') {
+      const tip = coachRestTip({ tecnica: ex.tecnica, seconds, techniqueSaid: techniqueSaid.current.has(ex.nome) });
+      if (tip === 'technique') techniqueSaid.current.add(ex.nome);
+    }
+    return event;
   }
 
   function addRest(seconds) {
@@ -114,6 +147,38 @@ export default function LiveWorkoutModal({ day, timer, renderExercise, onFinish,
   const isLast = index === items.length - 1;
   const exDone = isExerciseDone(ex);
   const { done: setsDone, total: setsTotal } = countSets(gatherExerciseDetails(day));
+  // Quem reabre o treino já além da metade não ouve "metade do treino" de novo.
+  const halfSaid = useRef(setsDone * 2 >= setsTotal);
+  const techniqueSaid = useRef(new Set());
+
+  // Modo "à vontade": avisa a pausa e a retomada do cronômetro.
+  const prevStatus = useRef(timer.status);
+  useEffect(() => {
+    if (prevStatus.current === 'running' && timer.status === 'paused') coachSay('paused');
+    if (prevStatus.current === 'paused' && timer.status === 'running') coachSay('resumed');
+    prevStatus.current = timer.status;
+  }, [timer.status]);
+
+  // Modo "à vontade": se o treino fica parado num exercício de séries (fora do
+  // descanso), o treinador chama de volta — uma vez só, até algo acontecer.
+  const lastActivity = useRef(Date.now());
+  const nudged = useRef(false);
+  useEffect(() => {
+    lastActivity.current = Date.now();
+    nudged.current = false;
+  }, [index, setsDone, rest?.id, timer.status]);
+  const canIdle = timer.status === 'running' && !rest && !exDone && setCountOf(ex) > 0 && !isCardioItem(ex);
+  useEffect(() => {
+    if (!canIdle) return;
+    const id = setInterval(() => {
+      if (nudged.current || Date.now() - lastActivity.current < IDLE_NUDGE_MS) return;
+      nudged.current = true;
+      coachSay('idle', { exercicio: speechExercise(ex.nome) });
+    }, 15000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canIdle, index]);
+
   const pct = setsTotal ? (setsDone / setsTotal) * 100 : 0;
   const finished = timer.status === 'finished';
   const isPos = index >= day.exercicios.length;

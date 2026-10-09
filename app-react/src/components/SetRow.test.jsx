@@ -16,7 +16,7 @@ vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
 vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.saveSetState, workoutIds: { Segunda: 'w-seg' } }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../lib/records', () => ({ checkForNewPR: (...a) => h.checkForNewPR(...a) }));
-vi.mock('../lib/coach', () => ({ coachSay: (...a) => h.coachSay(...a), speechExercise: n => n }));
+vi.mock('../lib/coach', () => ({ coachSay: (...a) => h.coachSay(...a), speechExercise: n => n, speechLoad: n => String(n) }));
 vi.mock('../lib/friends', () => ({ postActivity: (...a) => h.postActivity(...a) }));
 vi.mock('../lib/pushSubscriptions', () => ({ sendPushToSelf: (...a) => h.sendPushToSelf(...a) }));
 
@@ -182,7 +182,7 @@ describe('SetRow — recordes', () => {
     expect(h.checkForNewPR).toHaveBeenCalledWith('u1', 'Supino Reto', 100, '5', { workoutId: 'w-id', setNumber: 1 });
     expect(h.toast).toHaveBeenCalledWith('🏆 Novo recorde em Supino Reto!');
     expect(h.postActivity).toHaveBeenCalledWith('recorde', 'Novo recorde em Supino Reto', '100kg');
-    expect(h.coachSay).toHaveBeenCalledWith('pr', { exercicio: 'Supino Reto', carga: 100 }, { queue: true });
+    expect(h.coachSay).toHaveBeenCalledWith('pr', { exercicio: 'Supino Reto', carga: '100' }, { queue: true });
     expect(h.sendPushToSelf).toHaveBeenCalledWith(expect.objectContaining({ body: 'Supino Reto: 100kg', tag: 'pr-Supino Reto' }));
   });
 

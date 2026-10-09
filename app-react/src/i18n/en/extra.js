@@ -57,6 +57,8 @@ export default {
   'Quanto ele fala': 'How much it talks',
   'Tudo (exercícios, descanso e recordes)': 'Everything (exercises, rest and records)',
   'Só o essencial (início, recordes e fim)': 'Essentials only (start, records and end)',
+  'À vontade (também dá dicas e te chama se o treino parar)': 'Free rein (also gives tips and calls you back if the workout stalls)',
+  'Ele comenta sua evolução: a carga da última vez, a metade do treino, a meta da semana.': 'It comments on your progress: last session\'s load, the halfway point, the weekly goal.',
   'Velocidade da fala': 'Speech speed',
   'Mais lenta': 'Slower',
   'Mais rápida': 'Faster',
