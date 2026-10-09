@@ -9,18 +9,18 @@ const SECTION_LABELS = {
   stats: 'Faixa de números (automática)',
   compare: 'Comparação (sem plano vs. com EAFIT)',
   audience: 'Pra quem é',
-  showcase: 'Por dentro do app (vitrine com telas)',
-  features: 'Funcionalidades',
+  showcase: 'Por dentro do app (vitrine com telas) · página Recursos',
+  features: 'Funcionalidades · 6 primeiras na home, todas em Recursos',
   steps: 'Como funciona',
-  personal: 'Para personais (modo Personal)',
+  personal: 'Para personais (modo Personal) · resumo na home, completo em Para personais',
   testimonials: 'Depoimentos',
-  install: 'Como instalar',
-  faq: 'Perguntas frequentes',
+  install: 'Como instalar · página Ajuda',
+  faq: 'Perguntas frequentes · 5 primeiras na home, todas em Ajuda',
   cta: 'Chamada final',
 };
 
-// Chaves precisam bater com o mapa ICONS no <script> de
-// app-react/public/landing/index.html — mudar aqui sem mudar lá faz o
+// Chaves precisam bater com o mapa ICONS de
+// app-react/public/landing/assets/site.js — mudar aqui sem mudar lá faz o
 // ícone escolhido cair no fallback (activity) na página publicada.
 const ICON_OPTIONS = [
   { value: 'cloud', label: 'Nuvem (sync)' },
@@ -108,9 +108,12 @@ export default function LandingEditor() {
       <div className="page-header">
         <h1 className="page-title">Landing page</h1>
         <a className="btn btn--ghost btn--small" href="https://eafit.com.br/" target="_blank" rel="noreferrer">
-          Ver landing page ↗
+          Ver site ↗
         </a>
       </div>
+      <p className="field__label" style={{ margin: '0 0 16px' }}>
+        A ordem das seções vale para a home. Seções que ficam em outra página do site (indicada no nome) seguem a ordem daquela página.
+      </p>
 
       <div className="card form-grid" style={{ marginBottom: 16 }}>
         <label className="field">

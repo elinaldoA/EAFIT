@@ -7,6 +7,8 @@ on:
       - 'app-react/**'
       - 'app-admin/**'
       - 'site-root/**'
+      # a biblioteca de exercícios do site é gerada do seed (app-react/scripts/build-site.mjs)
+      - 'supabase/migrations/*exercise_library*'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
@@ -56,10 +58,11 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # Domínio próprio (eafit.com.br): a landing é a raiz do site, app-react
+      # Domínio próprio (eafit.com.br): o site é a raiz do domínio, app-react
       # fica em /app/ e app-admin em /admin/ — os dois "base" dos vite.config.js
-      # já apontam pra esses caminhos. A landing sai do build do app-react
-      # (public/landing) e sobe pra raiz junto com os arquivos de site-root/.
+      # já apontam pra esses caminhos. O site (home, páginas internas e, gerados
+      # no build, a biblioteca de exercícios e o sitemap) sai do build do
+      # app-react (public/landing) e sobe pra raiz junto com site-root/.
       - name: Combine sites
         run: |
           mkdir -p combined/app combined/admin

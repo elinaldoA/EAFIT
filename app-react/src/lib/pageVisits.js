@@ -7,7 +7,7 @@ export { detectOS } from './clientInfo';
 
 // Contagem anônima de visitas (tabela public.page_visits — ver
 // supabase/migrations/20261002030000_page_visits.sql). A MESMA regra de origem
-// e de aparelho (lib/clientInfo.js) está copiada no <script> de public/landing/index.html, que não tem build:
+// e de aparelho (lib/clientInfo.js) está copiada no script do site (public/landing/assets/site.js), que não tem build:
 // mudou aqui, mude lá.
 
 const REFERRER_SOURCES = [

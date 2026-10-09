@@ -1,6 +1,6 @@
 // Classificação do aparelho em poucas categorias, só pra estatística agregada
 // do painel admin. O user-agent em si nunca é gravado. A MESMA regra está
-// copiada no <script> de public/landing/index.html, que não tem build: mudou
+// copiada no script do site (public/landing/assets/site.js), que não tem build: mudou
 // aqui, mude lá.
 
 // Android antes de Linux: todo Android se declara Linux. iPad recente se

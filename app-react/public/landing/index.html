@@ -6,45 +6,34 @@
   <title>EAFIT — Treino com plano, registro e evolução</title>
   <meta name="description" content="Plano de treino montado pro seu objetivo, modo ao vivo, demonstração dos exercícios, desafios com amigos e gráficos de evolução. Grátis, sem anúncios e funciona offline." />
   <link rel="canonical" href="https://eafit.com.br/" />
-
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="pt_BR" />
-  <meta property="og:site_name" content="EAFIT" />
   <meta property="og:title" content="EAFIT — Treino com plano, registro e evolução" />
   <meta property="og:description" content="Plano de treino pro seu objetivo, modo ao vivo, demonstração dos exercícios e gráficos de evolução. Grátis e funciona offline." />
   <meta property="og:url" content="https://eafit.com.br/" />
+  <meta name="twitter:title" content="EAFIT — Treino com plano, registro e evolução" />
+  <meta name="twitter:description" content="Plano de treino pro seu objetivo, modo ao vivo, demonstração dos exercícios e gráficos de evolução. Grátis e funciona offline." />
+
+  <!-- site-head: igual em todas as páginas (conferido por scripts/build-site.test.js) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:site_name" content="EAFIT" />
   <meta property="og:image" content="https://eafit.com.br/app/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Logo do EAFIT com o slogan Seu treino, sempre com você" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="EAFIT — Treino com plano, registro e evolução" />
-  <meta name="twitter:description" content="Plano de treino pro seu objetivo, modo ao vivo, demonstração dos exercícios e gráficos de evolução. Grátis e funciona offline." />
   <meta name="twitter:image" content="https://eafit.com.br/app/og-image.png" />
   <link rel="manifest" href="/app/manifest.webmanifest" />
-
   <link rel="icon" href="/app/favicon.svg?v=2" type="image/svg+xml" />
   <link rel="alternate icon" href="/app/favicon.ico?v=2" />
   <link rel="apple-touch-icon" href="/app/apple-touch-icon.png" />
   <meta name="theme-color" content="#0b0b0f" media="(prefers-color-scheme: dark)" />
   <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
   <meta name="color-scheme" content="dark light" />
-
-  <script>
-    // Idioma: ?lang=en|pt (e guarda) > escolha salva (app_lang, a mesma do app) > português.
-    (function () {
-      var lang = 'pt';
-      try {
-        var q = new URLSearchParams(location.search).get('lang');
-        if (q === 'en' || q === 'pt') localStorage.setItem('app_lang', q);
-        var saved = localStorage.getItem('app_lang');
-        if (saved === 'en' || saved === 'pt') lang = saved;
-      } catch (e) { /* sem storage: português */ }
-      window.LANDING_LANG = lang;
-      document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
-    })();
-  </script>
-  <script src="i18n-en.js" defer></script>
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="/assets/site.css" />
+  <script src="/i18n-en.js" defer></script>
+  <script src="/assets/site.js" defer></script>
+  <!-- /site-head -->
 
   <script type="application/ld+json">
   {
@@ -69,875 +58,49 @@
     "url": "https://eafit.com.br/"
   }
   </script>
-
-  <!-- Espelho do FAQ visível (seção #faq). Mudou lá, atualize aqui. -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "É grátis mesmo?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Sim. Não tem plano pago, não tem anúncio e não pede cartão de crédito."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Preciso baixar na loja de apps?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Não. O EAFIT é um app web instalável: abra no navegador e, no Android, toque em “Instalar app” ou “Adicionar à tela inicial”; no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”. Ele passa a abrir em tela cheia, como qualquer app."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Funciona sem internet na academia?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Funciona. Você registra séries e água offline e, quando a conexão volta, tudo é sincronizado sozinho com a sua conta."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Posso mudar o treino que o app montou?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso. E na hora de treinar, o botão “Trocar exercício” sugere alternativas do mesmo músculo e do seu nível."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Como funcionam os desafios com amigos?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Você cria um desafio (7, 14 ou 30 dias), recebe um código e manda para quem quiser. Quem entra pelo código participa, e vence quem treinar mais dias no período. Os outros só veem seu apelido e sua pontuação."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "E se eu viajar ou ficar doente?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Ative o modo pausa no Perfil por 7, 14 ou 30 dias. A sequência de treinos fica protegida e os lembretes de treino são silenciados até você voltar."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Serve para quem está começando?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Serve. No cadastro você escolhe entre iniciante, intermediário e avançado, e os exercícios têm demonstração de execução e dica de técnica."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "O que acontece com os meus dados?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Ficam na sua conta, protegidos por login. No Perfil você pode exportar tudo ou excluir a conta quando quiser. Detalhes na Política de Privacidade."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Sou personal trainer. Posso usar o EAFIT com meus alunos?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Pode. O modo Personal é liberado pela equipe do EAFIT na sua conta. Você passa seu código de convite, o aluno digita no app e autoriza, e aí você acompanha treinos, peso e medidas, monta e envia treinos, manda recados e cria desafios para a turma."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Como funciona a agenda de aulas com o personal?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "O personal marca a aula com dia, horário e local, e você recebe um aviso para confirmar ou recusar pelo app. Depois de confirmada, você e o personal recebem um lembrete na véspera e outro pouco antes da aula."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "O que o meu personal vê dos meus dados?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Só depois que você digita o código dele e autoriza: treinos, peso, medidas, check-ins e desconfortos. Suas fotos de evolução ficam privadas, a menos que você ligue o compartilhamento à parte em Perfil → Meu personal. Você pode desligar ou encerrar o vínculo quando quiser."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "' + esc(item.question) + '",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "' + esc(item.answer) + '"
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Como adiciono amigos e vejo o ranking?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Cada pessoa tem um código de amigo no app. Você digita o código do amigo, ele aceita o pedido e vocês passam a se ver no ranking semanal de dias treinados e no feed de treinos, recordes e sequências, onde dá pra reagir com 💪 🔥 👏. Só aparecem apelido e atividade, e você pode desligar o compartilhamento quando quiser."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Dá para registrar cardio?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Dá. Itens como esteira, corrida e bike não têm séries: você usa o cronômetro (ou digita a duração), informa a distância se quiser e o app calcula o ritmo médio em min/km."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "O app tem versão em inglês?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Tem. Troque entre português e inglês no Perfil ou na tela de acesso. No primeiro uso, um tutorial guiado mostra os principais recursos e pode ser revisto no Perfil."
-      }
-    }
-  ]
-}
-  </script>
-
-  <style>
-    /* ============================================================
-       TOKENS — espelham app-react/src/styles/tokens.css. O admin pode
-       trocar --primary/--primary-h/--primary-glow (cor principal) via
-       landing_content; o resto é fixo.
-    ============================================================ */
-    :root {
-      --bg:           #0b0b0f;
-      --bg-2:         #101015;
-      --surface:      #16161a;
-      --surface-2:    #1c1c21;
-      --surface-3:    #27272a;
-      --border:       #26262b;
-      --border-2:     #3f3f46;
-      --text:         #ececef;
-      --text-muted:   #a1a1aa;
-      --text-dim:     #8b8b95;   /* >= 4.5:1 sobre --bg e --surface */
-      --primary:      #f97316;
-      --primary-h:    #fb923c;
-      --primary-glow: rgba(249, 115, 22, .18);
-      --primary-ink:  #fb923c;   /* laranja pra TEXTO (contraste) */
-      --on-primary:   #0e0e12;
-      --success:      #4ade80;
-      --water:        #38bdf8;
-      --error:        #f87171;
-      --nav-bg:       rgba(11, 11, 15, .78);
-      --phone-frame:  #1f1f24;
-      --shadow-lg:    0 40px 80px -30px rgba(0, 0, 0, .75);
-      --r-md: 12px; --r-lg: 18px; --r-xl: 26px;
-    }
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg:           #fafafa;
-        --bg-2:         #f4f4f5;
-        --surface:      #ffffff;
-        --surface-2:    #f4f4f5;
-        --surface-3:    #e4e4e7;
-        --border:       #e4e4e7;
-        --border-2:     #d4d4d8;
-        --text:         #18181b;
-        --text-muted:   #52525b;
-        --text-dim:     #71717a;
-        --primary-glow: rgba(249, 115, 22, .14);
-        --primary-ink:  #c2410c;
-        --success:      #16a34a;
-        --water:        #0284c7;
-        --error:        #dc2626;
-        --nav-bg:       rgba(250, 250, 250, .82);
-        --phone-frame:  #18181b;
-        --shadow-lg:    0 40px 80px -30px rgba(24, 24, 27, .35);
-      }
-    }
-
-    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html { scroll-behavior: smooth; scroll-padding-top: 72px; -webkit-text-size-adjust: 100%; overflow-x: hidden; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.55;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    img, video, svg { display: block; max-width: 100%; }
-    a { color: inherit; }
-    h1, h2, h3 { text-wrap: balance; }
-    p { text-wrap: pretty; }
-    .wrap { max-width: 1140px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 28px); position: relative; }
-    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-    .skip-link {
-      position: absolute; left: 12px; top: -60px; z-index: 100; padding: 10px 16px; border-radius: 10px;
-      background: var(--primary); color: var(--on-primary); font-weight: 700; text-decoration: none;
-    }
-    .skip-link:focus { top: 12px; }
-    main:focus { outline: none; }
-    :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 6px; }
-
-    /* ---------- botões ---------- */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      min-height: 48px; padding: 12px 24px; border-radius: 12px;
-      font: inherit; font-weight: 700; font-size: 15.5px; text-decoration: none;
-      border: 1px solid transparent; cursor: pointer; white-space: nowrap;
-      transition: transform .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
-    }
-    .btn:active { transform: scale(.97); }
-    .btn-primary { background: var(--primary); color: var(--on-primary); box-shadow: 0 10px 30px -8px var(--primary); }
-    .btn-primary:hover { background: var(--primary-h); transform: translateY(-1px); }
-    .btn-ghost { background: var(--surface); color: var(--text); border-color: var(--border); }
-    .btn-ghost:hover { border-color: var(--border-2); }
-    .btn-sm { min-height: 40px; padding: 8px 16px; font-size: 14px; box-shadow: none; }
-    .nav-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .lang-btn { min-height: 40px; min-width: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-2); background: transparent; color: var(--text-muted); font: inherit; font-size: 13.5px; font-weight: 700; letter-spacing: .04em; cursor: pointer; }
-    .lang-btn:hover { color: var(--text); background: var(--surface-2); }
-    .lang-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-    .btn svg { flex-shrink: 0; }
-
-    /* ---------- nav ---------- */
-    header.nav {
-      position: sticky; top: 0; z-index: 30;
-      background: var(--nav-bg);
-      -webkit-backdrop-filter: saturate(160%) blur(12px);
-      backdrop-filter: saturate(160%) blur(12px);
-      border-bottom: 1px solid transparent;
-      transition: border-color .2s ease;
-    }
-    header.nav.is-scrolled { border-bottom-color: var(--border); }
-    .nav-inner { display: flex; align-items: center; gap: 24px; height: 64px; }
-    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -.01em; text-decoration: none; }
-    .logo img { width: 30px; height: 30px; border-radius: 8px; }
-    .nav-inner > nav { margin-left: auto; }
-    .nav-links { display: flex; gap: 4px; list-style: none; padding: 0; margin: 0; }
-    .nav-links a { display: block; white-space: nowrap; padding: 8px 12px; border-radius: 8px; color: var(--text-muted); font-size: 14.5px; font-weight: 600; text-decoration: none; }
-    .nav-links a:hover { color: var(--text); background: var(--surface-2); }
-    .nav-inner > .btn { margin-left: 8px; }
-
-    /* ---------- hero ---------- */
-    .hero { position: relative; padding: clamp(40px, 7vw, 88px) 0 clamp(48px, 7vw, 96px); overflow: hidden; }
-    .hero::before {
-      content: ""; position: absolute; inset: -30% -10% auto; height: 900px; pointer-events: none;
-      background:
-        radial-gradient(40% 50% at 78% 30%, var(--primary-glow), transparent 70%),
-        radial-gradient(30% 40% at 12% 10%, rgba(56, 189, 248, .10), transparent 70%);
-    }
-    .hero::after {
-      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
-      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
-      background-size: 56px 56px;
-      -webkit-mask-image: radial-gradient(60% 60% at 70% 30%, #000 0%, transparent 75%);
-      mask-image: radial-gradient(60% 60% at 70% 30%, #000 0%, transparent 75%);
-    }
-    .hero .wrap { z-index: 1; }
-    .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
-    .hero-grid > *, .show-row > * { min-width: 0; }
-
-    .badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--text-muted); font-size: 13.5px; font-weight: 600;
-      padding: 6px 14px 6px 12px; border-radius: 999px; margin-bottom: 22px;
-    }
-    .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(74, 222, 128, .15); }
-    h1 {
-      font-size: clamp(34px, 4.4vw, 56px); line-height: 1.05; margin: 0 0 22px;
-      letter-spacing: -.035em; font-weight: 850;
-    }
-    .grad {
-      background: linear-gradient(120deg, var(--primary) 10%, var(--primary-h) 60%, #fbbf24);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .lead { font-size: clamp(16px, 1.6vw, 19px); color: var(--text-muted); max-width: 540px; margin: 0 0 32px; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
-    .hero-proof { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 0; color: var(--text-muted); font-size: 14px; font-weight: 600; }
-    .hero-proof li { display: flex; align-items: center; gap: 7px; }
-    .hero-proof svg { color: var(--success); }
-
-    /* ---------- celular com telas do app (HTML, não screenshot) ---------- */
-    .hero-visual { position: relative; display: flex; flex-direction: column; align-items: center; gap: 18px; }
-    .phone {
-      position: relative; width: 300px; max-width: 78vw; aspect-ratio: 300 / 620;
-      border-radius: 46px; padding: 11px; background: var(--phone-frame);
-      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255, 255, 255, .06) inset, 0 0 0 1px rgba(0, 0, 0, .3);
-    }
-    .phone::before { /* ilha */
-      content: ""; position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-      width: 86px; height: 24px; border-radius: 14px; background: #000; z-index: 5;
-    }
-    .phone__screen {
-      position: relative; width: 100%; height: 100%; overflow: hidden;
-      border-radius: 36px; background: var(--bg);
-      font-size: 11px; line-height: 1.35;
-      container-type: inline-size;
-    }
-    .scr {
-      position: absolute; inset: 0; display: flex; flex-direction: column;
-      opacity: 0; transform: translateY(8px) scale(.985);
-      transition: opacity .45s ease, transform .45s ease; pointer-events: none;
-    }
-    .scr.is-active { opacity: 1; transform: none; }
-
-    .screen-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; border-radius: 22px; max-width: 360px; background: var(--surface); border: 1px solid var(--border); }
-    .screen-tab {
-      border: 0; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 700;
-      padding: 7px 13px; border-radius: 999px; cursor: pointer; position: relative; overflow: hidden;
-      transition: background .2s ease, color .2s ease;
-    }
-    .screen-tab[aria-selected="true"] { background: var(--surface-3); color: var(--text); }
-    .screen-tab .prog { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--primary); }
-    .screen-tab[aria-selected="true"] .prog.run { animation: tabprog var(--dur, 5s) linear forwards; }
-    @keyframes tabprog { to { width: 100%; } }
-
-    .float-chip {
-      position: absolute; z-index: 6; display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.25;
-      background: var(--surface); border: 1px solid var(--border); box-shadow: 0 16px 40px -16px rgba(0, 0, 0, .5);
-      animation: floaty 6s ease-in-out infinite;
-    }
-    .float-chip b { display: block; font-size: 13.5px; }
-    .float-chip small { color: var(--text-muted); font-size: 12px; }
-    .float-chip .ico { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; }
-    .float-chip--pr { top: 2%; left: -14%; }
-    .float-chip--pr .ico { background: var(--primary-glow); }
-    .float-chip--water { bottom: 31%; right: -12%; animation-delay: -3s; }
-    .float-chip--water .ico { background: rgba(56, 189, 248, .15); }
-    @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-
-    /* ----- peças das telas (prefixo m-) ----- */
-    .m-status { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px 0; height: 40px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-    .m-status i { display: inline-block; width: 18px; height: 9px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; opacity: .8; }
-    .m-status i::after { content: ""; position: absolute; inset: 1px 5px 1px 1px; background: currentColor; border-radius: 1px; }
-    .m-topbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px 10px; flex-shrink: 0; }
-    .m-avatar { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #fbbf24); display: grid; place-items: center; color: #0e0e12; font-weight: 800; font-size: 10px; }
-    .m-topbar b { font-size: 12.5px; }
-    .m-topbar .online { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
-    .m-topbar .sp { flex: 1; }
-    .m-icon-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; font-size: 10px; }
-    .m-body { flex: 1; overflow: hidden; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
-    .m-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px; }
-    .m-label { font-size: 8.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); }
-    .m-tabbar { display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px 16px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
-    .m-tabbar span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 8px; font-weight: 600; color: var(--text-dim); }
-    .m-tabbar span.on { color: var(--primary); }
-    .m-tabbar svg { width: 17px; height: 17px; }
-
-    /* tela: ao vivo */
-    .m-live { padding: 0 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-    .m-live__top { display: flex; align-items: center; gap: 8px; }
-    .m-live__head { flex: 1; display: flex; flex-direction: column; }
-    .m-live__head b { font-size: 12.5px; }
-    .m-live__head small { color: var(--text-muted); font-size: 9.5px; }
-    .m-clock { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
-    .m-bar { height: 4px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
-    .m-bar i { display: block; height: 100%; width: 38%; background: var(--primary); border-radius: 4px; }
-    .m-steps { display: flex; gap: 4px; }
-    .m-steps i { flex: 1; height: 4px; border-radius: 3px; background: var(--surface-3); }
-    .m-steps i.done { background: var(--success); }
-    .m-steps i.cur { background: var(--primary); }
-    .m-kicker { font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--primary-ink); margin-top: 2px; }
-    .m-title { font-size: 16px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
-    .m-chips { display: flex; gap: 5px; flex-wrap: wrap; }
-    .m-chips span { font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); }
-    .m-tip { font-size: 10px; color: var(--text-muted); padding: 6px 8px; border-radius: 8px; background: var(--surface); border: 1px dashed var(--border-2); }
-    .m-sets { display: flex; flex-direction: column; gap: 5px; }
-    .m-set { display: grid; grid-template-columns: 22px 1fr 1fr 26px; gap: 6px; align-items: center; }
-    .m-set--head { font-size: 8.5px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
-    .m-set .n { font-weight: 800; color: var(--text-muted); text-align: center; }
-    .m-set .f { height: 28px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 700; font-size: 11.5px; }
-    .m-set .ck { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border-2); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
-    .m-set.done .f { color: var(--text-muted); }
-    .m-set.done .ck { background: var(--success); border-color: var(--success); color: #0e0e12; }
-    .m-set.cur .f { border-color: var(--primary); }
-    .m-set.cur .f.empty { color: var(--text-dim); }
-    .m-last { font-size: 9.5px; color: var(--text-muted); text-align: center; }
-    .m-last b { color: var(--text); }
-    .m-rest { position: relative; overflow: hidden; display: flex; align-items: center; gap: 6px; margin-top: auto; padding: 9px 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--primary); }
-    .m-rest__bar { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: var(--primary-glow); transform-origin: left; }
-    .m-rest > div { position: relative; flex: 1; display: flex; flex-direction: column; }
-    .m-rest small { font-size: 8.5px; font-weight: 800; color: var(--primary-ink); text-transform: uppercase; letter-spacing: .08em; }
-    .m-rest b { font-size: 18px; font-variant-numeric: tabular-nums; line-height: 1.1; }
-    .m-pill { position: relative; font-size: 10px; font-weight: 700; padding: 5px 9px; border-radius: 8px; border: 1px solid var(--border-2); background: var(--surface); }
-    .m-foot { display: flex; gap: 6px; }
-    .m-foot span { height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 11.5px; }
-    .m-foot .prev { width: 40px; border: 1px solid var(--border); background: var(--surface); }
-    .m-foot .next { flex: 1; background: var(--primary); color: #0e0e12; }
-
-    /* tela: água */
-    .m-water { display: flex; align-items: center; gap: 12px; }
-    .m-ring {
-      --pct: 62; width: 92px; height: 92px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center;
-      background: conic-gradient(var(--water) calc(var(--pct) * 1%), var(--surface-3) 0);
-    }
-    .m-ring > div { width: 76px; height: 76px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .m-ring b { font-size: 19px; line-height: 1; }
-    .m-ring b small { font-size: 10px; }
-    .m-ring span { font-size: 9px; color: var(--text-muted); }
-    .m-water__info { display: flex; flex-direction: column; gap: 2px; }
-    .m-water__info strong { font-size: 14px; }
-    .m-water__info span { font-size: 9.5px; color: var(--text-muted); }
-    .m-quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-    .m-quick span { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 0; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 9.5px; font-weight: 800; }
-    .m-quick em { font-style: normal; font-size: 14px; }
-    .m-quick small { font-size: 8px; color: var(--text-muted); font-weight: 600; }
-    .m-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-    .m-stats div { padding: 7px 6px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; }
-    .m-stats b { font-size: 14px; }
-    .m-stats span { font-size: 8px; color: var(--text-muted); line-height: 1.2; }
-    .m-wbars { position: relative; display: flex; align-items: flex-end; gap: 3px; height: 70px; margin-top: 6px; }
-    .m-wbars i { flex: 1; border-radius: 3px 3px 1px 1px; background: rgba(56, 189, 248, .35); }
-    .m-wbars i.hit { background: var(--water); }
-    .m-wbars::after { content: ""; position: absolute; left: 0; right: 0; bottom: 52px; border-top: 1px dashed var(--text-dim); opacity: .6; }
-
-    /* tela: evolução */
-    .m-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
-    .m-kpis div { padding: 8px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
-    .m-kpis b { font-size: 17px; display: block; line-height: 1.1; }
-    .m-kpis span { font-size: 8.5px; color: var(--text-muted); }
-    .m-seg { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; gap: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); }
-    .m-seg span { text-align: center; padding: 4px 0; border-radius: 7px; font-size: 9.5px; font-weight: 700; color: var(--text-muted); }
-    .m-seg span.on { background: var(--primary); color: #0e0e12; }
-    .m-heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 6px; }
-    .m-heat i { aspect-ratio: 1; border-radius: 3px; background: var(--surface-3); }
-    .m-heat i.l1 { background: rgba(249, 115, 22, .35); }
-    .m-heat i.l2 { background: rgba(249, 115, 22, .65); }
-    .m-heat i.l3 { background: var(--primary); }
-    .m-chart { width: 100%; height: 70px; margin-top: 4px; overflow: visible; }
-
-    /* tela: histórico */
-    .m-month { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 12px; }
-    .m-month span { color: var(--text-dim); font-size: 13px; }
-    .m-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; margin-top: 6px; }
-    .m-cal .wd { font-size: 8px; font-weight: 800; color: var(--text-dim); padding-bottom: 2px; }
-    .m-cal i { font-style: normal; font-size: 9.5px; font-weight: 600; padding: 4px 0; border-radius: 7px; color: var(--text-muted); position: relative; }
-    .m-cal i.d { background: var(--primary); color: #0e0e12; font-weight: 800; }
-    .m-cal i.p { box-shadow: inset 0 0 0 1.5px var(--primary); color: var(--text); }
-    .m-cal i.t { box-shadow: inset 0 0 0 1.5px var(--text); color: var(--text); font-weight: 800; }
-    .m-sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; text-align: center; }
-    .m-sum b { display: block; font-size: 13px; }
-    .m-sum span { font-size: 7.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
-    .m-session { display: flex; gap: 8px; align-items: center; }
-    .m-session .dt { width: 34px; height: 34px; border-radius: 10px; background: var(--primary-glow); color: var(--primary-ink); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; line-height: 1; }
-    .m-session .dt small { font-size: 7px; text-transform: uppercase; }
-    .m-session div:last-child { display: flex; flex-direction: column; }
-    .m-session b { font-size: 11px; }
-    .m-session span { font-size: 9px; color: var(--text-muted); }
-    .m-up { color: var(--success); font-weight: 700; }
-
-    /* ---------- faixa de destaques ---------- */
-    .highlights {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-      background: var(--bg-2);
-    }
-    .highlight {
-      flex: 1 1 200px; display: flex; align-items: center; justify-content: center; gap: 10px;
-      padding: 22px 12px; color: var(--text-muted); font-size: 15px; font-weight: 700;
-    }
-    .highlight + .highlight { border-left: 1px solid var(--border); }
-    .highlight svg { color: var(--primary); flex-shrink: 0; }
-
-    /* ---------- seções ---------- */
-    section { padding: clamp(64px, 9vw, 112px) 0; }
-    .section-head { text-align: center; max-width: 640px; margin: 0 auto clamp(36px, 6vw, 60px); }
-    .eyebrow { display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--primary-ink); margin-bottom: 12px; }
-    .section-head h2 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.03em; }
-    .section-head p { color: var(--text-muted); margin: 0; font-size: clamp(15.5px, 1.4vw, 17.5px); }
-
-    /* ---------- comparação ---------- */
-    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 960px; margin: 0 auto; }
-    .compare-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: clamp(22px, 3.5vw, 32px); }
-    .compare-col.good { border-color: rgba(249, 115, 22, .45); background: linear-gradient(170deg, var(--primary-glow), var(--surface) 55%); }
-    .compare-tag { display: inline-block; font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 999px; margin-bottom: 20px; }
-    .compare-tag.bad { background: rgba(239, 68, 68, .12); color: var(--error); }
-    .compare-tag.good { background: var(--primary); color: var(--on-primary); }
-    .compare-col ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
-    .compare-col li { position: relative; padding-left: 30px; color: var(--text-muted); }
-    .compare-col li::before {
-      position: absolute; left: 0; top: 2px; width: 20px; height: 20px; border-radius: 50%;
-      display: grid; place-items: center; font-size: 12px; font-weight: 900;
-    }
-    .compare-col:not(.good) li::before { content: "✕"; color: var(--error); background: rgba(239, 68, 68, .12); }
-    .compare-col.good li::before { content: "✓"; color: var(--on-primary); background: var(--primary); }
-    .compare-col.good li { color: var(--text); }
-
-    /* ---------- vitrine (linhas alternadas) ---------- */
-    .showcase { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .show-list { display: flex; flex-direction: column; gap: clamp(64px, 9vw, 120px); }
-    .show-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 6vw, 80px); align-items: center; }
-    .show-row:nth-child(even) .show-copy { order: 2; }
-    .show-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--primary-ink); margin-bottom: 12px; }
-    .show-tag i { width: 26px; height: 26px; border-radius: 8px; background: var(--primary-glow); display: grid; place-items: center; font-style: normal; }
-    .show-copy h3 { font-size: clamp(24px, 2.8vw, 34px); line-height: 1.12; letter-spacing: -.025em; margin: 0 0 14px; }
-    .show-copy > p { color: var(--text-muted); margin: 0 0 22px; font-size: 16.5px; }
-    .checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-    .checks li { position: relative; padding-left: 28px; font-weight: 600; }
-    .checks li::before {
-      content: ""; position: absolute; left: 0; top: 4px; width: 18px; height: 18px; border-radius: 50%;
-      background: var(--primary-glow) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f97316' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / 11px no-repeat;
-    }
-    .show-visual {
-      position: relative; min-height: 340px; border-radius: var(--r-xl); padding: clamp(20px, 3vw, 32px);
-      background: radial-gradient(80% 80% at 50% 0%, var(--primary-glow), transparent 70%), var(--surface);
-      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden;
-    }
-    .panel { width: 100%; max-width: 380px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px; box-shadow: 0 24px 48px -24px rgba(0, 0, 0, .5); }
-    .panel + .panel { margin-top: 12px; }
-    .panel-label { font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-
-    /* visual: descanso */
-    .rest-big { display: flex; align-items: center; gap: 20px; }
-    .rest-ring { position: relative; width: 132px; height: 132px; flex-shrink: 0; }
-    .rest-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-    .rest-ring circle { fill: none; stroke-width: 9; }
-    .rest-ring .bg { stroke: var(--surface-3); }
-    .rest-ring .fg { stroke: var(--primary); stroke-linecap: round; stroke-dasharray: 339.3; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear; }
-    .rest-ring > div { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .rest-ring b { font-size: 30px; font-variant-numeric: tabular-nums; line-height: 1; }
-    .rest-ring span { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
-    .rest-side { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
-    .rest-side .row { display: flex; gap: 8px; }
-    .chip-btn { flex: 1; text-align: center; font-weight: 800; font-size: 14px; padding: 9px 0; border-radius: 10px; border: 1px solid var(--border-2); background: var(--surface); }
-    .rest-next { font-size: 13px; color: var(--text-muted); }
-    .rest-next b { color: var(--text); display: block; font-size: 14.5px; }
-    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); }
-
-    /* visual: vídeo de demonstração */
-    .demo-video { position: relative; border-radius: 12px; overflow: hidden; background: #0e0e12; aspect-ratio: 16 / 10; }
-    .demo-video video { width: 100%; height: 100%; object-fit: cover; }
-    .demo-video .speed { position: absolute; left: 10px; top: 10px; font-size: 11.5px; font-weight: 800; padding: 4px 9px; border-radius: 999px; background: rgba(0, 0, 0, .65); color: #fff; }
-    .demo-controls { display: flex; gap: 8px; margin-top: 12px; }
-    .demo-controls button {
-      flex: 1; min-height: 40px; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
-      border-radius: 10px; border: 1px solid var(--border-2); background: var(--surface); color: var(--text);
-    }
-    .demo-controls button[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-    .credit { font-size: 11.5px; color: var(--text-dim); margin: 10px 0 0; }
-    .credit a { color: var(--text-muted); }
-
-    /* visual: evolução */
-    .load-chart { width: 100%; height: auto; overflow: visible; }
-    .load-chart .grid line { stroke: var(--border); }
-    .load-chart text { fill: var(--text-dim); font-size: 10px; font-family: inherit; }
-    .load-chart .line { fill: none; stroke: var(--primary); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 600; stroke-dashoffset: 0; transition: stroke-dashoffset 1.6s ease; }
-    .js .reveal:not(.visible) .load-chart .line { stroke-dashoffset: 600; }
-    .load-chart .pt { fill: var(--bg); stroke: var(--primary); stroke-width: 2; }
-    .load-chart .pr { fill: var(--primary); }
-    .load-chart .pr-label { fill: var(--primary-ink); font-weight: 800; font-size: 11px; }
-    .pr-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .pr-list div { padding: 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
-    .pr-list b { display: block; font-size: 17px; }
-    .pr-list span { font-size: 11.5px; color: var(--text-muted); line-height: 1.3; display: block; }
-
-    /* visual: plano */
-    .opt-group { display: flex; flex-wrap: wrap; gap: 6px; }
-    .opt { font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); }
-    .opt.on { border-color: var(--primary); background: var(--primary-glow); color: var(--text); }
-    .week { display: flex; flex-direction: column; gap: 6px; }
-    .week div { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 13.5px; }
-    .week b { color: var(--primary-ink); font-size: 12.5px; }
-    .week span { color: var(--text-dim); font-size: 12px; }
-    .week div.rest { opacity: .55; }
-    .week div.today { border-color: var(--primary); }
-
-    /* ---------- grid de funcionalidades ---------- */
-    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px;
-      transition: transform .25s ease, border-color .25s ease;
-    }
-    .card:hover { transform: translateY(-3px); border-color: rgba(249, 115, 22, .45); }
-    .icon-badge { width: 44px; height: 44px; border-radius: 12px; background: var(--primary-glow); color: var(--primary); display: grid; place-items: center; margin-bottom: 16px; }
-    .card h3 { margin: 0 0 6px; font-size: 17px; letter-spacing: -.01em; }
-    .card p { margin: 0; color: var(--text-muted); font-size: 15px; }
-
-    /* ---------- passos ---------- */
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; position: relative; }
-    .step { position: relative; padding: 26px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
-    .step .num {
-      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; margin-bottom: 18px;
-      background: var(--primary); color: var(--on-primary); font-weight: 900; font-size: 17px;
-    }
-    .step h3 { margin: 0 0 6px; font-size: 18px; }
-    .step p { margin: 0; color: var(--text-muted); font-size: 15px; }
-
-    /* ---------- telas reais ---------- */
-    .shots { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(20px, 4vw, 44px); }
-    .shot { margin: 0; width: min(100%, 270px); text-align: center; }
-    .shot img {
-      display: block; width: 100%; height: auto; border-radius: 30px; border: 6px solid var(--phone-frame);
-      box-shadow: var(--shadow-lg); background: var(--surface);
-    }
-    .shot figcaption { margin-top: 16px; color: var(--text-muted); font-size: 14.5px; }
-    .shot figcaption strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 2px; }
-
-    /* ---------- para quem é ---------- */
-    .audience .features { grid-template-columns: repeat(4, 1fr); }
-    @media (max-width: 980px) { .audience .features { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 560px) { .audience .features { grid-template-columns: 1fr; } }
-
-    /* ---------- faixa de números ---------- */
-    .stats-band { padding: 0 0 clamp(40px, 6vw, 72px); }
-    .stats-band[hidden] { display: none; }
-    .stats-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
-    .stat { flex: 1 1 180px; max-width: 260px; text-align: center; padding: 22px 16px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
-    .stat b { display: block; font-size: clamp(28px, 4vw, 38px); line-height: 1.1; letter-spacing: -.03em; color: var(--primary-ink); }
-    .stat span { display: block; margin-top: 6px; color: var(--text-muted); font-size: 14px; }
-
-    /* ---------- instalar + CTA fixo ---------- */
-    .install-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 820px; margin: 0 auto; }
-    .install-card { padding: 26px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
-    .install-card h3 { margin: 0 0 12px; font-size: 18px; }
-    .install-card ol { margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 15px; }
-    .install-card li + li { margin-top: 6px; }
-    .install-card ol a { color: var(--primary); font-weight: 600; }
-    .install-card .btn { margin-top: 18px; }
-    .install-card .btn[hidden] { display: none; }
-    .install-note { max-width: 820px; margin: 18px auto 0; text-align: center; color: var(--text-dim); font-size: 13.5px; }
-    .sticky-cta { display: none; }
-    @media (max-width: 760px) {
-      .install-grid { grid-template-columns: 1fr; }
-      .sticky-cta {
-        display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
-        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-        background: var(--nav-bg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-        border-top: 1px solid var(--border); transform: translateY(110%); transition: transform .3s ease;
-      }
-      .sticky-cta.show { transform: none; }
-      .sticky-cta .btn { width: 100%; }
-      footer { padding-bottom: 84px; }
-    }
-
-    /* ---------- depoimentos ---------- */
-    .quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .quote { display: flex; flex-direction: column; gap: 16px; padding: 26px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
-    .quote .stars { color: var(--primary); letter-spacing: 3px; font-size: 16px; }
-    .quote blockquote { margin: 0; color: var(--text); font-size: 15.5px; line-height: 1.6; flex: 1; }
-    .quote figcaption { display: flex; align-items: center; gap: 12px; }
-    .quote .avatar {
-      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-      background: var(--primary-glow); color: var(--primary-ink); font-weight: 800;
-    }
-    .quote .who { display: flex; flex-direction: column; line-height: 1.3; }
-    .quote .who strong { font-size: 15px; }
-    .quote .who span { font-size: 13px; color: var(--text-dim); }
-    @media (max-width: 860px) { .quotes { grid-template-columns: 1fr; } }
-
-    /* ---------- FAQ ---------- */
-    .faq { background: var(--bg-2); border-top: 1px solid var(--border); }
-    .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
-    .faq-list details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); transition: border-color .2s ease; }
-    .faq-list details[open] { border-color: var(--border-2); }
-    .faq-list summary {
-      list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-      padding: 18px 20px; font-weight: 700; font-size: 16.5px;
-    }
-    .faq-list summary::-webkit-details-marker { display: none; }
-    .faq-list summary::after {
-      content: "+"; flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
-      background: var(--surface-2); color: var(--primary-ink); font-size: 18px; font-weight: 700; transition: transform .2s ease;
-    }
-    .faq-list details[open] summary::after { transform: rotate(45deg); }
-    .faq-list details p { margin: 0; padding: 0 20px 20px; color: var(--text-muted); }
-
-    /* ---------- CTA final ---------- */
-    .cta-band {
-      position: relative; overflow: hidden; text-align: center;
-      border-radius: 28px; padding: clamp(48px, 8vw, 88px) clamp(20px, 6vw, 48px);
-      background: radial-gradient(70% 90% at 50% 0%, var(--primary-glow), transparent 70%), var(--surface);
-      border: 1px solid var(--border);
-    }
-    .cta-band > * { position: relative; }
-    .cta-band h2 { margin: 0 auto 14px; max-width: 640px; font-size: clamp(28px, 4vw, 46px); line-height: 1.08; letter-spacing: -.03em; }
-    .cta-band p { color: var(--text-muted); margin: 0 0 30px; font-size: 17px; }
-    .cta-band .hint { margin: 22px 0 0; font-size: 13.5px; color: var(--text-dim); }
-
-    /* ---------- rodapé ---------- */
-    footer { border-top: 1px solid var(--border); padding: 36px 0 calc(36px + env(safe-area-inset-bottom)); }
-    .footer-inner { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: flex-start; justify-content: space-between; }
-    .footer-brand p { margin: 8px 0 0; color: var(--text-dim); font-size: 14px; max-width: 320px; }
-    .footer-links { display: flex; flex-wrap: wrap; gap: 8px 22px; list-style: none; margin: 0; padding: 0; }
-    .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 14.5px; font-weight: 600; }
-    .footer-links a:hover { color: var(--text); }
-    .footer-credits { flex-basis: 100%; margin: 8px 0 0; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-dim); }
-    .footer-credits a { color: var(--text-muted); }
-    .footer-credits.footer-privacy { margin-top: 0; padding-top: 0; border-top: 0; }
-    .footer-credits.footer-privacy + .footer-credits { margin-top: 0; padding-top: 12px; border-top: 0; }
-
-    /* ---------- revelar ao rolar (só com JS) ---------- */
-    .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
-    .js .reveal.visible { opacity: 1; transform: none; }
-    .js .reveal-d1 { transition-delay: .08s; }
-    .js .reveal-d2 { transition-delay: .16s; }
-    .js .reveal-d3 { transition-delay: .24s; }
-
-    /* ---------- responsivo ---------- */
-    @media (max-width: 980px) {
-      .hero-grid { grid-template-columns: 1fr; text-align: center; }
-      .lead { margin-left: auto; margin-right: auto; }
-      .hero-actions, .hero-proof { justify-content: center; }
-      .features { grid-template-columns: repeat(2, 1fr); }
-      .show-row { grid-template-columns: 1fr; }
-      .show-row:nth-child(even) .show-copy { order: 0; }
-      .show-copy { max-width: 600px; }
-      /* Visual em coluna única ocupa a largura toda: os selos flutuantes
-         passam a se ancorar no celular centralizado, não na borda da tela. */
-      .float-chip--pr { left: max(0px, calc(50% - 260px)); top: 2%; }
-      .float-chip--water { right: max(0px, calc(50% - 260px)); }
-    }
-    /* Os 6 links + idioma + botão só cabem acima de ~1020px; abaixo disso
-       (tablet) quebravam linha e empurravam "Abrir app" pra fora da tela. */
-    @media (max-width: 1020px) {
-      .nav-links { display: none; }
-      .nav-inner > .btn { margin-left: auto; }
-    }
-    @media (max-width: 760px) {
-      .compare, .steps { grid-template-columns: 1fr; }
-      .highlight { flex-basis: 50%; font-size: 14px; padding: 18px 8px; }
-      .highlight + .highlight { border-left: 0; }
-      .highlight:nth-child(even) { border-left: 1px solid var(--border); }
-      .highlight:nth-child(n+3) { border-top: 1px solid var(--border); }
-      .show-visual { min-height: 0; }
-    }
-    @media (max-width: 560px) {
-      .features { grid-template-columns: 1fr; }
-      .hero-actions { flex-direction: column; }
-      .hero-actions .btn { width: 100%; }
-      .float-chip { display: none; }
-      .rest-big { flex-direction: column; text-align: center; }
-      .rest-side { width: 100%; }
-      .pr-list { grid-template-columns: 1fr 1fr; }
-      .pr-list div:last-child { display: none; }
-      .screen-tab { padding: 7px 10px; font-size: 12.5px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
-      .js .reveal { opacity: 1; transform: none; }
-    }
-    /* visual: desafios, rotina, retrospectiva */
-    .board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-    .board li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 14px; font-weight: 600; }
-    .board li.me { border-color: var(--primary); background: var(--primary-glow); }
-    .board b { color: var(--primary-ink); }
-    .pause-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.35; border-color: #fbbf24; background: rgba(251, 191, 36, .1); }
-    .pause-note .chip-btn { flex: 0 0 auto; padding: 8px 14px; background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-    .checkin-demo { display: flex; flex-direction: column; gap: 8px; }
-    .checkin-demo > div { display: flex; align-items: center; gap: 4px; }
-    .checkin-demo span { flex: 1; font-size: 13px; color: var(--text-muted); font-weight: 600; }
-    .checkin-demo i { font-style: normal; font-size: 20px; line-height: 1; padding: 6px; border-radius: 10px; border: 1px solid transparent; opacity: .5; }
-    .checkin-demo i.on { opacity: 1; border-color: var(--primary); background: var(--primary-glow); }
-    .recap-demo b { font-size: 20px; }
-    .measure-demo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
-    .measure-demo li { display: flex; justify-content: space-between; gap: 8px; color: var(--text-muted); }
-    .measure-demo b { color: var(--success); }
-    .measure-demo b.up { color: var(--primary-ink); }
-
-    /* telas novas do celular: check-in, troca, retrospectiva, desafios */
-    .m-ck { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-    .m-ck > div { display: flex; align-items: center; gap: 2px; }
-    .m-ck span { flex: 1; font-size: 10px; color: var(--text-muted); font-weight: 600; }
-    .m-ck i { font-style: normal; font-size: 14px; line-height: 1; padding: 4px; border-radius: 8px; border: 1px solid transparent; opacity: .5; }
-    .m-ck i.on { opacity: 1; border-color: var(--primary); background: var(--primary-glow); }
-    .m-ex { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
-    .m-ex > div { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; padding: 7px 8px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); }
-    .m-ex b { font-size: 10.5px; }
-    .m-ex span { font-size: 9px; color: var(--text-muted); }
-    .m-ex em { font-style: normal; font-size: 11px; }
-    .m-sum--3 { grid-template-columns: repeat(3, 1fr); margin-top: 6px; }
-    .m-delta { font-size: 10px; margin-top: 6px; color: var(--text-muted); font-weight: 600; }
-    .m-chal { margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
-    .m-chal b { font-size: 12px; }
-    .m-chal small { font-size: 9px; color: var(--text-muted); }
-    .m-board { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-    .m-board > div { display: flex; justify-content: space-between; padding: 5px 8px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); font-size: 10px; font-weight: 600; }
-    .m-board > div.me { border-color: var(--primary); background: var(--primary-glow); }
-    .m-pill--wide { display: block; text-align: center; margin-top: 8px; }
-
-    /* ---------- bônus: personal trainer ---------- */
-    .personal { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .personal-row { margin-bottom: clamp(36px, 6vw, 64px); }
-    .personal-row .show-copy { order: 0 !important; }
-    .personal-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-    .personal-cards .icon-badge { font-size: 22px; }
-    .personal-cards .card h3 { font-size: 16px; }
-    .personal-cards .card p { font-size: 14px; }
-    .personal-cta { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: clamp(28px, 5vw, 48px); padding: 20px 24px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); }
-    .personal-cta p { margin: 0; color: var(--text-muted); max-width: 640px; }
-    .personal-cta strong { color: var(--text); }
-    @media (max-width: 900px) { .personal-cards { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 560px) { .personal-cards { grid-template-columns: 1fr; } .personal-cta { flex-direction: column; align-items: stretch; text-align: center; } }
-
-    /* telas do modo Personal no celular */
-    .p-visual { max-width: 380px; margin: 0 auto; }
-    .m-ptag { color: var(--primary); font-weight: 700; }
-    .m-tabbar--4 { grid-template-columns: repeat(4, 1fr); }
-    .m-tcode { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .m-tcode b { display: block; font-size: 16px; letter-spacing: .12em; }
-    .m-tsum { display: flex; gap: 12px; font-size: 9.5px; color: var(--text-muted); }
-    .m-tsum b { color: var(--text); font-size: 11px; }
-    .m-tsum .warn b { color: #fbbf24; }
-    .m-crow { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; }
-    .m-crow > div { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-    .m-crow b { font-size: 11.5px; }
-    .m-crow small { font-size: 8.5px; color: var(--text-muted); }
-    .m-tb { font-size: 8px; font-weight: 800; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
-    .m-tb--ok { color: var(--success); border-color: var(--success); }
-    .m-tb--atencao { color: #fbbf24; border-color: #fbbf24; }
-    .m-tb--risco { color: var(--error); border-color: var(--error); }
-    .m-sum--4 { grid-template-columns: repeat(4, 1fr); margin-top: 6px; }
-    .m-field { margin-top: 4px; padding: 7px 9px; border-radius: 9px; background: var(--surface-2); border: 1px solid var(--border); font-size: 10px; }
-    .m-field--area { min-height: 44px; margin: 6px 0; line-height: 1.35; }
-    .m-dchips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-    .m-dchips span { font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); background: var(--surface-2); }
-    .m-dchips span.on { border-color: var(--primary); background: var(--primary-glow); color: var(--text); }
-    .m-sent { padding: 6px 0; border-top: 1px solid var(--border); }
-    .m-sent:first-of-type { border-top: 0; }
-    .m-sent > div { display: flex; justify-content: space-between; font-size: 10px; }
-    .m-sent small { color: var(--text-muted); font-size: 8.5px; }
-    .m-sent p { margin: 2px 0; font-size: 9.5px; }
-
-  </style>
 </head>
 <body>
-  <script>document.documentElement.classList.add('js');</script>
-
+  <!-- site-header: igual em todas as páginas; o link da página atual é marcado por assets/site.js -->
   <a class="skip-link" href="#top">Pular para o conteúdo</a>
 
   <header class="nav">
     <div class="wrap nav-inner">
-      <a class="logo" href="#top" aria-label="EAFIT — início">
+      <a class="logo" href="/" aria-label="EAFIT — início">
         <img src="/app/icon.svg" alt="" width="30" height="30" />
         EAFIT
       </a>
-      <nav aria-label="Seções">
+      <nav id="site-nav" aria-label="Principal">
         <ul class="nav-links">
-          <li><a href="#recursos">Recursos</a></li>
-          <li><a href="#funcionalidades">Funcionalidades</a></li>
-          <li><a href="#como-funciona">Como funciona</a></li>
-          <li><a href="#personal">Para personais</a></li>
-          <li><a href="#depoimentos">Depoimentos</a></li>
-          <li><a href="#faq">Dúvidas</a></li>
+          <li><a href="/recursos/">Recursos</a></li>
+          <li><a href="/personal/">Para personais</a></li>
+          <li><a href="/exercicios/">Exercícios</a></li>
+          <li><a href="/ajuda/">Ajuda</a></li>
+          <li><a href="/sobre/">Sobre</a></li>
         </ul>
       </nav>
       <div class="nav-actions">
         <button type="button" class="lang-btn" id="lang-toggle" aria-label="Idioma: português. Mudar para inglês / Language: Portuguese. Switch to English">EN</button>
         <a class="btn btn-primary btn-sm" href="/app/">Abrir app</a>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+          <svg class="bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+          <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
       </div>
     </div>
   </header>
+  <!-- /site-header -->
 
-  <!--
-    Cada bloco com data-section é editável pelo admin (Painel admin → Landing
-    page, tabela public.landing_content). O texto abaixo é o fallback (SEO,
-    JS desligado, fetch falhou) e deve espelhar o seed mais recente em
-    supabase/migrations/*landing_content*.sql.
-  -->
-  <main id="top" tabindex="-1">
+  <main id="top" tabindex="-1" data-reorder>
+    <!--
+      Cada bloco com data-section é editável pelo admin (Painel admin → Landing
+      page, tabela public.landing_content). O texto abaixo é o fallback (SEO,
+      JS desligado, fetch falhou) e deve espelhar o seed mais recente em
+      supabase/migrations/*landing_content*.sql. A mesma seção pode aparecer em
+      mais de uma página (ex.: "features" resumida aqui e completa em
+      /recursos/): assets/site.js aplica o conteúdo do admin em todas, e
+      data-limit corta a lista. A ordem escolhida no admin vale só aqui
+      (data-reorder).
+    -->
     <!-- ========== HERO ========== -->
     <section class="hero" data-section="hero">
       <div class="wrap hero-grid">
@@ -947,7 +110,7 @@
           <p class="lead">O EAFIT monta seu treino pelo seu objetivo e nível, guia cada série no modo ao vivo e transforma o que você registra em gráficos, recordes e sequência. Dá pra desafiar os amigos e pausar sem perder a sequência — no celular, mesmo sem internet.</p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="/app/">Começar grátis</a>
-            <a class="btn btn-ghost" href="#recursos">Ver o app por dentro</a>
+            <a class="btn btn-ghost" href="/recursos/">Ver o app por dentro</a>
           </div>
           <ul class="hero-proof">
             <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>Sem cartão de crédito</li>
@@ -1241,252 +404,6 @@
       </div>
     </section>
 
-    <!-- ========== VITRINE ========== -->
-    <section id="recursos" class="showcase" data-section="showcase">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <span class="eyebrow">Por dentro do app</span>
-          <h2>Feito pra usar no meio do treino</h2>
-          <p>Botões grandes, tela sempre acesa e nada de digitar mais do que o necessário.</p>
-        </div>
-
-        <div class="show-list">
-          <!-- 1. Modo ao vivo -->
-          <article class="show-row">
-            <div class="show-copy reveal">
-              <span class="show-tag"><i>⚡</i>Modo treino ao vivo</span>
-              <h3>Um exercício por vez, sem perder a série de vista</h3>
-              <p>Abra o treino de hoje e o EAFIT vai guiando: séries com campos grandes, a carga da última vez como referência e o descanso começando sozinho quando você marca a série.</p>
-              <ul class="checks">
-                <li>Descanso com alarme, +15s e pular</li>
-                <li>Tela sempre acesa durante o treino</li>
-                <li>Resumo e comparação ao finalizar</li>
-              </ul>
-            </div>
-            <div class="show-visual reveal reveal-d1" aria-hidden="true">
-              <div style="width:100%;max-width:380px">
-                <div class="panel">
-                  <div class="panel-label"><span>Descanso</span><span>Série 2 de 4</span></div>
-                  <div class="rest-big">
-                    <div class="rest-ring">
-                      <svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="54"/><circle class="fg" cx="60" cy="60" r="54" data-ring/></svg>
-                      <div><b data-rest-big>1:30</b><span>de 1:30</span></div>
-                    </div>
-                    <div class="rest-side">
-                      <div class="row"><span class="chip-btn">+15s</span><span class="chip-btn">Pular</span></div>
-                      <div class="rest-next">A seguir<b>Série 3 · 26 kg × 10</b></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="panel pill-row">
-                  <span class="pill">🔆 Tela acesa</span>
-                  <span class="pill">⏱ 32:14 de treino</span>
-                  <span class="pill">✓ 7/16 séries</span>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <!-- 2. Demonstração -->
-          <article class="show-row">
-            <div class="show-copy reveal">
-              <span class="show-tag"><i>▶</i>Demonstração de execução</span>
-              <h3>Na dúvida do movimento, veja antes de fazer</h3>
-              <p>Toque em “Ver execução” na lista ou no modo ao vivo. Os vídeos são curtos, sem som e têm câmera lenta para você reparar no detalhe da técnica.</p>
-              <ul class="checks">
-                <li>200 exercícios com demonstração</li>
-                <li>Vídeos reais com opção de câmera lenta</li>
-                <li>Dica de técnica em cada exercício</li>
-              </ul>
-            </div>
-            <div class="show-visual reveal reveal-d1">
-              <div class="panel">
-                <div class="panel-label"><span>Elevação Lateral com Halteres</span><span>3 × 12</span></div>
-                <div class="demo-video">
-                  <video id="demoVideo" muted loop playsinline preload="none" poster="/app/exercicios/Side_Lateral_Raise/0.webp" aria-label="Vídeo de demonstração da elevação lateral com halteres">
-                    <source src="/app/videos/elevacao-lateral-halteres.mp4" type="video/mp4" />
-                  </video>
-                  <span class="speed" id="demoSpeed" hidden>0,5×</span>
-                </div>
-                <div class="demo-controls">
-                  <button type="button" id="demoPlay" aria-pressed="false">⏸ Pausar</button>
-                  <button type="button" id="demoSlow" aria-pressed="false">🐢 Câmera lenta</button>
-                </div>
-                <p class="credit">Vídeo: Goulart · <a href="https://wger.de" target="_blank" rel="noopener noreferrer">wger.de</a> · CC BY-SA 4.0</p>
-              </div>
-            </div>
-          </article>
-
-          <!-- 3. Evolução -->
-          <article class="show-row">
-            <div class="show-copy reveal">
-              <span class="show-tag"><i>📈</i>Evolução e recordes</span>
-              <h3>Seu progresso em números, não em impressão</h3>
-              <p>Cada série registrada alimenta a evolução de carga por exercício, o volume por treino, o heatmap dos últimos 35 dias e a lista de recordes pessoais.</p>
-              <ul class="checks">
-                <li>Recordes pessoais (PRs) detectados sozinhos</li>
-                <li>Avatar com os músculos trabalhados no dia</li>
-                <li>Conquistas por sequência e constância</li>
-              </ul>
-            </div>
-            <div class="show-visual reveal reveal-d1" aria-hidden="true">
-              <div style="width:100%;max-width:380px">
-                <div class="panel">
-                  <div class="panel-label"><span>Supino Reto · carga máxima</span><span class="m-up">+22,5 kg</span></div>
-                  <svg class="load-chart" viewBox="0 0 340 170">
-                    <g class="grid">
-                      <line x1="30" x2="340" y1="20" y2="20"/><line x1="30" x2="340" y1="70" y2="70"/><line x1="30" x2="340" y1="120" y2="120"/>
-                    </g>
-                    <text x="0" y="24">85</text><text x="0" y="74">70</text><text x="0" y="124">55</text>
-                    <text x="34" y="160">jul</text><text x="150" y="160">ago</text><text x="270" y="160">set</text>
-                    <polyline class="line" points="40,103 68,103 96,95 124,87 152,87 180,70 208,62 236,53 264,53 292,45 320,28"/>
-                    <circle class="pt" cx="40" cy="103" r="3.5"/><circle class="pt" cx="96" cy="95" r="3.5"/><circle class="pt" cx="152" cy="87" r="3.5"/><circle class="pt" cx="208" cy="62" r="3.5"/><circle class="pt" cx="264" cy="53" r="3.5"/>
-                    <circle class="pr" cx="320" cy="28" r="6"/>
-                    <text class="pr-label" x="248" y="18">🏆 82,5 kg</text>
-                  </svg>
-                </div>
-                <div class="panel pr-list">
-                  <div><b>140 kg</b><span>Leg Press 45°</span></div>
-                  <div><b>110 kg</b><span>Levantamento Terra</span></div>
-                  <div><b>36 kg</b><span>Rosca Direta</span></div>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <!-- 4. Plano -->
-          <article class="show-row">
-            <div class="show-copy reveal">
-              <span class="show-tag"><i>🗓️</i>Plano personalizado</span>
-              <h3>Diga seu objetivo. O treino da semana sai pronto.</h3>
-              <p>No cadastro você informa peso, altura, objetivo e nível. O EAFIT monta a divisão da semana com séries, repetições, descanso e técnica — e você ajusta o que quiser no editor.</p>
-              <ul class="checks">
-                <li>6 objetivos e 3 níveis de experiência</li>
-                <li>Troque qualquer exercício por alternativas do mesmo músculo</li>
-                <li>Meta de água calculada pelo seu peso</li>
-              </ul>
-            </div>
-            <div class="show-visual reveal reveal-d1" aria-hidden="true">
-              <div style="width:100%;max-width:380px">
-                <div class="panel">
-                  <div class="panel-label"><span>Objetivo</span></div>
-                  <div class="opt-group">
-                    <span class="opt on">Ganho de massa</span><span class="opt">Força</span><span class="opt">Emagrecimento</span><span class="opt">Definição</span><span class="opt">Saúde</span><span class="opt">Resistência</span>
-                  </div>
-                  <div class="panel-label" style="margin-top:14px"><span>Nível</span></div>
-                  <div class="opt-group"><span class="opt">Iniciante</span><span class="opt on">Intermediário</span><span class="opt">Avançado</span></div>
-                </div>
-                <div class="panel week">
-                  <div class="today"><b>SEG</b>Peito · Ombro · Tríceps<span>7 exerc.</span></div>
-                  <div><b>TER</b>Costas · Bíceps<span>8 exerc.</span></div>
-                  <div><b>QUA</b>Pernas · Quadríceps<span>7 exerc.</span></div>
-                  <div><b>QUI</b>Superiores · Força<span>7 exerc.</span></div>
-                  <div><b>SEX</b>Posterior · Glúteos<span>7 exerc.</span></div>
-                  <div class="rest"><b>SÁB</b>Descanso<span>—</span></div>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <!-- 5. Desafios com amigos -->
-          <article class="show-row">
-            <div class="show-copy reveal">
-              <span class="show-tag"><i>👥</i>Desafios com amigos</span>
-              <h3>Treinar fica mais fácil quando alguém cobra</h3>
-              <p>Crie um desafio, mande o código de convite no WhatsApp e vejam quem treina mais dias no período. Quer algo contínuo? Adicione amigos pelo código e acompanhe o ranking semanal e o feed de treinos.</p>
-              <ul class="checks">
-                <li>Entra quem tem o código, até 20 pessoas</li>
-                <li>Placar de dias treinados, atualizado sozinho</li>
-                <li>Só apelido e pontuação ficam visíveis</li>
-                <li>Amigo só entra com aceite dos dois lados, e você escolhe se sua atividade aparece no feed</li>
-              </ul>
-            </div>
-            <div class="show-visual reveal reveal-d1" aria-hidden="true">
-              <div style="width:100%;max-width:380px">
-                <div class="panel">
-                  <div class="panel-label"><span>Turma da firma</span><span>5 dias restantes</span></div>
-                  <ol class="board">
-                    <li><span>1º Carol</span><b>9 dias</b></li>
-                    <li class="me"><span>2º Você</span><b>8 dias</b></li>
-                    <li><span>3º Rafa</span><b>6 dias</b></li>
-                    <li><span>4º Bruno</span><b>4 dias</b></li>
-                  </ol>
-                </div>
-                <div class="panel pill-row">
-                  <span class="pill">📤 Convidar · K7M2QX</span>
-                  <span class="pill">👥 4 pessoas</span>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <!-- 6. Rotina: pausa, check-in, horario -->
-          <article class="show-row">
-            <div class="show-copy reveal">
-              <span class="show-tag"><i>⏸</i>Respeita a sua rotina</span>
-              <h3>Viajou ou ficou doente? Sua sequência espera por você</h3>
-              <p>Ative o modo pausa por 7, 14 ou 30 dias: a sequência fica protegida e os lembretes silenciam. O check-in de energia, sono e humor ajuda a ajustar o treino do dia.</p>
-              <ul class="checks">
-                <li>Modo pausa sem perder a sequência</li>
-                <li>Check-in diário em 3 toques, com dica do dia</li>
-                <li>Lembrete 1h antes do seu horário de treino</li>
-              </ul>
-            </div>
-            <div class="show-visual reveal reveal-d1" aria-hidden="true">
-              <div style="width:100%;max-width:380px">
-                <div class="panel pause-note">
-                  <span>⏸ Modo pausa até 24/10 — sua sequência está protegida.</span>
-                  <span class="chip-btn">Retomar</span>
-                </div>
-                <div class="panel">
-                  <div class="panel-label"><span>Como você está hoje?</span></div>
-                  <div class="checkin-demo">
-                    <div><span>Energia</span><i>😴</i><i>🥱</i><i>🙂</i><i class="on">😃</i><i>⚡</i></div>
-                    <div><span>Sono</span><i>😵</i><i>😪</i><i class="on">🙂</i><i>😌</i><i>😴</i></div>
-                    <div><span>Humor</span><i>😞</i><i>😕</i><i>😐</i><i class="on">🙂</i><i>😄</i></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <!-- 7. Retrospectiva e medidas -->
-          <article class="show-row">
-            <div class="show-copy reveal">
-              <span class="show-tag"><i>📅</i>Retrospectiva e medidas</span>
-              <h3>Feche o mês sabendo o quanto evoluiu</h3>
-              <p>Veja treinos, tempo, volume, recordes e melhor sequência do mês, compartilhe como imagem e acompanhe cintura, braço e coxa junto com peso e fotos.</p>
-              <ul class="checks">
-                <li>Retrospectiva mensal para compartilhar</li>
-                <li>Medidas corporais com gráfico de evolução</li>
-                <li>Novas conquistas de constância</li>
-              </ul>
-            </div>
-            <div class="show-visual reveal reveal-d1" aria-hidden="true">
-              <div style="width:100%;max-width:380px">
-                <div class="panel">
-                  <div class="panel-label"><span>Retrospectiva · setembro</span><span class="m-up">▲ 18% vs. agosto</span></div>
-                  <div class="pr-list recap-demo">
-                    <div><b>16</b><span>treinos</span></div>
-                    <div><b>12h40</b><span>de treino</span></div>
-                    <div><b>9</b><span>recordes</span></div>
-                  </div>
-                </div>
-                <div class="panel">
-                  <div class="panel-label"><span>Medidas corporais</span></div>
-                  <ul class="measure-demo">
-                    <li><span>Cintura</span><span>90 → 86,5 cm <b>(-3,5)</b></span></li>
-                    <li><span>Braço</span><span>34 → 35,5 cm <b class="up">(+1,5)</b></span></li>
-                    <li><span>Coxa</span><span>56 → 58 cm <b class="up">(+2)</b></span></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <!-- ========== FUNCIONALIDADES ========== -->
     <section id="funcionalidades" data-section="features">
       <div class="wrap">
@@ -1494,24 +411,15 @@
           <h2>Tudo que você precisa pra treinar sério</h2>
           <p>Sem planilha, sem app pago, sem depender de internet.</p>
         </div>
-        <div class="features">
+        <div class="features" data-limit="6">
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><h3>Plano semanal personalizado</h3><p>Treino dividido por dia da semana, montado pelo seu objetivo e nível, com séries, repetições, descanso e técnica.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div><h3>Modo treino ao vivo</h3><p>Tela cheia com um exercício por vez, descanso com alarme e tela sempre acesa enquanto você treina.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></div><h3>Troca de exercício</h3><p>Sem o aparelho ou com desconforto? Troque na hora por alternativas do mesmo músculo e do seu nível.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg></div><h3>Demonstração de execução</h3><p>Vídeos curtos com câmera lenta e imagens do movimento para 200 exercícios.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line><polyline points="8.5 14.5 10.5 16.5 15.5 12"></polyline></svg></div><h3>Histórico e retrospectiva</h3><p>Calendário do mês, tempo, séries e volume, cada sessão comparada com a anterior e uma retrospectiva do mês para compartilhar.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div><h3>Evolução e recordes</h3><p>Evolução de carga por exercício, volume por treino, heatmap de 35 dias e seus recordes pessoais.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg></div><h3>Hidratação</h3><p>Meta diária pelo seu peso, adições rápidas com desfazer, sequência de dias na meta e lembretes.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path></svg></div><h3>Conquistas e sequência</h3><p>Medalhas por constância, sequência de 7 e 14 dias e marcos de 10, 25, 50, 100 e 200 treinos.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div><h3>Fotos, peso e medidas</h3><p>Fotos de progresso, registro de peso e medidas de cintura, braço, coxa e mais, com gráfico da evolução.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><h3>Desafios com amigos</h3><p>Crie um desafio, compartilhe o código de convite e vejam quem treina mais dias no período.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg></div><h3>Modo pausa e check-in</h3><p>Pause por 7, 14 ou 30 dias sem perder a sequência e registre energia, sono e humor em 3 toques.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div><h3>Cardio com cronômetro</h3><p>Esteira, corrida ou bike no plano: cronometre, anote a distância e veja o ritmo médio em min/km.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><h3>Amigos e ranking semanal</h3><p>Adicione amigos pelo código, veja o ranking de dias treinados na semana e reaja aos treinos e recordes no feed.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div><h3>Avisos e lembretes</h3><p>Central de avisos no sino, lembretes de treino e de água e notificações que você liga e desliga quando quiser.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div><h3>Português e inglês</h3><p>Troque o idioma do app no Perfil ou na tela de acesso. Um tutorial guiado mostra o caminho e pode ser revisto quando quiser.</p></div>
-          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg></div><h3>Offline e sincronizado</h3><p>Registre sem internet; quando a conexão volta, tudo sincroniza entre celular, tablet e computador.</p></div>
         </div>
+        <div class="section-more reveal"><a class="btn btn-ghost" href="/recursos/">Ver todos os recursos <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a></div>
       </div>
     </section>
 
@@ -1530,24 +438,28 @@
       </div>
     </section>
 
-    <!-- ========== TELAS REAIS ========== -->
-    <!-- Prints reais do app (conta anonimizada: nome "Ana"). Refazer quando a UI mudar. -->
-    <section data-section="screens">
+    <!-- ========== BIBLIOTECA DE EXERCÍCIOS (páginas geradas por scripts/build-site.mjs) ========== -->
+    <section data-section="library">
       <div class="wrap">
         <div class="section-head reveal">
-          <h2>O app de verdade, sem maquiagem</h2>
-          <p>Telas reais do EAFIT no celular: o treino do dia pronto e a hidratação sob controle.</p>
+          <span class="eyebrow">Biblioteca de exercícios</span>
+          <h2>Cada exercício com demonstração e dica de técnica</h2>
+          <p>Veja a execução, as séries e repetições sugeridas e o ponto de atenção de cada movimento. Escolha um grupo muscular pra começar.</p>
         </div>
-        <div class="shots">
-          <figure class="shot reveal">
-            <img src="img/app-treino.webp" width="560" height="1211" loading="lazy" alt="Tela Treino do EAFIT: treino de hoje Costas e Bíceps com botão Começar treino, semana atual e lista dos dias" />
-            <figcaption><strong>Treino do dia pronto</strong>Abra, toque em começar e vá marcando as séries.</figcaption>
-          </figure>
-          <figure class="shot reveal reveal-d1">
-            <img src="img/app-agua.webp" width="560" height="1211" loading="lazy" alt="Tela Água do EAFIT: 2,3 litros de 3,5 litros, atalhos de copo, caneca, garrafa e squeeze e gráfico dos últimos 14 dias" />
-            <figcaption><strong>Hidratação sem esforço</strong>Meta pelo seu peso e registro em um toque.</figcaption>
-          </figure>
-        </div>
+        <ul class="chip-row reveal">
+          <li><a class="chip" href="/exercicios/#peito">Peito</a></li>
+          <li><a class="chip" href="/exercicios/#costas">Costas</a></li>
+          <li><a class="chip" href="/exercicios/#ombro">Ombros</a></li>
+          <li><a class="chip" href="/exercicios/#biceps">Bíceps</a></li>
+          <li><a class="chip" href="/exercicios/#triceps">Tríceps</a></li>
+          <li><a class="chip" href="/exercicios/#quadriceps">Quadríceps</a></li>
+          <li><a class="chip" href="/exercicios/#posterior_coxa">Posterior de coxa</a></li>
+          <li><a class="chip" href="/exercicios/#gluteos">Glúteos</a></li>
+          <li><a class="chip" href="/exercicios/#panturrilha">Panturrilha</a></li>
+          <li><a class="chip" href="/exercicios/#core">Abdômen e core</a></li>
+          <li><a class="chip" href="/exercicios/#cardio">Cardio</a></li>
+        </ul>
+        <div class="section-more reveal"><a class="btn btn-ghost" href="/exercicios/">Abrir a biblioteca <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a></div>
       </div>
     </section>
 
@@ -1560,167 +472,13 @@
           <p>Acompanhe todos os seus alunos num só lugar, envie o treino direto para o app deles e mantenha a turma motivada, sem planilha e sem grupo bagunçado.</p>
         </div>
 
-        <div class="show-row personal-row">
-          <div class="show-copy reveal">
-            <span class="show-tag"><i>🧑‍🏫</i>Modo Personal</span>
-            <h3>Saiba quem precisa de você antes de o aluno sumir</h3>
-            <p>No modo Personal você vê a frequência, a sequência, o peso e as medidas de cada aluno, com um alerta para quem está parado, e age na hora com treino novo ou recado.</p>
-            <ul class="checks">
-              <li>Lista de alunos com quem precisa de atenção no topo</li>
-              <li>Ficha com frequência, evolução de peso, medidas e cargas</li>
-              <li>Fotos de evolução (se o aluno compartilhar) e sugestão de quando subir a carga</li>
-              <li>Agenda de aulas: o aluno confirma pelo app e os dois recebem lembrete antes</li>
-              <li>O aluno autoriza o vínculo e pode encerrá-lo quando quiser</li>
-            </ul>
-          </div>
-          <div class="reveal reveal-d1 hero-visual p-visual" data-carousel>
-            <div class="phone" role="img" aria-label="Prévia das telas do modo Personal do EAFIT">
-              <div class="phone__screen" aria-hidden="true">
-
-                <!-- Alunos -->
-                <div class="scr is-active" id="pscr-0">
-                  <div class="m-status"><span>9:41</span><i></i></div>
-                <div class="m-topbar"><b>🧑‍🏫 EAFIT <span class="m-ptag">Personal</span></b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
-                  <div class="m-body">
-                    <div class="m-card m-tcode">
-                      <div><span class="m-label">Seu código de convite</span><b>P7K2QX</b></div>
-                      <span class="m-pill">📤 Convidar</span>
-                    </div>
-                    <div class="m-tsum"><span><b>12</b> alunos</span><span class="warn"><b>2</b> precisam de atenção</span></div>
-                    <div class="m-card m-crow"><div><b>Rafa</b><span class="m-tb m-tb--risco">Sumido há 9 dias</span></div><small>0 treinos em 7 dias · 3 em 30</small></div>
-                    <div class="m-card m-crow"><div><b>Bruno</b><span class="m-tb m-tb--atencao">Parado há 5 dias</span></div><small>1 treino em 7 dias · 8 em 30</small></div>
-                    <div class="m-card m-crow"><div><b>Carol</b><span class="m-tb m-tb--ok">Treinou hoje</span></div><small>5 treinos em 7 dias · 19 em 30</small></div>
-                  </div>
-                  <div class="m-tabbar m-tabbar--4"><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Alunos</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>Turma</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Recados</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Conta</span></div>
-                </div>
-
-                <!-- Ficha do aluno -->
-                <div class="scr" id="pscr-1">
-                  <div class="m-status"><span>9:41</span><i></i></div>
-                <div class="m-topbar"><b>‹ Rafa</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
-                  <div class="m-body">
-                    <div class="m-card">
-                      <span class="m-label">Frequência</span>
-                      <div class="m-sum m-sum--4">
-                        <div><b>2/4</b><span>7 dias (meta)</span></div>
-                        <div><b>9</b><span>30 dias</span></div>
-                        <div><b>🔥 2</b><span>sequência</span></div>
-                        <div><b>05/10</b><span>último</span></div>
-                      </div>
-                    </div>
-                    <div class="m-card">
-                      <span class="m-label">Peso · <span class="m-up">-2,4 kg</span></span>
-                      <svg class="m-chart" viewBox="0 0 260 70" preserveAspectRatio="none">
-                        <path d="M0 14 L40 18 L80 26 L120 30 L160 40 L200 46 L260 54" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linejoin="round"/>
-                      </svg>
-                    </div>
-                    <div class="m-card">
-                      <span class="m-label">Medidas</span>
-                      <div class="m-delta">Cintura 90 → 86,5 cm <span class="m-up">(-3,5)</span></div>
-                      <div class="m-delta">Braço 34 → 35,5 cm <span class="m-up">(+1,5)</span></div>
-                    </div>
-                    <div class="m-foot"><span class="next">📋 Editar / enviar novo treino</span></div>
-                  </div>
-                  <div class="m-tabbar m-tabbar--4"><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Alunos</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>Turma</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Recados</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Conta</span></div>
-                </div>
-
-                <!-- Montar treino -->
-                <div class="scr" id="pscr-2">
-                  <div class="m-status"><span>9:41</span><i></i></div>
-                <div class="m-topbar"><b>📋 Treino de Rafa</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
-                  <div class="m-body">
-                    <div class="m-card">
-                      <span class="m-label">Nome do plano</span>
-                      <div class="m-field">Hipertrofia — ciclo 1</div>
-                      <span class="m-label" style="margin-top:6px">Dias</span>
-                      <div class="m-dchips"><span class="on">Seg</span><span>Ter</span><span class="on">Qua</span><span>Qui</span><span class="on">Sex</span><span>Sáb</span><span>Dom</span></div>
-                    </div>
-                    <div class="m-card">
-                      <span class="m-label">Segunda · Peito / Tríceps</span>
-                      <div class="m-ex">
-                        <div><b>Supino Reto</b><span>4 × 8–10</span><em>▲▼</em></div>
-                        <div><b>Supino Inclinado</b><span>4 × 8–10</span><em>▲▼</em></div>
-                        <div><b>Tríceps Corda</b><span>3 × 12</span><em>▲▼</em></div>
-                      </div>
-                      <div class="m-pill m-pill--wide">+ Exercício</div>
-                    </div>
-                    <div class="m-foot"><span class="next">📤 Enviar treino para o aluno</span></div>
-                  </div>
-                  <div class="m-tabbar m-tabbar--4"><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Alunos</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>Turma</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Recados</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Conta</span></div>
-                </div>
-
-                <!-- Recados -->
-                <div class="scr" id="pscr-3">
-                  <div class="m-status"><span>9:41</span><i></i></div>
-                <div class="m-topbar"><b>🧑‍🏫 EAFIT <span class="m-ptag">Personal</span></b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
-                  <div class="m-body">
-                    <div class="m-card">
-                      <span class="m-label">💬 Enviar recado</span>
-                      <div class="m-dchips"><span class="on">Todos</span><span>Rafa</span><span>Bruno</span><span>Carol</span></div>
-                      <div class="m-field m-field--area">Bora voltar amanhã? O treino de pernas já está no seu app. 💪</div>
-                      <div class="m-pill m-pill--wide">Enviar para todos</div>
-                    </div>
-                    <div class="m-card">
-                      <span class="m-label">Enviados</span>
-                      <div class="m-sent"><div><b>Para 12 alunos</b><small>hoje</small></div><p>Novo desafio da turma: "Outubro firme"…</p><small class="m-up">9/12 leram</small></div>
-                      <div class="m-sent"><div><b>📋 Para Rafa</b><small>ontem</small></div><p>Seu personal montou um novo treino para você.</p><small class="m-up">1/1 leram</small></div>
-                    </div>
-                  </div>
-                  <div class="m-tabbar m-tabbar--4"><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Alunos</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>Turma</span><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Recados</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Conta</span></div>
-                </div>
-
-                <!-- Turma -->
-                <div class="scr" id="pscr-4">
-                  <div class="m-status"><span>9:41</span><i></i></div>
-                <div class="m-topbar"><b>🧑‍🏫 EAFIT <span class="m-ptag">Personal</span></b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
-                  <div class="m-body">
-                    <div class="m-card">
-                      <span class="m-label">🏆 Desafios da turma</span>
-                      <div class="m-chal">
-                        <b>Outubro firme</b>
-                        <small>12 dias restantes · 12 alunos</small>
-                        <div class="m-board">
-                          <div><span>1º Carol</span><b>11</b></div>
-                          <div><span>2º Bruno</span><b>9</b></div>
-                          <div><span>3º Lia</span><b>8</b></div>
-                          <div><span>…</span><b></b></div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="m-card">
-                      <span class="m-label">Novo desafio</span>
-                      <div class="m-field">Nome do desafio</div>
-                      <div class="m-dchips"><span>7 dias</span><span class="on">14 dias</span><span>30 dias</span></div>
-                      <div class="m-pill m-pill--wide">Criar e avisar alunos</div>
-                    </div>
-                  </div>
-                  <div class="m-tabbar m-tabbar--4"><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Alunos</span><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>Turma</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Recados</span><span class=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Conta</span></div>
-                </div>
-
-              </div>
-            </div>
-
-            <div class="screen-tabs" role="tablist" aria-label="Telas do modo Personal">
-              <button class="screen-tab" role="tab" aria-selected="true" aria-controls="pscr-0" data-tab="0">Alunos<span class="prog"></span></button>
-              <button class="screen-tab" role="tab" aria-selected="false" aria-controls="pscr-1" data-tab="1">Ficha<span class="prog"></span></button>
-              <button class="screen-tab" role="tab" aria-selected="false" aria-controls="pscr-2" data-tab="2">Treino<span class="prog"></span></button>
-              <button class="screen-tab" role="tab" aria-selected="false" aria-controls="pscr-3" data-tab="3">Recados<span class="prog"></span></button>
-              <button class="screen-tab" role="tab" aria-selected="false" aria-controls="pscr-4" data-tab="4">Turma<span class="prog"></span></button>
-            </div>
-          </div>
-        </div>
-
         <div class="personal-cards">
           <div class="card reveal"><div class="icon-badge">📋</div><h3>Monte e envie treinos</h3><p>Escolha os dias, os exercícios e a duração. O treino vira o plano do aluno, sem ser trocado sozinho pelo app.</p></div>
           <div class="card reveal reveal-d1"><div class="icon-badge">💬</div><h3>Recados e conversa</h3><p>Fale com um aluno ou com a turma toda, veja quem já leu e receba a resposta dele, tudo com notificação.</p></div>
           <div class="card reveal reveal-d2"><div class="icon-badge">🏆</div><h3>Desafios da turma</h3><p>Crie um desafio e todos os alunos entram na hora. Vence quem treinar mais dias.</p></div>
           <div class="card reveal reveal-d3"><div class="icon-badge">🔁</div><h3>Seu app, nos dois modos</h3><p>Troque para o modo aluno e treine também. Mesma conta, mesmo app.</p></div>
         </div>
-
-        <div class="personal-cta reveal">
-          <p><strong>Como ter acesso?</strong> O modo Personal é liberado pela equipe do EAFIT na sua conta. Crie sua conta grátis e peça a liberação.</p>
-          <a class="btn btn-primary" href="/app/">Criar minha conta</a>
-        </div>
+        <div class="section-more reveal"><a class="btn btn-ghost" href="/personal/">Conhecer o modo Personal <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a></div>
       </div>
     </section>
 
@@ -1759,52 +517,14 @@
           <h2>Perguntas frequentes</h2>
           <p>Ainda em dúvida? As respostas mais comuns estão aqui.</p>
         </div>
-        <div class="faq-list">
+        <div class="faq-list" data-limit="5">
           <details><summary>É grátis mesmo?</summary><p>Sim. Não tem plano pago, não tem anúncio e não pede cartão de crédito.</p></details>
           <details><summary>Preciso baixar na loja de apps?</summary><p>Não. O EAFIT é um app web instalável: abra no navegador e, no Android, toque em “Instalar app” ou “Adicionar à tela inicial”; no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”. Ele passa a abrir em tela cheia, como qualquer app.</p></details>
           <details><summary>Funciona sem internet na academia?</summary><p>Funciona. Você registra séries e água offline e, quando a conexão volta, tudo é sincronizado sozinho com a sua conta.</p></details>
           <details><summary>Posso mudar o treino que o app montou?</summary><p>Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso. E na hora de treinar, o botão “Trocar exercício” sugere alternativas do mesmo músculo e do seu nível.</p></details>
           <details><summary>Como funcionam os desafios com amigos?</summary><p>Você cria um desafio (7, 14 ou 30 dias), recebe um código e manda para quem quiser. Quem entra pelo código participa, e vence quem treinar mais dias no período. Os outros só veem seu apelido e sua pontuação.</p></details>
-          <details><summary>E se eu viajar ou ficar doente?</summary><p>Ative o modo pausa no Perfil por 7, 14 ou 30 dias. A sequência de treinos fica protegida e os lembretes de treino são silenciados até você voltar.</p></details>
-          <details><summary>Serve para quem está começando?</summary><p>Serve. No cadastro você escolhe entre iniciante, intermediário e avançado, e os exercícios têm demonstração de execução e dica de técnica.</p></details>
-          <details><summary>O que acontece com os meus dados?</summary><p>Ficam na sua conta, protegidos por login. No Perfil você pode exportar tudo ou excluir a conta quando quiser. Detalhes na <a href="/app/legal/privacidade.html">Política de Privacidade</a>.</p></details>
-          <details><summary>Sou personal trainer. Posso usar o EAFIT com meus alunos?</summary><p>Pode. O modo Personal é liberado pela equipe do EAFIT na sua conta. Você passa seu código de convite, o aluno digita no app e autoriza, e aí você acompanha treinos, peso e medidas, monta e envia treinos, manda recados e cria desafios para a turma.</p></details>
-          <details><summary>Como funciona a agenda de aulas com o personal?</summary><p>O personal marca a aula com dia, horário e local, e você recebe um aviso para confirmar ou recusar pelo app. Depois de confirmada, você e o personal recebem um lembrete na véspera e outro pouco antes da aula.</p></details>
-          <details><summary>O que o meu personal vê dos meus dados?</summary><p>Só depois que você digita o código dele e autoriza: treinos, peso, medidas, check-ins e desconfortos. Suas fotos de evolução ficam privadas, a menos que você ligue o compartilhamento à parte em Perfil → Meu personal. Você pode desligar ou encerrar o vínculo quando quiser.</p></details>
-          <details><summary>Como adiciono amigos e vejo o ranking?</summary><p>Cada pessoa tem um código de amigo no app. Você digita o código do amigo, ele aceita o pedido e vocês passam a se ver no ranking semanal de dias treinados e no feed de treinos, recordes e sequências, onde dá pra reagir com 💪 🔥 👏. Só aparecem apelido e atividade, e você pode desligar o compartilhamento quando quiser.</p></details>
-          <details><summary>Dá para registrar cardio?</summary><p>Dá. Itens como esteira, corrida e bike não têm séries: você usa o cronômetro (ou digita a duração), informa a distância se quiser e o app calcula o ritmo médio em min/km.</p></details>
-          <details><summary>O app tem versão em inglês?</summary><p>Tem. Troque entre português e inglês no Perfil ou na tela de acesso. No primeiro uso, um tutorial guiado mostra os principais recursos e pode ser revisto no Perfil.</p></details>
         </div>
-      </div>
-    </section>
-
-    <!-- ========== COMO INSTALAR ========== -->
-    <section id="instalar" data-section="install">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <h2>Instale em 2 toques</h2>
-          <p>Sem loja de apps. O EAFIT abre em tela cheia, como qualquer aplicativo.</p>
-        </div>
-        <div class="install-grid">
-          <div class="install-card reveal">
-            <h3>🤖 Android (Chrome)</h3>
-            <ol>
-              <li>Abra <a href="/app/">eafit.com.br/app</a> no Chrome.</li>
-              <li>Toque em <strong>Instalar app</strong> (ou menu ⋮ → <strong>Adicionar à tela inicial</strong>).</li>
-              <li>Pronto: o ícone aparece junto dos seus apps.</li>
-            </ol>
-            <button type="button" class="btn btn-primary" id="install-btn" hidden>Instalar agora</button>
-          </div>
-          <div class="install-card reveal reveal-d1">
-            <h3>🍎 iPhone (Safari)</h3>
-            <ol>
-              <li>Abra <a href="/app/">eafit.com.br/app</a> no Safari.</li>
-              <li>Toque em <strong>Compartilhar</strong> (quadrado com seta).</li>
-              <li>Escolha <strong>Adicionar à Tela de Início</strong>.</li>
-            </ol>
-          </div>
-        </div>
-        <p class="install-note">No computador, use o ícone de instalar na barra de endereço do Chrome ou Edge.</p>
+        <div class="section-more reveal"><a class="btn btn-ghost" href="/ajuda/#faq">Ver todas as perguntas <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a></div>
       </div>
     </section>
 
@@ -1817,30 +537,47 @@
           <a class="btn btn-primary" href="/app/">Começar agora
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
           </a>
-          <p class="hint">Dica: no celular, <a href="#instalar">adicione à tela inicial</a> e use como app.</p>
+          <p class="hint">Dica: no celular, <a href="/ajuda/#instalar">adicione à tela inicial</a> e use como app.</p>
         </div>
       </div>
     </section>
   </main>
 
+  <!-- site-footer: igual em todas as páginas -->
   <footer>
     <div class="wrap footer-inner">
       <div class="footer-brand">
-        <a class="logo" href="#top"><img src="/app/icon.svg" alt="" width="30" height="30" />EAFIT</a>
+        <a class="logo" href="/"><img src="/app/icon.svg" alt="" width="30" height="30" />EAFIT</a>
         <p>Seu treino, sempre com você.</p>
       </div>
-      <ul class="footer-links">
-        <li><a href="/app/">Abrir app</a></li>
-        <li><a href="#recursos">Recursos</a></li>
-        <li><a href="#funcionalidades">Funcionalidades</a></li>
-        <li><a href="#personal">Para personais</a></li>
-        <li><a href="#depoimentos">Depoimentos</a></li>
-        <li><a href="#instalar">Instalar</a></li>
-        <li><a href="#faq">Dúvidas</a></li>
-        <li><a href="/app/legal/termos.html">Termos de Uso</a></li>
-        <li><a href="/app/legal/privacidade.html">Privacidade</a></li>
-        <li><a href="mailto:contato.eafit@gmail.com">Contato</a></li>
-      </ul>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h2>App</h2>
+          <ul>
+            <li><a href="/app/">Abrir app</a></li>
+            <li><a href="/recursos/">Recursos</a></li>
+            <li><a href="/personal/">Para personais</a></li>
+            <li><a href="/exercicios/">Exercícios</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2>Ajuda</h2>
+          <ul>
+            <li><a href="/ajuda/">Central de ajuda</a></li>
+            <li><a href="/ajuda/#instalar">Como instalar</a></li>
+            <li><a href="/ajuda/#faq">Perguntas frequentes</a></li>
+            <li><a href="/sobre/#contato">Contato</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h2>EAFIT</h2>
+          <ul>
+            <li><a href="/sobre/">Sobre</a></li>
+            <li><a href="/app/legal/termos.html">Termos de Uso</a></li>
+            <li><a href="/app/legal/privacidade.html">Privacidade</a></li>
+          </ul>
+        </div>
+      </div>
       <p class="footer-credits footer-privacy">
         Seus dados ficam na sua conta, protegidos por login (LGPD): você pode exportar ou excluir tudo quando quiser, no Perfil.
         Dúvidas ou suporte: <a href="mailto:contato.eafit@gmail.com">contato.eafit@gmail.com</a>.
@@ -1853,6 +590,7 @@
   </footer>
 
   <div class="sticky-cta" id="sticky-cta" aria-hidden="true"><a class="btn btn-primary" href="/app/" tabindex="-1">Começar grátis</a></div>
+  <!-- /site-footer -->
 
   <!-- Ícones da barra inferior do app (mesmos de app-react/src/components/BottomNav.jsx) -->
   <template id="tpl-tabbar">
@@ -1862,670 +600,5 @@
     <span data-key="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>Evolução</span>
     <span data-key="perfil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Perfil</span>
   </template>
-
-  <script>
-    (function () {
-      var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      // ---------- barra inferior das telas do celular ----------
-      var tpl = document.getElementById('tpl-tabbar');
-      document.querySelectorAll('[data-tabbar]').forEach(function (bar) {
-        bar.appendChild(tpl.content.cloneNode(true));
-        var on = bar.querySelector('[data-key="' + bar.getAttribute('data-tabbar') + '"]');
-        if (on) on.classList.add('on');
-      });
-
-      // ---------- nav com borda ao rolar ----------
-      var nav = document.querySelector('header.nav');
-      function onScroll() { nav.classList.toggle('is-scrolled', window.scrollY > 8); }
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
-
-      // ---------- carrossel de telas do celular (hero e modo Personal) ----------
-      function initCarousel(root, onShow) {
-        var DUR = 5000;
-        var screens = root.querySelectorAll('.scr');
-        var tabs = root.querySelectorAll('.screen-tab');
-        var current = 0, timer = null, paused = false, inView = true;
-
-        function show(i) {
-          current = i;
-          screens.forEach(function (s, k) { s.classList.toggle('is-active', k === i); });
-          tabs.forEach(function (t, k) {
-            t.setAttribute('aria-selected', k === i ? 'true' : 'false');
-            t.tabIndex = k === i ? 0 : -1;
-            var p = t.querySelector('.prog');
-            p.classList.remove('run');
-            void p.offsetWidth; // reinicia a animação da barrinha
-            if (k === i && !reduceMotion && !paused) p.classList.add('run');
-          });
-          if (onShow) onShow(i);
-        }
-        function schedule() {
-          clearTimeout(timer);
-          if (reduceMotion || paused || !inView) return;
-          timer = setTimeout(function () { show((current + 1) % screens.length); schedule(); }, DUR);
-        }
-        tabs.forEach(function (tab, i) {
-          tab.style.setProperty('--dur', DUR + 'ms');
-          tab.addEventListener('click', function () { paused = true; clearTimeout(timer); show(i); });
-          tab.addEventListener('keydown', function (e) {
-            var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-            if (!d) return;
-            e.preventDefault();
-            var n = (current + d + tabs.length) % tabs.length;
-            paused = true; clearTimeout(timer); show(n); tabs[n].focus();
-          });
-        });
-        if ('IntersectionObserver' in window) {
-          new IntersectionObserver(function (entries) {
-            inView = entries[0].isIntersecting;
-            if (inView) schedule(); else clearTimeout(timer);
-          }).observe(root);
-        }
-      }
-      var heroVisual = document.querySelector('.hero-visual:not([data-carousel])');
-      if (heroVisual) initCarousel(heroVisual, function (i) { if (i === 0) startLiveRest(); });
-      document.querySelectorAll('[data-carousel]').forEach(function (root) { initCarousel(root); });
-
-      // ---------- descanso contando (celular + vitrine) ----------
-      function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
-      function countdown(total, onTick) {
-        var left = total, id = null;
-        function tick() { onTick(left, total); left = left <= 0 ? total : left - 1; }
-        return {
-          start: function () { if (id || reduceMotion) return; tick(); id = setInterval(tick, 1000); },
-          stop: function () { clearInterval(id); id = null; },
-        };
-      }
-
-      var restEl = document.querySelector('[data-rest]');
-      var restBar = document.querySelector('[data-rest-bar]');
-      var clockEl = document.querySelector('[data-clock]');
-      var clockSec = 32 * 60 + 14;
-      var liveRest = countdown(90, function (left, total) {
-        restEl.textContent = fmt(left);
-        restBar.style.transform = 'scaleX(' + (left / total) + ')';
-        clockSec++;
-        clockEl.textContent = fmt(clockSec);
-      });
-      function startLiveRest() { liveRest.start(); }
-      if (!reduceMotion) startLiveRest();
-
-      var ring = document.querySelector('[data-ring]');
-      var bigEl = document.querySelector('[data-rest-big]');
-      var C = 2 * Math.PI * 54;
-      var bigRest = countdown(90, function (left, total) {
-        bigEl.textContent = fmt(left);
-        ring.style.strokeDashoffset = String(C * (1 - left / total));
-      });
-
-      // ---------- vídeo de demonstração ----------
-      var video = document.getElementById('demoVideo');
-      var playBtn = document.getElementById('demoPlay');
-      var slowBtn = document.getElementById('demoSlow');
-      var speedTag = document.getElementById('demoSpeed');
-      var userPaused = false;
-      function syncPlayBtn() {
-        var playing = !video.paused;
-        playBtn.textContent = playing ? '⏸ Pausar' : '▶ Reproduzir';
-      }
-      playBtn.addEventListener('click', function () {
-        if (video.paused) { userPaused = false; video.play().catch(function () {}); }
-        else { userPaused = true; video.pause(); }
-      });
-      slowBtn.addEventListener('click', function () {
-        var slow = video.playbackRate === 1;
-        video.playbackRate = slow ? 0.5 : 1;
-        slowBtn.setAttribute('aria-pressed', String(slow));
-        speedTag.hidden = !slow;
-      });
-      video.addEventListener('play', syncPlayBtn);
-      video.addEventListener('pause', syncPlayBtn);
-      syncPlayBtn();
-
-      // ---------- observadores de visibilidade ----------
-      function observeReveal(root) {
-        var els = (root || document).querySelectorAll('.reveal:not(.visible)');
-        if (!('IntersectionObserver' in window) || reduceMotion) {
-          els.forEach(function (el) { el.classList.add('visible'); });
-          return;
-        }
-        els.forEach(function (el) { revealIO.observe(el); });
-      }
-      var revealIO = 'IntersectionObserver' in window && new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('visible');
-          revealIO.unobserve(entry.target);
-        });
-      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-      observeReveal();
-      window.__eafitObserveReveal = observeReveal;
-
-      if ('IntersectionObserver' in window) {
-        var ringPanel = ring.closest('.show-visual');
-        new IntersectionObserver(function (entries) {
-          if (entries[0].isIntersecting) bigRest.start(); else bigRest.stop();
-        }, { threshold: 0.3 }).observe(ringPanel);
-
-        // Vídeo só baixa/toca quando aparece na tela (preload="none").
-        new IntersectionObserver(function (entries) {
-          if (entries[0].isIntersecting) {
-            if (!userPaused && !reduceMotion) video.play().catch(function () {});
-          } else if (!video.paused) {
-            video.pause();
-          }
-        }, { threshold: 0.4 }).observe(video);
-      }
-
-      show(0);
-      schedule();
-    })();
-  </script>
-
-  <script>
-    // Substitui o conteúdo estático acima (fallback pra SEO / JS desligado /
-    // fetch indisponível) pelo que o admin salvou em public.landing_content
-    // via app-admin/src/pages/LandingEditor.jsx. Chave anon pública — mesma
-    // exposta no bundle do app (app-react/.env VITE_SUPABASE_ANON_KEY),
-    // protegida só pela RLS (select liberado, insert/update exige is_admin()).
-    (function () {
-      var SUPABASE_URL = 'https://btzdetvoneyhzthsmdrp.supabase.co';
-      var SUPABASE_ANON_KEY = 'sb_publishable_NJWhkVt39gqzkAcmvmhw_g_9coJjxnb';
-
-      // Chaves precisam bater com ICON_OPTIONS em app-admin/src/pages/LandingEditor.jsx.
-      var ICONS = {
-        cloud: '<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>',
-        download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>',
-        'wifi-off': '<path d="M1 1l22 22"></path><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line>',
-        tag: '<path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>',
-        activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
-        droplet: '<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>',
-        chart: '<line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>',
-        user: '<circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>',
-        zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>',
-        play: '<circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon>',
-        calendar: '<rect x="3" y="4" width="18" height="17" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line><polyline points="8.5 14.5 10.5 16.5 15.5 12"></polyline>',
-        trophy: '<path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path>',
-        camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle>',
-        users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>',
-        pause: '<circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line>',
-        bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path>',
-        globe: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>',
-        repeat: '<polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path>',
-      };
-
-      function svgIcon(key, size) {
-        size = size || 22;
-        return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[key] || ICONS.activity) + '</svg>';
-      }
-
-      function esc(s) {
-        var div = document.createElement('div');
-        div.textContent = s == null ? '' : String(s);
-        return div.innerHTML;
-      }
-
-      function hexToRgb(hex) {
-        var clean = hex.replace('#', '');
-        if (clean.length === 3) clean = clean.split('').map(function (c) { return c + c; }).join('');
-        var num = parseInt(clean, 16);
-        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
-      }
-
-      function applyPrimaryColor(hex) {
-        if (!hex || !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex)) return;
-        var rgb = hexToRgb(hex);
-        var lighten = function (v) { return Math.min(255, Math.round(v + (255 - v) * 0.2)); };
-        var hoverHex = '#' + [lighten(rgb.r), lighten(rgb.g), lighten(rgb.b)]
-          .map(function (v) { return v.toString(16).padStart(2, '0'); }).join('');
-        var root = document.documentElement.style;
-        root.setProperty('--primary', hex);
-        root.setProperty('--primary-h', hoverHex);
-        root.setProperty('--primary-glow', 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',.18)');
-      }
-
-      function renderHead(section, el) {
-        var head = el.querySelector('.section-head');
-        if (!head) return;
-        var h2 = head.querySelector('h2'); if (h2 && section.title) h2.textContent = section.title;
-        var p = head.querySelector('p'); if (p) p.textContent = section.subtitle || '';
-      }
-
-      function renderHero(section, el) {
-        var badge = el.querySelector('.badge');
-        if (badge) badge.innerHTML = '<span class="dot"></span> ' + esc(section.badge);
-        var h1 = el.querySelector('h1');
-        if (h1) h1.innerHTML = esc(section.titleTop) + '<br />' + esc(section.titleBottom) + ' <span class="grad">' + esc(section.titleHighlight) + '</span>';
-        var lead = el.querySelector('.lead');
-        if (lead) lead.textContent = section.lead || '';
-        var actions = el.querySelectorAll('.hero-actions .btn');
-        if (actions[0]) actions[0].textContent = section.ctaPrimaryLabel || actions[0].textContent;
-        if (actions[1]) actions[1].textContent = section.ctaSecondaryLabel || actions[1].textContent;
-      }
-
-      function renderHighlights(section, el) {
-        el.innerHTML = (section.items || []).map(function (item) {
-          return '<div class="highlight">' + svgIcon(item.icon, 20) + esc(item.label) + '</div>';
-        }).join('');
-      }
-
-      function renderCompare(section, el) {
-        renderHead(section, el);
-        var bad = el.querySelector('.compare-col:not(.good)');
-        if (bad) {
-          var badTag = bad.querySelector('.compare-tag'); if (badTag) badTag.textContent = section.badLabel || '';
-          var badUl = bad.querySelector('ul');
-          if (badUl) badUl.innerHTML = (section.badItems || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
-        }
-        var good = el.querySelector('.compare-col.good');
-        if (good) {
-          var goodTag = good.querySelector('.compare-tag'); if (goodTag) goodTag.textContent = section.goodLabel || '';
-          var goodUl = good.querySelector('ul');
-          if (goodUl) goodUl.innerHTML = (section.goodItems || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
-        }
-      }
-
-      function renderFeatures(section, el) {
-        renderHead(section, el);
-        var grid = el.querySelector('.features');
-        if (grid) {
-          grid.innerHTML = (section.items || []).map(function (item) {
-            return '<div class="card reveal"><div class="icon-badge">' + svgIcon(item.icon) + '</div><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
-          }).join('');
-        }
-      }
-
-      function renderSteps(section, el) {
-        renderHead(section, el);
-        var grid = el.querySelector('.steps');
-        if (grid) {
-          grid.innerHTML = (section.items || []).map(function (item, i) {
-            return '<div class="step reveal"><span class="num">' + (i + 1) + '</span><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
-          }).join('');
-        }
-      }
-
-      function renderFaq(section, el) {
-        renderHead(section, el);
-        var list = el.querySelector('.faq-list');
-        if (list && Array.isArray(section.items)) {
-          list.innerHTML = section.items.map(function (item) {
-            return '<details><summary>' + esc(item.question) + '</summary><p>' + esc(item.answer) + '</p></details>';
-          }).join('');
-        }
-      }
-
-      function renderTestimonials(section, el) {
-        renderHead(section, el);
-        var grid = el.querySelector('.quotes');
-        if (grid && Array.isArray(section.items)) {
-          grid.innerHTML = section.items.map(function (item, i) {
-            var initial = esc(String(item.name || '?').trim().charAt(0).toUpperCase());
-            return '<figure class="quote reveal' + (i % 3 ? ' reveal-d' + (i % 3) : '') + '"><div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>' +
-              '<blockquote>“' + esc(item.text) + '”</blockquote>' +
-              '<figcaption><span class="avatar" aria-hidden="true">' + initial + '</span><span class="who"><strong>' + esc(item.name) + '</strong><span>' + esc(item.role) + '</span></span></figcaption></figure>';
-          }).join('');
-        }
-      }
-
-      function renderAudience(section, el) {
-        renderHead(section, el);
-        var grid = el.querySelector('.features');
-        if (grid) {
-          grid.innerHTML = (section.items || []).map(function (item) {
-            return '<div class="card reveal"><div class="icon-badge">' + svgIcon(item.icon) + '</div><h3>' + esc(item.title) + '</h3><p>' + esc(item.description) + '</p></div>';
-          }).join('');
-        }
-      }
-
-      function renderCta(section, el) {
-        var band = el.querySelector('.cta-band');
-        if (!band) return;
-        var h2 = band.querySelector('h2'); if (h2) h2.textContent = section.title || '';
-        var p = band.querySelector('p'); if (p) p.textContent = section.subtitle || '';
-        var btn = band.querySelector('.btn');
-        if (btn && section.ctaLabel) btn.firstChild.textContent = section.ctaLabel + ' ';
-      }
-
-      var RENDERERS = {
-        hero: renderHero, highlights: renderHighlights, compare: renderCompare,
-        showcase: renderHead, features: renderFeatures, steps: renderSteps, faq: renderFaq, cta: renderCta,
-        testimonials: renderTestimonials, audience: renderAudience, install: renderHead,
-      };
-
-      function applyContent(content) {
-        if (!content || !Array.isArray(content.sections)) return;
-        if (content.theme && content.theme.primaryColor) applyPrimaryColor(content.theme.primaryColor);
-        var main = document.getElementById('top');
-        var defaultOrder = Array.prototype.slice.call(main.querySelectorAll(':scope > [data-section]'));
-        var order = [];
-
-        content.sections.forEach(function (section) {
-          var el = main.querySelector(':scope > [data-section="' + section.id + '"]');
-          if (!el) return;
-          el.style.display = section.enabled === false ? 'none' : '';
-          var renderer = RENDERERS[section.type];
-          if (renderer && section.enabled !== false) renderer(section, el);
-          order.push(el);
-        });
-
-        // Seções que existem no HTML mas não no content (ex.: seção nova
-        // antes da migration rodar) ficam logo depois de quem as precedia
-        // por padrão, em vez de pular pro topo da página.
-        defaultOrder.forEach(function (el, i) {
-          if (order.indexOf(el) !== -1) return;
-          var prev = i > 0 ? order.indexOf(defaultOrder[i - 1]) : -1;
-          order.splice(prev + 1, 0, el);
-        });
-        order.forEach(function (el) { main.appendChild(el); });
-
-        if (window.__eafitObserveReveal) window.__eafitObserveReveal(main);
-      }
-
-      // ---------- instalar (PWA) + CTA fixo no celular ----------
-      (function () {
-        var installBtn = document.getElementById('install-btn');
-        var deferred = null;
-        window.addEventListener('beforeinstallprompt', function (e) {
-          e.preventDefault(); deferred = e;
-          if (installBtn) installBtn.hidden = false;
-        });
-        if (installBtn) installBtn.addEventListener('click', function () {
-          if (!deferred) return;
-          deferred.prompt();
-          deferred.userChoice.finally(function () { deferred = null; installBtn.hidden = true; });
-        });
-        window.addEventListener('appinstalled', function () { if (installBtn) installBtn.hidden = true; });
-
-        var bar = document.getElementById('sticky-cta');
-        var hero = document.querySelector('.hero');
-        var cta = document.querySelector('[data-section="cta"]');
-        if (!bar || !hero || !('IntersectionObserver' in window)) return;
-        var pastHero = false, onCta = false;
-        function sync() {
-          var on = pastHero && !onCta;
-          bar.classList.toggle('show', on);
-          bar.setAttribute('aria-hidden', on ? 'false' : 'true');
-          var a = bar.querySelector('a'); if (a) a.tabIndex = on ? 0 : -1;
-        }
-        new IntersectionObserver(function (en) { pastHero = !en[0].isIntersecting; sync(); }).observe(hero);
-        if (cta) new IntersectionObserver(function (en) { onCta = en[0].isIntersecting; sync(); }).observe(cta);
-      })();
-
-      // ---------- faixa de números reais (RPC landing_stats) ----------
-      // Só mostra um total quando ele já é "bonito" (>= mínimo); se nenhum
-      // passar, ou a RPC falhar, a faixa continua escondida.
-      (function () {
-        var band = document.getElementById('landing-stats');
-        var grid = document.getElementById('landing-stats-grid');
-        if (!band || !grid) return;
-        var TILES = [
-          { key: 'users', min: 50, label: 'pessoas treinando' },
-          { key: 'workouts', min: 100, label: 'treinos concluídos' },
-          { key: 'sets', min: 1000, label: 'séries registradas' },
-        ];
-        function round(n) {
-          var step = n >= 10000 ? 1000 : n >= 1000 ? 100 : 10;
-          return Math.floor(n / step) * step;
-        }
-        fetch(SUPABASE_URL + '/rest/v1/rpc/landing_stats', {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-            'Content-Type': 'application/json',
-          },
-          body: '{}',
-        })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (d) {
-            if (!d) return;
-            var tiles = TILES.filter(function (t) { return Number(d[t.key]) >= t.min; });
-            if (!tiles.length) return;
-            tiles.push({ value: '200', label: 'exercícios com demonstração' });
-            grid.innerHTML = tiles.map(function (t) {
-              var v = t.value || round(Number(d[t.key])).toLocaleString(window.LANDING_LANG === 'en' ? 'en-US' : 'pt-BR') + '+';
-              return '<div class="stat"><b>' + v + '</b><span>' + t.label + '</span></div>';
-            }).join('');
-            band.hidden = false;
-          })
-          .catch(function () {});
-      })();
-
-      // ---------- eventos anônimos (public.landing_events) ----------
-      // Cliques nos CTAs que levam ao app, instalação e seções alcançadas.
-      // Sem identificar ninguém; 1 registro por evento+lugar por sessão;
-      // falha em silêncio. Lugar = seção do clique (ou nav/sticky).
-      function track(event, place) {
-        var key = 'eafit_ev_' + event + ':' + place;
-        try {
-          if (sessionStorage.getItem(key)) return;
-          sessionStorage.setItem(key, '1');
-        } catch (e) { /* sem armazenamento: conta mesmo assim */ }
-        fetch(SUPABASE_URL + '/rest/v1/landing_events', {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-            'Content-Type': 'application/json', Prefer: 'return=minimal',
-          },
-          body: JSON.stringify({ event: event, place: place }),
-          keepalive: true,
-        }).catch(function () {});
-      }
-
-      function clickPlace(a) {
-        if (a.closest('.nav')) return 'nav';
-        if (a.closest('.sticky-cta')) return 'sticky';
-        if (a.closest('footer')) return 'rodape';
-        var sec = a.closest('[data-section]');
-        return (sec && sec.getAttribute('data-section')) || 'outro';
-      }
-
-      document.addEventListener('click', function (e) {
-        var a = e.target.closest && e.target.closest('a[href="/app/"]');
-        if (a) track('cta_click', clickPlace(a));
-        if (e.target.closest && e.target.closest('#install-btn')) track('install_click', 'install');
-      });
-      window.addEventListener('appinstalled', function () { track('install_done', 'install'); });
-
-      if ('IntersectionObserver' in window) {
-        var reachObs = new IntersectionObserver(function (entries) {
-          entries.forEach(function (en) {
-            if (!en.isIntersecting) return;
-            reachObs.unobserve(en.target);
-            track('reach', en.target.getAttribute('data-section'));
-          });
-        }, { threshold: 0.3 });
-        ['personal', 'testimonials', 'install', 'faq', 'cta'].forEach(function (id) {
-          var el = document.querySelector('[data-section="' + id + '"]');
-          if (el) reachObs.observe(el);
-        });
-      }
-
-      // ---------- contagem anônima de visitas (public.page_visits) ----------
-      // Cópia das regras de app-react/src/lib/pageVisits.js (detectSource) e lib/clientInfo.js —
-      // mudou lá, mude aqui. 1 visita por dia por navegador, sem identificar
-      // ninguém; falha em silêncio.
-      var REFERRER_SOURCES = [
-        [/(^|\.)google\./, 'google'], [/(^|\.)bing\.com$/, 'bing'],
-        [/(^|\.)instagram\.com$/, 'instagram'], [/(^|\.)(facebook\.com|fb\.com|fb\.me)$/, 'facebook'],
-        [/(^|\.)(t\.co|twitter\.com|x\.com)$/, 'x'], [/(^|\.)tiktok\.com$/, 'tiktok'],
-        [/(^|\.)(youtube\.com|youtu\.be)$/, 'youtube'], [/(^|\.)(whatsapp\.com|wa\.me)$/, 'whatsapp'],
-        [/(^|\.)linkedin\.com$/, 'linkedin'],
-      ];
-      function detectSource() {
-        var params = new URLSearchParams(window.location.search);
-        var tagged = (params.get('origem') || params.get('utm_source') || '').toLowerCase()
-          .replace(/[^a-z0-9_-]/g, '').slice(0, 40);
-        if (tagged) return tagged;
-        var host = '';
-        try { host = document.referrer ? new URL(document.referrer).hostname.toLowerCase() : ''; } catch (e) { host = ''; }
-        if (!host) return 'direto';
-        if (host === window.location.hostname) return 'landing';
-        for (var i = 0; i < REFERRER_SOURCES.length; i++) {
-          if (REFERRER_SOURCES[i][0].test(host)) return REFERRER_SOURCES[i][1];
-        }
-        return 'outro-site';
-      }
-      function detectOS() {
-        var ua = String(navigator.userAgent || '').toLowerCase();
-        if (!ua) return 'outro';
-        if (ua.indexOf('android') !== -1) return 'android';
-        if (/iphone|ipad|ipod/.test(ua)) return 'ios';
-        var mac = ua.indexOf('macintosh') !== -1 || ua.indexOf('mac os x') !== -1 || /^mac/i.test(navigator.platform || '');
-        if (mac) return navigator.maxTouchPoints > 1 ? 'ios' : 'mac';
-        if (ua.indexOf('windows') !== -1) return 'windows';
-        if (ua.indexOf('cros') !== -1) return 'outro';
-        if (ua.indexOf('linux') !== -1 || ua.indexOf('x11') !== -1) return 'linux';
-        return 'outro';
-      }
-      function detectBrowser() {
-        var ua = String(navigator.userAgent || '').toLowerCase();
-        if (!ua) return 'outro';
-        if (/edg(e|a|ios)?\//.test(ua)) return 'edge';
-        if (ua.indexOf('samsungbrowser') !== -1) return 'samsung';
-        if (/opr\/|opera|opt\//.test(ua)) return 'opera';
-        if (/firefox|fxios/.test(ua)) return 'firefox';
-        if (/chrome|crios|chromium/.test(ua)) return 'chrome';
-        if (ua.indexOf('safari') !== -1) return 'safari';
-        return 'outro';
-      }
-      function detectDevice() {
-        var ua = String(navigator.userAgent || '').toLowerCase();
-        if (!ua) return 'desktop';
-        if (ua.indexOf('ipad') !== -1) return 'tablet';
-        var mac = ua.indexOf('macintosh') !== -1 || /^mac/i.test(navigator.platform || '');
-        if (mac && navigator.maxTouchPoints > 1) return 'tablet';
-        if (ua.indexOf('android') !== -1) return ua.indexOf('mobile') !== -1 ? 'celular' : 'tablet';
-        if (/iphone|ipod|mobile/.test(ua)) return 'celular';
-        return 'desktop';
-      }
-      (function recordVisit() {
-        var key = 'eafit_visit_landing';
-        var today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
-        try {
-          if (localStorage.getItem(key) === today) return;
-          localStorage.setItem(key, today);
-        } catch (e) { /* sem armazenamento: conta mesmo assim */ }
-        var source = detectSource();
-        function send(row) {
-          return fetch(SUPABASE_URL + '/rest/v1/page_visits', {
-            method: 'POST',
-            headers: {
-              apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-              'Content-Type': 'application/json', Prefer: 'return=minimal',
-            },
-            body: JSON.stringify(row),
-            keepalive: true,
-          });
-        }
-        // Do mais completo pro mais simples: banco sem as colunas novas
-        // (migration ainda não aplicada) recusa a linha e a visita é gravada sem elas.
-        var os = detectOS();
-        var campaign = (new URLSearchParams(window.location.search).get('utm_campaign') || '').toLowerCase()
-          .replace(/[^a-z0-9_-]/g, '').slice(0, 40);
-        var visitLang = window.LANDING_LANG === 'en' ? 'en' : 'pt';
-        send({ page: 'landing', source: source, os: os, browser: detectBrowser(), device: detectDevice(), lang: visitLang, campaign: campaign })
-          .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source, os: os }); return r; })
-          .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source }); })
-          .catch(function () {});
-      })();
-
-      fetch(SUPABASE_URL + '/rest/v1/landing_content?select=content&id=eq.1', {
-        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
-      })
-        .then(function (r) { return r.ok ? r.json() : []; })
-        .then(function (rows) {
-          var row = rows && rows[0];
-          if (row && row.content) applyContent(row.content);
-        })
-        .catch(function () { /* mantém o conteúdo estático padrão acima */ });
-    })();
-  </script>
-
-  <script>
-    // Seletor de idioma e tradução do texto da página (dicionário em i18n-en.js).
-    // Roda sobre o DOM já pronto e de novo a cada mudança — o conteúdo vindo do
-    // painel admin chega depois e substitui o texto estático. Texto sem entrada
-    // no dicionário (ex.: algo recém-escrito no admin) fica em português.
-    document.addEventListener('DOMContentLoaded', function () {
-      var lang = window.LANDING_LANG === 'en' ? 'en' : 'pt';
-      var btn = document.getElementById('lang-toggle');
-      if (btn) {
-        btn.textContent = lang === 'en' ? 'PT' : 'EN';
-        btn.setAttribute('aria-label', lang === 'en'
-          ? 'Language: English. Switch to Portuguese / Idioma: inglês. Mudar para português'
-          : 'Idioma: português. Mudar para inglês / Language: Portuguese. Switch to English');
-        btn.addEventListener('click', function () {
-          try { localStorage.setItem('app_lang', lang === 'en' ? 'pt' : 'en'); } catch (e) { /* sem storage */ }
-          var url = new URL(location.href);
-          url.searchParams.delete('lang');
-          location.href = url.toString();
-        });
-      }
-      var dict = window.LANDING_EN;
-      if (lang !== 'en' || !dict) return;
-
-      var pending = false;
-      function norm(t) { return t.replace(/\s+/g, ' ').trim(); }
-
-      function translateTextNodes(root) {
-        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-          acceptNode: function (n) {
-            var p = n.parentNode && n.parentNode.nodeName;
-            return p === 'SCRIPT' || p === 'STYLE' || p === 'NOSCRIPT' ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
-          },
-        });
-        var node;
-        while ((node = walker.nextNode())) {
-          var raw = node.nodeValue;
-          var key = norm(raw);
-          if (!key || !Object.prototype.hasOwnProperty.call(dict.text, key)) continue;
-          var lead = raw.match(/^\s*/)[0];
-          var trail = raw.match(/\s*$/)[0];
-          var next = lead + dict.text[key] + trail;
-          if (next !== raw) node.nodeValue = next;
-        }
-      }
-
-      function translateAttrs(root) {
-        root.querySelectorAll('[alt],[aria-label],[title],[placeholder]').forEach(function (el) {
-          ['alt', 'aria-label', 'title', 'placeholder'].forEach(function (a) {
-            var v = el.getAttribute(a);
-            if (v && Object.prototype.hasOwnProperty.call(dict.attrs, v)) el.setAttribute(a, dict.attrs[v]);
-          });
-        });
-      }
-
-      function translateHead() {
-        var m = dict.meta;
-        var t = dict.text[norm(document.title)];
-        if (t) document.title = t;
-        function set(sel, v) { var el = document.querySelector(sel); if (el && v) el.setAttribute('content', v); }
-        set('meta[name="description"]', m.description);
-        set('meta[property="og:title"]', m.ogTitle);
-        set('meta[name="twitter:title"]', m.ogTitle);
-        set('meta[property="og:description"]', m.ogDescription);
-        set('meta[name="twitter:description"]', m.ogDescription);
-        set('meta[property="og:locale"]', m.ogLocale);
-        set('meta[property="og:image:alt"]', dict.attrs['Logo do EAFIT com o slogan Seu treino, sempre com você']);
-      }
-
-      function run() {
-        pending = false;
-        translateTextNodes(document.body);
-        translateAttrs(document.body);
-      }
-      translateHead();
-      run();
-      new MutationObserver(function () {
-        if (pending) return;
-        pending = true;
-        requestAnimationFrame(run);
-      }).observe(document.body, { childList: true, subtree: true, characterData: true });
-    });
-  </script>
-
 </body>
 </html>

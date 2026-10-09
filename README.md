@@ -3,7 +3,7 @@
 PWA (Progressive Web App) para acompanhamento de treino, hidratação e evolução física, com sincronização em nuvem e uso offline.
 
 🔗 **App em produção:** https://eafit.com.br/app/
-📣 **Landing page:** https://eafit.com.br/
+📣 **Site:** https://eafit.com.br/ (home, Recursos, Para personais, Biblioteca de exercícios, Ajuda e Sobre)
 
 <img src="app-react/public/landing/img/app-treino.webp" alt="Tela de Treino do EAFIT" width="240" /> <img src="app-react/public/landing/img/app-agua.webp" alt="Tela de Água do EAFIT" width="240" />
 
@@ -39,7 +39,8 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 .
 ├── app-react/          # código-fonte do app (React + Vite)
 │   ├── public/
-│   │   └── landing/      # landing page estática de divulgação (raiz do domínio)
+│   │   └── landing/      # site estático de divulgação (raiz do domínio)
+│   ├── scripts/         # build-site.mjs: gera a biblioteca de exercícios e o sitemap
 │   ├── src/
 │   │   ├── components/  # componentes de UI reutilizáveis
 │   │   ├── context/      # estado global (auth, tema, toast, treino)
@@ -49,7 +50,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 │   │   └── styles/       # CSS por área, importado em ordem por index.css
 │   └── vite.config.js
 ├── app-admin/          # backoffice (React + Vite), publicado em /admin
-├── site-root/          # arquivos da raiz do domínio (404, robots.txt, sitemap.xml)
+├── site-root/          # arquivos da raiz do domínio (404, robots.txt)
 ├── supabase/
 │   ├── functions/       # Edge Functions (Deno); _shared/ tem código + testes
 │   └── migrations/      # schema, RLS e RPCs
@@ -67,7 +68,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   de context e o hook (`useX`) ficam em `context/useX.js`. Arquivo `.jsx` que
   exporta componente e não-componente juntos perde o Fast Refresh (o lint
   avisa).
-- **Idiomas (pt/en)**: a interface usa o próprio texto em português como chave de tradução: `t('Iniciar treino')` (de `lib/i18n.js`). O inglês fica em `app-react/src/i18n/en/`; texto sem tradução cai no português. Ao criar texto novo na interface, envolva em `t()` e adicione a entrada em `i18n/en/` — o teste `lib/i18n.test.js` falha se faltar. Datas e números usam `locale`. O idioma é escolhido em Perfil → Idioma (ou na tela de acesso) e recarrega o app. **Exercícios e planos**: o dado fica em português (o nome é a chave do histórico e dos recordes); só a exibição passa por `tEx`/`tTec`/`tFoco`/`tReps` (`lib/i18n.js`), com o dicionário em `i18n/en/exercises.js` — exercício criado pelo usuário ou pelo personal aparece como foi digitado. `data/exerciseI18n.test.js` falha se um nome/técnica/foco dos planos prontos ou da biblioteca (migrations) ficar sem tradução. **Notificações do servidor**: o app grava o idioma em `user_metadata.lang` (hook `useSyncLang`) e as Edge Functions (`send-reminders`, `send-engagement`, alertas e lembretes de aula do personal) mandam push em pt ou en (`_shared/lang.ts`, `reminderTexts.ts`). As regras de `engagement_rules` têm `title_en`/`body_en` (o painel edita os dois idiomas em Automáticas → "Versão em inglês"; sem título e mensagem em inglês, cai no português), e `_shared/exerciseI18n.ts` é cópia gerada de `exercises.js` (teste de divergência). Avisos do admin e recados do personal vão como foram escritos. **Landing e termos**: seletor PT/EN na landing (`landing/i18n-en.js`, mesmo `app_lang` do app) e nos Termos/Privacidade (versão em inglês de cortesia, a em português prevalece e continua precisando de revisão jurídica); texto da landing editado no admin que ainda não tem tradução fica em português. **Fora do escopo**: o painel admin (backoffice interno).
+- **Idiomas (pt/en)**: a interface usa o próprio texto em português como chave de tradução: `t('Iniciar treino')` (de `lib/i18n.js`). O inglês fica em `app-react/src/i18n/en/`; texto sem tradução cai no português. Ao criar texto novo na interface, envolva em `t()` e adicione a entrada em `i18n/en/` — o teste `lib/i18n.test.js` falha se faltar. Datas e números usam `locale`. O idioma é escolhido em Perfil → Idioma (ou na tela de acesso) e recarrega o app. **Exercícios e planos**: o dado fica em português (o nome é a chave do histórico e dos recordes); só a exibição passa por `tEx`/`tTec`/`tFoco`/`tReps` (`lib/i18n.js`), com o dicionário em `i18n/en/exercises.js` — exercício criado pelo usuário ou pelo personal aparece como foi digitado. `data/exerciseI18n.test.js` falha se um nome/técnica/foco dos planos prontos ou da biblioteca (migrations) ficar sem tradução. **Notificações do servidor**: o app grava o idioma em `user_metadata.lang` (hook `useSyncLang`) e as Edge Functions (`send-reminders`, `send-engagement`, alertas e lembretes de aula do personal) mandam push em pt ou en (`_shared/lang.ts`, `reminderTexts.ts`). As regras de `engagement_rules` têm `title_en`/`body_en` (o painel edita os dois idiomas em Automáticas → "Versão em inglês"; sem título e mensagem em inglês, cai no português), e `_shared/exerciseI18n.ts` é cópia gerada de `exercises.js` (teste de divergência). Avisos do admin e recados do personal vão como foram escritos. **Site e termos**: seletor PT/EN no site (`landing/i18n-en.js`, mesmo `app_lang` do app; as páginas da biblioteca somam o dicionário gerado a partir de `i18n/en/exercises.js`) e nos Termos/Privacidade (versão em inglês de cortesia, a em português prevalece e continua precisando de revisão jurídica); texto da landing editado no admin que ainda não tem tradução fica em português. **Fora do escopo**: o painel admin (backoffice interno).
 - **Duplicação entre app-react e as Edge Functions (Deno)**: como os dois
   ambientes não compartilham build, algumas lógicas (geração de plano por
   IMC/nível, exclusão de dados do usuário) são portadas manualmente em vez de
@@ -77,6 +78,22 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   `supabase/functions/_shared/workoutAdjustments.ts` como exemplo (o mesmo vale
   pra `exerciseLibrary.js` ↔ `_shared/exerciseLibrary.ts`). Ao mudar um lado,
   replique no outro — os testes dos dois lados rodam no CI.
+
+- **Site (`app-react/public/landing/`)**: HTML estático, sem framework. Cada
+  página é uma pasta com `index.html` (`recursos/`, `personal/`, `ajuda/`,
+  `sobre/`) e todas usam `assets/site.css` e `assets/site.js`. Os blocos
+  `site-head`, `site-header` e `site-footer` são repetidos em cada página e
+  precisam ser idênticos (o teste `scripts/build-site.test.js` falha se
+  divergirem). Links e assets usam caminho absoluto (`/recursos/`,
+  `/assets/site.css`), porque o deploy publica a pasta na raiz do domínio.
+  As seções com `data-section` continuam editáveis no painel admin; a mesma
+  seção pode aparecer resumida na home (`data-limit`) e completa na página
+  interna. A **biblioteca de exercícios** (`/exercicios/` e uma página por
+  exercício) e o `sitemap.xml` não são versionados: `npm run site` (ou
+  `npm run build`) gera tudo a partir do seed de `exercise_library` nas
+  migrations e das demonstrações de `exerciseMedia.js`/`exerciseVideos.js`.
+  Página nova escrita à mão: crie a pasta, copie os três blocos da home,
+  adicione o inglês em `landing/i18n-en.js` e, se for o caso, o link no menu.
 
 ## Rodando localmente
 
@@ -108,7 +125,7 @@ npm run build    # build de produção em app-react/dist
 
 ## Deploy
 
-O deploy é automático: qualquer push em `main` que altere arquivos dentro de `app-react/` dispara o workflow `.github/workflows/deploy.yml`, que builda o projeto e publica no GitHub Pages, no domínio próprio `eafit.com.br`: a landing na raiz, o app em `/app/` e o painel em `/admin/`.
+O deploy é automático: qualquer push em `main` que altere arquivos dentro de `app-react/` dispara o workflow `.github/workflows/deploy.yml`, que builda o projeto e publica no GitHub Pages, no domínio próprio `eafit.com.br`: o site na raiz, o app em `/app/` e o painel em `/admin/`.
 
 Backend (Supabase): o workflow `.github/workflows/supabase.yml` roda os testes e a checagem de tipos das Edge Functions em todo push/PR que mexe em `supabase/`. Aplicar migrations e implantar funções em produção é **manual**, em Actions → Supabase → Run workflow (marque "Aplicar migrations" e/ou "Implantar todas as Edge Functions"; migrations rodam antes das funções). Precisa dos secrets `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID` e `SUPABASE_DB_PASSWORD` no repositório. Localmente, `supabase db push` (com o CLI linkado) continua funcionando.
 

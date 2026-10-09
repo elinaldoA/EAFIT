@@ -53,7 +53,7 @@ describe('LandingEditor', () => {
     render(<LandingEditor />);
     expect(await screen.findByText('Topo (hero)')).toBeTruthy();
     expect(screen.getByText('Faixa de destaques')).toBeTruthy();
-    expect(screen.getByText('Perguntas frequentes')).toBeTruthy();
+    expect(screen.getByText('Perguntas frequentes · 5 primeiras na home, todas em Ajuda')).toBeTruthy();
     expect(screen.getByDisplayValue('T1')).toBeTruthy();
     expect(screen.getByText(/Os números vêm do banco/)).toBeTruthy();
   });

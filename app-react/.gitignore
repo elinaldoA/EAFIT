@@ -26,3 +26,7 @@ dist-ssr
 
 # Supabase CLI
 supabase/.temp/
+
+# Site: páginas geradas por scripts/build-site.mjs (npm run site / npm run build)
+public/landing/exercicios/
+public/landing/sitemap.xml
