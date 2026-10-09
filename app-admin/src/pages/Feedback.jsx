@@ -38,8 +38,10 @@ function FeedbackCard({ item, onChanged }) {
     setBusy(true);
     setMsg('');
     try {
-      const { notified } = await replyToFeedback(item, reply, { resolve: resolveOnReply });
+      const { notified, emailed } = await replyToFeedback(item, reply, { resolve: resolveOnReply });
       if (!notified) setMsg('Resposta salva, mas o aviso ao usuário falhou (ele ainda a vê no Perfil).');
+      else if (!emailed) setMsg('Resposta enviada pelo app, mas o e-mail não saiu (ele ainda a vê no Perfil).');
+      else setMsg('Resposta enviada: aviso no app e e-mail.');
       setReply('');
       await onChanged();
     } catch (err) {
@@ -79,7 +81,7 @@ function FeedbackCard({ item, onChanged }) {
       )}
 
       <label className="field">
-        <span className="field__label">{item.admin_reply ? 'Nova resposta ao usuário' : 'Responder ao usuário (ele recebe um aviso no app)'}</span>
+        <span className="field__label">{item.admin_reply ? 'Nova resposta ao usuário' : 'Responder ao usuário (ele recebe um aviso no app e um e-mail)'}</span>
         <textarea className="input" rows={2} maxLength={REPLY_MAX} value={reply} onChange={e => setReply(e.target.value)} />
       </label>
       <div className="actions-row">
@@ -97,7 +99,7 @@ function FeedbackCard({ item, onChanged }) {
       <div className="actions-row">
         <button className="btn btn--small" disabled={busy || !noteChanged(item.admin_note, note)} onClick={handleSaveNote}>Salvar nota</button>
         <button className="btn btn--ghost btn--small" disabled={busy} onClick={handleDelete}>Excluir</button>
-        {msg && <span className="form-msg form-msg--error">{msg}</span>}
+        {msg && <span className={`form-msg ${msg.startsWith('Resposta enviada:') ? 'form-msg--ok' : 'form-msg--error'}`}>{msg}</span>}
       </div>
     </div>
   );

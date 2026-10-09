@@ -64,7 +64,8 @@ export function replyValue(draft) {
 
 // Grava a resposta no feedback e avisa o usuário (push, central de avisos e
 // e-mail, via admin-broadcast). A resposta é salva primeiro: se o aviso falhar, ela
-// continua visível para o usuário no Perfil e o admin é informado.
+// continua visível para o usuário no Perfil e o admin é informado. `emailed`
+// diz se o e-mail saiu de fato (a função devolve quantos enviou).
 export async function replyToFeedback(item, text, { resolve = false } = {}) {
   const reply = replyValue(text);
   if (!reply) throw new Error(`Escreva uma resposta de 1 a ${REPLY_MAX} caracteres.`);
@@ -76,6 +77,6 @@ export async function replyToFeedback(item, text, { resolve = false } = {}) {
   const { data, error } = await db.functions.invoke('admin-broadcast', {
     body: { title: '💬 Resposta ao seu feedback', body: reply, targetUserIds: [item.user_id], email: 'resposta' },
   });
-  if (error || data?.error) return { notified: false };
-  return { notified: true };
+  if (error || data?.error) return { notified: false, emailed: false };
+  return { notified: true, emailed: (data?.emailSent || 0) > 0 };
 }

@@ -76,14 +76,20 @@ describe('replyToFeedback', () => {
 
   it('salva a resposta, marca como resolvido e avisa só o autor', async () => {
     mockEq.mockResolvedValue({ error: null });
-    mockInvoke.mockResolvedValue({ data: { ok: true }, error: null });
+    mockInvoke.mockResolvedValue({ data: { ok: true, emailTargetCount: 1, emailSent: 1 }, error: null });
     const out = await replyToFeedback(item, ' Já corrigimos! ', { resolve: true });
     expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ admin_reply: 'Já corrigimos!', status: 'resolvido' }));
     expect(mockEq).toHaveBeenCalledWith('id', 'f1');
     expect(mockInvoke).toHaveBeenCalledWith('admin-broadcast', {
       body: expect.objectContaining({ body: 'Já corrigimos!', targetUserIds: ['u1'], email: 'resposta' }),
     });
-    expect(out).toEqual({ notified: true });
+    expect(out).toEqual({ notified: true, emailed: true });
+  });
+
+  it('informa quando o aviso saiu mas o e-mail não', async () => {
+    mockEq.mockResolvedValue({ error: null });
+    mockInvoke.mockResolvedValue({ data: { ok: true, emailTargetCount: 1, emailSent: 0 }, error: null });
+    expect(await replyToFeedback(item, 'ok')).toEqual({ notified: true, emailed: false });
   });
 
   it('não altera o status sem resolve e informa quando o aviso falha', async () => {
@@ -91,7 +97,7 @@ describe('replyToFeedback', () => {
     mockInvoke.mockResolvedValue({ data: null, error: new Error('x') });
     const out = await replyToFeedback(item, 'ok');
     expect(mockUpdate.mock.calls[0][0]).not.toHaveProperty('status');
-    expect(out).toEqual({ notified: false });
+    expect(out).toEqual({ notified: false, emailed: false });
   });
 
   it('rejeita resposta vazia sem gravar nada', async () => {
