@@ -59,9 +59,23 @@ Deno.test('renderEmail: link de descadastro no rodapé, em HTML e em texto', () 
   assert(!renderEmail('pt', { subject: 'S', heading: 'H', paragraphs: ['P'] }).html.includes('Parar de receber'));
 });
 
+Deno.test('renderEmail: opções de resposta viram um link por linha, em HTML e em texto', () => {
+  const { html, text } = renderEmail('pt', {
+    subject: 'S',
+    heading: 'H',
+    paragraphs: ['P'],
+    choices: [{ label: 'Sem tempo', url: 'https://eafit.com.br/app/?motivo=sem_tempo&r=id.abc' }, { label: '<b>Outro</b>', url: 'https://x/2' }],
+  });
+  assertStringIncludes(html, 'href="https://eafit.com.br/app/?motivo=sem_tempo&amp;r=id.abc"');
+  assertStringIncludes(html, '>Sem tempo</a>');
+  assertStringIncludes(html, '&lt;b&gt;Outro&lt;/b&gt;');
+  assertEquals(html.split('class="choice"').length - 1, 2);
+  assertEquals(text.split('\n').slice(0, 6), ['H', '', 'P', '', '- Sem tempo: https://eafit.com.br/app/?motivo=sem_tempo&r=id.abc', '- <b>Outro</b>: https://x/2']);
+});
+
 Deno.test('renderEmail: sem os opcionais, não sobra marcação deles', () => {
   const { html, text } = renderEmail('pt', { subject: 'S', heading: 'H', paragraphs: ['P'] });
-  for (const cls of ['preheader', 'eyebrow', 'linkbox', 'rule']) assert(!html.includes(`class="${cls}"`), cls);
+  for (const cls of ['preheader', 'eyebrow', 'linkbox', 'rule', 'choice']) assert(!html.includes(`class="${cls}"`), cls);
   assertEquals(text.split('\n').slice(0, 4), ['H', '', 'P', '']);
 });
 

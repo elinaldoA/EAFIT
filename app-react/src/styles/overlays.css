@@ -273,6 +273,22 @@ body.modal-open { overflow: hidden; }
 .maintenance__title { margin: 4px 0 0; font-size: 1.15rem; }
 .maintenance__text { margin: 0; max-width: 32ch; font-size: 0.9rem; line-height: 1.45; opacity: .8; }
 
+/* Pesquisa de inatividade aberta pelo e-mail (InactivitySurveyScreen) */
+/* Mais alta que a tela em celular pequeno: rola, e centraliza quando sobra espaço. */
+.survey { justify-content: flex-start; gap: 12px; overflow-y: auto; background: var(--bg); color: var(--text); }
+.survey > :first-child { margin-top: auto; }
+.survey > :last-child { margin-bottom: auto; }
+.survey img { width: 56px; height: 56px; border-radius: 14px; }
+.survey__options,
+.survey__actions {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.survey__comment { max-width: 340px; font-size: 0.9rem; }
+
 /* Passo a passo da tela de instalação (InstallScreen) */
 .install__steps {
   margin: 0;

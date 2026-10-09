@@ -21,6 +21,9 @@ export type EmailContent = {
   eyebrow?: string;
   heading: string;
   paragraphs: string[];
+  // Opções de resposta em um toque, uma por linha, entre o texto e o botão
+  // (ex.: os motivos da pesquisa de inatividade).
+  choices?: { label: string; url: string }[];
   cta?: { label: string; url: string };
   // Linha miúda no fim do cartão (ex.: "se não foi você, ignore este e-mail").
   footnote?: string;
@@ -66,7 +69,7 @@ const STRINGS = {
 };
 
 export function renderEmail(lang: Lang, content: EmailContent): RenderedEmail {
-  const { subject, preheader, eyebrow, heading, paragraphs, cta, footnote, unsubscribeUrl } = content;
+  const { subject, preheader, eyebrow, heading, paragraphs, choices, cta, footnote, unsubscribeUrl } = content;
   const s = { ...STRINGS[lang], ...(content.reason ? { reason: content.reason } : {}) };
 
   // Texto invisível: sem ele, a lista de e-mails mostra o começo do HTML
@@ -80,6 +83,11 @@ export function renderEmail(lang: Lang, content: EmailContent): RenderedEmail {
   const body = paragraphs
     .map((p) => `<p class="text" style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#3f3f46;">${escapeHtml(p)}</p>`)
     .join('\n');
+  const options = choices?.length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;">
+${choices.map((c) => `<tr><td style="padding:0 0 10px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="choice" style="border:1px solid #d4d4d8;border-radius:12px;"><a href="${escapeHtml(c.url)}" style="display:block;padding:13px 16px;font-family:${FONT};font-size:15px;line-height:1.35;font-weight:600;color:#18181b;text-decoration:none;">${escapeHtml(c.label)}</a></td></tr></table></td></tr>`).join('\n')}
+</table>`
+    : '';
   // Tabela em vez de <a> com padding: é o que o Outlook respeita.
   const button = cta
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;"><tr><td align="center" bgcolor="#f97316" style="border-radius:12px;"><a href="${escapeHtml(cta.url)}" style="display:inline-block;padding:15px 30px;font-family:${FONT};font-size:16px;line-height:1.2;font-weight:700;color:#0e0e12;text-decoration:none;border-radius:12px;">${escapeHtml(cta.label)}</a></td></tr></table>
@@ -113,6 +121,8 @@ export function renderEmail(lang: Lang, content: EmailContent): RenderedEmail {
   .rule { border-color: #26262b !important; }
   .linkbox { background: #1c1c21 !important; }
   .linkbox, .linkbox a { color: #a1a1aa !important; }
+  .choice { border-color: #3f3f46 !important; }
+  .choice a { color: #ececef !important; }
 }
 @media (max-width: 480px) {
   .pad { padding-left: 22px !important; padding-right: 22px !important; }
@@ -139,6 +149,7 @@ ${hidden}
 ${label}
 <h1 class="heading" style="margin:0 0 16px;font-size:24px;line-height:1.25;font-weight:800;color:#18181b;">${escapeHtml(heading)}</h1>
 ${body}
+${options}
 ${button}
 ${note}
 </td></tr>
@@ -159,6 +170,7 @@ ${escapeHtml(s.reason)}${unsubscribe}
     heading,
     '',
     ...paragraphs,
+    ...(choices?.length ? ['', ...choices.map((c) => `- ${c.label}: ${c.url}`)] : []),
     ...(cta ? ['', `${cta.label}: ${cta.url}`] : []),
     ...(footnote ? ['', footnote] : []),
     '',

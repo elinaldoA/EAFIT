@@ -60,17 +60,23 @@ export async function sendEmail(to: string, email: RenderedEmail, options: SendO
 }
 
 // Envio em lote, poucos por vez: o Gmail derruba quem abre muitas conexões ou
-// dispara rápido demais. Devolve quantos saíram.
+// dispara rápido demais. Devolve quantos saíram; `onSent` recebe a posição de
+// cada um que saiu, pra quem precisa registrar o envio.
 export async function sendEmailBatch(
   items: { to: string; email: RenderedEmail; options?: SendOptions }[],
   concurrency = 3,
+  onSent?: (index: number) => void,
 ): Promise<number> {
   let sent = 0;
   let next = 0;
   async function worker() {
     while (next < items.length) {
-      const item = items[next++];
-      if ((await sendEmail(item.to, item.email, item.options)) === 'sent') sent++;
+      const index = next++;
+      const item = items[index];
+      if ((await sendEmail(item.to, item.email, item.options)) === 'sent') {
+        sent++;
+        onSent?.(index);
+      }
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));

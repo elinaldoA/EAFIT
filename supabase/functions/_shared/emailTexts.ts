@@ -3,7 +3,9 @@
 // visual vem de emailLayout.ts. Os e-mails do login (redefinição de senha,
 // confirmação, avisos de segurança) ficam em supabase/templates/build.ts.
 import { APP_URL, type EmailContent } from './emailLayout.ts';
+import { INACTIVITY_REASONS, type InactivityReason, reasonLabel } from './inactivity.ts';
 import type { Lang } from './lang.ts';
+import type { WhyEmail } from './weeklyEmails.ts';
 
 export function welcomeEmail(lang: Lang): EmailContent {
   return lang === 'en'
@@ -139,6 +141,65 @@ export function comebackEmail(lang: Lang, days: number, neverTrained: boolean): 
       ],
       cta: { label: 'Abrir o treino de hoje', url: `${APP_URL}#treino` },
     };
+}
+
+// Pesquisa de inatividade: passou das 4 semanas do convite pra voltar, então
+// pergunta o motivo. Cada opção é um link que já registra a resposta
+// (`linkFor`, ver inactivity.ts). 'absent' = sumiu do app; 'idle' = continua
+// entrando, mas não treina.
+export function inactivityEmail(
+  lang: Lang,
+  pick: Pick<WhyEmail, 'segment' | 'days' | 'neverTrained'>,
+  linkFor: (reason: InactivityReason) => string,
+): EmailContent {
+  const choices = INACTIVITY_REASONS.map((reason) => ({ label: reasonLabel(lang, reason), url: linkFor(reason) }));
+  const en = lang === 'en';
+  const ask = en
+    ? 'We want to make the app better, and your answer helps a lot. What got in the way? One tap is enough:'
+    : 'Queremos melhorar o app, e a sua resposta ajuda muito. O que atrapalhou? Um toque já basta:';
+  const cta = { label: en ? 'Open the app' : 'Abrir o app', url: `${APP_URL}#treino` };
+  const footnote = en
+    ? 'Your plan and your history are still saved, whenever you want to come back.'
+    : 'Seu plano e seu histórico continuam guardados, pra quando você quiser voltar.';
+
+  if (pick.segment === 'idle') {
+    const lead = pick.neverTrained
+      ? (en
+        ? 'You have opened EAFIT recently, but have not logged a workout yet.'
+        : 'Você abriu o EAFIT recentemente, mas ainda não registrou nenhum treino.')
+      : (en
+        ? `You have opened EAFIT recently, but it has been ${pick.days} days since your last workout.`
+        : `Você abriu o EAFIT recentemente, mas já são ${pick.days} dias desde o seu último treino.`);
+    return {
+      subject: en ? 'What is keeping you from training?' : 'O que está travando o seu treino?',
+      preheader: en ? 'Tell us in one tap.' : 'Conte pra gente em um toque.',
+      eyebrow: en ? 'Quick question' : 'Pergunta rápida',
+      heading: en ? 'What is keeping you from training?' : 'O que está travando o seu treino?',
+      paragraphs: [lead, ask],
+      choices,
+      cta,
+      footnote,
+    };
+  }
+  return {
+    subject: en ? 'What made you stop?' : 'O que fez você parar?',
+    preheader: en ? 'Tell us in one tap.' : 'Conte pra gente em um toque.',
+    eyebrow: en ? 'Quick question' : 'Pergunta rápida',
+    heading: en ? 'It has been a while' : 'Faz tempo que você não aparece',
+    paragraphs: [
+      pick.neverTrained
+        ? (en
+          ? 'You created your EAFIT account, but have not come back to do your first workout.'
+          : 'Você criou sua conta no EAFIT, mas não voltou pra fazer o primeiro treino.')
+        : (en
+          ? `It has been ${pick.days} days since your last workout, and you have not opened EAFIT in a while.`
+          : `Já são ${pick.days} dias desde o seu último treino, e faz um tempo que você não abre o EAFIT.`),
+      ask,
+    ],
+    choices,
+    cta,
+    footnote,
+  };
 }
 
 // Comunicado escrito pelo admin: título e mensagem saem como foram digitados

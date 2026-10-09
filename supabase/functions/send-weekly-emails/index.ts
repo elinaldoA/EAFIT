@@ -1,8 +1,10 @@
 // E-mail semanal, chamado pelo pg_cron na segunda de manhã: resumo da semana
-// pra quem treinou e convite pra voltar pra quem parou (regras em
-// _shared/weeklyEmails.ts). Mesmo padrão de send-engagement: sem usuário
-// logado, Verify JWT desativado, age via service role e só aceita o header
-// x-cron-secret.
+// pra quem treinou, convite pra voltar pra quem parou há 1 a 4 semanas e,
+// passado isso, a pesquisa "por que você parou?" — uma vez por período parado,
+// com texto diferente pra quem sumiu do app e pra quem entra mas não treina
+// (regras em _shared/weeklyEmails.ts; respostas em inactivity-reason). Mesmo
+// padrão de send-engagement: sem usuário logado, Verify JWT desativado, age
+// via service role e só aceita o header x-cron-secret.
 //
 // É independente dos lembretes por push (send-reminders, send-engagement):
 // alcança também quem não ativou as notificações ou desinstalou o app. Só
@@ -15,9 +17,12 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { sendEmailBatch } from '../_shared/email.ts';
 import { type BulkEmailItem, bulkEmailItem, loadEmailUsers } from '../_shared/emailRecipients.ts';
-import { comebackEmail, weeklySummaryEmail } from '../_shared/emailTexts.ts';
+import { comebackEmail, inactivityEmail, weeklySummaryEmail } from '../_shared/emailTexts.ts';
 import { nowInSaoPaulo } from '../_shared/engagement.ts';
-import { canReceiveBulkEmail, isPaused, MAX_BULK_EMAILS, weeklyEmailFor } from '../_shared/weeklyEmails.ts';
+import { surveyLink, surveyToken } from '../_shared/inactivity.ts';
+import {
+  type ActivityState, canReceiveBulkEmail, isPaused, MAX_BULK_EMAILS, weeklyEmailFor, type WhyEmail,
+} from '../_shared/weeklyEmails.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -40,6 +45,27 @@ function addDays(date: string, days: number): string {
 
 type Workout = { id: string; user_id: string; workout_date: string };
 type SetRow = { workout_id: string; carga: string | number | null };
+type StateRow = { st_user: string; st_last_workout: string | null; st_last_seen: string | null; st_last_asked: string | null };
+type State = ActivityState & { lastWorkoutDate: string | null };
+
+// Último treino, último acesso e última pesquisa de cada conta. Se falhar
+// (ex.: migration ainda não aplicada) devolve null: o envio segue só com
+// resumo e convite pra voltar, sem a pesquisa de inatividade.
+async function loadInactivityState(): Promise<Map<string, State> | null> {
+  const out = new Map<string, State>();
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase.rpc('email_inactivity_state').range(from, from + PAGE - 1);
+    if (error) {
+      console.error('email_inactivity_state error:', error.message);
+      return null;
+    }
+    for (const r of (data || []) as StateRow[]) {
+      out.set(r.st_user, { lastWorkoutDate: r.st_last_workout, lastSeenDate: r.st_last_seen, lastAskedDate: r.st_last_asked });
+    }
+    if (!data || data.length < PAGE) break;
+  }
+  return out;
+}
 
 Deno.serve(async (req) => {
   if (!isAuthorizedCronRequest(req, CRON_SECRET)) return new Response('Unauthorized', { status: 401 });
@@ -110,34 +136,65 @@ Deno.serve(async (req) => {
     }
   }
 
+  const state = await loadInactivityState();
+
   const env = { supabaseUrl: SUPABASE_URL, secret: SERVICE_ROLE_KEY };
   const summaries: BulkEmailItem[] = [];
   const comebacks: BulkEmailItem[] = [];
+  const whys: { userId: string; pick: WhyEmail; item: BulkEmailItem }[] = [];
   for (const u of users) {
     const count = weekCount.get(u.id) || 0;
+    const st = state?.get(u.id);
     const pick = weeklyEmailFor({
       weekCount: count,
-      lastWorkoutDate: lastWorkout.get(u.id) ?? null,
+      // O estado do banco enxerga o histórico inteiro; a consulta acima, só as últimas semanas.
+      lastWorkoutDate: st?.lastWorkoutDate ?? lastWorkout.get(u.id) ?? null,
       createdDate: nowInSaoPaulo(new Date(u.createdAt)).date,
       today,
+      activity: st,
     });
     if (!pick) continue;
     if (pick.kind === 'summary') {
       const goal = Number(u.meta.weeklyGoal) > 0 ? Number(u.meta.weeklyGoal) : DEFAULT_WEEKLY_GOAL;
       const volume = Math.round(weekVolume.get(u.id) || 0);
       summaries.push(await bulkEmailItem(u, (lang) => weeklySummaryEmail(lang, count, goal, volume), env));
-    } else {
+    } else if (pick.kind === 'comeback') {
       comebacks.push(await bulkEmailItem(u, (lang) => comebackEmail(lang, pick.days, pick.neverTrained), env));
+    } else {
+      const token = await surveyToken(u.id, SERVICE_ROLE_KEY);
+      const item = await bulkEmailItem(u, (lang) => inactivityEmail(lang, pick, (reason) => surveyLink(token, reason)), env);
+      whys.push({ userId: u.id, pick, item });
     }
   }
 
-  // Resumo primeiro: se o teto do Gmail cortar alguém, que seja quem está parado.
-  const queue = [...summaries, ...comebacks];
-  if (dry) return json({ dry: true, summary: summaries.length, comeback: comebacks.length, wouldSend: Math.min(queue.length, MAX_BULK_EMAILS) });
+  // Resumo primeiro e pesquisa por último (de quem parou há menos tempo pra
+  // quem parou há mais): se o teto do Gmail cortar alguém, que seja quem está
+  // parado há mais tempo. Quem ficou de fora da pesquisa recebe na segunda seguinte.
+  whys.sort((a, b) => a.pick.days - b.pick.days);
+  const queue = [...summaries, ...comebacks, ...whys.map((w) => w.item)];
+  const counts = {
+    summary: summaries.length,
+    comeback: comebacks.length,
+    whyAbsent: whys.filter((w) => w.pick.segment === 'absent').length,
+    whyIdle: whys.filter((w) => w.pick.segment === 'idle').length,
+  };
+  if (dry) return json({ dry: true, ...counts, wouldSend: Math.min(queue.length, MAX_BULK_EMAILS) });
   if (queue.length > MAX_BULK_EMAILS) {
     console.error(`send-weekly-emails: ${queue.length} destinatários, enviando só ${MAX_BULK_EMAILS} (limite diário do Gmail)`);
   }
-  const sent = await sendEmailBatch(queue.slice(0, MAX_BULK_EMAILS));
+  const firstWhy = summaries.length + comebacks.length;
+  const asked: { user_id: string; segment: string; days_inactive: number; never_trained: boolean }[] = [];
+  const sent = await sendEmailBatch(queue.slice(0, MAX_BULK_EMAILS), undefined, (index) => {
+    if (index < firstWhy) return;
+    const { userId, pick } = whys[index - firstWhy];
+    asked.push({ user_id: userId, segment: pick.segment, days_inactive: pick.days, never_trained: pick.neverTrained });
+  });
 
-  return json({ summary: summaries.length, comeback: comebacks.length, sent });
+  // É este registro que impede a pesquisa de sair de novo na semana seguinte.
+  if (asked.length) {
+    const { error } = await supabase.from('inactivity_surveys').insert(asked);
+    if (error) console.error('inactivity_surveys insert error:', error.message);
+  }
+
+  return json({ ...counts, sent });
 });

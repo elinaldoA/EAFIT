@@ -1,7 +1,8 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { renderEmail } from './emailLayout.ts';
 import {
-  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, shouldSendWelcome, weeklySummaryEmail, welcomeEmail,
+  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, inactivityEmail, shouldSendWelcome, weeklySummaryEmail,
+  welcomeEmail,
 } from './emailTexts.ts';
 
 Deno.test('welcomeEmail: pt e en, com botão pro app', () => {
@@ -35,6 +36,26 @@ Deno.test('comebackEmail: dias parado, ou primeiro treino pra quem nunca treinou
   assertStringIncludes(comebackEmail('en', 9, false).paragraphs[0], 'It has been 9 days');
   assertEquals(comebackEmail('pt', 10, true).subject, 'Seu primeiro treino está esperando');
   assertEquals(comebackEmail('en', 10, true).subject, 'Your first workout is waiting');
+});
+
+Deno.test('inactivityEmail: texto por segmento e um link por motivo', () => {
+  const link = (reason: string) => `https://x/?motivo=${reason}`;
+  const absent = inactivityEmail('pt', { segment: 'absent', days: 41, neverTrained: false }, link);
+  assertEquals(absent.subject, 'O que fez você parar?');
+  assertStringIncludes(absent.paragraphs[0], 'Já são 41 dias');
+  assertEquals(absent.choices?.length, 7);
+  assertEquals(absent.choices?.[0], { label: 'Estou sem tempo', url: 'https://x/?motivo=sem_tempo' });
+
+  const idle = inactivityEmail('pt', { segment: 'idle', days: 41, neverTrained: false }, link);
+  assertEquals(idle.subject, 'O que está travando o seu treino?');
+  assertStringIncludes(idle.paragraphs[0], 'Você abriu o EAFIT recentemente');
+  assertStringIncludes(inactivityEmail('pt', { segment: 'idle', days: 41, neverTrained: true }, link).paragraphs[0], 'ainda não registrou nenhum treino');
+  assertStringIncludes(inactivityEmail('pt', { segment: 'absent', days: 41, neverTrained: true }, link).paragraphs[0], 'primeiro treino');
+
+  const en = inactivityEmail('en', { segment: 'absent', days: 41, neverTrained: false }, link);
+  assertEquals(en.subject, 'What made you stop?');
+  assertEquals(en.choices?.[0].label, 'I have no time');
+  assertEquals(inactivityEmail('en', { segment: 'idle', days: 41, neverTrained: false }, link).subject, 'What is keeping you from training?');
 });
 
 Deno.test('broadcastEmail e feedbackReplyEmail: cada linha vira um parágrafo', () => {

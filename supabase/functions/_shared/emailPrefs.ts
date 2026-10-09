@@ -12,29 +12,39 @@ export function emailOptedIn(meta: unknown): boolean {
   return (meta as { notifyEmail?: unknown } | null | undefined)?.notifyEmail !== false;
 }
 
-async function sign(userId: string, secret: string): Promise<string> {
+async function sign(purpose: string, userId: string, secret: string): Promise<string> {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(`email-unsubscribe:${userId}`)));
+  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(`${purpose}:${userId}`)));
   return [...mac].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-export async function unsubscribeToken(userId: string, secret: string): Promise<string> {
-  return `${userId}.${await sign(userId, secret)}`;
+// Código assinado que identifica a conta num link de e-mail. O `purpose` entra
+// na assinatura: o código de um tipo de link não serve em outro.
+export async function signedUserToken(purpose: string, userId: string, secret: string): Promise<string> {
+  return `${userId}.${await sign(purpose, userId, secret)}`;
 }
 
 // Devolve o id do usuário se o código for válido; senão, null.
-export async function verifyUnsubscribeToken(token: unknown, secret: string): Promise<string | null> {
+export async function verifyUserToken(purpose: string, token: unknown, secret: string): Promise<string | null> {
   if (typeof token !== 'string') return null;
   const dot = token.indexOf('.');
   if (dot <= 0) return null;
   const userId = token.slice(0, dot);
   const given = token.slice(dot + 1);
-  const expected = await sign(userId, secret);
+  const expected = await sign(purpose, userId, secret);
   if (given.length !== expected.length) return null;
   let diff = 0;
   for (let i = 0; i < expected.length; i++) diff |= given.charCodeAt(i) ^ expected.charCodeAt(i);
   return diff === 0 ? userId : null;
+}
+
+export function unsubscribeToken(userId: string, secret: string): Promise<string> {
+  return signedUserToken('email-unsubscribe', userId, secret);
+}
+
+export function verifyUnsubscribeToken(token: unknown, secret: string): Promise<string | null> {
+  return verifyUserToken('email-unsubscribe', token, secret);
 }
 
 // `page` vai no rodapé do e-mail (abre o app, que confirma o descadastro);

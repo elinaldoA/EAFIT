@@ -172,9 +172,15 @@ passos manuais:
      `supabase/functions/_shared/email.ts` (sem eles, as funções só não enviam e-mail).
      Hoje enviam e-mail: `send-welcome` (boas-vindas, chamada pelo app no cadastro),
      `delete-account` (confirmação de conta excluída), `send-weekly-emails` (resumo da
-     semana ou convite pra voltar, toda segunda pelo cron) e `admin-broadcast` (comunicado
-     com "enviar também por e-mail" e resposta a feedback). Resumo, convite e comunicado
-     respeitam o descadastro (`user_metadata.notifyEmail`, chave no Perfil e link no
-     rodapé, atendido por `email-unsubscribe`) e o teto de 300 destinatários por envio.
+     semana, convite pra voltar ou pesquisa de inatividade, toda segunda pelo cron) e
+     `admin-broadcast` (comunicado com "enviar também por e-mail" e resposta a feedback).
+     Resumo, convite, pesquisa e comunicado respeitam o descadastro
+     (`user_metadata.notifyEmail`, chave no Perfil e link no rodapé, atendido por
+     `email-unsubscribe`) e o teto de 300 destinatários por envio.
+     A pesquisa de inatividade ("por que você parou?") sai uma vez para quem passa de 4
+     semanas sem treinar, com texto diferente para quem sumiu do app (30 dias ou mais sem
+     abrir) e para quem entra mas não treina. Cada motivo do e-mail é um link que abre o
+     app e grava a resposta por `inactivity-reason`; o resultado aparece no painel em
+     Acompanhamento → Por que pararam.
 - **Custo/escala**: checar os limites do plano atual do Supabase (linhas de banco,
   storage de fotos, invocações de Edge Function) antes de divulgar amplamente.

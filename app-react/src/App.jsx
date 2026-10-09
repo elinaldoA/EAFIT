@@ -27,6 +27,8 @@ import MaintenanceScreen from './components/MaintenanceScreen';
 import MovedScreen from './components/MovedScreen';
 import EmailUnsubscribeScreen from './components/EmailUnsubscribeScreen';
 import { takeUnsubscribeToken } from './lib/emailUnsubscribe';
+import InactivitySurveyScreen from './components/InactivitySurveyScreen';
+import { takeSurveyLink } from './lib/inactivitySurvey';
 import { movedTarget } from './lib/appConfig';
 import { cameFromOldAddress } from './lib/installPrompt';
 import AnnouncementBanner from './components/AnnouncementBanner';
@@ -74,6 +76,8 @@ function Shell() {
   const [fromOldAddress] = useState(cameFromOldAddress);
   // Aberto pelo link de descadastro de um e-mail (lib/emailUnsubscribe.js).
   const [unsubscribeToken, setUnsubscribeToken] = useState(takeUnsubscribeToken);
+  // Aberto por um motivo da pesquisa de inatividade do e-mail (lib/inactivitySurvey.js).
+  const [surveyLink, setSurveyLink] = useState(takeSurveyLink);
   useEffect(() => {
     const onNav = event => { if (event.detail?.remount) setNavSeq(n => n + 1); };
     window.addEventListener(NAV_EVENT, onNav);
@@ -107,6 +111,7 @@ function Shell() {
   if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;
 
   if (unsubscribeToken) return <EmailUnsubscribeScreen token={unsubscribeToken} onClose={() => setUnsubscribeToken(null)} />;
+  if (surveyLink) return <InactivitySurveyScreen token={surveyLink.token} reason={surveyLink.reason} onClose={() => setSurveyLink(null)} />;
 
   if (authLoading) return <BootSplash />;
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;

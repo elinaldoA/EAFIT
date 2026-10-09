@@ -94,6 +94,7 @@ describe('backup cobre as tabelas do usuário', () => {
     user_events: 'métrica de uso do app (telas e funcionalidades abertas), não é conteúdo do usuário',
     user_client: 'retrato técnico do aparelho (sistema, navegador, versão do app)',
     admin_user_notes: 'anotações internas da equipe sobre a conta',
+    inactivity_surveys: 'controle de envio da pesquisa de inatividade; a resposta chega por link de e-mail, sem login, e o app não lê a tabela',
     feed_events: 'atividade já refletida em treinos/recordes; os amigos veem só apelido',
     feed_reactions: 'reações em publicações de terceiros',
     friendships: 'a lista de amigos (apelido e status) vai em friends',

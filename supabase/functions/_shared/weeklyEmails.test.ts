@@ -46,3 +46,46 @@ Deno.test('weeklyEmailFor: resumo pra quem treinou, volta pra quem parou há 1 a
   );
   assertEquals(weeklyEmailFor({ weekCount: 0, lastWorkoutDate: null, createdDate: '2026-10-10', today }), null);
 });
+
+Deno.test('weeklyEmailFor: depois de 4 semanas pergunta o motivo, uma vez por período parado', () => {
+  const today = '2026-10-12';
+  const created = '2026-06-01';
+  const stopped = { weekCount: 0, lastWorkoutDate: '2026-09-01', createdDate: created, today };
+  const never = { lastSeenDate: null, lastAskedDate: null };
+
+  // Sem o estado do banco, segue como antes: para de insistir.
+  assertEquals(weeklyEmailFor(stopped), null);
+
+  // Não abre o app desde o último treino: sumiu.
+  assertEquals(
+    weeklyEmailFor({ ...stopped, activity: never }),
+    { kind: 'why', days: 41, neverTrained: false, segment: 'absent' },
+  );
+  // Abriu o app há 5 dias, mas não treina.
+  assertEquals(
+    weeklyEmailFor({ ...stopped, activity: { ...never, lastSeenDate: '2026-10-07' } }),
+    { kind: 'why', days: 41, neverTrained: false, segment: 'idle' },
+  );
+  // Limite do acesso: 30 dias sem abrir é sumiço, 29 ainda não.
+  assertEquals(weeklyEmailFor({ ...stopped, lastWorkoutDate: '2026-08-01', activity: { ...never, lastSeenDate: '2026-09-12' } }), {
+    kind: 'why', days: 72, neverTrained: false, segment: 'absent',
+  });
+  assertEquals(weeklyEmailFor({ ...stopped, lastWorkoutDate: '2026-08-01', activity: { ...never, lastSeenDate: '2026-09-13' } }), {
+    kind: 'why', days: 72, neverTrained: false, segment: 'idle',
+  });
+
+  // Dentro das 4 semanas continua sendo o convite pra voltar.
+  assertEquals(weeklyEmailFor({ ...stopped, lastWorkoutDate: '2026-09-14', activity: never })?.kind, 'comeback');
+  assertEquals(weeklyEmailFor({ ...stopped, lastWorkoutDate: '2026-09-13', activity: never })?.kind, 'why');
+
+  // Já perguntou depois do último treino: não repete.
+  assertEquals(weeklyEmailFor({ ...stopped, activity: { ...never, lastAskedDate: '2026-10-05' } }), null);
+  // Perguntou, a pessoa voltou a treinar e parou de novo: pergunta outra vez.
+  assertEquals(weeklyEmailFor({ ...stopped, activity: { ...never, lastAskedDate: '2026-08-10' } })?.kind, 'why');
+
+  // Nunca treinou: conta da criação da conta.
+  assertEquals(
+    weeklyEmailFor({ weekCount: 0, lastWorkoutDate: null, createdDate: '2026-08-01', today, activity: never }),
+    { kind: 'why', days: 72, neverTrained: true, segment: 'absent' },
+  );
+});

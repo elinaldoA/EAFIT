@@ -36,6 +36,7 @@ export const NAV_GROUPS = [
         key: 'acompanhamento', label: 'Acompanhamento', icon: 'shield',
         tabs: [
           { to: '/feedback', label: 'Feedback' },
+          { to: '/inatividade', label: 'Por que pararam' },
           { to: '/contato', label: 'Contato do site' },
           { to: '/seguranca', label: 'Segurança' },
         ],
