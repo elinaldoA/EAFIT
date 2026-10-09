@@ -779,54 +779,30 @@ header.nav.is-open .nav-toggle .x { display: block; }
 .footer-col a:hover { color: var(--text); }
 @media (max-width: 560px) { .footer-cols { grid-template-columns: 1fr 1fr; width: 100%; } }
 
-/* ---------- biblioteca de exercícios (páginas geradas por scripts/build-site.mjs) ---------- */
-.lib-tools { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.lib-search {
-  width: 100%; max-width: 480px; min-height: 48px; padding: 12px 16px; border-radius: 12px;
-  border: 1px solid var(--border-2); background: var(--surface); color: var(--text); font: inherit; font-size: 16px;
+/* ---------- biblioteca de exercícios em números (página gerada por scripts/build-site.mjs) ---------- */
+.page-hero .stats-grid { margin-top: 8px; }
+.page-hero .stat { flex-basis: 150px; }
+.lib-section { padding: clamp(40px, 6vw, 72px) 0; }
+.bar { display: block; height: 8px; border-radius: 6px; background: var(--surface-3); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 6px; background: var(--primary); }
+.group-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; list-style: none; margin: 0; padding: 0; }
+.group-card { display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border); scroll-margin-top: 88px; }
+.group-card:target { border-color: var(--primary); }
+.group-card__name { font-size: 14.5px; font-weight: 700; color: var(--text-muted); }
+.group-card > b { font-size: 34px; line-height: 1; letter-spacing: -.03em; }
+.group-card__mix { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--text-dim); }
+.group-card__mix b { color: var(--text-muted); }
+.bar-panel { max-width: 720px; margin: 0 auto; }
+.bar-panel h2 { margin: 0 0 6px; font-size: clamp(20px, 2.4vw, 26px); letter-spacing: -.02em; }
+.bar-panel > p { margin: 0 0 18px; color: var(--text-muted); font-size: 15px; }
+.bar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.bar-list li { display: grid; grid-template-columns: 150px 1fr 36px; align-items: center; gap: 12px; font-size: 15px; font-weight: 600; }
+.bar-list li > b { text-align: right; font-variant-numeric: tabular-nums; }
+.bar-cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 64px); }
+.bar-cols .bar-panel { max-width: none; margin: 0; }
+@media (max-width: 760px) { .bar-cols { grid-template-columns: 1fr; } }
+@media (max-width: 480px) {
+  .group-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .group-card { padding: 16px; }
+  .bar-list li { grid-template-columns: 112px 1fr 30px; font-size: 14px; }
 }
-.lib-search::placeholder { color: var(--text-dim); }
-.lib-group { padding: clamp(28px, 4vw, 48px) 0 0; }
-.page-hero + .lib-group { padding-top: clamp(12px, 2vw, 24px); }
-.lib-group[hidden], .ex-grid li[hidden], .lib-empty[hidden] { display: none; }
-.lib-group h2 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 18px; font-size: clamp(22px, 2.6vw, 30px); letter-spacing: -.02em; }
-.lib-group h2 small { font-size: 14px; font-weight: 600; color: var(--text-dim); letter-spacing: 0; }
-.lib-end { padding-top: clamp(40px, 6vw, 72px); }
-.lib-empty { margin: 0; padding: 40px 0 0; text-align: center; color: var(--text-muted); }
-.ex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; list-style: none; margin: 0; padding: 0; }
-.ex-card {
-  display: flex; flex-direction: column; height: 100%; overflow: hidden; text-decoration: none;
-  border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--border);
-  transition: transform .2s ease, border-color .2s ease;
-}
-.ex-card:hover { transform: translateY(-3px); border-color: rgba(249, 115, 22, .45); }
-.ex-card__img { display: grid; place-items: center; aspect-ratio: 4 / 3; background: #fff; color: #a1a1aa; }
-.ex-card__img img { width: 100%; height: 100%; object-fit: cover; }
-.ex-card__body { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 14px; }
-.ex-card__body b { font-size: 15px; line-height: 1.25; }
-.ex-card__body span { font-size: 12.5px; font-weight: 600; color: var(--text-dim); }
-@media (max-width: 480px) { .ex-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
-
-.ex-detail { padding: clamp(28px, 4vw, 48px) 0 clamp(40px, 6vw, 72px); }
-.ex-detail h1 { font-size: clamp(28px, 3.6vw, 44px); margin-bottom: 14px; }
-.ex-detail .chip-row { justify-content: flex-start; }
-.ex-layout { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(24px, 4vw, 48px); align-items: start; margin-top: 28px; }
-.ex-layout > * { min-width: 0; }
-.ex-media .panel { max-width: none; }
-.demo-frames { position: relative; overflow: hidden; border-radius: 12px; background: #0e0e12; aspect-ratio: 3 / 2; }
-.demo-frames img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.demo-frames img + img { animation: frameflip 2.4s steps(1) infinite; }
-@keyframes frameflip { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
-.ex-info h2 { margin: 0 0 12px; font-size: 18px; }
-.ex-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 16px; }
-.ex-facts div { padding: 14px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border); }
-.ex-facts dt { font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); }
-.ex-facts dd { margin: 4px 0 0; font-size: 19px; font-weight: 800; line-height: 1.2; }
-.ex-tip { margin: 0 0 22px; padding: 16px 18px; border-radius: var(--r-md); background: var(--surface); border: 1px dashed var(--border-2); color: var(--text-muted); }
-.ex-tip b { display: block; margin-bottom: 4px; color: var(--text); }
-.ex-note { margin: 14px 0 0; font-size: 13.5px; color: var(--text-dim); }
-.ex-related { padding-top: 0; }
-.ex-related .ex-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-.ex-related h2 { margin: 0 0 18px; font-size: clamp(20px, 2.4vw, 26px); letter-spacing: -.02em; }
-@media (max-width: 860px) { .ex-layout { grid-template-columns: 1fr; } }
-@media (max-width: 420px) { .ex-facts { grid-template-columns: 1fr 1fr; } }

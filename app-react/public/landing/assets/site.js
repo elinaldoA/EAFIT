@@ -135,7 +135,7 @@
     ring.style.strokeDashoffset = String(C * (1 - left / total));
   });
 
-  // ---------- vídeo de demonstração (vitrine de /recursos/ e página de exercício) ----------
+  // ---------- vídeo de demonstração (vitrine de /recursos/) ----------
   var video = document.getElementById('demoVideo');
   var playBtn = document.getElementById('demoPlay');
   var slowBtn = document.getElementById('demoSlow');
@@ -197,30 +197,6 @@
         }
       }, { threshold: 0.4 }).observe(video);
     }
-  }
-
-  // ---------- biblioteca de exercícios: busca por nome (/exercicios/) ----------
-  var libSearch = document.getElementById('lib-search');
-  if (libSearch) {
-    var plain = function (s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
-    var libGroups = document.querySelectorAll('.lib-group');
-    var libEmpty = document.getElementById('lib-empty');
-    libSearch.addEventListener('input', function () {
-      var q = plain(libSearch.value.trim());
-      var total = 0;
-      libGroups.forEach(function (group) {
-        var shown = 0;
-        group.querySelectorAll('.ex-grid li').forEach(function (li) {
-          // textContent já está no idioma da página (a tradução troca o texto do nó).
-          var hit = !q || plain(li.textContent).indexOf(q) !== -1;
-          li.hidden = !hit;
-          if (hit) shown++;
-        });
-        group.hidden = !shown;
-        total += shown;
-      });
-      if (libEmpty) libEmpty.hidden = total > 0;
-    });
   }
 })();
 
@@ -447,7 +423,7 @@
     window.addEventListener('appinstalled', function () { if (installBtn) installBtn.hidden = true; });
 
     var bar = document.getElementById('sticky-cta');
-    var hero = document.querySelector('.hero, .page-hero, .ex-detail');
+    var hero = document.querySelector('.hero, .page-hero');
     var cta = document.querySelector('[data-section="cta"]');
     if (!bar || !hero || !('IntersectionObserver' in window)) return;
     var pastHero = false, onCta = false;

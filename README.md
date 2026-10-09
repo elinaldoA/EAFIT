@@ -40,7 +40,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
 ├── app-react/          # código-fonte do app (React + Vite)
 │   ├── public/
 │   │   └── landing/      # site estático de divulgação (raiz do domínio)
-│   ├── scripts/         # build-site.mjs: gera a biblioteca de exercícios e o sitemap
+│   ├── scripts/         # build-site.mjs: gera a página da biblioteca (em números) e o sitemap
 │   ├── src/
 │   │   ├── components/  # componentes de UI reutilizáveis
 │   │   ├── context/      # estado global (auth, tema, toast, treino)
@@ -68,7 +68,7 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   de context e o hook (`useX`) ficam em `context/useX.js`. Arquivo `.jsx` que
   exporta componente e não-componente juntos perde o Fast Refresh (o lint
   avisa).
-- **Idiomas (pt/en)**: a interface usa o próprio texto em português como chave de tradução: `t('Iniciar treino')` (de `lib/i18n.js`). O inglês fica em `app-react/src/i18n/en/`; texto sem tradução cai no português. Ao criar texto novo na interface, envolva em `t()` e adicione a entrada em `i18n/en/` — o teste `lib/i18n.test.js` falha se faltar. Datas e números usam `locale`. O idioma é escolhido em Perfil → Idioma (ou na tela de acesso) e recarrega o app. **Exercícios e planos**: o dado fica em português (o nome é a chave do histórico e dos recordes); só a exibição passa por `tEx`/`tTec`/`tFoco`/`tReps` (`lib/i18n.js`), com o dicionário em `i18n/en/exercises.js` — exercício criado pelo usuário ou pelo personal aparece como foi digitado. `data/exerciseI18n.test.js` falha se um nome/técnica/foco dos planos prontos ou da biblioteca (migrations) ficar sem tradução. **Notificações do servidor**: o app grava o idioma em `user_metadata.lang` (hook `useSyncLang`) e as Edge Functions (`send-reminders`, `send-engagement`, alertas e lembretes de aula do personal) mandam push em pt ou en (`_shared/lang.ts`, `reminderTexts.ts`). As regras de `engagement_rules` têm `title_en`/`body_en` (o painel edita os dois idiomas em Automáticas → "Versão em inglês"; sem título e mensagem em inglês, cai no português), e `_shared/exerciseI18n.ts` é cópia gerada de `exercises.js` (teste de divergência). Avisos do admin e recados do personal vão como foram escritos. **Site e termos**: seletor PT/EN no site (`landing/i18n-en.js`, mesmo `app_lang` do app; as páginas da biblioteca somam o dicionário gerado a partir de `i18n/en/exercises.js`) e nos Termos/Privacidade (versão em inglês de cortesia, a em português prevalece e continua precisando de revisão jurídica); texto da landing editado no admin que ainda não tem tradução fica em português. **Fora do escopo**: o painel admin (backoffice interno).
+- **Idiomas (pt/en)**: a interface usa o próprio texto em português como chave de tradução: `t('Iniciar treino')` (de `lib/i18n.js`). O inglês fica em `app-react/src/i18n/en/`; texto sem tradução cai no português. Ao criar texto novo na interface, envolva em `t()` e adicione a entrada em `i18n/en/` — o teste `lib/i18n.test.js` falha se faltar. Datas e números usam `locale`. O idioma é escolhido em Perfil → Idioma (ou na tela de acesso) e recarrega o app. **Exercícios e planos**: o dado fica em português (o nome é a chave do histórico e dos recordes); só a exibição passa por `tEx`/`tTec`/`tFoco`/`tReps` (`lib/i18n.js`), com o dicionário em `i18n/en/exercises.js` — exercício criado pelo usuário ou pelo personal aparece como foi digitado. `data/exerciseI18n.test.js` falha se um nome/técnica/foco dos planos prontos ou da biblioteca (migrations) ficar sem tradução. **Notificações do servidor**: o app grava o idioma em `user_metadata.lang` (hook `useSyncLang`) e as Edge Functions (`send-reminders`, `send-engagement`, alertas e lembretes de aula do personal) mandam push em pt ou en (`_shared/lang.ts`, `reminderTexts.ts`). As regras de `engagement_rules` têm `title_en`/`body_en` (o painel edita os dois idiomas em Automáticas → "Versão em inglês"; sem título e mensagem em inglês, cai no português), e `_shared/exerciseI18n.ts` é cópia gerada de `exercises.js` (teste de divergência). Avisos do admin e recados do personal vão como foram escritos. **Site e termos**: seletor PT/EN no site (`landing/i18n-en.js`, mesmo `app_lang` do app; a página da biblioteca soma um dicionário gerado no build) e nos Termos/Privacidade (versão em inglês de cortesia, a em português prevalece e continua precisando de revisão jurídica); texto da landing editado no admin que ainda não tem tradução fica em português. **Fora do escopo**: o painel admin (backoffice interno).
 - **Duplicação entre app-react e as Edge Functions (Deno)**: como os dois
   ambientes não compartilham build, algumas lógicas (geração de plano por
   IMC/nível, exclusão de dados do usuário) são portadas manualmente em vez de
@@ -88,9 +88,9 @@ PWA (Progressive Web App) para acompanhamento de treino, hidratação e evoluç�
   `/assets/site.css`), porque o deploy publica a pasta na raiz do domínio.
   As seções com `data-section` continuam editáveis no painel admin; a mesma
   seção pode aparecer resumida na home (`data-limit`) e completa na página
-  interna. A **biblioteca de exercícios** (`/exercicios/` e uma página por
-  exercício) e o `sitemap.xml` não são versionados: `npm run site` (ou
-  `npm run build`) gera tudo a partir do seed de `exercise_library` nas
+  interna. A **biblioteca de exercícios** (`/exercicios/`) mostra só números:
+  quantos exercícios há por grupo muscular, equipamento, tipo e nível, sem listar nomes nem demonstrações (isso fica dentro do app). Ela e o `sitemap.xml` não são versionados: `npm run site` (ou
+  `npm run build`) gera os dois a partir do seed de `exercise_library` nas
   migrations e das demonstrações de `exerciseMedia.js`/`exerciseVideos.js`.
   Página nova escrita à mão: crie a pasta, copie os três blocos da home,
   adicione o inglês em `landing/i18n-en.js` e, se for o caso, o link no menu.

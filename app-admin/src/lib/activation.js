@@ -126,7 +126,7 @@ const EVENT_PLACES = {
   sticky: 'Barra fixa (celular)',
   personal: 'Seção Personal',
   library: 'Biblioteca (home)',
-  exercicio: 'Páginas de exercício',
+  exercicio: 'Biblioteca de exercícios',
   cta: 'CTA final',
   rodape: 'Rodapé',
   outro: 'Outro',
