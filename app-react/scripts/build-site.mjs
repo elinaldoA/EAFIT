@@ -6,6 +6,7 @@
 //   - exercicios/i18n-en.js: inglês dessa página (soma ao landing/i18n-en.js)
 //   - sitemap.xml: páginas escritas à mão + a gerada
 // Roda antes do `vite build` (npm run build) ou avulso com `npm run site`.
+// Depois do `vite build`, `--stamp` carimba a versão dos CSS/JS em dist/landing.
 // A saída não é versionada (ver .gitignore).
 //
 // Fontes: a biblioteca semeada em supabase/migrations/*exercise_library*.sql
@@ -14,6 +15,7 @@
 // site-header e site-footer de public/landing/index.html).
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { EXERCISE_VIDEOS } from '../src/data/exerciseVideos.js';
 
@@ -333,6 +335,40 @@ export function build() {
   return all.length;
 }
 
+// Depois do `vite build`: acrescenta ?v=<hash do conteúdo> aos CSS/JS do site
+// em todo HTML de dist/landing. O GitHub Pages deixa o navegador guardar os
+// arquivos por 10 minutos; sem isso, logo após um deploy o visitante podia
+// receber o HTML novo com o site.css antigo (menu quebrado). Só mexe em dist.
+const STAMPED = ['/assets/site.css', '/assets/site.js', '/i18n-en.js', '/exercicios/i18n-en.js'];
+
+export function stampHtml(html, versions) {
+  return STAMPED.reduce((acc, url) => (versions[url]
+    ? acc.replaceAll(`"${url}"`, `"${url}?v=${versions[url]}"`)
+    : acc), html);
+}
+
+export function stamp(distLanding) {
+  const versions = {};
+  for (const url of STAMPED) {
+    const file = path.join(distLanding, url);
+    if (fs.existsSync(file)) versions[url] = createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 10);
+  }
+  let count = 0;
+  const walk = dir => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.html')) { fs.writeFileSync(full, stampHtml(fs.readFileSync(full, 'utf8'), versions)); count++; }
+    }
+  };
+  walk(distLanding);
+  return count;
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  console.log(`site: biblioteca em números (${build()} exercícios) + sitemap em public/landing/`);
+  if (process.argv[2] === '--stamp') {
+    console.log(`site: versão dos assets carimbada em ${stamp(path.join(APP, 'dist/landing'))} páginas de dist/landing/`);
+  } else {
+    console.log(`site: biblioteca em números (${build()} exercícios) + sitemap em public/landing/`);
+  }
 }

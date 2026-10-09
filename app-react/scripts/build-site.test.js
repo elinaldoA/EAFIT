@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { GROUPS, loadExercises, loadShell, summarize, renderIndex, buildDictionary, buildSitemap } from './build-site.mjs';
+import { GROUPS, loadExercises, loadShell, summarize, renderIndex, buildDictionary, buildSitemap, stampHtml } from './build-site.mjs';
 
 const dir = path.resolve(process.cwd(), 'public/landing');
 const read = rel => fs.readFileSync(path.join(dir, rel), 'utf8');
@@ -88,5 +88,20 @@ describe('biblioteca de exercícios em números', () => {
     for (const p of handPages.slice(1)) expect(xml).toContain(`https://eafit.com.br/${p.replace('index.html', '')}</loc>`);
     expect(xml).toContain('https://eafit.com.br/exercicios/</loc>');
     expect(xml.match(/<url>/g).length).toBe(handPages.length + 4);
+  });
+
+  it('o carimbo de versão alcança os CSS/JS do site em todas as páginas e não mexe no resto', () => {
+    const versions = { '/assets/site.css': 'aaa', '/assets/site.js': 'bbb', '/i18n-en.js': 'ccc', '/exercicios/i18n-en.js': 'ddd' };
+    for (const p of [...handPages, '404.html']) {
+      const out = stampHtml(read(p), versions);
+      expect(out, p).toContain('href="/assets/site.css?v=aaa"');
+      expect(out, p).toContain('src="/assets/site.js?v=bbb"');
+      expect(out, p).toContain('src="/i18n-en.js?v=ccc"');
+      expect(out, p).not.toContain('"/assets/site.css"');
+      expect(out, p).not.toContain('"/assets/site.js"');
+    }
+    const stamped = stampHtml(html, versions);
+    expect(stamped).toContain('src="/exercicios/i18n-en.js?v=ddd"');
+    expect(stampHtml(stamped, {})).toBe(stamped);
   });
 });
