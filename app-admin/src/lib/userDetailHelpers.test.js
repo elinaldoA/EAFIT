@@ -8,7 +8,7 @@ import {
   formatDate, estimateOneRepMax, computePersonalRecords, callAdminAction, callGeneratePlan,
   METAS, NIVEIS, BADGE_LABELS, SEVERITY_BADGE, SEVERITY_LABEL,
 } from './userDetailHelpers';
-import { fetchUsersPage, PAGE_SIZE } from './users';
+import { fetchUsersPage, fetchDeactivatedIds, PAGE_SIZE } from './users';
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -139,5 +139,11 @@ describe('fetchUsersPage', () => {
   it('propaga erro', async () => {
     mockRpc.mockResolvedValue({ data: null, error: { message: 'not_authorized' } });
     await expect(fetchUsersPage()).rejects.toMatchObject({ message: 'not_authorized' });
+  });
+});
+
+describe('fetchDeactivatedIds', () => {
+  it('sem acesso à tabela devolve conjunto vazio em vez de derrubar a lista', async () => {
+    expect((await fetchDeactivatedIds()).size).toBe(0);
   });
 });

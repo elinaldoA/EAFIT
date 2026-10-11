@@ -10,6 +10,19 @@ export async function fetchUsers() {
   return data || [];
 }
 
+// Ids das contas desativadas pelo admin. A lista paginada só traz
+// banned_until, que também fica preenchido no banimento — é esta consulta que
+// separa "desativado" de "banido". Falha aqui não derruba a lista.
+export async function fetchDeactivatedIds() {
+  try {
+    const { data, error } = await db.from('account_deactivations').select('user_id');
+    if (error) return new Set();
+    return new Set((data || []).map(r => r.user_id));
+  } catch {
+    return new Set();
+  }
+}
+
 export async function fetchUsersPage({ search = '', status = '', sort = '', nivel = '', meta = '', page = 0, pageSize = PAGE_SIZE } = {}) {
   const { data, error } = await db.rpc('admin_list_users_page', {
     search: search || null,

@@ -5,6 +5,7 @@ import { translateAuthError, isEmailNotConfirmed, isSpecificAuthError } from '..
 import { trackAuthEvent } from '../lib/tracking';
 import { claimLocalData, clearUserLocalData } from '../lib/localData';
 import { isAdminAccount } from '../lib/adminGuard';
+import { isAccountDeactivated } from '../lib/accountStatus';
 import { takeEmailLink } from '../lib/emailLink';
 
 import { t, lang } from '../lib/i18n';
@@ -31,17 +32,23 @@ export function AuthProvider({ children }) {
   // válida e dispara PASSWORD_RECOVERY — o Shell mostra a tela de nova senha
   // antes de liberar o app (mesmo padrão de app-admin/AdminAuthContext).
   const [recoveryMode, setRecoveryMode] = useState(false);
-  // Link de e-mail que não valeu (expirado ou já usado): a tela de acesso
-  // abre mostrando o motivo.
+  // Link de e-mail que não valeu (expirado ou já usado) ou conta desativada:
+  // a tela de acesso abre mostrando o motivo.
   const [linkError, setLinkError] = useState('');
 
   useEffect(() => {
     let active = true;
 
-    // Conta de admin não usa o app (só o painel admin): derruba a sessão e
-    // deixa a tela de acesso. Qualquer outra sessão segue o fluxo normal.
+    // Conta de admin não usa o app (só o painel admin) e conta desativada não
+    // entra: derruba a sessão e deixa a tela de acesso. Qualquer outra sessão
+    // segue o fluxo normal.
     async function acceptSession(session) {
-      if (session && await isAdminAccount(session.user.id)) {
+      const [isAdmin, deactivated] = session
+        ? await Promise.all([isAdminAccount(session.user.id), isAccountDeactivated()])
+        : [false, false];
+      if (isAdmin || deactivated) {
+        // Antes do signOut: a tela de acesso monta no SIGNED_OUT e já lê o motivo.
+        if (deactivated && active) setLinkError(t('Esta conta foi desativada. Fale com o suporte.'));
         await db.auth.signOut();
         if (active) { setUser(null); setAuthLoading(false); }
         return;
@@ -95,6 +102,23 @@ export function AuthProvider({ children }) {
 
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
+
+  // Conta desativada com o app já aberto: o token guardado ainda vale por um
+  // tempo, então cada volta para a tela confere de novo e encerra a sessão.
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return undefined;
+    let active = true;
+    async function check() {
+      if (document.visibilityState !== 'visible' || !await isAccountDeactivated() || !active) return;
+      setLinkError(t('Esta conta foi desativada. Fale com o suporte.'));
+      await db.auth.signOut();
+      clearUserLocalData();
+      setUser(null);
+    }
+    document.addEventListener('visibilitychange', check);
+    return () => { active = false; document.removeEventListener('visibilitychange', check); };
+  }, [userId]);
 
   async function login(email, password) {
     const { data, error } = await db.auth.signInWithPassword({ email, password });

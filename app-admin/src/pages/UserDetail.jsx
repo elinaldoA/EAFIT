@@ -28,6 +28,7 @@ export default function UserDetail() {
   const [achievements, setAchievements] = useState([]);
   const [progressPhotos, setProgressPhotos] = useState([]);
   const [pushCount, setPushCount] = useState(0);
+  const [deactivation, setDeactivation] = useState(null);
   const [expandedWorkoutId, setExpandedWorkoutId] = useState(null);
   const [workoutSets, setWorkoutSets] = useState({});
   const [setsLoading, setSetsLoading] = useState(false);
@@ -44,7 +45,7 @@ export default function UserDetail() {
     setLoading(true);
     setError('');
     try {
-      const [{ data: userRows, error: userErr }, plan, w, wa, we, allWorkoutIds, disc, ach, photos, push] = await Promise.all([
+      const [{ data: userRows, error: userErr }, plan, w, wa, we, allWorkoutIds, disc, ach, photos, push, deact] = await Promise.all([
         db.rpc('admin_get_user', { target: id }),
         db.from('workout_plans')
           .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, is_post_workout, order_index))')
@@ -57,6 +58,7 @@ export default function UserDetail() {
         db.from('achievements').select('id, badge_id, unlocked_at').eq('user_id', id).order('unlocked_at', { ascending: false }),
         db.from('progress_photos').select('id, photo_date, image_data, storage_path, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
         db.from('push_subscriptions').select('id', { count: 'exact', head: true }).eq('user_id', id),
+        db.from('account_deactivations').select('reason, deactivated_by_email, deactivated_at').eq('user_id', id).maybeSingle(),
       ]);
       if (userErr) throw userErr;
 
@@ -93,6 +95,7 @@ export default function UserDetail() {
       setAchievements(ach.data || []);
       setProgressPhotos(await withSignedPhotos(photos.data));
       setPushCount(push.count || 0);
+      setDeactivation(deact.data || null);
       setExpandedWorkoutId(null);
       setWorkoutSets({});
     } catch (err) {
@@ -131,6 +134,16 @@ export default function UserDetail() {
     } finally {
       setBusy(false);
     }
+  }
+
+  // O prompt do motivo já serve de confirmação: cancelar não desativa.
+  function handleDeactivate() {
+    const reason = window.prompt(
+      'Desativar esta conta? O login fica bloqueado e a conta sai de e-mails, notificações e comunidade. '
+      + 'Os dados são mantidos e você pode reativar depois.\n\nMotivo (opcional, fica no registro de auditoria):',
+    );
+    if (reason === null) return;
+    return runAction('deactivate', { reason: reason.trim() });
   }
 
   async function handleSaveProfile(e) {
@@ -291,7 +304,8 @@ export default function UserDetail() {
               <span className="badge badge--warning">⏸ pausado até {md.pausedUntil.split('-').reverse().slice(0, 2).join('/')}</span>
             )}
             {detail.is_admin && <span className="badge badge--admin">admin</span>}
-            {isBanned && <span className="badge badge--danger">banido</span>}
+            {deactivation && <span className="badge badge--danger">desativado</span>}
+            {!deactivation && isBanned && <span className="badge badge--danger">banido</span>}
           </p>
         </div>
       </div>
@@ -338,6 +352,7 @@ export default function UserDetail() {
           onRunAction={runAction} onToggleAdmin={handleToggleAdmin} onGeneratePlan={handleGeneratePlan}
           trainerCode={trainerCode} onToggleTrainer={handleToggleTrainer}
           onExportData={handleExportData}
+          deactivation={deactivation} onDeactivate={handleDeactivate}
         />
       )}
     </div>

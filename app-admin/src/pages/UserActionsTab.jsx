@@ -1,7 +1,12 @@
+import { formatDate } from '../lib/userDetailHelpers';
+
 export default function UserActionsTab({
   detail, adminUser, busy, recoveryLink, isBanned, hasProfile,
   onRunAction, onToggleAdmin, onGeneratePlan, trainerCode, onToggleTrainer, onExportData,
+  deactivation, onDeactivate,
 }) {
+  const isSelf = detail.id === adminUser?.id;
+
   return (
     <div className="card stack">
       {recoveryLink && (
@@ -11,17 +16,31 @@ export default function UserActionsTab({
         </div>
       )}
 
+      {deactivation && (
+        <p className="form-msg">
+          Conta desativada em {formatDate(deactivation.deactivated_at)}
+          {deactivation.deactivated_by_email ? ` por ${deactivation.deactivated_by_email}` : ''}.
+          {' '}Motivo: {deactivation.reason || 'não informado'}.
+          {' '}O login está bloqueado e os dados continuam guardados.
+        </p>
+      )}
+
       <div className="actions-row">
-        {isBanned ? (
+        {deactivation ? (
+          <button className="btn" disabled={busy} onClick={() => onRunAction('reactivate', {}, 'Reativar esta conta? O login volta a funcionar.')}>Reativar usuário</button>
+        ) : isBanned ? (
           <button className="btn" disabled={busy} onClick={() => onRunAction('unban')}>Desbanir usuário</button>
         ) : (
-          <button className="btn btn--danger" disabled={busy} onClick={() => onRunAction('ban', {}, 'Banir este usuário?')}>Banir usuário</button>
+          <>
+            {!isSelf && <button className="btn btn--danger" disabled={busy} onClick={onDeactivate}>Desativar usuário</button>}
+            <button className="btn btn--danger" disabled={busy} onClick={() => onRunAction('ban', {}, 'Banir este usuário?')}>Banir usuário</button>
+          </>
         )}
         <button className="btn" disabled={busy} onClick={() => onRunAction('resetPassword')}>Gerar link de redefinição de senha</button>
         {!detail.email_confirmed_at && (
           <button className="btn" disabled={busy} onClick={() => onRunAction('confirmUser', {}, 'Confirmar o e-mail deste usuário manualmente?')}>Confirmar e-mail</button>
         )}
-        {detail.id !== adminUser?.id && (
+        {!isSelf && (
           <button className="btn" disabled={busy} onClick={onToggleAdmin}>
             {detail.is_admin ? 'Remover admin' : 'Tornar admin'}
           </button>

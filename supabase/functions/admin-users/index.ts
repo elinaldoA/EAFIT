@@ -1,5 +1,5 @@
 // API do backoffice pra ações que só a GoTrue Admin API resolve (banir,
-// resetar senha, excluir conta de terceiros, editar metadata de terceiros) —
+// desativar, resetar senha, excluir conta de terceiros, editar metadata de terceiros) —
 // nada disso é alcançável via PostgREST/RLS. Mesmo padrão de
 // delete-account/index.ts: cliente anon com o JWT de quem chamou pra
 // identificar o admin, cliente service role pra agir. Diferente dele, aqui
@@ -8,6 +8,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { deleteUserData } from '../_shared/deleteUserData.ts';
 import { countWorkouts, logAccountDeletion } from '../_shared/accountDeletion.ts';
+import { BAN_FOREVER, deactivateAccount, normalizeReason, reactivateAccount } from '../_shared/accountDeactivation.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -62,16 +63,31 @@ Deno.serve(async (req) => {
   try {
     switch (action) {
       case 'ban': {
-        const { error } = await admin.auth.admin.updateUserById(targetUserId, { ban_duration: '876000h' });
+        const { error } = await admin.auth.admin.updateUserById(targetUserId, { ban_duration: BAN_FOREVER });
         if (error) throw error;
         await logAudit(admin, callerId, targetUserId, 'ban', null);
         return json({ ok: true });
       }
 
+      // Também apaga o registro de desativação, se houver: login liberado com
+      // a conta ainda marcada como desativada derrubaria a sessão no app.
       case 'unban': {
-        const { error } = await admin.auth.admin.updateUserById(targetUserId, { ban_duration: 'none' });
-        if (error) throw error;
+        await reactivateAccount(admin, targetUserId);
         await logAudit(admin, callerId, targetUserId, 'unban', null);
+        return json({ ok: true });
+      }
+
+      case 'deactivate': {
+        if (targetUserId === callerId) return json({ error: 'Você não pode desativar a própria conta.' }, 400);
+        const reason = normalizeReason(body.reason);
+        await deactivateAccount(admin, { targetUserId, adminId: callerId, adminEmail: userRes.user.email ?? null, reason });
+        await logAudit(admin, callerId, targetUserId, 'deactivate', reason ? { reason } : null);
+        return json({ ok: true });
+      }
+
+      case 'reactivate': {
+        await reactivateAccount(admin, targetUserId);
+        await logAudit(admin, callerId, targetUserId, 'reactivate', null);
         return json({ ok: true });
       }
 

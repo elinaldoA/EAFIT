@@ -38,7 +38,7 @@ export default {
   'E-mail inválido.': 'Invalid email.',
   'Confira o e-mail e a senha informados.': 'Check the email and password you entered.',
   'Novos cadastros estão temporariamente desativados.': 'New sign-ups are temporarily disabled.',
-  'Esta conta está suspensa. Fale com o suporte.': 'This account is suspended. Contact support.',
+  'Esta conta está desativada ou suspensa. Fale com o suporte.': 'This account is deactivated or suspended. Contact support.',
   'Sua sessão expirou. Entre de novo.': 'Your session has expired. Sign in again.',
   'Este link expirou ou já foi usado. Peça um novo.': 'This link has expired or was already used. Request a new one.',
   'Sem conexão com a internet. Verifique e tente de novo.': 'No internet connection. Check it and try again.',

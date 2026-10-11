@@ -15,7 +15,8 @@ const BY_CODE = {
   email_address_invalid: t('E-mail inválido.'),
   validation_failed: t('Confira o e-mail e a senha informados.'),
   signup_disabled: t('Novos cadastros estão temporariamente desativados.'),
-  user_banned: t('Esta conta está suspensa. Fale com o suporte.'),
+  // O GoTrue responde o mesmo código para conta banida e conta desativada.
+  user_banned: t('Esta conta está desativada ou suspensa. Fale com o suporte.'),
   session_expired: t('Sua sessão expirou. Entre de novo.'),
   otp_expired: t('Este link expirou ou já foi usado. Peça um novo.'),
 };

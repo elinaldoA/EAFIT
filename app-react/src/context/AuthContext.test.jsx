@@ -22,6 +22,7 @@ vi.mock('../lib/supabase', () => ({
 }));
 
 import * as adminGuard from '../lib/adminGuard';
+import * as accountStatus from '../lib/accountStatus';
 import { AuthProvider } from './AuthContext';
 import { useAuth } from './useAuth';
 
@@ -274,5 +275,39 @@ describe('AuthProvider — conta de administrador', () => {
     await waitFor(() => expect(result.current.authLoading).toBe(false));
     expect(mockAuth.signOut).toHaveBeenCalled();
     expect(result.current.user).toBeNull();
+  });
+});
+
+describe('AuthProvider — conta desativada', () => {
+  // O spy do bloco de admin acima continua valendo entre os testes.
+  beforeEach(() => { vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(false); });
+
+  it('sessão já aberta no aparelho é encerrada ao abrir o app, com o motivo na tela de acesso', async () => {
+    vi.spyOn(accountStatus, 'isAccountDeactivated').mockResolvedValue(true);
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+    expect(mockAuth.signOut).toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+    expect(result.current.linkError).toMatch(/foi desativada/);
+  });
+
+  it('desativada com o app aberto: voltar para a tela encerra a sessão', async () => {
+    const check = vi.spyOn(accountStatus, 'isAccountDeactivated').mockResolvedValue(false);
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    mockAuth.signOut.mockResolvedValue({});
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.user).toEqual({ id: 'u1' }));
+
+    // Conta ainda ativa: voltar para a tela não muda nada.
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+    expect(result.current.user).toEqual({ id: 'u1' });
+
+    check.mockResolvedValue(true);
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+    await waitFor(() => expect(result.current.user).toBeNull());
+    expect(mockAuth.signOut).toHaveBeenCalled();
+    expect(result.current.linkError).toMatch(/foi desativada/);
   });
 });

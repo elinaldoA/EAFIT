@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { fetchSegments, createSegment, hasFilters } from '../lib/segments';
-import { fetchUsersPage, PAGE_SIZE } from '../lib/users';
+import { fetchUsersPage, fetchDeactivatedIds, PAGE_SIZE } from '../lib/users';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
@@ -16,7 +16,8 @@ const CSV_COLUMNS = [
   { key: 'last_training', label: 'UltimoTreino' }, { key: 'trainings_30d', label: 'Treinos30d' },
   { key: 'plan_end_date', label: 'FimDoPlano' }, { key: 'created_at', label: 'CriadoEm' },
   { key: 'last_sign_in_at', label: 'UltimoLogin' }, { key: 'email_confirmed_at', label: 'Confirmado' },
-  { key: 'banned_until', label: 'BanidoAte' }, { key: 'is_admin', label: 'Admin' },
+  { key: 'banned_until', label: 'BanidoAte' }, { key: 'deactivated', label: 'Desativado' },
+  { key: 'is_admin', label: 'Admin' },
 ];
 
 const STATUS_OPTIONS = [
@@ -24,6 +25,7 @@ const STATUS_OPTIONS = [
   { value: 'active', label: 'Ativos' },
   { value: 'admin', label: 'Admins' },
   { value: 'banned', label: 'Banidos' },
+  { value: 'deactivated', label: 'Desativados' },
   { value: 'unconfirmed', label: 'Não confirmados' },
   { value: 'inactive', label: 'Inativos (14+ dias sem treinar)' },
   { value: 'never_trained', label: 'Nunca treinaram' },
@@ -41,6 +43,12 @@ const SORT_OPTIONS = [
 function formatDate(value) {
   if (!value) return '—';
   return new Date(value).toLocaleString('pt-BR');
+}
+
+// Página de usuários com a marca de conta desativada em cada linha.
+async function fetchPage(params) {
+  const [{ rows, total }, deactivated] = await Promise.all([fetchUsersPage(params), fetchDeactivatedIds()]);
+  return { rows: rows.map(r => ({ ...r, deactivated: deactivated.has(r.id) })), total };
 }
 
 function formatDay(iso) {
@@ -116,7 +124,7 @@ export default function UsersList() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    fetchUsersPage({ search, status, sort, nivel, meta, page })
+    fetchPage({ search, status, sort, nivel, meta, page })
       .then(({ rows, total }) => { if (active) { rows.forEach(r => seenRows.current.set(r.id, r)); setUsers(rows); setTotal(total); } })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
@@ -129,7 +137,7 @@ export default function UsersList() {
     // Exporta a base filtrada inteira (não só a página atual), com o mesmo
     // filtro em vigor — pra isso vale a pena um limite bem alto em vez de
     // paginar N vezes.
-    const { rows } = await fetchUsersPage({ search, status, sort, nivel, meta, page: 0, pageSize: 10000 });
+    const { rows } = await fetchPage({ search, status, sort, nivel, meta, page: 0, pageSize: 10000 });
     downloadCsv('usuarios.csv', toCsv(rows, CSV_COLUMNS));
   }
 
@@ -157,7 +165,7 @@ export default function UsersList() {
   const handleBulkBan = (action, verb, confirmText) => handleBulk(verb, confirmText, async () => {
     const res = await bulkAction(action, bannable);
     setSelected(new Set());
-    setUsers(await fetchUsersPage({ search, status, sort, nivel, meta, page }).then(r => r.rows));
+    setUsers(await fetchPage({ search, status, sort, nivel, meta, page }).then(r => r.rows));
     return summarize(res, verb);
   });
 
@@ -292,7 +300,8 @@ export default function UsersList() {
                   <td data-label="Último login">{formatDate(u.last_sign_in_at)}</td>
                   <td data-label="Status">
                     {u.is_admin && <span className="badge badge--admin">admin</span>}
-                    {u.banned_until && new Date(u.banned_until) > new Date() && <span className="badge badge--danger">banido</span>}
+                    {u.deactivated && <span className="badge badge--danger">desativado</span>}
+                    {!u.deactivated && u.banned_until && new Date(u.banned_until) > new Date() && <span className="badge badge--danger">banido</span>}
                     {!u.email_confirmed_at && <span className="badge badge--warning">não confirmado</span>}
                     {!u.is_admin && !u.banned_until && u.email_confirmed_at && <span className="badge badge--ok">ativo</span>}
                   </td>

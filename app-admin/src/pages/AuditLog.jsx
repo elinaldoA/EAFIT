@@ -13,6 +13,8 @@ function formatDate(value) {
 const ACTION_LABEL = {
   ban: 'Baniu',
   unban: 'Desbaniu',
+  deactivate: 'Desativou conta',
+  reactivate: 'Reativou conta',
   resetPassword: 'Gerou link de senha',
   updateProfile: 'Editou perfil',
   deleteUser: 'Excluiu conta',

@@ -52,6 +52,36 @@ describe('UserActionsTab', () => {
     expect(onRunAction).toHaveBeenCalledWith('unban');
   });
 
+  it('desativar fica ao lado de banir e some na própria conta', () => {
+    const onDeactivate = vi.fn();
+    const { unmount } = renderTab({ onDeactivate });
+    fireEvent.click(screen.getByText('Desativar usuário'));
+    expect(onDeactivate).toHaveBeenCalled();
+    unmount();
+    renderTab({ detail: { ...base.detail, id: 'adm1' } });
+    expect(screen.queryByText('Desativar usuário')).toBeNull();
+    expect(screen.getByText('Banir usuário')).toBeTruthy();
+  });
+
+  it('conta desativada mostra motivo e autor, e só oferece reativar', () => {
+    const onRunAction = vi.fn();
+    renderTab({
+      onRunAction, isBanned: true,
+      deactivation: { reason: 'Pediu um tempo', deactivated_by_email: 'adm@x.com', deactivated_at: '2026-10-01T12:00:00Z' },
+    });
+    expect(screen.getByText(/por adm@x\.com\..*Motivo: Pediu um tempo\./)).toBeTruthy();
+    expect(screen.queryByText('Desativar usuário')).toBeNull();
+    expect(screen.queryByText('Banir usuário')).toBeNull();
+    expect(screen.queryByText('Desbanir usuário')).toBeNull();
+    fireEvent.click(screen.getByText('Reativar usuário'));
+    expect(onRunAction).toHaveBeenCalledWith('reactivate', {}, 'Reativar esta conta? O login volta a funcionar.');
+  });
+
+  it('conta desativada sem motivo informado', () => {
+    renderTab({ deactivation: { reason: null, deactivated_by_email: null, deactivated_at: '2026-10-01T12:00:00Z' } });
+    expect(screen.getByText(/Motivo: não informado\./)).toBeTruthy();
+  });
+
   it('só mostra "Confirmar e-mail" para e-mail não confirmado', () => {
     const { unmount } = renderTab();
     expect(screen.queryByText('Confirmar e-mail')).toBeNull();
@@ -272,6 +302,7 @@ describe('UserDetail', () => {
       water_logs: { data: [] }, weight_logs: { data: [] }, exercise_discomfort: { data: [] },
       achievements: { data: [] }, progress_photos: { data: [] },
       push_subscriptions: { count: 2 },
+      account_deactivations: { data: null },
       exercise_sets: { data: [{ id: 's1', exercise_name: 'Supino', set_number: 1, carga: 60, reps: 10, completed: true }] },
       trainers: { data: null },
       profiles: { error: null },
@@ -358,6 +389,37 @@ describe('UserDetail', () => {
     goTab('Ações');
     fireEvent.click(screen.getByText('Banir usuário'));
     await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('admin-users', { body: { action: 'ban', targetUserId: 'u1' } }));
+  });
+
+  it('aba Ações: desativar pede o motivo e chama a função', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('  Pediu um tempo  ');
+    renderPage();
+    await screen.findByRole('heading', { name: 'u@x.com' });
+    goTab('Ações');
+    fireEvent.click(screen.getByText('Desativar usuário'));
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('admin-users', {
+      body: { action: 'deactivate', targetUserId: 'u1', reason: 'Pediu um tempo' },
+    }));
+  });
+
+  it('aba Ações: cancelar o motivo não desativa', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue(null);
+    renderPage();
+    await screen.findByRole('heading', { name: 'u@x.com' });
+    goTab('Ações');
+    fireEvent.click(screen.getByText('Desativar usuário'));
+    expect(mockInvoke).not.toHaveBeenCalled();
+  });
+
+  it('conta desativada: badge "desativado" no lugar de "banido" e ação de reativar', async () => {
+    tables.account_deactivations = { data: { reason: 'Teste', deactivated_by_email: 'adm@x.com', deactivated_at: '2026-10-01T12:00:00Z' } };
+    mockRpc.mockResolvedValue({ data: [{ ...userRow, banned_until: '2999-01-01T00:00:00Z' }], error: null });
+    renderPage();
+    expect(await screen.findByText('desativado')).toBeTruthy();
+    expect(screen.queryByText('banido')).toBeNull();
+    goTab('Ações');
+    fireEvent.click(screen.getByText('Reativar usuário'));
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('admin-users', { body: { action: 'reactivate', targetUserId: 'u1' } }));
   });
 
   it('aba Ações: cancelar a confirmação não chama a função', async () => {

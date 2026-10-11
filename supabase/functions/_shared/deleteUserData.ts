@@ -24,7 +24,7 @@ const USER_COLUMNS: [table: string, column: string][] = [
   ['feed_reactions', 'user_id'], ['feed_events', 'user_id'], ['friend_profiles', 'user_id'],
   ['friendships', 'requester_id'], ['friendships', 'addressee_id'],
   ['feedback', 'user_id'], ['user_notifications', 'user_id'], ['notification_log', 'user_id'],
-  ['client_errors', 'user_id'], ['admin_user_notes', 'user_id'],
+  ['client_errors', 'user_id'], ['admin_user_notes', 'user_id'], ['account_deactivations', 'user_id'],
   ['user_events', 'user_id'], ['user_client', 'user_id'], ['inactivity_surveys', 'user_id'],
   ['appointment_reminder_log', 'recipient'],
   ['trainer_appointments', 'client_id'], ['trainer_appointments', 'trainer_id'],
