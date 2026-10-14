@@ -5,6 +5,7 @@ import { useToast } from '../context/useToast';
 import { parseLocalDate, formatDuration } from '../lib/utils';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { MONTH_NAMES, buildMonthGrid, fetchMonthSessions, summarizeMonth, fmtVolume } from '../lib/workoutHistory';
+import { getHolidays } from '../lib/holidays';
 import Skeleton from '../components/Skeleton';
 import SessionDetailModal from '../components/SessionDetailModal';
 
@@ -65,6 +66,7 @@ export default function HistoricoPage() {
 
   const byDate = useMemo(() => new Map(sessions.map(s => [s.date, s])), [sessions]);
   const weeks = useMemo(() => buildMonthGrid(cursor.year, cursor.month), [cursor]);
+  const holidays = useMemo(() => getHolidays(cursor.year), [cursor.year]);
   const stats = useMemo(() => summarizeMonth(sessions), [sessions]);
   const visible = selectedDate ? sessions.filter(s => s.date === selectedDate) : sessions;
 
@@ -96,8 +98,10 @@ export default function HistoricoPage() {
           {weeks.flat().map((date, i) => {
             if (!date) return <span key={`e${i}`} className="history-cal__cell history-cal__cell--empty" />;
             const s = byDate.get(date);
+            const holiday = holidays.get(date);
             const cls = [
               'history-cal__cell',
+              holiday && 'history-cal__cell--holiday',
               s && (s.completed ? 'history-cal__cell--done' : 'history-cal__cell--partial'),
               date === today && 'history-cal__cell--today',
               date === selectedDate && 'history-cal__cell--selected',
@@ -105,8 +109,9 @@ export default function HistoricoPage() {
             return (
               <button
                 key={date} type="button" className={cls} disabled={!s}
+                title={holiday}
                 aria-pressed={date === selectedDate}
-                aria-label={`${parseLocalDate(date).getDate()}${s ? (s.completed ? t(', treino concluído') : t(', treino incompleto')) : ''}`}
+                aria-label={`${parseLocalDate(date).getDate()}${s ? (s.completed ? t(', treino concluído') : t(', treino incompleto')) : ''}${holiday ? t(', feriado: {v1}', { v1: holiday }) : ''}`}
                 onClick={() => handleDayClick(date)}
               >
                 {parseLocalDate(date).getDate()}
@@ -118,6 +123,7 @@ export default function HistoricoPage() {
         <div className="history-cal__legend">
           <span><i className="history-dot history-dot--done" /> {t('Concluído')}</span>
           <span><i className="history-dot history-dot--partial" /> {t('Incompleto')}</span>
+          <span><i className="history-dot history-dot--holiday" /> {t('Feriado')}</span>
         </div>
       </div>
 

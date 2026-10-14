@@ -57,6 +57,13 @@ button.history-cal__cell:not(:disabled) { cursor: pointer; }
   border-color: rgba(249, 115, 22, .35);
 }
 
+/* Feriado: sublinhado pontilhado, pra não brigar com done/partial (fundo) */
+.history-cal__cell--holiday {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  border-color: var(--border-2);
+}
+
 .history-cal__cell--selected {
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
 }
@@ -71,6 +78,7 @@ button.history-cal__cell:not(:disabled) { cursor: pointer; }
 
 .history-dot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
 .history-dot--done { background: var(--primary); }
+.history-dot--holiday { border: 1px dotted var(--text-muted); }
 .history-dot--partial { background: var(--primary-glow); border: 1px solid rgba(249, 115, 22, .5); }
 
 .history-stats {
