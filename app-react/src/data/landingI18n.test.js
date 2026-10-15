@@ -23,7 +23,7 @@ const norm = s => s.replace(/\s+/g, ' ').trim();
 const docs = pages.map(p => new DOMParser().parseFromString(fs.readFileSync(path.join(dir, p), 'utf8'), 'text/html'));
 
 const SAME = new Set([
-  'EAFIT', 'EA', 'App', 'wger.de', 'Free Exercise DB', 'contato.eafit@gmail.com', 'eafit.com.br/app', 'P7K2QX',
+  'EAFIT', 'EA', 'App', 'wger.de', 'Free Exercise DB', 'contato.eafit@gmail.com', 'Instagram', '@eafitapp', 'eafit.com.br/app', 'P7K2QX',
   'Rafael', 'Mariana', 'Carlos', 'Rafa', 'Bruno', 'Carol', 'Lia', 'Cardio',
   'EN', '26 kg', '140 kg', '110 kg', '36 kg', '+200ml', '+300ml', '+500ml', '+750ml', '· CC BY-SA 4.0',
 ]);

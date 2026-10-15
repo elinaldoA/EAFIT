@@ -640,6 +640,8 @@ window.LANDING_EN = {
     'Usamos seu nome e e-mail só pra responder. Detalhes na': 'We use your name and email only to reply. Details in the',
     'Prefere e-mail?': 'Prefer email?',
     'Escreva direto para a equipe.': 'Write straight to the team.',
+    'Siga no Instagram': 'Follow us on Instagram',
+    'Novidades, dicas de treino e o app por dentro.': 'News, workout tips and a look inside the app.',
     'Ver como protegemos seus dados': 'See how we protect your data',
     'Enviando…': 'Sending…',
     'Mensagem enviada. A resposta chega no seu e-mail.': 'Message sent. The reply will reach your email.',

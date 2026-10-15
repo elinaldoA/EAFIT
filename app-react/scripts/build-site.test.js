@@ -68,7 +68,7 @@ describe('biblioteca de exercícios em números', () => {
     new Function('window', read('i18n-en.js'))(win);
     const own = buildDictionary();
     const text = { ...win.LANDING_EN.text, ...own.text };
-    const same = new Set([...own.same, 'EAFIT', 'EN', 'App', 'wger.de', 'Free Exercise DB', 'contato.eafit@gmail.com']);
+    const same = new Set([...own.same, 'EAFIT', 'EN', 'App', 'wger.de', 'Free Exercise DB', 'contato.eafit@gmail.com', 'Instagram']);
     const norm = t => t.replace(/\s+/g, ' ').trim();
     const noLetters = t => !/[A-Za-zÀ-ú]{2}/.test(t);
     const missing = new Set();
