@@ -612,7 +612,7 @@ window.LANDING_EN = {
     'Atividade: treinos, séries, cargas, repetições, água registrada, recordes e conquistas.': 'Activity: workouts, sets, weights, reps, logged water, records and achievements.',
     'Uso do app: quais telas e funcionalidades você abriu, pra melhorar o app e dar suporte. É apagado junto com a conta.': 'App usage: which screens and features you opened, to improve the app and provide support. It is deleted along with the account.',
     'O que este site guarda': 'What this site stores',
-    'Visitas anônimas: a data, a página, a origem do acesso, o tipo de sistema e de navegador e o idioma. Não registramos IP nem quem você é.': 'Anonymous visits: the date, the page, the source of the visit, the type of system and browser and the language. We do not record your IP or who you are.',
+    'Visitas: a data, a página, a origem do acesso, o tipo de sistema e de navegador, o idioma e a localização aproximada (país, estado e cidade) a partir do IP, que é apagado em até 90 dias. A visita não é ligada à sua conta.': 'Visits: the date, the page, the source of the visit, the type of system and browser, the language and the approximate location (country, state and city) derived from the IP, which is erased within 90 days. The visit is not linked to your account.',
     'Formulário de contato: o nome, o e-mail e a mensagem que você enviar, usados só pra responder.': 'Contact form: the name, email and message you send, used only to reply.',
     'No navegador: a sua escolha de idioma e de tema e a data da última visita, pra contar cada visita no máximo uma vez por dia.': 'In your browser: your language and theme choice and the date of your last visit, to count each visit at most once a day.',
     'Quem mais pode ver': 'Who else can see it',

@@ -122,7 +122,20 @@ describe('AudienceInsights', () => {
     expect(screen.getByText('30 · 75%')).toBeTruthy();
     expect(screen.getByText('10 · 25%')).toBeTruthy();
     expect(screen.getByText('5 · 100%')).toBeTruthy();
-    expect(screen.getByText('Sem dados.')).toBeTruthy();
+    // sexo e faixa etária sem dados
+    expect(screen.getAllByText('Sem dados.')).toHaveLength(2);
+  });
+
+  it('mostra sexo por extenso e faixa etária na ordem das idades', async () => {
+    mockAudienceRpc(exercises, [
+      { dimension: 'sexo', value: 'F', total: '3' },
+      { dimension: 'faixa_etaria', value: '35–44', total: '9' },
+      { dimension: 'faixa_etaria', value: '18–24', total: '1' },
+    ]);
+    render(<AudienceInsights />);
+    expect(await screen.findByText('Feminino')).toBeTruthy();
+    const faixas = screen.getAllByText(/^\d{2}–\d{2}$/).map(el => el.textContent);
+    expect(faixas).toEqual(['18–24', '35–44']);
   });
 
   it('lista exercícios com carga média ou travessão', async () => {

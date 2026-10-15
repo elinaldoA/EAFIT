@@ -69,6 +69,7 @@ jobs:
           supabase/functions/send-weekly-emails/index.ts
           supabase/functions/email-unsubscribe/index.ts
           supabase/functions/inactivity-reason/index.ts
+          supabase/functions/resolve-geo/index.ts
           supabase/functions/_shared/email.ts
 
   push-migrations:
@@ -114,6 +115,7 @@ jobs:
           deploy send-trainer-alerts --no-verify-jwt
           deploy send-appointment-reminders --no-verify-jwt
           deploy send-weekly-emails --no-verify-jwt
+          deploy resolve-geo --no-verify-jwt
           # email-unsubscribe: aberto de propósito, quem autoriza é o código assinado do e-mail.
           deploy email-unsubscribe --no-verify-jwt
           # inactivity-reason: idem, pelo código assinado dos links da pesquisa de inatividade.

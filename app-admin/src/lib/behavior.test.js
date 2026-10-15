@@ -168,7 +168,15 @@ describe('describeClient', () => {
     expect(Object.fromEntries(pairs)).toEqual({
       Sistema: 'iOS (iPhone/iPad)', Navegador: 'Safari', Aparelho: 'Celular', Modo: 'App instalado',
       'Versão do app': '1.4.2', Idioma: 'Português', Notificações: 'Bloqueou', 'Último acesso': '07/10/2026',
+      IP: '—', Local: '—',
     });
     expect(describeClient(null)).toEqual([]);
+  });
+
+  it('mostra IP e local do último acesso', () => {
+    const place = c => Object.fromEntries(describeClient({ os: 'android', ...c }));
+    expect(place({ ip: '200.1.2.3', country: 'BR', uf: 'SP', city: 'Campinas' })).toMatchObject({ IP: '200.1.2.3', Local: 'Campinas · SP · Brasil' });
+    expect(place({ ip: '200.1.2.3', country: 'PT', region: 'Lisbon' }).Local).toBe('Lisbon · Portugal');
+    expect(place({ ip: '200.1.2.3' }).Local).toBe('Aguardando localização');
   });
 });

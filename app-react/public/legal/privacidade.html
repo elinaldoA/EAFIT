@@ -76,11 +76,11 @@
   <table>
     <tr><th>Categoria</th><th>Exemplos</th></tr>
     <tr><td>Cadastro</td><td>Nome, apelido, e-mail, senha (armazenada de forma criptografada)</td></tr>
-    <tr><td>Dados de saúde/corpo</td><td>Peso, altura, meta, nível, fotos de progresso</td></tr>
+    <tr><td>Dados de saúde/corpo</td><td>Sexo biológico, idade, peso, altura, meta, nível, fotos de progresso</td></tr>
     <tr><td>Atividade no app</td><td>Treinos realizados, séries, cargas, repetições, água registrada, recordes, conquistas</td></tr>
     <tr><td>Técnicos</td><td>Inscrição push (para notificações), preferências de tema, lembretes e idioma</td></tr>
-    <tr><td>Visitas (anônimas)</td><td>Contagem de acessos à página de apresentação e à tela de login/cadastro: só a data, a página, a origem do acesso (ex.: Google, link compartilhado) o tipo de sistema (Android, iOS, Windows, Mac ou Linux), o navegador, se é celular, tablet ou computador, o idioma e a campanha do link. Na tela de cadastro, contamos também em qual etapa as pessoas param e o tipo de erro (ex.: senha curta), sem o e-mail digitado. Não registramos IP, modelo do aparelho nem quem você é.</td></tr>
-    <tr><td>Uso do app (ligado à sua conta)</td><td>Quais telas e funcionalidades você abriu em cada dia (ex.: modo treino, hidratação), as etapas do preenchimento do perfil e se abriu o app por uma notificação; e um retrato do último acesso: sistema, navegador, tipo de aparelho, se o app está instalado, versão do app, idioma e se as notificações estão permitidas. Usamos para melhorar o app e dar suporte; esses dados são apagados junto com a conta.</td></tr>
+    <tr><td>Visitas</td><td>Contagem de acessos à página de apresentação e à tela de login/cadastro: a data, a página, a origem do acesso (ex.: Google, link compartilhado), o tipo de sistema (Android, iOS, Windows, Mac ou Linux), o navegador, se é celular, tablet ou computador, o idioma, a campanha do link, o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Na tela de cadastro, contamos também em qual etapa as pessoas param e o tipo de erro (ex.: senha curta), sem o e-mail digitado. Não registramos modelo do aparelho nem ligamos a visita à sua conta.</td></tr>
+    <tr><td>Uso do app (ligado à sua conta)</td><td>Quais telas e funcionalidades você abriu em cada dia (ex.: modo treino, hidratação), as etapas do preenchimento do perfil e se abriu o app por uma notificação; e um retrato do último acesso: sistema, navegador, tipo de aparelho, se o app está instalado, versão do app, idioma, se as notificações estão permitidas, o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Usamos para melhorar o app e dar suporte; esses dados são apagados junto com a conta.</td></tr>
   </table>
 
   <h2>3. Por que tratamos esses dados</h2>
@@ -97,6 +97,11 @@
     pode desligar a qualquer momento em Perfil ou pelo link "Parar de receber estes e-mails" no
     rodapé de cada mensagem.
   </p>
+  <p>
+    O endereço IP e a localização aproximada (país, estado e cidade) servem para entender de onde vêm
+    as pessoas que conhecem e usam o app, em números agregados, e para dar suporte e investigar
+    abusos. A base legal é o legítimo interesse; o IP em si é apagado em até 90 dias (veja a seção 6).
+  </p>
 
   <h2>4. Com quem compartilhamos</h2>
   <p>
@@ -108,6 +113,7 @@
     <li><strong>Serviço de push</strong> (Web Push/VAPID) — entrega de notificações no seu navegador/dispositivo.</li>
     <li><strong>Google (Gmail)</strong> — envio dos e-mails descritos acima; para isso recebe o seu endereço de e-mail e o conteúdo da mensagem.</li>
     <li><strong>GitHub Pages</strong> — hospedagem dos arquivos estáticos do app.</li>
+    <li><strong>IPinfo</strong> — converte o endereço IP em localização aproximada (país, estado e cidade); recebe só o IP, sem nenhum outro dado seu.</li>
   </ul>
 
   <h2>5. Como protegemos seus dados</h2>
@@ -119,6 +125,11 @@
 
   <h2>6. Por quanto tempo guardamos</h2>
   <p>Enquanto sua conta estiver ativa. Se você excluir a conta, os dados associados são apagados.</p>
+  <p>
+    O endereço IP é apagado em até 90 dias: nas visitas, contados da data da visita; na conta, do seu
+    último acesso. A localização aproximada obtida a partir dele (país, estado e cidade) continua nas
+    estatísticas.
+  </p>
 
   <h2>7. Seus direitos (LGPD)</h2>
   <p>Você pode, a qualquer momento, direto na aba <strong>Perfil</strong> do app:</p>
@@ -164,11 +175,11 @@
   <table>
     <tr><th>Category</th><th>Examples</th></tr>
     <tr><td>Registration</td><td>Name, nickname, email, password (stored encrypted)</td></tr>
-    <tr><td>Health/body data</td><td>Weight, height, goal, level, progress photos</td></tr>
+    <tr><td>Health/body data</td><td>Biological sex, age, weight, height, goal, level, progress photos</td></tr>
     <tr><td>Activity in the app</td><td>Workouts done, sets, weights, reps, logged water, records, achievements</td></tr>
     <tr><td>Technical</td><td>Push subscription (for notifications), theme and reminder preferences, language</td></tr>
-    <tr><td>Visits (anonymous)</td><td>A count of visits to the presentation page and to the sign-in/sign-up screen: only the date, the page, the source of the visit (e.g. Google, shared link), the type of system (Android, iOS, Windows, Mac or Linux), the browser, whether it is a phone, tablet or computer, the language and the campaign in the link. On the sign-up screen we also count at which step people stop and the kind of error (e.g. short password), without the e-mail typed. We do not record your IP, device model or who you are.</td></tr>
-    <tr><td>App usage (linked to your account)</td><td>Which screens and features you opened each day (e.g. workout mode, hydration), the steps of filling in your profile and whether you opened the app from a notification; and a snapshot of your last access: system, browser, device type, whether the app is installed, app version, language and whether notifications are allowed. We use this to improve the app and provide support; this data is deleted along with your account.</td></tr>
+    <tr><td>Visits</td><td>A count of visits to the presentation page and to the sign-in/sign-up screen: the date, the page, the source of the visit (e.g. Google, shared link), the type of system (Android, iOS, Windows, Mac or Linux), the browser, whether it is a phone, tablet or computer, the language, the campaign in the link, the IP address and the approximate location derived from it (country, state and city). On the sign-up screen we also count at which step people stop and the kind of error (e.g. short password), without the e-mail typed. We do not record the device model or link the visit to your account.</td></tr>
+    <tr><td>App usage (linked to your account)</td><td>Which screens and features you opened each day (e.g. workout mode, hydration), the steps of filling in your profile and whether you opened the app from a notification; and a snapshot of your last access: system, browser, device type, whether the app is installed, app version, language, whether notifications are allowed, the IP address and the approximate location derived from it (country, state and city). We use this to improve the app and provide support; this data is deleted along with your account.</td></tr>
   </table>
 
   <h2>3. Why we process this data</h2>
@@ -185,6 +196,12 @@
     off at any time in Profile or through the "Stop receiving these emails" link at the bottom of
     each message.
   </p>
+  <p>
+    The IP address and the approximate location (country, state and city) help us understand, in
+    aggregate numbers, where the people who discover and use the app come from, and to provide support
+    and investigate abuse. The legal basis is legitimate interest; the IP itself is erased within 90
+    days (see section 6).
+  </p>
 
   <h2>4. Who we share it with</h2>
   <p>
@@ -196,6 +213,7 @@
     <li><strong>Push service</strong> (Web Push/VAPID) — delivery of notifications to your browser/device.</li>
     <li><strong>Google (Gmail)</strong> — sending of the emails described above; for that it receives your email address and the content of the message.</li>
     <li><strong>GitHub Pages</strong> — hosting of the app's static files.</li>
+    <li><strong>IPinfo</strong> — turns the IP address into an approximate location (country, state and city); it receives only the IP, with no other data about you.</li>
   </ul>
 
   <h2>5. How we protect your data</h2>
@@ -207,6 +225,11 @@
 
   <h2>6. How long we keep it</h2>
   <p>As long as your account is active. If you delete your account, the associated data is erased.</p>
+  <p>
+    The IP address is erased within 90 days: for visits, counted from the date of the visit; for your
+    account, from your last access. The approximate location derived from it (country, state and city)
+    remains in the statistics.
+  </p>
 
   <h2>7. Your rights (LGPD)</h2>
   <p>At any time, directly in the app's <strong>Profile</strong> tab, you can:</p>

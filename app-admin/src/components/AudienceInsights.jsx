@@ -10,8 +10,16 @@ const PERIODS = [
 const DIMENSIONS = [
   { key: 'meta', title: 'Objetivo' },
   { key: 'nivel', title: 'Nível' },
-  { key: 'sexo', title: 'Sexo' },
+  { key: 'sexo', title: 'Sexo', labels: { M: 'Masculino', F: 'Feminino' } },
+  { key: 'faixa_etaria', title: 'Faixa etária', order: ['14–17', '18–24', '25–34', '35–44', '45–54', '55+', 'não informado'] },
 ];
+
+// Rótulo legível e, na faixa etária, ordem das idades em vez do total.
+function prepare(rows, { labels, order }) {
+  if (!rows) return rows;
+  const out = rows.map(r => ({ ...r, value: labels?.[r.value] || r.value }));
+  return order ? [...out].sort((a, b) => order.indexOf(a.value) - order.indexOf(b.value)) : out;
+}
 
 function DistributionBars({ rows }) {
   if (!rows?.length) return <p className="card-note">Sem dados.</p>;
@@ -57,7 +65,7 @@ export default function AudienceInsights() {
           {DIMENSIONS.map(d => (
             <div key={d.key}>
               <div className="field__label">{d.title}</div>
-              <DistributionBars rows={dist[d.key]} />
+              <DistributionBars rows={prepare(dist[d.key], d)} />
             </div>
           ))}
         </div>

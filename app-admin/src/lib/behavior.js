@@ -218,6 +218,14 @@ export function formatDuration(seconds) {
 }
 
 // Retrato do último acesso de um usuário → pares rótulo/valor pra ficha.
+// "Campinas · SP · Brasil" a partir da localização do último IP.
+export function describePlace(c) {
+  if (!c?.country) return c?.ip ? 'Aguardando localização' : '—';
+  let country = c.country;
+  try { country = new Intl.DisplayNames(['pt-BR'], { type: 'region' }).of(c.country) || c.country; } catch { /* sem Intl */ }
+  return [c.city, c.uf || c.region, country].filter(Boolean).join(' · ');
+}
+
 export function describeClient(c) {
   if (!c) return [];
   return [
@@ -229,5 +237,7 @@ export function describeClient(c) {
     ['Idioma', LANG_LABELS[c.lang] || c.lang],
     ['Notificações', PUSH_LABELS[c.push_permission] || c.push_permission],
     ['Último acesso', c.last_seen ? c.last_seen.split('-').reverse().join('/') : '—'],
+    ['IP', c.ip || '—'],
+    ['Local', describePlace(c)],
   ];
 }

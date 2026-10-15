@@ -7,6 +7,7 @@ import RetentionCohorts from '../components/RetentionCohorts';
 import KpiPanel from '../components/KpiPanel';
 import { fetchNewFeedbackCount } from '../lib/feedback';
 import AudienceInsights from '../components/AudienceInsights';
+import GeoPanel from '../components/GeoPanel';
 
 const TILES = [
   { key: 'total_users', label: 'Usuários' },
@@ -24,6 +25,7 @@ const TILES = [
 const DASH_TABS = [
   { key: 'resumo', label: 'Resumo' },
   { key: 'publico', label: 'Público' },
+  { key: 'localizacao', label: 'Localização' },
   { key: 'ativacao', label: 'Ativação' },
   { key: 'retencao', label: 'Retenção' },
 ];
@@ -98,6 +100,7 @@ export default function Dashboard() {
         </>
       )}
       {tab === 'publico' && <AudienceInsights />}
+      {tab === 'localizacao' && <GeoPanel />}
       {tab === 'ativacao' && <ActivationFunnel />}
       {tab === 'retencao' && <RetentionCohorts />}
     </div>

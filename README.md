@@ -125,6 +125,8 @@ Edge Functions de push (implantadas pelo workflow `supabase.yml`, ver [Deploy](#
 - `send-reminders` e `send-scheduled-broadcast` — chamadas só pelo cron (`pg_cron`, a cada minuto); **Verify JWT desativado**, pois não há usuário logado numa chamada interna do cron. Em vez de JWT, só aceitam requisição com o header `x-cron-secret` (valor guardado no Supabase Vault e no secret `CRON_SECRET` das funções — ver `supabase/migrations/20260925010000_cron_secret.sql`). `send-reminders` cobre refeição/água (horário fixo) e as notificações inteligentes: sequência em risco, inatividade, resumo semanal e lembrete de atualizar o peso (segunda de manhã).
 - `send-push` — chamada pelo próprio app logo após um evento (novo recorde, conquista desbloqueada); **Verify JWT ativado**, já que o usuário só pode mandar push pra si mesmo (o `user_id` vem do token da sessão, nunca do corpo da requisição).
 
+Localização (Dashboard → Localização no painel admin): o banco grava o IP de cada visita e o último IP de cada conta a partir dos cabeçalhos da requisição (`request_ip()`), e a função `resolve-geo` (cron a cada 15 min, mesmo `x-cron-secret`) converte em país/estado/cidade pelo ipinfo.io. Secret opcional `IPINFO_TOKEN`: o plano gratuito (Lite) só informa o país; estado e cidade exigem plano pago ou, sem token, a API pública com limite baixo. O IP bruto é apagado em 90 dias pelo cron `purge-old-ips-daily`. Ver `supabase/migrations/20261105010000_visit_geo.sql`.
+
 Depois:
 
 ```bash
