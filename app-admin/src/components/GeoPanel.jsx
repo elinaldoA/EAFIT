@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchVisitGeo, fetchUserGeo, summarizeGeo, demographics, UF_NAMES } from '../lib/geo';
+import { fetchVisitGeo, fetchAppGeo, fetchUserGeo, selectAccessRows, splitSiteApp, summarizeGeo, demographics, UF_NAMES } from '../lib/geo';
 import BrazilMap from './BrazilMap';
 import Loading from './Loading';
 
@@ -10,9 +10,22 @@ const PERIODS = [
 ];
 
 const MODES = [
-  { key: 'visitas', label: 'Visitas', unit: 'visitas', note: 'Visitas ao site e à tela de acesso (1 por navegador por dia).' },
+  { key: 'tudo', label: 'Tudo', unit: 'acessos', note: 'Visitas ao site e acessos ao app (1 por navegador ou conta por dia).' },
+  { key: 'site', label: 'Site', unit: 'visitas', note: 'Visitas à página de apresentação (1 por navegador por dia).' },
+  { key: 'app', label: 'App', unit: 'acessos', note: 'Tela de login de quem chega sem sessão e dias de uso de quem está logado (1 por navegador ou conta por dia).' },
   { key: 'contas', label: 'Contas', unit: 'contas', note: 'Contas que abriram o app no período, pelo último acesso.' },
 ];
+
+// Contas: uma linha por localização/sexo/faixa. Demais modos: visitas ao site
+// e acessos ao app no mesmo formato, filtrados pelo modo.
+async function loadRows(mode, days) {
+  if (mode === 'contas') return fetchUserGeo(days);
+  const [visits, app] = await Promise.all([
+    fetchVisitGeo(days),
+    mode === 'site' ? [] : fetchAppGeo(days),
+  ]);
+  return selectAccessRows(visits, app, mode);
+}
 
 function Bars({ rows, onPick, selected }) {
   if (!rows?.length) return <p className="card-note">Sem dados.</p>;
@@ -44,7 +57,7 @@ function Bars({ rows, onPick, selected }) {
 // Dashboard → Localização: de onde vêm as visitas e onde estão as contas.
 export default function GeoPanel() {
   const [days, setDays] = useState(30);
-  const [mode, setMode] = useState('visitas');
+  const [mode, setMode] = useState('tudo');
   const [rows, setRows] = useState([]);
   const [uf, setUf] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +67,7 @@ export default function GeoPanel() {
     let active = true;
     setLoading(true);
     setError('');
-    (mode === 'contas' ? fetchUserGeo(days) : fetchVisitGeo(days))
+    loadRows(mode, days)
       .then(r => { if (active) setRows(r); })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
@@ -66,6 +79,7 @@ export default function GeoPanel() {
   const summary = useMemo(() => summarizeGeo(rows, countKey, uf), [rows, countKey, uf]);
   const demo = useMemo(() => (mode === 'contas' ? demographics(rows, uf) : null), [rows, mode, uf]);
   const ufTotal = uf ? summary.byUf.get(uf) || 0 : 0;
+  const split = mode === 'tudo' ? splitSiteApp(rows) : null;
 
   return (
     <div className="card">
@@ -100,7 +114,9 @@ export default function GeoPanel() {
       {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : (
         <>
           <p className="card-note" style={{ marginTop: 0 }}>
-            {current.note} <strong>{summary.located}</strong> localizadas de {summary.total}
+            {current.note}
+            {split && <> Site: <strong>{split.site}</strong> · App: <strong>{split.app}</strong>.</>}
+            {' '}<strong>{summary.located}</strong> localizados de {summary.total}
             {summary.pending > 0 && <> · {summary.pending} aguardando localização</>}
             {summary.noLocation > 0 && <> · {summary.noLocation} sem localização</>}
             {summary.brNoUf > 0 && <> · {summary.brNoUf} no Brasil sem estado identificado</>}

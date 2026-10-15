@@ -12,7 +12,33 @@ async function rpcRows(name, args) {
 }
 
 export const fetchVisitGeo = (days = 30) => rpcRows('admin_visit_geo', { days_back: days });
+export const fetchAppGeo = (days = 30) => rpcRows('admin_app_geo', { days_back: days });
 export const fetchUserGeo = (days = 30) => rpcRows('admin_user_geo', { days_back: days });
+
+// Qual página conta em cada modo do mapa. 'acesso' é a tela de login do app
+// (quem chega sem sessão); 'app' são os dias de uso de quem está logado
+// (admin_app_geo, de 20261106010000_app_access_geo.sql).
+export const ACCESS_PAGES = {
+  tudo: ['landing', 'acesso', 'app'],
+  site: ['landing'],
+  app: ['acesso', 'app'],
+};
+
+// Linhas de visitas e de uso do app → só as do modo escolhido.
+export function selectAccessRows(visitRows, appRows, mode) {
+  const pages = ACCESS_PAGES[mode] || ACCESS_PAGES.tudo;
+  return [...(visitRows || []), ...(appRows || [])].filter(r => pages.includes(r.page));
+}
+
+// Visitas ao site × acessos ao app (tela de login + logados), pro resumo.
+export function splitSiteApp(rows) {
+  let site = 0, app = 0;
+  for (const r of rows || []) {
+    const n = Number(r.visits) || 0;
+    if (r.page === 'landing') site += n; else app += n;
+  }
+  return { site, app };
+}
 
 export const UF_NAMES = Object.fromEntries(BR_STATES.map(s => [s.uf, s.name]));
 

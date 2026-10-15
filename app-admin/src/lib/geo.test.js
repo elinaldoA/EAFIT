@@ -4,7 +4,7 @@ const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
-  fetchVisitGeo, fetchUserGeo, summarizeGeo, demographics, colorStep, legendSteps,
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep, legendSteps,
   countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
@@ -18,6 +18,8 @@ describe('consultas', () => {
     mockRpc.mockResolvedValue({ data: null, error: null });
     expect(await fetchVisitGeo(7)).toEqual([]);
     expect(mockRpc).toHaveBeenCalledWith('admin_visit_geo', { days_back: 7 });
+    await fetchAppGeo(7);
+    expect(mockRpc).toHaveBeenCalledWith('admin_app_geo', { days_back: 7 });
     await fetchUserGeo(90);
     expect(mockRpc).toHaveBeenCalledWith('admin_user_geo', { days_back: 90 });
   });
@@ -25,6 +27,22 @@ describe('consultas', () => {
   it('propagam o erro da RPC', async () => {
     mockRpc.mockResolvedValue({ data: null, error: new Error('not_authorized') });
     await expect(fetchVisitGeo()).rejects.toThrow('not_authorized');
+  });
+});
+
+describe('modos do mapa', () => {
+  const v = [{ page: 'landing', visits: 3 }, { page: 'acesso', visits: 2 }];
+  const a = [{ page: 'app', visits: 5 }];
+
+  it('selectAccessRows filtra por modo', () => {
+    expect(selectAccessRows(v, a, 'tudo').map(r => r.page)).toEqual(['landing', 'acesso', 'app']);
+    expect(selectAccessRows(v, a, 'site').map(r => r.page)).toEqual(['landing']);
+    expect(selectAccessRows(v, a, 'app').map(r => r.page)).toEqual(['acesso', 'app']);
+    expect(selectAccessRows(null, null, 'app')).toEqual([]);
+  });
+
+  it('splitSiteApp separa site de app (tela de login conta como app)', () => {
+    expect(splitSiteApp([...v, ...a])).toEqual({ site: 3, app: 7 });
   });
 });
 

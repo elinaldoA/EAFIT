@@ -14,6 +14,10 @@ const visits = [
   { page: 'landing', status: 'pendente', country: null, uf: null, region: null, city: null, visits: 1 },
 ];
 
+const app = [
+  { page: 'app', status: 'ok', country: 'BR', uf: 'BA', region: 'Bahia', city: 'Salvador', visits: 4 },
+];
+
 const users = [
   { status: 'ok', country: 'BR', uf: 'SP', region: 'São Paulo', city: 'Campinas', sexo: 'F', faixa: '25–34', users: 3 },
   { status: 'ok', country: 'BR', uf: 'BA', region: 'Bahia', city: 'Salvador', sexo: 'M', faixa: '18–24', users: 1 },
@@ -21,26 +25,41 @@ const users = [
 
 beforeEach(() => {
   mockRpc.mockReset();
-  mockRpc.mockImplementation(async name => ({ data: name === 'admin_user_geo' ? users : visits, error: null }));
+  mockRpc.mockImplementation(async name => ({
+    data: { admin_user_geo: users, admin_app_geo: app }[name] ?? visits, error: null,
+  }));
 });
 
 describe('GeoPanel', () => {
-  it('mostra resumo, estados, cidades e países das visitas', async () => {
+  it('em Tudo soma site e app, com estados, cidades e países', async () => {
     render(<GeoPanel />);
     expect(await screen.findByText('Estados')).toBeTruthy();
     expect(mockRpc).toHaveBeenCalledWith('admin_visit_geo', { days_back: 30 });
+    expect(mockRpc).toHaveBeenCalledWith('admin_app_geo', { days_back: 30 });
     expect(screen.getByText(/1 aguardando localização/)).toBeTruthy();
-    expect(screen.getByText('6 · 75%')).toBeTruthy(); // SP: 6 de 8 no Brasil
+    expect(screen.getAllByText('6 · 50%')).toHaveLength(2); // SP e BA: 6 de 12 cada no Brasil
+    expect(document.querySelector('.card-note').textContent).toMatch(/Site: 9 · App: 6\./);
     expect(screen.getByText('Campinas · SP')).toBeTruthy();
     expect(screen.getByText('Lisboa · Lisbon · PT')).toBeTruthy();
     expect(screen.getByText(/Portugal/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'São Paulo: 6 visitas' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Bahia: 6 acessos' })).toBeTruthy();
+  });
+
+  it('Site mostra só a página de apresentação e App só tela de login + logados', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    fireEvent.click(screen.getByRole('button', { name: 'Site' }));
+    expect(await screen.findByRole('button', { name: 'São Paulo: 6 visitas' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Bahia: 0 visitas' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'App' }));
+    expect(await screen.findByRole('button', { name: 'Bahia: 6 acessos' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'São Paulo: 0 acessos' })).toBeTruthy();
   });
 
   it('clicar no estado filtra as cidades e volta pro Brasil todo', async () => {
     render(<GeoPanel />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Bahia: 2 visitas' }));
-    expect(screen.getByText(/Bahia · 2 visitas/)).toBeTruthy();
+    fireEvent.click(await screen.findByRole('button', { name: 'Bahia: 6 acessos' }));
+    expect(screen.getByText(/Bahia · 6 acessos/)).toBeTruthy();
     expect(screen.queryByText('Campinas · SP')).toBeNull();
     expect(screen.getByText('Salvador · BA')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Ver o Brasil todo' }));
