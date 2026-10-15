@@ -277,7 +277,7 @@ Deno.serve(async (req) => {
           sent++;
         } catch (err) {
           if (err.statusCode === 404 || err.statusCode === 410) {
-            await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+            await supabase.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
           } else {
             console.error('sendNotification error:', err);
           }

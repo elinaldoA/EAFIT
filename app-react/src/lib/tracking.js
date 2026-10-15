@@ -106,6 +106,68 @@ export function trackClient() {
   }
 }
 
+// Instalação do app (Dashboard → Instalações no painel; tabela app_installs em
+// supabase/migrations/20261107010000_app_installs.sql). Cada navegador ganha um
+// identificador aleatório, só pra saber que a instalação, a resposta ao botão
+// e as aberturas pelo ícone são do mesmo aparelho. No iPhone, o app instalado
+// tem armazenamento próprio: lá a primeira abertura pelo ícone é a instalação.
+const DEVICE_KEY = 'eafit_device_id';
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+function randomUuid() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  const b = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(b);
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+// null sem armazenamento: sem identificador estável, não dá pra contar.
+export function deviceId() {
+  try {
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id || !UUID_RE.test(id)) {
+      id = randomUuid();
+      localStorage.setItem(DEVICE_KEY, id);
+    }
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+const INSTALL_EVENTS = ['screen_shown', 'prompt_accepted', 'prompt_dismissed', 'installed', 'open'];
+
+// screen_shown conta 1 vez por sessão do navegador; open (abriu pelo ícone),
+// 1 vez por dia. Os demais acontecem uma vez por instalação.
+export function trackInstall(event) {
+  if (!enabled || !INSTALL_EVENTS.includes(event)) return false;
+  try {
+    const id = deviceId();
+    if (!id) return false;
+    if (event === 'screen_shown') {
+      try {
+        if (sessionStorage.getItem('eafit_install_shown')) return false;
+        sessionStorage.setItem('eafit_install_shown', '1');
+      } catch { /* sem armazenamento: envia mesmo assim */ }
+    } else if (event === 'open') {
+      const key = 'eafit_install_open';
+      const today = todayDate();
+      try {
+        if (localStorage.getItem(key) === today) return false;
+        localStorage.setItem(key, today);
+      } catch { /* sem armazenamento: envia mesmo assim */ }
+    }
+    const { os, browser } = readClientInfo();
+    Promise.resolve(db.rpc('track_install', { p_device: id, p_event: event, p_os: os, p_browser: browser })).catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const AUTH_EVENTS = ['signup_start', 'signup_submit', 'signup_error', 'signup_ok', 'login_error'];
 
 // Evento anônimo da tela de acesso: 1 por sessão do navegador por evento+detalhe.

@@ -9,7 +9,8 @@ import { useAppConfig } from './context/useAppConfig';
 import { AvatarProvider } from './context/AvatarContext';
 import AuthScreen from './components/AuthScreen';
 import { markKnownUser } from './lib/knownUser';
-import { setTrackingUser, trackClient, trackEvent, flushPushOpen } from './lib/tracking';
+import { setTrackingUser, trackClient, trackEvent, trackInstall, flushPushOpen } from './lib/tracking';
+import { detectDisplayMode } from './lib/clientInfo';
 import OnboardingScreen from './components/OnboardingScreen';
 import ThemeToggle from './components/ThemeToggle';
 import TopbarProfile from './components/TopbarProfile';
@@ -90,6 +91,7 @@ function Shell() {
     if (!user) return;
     markKnownUser();
     trackClient();
+    if (detectDisplayMode(window) === 'standalone') trackInstall('open');
     flushPushOpen();
   }, [user]);
 

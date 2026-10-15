@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     const title = customTitle ?? defaultMessageTitle(langs.get(sub.user_id) ?? 'pt');
     const result = await sendWebPush(sub, { title, body: previewText(text), tag: 'trainer-message' });
     if (result === 'sent') sent++;
-    else if (result === 'stale') await admin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    else if (result === 'stale') await admin.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
   }
 
   return json({ sent, recipients: recipients.length });

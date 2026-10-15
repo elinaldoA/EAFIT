@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+const { trackInstall } = vi.hoisted(() => ({ trackInstall: vi.fn() }));
+vi.mock('./tracking', () => ({ trackInstall }));
+
 // O módulo guarda estado (evento capturado, instalado): cada teste importa uma cópia nova.
 async function load() {
   vi.resetModules();
@@ -21,9 +24,23 @@ const promptEvent = (outcome = 'accepted') => ({
   userChoice: Promise.resolve({ outcome }),
 });
 
-beforeEach(() => sessionStorage.clear());
+beforeEach(() => { sessionStorage.clear(); trackInstall.mockReset(); });
 
 describe('installPrompt', () => {
+  it('registra a resposta ao botão e o aviso de instalação do navegador', async () => {
+    const m = await load();
+    const win = fakeWindow();
+    m.captureInstallPrompt(win);
+    win.fire('beforeinstallprompt', promptEvent('dismissed'));
+    expect(await m.promptInstall()).toBe('dismissed');
+    expect(trackInstall).toHaveBeenLastCalledWith('prompt_dismissed');
+    win.fire('beforeinstallprompt', promptEvent('accepted'));
+    expect(await m.promptInstall()).toBe('accepted');
+    expect(trackInstall).toHaveBeenLastCalledWith('prompt_accepted');
+    win.fire('appinstalled');
+    expect(trackInstall).toHaveBeenLastCalledWith('installed');
+  });
+
   it('guarda o convite do navegador, avisa quem escuta e instala com um toque', async () => {
     const m = await load();
     const win = fakeWindow();

@@ -8,7 +8,10 @@ const h = vi.hoisted(() => ({
   state: 'manual',
   listeners: new Set(),
   promptInstall: vi.fn(),
+  trackInstall: vi.fn(),
 }));
+
+vi.mock('../lib/tracking', () => ({ trackInstall: (...a) => h.trackInstall(...a) }));
 
 vi.mock('../lib/clientInfo', () => ({
   readClientInfo: () => h.client,
@@ -98,5 +101,16 @@ describe('InstallScreen', () => {
     h.client = { os: 'windows', browser: 'firefox', device: 'desktop' };
     const b = render(<InstallScreen />);
     expect(b.container.textContent).toBe('');
+  });
+
+  it('registra que a tela de instalar apareceu, e só quando aparece', () => {
+    h.trackInstall.mockReset();
+    h.displayMode = 'standalone';
+    render(<InstallScreen />);
+    expect(h.trackInstall).not.toHaveBeenCalled();
+    cleanup();
+    h.displayMode = 'browser';
+    render(<InstallScreen />);
+    expect(h.trackInstall).toHaveBeenCalledWith('screen_shown');
   });
 });

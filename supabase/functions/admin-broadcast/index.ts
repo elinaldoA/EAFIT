@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   for (const sub of subs || []) {
     const result = await sendWebPush(sub, { title, body: message });
     if (result === 'sent') sent++;
-    else if (result === 'stale') await admin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    else if (result === 'stale') await admin.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
   }
 
   const targeted = Array.isArray(targetUserIds) && targetUserIds.length > 0;

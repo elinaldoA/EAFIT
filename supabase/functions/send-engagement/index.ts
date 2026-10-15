@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       for (const sub of subsByUser.get(c.user_id) || []) {
         const result = await sendWebPush(sub, { title, body, tag: `engagement-${rule.kind}-${date}` });
         if (result === 'sent') delivered = true;
-        else if (result === 'stale') await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+        else if (result === 'stale') await supabase.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
       }
 
       if (delivered) {

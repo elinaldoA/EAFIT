@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
   })));
 
   const stale = results.filter(r => r.result === 'stale').map(r => r.sub.endpoint);
-  if (stale.length) await supabaseAdmin.from('push_subscriptions').delete().in('endpoint', stale);
+  if (stale.length) await supabaseAdmin.rpc('push_drop_stale', { p_endpoints: stale });
 
   return json({ sent: results.filter(r => r.result === 'sent').length });
 });

@@ -1,4 +1,5 @@
 import { t } from './i18n';
+import { trackInstall } from './tracking';
 
 // Instalação do app (PWA) pra quem ainda abre o EAFIT numa aba do navegador —
 // alimenta a tela components/InstallScreen.jsx.
@@ -24,6 +25,7 @@ export function captureInstallPrompt(win = typeof window === 'undefined' ? null 
     notify();
   });
   win.addEventListener('appinstalled', () => {
+    trackInstall('installed');
     deferred = null;
     installed = true;
     notify();
@@ -50,7 +52,9 @@ export async function promptInstall() {
   try {
     event.prompt();
     const choice = await event.userChoice;
-    return choice?.outcome === 'accepted' ? 'accepted' : 'dismissed';
+    const outcome = choice?.outcome === 'accepted' ? 'accepted' : 'dismissed';
+    trackInstall(outcome === 'accepted' ? 'prompt_accepted' : 'prompt_dismissed');
+    return outcome;
   } catch {
     return 'dismissed';
   } finally {

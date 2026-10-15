@@ -59,7 +59,7 @@ async function pushToTrainer(subs: Sub[], payload: { title: string; body: string
   for (const sub of subs) {
     const result = await sendWebPush(sub, payload);
     if (result === 'sent') delivered = true;
-    else if (result === 'stale') await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    else if (result === 'stale') await supabase.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
   }
   return delivered;
 }

@@ -80,7 +80,7 @@
     <tr><td>Atividade no app</td><td>Treinos realizados, séries, cargas, repetições, água registrada, recordes, conquistas</td></tr>
     <tr><td>Técnicos</td><td>Inscrição push (para notificações), preferências de tema, lembretes e idioma</td></tr>
     <tr><td>Visitas</td><td>Contagem de acessos à página de apresentação e à tela de login/cadastro: a data, a página, a origem do acesso (ex.: Google, link compartilhado), o tipo de sistema (Android, iOS, Windows, Mac ou Linux), o navegador, se é celular, tablet ou computador, o idioma, a campanha do link, o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Na tela de cadastro, contamos também em qual etapa as pessoas param e o tipo de erro (ex.: senha curta), sem o e-mail digitado. Não registramos modelo do aparelho nem ligamos a visita à sua conta.</td></tr>
-    <tr><td>Uso do app (ligado à sua conta)</td><td>Quais telas e funcionalidades você abriu em cada dia (ex.: modo treino, hidratação), as etapas do preenchimento do perfil e se abriu o app por uma notificação; e um retrato do último acesso: sistema, navegador, tipo de aparelho, se o app está instalado, versão do app, idioma, se as notificações estão permitidas, o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Usamos para melhorar o app e dar suporte; esses dados são apagados junto com a conta.</td></tr>
+    <tr><td>Uso do app (ligado à sua conta)</td><td>Quais telas e funcionalidades você abriu em cada dia (ex.: modo treino, hidratação), as etapas do preenchimento do perfil e se abriu o app por uma notificação; e um retrato do último acesso: sistema, navegador, tipo de aparelho, se o app está instalado, versão do app, idioma, se as notificações estão permitidas, o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Também registramos a instalação do app em cada aparelho: quando a tela de instalar apareceu, a resposta ao botão de instalar, a data da instalação, os dias em que o app foi aberto pelo ícone e quando as notificações deixaram de chegar ao aparelho (o que costuma indicar que o app foi desinstalado). Usamos para melhorar o app e dar suporte; esses dados são apagados junto com a conta.</td></tr>
   </table>
 
   <h2>3. Por que tratamos esses dados</h2>
@@ -143,8 +143,9 @@
   <h2>8. Cookies e armazenamento local</h2>
   <p>
     O app usa armazenamento local do navegador (localStorage) para preferências (tema, lembretes, idioma),
-    para funcionar offline como PWA e para contar cada visita no máximo uma vez por dia (guarda só a
-    data da última visita, nada que identifique você). Não usamos cookies de rastreamento de terceiros
+    para funcionar offline como PWA, para contar cada visita no máximo uma vez por dia (guarda só a
+    data da última visita) e um identificador aleatório do aparelho, usado só para saber se o app foi
+    instalado e aberto pelo ícone nesse aparelho. Não usamos cookies de rastreamento de terceiros
     ou publicidade.
   </p>
 
@@ -179,7 +180,7 @@
     <tr><td>Activity in the app</td><td>Workouts done, sets, weights, reps, logged water, records, achievements</td></tr>
     <tr><td>Technical</td><td>Push subscription (for notifications), theme and reminder preferences, language</td></tr>
     <tr><td>Visits</td><td>A count of visits to the presentation page and to the sign-in/sign-up screen: the date, the page, the source of the visit (e.g. Google, shared link), the type of system (Android, iOS, Windows, Mac or Linux), the browser, whether it is a phone, tablet or computer, the language, the campaign in the link, the IP address and the approximate location derived from it (country, state and city). On the sign-up screen we also count at which step people stop and the kind of error (e.g. short password), without the e-mail typed. We do not record the device model or link the visit to your account.</td></tr>
-    <tr><td>App usage (linked to your account)</td><td>Which screens and features you opened each day (e.g. workout mode, hydration), the steps of filling in your profile and whether you opened the app from a notification; and a snapshot of your last access: system, browser, device type, whether the app is installed, app version, language, whether notifications are allowed, the IP address and the approximate location derived from it (country, state and city). We use this to improve the app and provide support; this data is deleted along with your account.</td></tr>
+    <tr><td>App usage (linked to your account)</td><td>Which screens and features you opened each day (e.g. workout mode, hydration), the steps of filling in your profile and whether you opened the app from a notification; and a snapshot of your last access: system, browser, device type, whether the app is installed, app version, language, whether notifications are allowed, the IP address and the approximate location derived from it (country, state and city). We also record the installation of the app on each device: when the install screen appeared, the answer to the install button, the installation date, the days the app was opened from its icon and when notifications stopped reaching the device (which usually means the app was uninstalled). We use this to improve the app and provide support; this data is deleted along with your account.</td></tr>
   </table>
 
   <h2>3. Why we process this data</h2>
@@ -243,8 +244,9 @@
   <h2>8. Cookies and local storage</h2>
   <p>
     The app uses the browser's local storage (localStorage) for preferences (theme, reminders, language),
-    to work offline as a PWA and to count each visit at most once a day (it only stores the date of the
-    last visit, nothing that identifies you). We do not use third-party tracking or advertising cookies.
+    to work offline as a PWA, to count each visit at most once a day (it only stores the date of the
+    last visit) and a random device identifier, used only to know whether the app was installed and
+    opened from its icon on that device. We do not use third-party tracking or advertising cookies.
   </p>
 
   <h2>9. Minors</h2>

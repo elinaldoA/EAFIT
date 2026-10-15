@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     for (const sub of subs || []) {
       const result = await sendWebPush(sub, { title: broadcast.title, body: broadcast.body });
       if (result === 'sent') sent++;
-      else if (result === 'stale') await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+      else if (result === 'stale') await supabase.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
     }
 
     // Marca sent_at antes de qualquer coisa poder falhar de novo nele: uma

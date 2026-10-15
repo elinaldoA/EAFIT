@@ -174,4 +174,41 @@ describe('tracking', () => {
     onMessage({ data: { type: 'eafit-push-open' } });
     expect(mockRpc).toHaveBeenCalledWith('track_event', { p_event: 'push', p_detail: 'open' });
   });
+
+  it('instalação: mesmo identificador do aparelho em todos os eventos, sem precisar de login', async () => {
+    const t = await freshTracking();
+    expect(t.trackInstall('installed')).toBe(false); // desligado
+    t.enableTracking();
+    expect(t.trackInstall('installed')).toBe(true);
+    expect(t.trackInstall('prompt_accepted')).toBe(true);
+    expect(t.trackInstall('qualquer')).toBe(false);
+    const [first, second] = mockRpc.mock.calls;
+    expect(first[0]).toBe('track_install');
+    expect(first[1].p_event).toBe('installed');
+    expect(first[1].p_device).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(second[1].p_device).toBe(first[1].p_device);
+    expect(t.deviceId()).toBe(first[1].p_device);
+  });
+
+  it('instalação: tela mostrada 1 vez por sessão e abertura pelo ícone 1 vez por dia', async () => {
+    let t = await freshTracking();
+    t.enableTracking();
+    expect(t.trackInstall('screen_shown')).toBe(true);
+    expect(t.trackInstall('screen_shown')).toBe(false);
+    expect(t.trackInstall('open')).toBe(true);
+    expect(t.trackInstall('open')).toBe(false);
+    t = await freshTracking();
+    t.enableTracking();
+    expect(t.trackInstall('open')).toBe(false); // recarregou no mesmo dia
+    sessionStorage.clear();
+    expect(t.trackInstall('screen_shown')).toBe(true); // sessão nova
+    expect(mockRpc).toHaveBeenCalledTimes(3);
+  });
+
+  it('instalação: identificador inválido guardado é trocado', async () => {
+    localStorage.setItem('eafit_device_id', 'lixo');
+    const t = await freshTracking();
+    expect(t.deviceId()).toMatch(/^[0-9a-f-]{36}$/);
+    expect(localStorage.getItem('eafit_device_id')).toBe(t.deviceId());
+  });
 });

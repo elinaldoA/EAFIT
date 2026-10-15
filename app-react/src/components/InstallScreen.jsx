@@ -1,8 +1,9 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { readClientInfo, detectDisplayMode } from '../lib/clientInfo';
 import {
   subscribeInstall, getInstallState, promptInstall, installSteps, isInstallSkipped, skipInstall, cameFromOldAddress,
 } from '../lib/installPrompt';
+import { trackInstall } from '../lib/tracking';
 
 import { t } from '../lib/i18n';
 // Tela cheia pra quem abre o EAFIT numa aba do navegador: leva a instalar o
@@ -15,10 +16,12 @@ export default function InstallScreen() {
   const [skipped, setSkipped] = useState(isInstallSkipped);
   const [busy, setBusy] = useState(false);
   const [fromOldAddress] = useState(cameFromOldAddress);
-
-  if (standalone || skipped) return null;
   const steps = installSteps(client);
-  if (state === 'manual' && !steps) return null;
+  const visible = !standalone && !skipped && !(state === 'manual' && !steps);
+
+  useEffect(() => { if (visible) trackInstall('screen_shown'); }, [visible]);
+
+  if (!visible) return null;
 
   function handleSkip() {
     skipInstall();
