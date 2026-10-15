@@ -93,6 +93,7 @@ describe('backup cobre as tabelas do usuário', () => {
     client_errors: 'diagnóstico técnico de erros do navegador',
     user_events: 'métrica de uso do app (telas e funcionalidades abertas), não é conteúdo do usuário',
     user_client: 'retrato técnico do aparelho (sistema, navegador, versão do app)',
+    app_access_days: 'métrica de uso (dias em que abriu o app, com IP e localização aproximada), mesma natureza de user_client',
     admin_user_notes: 'anotações internas da equipe sobre a conta',
     account_deactivations: 'registro interno de conta desativada pelo admin (com a conta desativada não há login para exportar)',
     inactivity_surveys: 'controle de envio da pesquisa de inatividade; a resposta chega por link de e-mail, sem login, e o app não lê a tabela',
