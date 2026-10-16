@@ -2,6 +2,7 @@ import EmptyState from '../components/EmptyState';
 import UserClientCard from '../components/UserClientCard';
 import UserWellbeingCard from '../components/UserWellbeingCard';
 import UserFriendsCard from '../components/UserFriendsCard';
+import UserAmbassadorCard from '../components/UserAmbassadorCard';
 import { METAS, NIVEIS, BADGE_LABELS, formatDate } from '../lib/userDetailHelpers';
 
 export default function UserProfileTab({ userId, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
@@ -61,6 +62,7 @@ export default function UserProfileTab({ userId, form, setForm, busy, onSaveProf
         </div>
       </form>
 
+      <UserAmbassadorCard userId={userId} />
       <UserClientCard userId={userId} />
       <UserWellbeingCard userId={userId} />
       <UserFriendsCard userId={userId} />

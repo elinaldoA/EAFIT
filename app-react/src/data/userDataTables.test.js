@@ -97,6 +97,7 @@ describe('backup cobre as tabelas do usuário', () => {
     app_installs: 'métrica de instalação do app no aparelho (datas de instalação e de abertura pelo ícone)',
     app_install_baseline: 'marca interna de quem já tinha o app instalado antes da medição',
     push_stale_log: 'registro técnico de inscrição de notificação que deixou de funcionar',
+    ambassador_referrals: 'registro interno de atribuição (por qual link de embaixador a conta foi criada)',
     admin_user_notes: 'anotações internas da equipe sobre a conta',
     account_deactivations: 'registro interno de conta desativada pelo admin (com a conta desativada não há login para exportar)',
     inactivity_surveys: 'controle de envio da pesquisa de inatividade; a resposta chega por link de e-mail, sem login, e o app não lê a tabela',

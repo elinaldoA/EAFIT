@@ -652,8 +652,22 @@
     if (/iphone|ipod|mobile/.test(ua)) return 'celular';
     return 'desktop';
   }
+  // Link de embaixador (?ref=CODIGO): cópia de app-react/src/lib/ambassadorRef.js
+  // (mesma chave e regra) — o app lê o código daqui no cadastro. O primeiro
+  // link vale por 30 dias.
+  var ref = (new URLSearchParams(window.location.search).get('ref') || '').trim().toLowerCase();
+  if (!/^[a-z0-9-]{3,30}$/.test(ref)) ref = '';
+  (function captureRef() {
+    if (!ref) return;
+    try {
+      var saved = JSON.parse(localStorage.getItem('eafit_ref') || 'null');
+      if (saved && /^[a-z0-9-]{3,30}$/.test(String(saved.code)) && Date.now() - Number(saved.at) < 30 * 24 * 60 * 60 * 1000) return;
+      localStorage.setItem('eafit_ref', JSON.stringify({ code: ref, source: detectSource(), at: Date.now() }));
+    } catch { /* sem armazenamento */ }
+  })();
   (function recordVisit() {
-    var key = 'eafit_visit_landing';
+    // Link de embaixador conta à parte (não some o clique de quem já visitou hoje).
+    var key = ref ? 'eafit_visit_landing_' + ref : 'eafit_visit_landing';
     var today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
     try {
       if (localStorage.getItem(key) === today) return;
@@ -677,7 +691,10 @@
     var campaign = (new URLSearchParams(window.location.search).get('utm_campaign') || '').toLowerCase()
       .replace(/[^a-z0-9_-]/g, '').slice(0, 40);
     var visitLang = window.LANDING_LANG === 'en' ? 'en' : 'pt';
-    send({ page: 'landing', source: source, os: os, browser: detectBrowser(), device: detectDevice(), lang: visitLang, campaign: campaign })
+    var full = { page: 'landing', source: source, os: os, browser: detectBrowser(), device: detectDevice(), lang: visitLang, campaign: campaign };
+    var withRef = ref ? Object.assign({ ref: ref }, full) : full;
+    send(withRef)
+      .then(function (r) { if (!r.ok && ref) return send(full); return r; })
       .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source, os: os }); return r; })
       .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source }); })
       .catch(function () {});

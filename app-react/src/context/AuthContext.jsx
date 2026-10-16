@@ -7,6 +7,7 @@ import { claimLocalData, clearUserLocalData } from '../lib/localData';
 import { isAdminAccount } from '../lib/adminGuard';
 import { isAccountDeactivated } from '../lib/accountStatus';
 import { takeEmailLink } from '../lib/emailLink';
+import { pendingRef, clearRef } from '../lib/ambassadorRef';
 
 import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 6;
@@ -143,9 +144,14 @@ export function AuthProvider({ children }) {
       trackAuthEvent('signup_error', 'senha_curta');
       return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
     }
+    // Veio por link de embaixador: o banco vincula a conta pelo user_metadata.ref.
+    const ref = pendingRef();
     const { data, error } = await db.auth.signUp({
       email, password,
-      options: { data: { termsAcceptedAt: new Date().toISOString(), lang }, emailRedirectTo: appUrl() },
+      options: {
+        data: { termsAcceptedAt: new Date().toISOString(), lang, ...(ref ? { ref: ref.code, refSource: ref.source } : {}) },
+        emailRedirectTo: appUrl(),
+      },
     });
     if (error) {
       trackAuthEvent('signup_error', error.code || 'outro');
@@ -158,6 +164,7 @@ export function AuthProvider({ children }) {
       return { error: translateAuthError({ code: 'user_already_exists' }) };
     }
     trackAuthEvent('signup_ok');
+    clearRef();
     if (data.session) {
       claimLocalData(data.user.id);
       setUser(data.user);

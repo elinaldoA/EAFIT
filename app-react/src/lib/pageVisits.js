@@ -44,11 +44,19 @@ export function detectCampaign(search) {
   return raw.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 }
 
+// ?ref= de link de embaixador no formato aceito pelo banco (vazio = sem código).
+export function detectRef(search) {
+  const code = String(new URLSearchParams(search || '').get('ref') ?? '').trim().toLowerCase();
+  return /^[a-z0-9-]{3,30}$/.test(code) ? code : '';
+}
+
 // No máximo 1 visita por página por dia neste navegador (aproxima
-// "visitantes por dia" sem identificar ninguém). Falha silenciosa: métrica
-// nunca pode atrapalhar o app.
+// "visitantes por dia" sem identificar ninguém); link de embaixador conta à
+// parte, pra não sumir o clique de quem já tinha visitado no dia. Falha
+// silenciosa: métrica nunca pode atrapalhar o app.
 export async function recordVisit(page) {
-  const key = `eafit_visit_${page}`;
+  const ref = detectRef(window.location.search);
+  const key = ref ? `eafit_visit_${page}_${ref}` : `eafit_visit_${page}`;
   const today = todayDate();
   try {
     if (localStorage.getItem(key) === today) return false;
@@ -61,6 +69,7 @@ export async function recordVisit(page) {
   // Do mais completo pro mais simples: banco sem as colunas novas (migration
   // ainda não aplicada) recusa a linha, e a visita é gravada sem elas.
   const attempts = [
+    ...(ref ? [{ page, source, os, browser, device, lang, campaign, ref }] : []),
     { page, source, os, browser, device, lang, campaign },
     { page, source, os },
     { page, source },

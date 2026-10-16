@@ -127,6 +127,20 @@ describe('AuthProvider', () => {
     expect(mockFunctions.invoke).toHaveBeenCalledWith('send-welcome');
   });
 
+  it('signup leva o código do link de embaixador e limpa depois', async () => {
+    localStorage.setItem('eafit_ref', JSON.stringify({ code: 'anafit', source: 'whatsapp', at: Date.now() }));
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signUp.mockResolvedValue({ data: { session: null, user: { id: 'u4' } }, error: null });
+    await act(async () => {
+      await result.current.signup('a@b.com', 'segredo123');
+    });
+
+    expect(mockAuth.signUp.mock.calls.at(-1)[0].options.data).toMatchObject({ ref: 'anafit', refSource: 'whatsapp' });
+    expect(localStorage.getItem('eafit_ref')).toBeNull();
+  });
+
   it('signup com e-mail que já tem conta (identities vazio) avisa em vez de fingir sucesso', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.authLoading).toBe(false));
