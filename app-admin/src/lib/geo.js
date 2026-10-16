@@ -68,9 +68,16 @@ function rank(map, build) {
   return [...map.entries()].map(build).sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
 }
 
-// Linhas das RPCs (status, country, uf, region, city, <countKey>) → totais do
-// mapa e das listas. `uf` filtra cidades e demografia por um estado.
-export function summarizeGeo(rows, countKey = 'visits', uf = null) {
+// Filtro de um estado ou de um país (clique no mapa ou na lista).
+function inPlace(r, { uf = null, country = null } = {}) {
+  if (uf) return r.uf === uf;
+  if (country) return r.country === country;
+  return true;
+}
+
+// Linhas das RPCs (status, country, uf, region, city, <countKey>) → totais dos
+// mapas e das listas. `place` ({ uf } ou { country }) filtra as cidades.
+export function summarizeGeo(rows, countKey = 'visits', place = {}) {
   let total = 0, located = 0, pending = 0, brTotal = 0, brNoUf = 0;
   const byUf = new Map();
   const byCountry = new Map();
@@ -88,7 +95,7 @@ export function summarizeGeo(rows, countKey = 'visits', uf = null) {
       if (r.uf) byUf.set(r.uf, (byUf.get(r.uf) || 0) + n);
       else brNoUf += n;
     }
-    if (r.city && (!uf || r.uf === uf)) {
+    if (r.city && inPlace(r, place)) {
       const key = `${r.city}|${r.uf || r.region || ''}|${r.country}`;
       const cur = byCity.get(key) || { city: r.city, place: r.uf || r.region || '', country: r.country, total: 0 };
       cur.total += n;
@@ -98,22 +105,25 @@ export function summarizeGeo(rows, countKey = 'visits', uf = null) {
 
   return {
     total, located, pending, noLocation: total - located - pending,
-    brTotal, brNoUf,
+    brTotal, brNoUf, abroad: located - brTotal,
     byUf,
     maxUf: Math.max(0, ...byUf.values()),
+    byCountry,
+    maxCountry: Math.max(0, ...byCountry.values()),
     states: rank(byUf, ([code, n]) => ({ uf: code, label: UF_NAMES[code] || code, total: n, pct: pct(n, brTotal) })),
     countries: rank(byCountry, ([code, n]) => ({ code, label: countryName(code), flag: flag(code), total: n, pct: pct(n, located) })),
     cities: [...byCity.values()].sort((a, b) => b.total - a.total || a.city.localeCompare(b.city)),
   };
 }
 
-// Sexo e faixa etária das contas (só no modo Contas), opcionalmente de um estado.
-export function demographics(rows, uf = null) {
+// Sexo e faixa etária das contas (só no modo Contas), opcionalmente de um
+// estado ou de um país.
+export function demographics(rows, place = {}) {
   const sexo = new Map();
   const faixa = new Map();
   let sum = 0;
   for (const r of rows || []) {
-    if (uf && r.uf !== uf) continue;
+    if (!inPlace(r, place)) continue;
     const n = Number(r.users) || 0;
     sum += n;
     sexo.set(r.sexo, (sexo.get(r.sexo) || 0) + n);
@@ -126,7 +136,8 @@ export function demographics(rows, uf = null) {
   };
 }
 
-// Degrau de cor (0 = sem dado, 1–5) proporcional ao estado com mais registros.
+// Degrau de cor (0 = sem dado, 1–5) proporcional ao estado (ou país) com mais
+// registros.
 export const COLOR_STEPS = 5;
 export function colorStep(value, max) {
   if (!value || !max) return 0;

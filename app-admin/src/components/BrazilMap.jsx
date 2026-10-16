@@ -1,5 +1,6 @@
 import { BR_STATES, BR_VIEWBOX } from '../lib/brazilStates';
-import { colorStep, legendSteps } from '../lib/geo';
+import { colorStep } from '../lib/geo';
+import MapLegend from './MapLegend';
 
 // Estados pequenos demais pra caber a sigla dentro do contorno.
 const NO_LABEL = new Set(['DF', 'SE', 'AL', 'PB', 'RN', 'ES', 'RJ']);
@@ -44,16 +45,7 @@ export default function BrazilMap({ byUf, max, selected, onSelect, unit = 'visit
           </text>
         ))}
       </svg>
-      {max > 0 && (
-        <figcaption className="br-map__legend">
-          {legendSteps(max).map(l => (
-            <span key={l.step} className="br-map__key">
-              <span className={`br-map__swatch br-map__state--s${l.step}`} aria-hidden="true" />
-              {l.from === l.to ? l.from : `${l.from}–${l.to}`}
-            </span>
-          ))}
-        </figcaption>
-      )}
+      <MapLegend max={max} />
     </figure>
   );
 }

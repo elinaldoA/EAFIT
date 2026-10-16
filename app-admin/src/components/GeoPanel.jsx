@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
-import { fetchVisitGeo, fetchAppGeo, fetchUserGeo, selectAccessRows, splitSiteApp, summarizeGeo, demographics, UF_NAMES } from '../lib/geo';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { fetchVisitGeo, fetchAppGeo, fetchUserGeo, selectAccessRows, splitSiteApp, summarizeGeo, demographics, countryName, flag, UF_NAMES } from '../lib/geo';
 import BrazilMap from './BrazilMap';
 import Loading from './Loading';
+
+const WorldMap = lazy(() => import('./WorldMap'));
+
+const VIEWS = [
+  { key: 'brasil', label: 'Brasil' },
+  { key: 'mundo', label: 'Mundo' },
+];
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -59,7 +66,9 @@ export default function GeoPanel() {
   const [days, setDays] = useState(30);
   const [mode, setMode] = useState('tudo');
   const [rows, setRows] = useState([]);
+  const [view, setView] = useState('brasil');
   const [uf, setUf] = useState(null);
+  const [country, setCountry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -76,9 +85,14 @@ export default function GeoPanel() {
 
   const countKey = mode === 'contas' ? 'users' : 'visits';
   const current = MODES.find(m => m.key === mode);
-  const summary = useMemo(() => summarizeGeo(rows, countKey, uf), [rows, countKey, uf]);
-  const demo = useMemo(() => (mode === 'contas' ? demographics(rows, uf) : null), [rows, mode, uf]);
+  // Brasil: filtra por estado; Mundo: por país.
+  const place = useMemo(() => (view === 'brasil' ? { uf } : { country }), [view, uf, country]);
+  const placeName = view === 'brasil' ? uf : country && countryName(country);
+  const summary = useMemo(() => summarizeGeo(rows, countKey, place), [rows, countKey, place]);
+  const demo = useMemo(() => (mode === 'contas' ? demographics(rows, place) : null), [rows, mode, place]);
   const ufTotal = uf ? summary.byUf.get(uf) || 0 : 0;
+  const countryTotal = country ? summary.byCountry.get(country) || 0 : 0;
+  const pickView = v => { setView(v); setUf(null); setCountry(null); };
   const split = mode === 'tudo' ? splitSiteApp(rows) : null;
 
   return (
@@ -91,7 +105,7 @@ export default function GeoPanel() {
               <button
                 key={m.key} type="button" aria-pressed={mode === m.key}
                 className={`seg__btn${mode === m.key ? ' seg__btn--active' : ''}`}
-                onClick={() => { setMode(m.key); setUf(null); }}
+                onClick={() => { setMode(m.key); setUf(null); setCountry(null); }}
               >
                 {m.label}
               </button>
@@ -120,13 +134,51 @@ export default function GeoPanel() {
             {summary.pending > 0 && <> · {summary.pending} aguardando localização</>}
             {summary.noLocation > 0 && <> · {summary.noLocation} sem localização</>}
             {summary.brNoUf > 0 && <> · {summary.brNoUf} no Brasil sem estado identificado</>}
+            {summary.abroad > 0 && <> · {summary.abroad} fora do Brasil{view === 'brasil' && ' (veja em Mundo)'}</>}
           </p>
 
           <div className="geo-grid">
-            <BrazilMap byUf={summary.byUf} max={summary.maxUf} selected={uf} onSelect={setUf} unit={current.unit} />
+            <div>
+              <div className="seg geo-view" role="group" aria-label="Mapa">
+                {VIEWS.map(v => (
+                  <button
+                    key={v.key} type="button" aria-pressed={view === v.key}
+                    className={`seg__btn${view === v.key ? ' seg__btn--active' : ''}`}
+                    onClick={() => pickView(v.key)}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {view === 'brasil' ? (
+                <BrazilMap byUf={summary.byUf} max={summary.maxUf} selected={uf} onSelect={setUf} unit={current.unit} />
+              ) : (
+                <Suspense fallback={<Loading />}>
+                  <WorldMap byCountry={summary.byCountry} max={summary.maxCountry} selected={country} onSelect={setCountry} unit={current.unit} />
+                </Suspense>
+              )}
+            </div>
 
             <div>
-              {uf ? (
+              {view === 'mundo' ? (country ? (
+                <div className="geo-selected">
+                  <h3 className="subsection-title" style={{ marginTop: 0 }}>
+                    <span aria-hidden="true">{flag(country)}</span> {countryName(country)} · {countryTotal} {current.unit}
+                    {summary.located > 0 && <> ({Math.round((countryTotal / summary.located) * 100)}% dos localizados)</>}
+                  </h3>
+                  <span className="geo-selected__actions">
+                    {country === 'BR' && (
+                      <button type="button" className="btn btn--ghost btn--small" onClick={() => pickView('brasil')}>Ver por estado</button>
+                    )}
+                    <button type="button" className="btn btn--ghost btn--small" onClick={() => setCountry(null)}>Ver o mundo todo</button>
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <h3 className="subsection-title" style={{ marginTop: 0 }}>Países</h3>
+                  <Bars rows={summary.countries} onPick={setCountry} selected={country} />
+                </>
+              )) : uf ? (
                 <div className="geo-selected">
                   <h3 className="subsection-title" style={{ marginTop: 0 }}>
                     {UF_NAMES[uf]} · {ufTotal} {current.unit}
@@ -143,14 +195,14 @@ export default function GeoPanel() {
 
               {demo && (
                 <>
-                  <h3 className="subsection-title">Sexo{uf ? ` em ${uf}` : ''}</h3>
+                  <h3 className="subsection-title">Sexo{placeName ? ` em ${placeName}` : ''}</h3>
                   <Bars rows={demo.sexo} />
-                  <h3 className="subsection-title">Faixa etária{uf ? ` em ${uf}` : ''}</h3>
+                  <h3 className="subsection-title">Faixa etária{placeName ? ` em ${placeName}` : ''}</h3>
                   <Bars rows={demo.faixa} />
                 </>
               )}
 
-              <h3 className="subsection-title">Cidades{uf ? ` em ${uf}` : ''}</h3>
+              <h3 className="subsection-title">Cidades{placeName ? ` em ${placeName}` : ''}</h3>
               {summary.cities.length ? (
                 <div className="table-wrap">
                   <table className="source-table">
@@ -169,8 +221,8 @@ export default function GeoPanel() {
             </div>
           </div>
 
-          <h3 className="subsection-title">Países</h3>
-          {summary.countries.length ? (
+          {view === 'brasil' && <h3 className="subsection-title">Países</h3>}
+          {view === 'mundo' ? null : summary.countries.length ? (
             <div className="table-wrap">
               <table className="source-table">
                 <thead><tr><th scope="col">País</th><th scope="col">Total</th><th scope="col">%</th></tr></thead>

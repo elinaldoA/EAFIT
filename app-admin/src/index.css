@@ -844,6 +844,12 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 @media (max-width: 900px) { .geo-grid { grid-template-columns: minmax(0, 1fr); } }
 .geo-selected { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
 .br-map { margin: 0; }
+.geo-view { margin-bottom: 10px; }
+.geo-selected__actions { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.world-map svg { max-width: none; }
+.world-map .br-map__state { stroke-width: 0.5; }
+.world-map .br-map__state:hover, .world-map .br-map__state:focus-visible { stroke-width: 1; }
+.world-map .br-map__state--sel { stroke-width: 1.5; }
 .br-map svg { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
 .br-map__state { stroke: var(--surface); stroke-width: 1; stroke-linejoin: round; cursor: pointer; transition: fill .15s ease; outline: none; }
 .br-map__state--s0 { fill: var(--surface-3); }

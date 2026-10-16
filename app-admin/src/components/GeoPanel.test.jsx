@@ -66,6 +66,25 @@ describe('GeoPanel', () => {
     expect(screen.getByText('Campinas · SP')).toBeTruthy();
   });
 
+  it('Mundo pinta os países e clicar no país filtra as cidades', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    expect(document.querySelector('.card-note').textContent).toMatch(/2 fora do Brasil \(veja em Mundo\)/);
+    fireEvent.click(screen.getByRole('button', { name: 'Mundo' }));
+    const pt = await screen.findByRole('button', { name: 'Portugal: 2 acessos' }, { timeout: 5000 }); // mapa carregado sob demanda
+    expect(screen.getByRole('button', { name: 'Brasil: 12 acessos' })).toBeTruthy();
+    expect(screen.queryByText('Estados')).toBeNull();
+    fireEvent.click(pt);
+    expect(screen.getByText(/Portugal · 2 acessos/)).toBeTruthy();
+    expect(screen.getByText('Lisboa · Lisbon · PT')).toBeTruthy();
+    expect(screen.queryByText('Campinas · SP')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Ver o mundo todo' }));
+    expect(screen.getByText('Campinas · SP')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Brasil: 12 acessos' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ver por estado' }));
+    expect(screen.getByText('Estados')).toBeTruthy();
+  });
+
   it('no modo Contas mostra sexo e faixa etária', async () => {
     render(<GeoPanel />);
     await screen.findByText('Estados');

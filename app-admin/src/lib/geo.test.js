@@ -8,6 +8,7 @@ import {
   countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
+import { WORLD_COUNTRIES } from './worldCountries';
 
 beforeEach(() => { mockRpc.mockReset(); });
 
@@ -46,6 +47,18 @@ describe('modos do mapa', () => {
   });
 });
 
+describe('mapa do mundo', () => {
+  it('tem os países com sigla ISO única e contorno', () => {
+    expect(WORLD_COUNTRIES.length).toBeGreaterThan(150);
+    expect(new Set(WORLD_COUNTRIES.map(c => c.code)).size).toBe(WORLD_COUNTRIES.length);
+    for (const c of WORLD_COUNTRIES) {
+      expect(c.code).toMatch(/^[A-Z]{2}$/);
+      expect(c.d).toMatch(/^M[-\d.,LMZ]+Z$/);
+    }
+    expect(WORLD_COUNTRIES.map(c => c.code)).toEqual(expect.arrayContaining(['BR', 'US', 'PT']));
+  });
+});
+
 describe('mapa dos estados', () => {
   it('tem os 27 estados com contorno e ponto de rótulo', () => {
     expect(BR_STATES).toHaveLength(27);
@@ -71,7 +84,7 @@ describe('summarizeGeo', () => {
 
   it('separa localizados, pendentes e sem localização', () => {
     const s = summarizeGeo(rows);
-    expect(s).toMatchObject({ total: 23, located: 15, pending: 2, noLocation: 6, brTotal: 14, brNoUf: 4, maxUf: 8 });
+    expect(s).toMatchObject({ total: 23, located: 15, pending: 2, noLocation: 6, brTotal: 14, brNoUf: 4, abroad: 1, maxUf: 8 });
   });
 
   it('ordena estados e países pelo total', () => {
@@ -83,11 +96,18 @@ describe('summarizeGeo', () => {
 
   it('filtra cidades por estado', () => {
     expect(summarizeGeo(rows).cities.map(c => c.city)).toEqual(['Campinas', 'São Paulo', 'Salvador', 'Lisboa']);
-    expect(summarizeGeo(rows, 'visits', 'BA').cities).toEqual([{ city: 'Salvador', place: 'BA', country: 'BR', total: 2 }]);
+    expect(summarizeGeo(rows, 'visits', { uf: 'BA' }).cities).toEqual([{ city: 'Salvador', place: 'BA', country: 'BR', total: 2 }]);
+  });
+
+  it('totaliza e filtra cidades por país', () => {
+    const s = summarizeGeo(rows);
+    expect(s.byCountry.get('PT')).toBe(1);
+    expect(s.maxCountry).toBe(14);
+    expect(summarizeGeo(rows, 'visits', { country: 'PT' }).cities).toEqual([{ city: 'Lisboa', place: 'Lisbon', country: 'PT', total: 1 }]);
   });
 
   it('aguenta lista vazia', () => {
-    expect(summarizeGeo([])).toMatchObject({ total: 0, located: 0, maxUf: 0, states: [], countries: [], cities: [] });
+    expect(summarizeGeo([])).toMatchObject({ total: 0, located: 0, maxUf: 0, maxCountry: 0, states: [], countries: [], cities: [] });
   });
 });
 
@@ -106,8 +126,9 @@ describe('demographics', () => {
     expect(d.faixa.map(x => x.value)).toEqual(['18–24', '25–34', '55+', 'não informado']);
   });
 
-  it('filtra por estado', () => {
-    const d = demographics(rows, 'SP');
+  it('filtra por estado ou país', () => {
+    expect(demographics(rows, { country: 'BR' }).total).toBe(6);
+    const d = demographics(rows, { uf: 'SP' });
     expect(d.total).toBe(4);
     expect(d.sexo.map(x => x.value)).toEqual(['F', 'M']);
     expect(d.sexo[0].pct).toBe(75);
