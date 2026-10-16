@@ -326,3 +326,26 @@ button.profile-section__title {
   margin-top: 6px;
 }
 .feedback-reply__text { margin: 6px 0 0; font-size: 0.86rem; color: var(--text); line-height: 1.45; }
+
+/* ── Painel do embaixador (Perfil → Embaixador) ── */
+.amb { display: flex; flex-direction: column; gap: 12px; }
+.amb__notice { margin: 0; padding: 10px 12px; border-radius: var(--r-md); border: 1px solid var(--warning); background: rgba(251,191,36,.06); font-size: 0.8rem; }
+.amb__link { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--border); }
+.amb__link-label { font-size: 0.8rem; color: var(--text-muted); }
+.amb__link-url { font-size: 0.78rem; word-break: break-all; }
+.amb__label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-dim); margin-bottom: -4px; }
+.amb__channels { display: flex; flex-wrap: wrap; gap: 6px; }
+.amb__hint { margin: 0; font-size: 0.74rem; color: var(--text-muted); line-height: 1.4; }
+.amb__period { align-self: flex-start; }
+.amb__stats { margin: 0; }
+.amb__stats--two { grid-template-columns: repeat(2, 1fr); margin-top: -4px; }
+.amb__table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.amb__table th, .amb__table td { padding: 7px 4px; border-bottom: 1px solid var(--border); text-align: right; }
+.amb__table th:first-child, .amb__table td:first-child { text-align: left; }
+.amb__table th { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; color: var(--text-dim); }
+.amb-bars { display: flex; align-items: flex-end; gap: 2px; height: 80px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.amb-bars__col { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
+.amb-bars__bar { width: 100%; border-radius: 2px 2px 0 0; background: var(--border-2); }
+.amb-bars__bar--signup { background: var(--primary); }
+.amb-bars__legend { display: flex; justify-content: space-between; gap: 8px; font-size: 0.68rem; color: var(--text-dim); margin-top: -6px; }
+.amb-bars__dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--primary); vertical-align: middle; }

@@ -4,6 +4,7 @@ import { useAppConfig } from '../context/useAppConfig';
 import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
 import ProfilePauseSection from '../components/ProfilePauseSection';
 import ProfileTrainerSection from '../components/ProfileTrainerSection';
+import ProfileAmbassadorSection from '../components/ProfileAmbassadorSection';
 import { activePause, formatDayBR } from '../lib/pause';
 import { isFlagOn } from '../lib/appConfig';
 import { useToast } from '../context/useToast';
@@ -288,6 +289,8 @@ export default function PerfilPage({ active }) {
           <span className="collapse__chevron" aria-hidden="true">›</span>
         </button>
       </div>
+
+      <ProfileAmbassadorSection toast={toast} />
 
       {isFlagOn(config.flags, 'convite_amigos') && (
         <div className="section-group">

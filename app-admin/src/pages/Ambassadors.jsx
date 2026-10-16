@@ -104,6 +104,7 @@ export default function Ambassadors() {
           <p className="page-subtitle">
             Influenciadores da marca. Cada um tem um código e um link de divulgação: quem abre o link e cria conta
             em até 30 dias fica vinculado ao embaixador (vale o primeiro link aberto naquele navegador).
+            O embaixador acompanha os números (sem saber quem se cadastrou) no app, em Perfil → Painel do embaixador.
           </p>
         </div>
         <div className="seg" role="group" aria-label="Período">
