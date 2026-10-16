@@ -15,7 +15,7 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('ErrorBoundary:', error, info?.componentStack);
-    reportError('boundary', error);
+    reportError('boundary', error, { componentStack: info?.componentStack });
     if (isChunkLoadError(error)) reloadOnceForChunkError();
   }
 

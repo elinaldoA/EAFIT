@@ -1,11 +1,55 @@
 import { useCallback, useEffect, useState } from 'react';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
-import { fetchClientErrors, purgeOldClientErrors, KIND_LABELS, PAGE_SIZE } from '../lib/clientErrors';
+import { fetchClientErrors, purgeOldClientErrors, describeDevice, formatUptime, KIND_LABELS, PAGE_SIZE } from '../lib/clientErrors';
 
 function formatDate(value) {
   if (!value) return '—';
   return new Date(value).toLocaleString('pt-BR');
+}
+
+// Tudo o que o app mandou junto com o erro (context, ver lib/errorReporter.js
+// no app-react). Erros antigos só têm a stack.
+function ErrorDetails({ row }) {
+  const c = row.context || {};
+  const device = describeDevice(row);
+  const trail = Array.isArray(c.trail) ? c.trail : [];
+  return (
+    <div className="error-details">
+      {device && <p><strong>Aparelho:</strong> {device}</p>}
+      {c.where && <p><strong>Onde:</strong> <code>{c.where}</code></p>}
+      {c.uptime_s != null && <p><strong>Página aberta havia:</strong> {formatUptime(c.uptime_s)}</p>}
+      {(c.screen || c.lang) && <p><strong>Tela / idioma:</strong> {[c.screen, c.lang].filter(Boolean).join(' · ')}</p>}
+      {c.user_agent && <p><strong>User-agent:</strong> <code>{c.user_agent}</code></p>}
+      {trail.length > 0 && (
+        <>
+          <p><strong>Últimas ações antes do erro:</strong></p>
+          <ol className="error-details__trail">
+            {trail.map((item, i) => (
+              <li key={i}>
+                <span className="error-details__ago">
+                  {c.uptime_s != null ? `−${formatUptime(c.uptime_s - item.s)}` : formatUptime(item.s)}
+                </span>{' '}
+                {item.e}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+      {row.stack && (
+        <>
+          <p><strong>Stack:</strong></p>
+          <pre className="template-json-preview">{row.stack}</pre>
+        </>
+      )}
+      {c.component_stack && (
+        <>
+          <p><strong>Componentes:</strong></p>
+          <pre className="template-json-preview">{c.component_stack}</pre>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function ClientErrors() {
@@ -64,7 +108,7 @@ export default function ClientErrors() {
         <>
           <table className="resp-table">
             <thead>
-              <tr><th>Quando</th><th>Tipo</th><th>Mensagem</th><th>Tela</th><th>Usuário</th><th>Stack</th></tr>
+              <tr><th>Quando</th><th>Tipo</th><th>Mensagem</th><th>Tela</th><th>Usuário</th><th>Detalhes</th></tr>
             </thead>
             <tbody>
               {rows.map(r => (
@@ -74,11 +118,11 @@ export default function ClientErrors() {
                   <td data-label="Mensagem">{r.message}</td>
                   <td data-label="Tela">{r.url || '—'}</td>
                   <td data-label="Usuário" title={r.user_id}>{r.user_id.slice(0, 8)}</td>
-                  <td data-label="Stack">
-                    {r.stack ? (
+                  <td data-label="Detalhes">
+                    {r.stack || r.context ? (
                       <details>
                         <summary style={{ cursor: 'pointer' }}>ver</summary>
-                        <pre className="template-json-preview">{r.stack}</pre>
+                        <ErrorDetails row={r} />
                       </details>
                     ) : '—'}
                   </td>

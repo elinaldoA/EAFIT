@@ -265,6 +265,28 @@ describe('ClientErrors', () => {
     expect(screen.getByText('at x()')).toBeTruthy();
   });
 
+  it('detalhes mostram aparelho, onde estourou e o rastro de ações antes do erro', async () => {
+    ce.fetchClientErrors.mockResolvedValue({
+      rows: [{
+        id: 'e3', user_id: 'zzzzzzzz-cccc', kind: 'error', message: 'Script error.', stack: null, url: '/app/', created_at: null,
+        app_version: '0.3.5',
+        context: {
+          os: 'ios', browser: 'safari', device: 'celular', display_mode: 'browser', online: false,
+          where: 'https://x/app.js:10:5', uptime_s: 125, user_agent: 'Mozilla/5.0 (iPhone)',
+          trail: [{ s: 100, e: 'toque: Perfil' }, { s: 120, e: 'rede: caiu' }],
+        },
+      }],
+      total: 1,
+    });
+    wrap(<ClientErrors />);
+    expect(await screen.findByText('Script error.')).toBeTruthy();
+    expect(screen.getByText('0.3.5 · ios · safari · celular · navegador · offline')).toBeTruthy();
+    expect(screen.getByText('https://x/app.js:10:5')).toBeTruthy();
+    expect(screen.getByText('2min 05s')).toBeTruthy();
+    expect(screen.getByText('toque: Perfil', { exact: false })).toBeTruthy();
+    expect(screen.getByText('−25s')).toBeTruthy();
+  });
+
   it('estado vazio', async () => {
     ce.fetchClientErrors.mockResolvedValue({ rows: [], total: 0 });
     wrap(<ClientErrors />);

@@ -41,7 +41,7 @@ describe('ErrorBoundary', () => {
     render(<ErrorBoundary><Bomb /></ErrorBoundary>);
     expect(screen.getByRole('alert').textContent).toMatch(/Algo deu errado/);
     expect(screen.getByText(/erro inesperado/)).toBeTruthy();
-    expect(h.reportError).toHaveBeenCalledWith('boundary', expect.any(Error));
+    expect(h.reportError).toHaveBeenCalledWith('boundary', expect.any(Error), { componentStack: expect.any(String) });
     expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull();
   });
 
