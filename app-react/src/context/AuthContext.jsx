@@ -9,6 +9,7 @@ import { isAccountDeactivated } from '../lib/accountStatus';
 import { takeEmailLink } from '../lib/emailLink';
 import { pendingRef, clearRef } from '../lib/ambassadorRef';
 import { syncLocalProfile } from '../lib/profileSync';
+import { noteFreshLogin } from '../lib/biometricLock';
 
 import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 6;
@@ -147,6 +148,7 @@ export function AuthProvider({ children }) {
       return { error: t('Esta conta é de administrador e acessa apenas o painel admin.') };
     }
     claimLocalData(data.user.id);
+    noteFreshLogin(data.user.id);
     setUser(data.user);
     return {};
   }

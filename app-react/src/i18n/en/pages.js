@@ -182,4 +182,6 @@ export default {
   '{dia} · {length} exercícios {v1}': '{dia} · {length} exercises {v1}',
   '{v1}% das séries': '{v1}% of the sets',
   'Dia de recuperação — descanse bem ou faça um cardio leve. 🧘': 'Recovery day — rest well or do some light cardio. 🧘',
+  'Bloqueio com biometria': 'Biometric lock',
+  'Ativado neste aparelho': 'On for this device',
 };

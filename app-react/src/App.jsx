@@ -23,6 +23,8 @@ import { useDayRollover } from './hooks/useDayRollover';
 import { useHashTab } from './hooks/useHashTab';
 import ErrorBoundary from './components/ErrorBoundary';
 import BootSplash from './components/BootSplash';
+import BiometricLockScreen from './components/BiometricLockScreen';
+import { useBiometricLock } from './hooks/useBiometricLock';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
 import MovedScreen from './components/MovedScreen';
@@ -70,6 +72,7 @@ function Shell() {
   useTrainerGoalsSync(user?.id);
   useSyncLang(user);
   useDayRollover();
+  const [locked, unlock] = useBiometricLock(user?.id);
 
   // Navegação vinda de notificação ou aviso (lib/appNav.js) com aba/cartão a
   // abrir: remonta a página pra valer mesmo se já era a aba atual.
@@ -122,7 +125,9 @@ function Shell() {
   const needsOnboarding = user && !trainerView && !user.user_metadata?.peso;
 
   return (
-    <div className="shell">
+    <>
+    {user && locked && <BiometricLockScreen user={user} onUnlock={unlock} />}
+    <div className="shell" inert={user && locked ? true : undefined}>
       <AnnouncementBanner />
       {user && <TermsUpdateScreen />}
       {(user || fromOldAddress) && <InstallScreen />}
@@ -167,6 +172,7 @@ function Shell() {
         </AvatarProvider>
       )}
     </div>
+    </>
   );
 }
 

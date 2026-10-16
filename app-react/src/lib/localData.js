@@ -2,10 +2,11 @@
 // escritas pendentes). Ficam atrelados a quem os gravou: sem isso, em aparelho
 // compartilhado a pessoa seguinte herdava séries marcadas, cargas e notas da
 // anterior, e a fila dela era reexecutada (e falhava na RLS) para sempre.
-// Tema e idioma não entram: são do aparelho, não da conta.
+// Tema e idioma não entram: são do aparelho, não da conta. A trava de
+// biometria entra: é da conta que a ligou.
 const OWNER_KEY = 'eafit_data_owner';
 const PREFIXES = ['treino_', 'set_', 'carga_', 'profile_'];
-const EXACT = ['pendingSyncQueue', 'plan_cache', 'dash_tab', 'reminders_enabled', 'coach_prefs'];
+const EXACT = ['pendingSyncQueue', 'plan_cache', 'dash_tab', 'reminders_enabled', 'coach_prefs', 'eafit_bio_lock'];
 
 function safe(fn) {
   try { return fn(); } catch { return undefined; }

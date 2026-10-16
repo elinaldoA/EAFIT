@@ -273,6 +273,14 @@ body.modal-open { overflow: hidden; }
 .maintenance__title { margin: 4px 0 0; font-size: 1.15rem; }
 .maintenance__text { margin: 0; max-width: 32ch; font-size: 0.9rem; line-height: 1.45; opacity: .8; }
 
+/* Trava de biometria (BiometricLockScreen): por cima de tudo, até dos modais. */
+.bio-lock { z-index: 10001; gap: 14px; padding: 24px; text-align: center; overflow-y: auto; background: var(--bg); color: var(--text); }
+.bio-lock__text { margin: 0; max-width: 30ch; font-size: 0.95rem; line-height: 1.45; opacity: .85; }
+.bio-lock__form { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 320px; text-align: left; }
+.bio-lock__form .field { width: 100%; }
+.bio-lock__email { margin: 0; font-size: 0.85rem; opacity: .7; }
+.bio-lock__error { margin: 0; max-width: 32ch; font-size: 0.85rem; color: var(--error); }
+
 /* Pesquisa de inatividade aberta pelo e-mail (InactivitySurveyScreen) */
 /* Mais alta que a tela em celular pequeno: rola, e centraliza quando sobra espaço. */
 .survey { justify-content: flex-start; gap: 12px; overflow-y: auto; background: var(--bg); color: var(--text); }

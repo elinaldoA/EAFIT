@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useAppConfig } from '../context/useAppConfig';
 import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
@@ -28,6 +28,8 @@ import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSect
 import { isCoachAvailable } from '../lib/coach';
 import { NotificationsSection, ExportSection, CoachSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
+import ProfileBiometricSection from '../components/ProfileBiometricSection';
+import { isBiometricAvailable, getLock } from '../lib/biometricLock';
 import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
 import { takeProfileCardToOpen } from '../lib/appNav';
@@ -64,6 +66,14 @@ export default function PerfilPage({ active }) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricOn, setBiometricOn] = useState(() => !!getLock(user?.id));
+
+  useEffect(() => {
+    let alive = true;
+    isBiometricAvailable().then(ok => { if (alive) setBiometricAvailable(ok); });
+    return () => { alive = false; };
+  }, []);
 
   async function handleExport(action, label) {
     if (!user || exporting) return;
@@ -340,6 +350,11 @@ export default function PerfilPage({ active }) {
         >
           <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
         </CollapsibleCard>
+        {biometricAvailable && (
+          <CollapsibleCard icon="🔒" title={t('Bloqueio com biometria')} summary={biometricOn ? t('Ativado neste aparelho') : t('Desativado')}>
+            <ProfileBiometricSection user={user} toast={toast} onChange={setBiometricOn} />
+          </CollapsibleCard>
+        )}
         <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal trainer')}>
           <ProfileTrainerSection toast={toast} />
         </CollapsibleCard>
