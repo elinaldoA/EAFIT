@@ -6,6 +6,7 @@ import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import {
   formatDate, callAdminAction, computePersonalRecords, callGeneratePlan, withSignedPhotos, fixWorkoutSet, deleteWorkout,
+  profileFormFromMetadata, profileFieldsToSave,
 } from '../lib/userDetailHelpers';
 import { downloadUserExport } from '../lib/userExport';
 import UserProfileTab from './UserProfileTab';
@@ -75,11 +76,7 @@ export default function UserDetail() {
       if (!row) throw new Error('Usuário não encontrado.');
       setDetail(row);
       const md = row.user_metadata || {};
-      setForm({
-        nome: md.nome || '', sobrenome: md.sobrenome || '', apelido: md.apelido || '',
-        sexo: md.sexo || '', idade: md.idade || '', peso: md.peso || '', altura: md.altura || '',
-        meta: md.meta || 'massa', nivel: md.nivel || 'intermediario', pesoAlvo: md.pesoAlvo || '',
-      });
+      setForm(profileFormFromMetadata(md));
       const rawPlan = plan.data;
       setActivePlan(rawPlan ? {
         ...rawPlan,
@@ -148,7 +145,7 @@ export default function UserDetail() {
 
   async function handleSaveProfile(e) {
     e.preventDefault();
-    await runAction('updateProfile', { fields: form });
+    await runAction('updateProfile', { fields: profileFieldsToSave(form) });
   }
 
   // Vai direto em public.profiles (permitido pela policy "admin full access"
@@ -289,12 +286,14 @@ export default function UserDetail() {
   const isBanned = detail.banned_until && new Date(detail.banned_until) > new Date();
   const md = detail.user_metadata || {};
   const hasProfile = Number(md.peso) > 0 && Number(md.altura) > 0;
+  const fullName = [md.nome, md.sobrenome].filter(Boolean).join(' ').trim();
 
   return (
     <div>
       <div className="page-header">
         <div>
           <h1 className="page-title">{detail.email}</h1>
+          {fullName && <p className="page-subtitle" style={{ margin: '2px 0 4px' }}>{fullName}{md.apelido ? ` · "${md.apelido}"` : ''}</p>}
           <p className="user-detail__meta">
             Criado em {formatDate(detail.created_at)} · Último login {formatDate(detail.last_sign_in_at)}
             {' · '}{pushCount > 0 ? `📲 ${pushCount} dispositivo(s) com push ativo` : '📴 sem push ativo'}
@@ -326,7 +325,7 @@ export default function UserDetail() {
 
       {tab === 'perfil' && (
         <UserProfileTab
-          userId={id}
+          userId={id} detail={detail}
           form={form} setForm={setForm} busy={busy} onSaveProfile={handleSaveProfile}
           achievements={achievements} progressPhotos={progressPhotos}
           weightLogs={weightLogs} waterLogs={waterLogs}

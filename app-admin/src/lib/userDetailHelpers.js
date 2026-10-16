@@ -18,6 +18,88 @@ export const BADGE_LABELS = {
 export const SEVERITY_BADGE = { leve: 'badge--ok', moderada: 'badge--warning', forte: 'badge--danger', lesao: 'badge--danger' };
 export const SEVERITY_LABEL = { leve: 'Leve', moderada: 'Moderada', forte: 'Forte', lesao: 'Lesão' };
 
+// Formulário da aba Perfil a partir do user_metadata, com os mesmos campos que
+// o app grava em Perfil (Dados pessoais, Meu corpo e Metas).
+export function profileFormFromMetadata(md = {}) {
+  const str = v => (v === undefined || v === null ? '' : String(v));
+  return {
+    nome: str(md.nome), sobrenome: str(md.sobrenome), apelido: str(md.apelido),
+    sexo: str(md.sexo), idade: str(md.idade), peso: str(md.peso), altura: str(md.altura),
+    meta: md.meta || 'massa', nivel: md.nivel || 'intermediario', pesoAlvo: str(md.pesoAlvo),
+    weeklyGoal: str(md.weeklyGoal), macroAgua: str(md.macroAgua),
+  };
+}
+
+// Metas em branco não são gravadas: no app, sem valor = padrão (5 treinos por
+// semana, água calculada pelo peso); gravar '' trocaria o padrão por nada.
+export function profileFieldsToSave(form) {
+  const fields = { ...form };
+  for (const k of ['weeklyGoal', 'macroAgua']) if (String(fields[k] ?? '').trim() === '') delete fields[k];
+  return fields;
+}
+
+export function computeImc(peso, altura) {
+  const p = parseFloat(peso);
+  const a = parseFloat(altura) / 100;
+  if (!(p > 0) || !(a > 0)) return null;
+  return Math.round((p / (a * a)) * 10) / 10;
+}
+
+// Mesmas chaves e textos de app-react/src/components/ProfilePreferencesSection.jsx
+// (NOTIFY_PREFS). Sem valor gravado = ligado (isNotifyEnabled do app).
+export const NOTIFY_LABELS = {
+  notifyEngagement: 'Lembretes e incentivos para treinar',
+  notifyStreakRisk: 'Sequência em risco',
+  notifyInactivity: 'Voltar a treinar',
+  notifyWeeklySummary: 'Resumo semanal',
+  notifyWeightUpdate: 'Atualizar peso',
+  notifyRecords: 'Recordes e conquistas',
+  notifyDiscomfortFollowup: 'Follow-up de desconforto',
+};
+
+const LANGS = { pt: 'Português', en: 'Inglês' };
+const COACH_TONES = { animado: 'animado', zoeira: 'zoeira', calmo: 'calmo' };
+const COACH_FREQ = { full: 'fala tudo', light: 'só o essencial', free: 'à vontade' };
+
+const brDay = d => String(d).slice(0, 10).split('-').reverse().join('/');
+
+// O que o app grava na conta além do formulário, em linhas [rótulo, valor]
+// para a ficha (aba Perfil → Dados do app).
+export function describeAppData(md = {}, detail = {}) {
+  const rows = [];
+  rows.push(['E-mail confirmado', detail.email_confirmed_at ? `sim, em ${formatDate(detail.email_confirmed_at)}` : 'não']);
+  rows.push(['Idioma do app', LANGS[md.lang] || (md.lang ? md.lang : 'Português (padrão)')]);
+
+  const imc = computeImc(md.peso, md.altura);
+  rows.push(['IMC', imc == null ? '—' : String(imc).replace('.', ',')]);
+
+  rows.push(['Treinos por semana (meta)', md.weeklyGoal ? String(md.weeklyGoal) : '5 (padrão)']);
+  const peso = parseFloat(md.peso);
+  const auto = peso > 0 ? Math.round(peso * 0.035 * 10) / 10 : null;
+  rows.push(['Meta de água', md.macroAgua
+    ? `${String(md.macroAgua).replace('.', ',')} L por dia (definida pelo usuário)`
+    : auto ? `${String(auto).replace('.', ',')} L por dia (calculada pelo peso)` : '—']);
+
+  rows.push(['Horário de treino', md.trainingHour === undefined || md.trainingHour === null || md.trainingHour === ''
+    ? 'não informado' : `por volta das ${String(md.trainingHour).padStart(2, '0')}h`]);
+
+  const off = Object.entries(NOTIFY_LABELS).filter(([k]) => md[k] === false).map(([, label]) => label);
+  rows.push(['Notificações', off.length === 0 ? 'todas ligadas' : `desligadas: ${off.join(', ')}`]);
+  rows.push(['E-mails de resumo e novidades', md.notifyEmail === false ? 'desligados' : 'ligados']);
+
+  rows.push(['Treinador por voz', md.coachEnabled
+    ? ['ligado', COACH_TONES[md.coachTone] && `tom ${COACH_TONES[md.coachTone]}`,
+      COACH_FREQ[md.coachFrequency], Number.isFinite(md.coachRate) && `velocidade ${String(md.coachRate).replace('.', ',')}x`]
+      .filter(Boolean).join(' · ')
+    : 'desligado']);
+
+  const pauses = (Array.isArray(md.pauses) ? md.pauses : []).filter(p => p?.from && p?.to);
+  rows.push(['Pausas', pauses.length === 0 ? 'nenhuma'
+    : pauses.slice(-3).reverse().map(p => `${brDay(p.from)} a ${brDay(p.to)}`).join(' · ')
+      + (pauses.length > 3 ? ` (+${pauses.length - 3} anteriores)` : '')]);
+  return rows;
+}
+
 export function formatDate(value) {
   if (!value) return '—';
   return new Date(value).toLocaleString('pt-BR');

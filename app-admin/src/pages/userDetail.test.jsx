@@ -188,7 +188,7 @@ describe('UserNotesTab', () => {
 });
 
 describe('UserProfileTab', () => {
-  const form = { nome: 'Ana', sobrenome: '', apelido: '', sexo: '', idade: '', peso: '', altura: '', meta: 'massa', nivel: 'iniciante', pesoAlvo: '' };
+  const form = { nome: 'Ana', sobrenome: '', apelido: '', sexo: '', idade: '', peso: '', altura: '', meta: 'massa', nivel: 'iniciante', pesoAlvo: '', weeklyGoal: '', macroAgua: '' };
   const props = { form, setForm: vi.fn(), busy: false, onSaveProfile: vi.fn(e => e.preventDefault()), achievements: [], progressPhotos: [], weightLogs: [], waterLogs: [] };
 
   it('edita campos via setForm e envia o formulário', () => {
@@ -221,6 +221,33 @@ describe('UserProfileTab', () => {
     expect(screen.getByText('costas')).toBeTruthy();
     expect(screen.getByText('80.5')).toBeTruthy();
     expect(screen.getByText('2000')).toBeTruthy();
+  });
+});
+
+describe('UserProfileTab — dados do app', () => {
+  const form = { nome: '', sobrenome: '', apelido: '', sexo: '', idade: '', peso: '', altura: '', meta: 'massa', nivel: 'iniciante', pesoAlvo: '', weeklyGoal: '3', macroAgua: '2.5' };
+  const props = { form, setForm: vi.fn(), busy: false, onSaveProfile: vi.fn(), achievements: [], progressPhotos: [], weightLogs: [], waterLogs: [] };
+
+  it('mostra metas no formulário, foto e preferências gravadas pelo app', () => {
+    const detail = {
+      avatar_data: 'data:image/png;base64,x', email_confirmed_at: '2026-10-01T12:00:00Z',
+      user_metadata: { peso: 80, altura: 180, lang: 'en', notifyRecords: false, coachEnabled: true, coachTone: 'calmo', pauses: [{ from: '2026-09-01', to: '2026-09-05' }] },
+    };
+    render(<UserProfileTab {...props} detail={detail} />);
+    expect(screen.getByDisplayValue('3')).toBeTruthy();
+    expect(screen.getByDisplayValue('2.5')).toBeTruthy();
+    expect(screen.getByAltText('Foto do perfil')).toBeTruthy();
+    expect(screen.getByText('Inglês')).toBeTruthy();
+    expect(screen.getByText('24,7')).toBeTruthy();
+    expect(screen.getByText('desligadas: Recordes e conquistas')).toBeTruthy();
+    expect(screen.getByText('ligado · tom calmo')).toBeTruthy();
+    expect(screen.getByText('01/09/2026 a 05/09/2026')).toBeTruthy();
+  });
+
+  it('sem foto mostra o espaço vazio', () => {
+    render(<UserProfileTab {...props} detail={{ user_metadata: {} }} />);
+    expect(screen.getByLabelText('Sem foto')).toBeTruthy();
+    expect(screen.getByText('não')).toBeTruthy();
   });
 });
 

@@ -3,9 +3,10 @@ import UserClientCard from '../components/UserClientCard';
 import UserWellbeingCard from '../components/UserWellbeingCard';
 import UserFriendsCard from '../components/UserFriendsCard';
 import UserAmbassadorCard from '../components/UserAmbassadorCard';
+import UserAppDataCard from '../components/UserAppDataCard';
 import { METAS, NIVEIS, BADGE_LABELS, formatDate } from '../lib/userDetailHelpers';
 
-export default function UserProfileTab({ userId, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
+export default function UserProfileTab({ userId, detail, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
   return (
     <div className="stack">
       <form className="card form-grid" onSubmit={onSaveProfile}>
@@ -46,6 +47,14 @@ export default function UserProfileTab({ userId, form, setForm, busy, onSaveProf
           <input className="input" type="number" step="0.1" value={form.pesoAlvo} onChange={e => setForm({ ...form, pesoAlvo: e.target.value })} />
         </label>
         <label className="field">
+          <span className="field__label">Treinos por semana (meta)</span>
+          <input className="input" type="number" min="1" max="7" placeholder="5 (padrão)" value={form.weeklyGoal} onChange={e => setForm({ ...form, weeklyGoal: e.target.value })} />
+        </label>
+        <label className="field">
+          <span className="field__label">Meta de água (L por dia)</span>
+          <input className="input" type="number" step="0.1" min="0" placeholder="calculada pelo peso" value={form.macroAgua} onChange={e => setForm({ ...form, macroAgua: e.target.value })} />
+        </label>
+        <label className="field">
           <span className="field__label">Objetivo</span>
           <select className="input" value={form.meta} onChange={e => setForm({ ...form, meta: e.target.value })}>
             {METAS.map(m => <option key={m} value={m}>{m}</option>)}
@@ -62,6 +71,7 @@ export default function UserProfileTab({ userId, form, setForm, busy, onSaveProf
         </div>
       </form>
 
+      <UserAppDataCard detail={detail} />
       <UserAmbassadorCard userId={userId} />
       <UserClientCard userId={userId} />
       <UserWellbeingCard userId={userId} />
