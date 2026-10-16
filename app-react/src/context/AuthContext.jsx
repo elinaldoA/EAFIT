@@ -8,6 +8,7 @@ import { isAdminAccount } from '../lib/adminGuard';
 import { isAccountDeactivated } from '../lib/accountStatus';
 import { takeEmailLink } from '../lib/emailLink';
 import { pendingRef, clearRef } from '../lib/ambassadorRef';
+import { syncLocalProfile } from '../lib/profileSync';
 
 import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 6;
@@ -104,9 +105,20 @@ export function AuthProvider({ children }) {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
+  const userId = user?.id;
+
+  // Dados do Perfil que ficaram só no aparelho sobem para a conta (uma vez por
+  // sessão), pra aparecerem em outros aparelhos e no painel admin.
+  useEffect(() => {
+    if (!userId) return undefined;
+    let active = true;
+    syncLocalProfile(user).then(updated => { if (active && updated) setUser(updated); });
+    return () => { active = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao trocar de conta
+  }, [userId]);
+
   // Conta desativada com o app já aberto: o token guardado ainda vale por um
   // tempo, então cada volta para a tela confere de novo e encerra a sessão.
-  const userId = user?.id;
   useEffect(() => {
     if (!userId) return undefined;
     let active = true;

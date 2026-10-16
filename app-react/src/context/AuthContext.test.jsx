@@ -325,3 +325,20 @@ describe('AuthProvider — conta desativada', () => {
     expect(result.current.linkError).toMatch(/foi desativada/);
   });
 });
+
+describe('perfil guardado só no aparelho', () => {
+  it('ao abrir com sessão, os campos que faltam na conta sobem e o usuário é atualizado', async () => {
+    vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(false);
+    vi.spyOn(accountStatus, 'isAccountDeactivated').mockResolvedValue(false);
+    localStorage.setItem('eafit_data_owner', 'u9');
+    localStorage.setItem('profile_nome', 'Ana');
+    localStorage.setItem('profile_apelido', 'Aninha');
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: { id: 'u9', user_metadata: { apelido: 'Ana B' } } } } });
+    mockAuth.updateUser.mockResolvedValue({ data: { user: { id: 'u9', user_metadata: { nome: 'Ana', apelido: 'Ana B' } } }, error: null });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.user?.user_metadata?.nome).toBe('Ana'));
+    expect(mockAuth.updateUser).toHaveBeenCalledWith({ data: { nome: 'Ana' } });
+    localStorage.clear();
+  });
+});
