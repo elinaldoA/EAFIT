@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
-import { TUTORIAL_EVENT, hasSeenTutorial, markTutorialSeen, stepsFor } from '../lib/tutorial';
+import { useAppConfig } from '../context/useAppConfig';
+import { goTo } from '../lib/appNav';
+import { TUTORIAL_EVENT, hasSeenTutorial, markTutorialSeen, visibleSteps } from '../lib/tutorial';
 
 import { t } from '../lib/i18n';
 const PAD = 6;
@@ -10,7 +12,8 @@ const PAD = 6;
 // pode ser reaberto com startTutorial(). Navega pelas abas e destaca o
 // elemento do passo quando ele existe na tela.
 export default function Tutorial({ role, userId, onNavigate }) {
-  const steps = stepsFor(role);
+  const { config } = useAppConfig();
+  const steps = useMemo(() => visibleSteps(role, config.flags), [role, config.flags]);
   const [index, setIndex] = useState(null); // null = fechado
   const [rect, setRect] = useState(null);
 
@@ -22,6 +25,11 @@ export default function Tutorial({ role, userId, onNavigate }) {
     window.addEventListener(TUTORIAL_EVENT, reopen);
     return () => { clearTimeout(timer); window.removeEventListener(TUTORIAL_EVENT, reopen); };
   }, [role, userId]);
+
+  // As chaves do painel podem chegar com o tutorial aberto e tirar passos.
+  useEffect(() => {
+    if (index !== null && index >= steps.length) setIndex(steps.length - 1);
+  }, [index, steps.length]);
 
   const open = index !== null;
   const step = open ? steps[index] : null;
@@ -38,8 +46,11 @@ export default function Tutorial({ role, userId, onNavigate }) {
     return () => document.body.classList.remove('modal-open');
   }, [open]);
 
+  // Passo numa aba da Evolução: goTo grava a aba e remonta a página, mesmo
+  // se a Evolução já estiver aberta em outra aba.
   useEffect(() => {
-    if (step?.tab) onNavigate(step.tab);
+    if (step?.dashTab) goTo({ tab: step.tab, dashTab: step.dashTab });
+    else if (step?.tab) onNavigate(step.tab);
   }, [step, onNavigate]);
 
   // Mede o alvo depois da troca de aba (as páginas carregam sob demanda).

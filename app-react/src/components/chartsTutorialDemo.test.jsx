@@ -23,7 +23,7 @@ import { Heatmap, WeeklyBars, PRList, WeekCompare, LoadHistory } from './DashCha
 import Tutorial from './Tutorial';
 import ExerciseDemo from './ExerciseDemo';
 import { useTrainerGoalsSync } from '../hooks/useTrainerGoalsSync';
-import { STUDENT_STEPS, TRAINER_STEPS, TUTORIAL_EVENT, startTutorial, hasSeenTutorial } from '../lib/tutorial';
+import { STUDENT_STEPS, TRAINER_STEPS, TUTORIAL_EVENT, startTutorial, hasSeenTutorial, visibleSteps } from '../lib/tutorial';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -214,7 +214,7 @@ describe('Tutorial', () => {
 
   it('último passo mostra Concluir (sem Pular) e fecha', async () => {
     await open();
-    for (let i = 0; i < STUDENT_STEPS.length - 1; i++) fireEvent.click(screen.getByText('Próximo'));
+    for (let i = 0; i < visibleSteps('student', {}).length - 1; i++) fireEvent.click(screen.getByText('Próximo'));
     expect(screen.queryByText('Pular')).toBeNull();
     fireEvent.click(screen.getByText('Concluir'));
     expect(screen.queryByRole('dialog')).toBeNull();
