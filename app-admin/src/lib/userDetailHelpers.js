@@ -18,16 +18,18 @@ export const BADGE_LABELS = {
   outubro_rosa_2026: '💗 Outubro Rosa 2026',
 };
 
-// Conquistas de temporada têm uma por ano (outubro_rosa_<ano>, halloween_<ano>, novembro_azul_<ano>, ver
+const SEASON_BADGE_NAMES = {
+  carnaval: '🎭 Carnaval', pascoa: '🐰 Páscoa', namorados: '💕 Namorados', festa_junina: '🌽 Arraiá',
+  outubro_rosa: '💗 Outubro Rosa', halloween: '🎃 Treino das Bruxas', novembro_azul: '💙 Novembro Azul',
+  natal: '🎄 Treino de Natal', ano_novo: '🎆 Ano Novo',
+};
+
+// Conquistas de temporada têm uma por ano (<tema>_<ano>, ex.: halloween_2026, ver
 // app-react/src/lib/achievements.js): anos sem rótulo acima saem pelo padrão.
 export function badgeLabel(id, labels = BADGE_LABELS) {
   if (labels[id]) return labels[id];
-  const halloween = /^halloween_(\d{4})$/.exec(id || '');
-  if (halloween) return `🎃 Treino das Bruxas ${halloween[1]}`;
-  const rosa = /^outubro_rosa_(\d{4})$/.exec(id || '');
-  if (rosa) return `💗 Outubro Rosa ${rosa[1]}`;
-  const azul = /^novembro_azul_(\d{4})$/.exec(id || '');
-  return azul ? `💙 Novembro Azul ${azul[1]}` : id;
+  const m = /^([a-z_]+)_(\d{4})$/.exec(id || '');
+  return m && SEASON_BADGE_NAMES[m[1]] ? `${SEASON_BADGE_NAMES[m[1]]} ${m[2]}` : id;
 }
 
 export const SEVERITY_BADGE = { leve: 'badge--ok', moderada: 'badge--warning', forte: 'badge--danger', lesao: 'badge--danger' };

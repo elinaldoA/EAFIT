@@ -1,5 +1,6 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import SeasonTheme from './components/SeasonTheme';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { useAdminAuth } from './context/useAdminAuth';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -95,6 +96,7 @@ function AppShell() {
 export default function App() {
   return (
     <ThemeProvider>
+      <SeasonTheme />
       <AdminAuthProvider>
         <AppShell />
       </AdminAuthProvider>

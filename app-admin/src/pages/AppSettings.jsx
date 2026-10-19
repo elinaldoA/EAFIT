@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
   KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
-  SEASON_THEMES, isValidSeasonWindow as isValidPeriod, seasonScheduleError, seasonStatus, seasonThemeLabel, sortPeriods,
+  SEASON_THEMES, isValidSeasonWindow as isValidPeriod, seasonScheduleError, seasonStatus, seasonThemeLabel, sortPeriods, withDefaultPeriods,
 } from '../lib/appSettings';
 import { todayStr } from '../lib/community';
+import { SEASON_CHANGE_EVENT, isAdminSeasonOff, setAdminSeasonOff } from '../lib/season';
 import Loading from '../components/Loading';
 
 function SectionMessage({ msg }) {
@@ -276,6 +277,7 @@ function SeasonCard({ saved, adminId, onSaved, today }) {
   const [draft, setDraft] = useState(saved);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [panelOff, setPanelOff] = useState(isAdminSeasonOff);
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
   const error = seasonScheduleError(draft);
   const status = seasonStatus(saved, today);
@@ -295,11 +297,19 @@ function SeasonCard({ saved, adminId, onSaved, today }) {
     setDraft({ ...draft, periods: [...draft.periods, { theme, startsOn: '', endsOn: '' }] });
   }
 
+  const year = Number(today.slice(0, 4));
+  function fillYear(y) {
+    const { periods, added } = withDefaultPeriods(draft.periods, y, today);
+    setDraft({ ...draft, periods });
+    setMsg(added ? `${added} período(s) de ${y} adicionado(s). Confira as datas e salve.` : `Nada novo para agendar em ${y}.`);
+  }
+
   async function handleSave() {
     setBusy(true);
     setMsg('');
     try {
       await saveSetting('season', { enabled: draft.enabled, periods: sortPeriods(draft.periods) }, adminId);
+      window.dispatchEvent(new Event(SEASON_CHANGE_EVENT));
       setMsg('Salvo.');
       await onSaved();
     } catch (err) {
@@ -321,8 +331,8 @@ function SeasonCard({ saved, adminId, onSaved, today }) {
             Decoração leve no app e no site (faixa do tema, detalhes de cor, card de compartilhar e falas do treinador por voz).
             Agende um período por tema: o app passa de um para o outro sozinho e tudo some depois do último, mesmo em app antigo em cache.
             Cada pessoa pode desligar no Perfil.
-            As conquistas têm datas fixas, independentes destes períodos: Outubro Rosa (10 treinos de 01/10 a 23/10; em 2026, 3 treinos
-            de 19/10 a 23/10), Treino das Bruxas (24/10 a 02/11) e Novembro Azul (12 treinos em novembro).
+            Cada tema tem uma conquista com datas fixas por ano, independentes destes períodos (a faixa do tema no app explica a regra).
+            "Preencher" sugere a agenda do ano, com Carnaval e Páscoa nas datas certas, sem mexer no que já está agendado.
           </p>
         </div>
         <label className="switch-row">
@@ -356,10 +366,16 @@ function SeasonCard({ saved, adminId, onSaved, today }) {
           </div>
         );
       })}
-      <div>
+      <div className="actions-row">
         <button type="button" className="btn btn--ghost btn--small" onClick={addPeriod}>+ Adicionar período</button>
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => fillYear(year)}>Preencher {year}</button>
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => fillYear(year + 1)}>Preencher {year + 1}</button>
       </div>
       {error && <p className="form-msg form-msg--error">{error}</p>}
+      <label className="switch-row">
+        <input type="checkbox" checked={!panelOff} onChange={e => { setPanelOff(!e.target.checked); setAdminSeasonOff(!e.target.checked); }} />
+        <span>Mostrar o tema também neste painel (só neste navegador)</span>
+      </label>
       <div className="actions-row">
         <button className="btn btn--primary btn--small" disabled={busy || !dirty || !!error} onClick={handleSave}>Salvar</button>
         <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(saved); setMsg(''); }}>Desfazer</button>

@@ -1,0 +1,371 @@
+/* ============================================================
+   TEMA DE TEMPORADA NO PAINEL (lib/season.js)
+   O mesmo tema do dia que o app e o site mostram (chave "season" de
+   app_settings), com as mesmas paletas de app-react/src/styles/season.css
+   (os dois apps não compartilham build: blocos copiados de lá). Aqui é só
+   cor e enfeite leve: barra lateral e topo com a cor do tema e a arte do
+   tema no canto, atrás do conteúdo. Desliga em Configurações do app → Tema
+   de temporada (vale por navegador).
+============================================================ */
+
+[data-season="halloween"] {
+  --bg:           #120c1a;
+  --surface:      #1b1326;
+  --surface-2:    #21182e;
+  --surface-3:    #2e2240;
+  --border:       #2f2440;
+  --border-2:     #4a3a63;
+  --text:         #ede7f6;
+  --text-muted:   #b4a7c8;
+  --text-dim:     #8c7da3;
+  --primary:      #f97316;
+  --primary-h:    #fb923c;
+  --primary-glow: rgba(249,115,22,.20);
+}
+
+[data-theme="light"][data-season="halloween"] {
+  --bg:           #f6f1fb;
+  --surface:      #ffffff;
+  --surface-2:    #f3ecfa;
+  --surface-3:    #e8dff3;
+  --border:       #dccfeb;
+  --border-2:     #a995c4;
+  --text:         #1e1529;
+  --text-muted:   #57476b;
+  --text-dim:     #6f5f85;
+  --primary-glow: rgba(249,115,22,.13);
+}
+
+[data-season="outubro_rosa"] {
+  --bg:           #170c14;
+  --surface:      #21121c;
+  --surface-2:    #271623;
+  --surface-3:    #36202f;
+  --border:       #34202d;
+  --border-2:     #573a4c;
+  --text:         #f8e9f1;
+  --text-muted:   #cfb0c1;
+  --text-dim:     #a88799;
+  --primary:      #ec4899;
+  --primary-h:    #f472b6;
+  --primary-glow: rgba(236,72,153,.20);
+  --season-accent: #f9a8d4;
+  --season-accent-soft: rgba(249, 168, 212, .14);
+  --season-glow:  rgba(236, 72, 153, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='54' r='44' fill='%23f9a8d4' fill-opacity='.08'/%3E%3Cg transform='translate(128 18) scale(.72)' fill='none' stroke-width='9' stroke-linejoin='round'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' stroke='%23ec4899'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' stroke='%23f9a8d4'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+[data-theme="light"][data-season="outubro_rosa"] {
+  --bg:           #fcf2f7;
+  --surface:      #ffffff;
+  --surface-2:    #faeef4;
+  --surface-3:    #f3dde9;
+  --border:       #efd6e3;
+  --border-2:     #cf9fb8;
+  --text:         #2a0f1f;
+  --text-muted:   #6b4258;
+  --text-dim:     #865a71;
+  --primary-glow: rgba(236,72,153,.13);
+  --season-accent: #be185d;
+  --season-accent-soft: rgba(190, 24, 93, .10);
+}
+
+[data-season="novembro_azul"] {
+  --bg:           #0b1220;
+  --surface:      #111a2d;
+  --surface-2:    #152038;
+  --surface-3:    #1e2b48;
+  --border:       #1f2c46;
+  --border-2:     #36496f;
+  --text:         #e6edf8;
+  --text-muted:   #a7b5cf;
+  --text-dim:     #7f8fac;
+  --primary:      #3b82f6;
+  --primary-h:    #60a5fa;
+  --primary-glow: rgba(59,130,246,.20);
+  --season-accent: #93c5fd;
+  --season-accent-soft: rgba(147, 197, 253, .14);
+  --season-glow:  rgba(59, 130, 246, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='54' r='44' fill='%2393c5fd' fill-opacity='.08'/%3E%3Cg transform='translate(128 18) scale(.72)' fill='none' stroke-width='9' stroke-linejoin='round'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' stroke='%233b82f6'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' stroke='%2393c5fd'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+[data-theme="light"][data-season="novembro_azul"] {
+  --bg:           #f1f5fc;
+  --surface:      #ffffff;
+  --surface-2:    #edf2fb;
+  --surface-3:    #dde6f5;
+  --border:       #d2ddef;
+  --border-2:     #98add0;
+  --text:         #0f1a2e;
+  --text-muted:   #44546f;
+  --text-dim:     #5d6d89;
+  --primary-glow: rgba(59,130,246,.13);
+  --season-accent: #1d4ed8;
+  --season-accent-soft: rgba(29, 78, 216, .10);
+}
+
+[data-season="carnaval"] {
+  --bg:           #081416;
+  --surface:      #0e1d20;
+  --surface-2:    #112427;
+  --surface-3:    #1a3337;
+  --border:       #1a2e32;
+  --border-2:     #34545b;
+  --text:         #ebf3f4;
+  --text-muted:   #b1c5c9;
+  --text-dim:     #91a7ac;
+  --primary:      #22d3ee;
+  --primary-h:    #67e8f9;
+  --primary-glow: rgba(34, 211, 238, .20);
+  --season-accent: #f0abfc;
+  --season-accent-soft: rgba(240, 171, 252, .14);
+  --season-glow:  rgba(34, 211, 238, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke-width='4' stroke-linecap='round' stroke-opacity='.7'%3E%3Cpath d='M200 18c-14 6-22 18-14 28s0 22-14 26-18 18-10 30' stroke='%2322d3ee'/%3E%3Cpath d='M200 50c-12 4-18 14-10 22s-2 18-14 22' stroke='%23f0abfc'/%3E%3Cpath d='M168 0c-2 12 6 18 0 28s2 20-6 26' stroke='%23facc15'/%3E%3C/g%3E%3Cg fill-opacity='.85'%3E%3Crect x='120' y='40' width='6' height='9' rx='1' fill='%23f0abfc' transform='rotate(25 123 44)'/%3E%3Crect x='136' y='92' width='6' height='9' rx='1' fill='%2322d3ee' transform='rotate(-30 139 96)'/%3E%3Crect x='108' y='76' width='6' height='9' rx='1' fill='%23facc15' transform='rotate(60 111 80)'/%3E%3Ccircle cx='150' cy='120' r='3' fill='%234ade80'/%3E%3Ccircle cx='128' cy='18' r='3' fill='%23f87171'/%3E%3C/g%3E%3C/svg%3E");
+  --season-particle: #facc15;
+  --season-particle-border: 0;
+  --season-particle-radius: 2px;
+}
+
+[data-theme="light"][data-season="carnaval"] {
+  /* tom mais escuro: a cor do tema também vira texto (links, abas) sobre fundo claro */
+  --primary:      #0891b2;
+  --primary-h:    #06b6d4;
+  --bg:           #f3fafc;
+  --surface:      #ffffff;
+  --surface-2:    #edf6f8;
+  --surface-3:    #ddebee;
+  --border:       #d6e8eb;
+  --border-2:     #9fbfc6;
+  --text:         #0e2125;
+  --text-muted:   #426067;
+  --text-dim:     #547278;
+  --primary-glow: rgba(34, 211, 238, .13);
+  --season-accent: #a21caf;
+  --season-accent-soft: rgba(162, 28, 175, .10);
+}
+
+[data-season="pascoa"] {
+  --bg:           #140f0b;
+  --surface:      #1d1611;
+  --surface-2:    #241b14;
+  --surface-3:    #33271f;
+  --border:       #2e251e;
+  --border-2:     #54453b;
+  --text:         #f4efeb;
+  --text-muted:   #c9bbb1;
+  --text-dim:     #ac9c91;
+  --primary:      #a78bfa;
+  --primary-h:    #c4b5fd;
+  --primary-glow: rgba(167, 139, 250, .20);
+  --season-accent: #fde68a;
+  --season-accent-soft: rgba(253, 230, 138, .14);
+  --season-glow:  rgba(167, 139, 250, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cellipse cx='152' cy='62' rx='24' ry='31' fill='%23a78bfa' fill-opacity='.5'/%3E%3Cpath d='M129 64l8-7 8 7 8-7 8 7 8-7 7 6' fill='none' stroke='%23fde68a' stroke-width='3' stroke-opacity='.85'/%3E%3Cellipse cx='112' cy='98' rx='15' ry='20' fill='%23fde68a' fill-opacity='.5'/%3E%3Cg fill='%23a78bfa' fill-opacity='.8'%3E%3Ccircle cx='106' cy='94' r='2.4'/%3E%3Ccircle cx='117' cy='100' r='2.4'/%3E%3Ccircle cx='110' cy='106' r='2.4'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+[data-theme="light"][data-season="pascoa"] {
+  /* tom mais escuro: a cor do tema também vira texto (links, abas) sobre fundo claro */
+  --primary:      #8b5cf6;
+  --primary-h:    #a78bfa;
+  --bg:           #fcf7f3;
+  --surface:      #ffffff;
+  --surface-2:    #f8f1ed;
+  --surface-3:    #eee4dd;
+  --border:       #ebdfd6;
+  --border-2:     #c6af9f;
+  --text:         #25180e;
+  --text-muted:   #675142;
+  --text-dim:     #786354;
+  --primary-glow: rgba(167, 139, 250, .13);
+  --season-accent: #7c3aed;
+  --season-accent-soft: rgba(124, 58, 237, .10);
+}
+
+[data-season="namorados"] {
+  --bg:           #15090b;
+  --surface:      #1f0f11;
+  --surface-2:    #261215;
+  --surface-3:    #361c20;
+  --border:       #311c1f;
+  --border-2:     #59363c;
+  --text:         #f4ebed;
+  --text-muted:   #c9b1b5;
+  --text-dim:     #ac9195;
+  --primary:      #f43f5e;
+  --primary-h:    #fb7185;
+  --primary-glow: rgba(244, 63, 94, .20);
+  --season-accent: #fda4af;
+  --season-accent-soft: rgba(253, 164, 175, .14);
+  --season-glow:  rgba(244, 63, 94, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='%23f43f5e' fill-opacity='.6'%3E%3Cpath transform='translate(150 52) scale(2)' d='M0 -5C-5 -13 -17 -8 -12 2L0 13L12 2C17 -8 5 -13 0 -5Z'/%3E%3C/g%3E%3Cg fill='%23fda4af' fill-opacity='.6'%3E%3Cpath transform='translate(108 96) scale(1.1)' d='M0 -5C-5 -13 -17 -8 -12 2L0 13L12 2C17 -8 5 -13 0 -5Z'/%3E%3Cpath transform='translate(178 104) scale(.7)' d='M0 -5C-5 -13 -17 -8 -12 2L0 13L12 2C17 -8 5 -13 0 -5Z'/%3E%3C/g%3E%3C/svg%3E");
+  --season-particle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-14 -14 28 28'%3E%3Cpath d='M0 -5C-5 -13 -17 -8 -12 2L0 13L12 2C17 -8 5 -13 0 -5Z' fill='%23fb7185'/%3E%3C/svg%3E") center / contain no-repeat;
+  --season-particle-border: 0;
+  --season-particle-radius: 0;
+}
+
+[data-theme="light"][data-season="namorados"] {
+  --bg:           #fcf3f5;
+  --surface:      #ffffff;
+  --surface-2:    #f8edee;
+  --surface-3:    #eedde0;
+  --border:       #ebd6d9;
+  --border-2:     #c69fa6;
+  --text:         #250e12;
+  --text-muted:   #674248;
+  --text-dim:     #78545a;
+  --primary-glow: rgba(244, 63, 94, .13);
+  --season-accent: #be123c;
+  --season-accent-soft: rgba(190, 18, 60, .10);
+}
+
+[data-season="festa_junina"] {
+  --bg:           #150f09;
+  --surface:      #1f170f;
+  --surface-2:    #261c12;
+  --surface-3:    #36291c;
+  --border:       #31261c;
+  --border-2:     #594736;
+  --text:         #f4f0eb;
+  --text-muted:   #c9bdb1;
+  --text-dim:     #ac9e91;
+  --primary:      #f59e0b;
+  --primary-h:    #fbbf24;
+  --primary-glow: rgba(245, 158, 11, .20);
+  --season-accent: #f87171;
+  --season-accent-soft: rgba(248, 113, 113, .14);
+  --season-glow:  rgba(245, 158, 11, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M60 6Q130 44 200 10' fill='none' stroke='%23a8a29e' stroke-opacity='.6' stroke-width='1.5'/%3E%3Cpath d='M66.0 10.3l14 2-9 18z' fill='%23ef4444' fill-opacity='.75'/%3E%3Cpath d='M88.0 17.0l14 2-9 18z' fill='%23facc15' fill-opacity='.75'/%3E%3Cpath d='M110.0 20.9l14 2-9 18z' fill='%2322c55e' fill-opacity='.75'/%3E%3Cpath d='M132.0 22.0l14 2-9 18z' fill='%233b82f6' fill-opacity='.75'/%3E%3Cpath d='M154.0 20.4l14 2-9 18z' fill='%23f97316' fill-opacity='.75'/%3E%3Cpath d='M176.0 16.0l14 2-9 18z' fill='%23ec4899' fill-opacity='.75'/%3E%3Cpath d='M198.0 8.8l14 2-9 18z' fill='%23facc15' fill-opacity='.75'/%3E%3C/svg%3E");
+  --season-particle: radial-gradient(circle, #fbbf24 0 40%%, rgba(249, 115, 22, .5) 55%%, transparent 72%%);
+  --season-particle-border: 0;
+}
+
+[data-theme="light"][data-season="festa_junina"] {
+  /* tom mais escuro: a cor do tema também vira texto (links, abas) sobre fundo claro */
+  --primary:      #d97706;
+  --primary-h:    #f59e0b;
+  --bg:           #fcf7f3;
+  --surface:      #ffffff;
+  --surface-2:    #f8f2ed;
+  --surface-3:    #eee6dd;
+  --border:       #ebe0d6;
+  --border-2:     #c6b29f;
+  --text:         #251a0e;
+  --text-muted:   #675442;
+  --text-dim:     #786654;
+  --primary-glow: rgba(245, 158, 11, .13);
+  --season-accent: #b91c1c;
+  --season-accent-soft: rgba(185, 28, 28, .10);
+}
+
+[data-season="natal"] {
+  --bg:           #09150f;
+  --surface:      #0f1f17;
+  --surface-2:    #12261c;
+  --surface-3:    #1c3629;
+  --border:       #1c3126;
+  --border-2:     #365947;
+  --text:         #ebf4f0;
+  --text-muted:   #b1c9bd;
+  --text-dim:     #91ac9e;
+  --primary:      #ef4444;
+  --primary-h:    #f87171;
+  --primary-glow: rgba(239, 68, 68, .20);
+  --season-accent: #4ade80;
+  --season-accent-soft: rgba(74, 222, 128, .14);
+  --season-glow:  rgba(239, 68, 68, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='60' r='46' fill='%234ade80' fill-opacity='.07'/%3E%3Cg fill='%2322c55e' fill-opacity='.55'%3E%3Cpath d='M150 22l18 26h-36z'/%3E%3Cpath d='M150 38l25 32h-50z'/%3E%3Cpath d='M150 56l32 38h-64z'/%3E%3C/g%3E%3Crect x='145' y='94' width='10' height='12' fill='%23a16207' fill-opacity='.6'/%3E%3Cpolygon points='150.0,12.0 152.1,17.1 157.6,17.5 153.4,21.1 154.7,26.5 150.0,23.6 145.3,26.5 146.6,21.1 142.4,17.5 147.9,17.1' fill='%23facc15'/%3E%3Cg fill='%23ef4444' fill-opacity='.85'%3E%3Ccircle cx='140' cy='52' r='3'/%3E%3Ccircle cx='160' cy='66' r='3'/%3E%3Ccircle cx='136' cy='82' r='3'/%3E%3Ccircle cx='164' cy='86' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  --season-particle: radial-gradient(circle, #ffffff 0 42%%, transparent 70%%);
+  --season-particle-border: 0;
+}
+
+[data-theme="light"][data-season="natal"] {
+  --bg:           #f3fcf7;
+  --surface:      #ffffff;
+  --surface-2:    #edf8f2;
+  --surface-3:    #ddeee6;
+  --border:       #d6ebe0;
+  --border-2:     #9fc6b2;
+  --text:         #0e251a;
+  --text-muted:   #426754;
+  --text-dim:     #547866;
+  --primary-glow: rgba(239, 68, 68, .13);
+  --season-accent: #15803d;
+  --season-accent-soft: rgba(21, 128, 61, .10);
+  --season-particle: radial-gradient(circle, #94a3b8 0 42%, transparent 70%);
+}
+
+[data-season="ano_novo"] {
+  --bg:           #13110b;
+  --surface:      #1c1a12;
+  --surface-2:    #221f16;
+  --surface-3:    #312d21;
+  --border:       #2d2a20;
+  --border-2:     #524d3d;
+  --text:         #f4f2eb;
+  --text-muted:   #c9c3b1;
+  --text-dim:     #aca591;
+  --primary:      #eab308;
+  --primary-h:    #facc15;
+  --primary-glow: rgba(234, 179, 8, .20);
+  --season-accent: #fde68a;
+  --season-accent-soft: rgba(253, 230, 138, .14);
+  --season-glow:  rgba(234, 179, 8, .35);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke-opacity='.75'%3E%3Cpath d='M160.0 54.0L190.0 54.0M159.0 58.3L186.0 71.4M156.2 61.8L174.9 85.3M152.2 63.7L158.9 93.0M147.8 63.7L141.1 93.0M143.8 61.8L125.1 85.3M141.0 58.3L114.0 71.4M140.0 54.0L110.0 54.0M141.0 49.7L114.0 36.6M143.8 46.2L125.1 22.7M147.8 44.3L141.1 15.0M152.2 44.3L158.9 15.0M156.2 46.2L174.9 22.7M159.0 49.7L186.0 36.6' stroke='%23eab308' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M110.0 96.0L126.0 96.0M108.9 99.5L121.8 108.9M105.9 101.7L110.8 116.9M102.1 101.7L97.2 116.9M99.1 99.5L86.2 108.9M98.0 96.0L82.0 96.0M99.1 92.5L86.2 83.1M102.1 90.3L97.2 75.1M105.9 90.3L110.8 75.1M108.9 92.5L121.8 83.1' stroke='%23fde68a' stroke-width='2.4' stroke-linecap='round'/%3E%3C/g%3E%3Cpolygon points='176.0,99.0 177.3,102.2 180.8,102.5 178.1,104.7 178.9,108.0 176.0,106.2 173.1,108.0 173.9,104.7 171.2,102.5 174.7,102.2' fill='%23fde68a'/%3E%3Cpolygon points='122.0,24.0 123.1,26.5 125.8,26.8 123.7,28.6 124.4,31.2 122.0,29.8 119.6,31.2 120.3,28.6 118.2,26.8 120.9,26.5' fill='%23eab308'/%3E%3C/svg%3E");
+  --season-particle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpolygon points='10.0,1.0 12.4,6.7 18.6,7.2 13.9,11.3 15.3,17.3 10.0,14.1 4.7,17.3 6.1,11.3 1.4,7.2 7.6,6.7' fill='%23facc15'/%3E%3C/svg%3E") center / contain no-repeat;
+  --season-particle-border: 0;
+  --season-particle-radius: 0;
+}
+
+[data-theme="light"][data-season="ano_novo"] {
+  /* tom mais escuro: a cor do tema também vira texto (links, abas) sobre fundo claro */
+  --primary:      #ca8a04;
+  --primary-h:    #eab308;
+  --bg:           #fcf9f3;
+  --surface:      #ffffff;
+  --surface-2:    #f8f5ed;
+  --surface-3:    #eeeadd;
+  --border:       #ebe6d6;
+  --border-2:     #c6bc9f;
+  --text:         #251f0e;
+  --text-muted:   #675d42;
+  --text-dim:     #786f54;
+  --primary-glow: rgba(234, 179, 8, .13);
+  --season-accent: #a16207;
+  --season-accent-soft: rgba(161, 98, 7, .10);
+}
+
+[data-season="halloween"] {
+  --season-accent: #a855f7;
+  --season-accent-soft: rgba(168, 85, 247, .16);
+  --season-art: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='50' r='26' fill='%23fde68a' fill-opacity='.22'/%3E%3Ccircle cx='150' cy='50' r='40' fill='%23fde68a' fill-opacity='.06'/%3E%3Cg fill='%23a855f7' fill-opacity='.45'%3E%3Cpath transform='translate(70 30) scale(.7)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3Cpath transform='translate(118 92) scale(.45)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-theme="light"][data-season="halloween"] {
+  --season-accent: #7e22ce;
+  --season-accent-soft: rgba(126, 34, 206, .10);
+}
+
+/* Texto sobre a cor principal: escuro, como no app (cores como o dourado do
+   Ano Novo ou o ciano do Carnaval não dão contraste com branco). */
+[data-season] :is(.btn--primary, .seg__btn--active, .topbar__avatar) { color: #09090b; }
+
+[data-season] .sidebar {
+  background: linear-gradient(180deg, var(--season-accent-soft), transparent 45%), var(--surface);
+  border-right-color: var(--season-accent);
+}
+[data-season] .topbar { box-shadow: inset 0 -2px 0 var(--season-accent); }
+
+/* Arte do tema no canto de cima da área de conteúdo, atrás dos cards */
+[data-season] .shell__main { position: relative; }
+[data-season] .shell__main::before {
+  content: '';
+  position: absolute;
+  top: 58px;
+  right: 0;
+  width: 220px;
+  height: 220px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .5;
+  background: var(--season-art) top right / 220px no-repeat;
+}
+[data-theme="light"][data-season] .shell__main::before { opacity: .4; }

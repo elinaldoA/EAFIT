@@ -477,6 +477,126 @@ export const SEASON_PHRASES = {
       finish: ['Treino das Bruxas concluído. Bom trabalho hoje.'],
     },
   },
+  carnaval: {
+    animado: {
+      start: ['{saudacao}! Carnaval e treino de {foco}. Bora que o bloco não para!', 'Bora, {nome}! {foco} hoje, depois é folia.'],
+      restDone: ['Tempo! Volta pra série que a bateria já começou!'],
+      pr: ['Recorde de Carnaval! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Agora sim, pode cair na folia.'],
+    },
+    zoeira: {
+      start: ['{saudacao}! Carnaval e você aqui treinando {foco}. Isso é que é fantasia de atleta.', 'Enquanto o bloco passa, a gente faz {foco}.'],
+      restDone: ['Acabou o descanso. Quarta-feira de cinzas é só pros músculos!', 'Bora! Confete não levanta peso sozinho.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, nota dez em todos os quesitos!'],
+      finish: ['Treino fechado! Esse você desfilou.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Carnaval, treino de {foco}. Um pouco de constância no meio da festa.'],
+      restDone: ['Descanso concluído. Vamos para a próxima.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Ótimo trabalho.'],
+      finish: ['Treino de Carnaval concluído. Aproveite o feriado.'],
+    },
+  },
+  pascoa: {
+    animado: {
+      start: ['{saudacao}! Semana de Páscoa e treino de {foco}. Bora queimar esse chocolate!', 'Feliz Páscoa, {nome}! {foco} hoje.'],
+      restDone: ['Tempo! Volta pra série, o coelho não espera!'],
+      pr: ['Recorde de Páscoa! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Agora o ovo de chocolate tá merecido.'],
+    },
+    zoeira: {
+      start: ['{saudacao}! Treino de {foco} na Páscoa. Cada série é um bombom a menos na consciência.', 'Páscoa e {foco}: o chocolate já tá tremendo.'],
+      restDone: ['Acabou o descanso. O coelho pula, você levanta!', 'Bora! Esse descanso tá maior que ovo de colher.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, mais forte que chocolate amargo!'],
+      finish: ['Treino fechado! Pode caçar os ovos com a consciência tranquila.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Semana de Páscoa, treino de {foco}. Vamos com calma e constância.'],
+      restDone: ['Descanso concluído. Vamos para a próxima.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Bom presente de Páscoa.'],
+      finish: ['Treino de Páscoa concluído. Bom descanso.'],
+    },
+  },
+  namorados: {
+    animado: {
+      start: ['{saudacao}! Semana dos Namorados e treino de {foco}. Bora se amar treinando!', '{nome}, {foco} hoje. Amor próprio também é treino!'],
+      restDone: ['Tempo! Volta pra série, que esse treino é paixão!'],
+      pr: ['Recorde apaixonante! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Se cuidar é o melhor presente.'],
+    },
+    zoeira: {
+      start: ['{saudacao}! Treino de {foco} na semana dos Namorados. O crush é a barra.', 'Semana dos Namorados: hoje o date é com {foco}.'],
+      restDone: ['Acabou o descanso. Não deixa a série no vácuo!', 'Bora! Esse descanso tá mais longo que namoro à distância.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, foi amor à primeira série!'],
+      finish: ['Treino fechado! Relacionamento sério com a constância.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Semana dos Namorados, treino de {foco}. Cuidar de si é um gesto de carinho.'],
+      restDone: ['Descanso concluído. Vamos para a próxima.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Muito bem.'],
+      finish: ['Treino concluído. Um bom Dia dos Namorados pra você.'],
+    },
+  },
+  festa_junina: {
+    animado: {
+      start: ['{saudacao}! Arraiá do EAFIT e treino de {foco}. Bora, sô!', 'Olha a cobra! Mentira, é treino de {foco}, {nome}!'],
+      restDone: ['Tempo! Anarriê, volta pra série!'],
+      pr: ['Recorde de arraiá! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Agora pode ir pra quadrilha.'],
+    },
+    zoeira: {
+      start: ['{saudacao}! Treino de {foco} no arraiá. A canjica fica pra depois.', 'Festa junina e {foco}: o pé de moleque que se cuide.'],
+      restDone: ['Acabou o descanso. Olha a chuva! É mentira, bora pra série.', 'Bora! Descanso longo assim só fila de quentão.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, mais quente que a fogueira!'],
+      finish: ['Treino fechado! Esse merece fogos de São João.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Festa junina, treino de {foco}. Vamos com calma e constância.'],
+      restDone: ['Descanso concluído. Vamos para a próxima.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Bom trabalho.'],
+      finish: ['Treino do arraiá concluído. Aproveite a festa.'],
+    },
+  },
+  natal: {
+    animado: {
+      start: ['{saudacao}! Clima de Natal e treino de {foco}. Bora!', 'Feliz Natal, {nome}! {foco} hoje, presente pro corpo.'],
+      restDone: ['Tempo! Volta pra série, que o Papai Noel tá de olho!'],
+      pr: ['Recorde de Natal! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Ceia liberada com a consciência leve.'],
+    },
+    zoeira: {
+      start: ['{saudacao}! Treino de {foco} no Natal. A rabanada que lute.', 'Natal e {foco}: hoje o peru fica pra depois.'],
+      restDone: ['Acabou o descanso. Rena não para, você também não!', 'Bora! Esse descanso tá mais longo que fila de presente.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, nem o trenó carrega isso!'],
+      finish: ['Treino fechado! Nome garantido na lista de quem se comportou bem.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Semana de Natal, treino de {foco}. Vamos com calma e constância.'],
+      restDone: ['Descanso concluído. Vamos para a próxima.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Um belo presente de Natal.'],
+      finish: ['Treino de Natal concluído. Boas festas.'],
+    },
+  },
+  ano_novo: {
+    animado: {
+      start: ['{saudacao}! Ano novo, treino de {foco}. Começou com tudo!', 'Feliz Ano Novo, {nome}! {foco} hoje, a meta do ano começa agora.'],
+      restDone: ['Tempo! Volta pra série, que esse ano é seu!'],
+      pr: ['Recorde de ano novo! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Primeira vitória do ano.'],
+    },
+    zoeira: {
+      start: ['{saudacao}! Treino de {foco}. A promessa de ano novo tá sendo cumprida, hein?', 'Ano novo, {foco} de sempre. Só que mais forte.'],
+      restDone: ['Acabou o descanso. Resolução de ano novo não se cumpre sentado!', 'Bora! Esse descanso tá mais longo que a contagem regressiva.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, isso merece fogos!'],
+      finish: ['Treino fechado! Janeiro na academia é seu.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Começo de ano, treino de {foco}. Constância é a melhor meta.'],
+      restDone: ['Descanso concluído. Vamos para a próxima.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Ótimo começo de ano.'],
+      finish: ['Treino concluído. Um bom ano de treinos pra você.'],
+    },
+  },
   // Campanhas de saúde: incentivo e lembrete de cuidado, sem piada com doença.
   outubro_rosa: {
     animado: {

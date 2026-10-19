@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  normalizeSeason, activeSeason, activePeriod, isSeasonOff, setSeasonOff, onSeasonChange, earnedHalloween, halloweenWindow,
-  earnedNovembroAzul, novembroAzulWindow, earnedOutubroRosa, outubroRosaWindow, workoutDaysIn,
+  normalizeSeason, activeSeason, activePeriod, isSeasonOff, setSeasonOff, onSeasonChange, SEASONS, SEASON_CHALLENGES,
+  seasonWindow, earnedSeason, workoutDaysIn, shiftDay,
   applySeason, bootSeason, cacheSeason, cachedSeason, currentSeason, seasonText,
 } from './season';
 import { normalizeConfig } from './appConfig';
@@ -27,8 +27,8 @@ describe('tema de temporada', () => {
   it('normaliza a chave season e ignora tema desconhecido ou datas tortas', () => {
     expect(normalizeSeason(ON)).toEqual(ON);
     expect(normalizeSeason(AGENDA)).toEqual(AGENDA);
-    expect(normalizeSeason({ enabled: true, periods: [{ ...HALLOWEEN, theme: 'natal' }] })).toEqual({ enabled: false, periods: [] });
-    expect(normalizeSeason({ enabled: true, periods: [{ ...HALLOWEEN, theme: 'natal' }, HALLOWEEN] }).periods).toEqual([HALLOWEEN]);
+    expect(normalizeSeason({ enabled: true, periods: [{ ...HALLOWEEN, theme: 'reveillon' }] })).toEqual({ enabled: false, periods: [] });
+    expect(normalizeSeason({ enabled: true, periods: [{ ...HALLOWEEN, theme: 'reveillon' }, HALLOWEEN] }).periods).toEqual([HALLOWEEN]);
     expect(normalizeSeason({ enabled: true, periods: [{ ...HALLOWEEN, startsOn: '24/10' }] }).periods[0].startsOn).toBe('');
     expect(normalizeSeason(null)).toEqual({ enabled: false, periods: [] });
     expect(normalizeConfig([{ key: 'season', value: AGENDA }]).season).toEqual(AGENDA);
@@ -37,7 +37,7 @@ describe('tema de temporada', () => {
 
   it('aceita o formato antigo, de um tema só', () => {
     expect(normalizeSeason({ enabled: true, ...HALLOWEEN })).toEqual(ON);
-    expect(normalizeSeason({ enabled: true, ...HALLOWEEN, theme: 'natal' })).toEqual({ enabled: false, periods: [] });
+    expect(normalizeSeason({ enabled: true, ...HALLOWEEN, theme: 'reveillon' })).toEqual({ enabled: false, periods: [] });
   });
 
   it('só fica no ar entre as duas datas, inclusive', () => {
@@ -76,20 +76,23 @@ describe('tema de temporada', () => {
 
 describe('conquista Treino das Bruxas', () => {
   it('vale treinar em 31/10 ou 3 treinos de 24/10 a 02/11', () => {
-    expect(halloweenWindow(2026)).toEqual({ from: '2026-10-24', to: '2026-11-02', day: '2026-10-31' });
-    expect(earnedHalloween(['2026-10-31'], 2026)).toBe(true);
-    expect(earnedHalloween(['2026-10-24', '2026-10-28', '2026-11-02'], 2026)).toBe(true);
+    expect(seasonWindow('halloween', 2026)).toEqual({ from: '2026-10-24', to: '2026-11-02', goal: 3, day: '2026-10-31' });
+    const earned = dates => earnedSeason('halloween', dates, 2026);
+    expect(earned(['2026-10-31'])).toBe(true);
+    expect(earned(['2026-10-24', '2026-10-28', '2026-11-02'])).toBe(true);
     // mesmo dia repetido conta uma vez; fora do período não conta
-    expect(earnedHalloween(['2026-10-25', '2026-10-25', '2026-10-26'], 2026)).toBe(false);
-    expect(earnedHalloween(['2026-10-23', '2026-11-03', '2026-10-30'], 2026)).toBe(false);
-    expect(earnedHalloween(['2025-10-31'], 2026)).toBe(false);
+    expect(earned(['2026-10-25', '2026-10-25', '2026-10-26'])).toBe(false);
+    expect(earned(['2026-10-23', '2026-11-03', '2026-10-30'])).toBe(false);
+    expect(earned(['2025-10-31'])).toBe(false);
   });
 
   it('cria uma conquista por ano a partir de 2026', () => {
-    expect(seasonalBadges('2026-10-19').map(b => b.id)).toEqual(['outubro_rosa_2026', 'halloween_2026', 'novembro_azul_2026']);
-    expect(seasonalBadges('2027-01-05').map(b => b.id)).toEqual([
-      'outubro_rosa_2026', 'halloween_2026', 'novembro_azul_2026', 'outubro_rosa_2027', 'halloween_2027', 'novembro_azul_2027',
-    ]);
+    const y2026 = ['outubro_rosa_2026', 'halloween_2026', 'novembro_azul_2026', 'natal_2026', 'ano_novo_2027'];
+    expect(seasonalBadges('2026-10-19').map(b => b.id)).toEqual(y2026);
+    // os que estreiam em 2027 entram na ordem do calendário
+    expect(seasonalBadges('2027-01-05').map(b => b.id)).toEqual([...y2026,
+      'carnaval_2027', 'pascoa_2027', 'namorados_2027', 'festa_junina_2027',
+      'outubro_rosa_2027', 'halloween_2027', 'novembro_azul_2027', 'natal_2027', 'ano_novo_2028']);
     const b = seasonalBadges('2026-10-19').find(x => x.id === 'halloween_2026');
     expect(b.check({ completedDates: ['2026-10-31'] })).toBe(true);
     expect(b.check({})).toBe(false);
@@ -109,14 +112,14 @@ describe('conquista Novembro Azul', () => {
   const days = (n, from = 1) => Array.from({ length: n }, (_, i) => `2026-11-${String(from + i).padStart(2, '0')}`);
 
   it('vale 12 treinos em dias diferentes de novembro', () => {
-    const w = novembroAzulWindow(2026);
+    const w = seasonWindow('novembro_azul', 2026);
     expect(w).toEqual({ from: '2026-11-01', to: '2026-11-30', goal: 12 });
-    expect(earnedNovembroAzul(days(12), 2026)).toBe(true);
-    expect(earnedNovembroAzul(days(11), 2026)).toBe(false);
+    expect(earnedSeason('novembro_azul', days(12), 2026)).toBe(true);
+    expect(earnedSeason('novembro_azul', days(11), 2026)).toBe(false);
     // mesmo dia repetido conta uma vez; fora de novembro ou de outro ano não conta
     expect(workoutDaysIn([...days(11), '2026-11-01'], w)).toBe(11);
     expect(workoutDaysIn([...days(10), '2026-10-31', '2026-12-01', '2025-11-20'], w)).toBe(10);
-    expect(earnedNovembroAzul(days(12), 2027)).toBe(false);
+    expect(earnedSeason('novembro_azul', days(12), 2027)).toBe(false);
   });
 
   it('aparece na grade durante o tema do ano e confere pelos treinos', () => {
@@ -129,22 +132,55 @@ describe('conquista Novembro Azul', () => {
 
 describe('conquista Outubro Rosa', () => {
   it('2026 (primeira edição, no ar em 19/10): 3 treinos de 19/10 a 23/10', () => {
-    expect(outubroRosaWindow(2026)).toEqual({ from: '2026-10-19', to: '2026-10-23', goal: 3 });
-    expect(earnedOutubroRosa(['2026-10-19', '2026-10-21', '2026-10-23'], 2026)).toBe(true);
-    expect(earnedOutubroRosa(['2026-10-18', '2026-10-21', '2026-10-24'], 2026)).toBe(false);
+    expect(seasonWindow('outubro_rosa', 2026)).toEqual({ from: '2026-10-19', to: '2026-10-23', goal: 3 });
+    expect(earnedSeason('outubro_rosa', ['2026-10-19', '2026-10-21', '2026-10-23'], 2026)).toBe(true);
+    expect(earnedSeason('outubro_rosa', ['2026-10-18', '2026-10-21', '2026-10-24'], 2026)).toBe(false);
   });
 
   it('dali em diante: 10 treinos de 01/10 a 23/10', () => {
-    expect(outubroRosaWindow(2027)).toEqual({ from: '2027-10-01', to: '2027-10-23', goal: 10 });
+    expect(seasonWindow('outubro_rosa', 2027)).toEqual({ from: '2027-10-01', to: '2027-10-23', goal: 10 });
     const ten = Array.from({ length: 10 }, (_, i) => `2027-10-${String(i * 2 + 1).padStart(2, '0')}`);
-    expect(earnedOutubroRosa(ten, 2027)).toBe(true);
-    expect(earnedOutubroRosa(ten.slice(1), 2027)).toBe(false);
+    expect(earnedSeason('outubro_rosa', ten, 2027)).toBe(true);
+    expect(earnedSeason('outubro_rosa', ten.slice(1), 2027)).toBe(false);
   });
 
   it('aparece na grade durante o tema do ano', () => {
     const grid = visibleBadges(new Set(), { theme: 'outubro_rosa', year: 2026 }, '2026-10-20');
     expect(grid.at(-1).id).toBe('outubro_rosa_2026');
     expect(grid.at(-1).check({ completedDates: ['2026-10-19', '2026-10-20', '2026-10-22'] })).toBe(true);
+  });
+});
+
+describe('conquistas dos outros temas', () => {
+  it('todo tema tem desafio, e todo desafio é de um tema', () => {
+    expect(Object.keys(SEASON_CHALLENGES)).toEqual(Object.keys(SEASONS));
+  });
+
+  it('Carnaval e Páscoa seguem a Páscoa do ano', () => {
+    // Páscoa de 2027: 28/03. Carnaval (terça) em 09/02.
+    expect(seasonWindow('carnaval', 2027)).toEqual({ from: '2027-02-06', to: '2027-02-10', goal: 3 });
+    expect(seasonWindow('pascoa', 2027)).toEqual({ from: '2027-03-26', to: '2027-04-04', goal: 3 });
+    // 2028: Páscoa em 16/04, Carnaval em 29/02 (ano bissexto)
+    expect(seasonWindow('carnaval', 2028).from).toBe('2028-02-26');
+    expect(shiftDay('2028-02-28', 2)).toBe('2028-03-01');
+  });
+
+  it('Namorados e Natal: o dia certo basta', () => {
+    expect(earnedSeason('namorados', ['2027-06-12'], 2027)).toBe(true);
+    expect(earnedSeason('namorados', ['2027-06-06', '2027-06-09'], 2027)).toBe(false);
+    expect(earnedSeason('natal', ['2026-12-24'], 2026)).toBe(true);
+    expect(earnedSeason('natal', ['2026-12-18', '2026-12-20', '2026-12-26'], 2026)).toBe(true);
+    expect(earnedSeason('festa_junina', ['2027-06-13', '2027-06-15', '2027-06-20', '2027-06-24'], 2027)).toBe(false);
+  });
+
+  it('Ano Novo que começa em dezembro vale a primeira semana do ano seguinte', () => {
+    expect(seasonWindow('ano_novo', 2026)).toEqual({ from: '2027-01-01', to: '2027-01-07', goal: 1 });
+    expect(earnedSeason('ano_novo', ['2027-01-03'], 2026)).toBe(true);
+    expect(earnedSeason('ano_novo', ['2026-12-31'], 2026)).toBe(false);
+    // na grade, casa com o período do painel (edição 2026), mas o nome é do ano novo
+    const grid = visibleBadges(new Set(), { theme: 'ano_novo', year: 2026 }, '2026-12-28');
+    expect(grid.at(-1)).toMatchObject({ id: 'ano_novo_2027', year: 2026 });
+    expect(grid.at(-1).title).toContain('2027');
   });
 });
 
@@ -232,5 +268,19 @@ describe('tema no documento e nos textos', () => {
     applySeason('outubro_rosa');
     expect(document.querySelector('meta[name="theme-color"]').getAttribute('content')).toBe('#170c14');
     expect(document.querySelector('link[rel="icon"]').getAttribute('href')).toMatch(/db2777/);
+  });
+
+  it('temas fora o Dia das Bruxas usam a decoração suave e o emoji como favicon', () => {
+    const root = document.documentElement;
+    applySeason('natal');
+    expect(root.getAttribute('data-season-style')).toBe('soft');
+    expect(decodeURIComponent(document.querySelector('link[rel="icon"]').getAttribute('href'))).toContain('🎄');
+    applySeason('halloween');
+    expect(root.hasAttribute('data-season-style')).toBe(false);
+    applySeason('');
+    expect(root.hasAttribute('data-season-style')).toBe(false);
+    applySeason('festa_junina');
+    // na Festa Junina o fogo é a fogueira e fica
+    expect(seasonText('Sequência 🔥 🎉')).toBe('Sequência 🔥 🌽');
   });
 });

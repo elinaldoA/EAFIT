@@ -385,6 +385,12 @@ const SHARE_URL_LABEL = 'eafit.com.br';
 
 export const SHARE_TEXT = t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
 const SEASON_SHARE_TEXT = {
+  carnaval: t('Treino de Carnaval concluído no EAFIT 🎭 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  pascoa: t('Treino de Páscoa concluído no EAFIT 🐰 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  namorados: t('Treino dos Namorados concluído no EAFIT 💕 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  festa_junina: t('Treino do Arraiá concluído no EAFIT 🌽 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  natal: t('Treino de Natal concluído no EAFIT 🎄 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  ano_novo: t('Primeiro treino do ano concluído no EAFIT 🎆 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
   outubro_rosa: t('Treino do Outubro Rosa concluído no EAFIT 💗 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
   halloween: t('Treino das Bruxas concluído no EAFIT 🎃 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
   novembro_azul: t('Treino do Novembro Azul concluído no EAFIT 💙 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
@@ -425,10 +431,29 @@ function drawRibbonTheme(ctx, glow, ribbon, ribbonLight) {
   ctx.restore();
 }
 
+// Outros temas: brilho na cor do tema e o emoji grande no topo, no lugar da
+// abóbora.
+function drawEmojiTheme(ctx, glow, emoji) {
+  drawGlow(ctx, CARD_WIDTH * 0.08, 300, 640, glow, 0.28);
+  drawGlow(ctx, CARD_WIDTH * 0.9, CARD_HEIGHT * 0.72, 560, glow, 0.14);
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `110px ${FONT}`;
+  ctx.fillText(emoji, CARD_WIDTH - PAD_X - 60, 262);
+  ctx.restore();
+}
+
 const SEASON_CARD = {
+  carnaval: { draw: ctx => drawEmojiTheme(ctx, '#22d3ee', '🎭'), label: () => t('TREINO DE CARNAVAL CONCLUÍDO') },
+  pascoa: { draw: ctx => drawEmojiTheme(ctx, '#a78bfa', '🐰'), label: () => t('TREINO DE PÁSCOA CONCLUÍDO') },
+  namorados: { draw: ctx => drawEmojiTheme(ctx, '#f43f5e', '💕'), label: () => t('TREINO DOS NAMORADOS CONCLUÍDO') },
+  festa_junina: { draw: ctx => drawEmojiTheme(ctx, '#f59e0b', '🌽'), label: () => t('TREINO DO ARRAIÁ CONCLUÍDO') },
   outubro_rosa: { draw: ctx => drawRibbonTheme(ctx, PINK, '#db2777', '#f9a8d4'), label: () => t('TREINO ROSA CONCLUÍDO') },
   halloween: { draw: drawHalloween, label: () => t('TREINO DAS BRUXAS CONCLUÍDO') },
   novembro_azul: { draw: ctx => drawRibbonTheme(ctx, BLUE, '#2563eb', '#60a5fa'), label: () => t('TREINO AZUL CONCLUÍDO') },
+  natal: { draw: ctx => drawEmojiTheme(ctx, '#ef4444', '🎄'), label: () => t('TREINO DE NATAL CONCLUÍDO') },
+  ano_novo: { draw: ctx => drawEmojiTheme(ctx, '#eab308', '🎆'), label: () => t('PRIMEIRO TREINO DO ANO') },
 };
 
 // Barra de marca no topo: logo + nome à esquerda, data à direita.

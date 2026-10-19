@@ -81,7 +81,14 @@ describe('site em inglês', () => {
       'Enviando…', 'Mensagem enviada. A resposta chega no seu e-mail.', 'Não deu pra enviar agora. Tente de novo ou escreva para contato.eafit@gmail.com.',
       'Semana do Dia das Bruxas no EAFIT!', 'Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.',
       'Novembro Azul no EAFIT!', 'Mês de cuidar da saúde do homem. Faça 12 treinos em novembro e ganhe a conquista Novembro Azul no app.',
-      'Outubro Rosa no EAFIT!', 'Mês de conscientização sobre o câncer de mama. Treine durante a campanha e ganhe a conquista Outubro Rosa no app.']);
+      'Outubro Rosa no EAFIT!', 'Mês de conscientização sobre o câncer de mama. Treine durante a campanha e ganhe a conquista Outubro Rosa no app.',
+      "Carnaval no EAFIT!", "Bloco na rua e treino em dia: treine durante o Carnaval e ganhe a conquista Carnaval no app.",
+      "Páscoa no EAFIT!", "Hora de queimar o chocolate: treine na semana da Páscoa e ganhe a conquista Páscoa no app.",
+      "Semana dos Namorados no EAFIT!", "Chame seu amor pra treinar e ganhe a conquista Namorados no app.",
+      "Arraiá do EAFIT!", "Treine durante as festas juninas e ganhe a conquista Arraiá no app. Anarriê!",
+      "Natal no EAFIT!", "Treine na semana do Natal e ganhe a conquista Treino de Natal no app.",
+      "Feliz Ano Novo!", "Comece o ano treinando e ganhe a conquista Ano Novo no app.",
+    ]);
     const orphans = Object.keys(dict.text).filter(k => !texts.has(k) && !dynamic.has(k));
     expect(orphans).toEqual([]);
   });

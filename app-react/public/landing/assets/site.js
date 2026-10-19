@@ -716,8 +716,25 @@
   // public.app_settings que o app lê (app-react/src/lib/season.js), com a
   // lista de períodos agendados. Liga o tema do período de hoje, no fuso do
   // app; fora dos períodos o site fica como sempre.
-  // Faixa de cada tema: emoji, título e texto (traduzidos em i18n-en.js).
+  // Faixa de cada tema, na ordem do calendário: emoji, título e texto
+  // (traduzidos em i18n-en.js).
   var SEASONS = {
+    carnaval: {
+      emoji: '🎭', title: 'Carnaval no EAFIT!',
+      text: 'Bloco na rua e treino em dia: treine durante o Carnaval e ganhe a conquista Carnaval no app.',
+    },
+    pascoa: {
+      emoji: '🐰', title: 'Páscoa no EAFIT!',
+      text: 'Hora de queimar o chocolate: treine na semana da Páscoa e ganhe a conquista Páscoa no app.',
+    },
+    namorados: {
+      emoji: '💕', title: 'Semana dos Namorados no EAFIT!',
+      text: 'Chame seu amor pra treinar e ganhe a conquista Namorados no app.',
+    },
+    festa_junina: {
+      emoji: '🌽', title: 'Arraiá do EAFIT!',
+      text: 'Treine durante as festas juninas e ganhe a conquista Arraiá no app. Anarriê!',
+    },
     outubro_rosa: {
       emoji: '💗', title: 'Outubro Rosa no EAFIT!',
       text: 'Mês de conscientização sobre o câncer de mama. Treine durante a campanha e ganhe a conquista Outubro Rosa no app.',
@@ -729,6 +746,14 @@
     novembro_azul: {
       emoji: '💙', title: 'Novembro Azul no EAFIT!',
       text: 'Mês de cuidar da saúde do homem. Faça 12 treinos em novembro e ganhe a conquista Novembro Azul no app.',
+    },
+    natal: {
+      emoji: '🎄', title: 'Natal no EAFIT!',
+      text: 'Treine na semana do Natal e ganhe a conquista Treino de Natal no app.',
+    },
+    ano_novo: {
+      emoji: '🎆', title: 'Feliz Ano Novo!',
+      text: 'Comece o ano treinando e ganhe a conquista Ano Novo no app.',
     },
   };
   var SEASON_BANNER_KEY = 'eafit_season_banner_site';
@@ -756,30 +781,39 @@
     nav.parentNode.insertBefore(bar, nav);
   }
   // Efeitos por cima da página (assets/site.css), sem toque e escondidos do
-  // leitor de tela: morcegos, aranha e névoa no Dia das Bruxas; bolhas azuis
-  // no Novembro Azul. E a barra do navegador e o favicon do tema.
-  var SEASON_FX = {
-    halloween: '<span class="season-bat"></span><span class="season-bat"></span><span class="season-bat"></span>'
-      + '<span class="season-spider"></span><span class="season-fog"></span>',
-    outubro_rosa: new Array(7).join('<span class="season-bubble"></span>'),
-    novembro_azul: new Array(7).join('<span class="season-bubble"></span>'),
-  };
+  // leitor de tela: morcegos, aranha e névoa no Dia das Bruxas; nos outros
+  // temas, partículas subindo (ou caindo: neve e confete). E a barra do
+  // navegador e o favicon do tema.
+  var HALLOWEEN_FX = '<span class="season-bat"></span><span class="season-bat"></span><span class="season-bat"></span>'
+    + '<span class="season-spider"></span><span class="season-fog"></span>';
+  var SEASON_FALLING = { natal: true, carnaval: true };
   var SEASON_BAR_COLOR = {
-    outubro_rosa: ['#fdf4f8', '#160b13'], halloween: ['#faf6fd', '#110b18'], novembro_azul: ['#f3f6fc', '#0a1120'],
+    carnaval: ['#f3fafc', '#081416'],
+    pascoa: ['#fcf7f3', '#140f0b'],
+    namorados: ['#fcf3f5', '#15090b'],
+    festa_junina: ['#fcf7f3', '#150f09'],
+    outubro_rosa: ['#fdf4f8', '#160b13'],
+    halloween: ['#faf6fd', '#110b18'],
+    novembro_azul: ['#f3f6fc', '#0a1120'],
+    natal: ['#f3fcf7', '#09150f'],
+    ano_novo: ['#fcf9f3', '#13110b'],
   };
   function showSeasonFx(theme) {
     var fx = document.createElement('div');
-    fx.className = 'season-fx';
+    fx.className = 'season-fx' + (SEASON_FALLING[theme] ? ' season-fx--fall' : '');
     fx.setAttribute('aria-hidden', 'true');
-    fx.innerHTML = SEASON_FX[theme];
+    fx.innerHTML = theme === 'halloween' ? HALLOWEEN_FX : new Array(7).join('<span class="season-bubble"></span>');
     document.body.appendChild(fx);
     document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
       m.setAttribute('content', SEASON_BAR_COLOR[theme][/light/.test(m.getAttribute('media') || '') ? 0 : 1]);
     });
     // Mesmos desenhos de app-react/src/lib/season.js
     var icon = document.querySelector('link[rel="icon"]');
-    if (icon) icon.setAttribute('href', SEASON_FAVICON[theme]);
+    if (icon) icon.setAttribute('href', SEASON_FAVICON[theme] || emojiFavicon(SEASONS[theme].emoji));
     swapSeasonEmojis(document.body, theme);
+  }
+  function emojiFavicon(emoji) {
+    return 'data:image/svg+xml,' + encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>" + emoji + '</text></svg>');
   }
   var SEASON_FAVICON = {
     outubro_rosa: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' fill='none' stroke='%23db2777' stroke-width='9' stroke-linejoin='round'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' fill='none' stroke='%23f9a8d4' stroke-width='9'/%3E%3C/svg%3E",
@@ -790,9 +824,15 @@
   // (seasonText em app-react/src/lib/season.js); avisos, status e carinhas de
   // humor ficam, e emoji dentro de sequência (🧑‍🏫) ou com tom de pele também.
   var SEASON_EMOJI = {
+    carnaval: { '🔥': '🎭', '🎉': '🎊' },
+    pascoa: { '🔥': '🐰', '🎉': '🐣' },
+    namorados: { '🔥': '💘', '🎉': '💕' },
+    festa_junina: { '🎉': '🌽' },
     outubro_rosa: { '🔥': '💗', '🎉': '💗' },
     halloween: { '🔥': '🎃', '🎉': '👻', '💪': '🦇', '🎯': '🔮', '🚀': '🧹', '💡': '🕯️' },
     novembro_azul: { '🔥': '💙', '🎉': '💙' },
+    natal: { '🔥': '🎄', '🎉': '🎁' },
+    ano_novo: { '🔥': '✨', '🎉': '🥂' },
   };
   function swapSeasonEmojis(root, theme) {
     var map = SEASON_EMOJI[theme];
@@ -821,6 +861,7 @@
       })[0];
       if (!p) return;
       document.documentElement.setAttribute('data-season', p.theme);
+      if (p.theme !== 'halloween') document.documentElement.setAttribute('data-season-style', 'soft');
       showSeasonBanner(p.theme, p.startsOn.slice(0, 4));
       showSeasonFx(p.theme);
     })

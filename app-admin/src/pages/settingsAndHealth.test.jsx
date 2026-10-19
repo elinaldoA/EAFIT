@@ -87,8 +87,7 @@ describe('AppSettings', () => {
   it('tema de temporada: agenda vários períodos, recusa sobreposição e salva em ordem', async () => {
     render(<AppSettings />);
     await screen.findByText('Tema de temporada');
-    const boxes = screen.getAllByRole('checkbox');
-    fireEvent.click(boxes[boxes.length - 1]);
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Ligado' }).at(-1));
     expect(screen.getByText(/Adicione pelo menos um período/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: '+ Adicionar período' }));
@@ -97,7 +96,9 @@ describe('AppSettings', () => {
     const starts = () => screen.getAllByLabelText('Começa em');
     const ends = () => screen.getAllByLabelText('Termina em (inclusive)');
     // sugere os temas na ordem do calendário
-    expect(themes().map(el => el.value)).toEqual(['outubro_rosa', 'halloween']);
+    expect(themes().map(el => el.value)).toEqual(['carnaval', 'pascoa']);
+    fireEvent.change(themes()[0], { target: { value: 'outubro_rosa' } });
+    fireEvent.change(themes()[1], { target: { value: 'halloween' } });
     expect(screen.getByText(/Informe as duas datas/)).toBeTruthy();
 
     fireEvent.change(starts()[1], { target: { value: '2026-10-24' } });
@@ -115,6 +116,13 @@ describe('AppSettings', () => {
     fireEvent.click(screen.getByRole('button', { name: '+ Adicionar período' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remover período 4' }));
 
+    // ligar/desligar o tema no painel vale só neste navegador e não mexe na agenda
+    const panel = screen.getByRole('checkbox', { name: /Mostrar o tema também neste painel/ });
+    fireEvent.click(panel);
+    expect(localStorage.getItem('eafit_admin_season_off')).toBe('1');
+    fireEvent.click(panel);
+    expect(localStorage.getItem('eafit_admin_season_off')).toBe(null);
+
     const save = saveButtons();
     fireEvent.click(save[save.length - 1]);
     await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('season', {
@@ -125,6 +133,19 @@ describe('AppSettings', () => {
         { theme: 'novembro_azul', startsOn: '2026-11-03', endsOn: '2026-11-30' },
       ],
     }, 'adm1'));
+  });
+
+  it('tema de temporada: preenche a agenda do ano sem duplicar', async () => {
+    render(<AppSettings />);
+    await screen.findByText('Tema de temporada');
+    const year = new Date().getFullYear() + 1;
+    fireEvent.click(screen.getByRole('button', { name: `Preencher ${year}` }));
+    expect(screen.getAllByLabelText(/^Tema/).map(el => el.value)).toEqual(
+      ['carnaval', 'pascoa', 'namorados', 'festa_junina', 'outubro_rosa', 'halloween', 'novembro_azul', 'natal', 'ano_novo']);
+    expect(screen.getByText(`9 período(s) de ${year} adicionado(s). Confira as datas e salve.`)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: `Preencher ${year}` }));
+    expect(screen.getByText(`Nada novo para agendar em ${year}.`)).toBeTruthy();
+    expect(screen.getAllByLabelText(/^Tema/)).toHaveLength(9);
   });
 
   it('banner: bloqueia link inválido', async () => {

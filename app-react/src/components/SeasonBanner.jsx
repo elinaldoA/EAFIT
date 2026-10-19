@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useSeason } from '../hooks/useSeason';
 import { useAppConfig } from '../context/useAppConfig';
-import { SEASONS, applySeason, cacheSeason, halloweenWindow, novembroAzulWindow, outubroRosaWindow } from '../lib/season';
-import { seasonDay as fmt } from '../lib/seasonLabels';
+import { SEASONS, applySeason, cacheSeason, seasonWindow } from '../lib/season';
+import { challengeVars } from '../lib/seasonLabels';
 
 import { t } from '../lib/i18n';
 const DISMISS_KEY = 'eafit_season_banner';
@@ -10,6 +10,8 @@ const DISMISS_KEY = 'eafit_season_banner';
 function wasDismissed(id) {
   try { return localStorage.getItem(DISMISS_KEY) === id; } catch { return false; }
 }
+
+const FALLING = new Set(['natal', 'carnaval']);
 
 // Aplica o tema de temporada no documento (lib/season.js: <html data-season>,
 // barra de status, favicon e o que card de compartilhar, treinador por voz e
@@ -20,16 +22,16 @@ export function SeasonDecor() {
   const { config, loaded } = useAppConfig();
   useEffect(() => { applySeason(theme); }, [theme]);
   useEffect(() => { if (loaded) cacheSeason(config.season); }, [loaded, config.season]);
-  if (theme === 'outubro_rosa' || theme === 'novembro_azul') {
-    // Bolhas na cor do laço subindo devagar (styles/season.css): discreto, é
-    // campanha de saúde.
+  if (!theme) return null;
+  if (theme !== 'halloween') {
+    // Partículas do tema subindo devagar, ou caindo (neve, confete), bem
+    // discretas (styles/season.css).
     return (
-      <div className="season-fx" aria-hidden="true">
+      <div className={`season-fx${FALLING.has(theme) ? ' season-fx--fall' : ''}`} aria-hidden="true">
         {Array.from({ length: 6 }, (_, i) => <span key={i} className="season-bubble" />)}
       </div>
     );
   }
-  if (theme !== 'halloween') return null;
   // Morcegos voando, aranha descendo do topo e névoa (styles/season.css).
   // Só enfeite: sem toque, escondido do leitor de tela e no modo ao vivo.
   return (
@@ -43,26 +45,24 @@ export function SeasonDecor() {
   );
 }
 
-// Texto da faixa de cada tema, explicando a conquista.
+// Título e texto da faixa de cada tema, explicando a conquista (variáveis em
+// challengeVars).
 const BANNER_TEXT = {
-  outubro_rosa: year => {
-    const { goal, to } = outubroRosaWindow(year);
-    return [
-      t('Outubro Rosa!'),
-      t('Mês de conscientização sobre o câncer de mama: cuide de você, com treino e exames em dia. Faça {meta} treinos até {fim} e ganhe a conquista Outubro Rosa.', { meta: goal, fim: fmt(to) }),
-    ];
-  },
-  halloween: year => {
-    const { day, to } = halloweenWindow(year);
-    return [t('Semana do Dia das Bruxas!'), t('Treine no dia {dia} ou faça 3 treinos até {fim} e ganhe a conquista Treino das Bruxas.', { dia: fmt(day), fim: fmt(to) })];
-  },
-  novembro_azul: year => {
-    const { goal, to } = novembroAzulWindow(year);
-    return [
-      t('Novembro Azul!'),
-      t('Mês de cuidar da saúde do homem: treino em dia e exames de rotina também. Faça {meta} treinos até {fim} e ganhe a conquista Novembro Azul.', { meta: goal, fim: fmt(to) }),
-    ];
-  },
+  carnaval: v => [t('Carnaval!'), t('Bloco na rua e treino em dia: faça {meta} treinos entre {de} e {ate} e ganhe a conquista Carnaval.', v)],
+  pascoa: v => [t('Páscoa!'), t('Hora de queimar o chocolate: faça {meta} treinos entre {de} e {ate} e ganhe a conquista Páscoa.', v)],
+  namorados: v => [t('Semana dos Namorados!'), t('Chame seu amor pra treinar: treine no dia {dia} ou faça {meta} treinos até {fim} e ganhe a conquista Namorados.', v)],
+  festa_junina: v => [t('Arraiá do EAFIT!'), t('Faça {meta} treinos entre {de} e {ate} e ganhe a conquista Arraiá. Anarriê!', v)],
+  outubro_rosa: v => [
+    t('Outubro Rosa!'),
+    t('Mês de conscientização sobre o câncer de mama: cuide de você, com treino e exames em dia. Faça {meta} treinos até {fim} e ganhe a conquista Outubro Rosa.', v),
+  ],
+  halloween: v => [t('Semana do Dia das Bruxas!'), t('Treine no dia {dia} ou faça 3 treinos até {fim} e ganhe a conquista Treino das Bruxas.', v)],
+  novembro_azul: v => [
+    t('Novembro Azul!'),
+    t('Mês de cuidar da saúde do homem: treino em dia e exames de rotina também. Faça {meta} treinos até {fim} e ganhe a conquista Novembro Azul.', v),
+  ],
+  natal: v => [t('Natal no EAFIT!'), t('Treine no dia {dia} ou faça {meta} treinos entre {de} e {ate} e ganhe a conquista Treino de Natal.', v)],
+  ano_novo: v => [t('Feliz Ano Novo!'), t('Comece {ano} treinando: faça um treino entre {de} e {ate} e ganhe a conquista Ano Novo {ano}.', v)],
 };
 
 // Faixa do tema de temporada, explicando a conquista. Fechou, some até o
@@ -75,7 +75,7 @@ export default function SeasonBanner() {
 
   if (!BANNER_TEXT[theme] || closedId === id || wasDismissed(id)) return null;
 
-  const [title, text] = BANNER_TEXT[theme](year);
+  const [title, text] = BANNER_TEXT[theme](challengeVars(seasonWindow(theme, year)));
 
   function close() {
     try { localStorage.setItem(DISMISS_KEY, id); } catch { /* armazenamento bloqueado */ }

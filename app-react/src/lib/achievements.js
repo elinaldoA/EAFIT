@@ -1,9 +1,6 @@
 import { db } from './supabase';
-import {
-  FIRST_HALLOWEEN_YEAR, FIRST_NOVEMBRO_AZUL_YEAR, FIRST_OUTUBRO_ROSA_YEAR, earnedHalloween, earnedNovembroAzul, earnedOutubroRosa,
-  novembroAzulWindow, outubroRosaWindow, seasonToday,
-} from './season';
-import { seasonDay } from './seasonLabels';
+import { SEASONS, SEASON_CHALLENGES, earnedSeason, seasonToday, seasonWindow } from './season';
+import { challengeVars } from './seasonLabels';
 
 import { t } from './i18n';
 export const BADGES = [
@@ -22,48 +19,47 @@ export const BADGES = [
   { id: 'weight_30', emoji: '📉', title: t('30 registros de peso'), desc: t('Registre seu peso 30 vezes'), check: s => s.totalWeightLogs >= 30 },
 ];
 
-// Conquistas de temporada (lib/season.js): uma por ano, desde a primeira
-// edição. Só aparecem na grade quando ganhas ou durante o tema daquele ano.
-function halloweenBadge(year) {
-  return {
-    id: `halloween_${year}`, emoji: '🎃', season: 'halloween', year,
-    title: t('Treino das Bruxas {ano}', { ano: year }),
-    desc: t('Treine em 31/10 ou faça 3 treinos entre 24/10 e 02/11'),
-    check: s => earnedHalloween(s.completedDates, year),
-  };
+// Conquistas de temporada (lib/season.js): uma por edição de cada tema, desde
+// a primeira. O id leva o ano em que o desafio termina (ano_novo_2027 é a
+// edição que começa em dezembro de 2026); `year` é o da edição, o mesmo do
+// período no painel. Só aparecem na grade quando ganhas ou durante o tema.
+const BADGE_TITLE = {
+  carnaval: v => t('Carnaval {ano}', v),
+  pascoa: v => t('Páscoa {ano}', v),
+  namorados: v => t('Namorados {ano}', v),
+  festa_junina: v => t('Arraiá {ano}', v),
+  outubro_rosa: v => t('Outubro Rosa {ano}', v),
+  halloween: v => t('Treino das Bruxas {ano}', v),
+  novembro_azul: v => t('Novembro Azul {ano}', v),
+  natal: v => t('Treino de Natal {ano}', v),
+  ano_novo: v => t('Ano Novo {ano}', v),
+};
+
+function badgeDesc(theme, w, v) {
+  if (theme === 'halloween') return t('Treine em 31/10 ou faça 3 treinos entre 24/10 e 02/11');
+  if (theme === 'novembro_azul') return t('Faça {meta} treinos em novembro', v);
+  if (w.goal === 1) return t('Treine entre {de} e {ate}', v);
+  if (w.day) return t('Treine em {dia} ou faça {meta} treinos entre {de} e {ate}', v);
+  return t('Faça {meta} treinos entre {de} e {ate}', v);
 }
 
-function outubroRosaBadge(year) {
-  const w = outubroRosaWindow(year);
+function seasonBadge(theme, year) {
+  const w = seasonWindow(theme, year);
+  const v = challengeVars(w);
   return {
-    id: `outubro_rosa_${year}`, emoji: '💗', season: 'outubro_rosa', year,
-    title: t('Outubro Rosa {ano}', { ano: year }),
-    desc: t('Faça {meta} treinos entre {de} e {ate}', { meta: w.goal, de: seasonDay(w.from), ate: seasonDay(w.to) }),
-    check: s => earnedOutubroRosa(s.completedDates, year),
+    id: `${theme}_${v.ano}`, emoji: SEASONS[theme].emoji, season: theme, year,
+    title: BADGE_TITLE[theme](v),
+    desc: badgeDesc(theme, w, v),
+    check: s => earnedSeason(theme, s.completedDates, year),
   };
 }
-
-function novembroAzulBadge(year) {
-  return {
-    id: `novembro_azul_${year}`, emoji: '💙', season: 'novembro_azul', year,
-    title: t('Novembro Azul {ano}', { ano: year }),
-    desc: t('Faça {meta} treinos em novembro', { meta: novembroAzulWindow(year).goal }),
-    check: s => earnedNovembroAzul(s.completedDates, year),
-  };
-}
-
-// Na ordem do calendário: Outubro Rosa, Dia das Bruxas, Novembro Azul.
-const SEASONAL = [
-  [FIRST_OUTUBRO_ROSA_YEAR, outubroRosaBadge],
-  [FIRST_HALLOWEEN_YEAR, halloweenBadge],
-  [FIRST_NOVEMBRO_AZUL_YEAR, novembroAzulBadge],
-];
 
 export function seasonalBadges(today = seasonToday()) {
   const list = [];
+  const themes = Object.keys(SEASON_CHALLENGES);
   const last = Number(today.slice(0, 4));
-  for (let y = Math.min(...SEASONAL.map(([first]) => first)); y <= last; y++) {
-    for (const [first, badge] of SEASONAL) if (y >= first) list.push(badge(y));
+  for (let y = Math.min(...themes.map(k => SEASON_CHALLENGES[k].first)); y <= last; y++) {
+    for (const theme of themes) if (y >= SEASON_CHALLENGES[theme].first) list.push(seasonBadge(theme, y));
   }
   return list;
 }

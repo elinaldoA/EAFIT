@@ -32,9 +32,15 @@ export const DEFAULT_SETTINGS = {
 // app-react/src/lib/season.js e em public/landing/assets/site.js), na ordem
 // do calendário.
 export const SEASON_THEMES = [
+  { value: 'carnaval', label: '🎭 Carnaval' },
+  { value: 'pascoa', label: '🐰 Páscoa' },
+  { value: 'namorados', label: '💕 Dia dos Namorados' },
+  { value: 'festa_junina', label: '🌽 Festa Junina' },
   { value: 'outubro_rosa', label: '💗 Outubro Rosa' },
   { value: 'halloween', label: '🎃 Dia das Bruxas' },
   { value: 'novembro_azul', label: '💙 Novembro Azul' },
+  { value: 'natal', label: '🎄 Natal' },
+  { value: 'ano_novo', label: '🎆 Ano Novo' },
 ];
 
 export const seasonThemeLabel = theme => SEASON_THEMES.find(s => s.value === theme)?.label || theme;
@@ -112,6 +118,50 @@ export function seasonScheduleError(season) {
     }
   }
   return '';
+}
+
+// Domingo de Páscoa (algoritmo gregoriano anônimo), em YYYY-MM-DD. Mesma conta
+// de app-react/src/lib/easter.js (os dois apps não compartilham build).
+export function easterDay(year) {
+  const a = year % 19, b = Math.floor(year / 100), c = year % 100, d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function shiftDay(day, n) {
+  const dt = new Date(`${day}T12:00:00Z`);
+  dt.setUTCDate(dt.getUTCDate() + n);
+  return dt.toISOString().slice(0, 10);
+}
+
+// Agenda sugerida de um ano, cobrindo as janelas das conquistas de cada tema
+// (SEASON_CHALLENGES em app-react/src/lib/season.js): Carnaval de sexta à
+// Quarta de Cinzas, Páscoa da segunda da Semana Santa ao domingo seguinte e o
+// Ano Novo de 27/12 a 07/01.
+export function defaultSeasonPeriods(year) {
+  const e = easterDay(year);
+  return [
+    { theme: 'carnaval', startsOn: shiftDay(e, -51), endsOn: shiftDay(e, -46) },
+    { theme: 'pascoa', startsOn: shiftDay(e, -6), endsOn: shiftDay(e, 7) },
+    { theme: 'namorados', startsOn: `${year}-06-05`, endsOn: `${year}-06-12` },
+    { theme: 'festa_junina', startsOn: `${year}-06-13`, endsOn: `${year}-06-30` },
+    { theme: 'outubro_rosa', startsOn: `${year}-10-01`, endsOn: `${year}-10-23` },
+    { theme: 'halloween', startsOn: `${year}-10-24`, endsOn: `${year}-11-02` },
+    { theme: 'novembro_azul', startsOn: `${year}-11-03`, endsOn: `${year}-11-30` },
+    { theme: 'natal', startsOn: `${year}-12-01`, endsOn: `${year}-12-26` },
+    { theme: 'ano_novo', startsOn: `${year}-12-27`, endsOn: `${year + 1}-01-07` },
+  ];
+}
+
+// Soma a agenda sugerida do ano à atual: entra só o que ainda não terminou e
+// não bate com nenhum período já agendado (que fica como o admin deixou).
+export function withDefaultPeriods(periods, year, today) {
+  const overlaps = (a, b) => isValidSeasonWindow(b) && a.startsOn <= b.endsOn && b.startsOn <= a.endsOn;
+  const added = defaultSeasonPeriods(year).filter(p => p.endsOn >= today && !periods.some(q => overlaps(p, q)));
+  return { periods: sortPeriods([...periods, ...added]), added: added.length };
 }
 
 // Situação da agenda hoje: 'desligado', 'no_ar' (com o tema), 'agendado'

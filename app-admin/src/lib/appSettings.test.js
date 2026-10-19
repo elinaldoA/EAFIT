@@ -72,7 +72,7 @@ describe('tema de temporada', () => {
     const old = normalizeSettings([{ key: 'season', value: { enabled: true, theme: 'halloween', startsOn: '2026-10-24', endsOn: 'x' } }]).season;
     expect(old).toEqual({ enabled: true, periods: [P('halloween', '2026-10-24', '')] });
     expect(isValidSeasonWindow(old.periods[0])).toBe(false);
-    const list = normalizeSettings([{ key: 'season', value: { enabled: true, periods: [P('natal', '2026-12-01', '2026-12-26'), P('outubro_rosa', '2026-10-19', '2026-10-23')] } }]).season;
+    const list = normalizeSettings([{ key: 'season', value: { enabled: true, periods: [P('reveillon', '2026-12-01', '2026-12-26'), P('outubro_rosa', '2026-10-19', '2026-10-23')] } }]).season;
     expect(list).toEqual({ enabled: true, periods: [P('outubro_rosa', '2026-10-19', '2026-10-23')] });
     expect(normalizeSettings([]).season).toEqual({ enabled: false, periods: [] });
     expect(isValidSeasonWindow({ startsOn: '2026-10-24', endsOn: '2026-11-02' })).toBe(true);
@@ -98,12 +98,37 @@ describe('tema de temporada', () => {
     expect(seasonStatus(agenda, '2026-12-01')).toEqual({ key: 'encerrado' });
   });
 
+  it('agenda sugerida: datas móveis certas e sem pisar no que já existe', async () => {
+    const { defaultSeasonPeriods, withDefaultPeriods, easterDay, seasonScheduleError } = await import('./appSettings');
+    expect(easterDay(2026)).toBe('2026-04-05');
+    expect(easterDay(2027)).toBe('2027-03-28');
+    const y2027 = defaultSeasonPeriods(2027);
+    expect(y2027.map(p => p.theme)).toEqual(['carnaval', 'pascoa', 'namorados', 'festa_junina', 'outubro_rosa', 'halloween', 'novembro_azul', 'natal', 'ano_novo']);
+    expect(y2027[0]).toEqual(P('carnaval', '2027-02-05', '2027-02-10'));
+    expect(y2027[1]).toEqual(P('pascoa', '2027-03-22', '2027-04-04'));
+    expect(y2027.at(-1)).toEqual(P('ano_novo', '2027-12-27', '2028-01-07'));
+    // a agenda sugerida de vários anos nunca se sobrepõe
+    for (const y of [2026, 2027, 2028, 2035]) {
+      expect(seasonScheduleError({ enabled: true, periods: [...defaultSeasonPeriods(y), ...defaultSeasonPeriods(y + 1)] })).toBe('');
+    }
+
+    // em 19/10/2026, com o que já está agendado: só entram Natal e Ano Novo
+    const atual = [P('outubro_rosa', '2026-10-19', '2026-10-23'), P('halloween', '2026-10-24', '2026-11-02'), P('novembro_azul', '2026-11-03', '2026-11-30')];
+    const r = withDefaultPeriods(atual, 2026, '2026-10-19');
+    expect(r.added).toBe(2);
+    expect(r.periods.map(p => p.theme)).toEqual(['outubro_rosa', 'halloween', 'novembro_azul', 'natal', 'ano_novo']);
+    expect(withDefaultPeriods(r.periods, 2026, '2026-10-19').added).toBe(0);
+  });
+
   it('rotula a conquista de temporada de qualquer ano', async () => {
     const { badgeLabel } = await import('./userDetailHelpers');
     expect(badgeLabel('halloween_2026')).toBe('🎃 Treino das Bruxas 2026');
     expect(badgeLabel('halloween_2031')).toBe('🎃 Treino das Bruxas 2031');
     expect(badgeLabel('novembro_azul_2027')).toBe('💙 Novembro Azul 2027');
     expect(badgeLabel('outubro_rosa_2027')).toBe('💗 Outubro Rosa 2027');
+    expect(badgeLabel('festa_junina_2027')).toBe('🌽 Arraiá 2027');
+    expect(badgeLabel('ano_novo_2027')).toBe('🎆 Ano Novo 2027');
+    expect(badgeLabel('outra_coisa_2027')).toBe('outra_coisa_2027');
     expect(badgeLabel('streak_3')).toBe('🔥 Sequência de 3 dias');
     expect(badgeLabel('desconhecida')).toBe('desconhecida');
   });
