@@ -29,7 +29,7 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/users', label: 'Usuários' },
           { to: '/personais', label: 'Personais' },
-          { to: '/embaixadores', label: 'Embaixadores' },
+          { to: '/embaixadores', label: 'Embaixadores e influenciadores' },
           { to: '/segmentos', label: 'Segmentos' },
         ],
       },

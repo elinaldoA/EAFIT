@@ -1,8 +1,9 @@
 import { db } from './supabase';
 
-// Embaixadores (influenciadores): código + link de divulgação e as contas que
-// chegaram por ele. Tabelas e funções em
-// supabase/migrations/20261108010000_ambassadors.sql.
+// Embaixadores e influenciadores: código + link de divulgação e as contas que
+// chegaram por ele. Os dois tipos têm exatamente o mesmo programa; só muda o
+// nome. Tabelas e funções em supabase/migrations/20261108010000_ambassadors.sql
+// e 20261118010000_ambassador_kind.sql.
 
 export const LANDING_URL = 'https://eafit.com.br/';
 
@@ -16,6 +17,15 @@ export const CHANNELS = [
   { key: 'youtube', label: 'YouTube' },
 ];
 
+export const KINDS = [
+  { key: 'embaixador', label: 'Embaixador', plural: 'Embaixadores' },
+  { key: 'influenciador', label: 'Influenciador', plural: 'Influenciadores' },
+];
+
+export function kindLabel(kind) {
+  return kind === 'influenciador' ? 'Influenciador' : 'Embaixador';
+}
+
 export const SOURCE_LABELS = {
   instagram: 'Instagram', whatsapp: 'WhatsApp', tiktok: 'TikTok', youtube: 'YouTube',
   facebook: 'Facebook', x: 'X', google: 'Google', direto: 'Direto / sem canal',
@@ -24,11 +34,12 @@ export const SOURCE_LABELS = {
 
 const ERRORS = {
   invalid_code: 'Código inválido: use de 3 a 30 letras minúsculas, números ou hífen.',
-  invalid_name: 'Informe o nome do embaixador.',
+  invalid_name: 'Informe o nome.',
+  invalid_kind: 'Tipo inválido.',
   user_not_found: 'Nenhuma conta com esse e-mail.',
-  already_ambassador: 'Essa conta já é embaixadora.',
+  already_ambassador: 'Essa conta já é embaixadora ou influenciadora.',
   code_taken: 'Esse código já está em uso.',
-  not_found: 'Embaixador não encontrado.',
+  not_found: 'Cadastro não encontrado.',
 };
 
 export function ambassadorError(err) {
@@ -67,7 +78,7 @@ async function rpc(name, args) {
 export async function fetchAmbassadors(days = 30) {
   return ((await rpc('admin_ambassadors', { days_back: days })) || []).map(r => ({
     id: r.am_id, userId: r.am_user, email: r.am_email, name: r.am_name, code: r.am_code,
-    active: r.am_active, createdAt: r.am_created,
+    active: r.am_active, createdAt: r.am_created, kind: r.am_kind || 'embaixador',
     visits: Number(r.am_visits) || 0, signups: Number(r.am_signups) || 0,
     total: Number(r.am_total) || 0, active7: Number(r.am_active_7d) || 0, lastSignup: r.am_last_signup,
   }));
@@ -82,13 +93,13 @@ export async function fetchReferrals(ambassadorId) {
 
 export async function fetchUserAmbassador(userId) {
   const r = ((await rpc('admin_user_ambassador', { p_user: userId })) || [])[0];
-  return r ? { id: r.am_id, name: r.am_name, code: r.am_code, source: r.ar_source, linkedAt: r.ar_linked } : null;
+  return r ? { id: r.am_id, name: r.am_name, code: r.am_code, kind: r.am_kind || 'embaixador', source: r.ar_source, linkedAt: r.ar_linked } : null;
 }
 
-export function createAmbassador({ email, name, code }) {
-  return rpc('admin_create_ambassador', { p_email: email.trim(), p_name: name.trim(), p_code: code.trim().toLowerCase() });
+export function createAmbassador({ email, name, code, kind = 'embaixador' }) {
+  return rpc('admin_create_ambassador', { p_email: email.trim(), p_name: name.trim(), p_code: code.trim().toLowerCase(), p_kind: kind });
 }
 
-export function updateAmbassador({ id, name, code, active }) {
-  return rpc('admin_update_ambassador', { p_id: id, p_name: name.trim(), p_code: code.trim().toLowerCase(), p_active: active });
+export function updateAmbassador({ id, name, code, active, kind }) {
+  return rpc('admin_update_ambassador', { p_id: id, p_name: name.trim(), p_code: code.trim().toLowerCase(), p_active: active, p_kind: kind || null });
 }

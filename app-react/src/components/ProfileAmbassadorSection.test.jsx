@@ -51,6 +51,15 @@ describe('ProfileAmbassadorSection', () => {
     expect(toast).toHaveBeenCalledWith('🔗 Link copiado');
   });
 
+  it('influenciador vê o mesmo painel com o próprio nome', async () => {
+    h.fetchMyAmbassador.mockResolvedValue({ ...SUMMARY, kind: 'influenciador' });
+    render(<ProfileAmbassadorSection toast={vi.fn()} />);
+    expect(await screen.findByText('Influenciador EAFIT')).toBeTruthy();
+    fireEvent.click(screen.getByText('Painel do influenciador'));
+    expect(screen.getByText('https://eafit.com.br/?ref=anafit')).toBeTruthy();
+    expect(screen.queryByText('Painel do embaixador')).toBeNull();
+  });
+
   it('embaixador pausado vê o aviso e não compartilha', async () => {
     h.fetchMyAmbassador.mockResolvedValue({ ...SUMMARY, active: false });
     render(<ProfileAmbassadorSection toast={vi.fn()} />);

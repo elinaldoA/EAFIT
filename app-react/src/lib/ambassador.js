@@ -4,6 +4,8 @@ import { t } from './i18n';
 
 // Painel do embaixador (Perfil → Embaixador): só números, nunca quem se
 // cadastrou. Funções em supabase/migrations/20261109010000_ambassador_panel.sql.
+// Influenciador é o mesmo programa com outro nome (kind, migration
+// 20261118010000_ambassador_kind.sql).
 
 // Canal vai no link (?origem=) porque WhatsApp e Instagram quase nunca dizem
 // de onde a pessoa veio. Mesma lista do painel admin (app-admin/src/lib/ambassadors.js).
@@ -42,12 +44,14 @@ async function rows(name, days) {
   return data || [];
 }
 
+export const isInfluencer = amb => amb?.kind === 'influenciador';
+
 // null = a conta não é embaixadora.
 export async function fetchMyAmbassador(days = 30) {
   const r = (await rows('my_ambassador_summary', days))[0];
   if (!r) return null;
   return {
-    name: r.am_name, code: r.am_code, active: !!r.am_active,
+    name: r.am_name, code: r.am_code, active: !!r.am_active, kind: r.am_kind || 'embaixador',
     visits: Number(r.am_visits) || 0, signups: Number(r.am_signups) || 0,
     total: Number(r.am_total) || 0, active7: Number(r.am_active_7d) || 0,
   };

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   fetchAmbassadors, fetchReferrals, createAmbassador, updateAmbassador,
-  ambassadorLink, suggestCode, isValidCode, conversion, CHANNELS, SOURCE_LABELS,
+  ambassadorLink, suggestCode, isValidCode, conversion, kindLabel, CHANNELS, KINDS, SOURCE_LABELS,
 } from '../lib/ambassadors';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
@@ -15,10 +15,12 @@ const PERIODS = [
   { days: 0, label: 'Tudo' },
 ];
 
-const EMPTY_FORM = { email: '', name: '', code: '' };
+const EMPTY_FORM = { email: '', name: '', code: '', kind: 'embaixador' };
 
-// Pessoas → Embaixadores: influenciadores da marca, o link de cada um e as
-// contas que chegaram por ele.
+const FILTERS = [{ key: '', label: 'Todos' }, ...KINDS.map(k => ({ key: k.key, label: k.plural }))];
+
+// Pessoas → Embaixadores e influenciadores: o link de cada um e as contas que
+// chegaram por ele. Os dois tipos têm o mesmo programa; só muda o nome.
 export default function Ambassadors() {
   const [days, setDays] = useState(30);
   const [rows, setRows] = useState([]);
@@ -30,6 +32,7 @@ export default function Ambassadors() {
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState('');
   const [editing, setEditing] = useState(null);
+  const [filter, setFilter] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -54,7 +57,7 @@ export default function Ambassadors() {
     setMsg('');
     try {
       await createAmbassador(form);
-      setMsg(`Embaixador criado. Link: ${ambassadorLink(form.code.trim().toLowerCase())}`);
+      setMsg(`${kindLabel(form.kind)} criado. Link: ${ambassadorLink(form.code.trim().toLowerCase())}`);
       setForm(EMPTY_FORM);
       setCodeTouched(false);
       await load();
@@ -73,7 +76,7 @@ export default function Ambassadors() {
     setMsg('');
     try {
       await updateAmbassador(next);
-      setMsg('Embaixador atualizado.');
+      setMsg(`${kindLabel(next.kind)} atualizado.`);
       setEditing(null);
       await load();
     } catch (err) {
@@ -92,7 +95,8 @@ export default function Ambassadors() {
     }
   }
 
-  const totals = rows.reduce((acc, a) => ({
+  const shown = filter ? rows.filter(a => a.kind === filter) : rows;
+  const totals = shown.reduce((acc, a) => ({
     visits: acc.visits + a.visits, signups: acc.signups + a.signups, total: acc.total + a.total, active7: acc.active7 + a.active7,
   }), { visits: 0, signups: 0, total: 0, active7: 0 });
 
@@ -100,11 +104,12 @@ export default function Ambassadors() {
     <div className="stack">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Embaixadores</h1>
+          <h1 className="page-title">Embaixadores e influenciadores</h1>
           <p className="page-subtitle">
-            Influenciadores da marca. Cada um tem um código e um link de divulgação: quem abre o link e cria conta
-            em até 30 dias fica vinculado ao embaixador (vale o primeiro link aberto naquele navegador).
-            O embaixador acompanha os números (sem saber quem se cadastrou) no app, em Perfil → Painel do embaixador.
+            Os dois tipos têm o mesmo programa, só muda o nome. Cada um tem um código e um link de divulgação: quem
+            abre o link e cria conta em até 30 dias fica vinculado a ele (vale o primeiro link aberto naquele navegador).
+            A pessoa acompanha os números (sem saber quem se cadastrou) no app, em Perfil → Painel do embaixador
+            (ou do influenciador).
           </p>
         </div>
         <div className="seg" role="group" aria-label="Período">
@@ -121,6 +126,12 @@ export default function Ambassadors() {
       </div>
 
       <form className="card form-grid" onSubmit={handleCreate}>
+        <label className="field">
+          <span className="field__label">Tipo</span>
+          <select className="input" value={form.kind} onChange={e => setForm({ ...form, kind: e.target.value })}>
+            {KINDS.map(k => <option key={k.key} value={k.key}>{k.label}</option>)}
+          </select>
+        </label>
         <label className="field">
           <span className="field__label">E-mail da conta no app</span>
           <input className="input" type="email" required value={form.email} placeholder="pessoa@exemplo.com"
@@ -139,7 +150,7 @@ export default function Ambassadors() {
           <span className="card-note" style={{ margin: 0 }}>
             {form.code ? ambassadorLink(form.code) : 'A pessoa precisa ter conta no app.'}
           </span>
-          <button className="btn btn--primary" type="submit" disabled={busy || !isValidCode(form.code)}>Criar embaixador</button>
+          <button className="btn btn--primary" type="submit" disabled={busy || !isValidCode(form.code)}>Criar {kindLabel(form.kind).toLowerCase()}</button>
         </div>
       </form>
 
@@ -147,9 +158,25 @@ export default function Ambassadors() {
       {loading && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
 
-      {!loading && !error && rows.length === 0 && <EmptyState icon="📣" label="Nenhum embaixador ainda." />}
-
       {!loading && !error && rows.length > 0 && (
+        <div className="seg" role="group" aria-label="Tipo">
+          {FILTERS.map(f => (
+            <button
+              key={f.key || 'todos'} type="button" aria-pressed={filter === f.key}
+              className={`seg__btn${filter === f.key ? ' seg__btn--active' : ''}`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loading && !error && shown.length === 0 && (
+        <EmptyState icon="📣" label={filter === 'influenciador' ? 'Nenhum influenciador ainda.' : 'Nenhum embaixador ainda.'} />
+      )}
+
+      {!loading && !error && shown.length > 0 && (
         <>
           <div className="tile-grid">
             <div className="tile"><div className="tile__value">{totals.visits}</div><div className="tile__label">Visitas pelos links no período</div></div>
@@ -161,14 +188,14 @@ export default function Ambassadors() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Embaixador</th><th>Código</th><th>Visitas</th><th>Cadastros</th><th>Conversão</th><th>Total</th><th>Ativos 7d</th><th /></tr>
+                <tr><th>Nome</th><th>Tipo</th><th>Código</th><th>Visitas</th><th>Cadastros</th><th>Conversão</th><th>Total</th><th>Ativos 7d</th><th /></tr>
               </thead>
               <tbody>
-                {rows.map(a => (
+                {shown.map(a => (
                   <AmbassadorRow
                     key={a.id} a={a} open={openId === a.id} editing={editing?.id === a.id ? editing : null} busy={busy}
                     onToggle={() => setOpenId(openId === a.id ? '' : a.id)}
-                    onEdit={() => setEditing({ id: a.id, name: a.name, code: a.code })}
+                    onEdit={() => setEditing({ id: a.id, name: a.name, code: a.code, kind: a.kind })}
                     onEditChange={setEditing} onCancel={() => setEditing(null)}
                     onSave={changes => handleSave(a, changes)} onCopy={copy}
                   />
@@ -191,7 +218,7 @@ function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange,
   return (
     <>
       <tr>
-        <td data-label="Embaixador">
+        <td data-label="Nome">
           {editing ? (
             <input className="input" value={editing.name} aria-label="Nome" onChange={e => onEditChange({ ...editing, name: e.target.value })} />
           ) : (
@@ -203,6 +230,13 @@ function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange,
               </div>
             </>
           )}
+        </td>
+        <td data-label="Tipo">
+          {editing ? (
+            <select className="input" value={editing.kind} aria-label="Tipo" onChange={e => onEditChange({ ...editing, kind: e.target.value })}>
+              {KINDS.map(k => <option key={k.key} value={k.key}>{k.label}</option>)}
+            </select>
+          ) : kindLabel(a.kind)}
         </td>
         <td data-label="Código">
           {editing ? (
@@ -220,7 +254,7 @@ function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange,
             {editing ? (
               <>
                 <button className="btn btn--primary btn--small" disabled={busy || !isValidCode(editing.code) || !editing.name.trim()}
-                  onClick={() => onSave({ name: editing.name, code: editing.code })}>Salvar</button>
+                  onClick={() => onSave({ name: editing.name, code: editing.code, kind: editing.kind })}>Salvar</button>
                 <button className="btn btn--ghost btn--small" onClick={onCancel}>Cancelar</button>
               </>
             ) : (
@@ -240,14 +274,14 @@ function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange,
       </tr>
       {open && (
         <tr>
-          <td colSpan={8}>
+          <td colSpan={9}>
             <div className="actions-row" style={{ marginBottom: 12 }}>
               <span className="card-note" style={{ margin: 0 }}>Copiar link:</span>
               {CHANNELS.map(c => (
                 <button key={c.key} className="btn btn--ghost btn--small" disabled={!a.active}
                   onClick={() => onCopy(ambassadorLink(a.code, c.key))}>{c.label}</button>
               ))}
-              {!a.active && <span className="card-note" style={{ margin: 0 }}>Embaixador inativo: o link não vincula novas contas.</span>}
+              {!a.active && <span className="card-note" style={{ margin: 0 }}>{kindLabel(a.kind)} inativo: o link não vincula novas contas.</span>}
             </div>
             <ReferralList ambassadorId={a.id} />
           </td>

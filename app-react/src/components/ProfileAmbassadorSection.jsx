@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import CollapsibleCard from './CollapsibleCard';
 import {
   fetchMyAmbassador, fetchMyAmbassadorChannels, fetchMyAmbassadorDaily,
-  ambassadorLink, conversion, sourceLabel, shareAmbassadorLink, copyAmbassadorLink, AMBASSADOR_CHANNELS,
+  ambassadorLink, conversion, sourceLabel, shareAmbassadorLink, copyAmbassadorLink, AMBASSADOR_CHANNELS, isInfluencer,
 } from '../lib/ambassador';
 
 import { t, locale } from '../lib/i18n';
@@ -13,8 +13,9 @@ const PERIODS = [
   { days: 90, label: () => t('90 dias') },
 ];
 
-// Perfil → Embaixador: só aparece para quem é embaixador da marca. Mostra o
-// link e os números do que ele trouxe — nunca quem se cadastrou.
+// Perfil → Embaixador (ou Influenciador, mesmo painel com outro nome): só
+// aparece para quem está no programa. Mostra o link e os números do que a
+// pessoa trouxe — nunca quem se cadastrou.
 export default function ProfileAmbassadorSection({ toast }) {
   const [amb, setAmb] = useState(null);
 
@@ -28,9 +29,9 @@ export default function ProfileAmbassadorSection({ toast }) {
 
   return (
     <div className="section-group">
-      <div className="section-group__label">{t('Embaixador EAFIT')}</div>
+      <div className="section-group__label">{isInfluencer(amb) ? t('Influenciador EAFIT') : t('Embaixador EAFIT')}</div>
       <CollapsibleCard
-        icon="📣" title={t('Painel do embaixador')}
+        icon="📣" title={isInfluencer(amb) ? t('Painel do influenciador') : t('Painel do embaixador')}
         summary={amb.active
           ? t('{total} cadastros pelo seu link', { total: amb.total })
           : t('Link pausado pela equipe EAFIT')}

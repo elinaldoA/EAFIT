@@ -39,7 +39,7 @@ describe('consultas', () => {
     mockRpc.mockResolvedValue({ data: [{ am_id: 'a1', am_user: 'u1', am_email: 'a@x', am_name: 'Ana', am_code: 'ana', am_active: true, am_visits: '10', am_signups: '2', am_total: '5', am_active_7d: '1' }], error: null });
     const [a] = await fetchAmbassadors(7);
     expect(mockRpc).toHaveBeenCalledWith('admin_ambassadors', { days_back: 7 });
-    expect(a).toMatchObject({ id: 'a1', code: 'ana', visits: 10, signups: 2, total: 5, active7: 1 });
+    expect(a).toMatchObject({ id: 'a1', code: 'ana', kind: 'embaixador', visits: 10, signups: 2, total: 5, active7: 1 });
 
     mockRpc.mockResolvedValue({ data: null, error: null });
     expect(await fetchReferrals('a1')).toEqual([]);
@@ -50,9 +50,14 @@ describe('consultas', () => {
   it('criar e editar normalizam o código e propagam o erro traduzido', async () => {
     mockRpc.mockResolvedValue({ data: 'id', error: null });
     await createAmbassador({ email: ' a@x ', name: ' Ana ', code: ' AnaFit ' });
-    expect(mockRpc).toHaveBeenCalledWith('admin_create_ambassador', { p_email: 'a@x', p_name: 'Ana', p_code: 'anafit' });
+    expect(mockRpc).toHaveBeenCalledWith('admin_create_ambassador', { p_email: 'a@x', p_name: 'Ana', p_code: 'anafit', p_kind: 'embaixador' });
     await updateAmbassador({ id: 'a1', name: 'Ana', code: 'ana', active: false });
-    expect(mockRpc).toHaveBeenCalledWith('admin_update_ambassador', { p_id: 'a1', p_name: 'Ana', p_code: 'ana', p_active: false });
+    expect(mockRpc).toHaveBeenCalledWith('admin_update_ambassador', { p_id: 'a1', p_name: 'Ana', p_code: 'ana', p_active: false, p_kind: null });
+    await updateAmbassador({ id: 'a1', name: 'Ana', code: 'ana', active: true, kind: 'influenciador' });
+    expect(mockRpc).toHaveBeenCalledWith('admin_update_ambassador', { p_id: 'a1', p_name: 'Ana', p_code: 'ana', p_active: true, p_kind: 'influenciador' });
+
+    await createAmbassador({ email: 'b@x', name: 'Bia', code: 'bia', kind: 'influenciador' });
+    expect(mockRpc).toHaveBeenCalledWith('admin_create_ambassador', { p_email: 'b@x', p_name: 'Bia', p_code: 'bia', p_kind: 'influenciador' });
 
     mockRpc.mockResolvedValue({ data: null, error: { message: 'user_not_found' } });
     await expect(createAmbassador({ email: 'x', name: '', code: 'abc' })).rejects.toThrow('Nenhuma conta com esse e-mail.');

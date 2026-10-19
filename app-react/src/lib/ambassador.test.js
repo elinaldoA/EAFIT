@@ -34,8 +34,8 @@ describe('consultas', () => {
   });
 
   it('converte os números', async () => {
-    mockRpc.mockResolvedValueOnce({ data: [{ am_name: 'Ana', am_code: 'ana', am_active: true, am_visits: '9', am_signups: '3', am_total: '12', am_active_7d: '4' }], error: null });
-    expect(await fetchMyAmbassador()).toEqual({ name: 'Ana', code: 'ana', active: true, visits: 9, signups: 3, total: 12, active7: 4 });
+    mockRpc.mockResolvedValueOnce({ data: [{ am_name: 'Ana', am_code: 'ana', am_active: true, am_visits: '9', am_signups: '3', am_total: '12', am_active_7d: '4', am_kind: 'influenciador' }], error: null });
+    expect(await fetchMyAmbassador()).toEqual({ name: 'Ana', code: 'ana', active: true, kind: 'influenciador', visits: 9, signups: 3, total: 12, active7: 4 });
     mockRpc.mockResolvedValueOnce({ data: [{ ch_source: 'instagram', ch_visits: '5', ch_signups: '1' }], error: null });
     expect(await fetchMyAmbassadorChannels()).toEqual([{ source: 'instagram', visits: 5, signups: 1 }]);
     mockRpc.mockResolvedValueOnce({ data: [{ day: '2026-10-16', visits: '2', signups: '0' }], error: null });

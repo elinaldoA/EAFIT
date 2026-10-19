@@ -70,6 +70,8 @@ export default {
   '90 dias': '90 days',
   'Embaixador EAFIT': 'EAFIT Ambassador',
   'Painel do embaixador': 'Ambassador dashboard',
+  'Influenciador EAFIT': 'EAFIT Influencer',
+  'Painel do influenciador': 'Influencer dashboard',
   '{total} cadastros pelo seu link': '{total} sign-ups from your link',
   'Link pausado pela equipe EAFIT': 'Link paused by the EAFIT team',
   '🔗 Link copiado': '🔗 Link copied',
