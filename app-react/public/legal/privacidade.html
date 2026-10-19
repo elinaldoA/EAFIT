@@ -79,8 +79,10 @@
     <tr><td>Dados de saúde/corpo</td><td>Sexo biológico, idade, peso, altura, meta, nível, fotos de progresso</td></tr>
     <tr><td>Atividade no app</td><td>Treinos realizados, séries, cargas, repetições, água registrada, recordes, conquistas</td></tr>
     <tr><td>Técnicos</td><td>Inscrição push (para notificações), preferências de tema, lembretes e idioma</td></tr>
-    <tr><td>Visitas</td><td>Contagem de acessos à página de apresentação e à tela de login/cadastro: a data, a página, a origem do acesso (ex.: Google, link compartilhado), o tipo de sistema (Android, iOS, Windows, Mac ou Linux), o navegador, se é celular, tablet ou computador, o idioma, a campanha do link, o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Na tela de cadastro, contamos também em qual etapa as pessoas param e o tipo de erro (ex.: senha curta), sem o e-mail digitado. Não registramos modelo do aparelho nem ligamos a visita à sua conta.</td></tr>
+    <tr><td>Visitas</td><td>Contagem de acessos à página de apresentação e à tela de login/cadastro: a data, a página, a origem do acesso (ex.: Google, link compartilhado), o tipo de sistema (Android, iOS, Windows, Mac ou Linux), o navegador, se é celular, tablet ou computador, o idioma, a campanha do link, o código do embaixador (se o link for de um), o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Na tela de cadastro, contamos também em qual etapa as pessoas param e o tipo de erro (ex.: senha curta), sem o e-mail digitado. Não registramos modelo do aparelho nem ligamos a visita à sua conta.</td></tr>
     <tr><td>Uso do app (ligado à sua conta)</td><td>Quais telas e funcionalidades você abriu em cada dia (ex.: modo treino, hidratação), as etapas do preenchimento do perfil e se abriu o app por uma notificação; e um retrato do último acesso: sistema, navegador, tipo de aparelho, se o app está instalado, versão do app, idioma, se as notificações estão permitidas, o endereço IP e a localização aproximada obtida a partir dele (país, estado e cidade). Também registramos a instalação do app em cada aparelho: quando a tela de instalar apareceu, a resposta ao botão de instalar, a data da instalação, os dias em que o app foi aberto pelo ícone e quando as notificações deixaram de chegar ao aparelho (o que costuma indicar que o app foi desinstalado). Usamos para melhorar o app e dar suporte; esses dados são apagados junto com a conta.</td></tr>
+    <tr><td>Indicação por embaixador</td><td>Se você chegou ao EAFIT pelo link de um embaixador, o código do link e o canal (ex.: Instagram, WhatsApp) ficam guardados no seu navegador por até 30 dias e, se você criar a conta nesse período, ela é vinculada ao embaixador. O embaixador vê só números agregados (visitas, cadastros e quantas contas vinculadas treinaram na semana), nunca o seu nome, e-mail ou outros dados. O vínculo é apagado junto com a sua conta. Se você for embaixador, guardamos o seu código, os seus links de divulgação e a contagem de visitas e cadastros vindos deles.</td></tr>
+    <tr><td>Relatórios de erro</td><td>Quando algo falha no app: a mensagem e o rastro técnico do erro, onde ele aconteceu, a versão do app, o sistema, o navegador e o tipo de aparelho, se havia conexão, o idioma, o tamanho da tela e as últimas ações no app (toques em botões, voltar, mudanças de conexão), nunca o que você digitou. Ficam ligados à sua conta quando você está logado e servem só para encontrar e corrigir o problema; são apagados junto com a conta.</td></tr>
   </table>
 
   <h2>3. Por que tratamos esses dados</h2>
@@ -93,7 +95,8 @@
   <p>
     Usamos o seu e-mail para mensagens sobre a conta (confirmação de cadastro, redefinição de senha,
     avisos de segurança e respostas a feedbacks que você enviou), que fazem parte do serviço. Também
-    podemos enviar um resumo semanal, convites para voltar a treinar e novidades do app: esses você
+    podemos enviar um resumo semanal, convites para voltar a treinar (com uma pergunta opcional sobre por
+    que você parou, cuja resposta usamos para melhorar o app) e novidades do app: esses você
     pode desligar a qualquer momento em Perfil ou pelo link "Parar de receber estes e-mails" no
     rodapé de cada mensagem.
   </p>
@@ -122,6 +125,12 @@
     garantem que cada pessoa só acessa os próprios registros. Fotos de progresso ficam em
     armazenamento privado, acessíveis só por link temporário assinado, nunca publicamente.
   </p>
+  <p>
+    Se você ativar o bloqueio com biometria, a digital, o rosto ou o bloqueio de tela são conferidos
+    pelo próprio aparelho (padrão WebAuthn). O EAFIT não recebe nem guarda nenhum dado biométrico: só
+    um identificador da chave criada no aparelho, que fica no seu navegador e é apagado quando você
+    sai da conta ou desliga o bloqueio.
+  </p>
 
   <h2>6. Por quanto tempo guardamos</h2>
   <p>Enquanto sua conta estiver ativa. Se você excluir a conta, os dados associados são apagados.</p>
@@ -144,8 +153,9 @@
   <p>
     O app usa armazenamento local do navegador (localStorage) para preferências (tema, lembretes, idioma),
     para funcionar offline como PWA, para contar cada visita no máximo uma vez por dia (guarda só a
-    data da última visita) e um identificador aleatório do aparelho, usado só para saber se o app foi
-    instalado e aberto pelo ícone nesse aparelho. Não usamos cookies de rastreamento de terceiros
+    data da última visita), um identificador aleatório do aparelho, usado só para saber se o app foi
+    instalado e aberto pelo ícone nesse aparelho, o código do link de embaixador (por até 30 dias, para
+    vincular o cadastro) e a configuração do bloqueio com biometria. Não usamos cookies de rastreamento de terceiros
     ou publicidade.
   </p>
 
@@ -179,8 +189,10 @@
     <tr><td>Health/body data</td><td>Biological sex, age, weight, height, goal, level, progress photos</td></tr>
     <tr><td>Activity in the app</td><td>Workouts done, sets, weights, reps, logged water, records, achievements</td></tr>
     <tr><td>Technical</td><td>Push subscription (for notifications), theme and reminder preferences, language</td></tr>
-    <tr><td>Visits</td><td>A count of visits to the presentation page and to the sign-in/sign-up screen: the date, the page, the source of the visit (e.g. Google, shared link), the type of system (Android, iOS, Windows, Mac or Linux), the browser, whether it is a phone, tablet or computer, the language, the campaign in the link, the IP address and the approximate location derived from it (country, state and city). On the sign-up screen we also count at which step people stop and the kind of error (e.g. short password), without the e-mail typed. We do not record the device model or link the visit to your account.</td></tr>
+    <tr><td>Visits</td><td>A count of visits to the presentation page and to the sign-in/sign-up screen: the date, the page, the source of the visit (e.g. Google, shared link), the type of system (Android, iOS, Windows, Mac or Linux), the browser, whether it is a phone, tablet or computer, the language, the campaign in the link, the ambassador code (if the link belongs to one), the IP address and the approximate location derived from it (country, state and city). On the sign-up screen we also count at which step people stop and the kind of error (e.g. short password), without the e-mail typed. We do not record the device model or link the visit to your account.</td></tr>
     <tr><td>App usage (linked to your account)</td><td>Which screens and features you opened each day (e.g. workout mode, hydration), the steps of filling in your profile and whether you opened the app from a notification; and a snapshot of your last access: system, browser, device type, whether the app is installed, app version, language, whether notifications are allowed, the IP address and the approximate location derived from it (country, state and city). We also record the installation of the app on each device: when the install screen appeared, the answer to the install button, the installation date, the days the app was opened from its icon and when notifications stopped reaching the device (which usually means the app was uninstalled). We use this to improve the app and provide support; this data is deleted along with your account.</td></tr>
+    <tr><td>Ambassador referral</td><td>If you came to EAFIT through an ambassador's link, the link code and the channel (e.g. Instagram, WhatsApp) are kept in your browser for up to 30 days and, if you create an account in that period, it is linked to the ambassador. The ambassador only sees aggregate numbers (visits, sign-ups and how many linked accounts trained that week), never your name, email or other data. The link is deleted along with your account. If you are an ambassador, we keep your code, your referral links and the count of visits and sign-ups that came from them.</td></tr>
+    <tr><td>Error reports</td><td>When something fails in the app: the error message and technical trace, where it happened, the app version, the system, the browser and the device type, whether there was a connection, the language, the screen size and your last actions in the app (button taps, going back, connection changes), never what you typed. They are linked to your account when you are signed in and are used only to find and fix the problem; they are deleted along with your account.</td></tr>
   </table>
 
   <h2>3. Why we process this data</h2>
@@ -193,7 +205,8 @@
   <p>
     We use your email for messages about your account (sign-up confirmation, password reset, security
     notices and replies to feedback you sent), which are part of the service. We may also send a
-    weekly summary, invitations to get back to training and news about the app: you can turn these
+    weekly summary, invitations to get back to training (with an optional question about why you
+    stopped, whose answer we use to improve the app) and news about the app: you can turn these
     off at any time in Profile or through the "Stop receiving these emails" link at the bottom of
     each message.
   </p>
@@ -223,6 +236,12 @@
     only accesses their own records. Progress photos are kept in private storage, reachable only through
     a temporary signed link, never publicly.
   </p>
+  <p>
+    If you turn on the biometric lock, your fingerprint, face or screen lock is checked by the device
+    itself (WebAuthn standard). EAFIT does not receive or store any biometric data: only an identifier
+    of the key created on the device, which stays in your browser and is deleted when you sign out or
+    turn the lock off.
+  </p>
 
   <h2>6. How long we keep it</h2>
   <p>As long as your account is active. If you delete your account, the associated data is erased.</p>
@@ -245,8 +264,9 @@
   <p>
     The app uses the browser's local storage (localStorage) for preferences (theme, reminders, language),
     to work offline as a PWA, to count each visit at most once a day (it only stores the date of the
-    last visit) and a random device identifier, used only to know whether the app was installed and
-    opened from its icon on that device. We do not use third-party tracking or advertising cookies.
+    last visit), a random device identifier, used only to know whether the app was installed and
+    opened from its icon on that device, the ambassador link code (for up to 30 days, to link the
+    sign-up) and the biometric lock setting. We do not use third-party tracking or advertising cookies.
   </p>
 
   <h2>9. Minors</h2>

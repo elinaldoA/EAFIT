@@ -113,6 +113,7 @@
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div><h3>Fotos em armazenamento privado</h3><p>As fotos de progresso só abrem por link temporário assinado, nunca publicamente.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></div><h3>Sem venda de dados e sem anúncios</h3><p>Não vendemos seus dados e não usamos cookies de rastreamento de terceiros ou de publicidade.</p></div>
           <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div><h3>Exportar e excluir quando quiser</h3><p>No Perfil você baixa uma cópia de tudo ou exclui a conta, e os dados associados são apagados.</p></div>
+          <div class="card reveal"><div class="icon-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><h3>Biometria só no aparelho</h3><p>Ao travar o app com digital ou rosto, quem confere é o seu celular. A biometria nunca chega ao EAFIT.</p></div>
         </div>
       </div>
     </section>
@@ -126,6 +127,8 @@
             <li>Corpo: peso, altura, meta, nível e fotos de progresso.</li>
             <li>Atividade: treinos, séries, cargas, repetições, água registrada, recordes e conquistas.</li>
             <li>Uso do app: quais telas e funcionalidades você abriu, pra melhorar o app e dar suporte. É apagado junto com a conta.</li>
+            <li>Relatórios de erro: quando algo falha, a mensagem do erro, o aparelho e o navegador e os últimos toques no app, nunca o que você digitou. Servem só pra achar e corrigir o problema.</li>
+            <li>Embaixador: se você chegou pelo link de um embaixador, a conta fica ligada a ele. Ele vê só números, nunca quem é você.</li>
           </ul>
         </div>
       </div>
@@ -136,9 +139,9 @@
         <div class="prose reveal">
           <h2>O que este site guarda</h2>
           <ul>
-            <li>Visitas: a data, a página, a origem do acesso, o tipo de sistema e de navegador, o idioma e a localização aproximada (país, estado e cidade) a partir do IP, que é apagado em até 90 dias. A visita não é ligada à sua conta.</li>
+            <li>Visitas: a data, a página, a origem do acesso, o tipo de sistema e de navegador, o idioma e a localização aproximada (país, estado e cidade) a partir do IP, que é apagado em até 90 dias. Se o link era de um embaixador, guardamos também o código dele. A visita não é ligada à sua conta.</li>
             <li>Formulário de contato: o nome, o e-mail e a mensagem que você enviar, usados só pra responder.</li>
-            <li>No navegador: a sua escolha de idioma e de tema e a data da última visita, pra contar cada visita no máximo uma vez por dia.</li>
+            <li>No navegador: a sua escolha de idioma e de tema, a data da última visita, pra contar cada visita no máximo uma vez por dia, e o código do link de embaixador por 30 dias, pra o cadastro contar pra ele.</li>
           </ul>
         </div>
       </div>
@@ -151,7 +154,8 @@
           <ul>
             <li>Seu personal, só depois que você digita o código dele e autoriza: treinos, peso, medidas, check-ins e desconfortos. As fotos ficam privadas, a menos que você ligue o compartilhamento. Você encerra o vínculo quando quiser.</li>
             <li>Amigos e participantes de desafios veem só o seu apelido e a sua atividade ou pontuação, e você pode desligar o compartilhamento.</li>
-            <li>Prestadores que fazem o app funcionar: Supabase (banco de dados, login e arquivos), Google (envio de e-mails), o serviço de notificações do seu navegador e GitHub Pages (hospedagem).</li>
+            <li>O embaixador cujo link você usou vê só números: visitas, cadastros e quantas contas treinaram na semana. Nunca o seu nome, e-mail ou treinos.</li>
+            <li>Prestadores que fazem o app funcionar: Supabase (banco de dados, login e arquivos), Google (envio de e-mails), o serviço de notificações do seu navegador, GitHub Pages (hospedagem) e IPinfo (localização aproximada a partir do IP).</li>
           </ul>
         </div>
       </div>
@@ -205,6 +209,7 @@
           <h2>EAFIT</h2>
           <ul>
             <li><a href="/sobre/">Sobre</a></li>
+            <li><a href="/sobre/#embaixadores">Embaixadores</a></li>
             <li><a href="/seguranca/">Segurança e privacidade</a></li>
             <li><a href="/app/legal/termos.html">Termos de Uso</a></li>
             <li><a href="/app/legal/privacidade.html">Privacidade</a></li>

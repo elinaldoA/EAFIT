@@ -664,6 +664,9 @@ footer { border-top: 1px solid var(--border); padding: 36px 0 calc(36px + env(sa
 .measure-demo li { display: flex; justify-content: space-between; gap: 8px; color: var(--text-muted); }
 .measure-demo b { color: var(--success); }
 .measure-demo b.up { color: var(--primary-ink); }
+.voice-demo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; line-height: 1.4; }
+.voice-demo li { align-self: flex-start; max-width: 92%; padding: 9px 12px; border-radius: 14px 14px 14px 4px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+.voice-demo li.pr { border-color: var(--primary); background: var(--primary-glow); font-weight: 600; }
 
 /* telas novas do celular: check-in, troca, retrospectiva, desafios */
 .m-ck { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }

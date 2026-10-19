@@ -41,6 +41,8 @@ const ICON_OPTIONS = [
   { value: 'bell', label: 'Sino (avisos)' },
   { value: 'globe', label: 'Globo (idiomas)' },
   { value: 'repeat', label: 'Troca (exercício)' },
+  { value: 'mic', label: 'Microfone (treinador por voz)' },
+  { value: 'lock', label: 'Cadeado (segurança)' },
 ];
 
 function moveItem(list, from, to) {

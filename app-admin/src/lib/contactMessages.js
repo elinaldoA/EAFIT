@@ -12,6 +12,7 @@ export const TOPIC_LABELS = {
   duvida: '❓ Dúvida',
   suporte: '🛠️ Suporte',
   personal: '🧑‍🏫 Modo Personal',
+  embaixador: '📣 Embaixador',
   sugestao: '💡 Sugestão',
   outro: '✉️ Outro',
 };
