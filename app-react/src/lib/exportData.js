@@ -101,7 +101,7 @@ export async function gatherUserData(userId) {
     safe('friendProfile', fetchMyFriendProfile, null),
     safe('friends', fetchMyFriends, []),
     safe('feedback', () => fetchMyFeedback(userId), []),
-    safe('notifications', () => fetchInbox(1000), []),
+    safe('notifications', () => fetchInbox(1000, { unreadOnly: false }), []),
     safe('trainer', fetchMyTrainer, null),
     safe('trainerGoals', fetchMyGoals, null),
     safe('trainerMessages', () => fetchMyThread(1000), []),

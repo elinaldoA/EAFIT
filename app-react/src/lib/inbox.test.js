@@ -1,7 +1,25 @@
 import { describe, it, expect, vi } from 'vitest';
-import { timeAgo, inboxTarget } from './inbox';
+import { timeAgo, inboxTarget, fetchInbox } from './inbox';
 
-vi.mock('./supabase', () => ({ db: {} }));
+const q = vi.hoisted(() => {
+  const query = { calls: [] };
+  for (const m of ['select', 'is', 'order', 'limit']) {
+    query[m] = (...args) => { query.calls.push([m, ...args]); return m === 'limit' ? Promise.resolve({ data: [], error: null }) : query; };
+  }
+  return query;
+});
+vi.mock('./supabase', () => ({ db: { from: () => q } }));
+
+describe('fetchInbox', () => {
+  it('o sino busca só os não lidos; a exportação busca todos', async () => {
+    q.calls = [];
+    await fetchInbox(30);
+    expect(q.calls).toContainEqual(['is', 'read_at', null]);
+    q.calls = [];
+    await fetchInbox(1000, { unreadOnly: false });
+    expect(q.calls.some(c => c[0] === 'is')).toBe(false);
+  });
+});
 
 describe('timeAgo', () => {
   const now = new Date('2026-10-10T12:00:00Z').getTime();

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
@@ -75,8 +75,8 @@ function InboxModal({ items, hasMore, onMore, onClose, onReadOne, onReadAll, onG
 // Sino na barra superior: avisos que o admin enviou e notificações
 // automáticas, para reler mesmo sem push, e o liga/desliga dos lembretes (o
 // sino fica cortado quando estão desligados). Abrir não marca nada como lido:
-// o aluno marca um aviso ou todos. Falha ao carregar (offline, migration
-// pendente) conta como "sem avisos", sem barulho.
+// o aluno marca um aviso ou todos, e o que foi lido sai da lista. Falha ao
+// carregar (offline, migration pendente) conta como "sem avisos", sem barulho.
 export default function InboxBell() {
   const { user } = useAuth();
   const toast = useToast();
@@ -85,10 +85,17 @@ export default function InboxBell() {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const [limit, setLimit] = useState(INBOX_PAGE);
+  // Marcados como lidos cuja confirmação ainda não voltou: uma atualização que
+  // chegue nesse meio-tempo não os traz de volta.
+  const readingRef = useRef(new Set());
 
   const refresh = useCallback(() => {
     if (!userId) return;
-    fetchInbox(limit).then(rows => setItems(rows.map(r => ({ ...r, unread: !r.read_at })))).catch(() => {});
+    fetchInbox(limit)
+      .then(rows => setItems(rows
+        .filter(r => !r.read_at && !readingRef.current.has(r.id))
+        .map(r => ({ ...r, unread: true }))))
+      .catch(() => {});
   }, [userId, limit]);
 
   useEffect(() => {
@@ -101,15 +108,20 @@ export default function InboxBell() {
 
   const unread = items.filter(i => i.unread).length;
 
-  // O destaque some na hora; se o servidor recusar, volta como estava.
+  // O aviso sai da lista na hora; se o servidor recusar, volta pro lugar.
   async function markRead(ids, request) {
-    setItems(list => list.map(i => (ids.includes(i.id) ? { ...i, unread: false } : i)));
+    const removed = items.filter(i => ids.includes(i.id));
+    ids.forEach(id => readingRef.current.add(id));
+    setItems(list => list.filter(i => !ids.includes(i.id)));
     try {
       await request();
     } catch (err) {
       console.error('markInboxRead:', err);
-      setItems(list => list.map(i => (ids.includes(i.id) ? { ...i, unread: true } : i)));
+      setItems(list => [...list.filter(i => !ids.includes(i.id)), ...removed]
+        .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))));
       toast(t('⚠️ Não foi possível marcar como lido. Tente de novo.'));
+    } finally {
+      ids.forEach(id => readingRef.current.delete(id));
     }
   }
 

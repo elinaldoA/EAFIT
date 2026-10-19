@@ -4,12 +4,15 @@ import { locale, t } from './i18n';
 import { FEEDBACK_REPLY_TITLE, NAV_TARGETS, kindTargetKey } from './pushTarget';
 // Central de avisos: o que o admin enviou e as notificações automáticas, para
 // reler dentro do app mesmo sem push (tabela user_notifications, só leitura
-// para o aluno; marcar como lido é pela RPC).
+// para o aluno; marcar como lido é pela RPC). O sino mostra só os não lidos:
+// marcou como lido, sai da lista. A exportação de dados pede todos.
 export const INBOX_PAGE = 30;
 
-export async function fetchInbox(limit = INBOX_PAGE) {
-  const { data, error } = await db.from('user_notifications')
-    .select('id, kind, title, body, created_at, read_at')
+export async function fetchInbox(limit = INBOX_PAGE, { unreadOnly = true } = {}) {
+  let query = db.from('user_notifications')
+    .select('id, kind, title, body, created_at, read_at');
+  if (unreadOnly) query = query.is('read_at', null);
+  const { data, error } = await query
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;

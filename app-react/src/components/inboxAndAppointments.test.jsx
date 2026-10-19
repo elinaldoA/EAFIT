@@ -94,14 +94,21 @@ describe('InboxBell', () => {
     expect(document.querySelector('.inbox-bell__badge').textContent).toBe('2');
   });
 
-  it('marca um aviso como lido e o contador desce', async () => {
+  it('aviso já lido não aparece na lista', async () => {
+    await openWith([item(1), item(3, { read_at: 'x' })]);
+    expect(screen.getByText('Aviso 1')).toBeTruthy();
+    expect(screen.queryByText('Aviso 3')).toBeNull();
+  });
+
+  it('marcar um aviso como lido tira ele da lista e o contador desce', async () => {
     await openWith([item(1), item(2), item(3, { read_at: 'x' })]);
     const buttons = screen.getAllByRole('button', { name: 'Marcar como lido' });
     expect(buttons).toHaveLength(2);
     fireEvent.click(buttons[1]);
     await flush();
     expect(h.api.markInboxItemRead).toHaveBeenCalledWith(2);
-    expect(document.querySelectorAll('.inbox__item--unread')).toHaveLength(1);
+    expect(screen.queryByText('Aviso 2')).toBeNull();
+    expect(document.querySelectorAll('.inbox__item')).toHaveLength(1);
     expect(document.querySelector('.inbox-bell__badge').textContent).toBe('1');
   });
 
@@ -110,7 +117,8 @@ describe('InboxBell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Marcar todos como lidos' }));
     await flush();
     expect(h.api.markInboxRead).toHaveBeenCalledTimes(1);
-    expect(document.querySelectorAll('.inbox__item--unread')).toHaveLength(0);
+    expect(document.querySelectorAll('.inbox__item')).toHaveLength(0);
+    expect(screen.getByText('Nenhum aviso por enquanto.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Marcar todos como lidos' })).toBeNull();
     expect(document.querySelector('.inbox-bell__badge')).toBeNull();
   });
@@ -131,11 +139,12 @@ describe('InboxBell', () => {
     await waitFor(() => expect(h.api.fetchInbox).toHaveBeenLastCalledWith(60));
   });
 
-  it('falha ao marcar devolve o destaque e avisa', async () => {
+  it('falha ao marcar devolve o aviso à lista e avisa', async () => {
     h.api.markInboxItemRead.mockRejectedValue(new Error('offline'));
     await openWith([item(1)]);
     fireEvent.click(screen.getByRole('button', { name: 'Marcar como lido' }));
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Não foi possível marcar como lido. Tente de novo.'));
+    expect(screen.getByText('Aviso 1')).toBeTruthy();
     expect(document.querySelectorAll('.inbox__item--unread')).toHaveLength(1);
   });
 
