@@ -906,10 +906,8 @@ textarea.input { resize: vertical; min-height: 120px; }
   background: none; border: 0; color: var(--text-muted); font-size: 22px; line-height: 1;
   padding: 4px 6px; cursor: pointer;
 }
-/* no celular o "Abrir app" do cabeçalho já fica logo abaixo */
 @media (max-width: 640px) {
   .season-bar { font-size: 13px; }
-  .season-bar__inner .btn { display: none; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .season-bar__emoji { animation: season-wobble 3.2s ease-in-out infinite; }
@@ -1086,7 +1084,9 @@ textarea.input { resize: vertical; min-height: 120px; }
    Fundo escuro puxado pra cor da campanha e a cor do laço como principal;
    mais discretas que o Dia das Bruxas: laço no topo e bolhas subindo. Cada
    tema só define os tokens (os blocos claros de cada um têm que ficar iguais);
-   as regras depois valem para os dois. */
+   as regras depois valem para os dois. A cor principal leva !important pra
+   passar por cima da cor que o admin define no <html> (applyPrimaryColor em
+   site.js) enquanto a campanha estiver no ar. */
 :root[data-season="outubro_rosa"] {
   --bg:           #160b13;
   --bg-2:         #1b0e18;
@@ -1098,10 +1098,10 @@ textarea.input { resize: vertical; min-height: 120px; }
   --text:         #f9ebf2;
   --text-muted:   #cfb0c1;
   --text-dim:     #ad8c9e;   /* >= 4.5:1 sobre --bg e --surface */
-  --primary:      #ec4899;
-  --primary-h:    #f472b6;
-  --primary-glow: rgba(236, 72, 153, .18);
-  --primary-ink:  #f472b6;
+  --primary:      #ec4899 !important;
+  --primary-h:    #f472b6 !important;
+  --primary-glow: rgba(236, 72, 153, .18) !important;
+  --primary-ink:  #f472b6 !important;
   --nav-bg:       rgba(22, 11, 19, .8);
   --phone-frame:  #2a1824;
   --season-accent: #f9a8d4;
@@ -1121,8 +1121,8 @@ textarea.input { resize: vertical; min-height: 120px; }
     --text:         #2a0f1f;
     --text-muted:   #6b4258;
     --text-dim:     #865a71;
-    --primary-glow: rgba(236, 72, 153, .14);
-    --primary-ink:  #be185d;
+    --primary-glow: rgba(236, 72, 153, .14) !important;
+    --primary-ink:  #be185d !important;
     --nav-bg:       rgba(253, 244, 248, .84);
     --phone-frame:  #2a0f1f;
     --season-accent: #be185d;
@@ -1140,8 +1140,8 @@ textarea.input { resize: vertical; min-height: 120px; }
   --text:         #2a0f1f;
   --text-muted:   #6b4258;
   --text-dim:     #865a71;
-  --primary-glow: rgba(236, 72, 153, .14);
-  --primary-ink:  #be185d;
+  --primary-glow: rgba(236, 72, 153, .14) !important;
+  --primary-ink:  #be185d !important;
   --nav-bg:       rgba(253, 244, 248, .84);
   --phone-frame:  #2a0f1f;
   --season-accent: #be185d;
@@ -1158,10 +1158,10 @@ textarea.input { resize: vertical; min-height: 120px; }
   --text:         #e8eef9;
   --text-muted:   #a7b5cf;
   --text-dim:     #8696b3;   /* >= 4.5:1 sobre --bg e --surface */
-  --primary:      #3b82f6;
-  --primary-h:    #60a5fa;
-  --primary-glow: rgba(59, 130, 246, .18);
-  --primary-ink:  #60a5fa;
+  --primary:      #3b82f6 !important;
+  --primary-h:    #60a5fa !important;
+  --primary-glow: rgba(59, 130, 246, .18) !important;
+  --primary-ink:  #60a5fa !important;
   --nav-bg:       rgba(10, 17, 32, .8);
   --phone-frame:  #1a2540;
   --season-accent: #93c5fd;
@@ -1181,8 +1181,8 @@ textarea.input { resize: vertical; min-height: 120px; }
     --text:         #0f1a2e;
     --text-muted:   #44546f;
     --text-dim:     #5d6d89;
-    --primary-glow: rgba(59, 130, 246, .14);
-    --primary-ink:  #1d4ed8;
+    --primary-glow: rgba(59, 130, 246, .14) !important;
+    --primary-ink:  #1d4ed8 !important;
     --nav-bg:       rgba(243, 246, 252, .84);
     --phone-frame:  #0f1a2e;
     --season-accent: #1d4ed8;
@@ -1200,8 +1200,8 @@ textarea.input { resize: vertical; min-height: 120px; }
   --text:         #0f1a2e;
   --text-muted:   #44546f;
   --text-dim:     #5d6d89;
-  --primary-glow: rgba(59, 130, 246, .14);
-  --primary-ink:  #1d4ed8;
+  --primary-glow: rgba(59, 130, 246, .14) !important;
+  --primary-ink:  #1d4ed8 !important;
   --nav-bg:       rgba(243, 246, 252, .84);
   --phone-frame:  #0f1a2e;
   --season-accent: #1d4ed8;

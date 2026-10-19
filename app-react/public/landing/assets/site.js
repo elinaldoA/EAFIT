@@ -747,7 +747,6 @@
       + '<span class="season-bar__emoji" aria-hidden="true">' + SEASONS[theme].emoji + '</span>'
       + '<p><strong>' + SEASONS[theme].title + '</strong> '
       + '<span>' + SEASONS[theme].text + '</span></p>'
-      + '<a class="btn btn-primary btn-sm" href="/app/">Abrir o app</a>'
       + '<button type="button" class="season-bar__close" aria-label="Fechar aviso">×</button>'
       + '</div>';
     bar.querySelector('button').addEventListener('click', function () {
