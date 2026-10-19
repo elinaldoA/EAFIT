@@ -14,14 +14,20 @@ export const BADGE_LABELS = {
   photo_first: '📸 Primeira foto de progresso',
   weight_10: '⚖️ 10 registros de peso',
   halloween_2026: '🎃 Treino das Bruxas 2026',
+  novembro_azul_2026: '💙 Novembro Azul 2026',
+  outubro_rosa_2026: '💗 Outubro Rosa 2026',
 };
 
-// Conquistas de temporada têm uma por ano (halloween_<ano>, ver
+// Conquistas de temporada têm uma por ano (outubro_rosa_<ano>, halloween_<ano>, novembro_azul_<ano>, ver
 // app-react/src/lib/achievements.js): anos sem rótulo acima saem pelo padrão.
 export function badgeLabel(id, labels = BADGE_LABELS) {
   if (labels[id]) return labels[id];
   const halloween = /^halloween_(\d{4})$/.exec(id || '');
-  return halloween ? `🎃 Treino das Bruxas ${halloween[1]}` : id;
+  if (halloween) return `🎃 Treino das Bruxas ${halloween[1]}`;
+  const rosa = /^outubro_rosa_(\d{4})$/.exec(id || '');
+  if (rosa) return `💗 Outubro Rosa ${rosa[1]}`;
+  const azul = /^novembro_azul_(\d{4})$/.exec(id || '');
+  return azul ? `💙 Novembro Azul ${azul[1]}` : id;
 }
 
 export const SEVERITY_BADGE = { leve: 'badge--ok', moderada: 'badge--warning', forte: 'badge--danger', lesao: 'badge--danger' };

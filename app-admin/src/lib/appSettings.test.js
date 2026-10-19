@@ -65,19 +65,45 @@ describe('nextBannerVersion', () => {
 });
 
 describe('tema de temporada', () => {
-  it('normaliza a chave season e valida o período', async () => {
+  const P = (theme, startsOn, endsOn) => ({ theme, startsOn, endsOn });
+
+  it('normaliza a chave season (lista de períodos ou formato antigo) e valida o período', async () => {
     const { isValidSeasonWindow } = await import('./appSettings');
-    const s = normalizeSettings([{ key: 'season', value: { enabled: true, theme: 'natal', startsOn: '2026-10-24', endsOn: 'x' } }]).season;
-    expect(s).toEqual({ enabled: true, theme: 'halloween', startsOn: '2026-10-24', endsOn: '' });
-    expect(isValidSeasonWindow(s)).toBe(false);
+    const old = normalizeSettings([{ key: 'season', value: { enabled: true, theme: 'halloween', startsOn: '2026-10-24', endsOn: 'x' } }]).season;
+    expect(old).toEqual({ enabled: true, periods: [P('halloween', '2026-10-24', '')] });
+    expect(isValidSeasonWindow(old.periods[0])).toBe(false);
+    const list = normalizeSettings([{ key: 'season', value: { enabled: true, periods: [P('natal', '2026-12-01', '2026-12-26'), P('outubro_rosa', '2026-10-19', '2026-10-23')] } }]).season;
+    expect(list).toEqual({ enabled: true, periods: [P('outubro_rosa', '2026-10-19', '2026-10-23')] });
+    expect(normalizeSettings([]).season).toEqual({ enabled: false, periods: [] });
     expect(isValidSeasonWindow({ startsOn: '2026-10-24', endsOn: '2026-11-02' })).toBe(true);
     expect(isValidSeasonWindow({ startsOn: '2026-11-02', endsOn: '2026-10-24' })).toBe(false);
+  });
+
+  it('agenda: exige período, datas e nada sobreposto', async () => {
+    const { seasonScheduleError, seasonStatus, sortPeriods } = await import('./appSettings');
+    const rosa = P('outubro_rosa', '2026-10-19', '2026-10-23');
+    const bruxas = P('halloween', '2026-10-24', '2026-11-02');
+    const azul = P('novembro_azul', '2026-11-03', '2026-11-30');
+    expect(seasonScheduleError({ enabled: false, periods: [] })).toBe('');
+    expect(seasonScheduleError({ enabled: true, periods: [] })).toMatch(/pelo menos um/);
+    expect(seasonScheduleError({ enabled: true, periods: [P('halloween', '2026-10-24', '')] })).toMatch(/duas datas/);
+    expect(seasonScheduleError({ enabled: true, periods: [azul, rosa, bruxas] })).toBe('');
+    expect(seasonScheduleError({ enabled: true, periods: [rosa, { ...bruxas, startsOn: '2026-10-23' }] })).toMatch(/Outubro Rosa e .*Dia das Bruxas se sobrepõem/);
+    expect(sortPeriods([azul, rosa, bruxas])).toEqual([rosa, bruxas, azul]);
+
+    const agenda = { enabled: true, periods: [rosa, bruxas, azul] };
+    expect(seasonStatus({ ...agenda, enabled: false }, '2026-10-20')).toEqual({ key: 'desligado' });
+    expect(seasonStatus(agenda, '2026-10-18')).toEqual({ key: 'agendado' });
+    expect(seasonStatus(agenda, '2026-10-30')).toEqual({ key: 'no_ar', theme: 'halloween' });
+    expect(seasonStatus(agenda, '2026-12-01')).toEqual({ key: 'encerrado' });
   });
 
   it('rotula a conquista de temporada de qualquer ano', async () => {
     const { badgeLabel } = await import('./userDetailHelpers');
     expect(badgeLabel('halloween_2026')).toBe('🎃 Treino das Bruxas 2026');
     expect(badgeLabel('halloween_2031')).toBe('🎃 Treino das Bruxas 2031');
+    expect(badgeLabel('novembro_azul_2027')).toBe('💙 Novembro Azul 2027');
+    expect(badgeLabel('outubro_rosa_2027')).toBe('💗 Outubro Rosa 2027');
     expect(badgeLabel('streak_3')).toBe('🔥 Sequência de 3 dias');
     expect(badgeLabel('desconhecida')).toBe('desconhecida');
   });

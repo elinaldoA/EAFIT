@@ -31,6 +31,8 @@ import ProfileAccountSection from '../components/ProfileAccountSection';
 import ProfileBiometricSection from '../components/ProfileBiometricSection';
 import ProfileSeasonSection from '../components/ProfileSeasonSection';
 import { useSeason } from '../hooks/useSeason';
+import { SEASONS } from '../lib/season';
+import { SEASON_DECOR_TITLE } from '../lib/seasonLabels';
 import { isBiometricAvailable, getLock } from '../lib/biometricLock';
 import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
@@ -330,8 +332,8 @@ export default function PerfilPage({ active }) {
 
       <div className="section-group">
         <div className="section-group__label">{t('Preferências')}</div>
-        {season.available === 'halloween' && (
-          <CollapsibleCard icon="🎃" title={t('Decoração do Dia das Bruxas')} summary={season.off ? t('Desativado') : t('Ativado')}>
+        {SEASON_DECOR_TITLE[season.available] && (
+          <CollapsibleCard icon={SEASONS[season.available].emoji} title={SEASON_DECOR_TITLE[season.available]()} summary={season.off ? t('Desativado') : t('Ativado')}>
             <ProfileSeasonSection theme={season.available} off={season.off} />
           </CollapsibleCard>
         )}

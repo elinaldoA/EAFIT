@@ -10,7 +10,7 @@ export const DEFAULT_CONFIG = {
   flags: {},
   moved: { enabled: false, url: '' },
   // Tema de temporada (lib/season.js). Literal aqui: season.js importa deste arquivo.
-  season: { enabled: false, theme: '', startsOn: '', endsOn: '' },
+  season: { enabled: false, periods: [] },
 };
 
 const BANNER_LEVELS = ['info', 'warning', 'success'];

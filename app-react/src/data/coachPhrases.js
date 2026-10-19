@@ -477,4 +477,57 @@ export const SEASON_PHRASES = {
       finish: ['Treino das Bruxas concluído. Bom trabalho hoje.'],
     },
   },
+  // Campanhas de saúde: incentivo e lembrete de cuidado, sem piada com doença.
+  outubro_rosa: {
+    animado: {
+      start: [
+        '{saudacao}! Outubro Rosa e treino de {foco}. Cuidar de você começa aqui!',
+        'Bora, {nome}! {foco} hoje. Treino em dia é saúde em dia.',
+      ],
+      restDone: ['Tempo! Corpo ativo é corpo cuidado, volta pra série!'],
+      pr: ['Recorde rosa! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Mais um pela sua saúde neste Outubro Rosa.'],
+    },
+    zoeira: {
+      start: [
+        '{saudacao}! Outubro Rosa e treino de {foco}. Hoje o laço é rosa e a carga é séria.',
+        'Outubro Rosa, {nome}! Hoje é {foco}, e o check-up dos músculos é agora.',
+      ],
+      restDone: ['Acabou o descanso. O único exame que dá pra adiar é o do sofá.', 'Bora! Saúde não tira folga, e você também não.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, isso é que é se cuidar!'],
+      finish: ['Treino fechado! E não esquece: exame de rotina também é treino.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Outubro Rosa, treino de {foco}. Cuidar de si é constância.'],
+      restDone: ['Descanso concluído. Vamos para a próxima, no seu ritmo.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Bom sinal de saúde.'],
+      finish: ['Treino concluído. Neste Outubro Rosa, lembre também dos exames de rotina.'],
+    },
+  },
+  novembro_azul: {
+    animado: {
+      start: [
+        '{saudacao}! Novembro Azul e treino de {foco}. Cuidar da saúde começa aqui!',
+        'Bora, {nome}! {foco} hoje. Treino em dia é saúde em dia.',
+      ],
+      restDone: ['Tempo! Corpo ativo é corpo cuidado, volta pra série!'],
+      pr: ['Recorde azul! {carga} quilos em {exercicio}!'],
+      finish: ['Treino concluído! Mais um pela sua saúde neste Novembro Azul.'],
+    },
+    zoeira: {
+      start: [
+        '{saudacao}! Novembro Azul e treino de {foco}. Bigode opcional, série obrigatória.',
+        'Novembro Azul, {nome}! Hoje é {foco}, e o check-up dos músculos é agora.',
+      ],
+      restDone: ['Acabou o descanso. O único exame que dá pra adiar é o do sofá.', 'Bora! Saúde não tira folga, e você também não.'],
+      pr: ['Recorde! {carga} quilos em {exercicio}, até o bigode arrepiou!'],
+      finish: ['Treino fechado! E não esquece: exame de rotina também é treino.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Novembro Azul, treino de {foco}. Cuidar de si é constância.'],
+      restDone: ['Descanso concluído. Vamos para a próxima, no seu ritmo.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Bom sinal de saúde.'],
+      finish: ['Treino concluído. Neste Novembro Azul, lembre também dos exames de rotina.'],
+    },
+  },
 };

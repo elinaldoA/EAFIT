@@ -1,5 +1,9 @@
 import { db } from './supabase';
-import { FIRST_HALLOWEEN_YEAR, earnedHalloween, seasonToday } from './season';
+import {
+  FIRST_HALLOWEEN_YEAR, FIRST_NOVEMBRO_AZUL_YEAR, FIRST_OUTUBRO_ROSA_YEAR, earnedHalloween, earnedNovembroAzul, earnedOutubroRosa,
+  novembroAzulWindow, outubroRosaWindow, seasonToday,
+} from './season';
+import { seasonDay } from './seasonLabels';
 
 import { t } from './i18n';
 export const BADGES = [
@@ -29,9 +33,38 @@ function halloweenBadge(year) {
   };
 }
 
+function outubroRosaBadge(year) {
+  const w = outubroRosaWindow(year);
+  return {
+    id: `outubro_rosa_${year}`, emoji: '💗', season: 'outubro_rosa', year,
+    title: t('Outubro Rosa {ano}', { ano: year }),
+    desc: t('Faça {meta} treinos entre {de} e {ate}', { meta: w.goal, de: seasonDay(w.from), ate: seasonDay(w.to) }),
+    check: s => earnedOutubroRosa(s.completedDates, year),
+  };
+}
+
+function novembroAzulBadge(year) {
+  return {
+    id: `novembro_azul_${year}`, emoji: '💙', season: 'novembro_azul', year,
+    title: t('Novembro Azul {ano}', { ano: year }),
+    desc: t('Faça {meta} treinos em novembro', { meta: novembroAzulWindow(year).goal }),
+    check: s => earnedNovembroAzul(s.completedDates, year),
+  };
+}
+
+// Na ordem do calendário: Outubro Rosa, Dia das Bruxas, Novembro Azul.
+const SEASONAL = [
+  [FIRST_OUTUBRO_ROSA_YEAR, outubroRosaBadge],
+  [FIRST_HALLOWEEN_YEAR, halloweenBadge],
+  [FIRST_NOVEMBRO_AZUL_YEAR, novembroAzulBadge],
+];
+
 export function seasonalBadges(today = seasonToday()) {
   const list = [];
-  for (let y = FIRST_HALLOWEEN_YEAR; y <= Number(today.slice(0, 4)); y++) list.push(halloweenBadge(y));
+  const last = Number(today.slice(0, 4));
+  for (let y = Math.min(...SEASONAL.map(([first]) => first)); y <= last; y++) {
+    for (const [first, badge] of SEASONAL) if (y >= first) list.push(badge(y));
+  }
   return list;
 }
 

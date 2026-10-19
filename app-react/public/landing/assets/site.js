@@ -713,9 +713,24 @@
     .catch(function () { /* mantém o conteúdo estático padrão acima */ });
 
   // Tema de temporada (ex.: Dia das Bruxas): mesma chave "season" de
-  // public.app_settings que o app lê (app-react/src/lib/season.js). Só liga
-  // entre as duas datas, no fuso do app; fora delas o site fica como sempre.
-  var SEASONS = { halloween: true };
+  // public.app_settings que o app lê (app-react/src/lib/season.js), com a
+  // lista de períodos agendados. Liga o tema do período de hoje, no fuso do
+  // app; fora dos períodos o site fica como sempre.
+  // Faixa de cada tema: emoji, título e texto (traduzidos em i18n-en.js).
+  var SEASONS = {
+    outubro_rosa: {
+      emoji: '💗', title: 'Outubro Rosa no EAFIT!',
+      text: 'Mês de conscientização sobre o câncer de mama. Treine durante a campanha e ganhe a conquista Outubro Rosa no app.',
+    },
+    halloween: {
+      emoji: '🎃', title: 'Semana do Dia das Bruxas no EAFIT!',
+      text: 'Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.',
+    },
+    novembro_azul: {
+      emoji: '💙', title: 'Novembro Azul no EAFIT!',
+      text: 'Mês de cuidar da saúde do homem. Faça 12 treinos em novembro e ganhe a conquista Novembro Azul no app.',
+    },
+  };
   var SEASON_BANNER_KEY = 'eafit_season_banner_site';
   function seasonToday() {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
@@ -729,9 +744,9 @@
     bar.className = 'season-bar';
     bar.setAttribute('role', 'status');
     bar.innerHTML = '<div class="wrap season-bar__inner">'
-      + '<span class="season-bar__emoji" aria-hidden="true">🎃</span>'
-      + '<p><strong>Semana do Dia das Bruxas no EAFIT!</strong> '
-      + '<span>Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.</span></p>'
+      + '<span class="season-bar__emoji" aria-hidden="true">' + SEASONS[theme].emoji + '</span>'
+      + '<p><strong>' + SEASONS[theme].title + '</strong> '
+      + '<span>' + SEASONS[theme].text + '</span></p>'
       + '<a class="btn btn-primary btn-sm" href="/app/">Abrir o app</a>'
       + '<button type="button" class="season-bar__close" aria-label="Fechar aviso">×</button>'
       + '</div>';
@@ -741,34 +756,52 @@
     });
     nav.parentNode.insertBefore(bar, nav);
   }
-  // Morcegos, aranha e névoa por cima da página (assets/site.css), sem toque e
-  // escondidos do leitor de tela; e a barra do navegador no roxo do fundo.
-  function showSeasonFx() {
+  // Efeitos por cima da página (assets/site.css), sem toque e escondidos do
+  // leitor de tela: morcegos, aranha e névoa no Dia das Bruxas; bolhas azuis
+  // no Novembro Azul. E a barra do navegador e o favicon do tema.
+  var SEASON_FX = {
+    halloween: '<span class="season-bat"></span><span class="season-bat"></span><span class="season-bat"></span>'
+      + '<span class="season-spider"></span><span class="season-fog"></span>',
+    outubro_rosa: new Array(7).join('<span class="season-bubble"></span>'),
+    novembro_azul: new Array(7).join('<span class="season-bubble"></span>'),
+  };
+  var SEASON_BAR_COLOR = {
+    outubro_rosa: ['#fdf4f8', '#160b13'], halloween: ['#faf6fd', '#110b18'], novembro_azul: ['#f3f6fc', '#0a1120'],
+  };
+  function showSeasonFx(theme) {
     var fx = document.createElement('div');
     fx.className = 'season-fx';
     fx.setAttribute('aria-hidden', 'true');
-    fx.innerHTML = '<span class="season-bat"></span><span class="season-bat"></span><span class="season-bat"></span>'
-      + '<span class="season-spider"></span><span class="season-fog"></span>';
+    fx.innerHTML = SEASON_FX[theme];
     document.body.appendChild(fx);
     document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
-      m.setAttribute('content', /light/.test(m.getAttribute('media') || '') ? '#faf6fd' : '#110b18');
+      m.setAttribute('content', SEASON_BAR_COLOR[theme][/light/.test(m.getAttribute('media') || '') ? 0 : 1]);
     });
-    // Abóbora na aba do navegador (mesmo desenho de app-react/src/lib/season.js)
+    // Mesmos desenhos de app-react/src/lib/season.js
     var icon = document.querySelector('link[rel="icon"]');
-    if (icon) icon.setAttribute('href', HALLOWEEN_FAVICON);
-    swapSeasonEmojis(document.body);
+    if (icon) icon.setAttribute('href', SEASON_FAVICON[theme]);
+    swapSeasonEmojis(document.body, theme);
   }
-  var HALLOWEEN_FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 16c1-6 5-9 9-9' stroke='%2316a34a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='20' cy='38' rx='14' ry='20' fill='%23ea580c'/%3E%3Cellipse cx='44' cy='38' rx='14' ry='20' fill='%23ea580c'/%3E%3Cellipse cx='32' cy='38' rx='14' ry='21' fill='%23f97316'/%3E%3Cpath d='M17 29l9 6-10 2zM47 29l-9 6 10 2z' fill='%23fde047'/%3E%3Cpath d='M18 45q14 9 28 0l-4 5-4-3-4 4-4-4-4 3z' fill='%23fde047'/%3E%3C/svg%3E";
+  var SEASON_FAVICON = {
+    outubro_rosa: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' fill='none' stroke='%23db2777' stroke-width='9' stroke-linejoin='round'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' fill='none' stroke='%23f9a8d4' stroke-width='9'/%3E%3C/svg%3E",
+    halloween: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 16c1-6 5-9 9-9' stroke='%2316a34a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='20' cy='38' rx='14' ry='20' fill='%23ea580c'/%3E%3Cellipse cx='44' cy='38' rx='14' ry='20' fill='%23ea580c'/%3E%3Cellipse cx='32' cy='38' rx='14' ry='21' fill='%23f97316'/%3E%3Cpath d='M17 29l9 6-10 2zM47 29l-9 6 10 2z' fill='%23fde047'/%3E%3Cpath d='M18 45q14 9 28 0l-4 5-4-3-4 4-4-4-4 3z' fill='%23fde047'/%3E%3C/svg%3E",
+    novembro_azul: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' fill='none' stroke='%232563eb' stroke-width='9' stroke-linejoin='round'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' fill='none' stroke='%2360a5fa' stroke-width='9'/%3E%3C/svg%3E",
+  };
   // Emojis de enfeite trocados nos textos da página, os mesmos do app
   // (seasonText em app-react/src/lib/season.js); avisos, status e carinhas de
   // humor ficam, e emoji dentro de sequência (🧑‍🏫) ou com tom de pele também.
-  var HALLOWEEN_EMOJI = { '🔥': '🎃', '🎉': '👻', '💪': '🦇', '🎯': '🔮', '🚀': '🧹', '💡': '🕯️' };
-  var HALLOWEEN_RE = /(\u200D)?(🔥|🎉|💪|🎯|🚀|💡)([\u{1F3FB}-\u{1F3FF}]|\uFE0F?\u200D)?/gu;
-  function swapSeasonEmojis(root) {
+  var SEASON_EMOJI = {
+    outubro_rosa: { '🔥': '💗', '🎉': '💗' },
+    halloween: { '🔥': '🎃', '🎉': '👻', '💪': '🦇', '🎯': '🔮', '🚀': '🧹', '💡': '🕯️' },
+    novembro_azul: { '🔥': '💙', '🎉': '💙' },
+  };
+  function swapSeasonEmojis(root, theme) {
+    var map = SEASON_EMOJI[theme];
+    var re = new RegExp('(\\u200D)?(' + Object.keys(map).join('|') + ')([\\u{1F3FB}-\\u{1F3FF}]|\\uFE0F?\\u200D)?', 'gu');
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     var node;
     while ((node = walker.nextNode())) {
-      var next = node.nodeValue.replace(HALLOWEEN_RE, function (m, zwj, emoji, tail) { return zwj || tail ? m : HALLOWEEN_EMOJI[emoji]; });
+      var next = node.nodeValue.replace(re, function (m, zwj, emoji, tail) { return zwj || tail ? m : map[emoji]; });
       if (next !== node.nodeValue) node.nodeValue = next;
     }
   }
@@ -778,14 +811,19 @@
     .then(function (r) { return r.ok ? r.json() : []; })
     .then(function (rows) {
       var v = rows && rows[0] && rows[0].value;
-      if (!v || v.enabled !== true || !SEASONS[v.theme]) return;
+      if (!v || v.enabled !== true) return;
+      // Lista de períodos, ou o formato antigo de um tema só
+      var periods = Array.isArray(v.periods) ? v.periods : [v];
       var day = /^\d{4}-\d{2}-\d{2}$/;
-      if (!day.test(v.startsOn || '') || !day.test(v.endsOn || '')) return;
       var today = seasonToday();
-      if (today < v.startsOn || today > v.endsOn) return;
-      document.documentElement.setAttribute('data-season', v.theme);
-      showSeasonBanner(v.theme, v.startsOn.slice(0, 4));
-      showSeasonFx();
+      var p = periods.filter(function (x) {
+        return x && SEASONS[x.theme] && day.test(x.startsOn || '') && day.test(x.endsOn || '')
+          && today >= x.startsOn && today <= x.endsOn;
+      })[0];
+      if (!p) return;
+      document.documentElement.setAttribute('data-season', p.theme);
+      showSeasonBanner(p.theme, p.startsOn.slice(0, 4));
+      showSeasonFx(p.theme);
     })
     .catch(function () { /* sem tema: site como sempre */ });
 })();

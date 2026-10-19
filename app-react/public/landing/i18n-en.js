@@ -652,6 +652,10 @@ window.LANDING_EN = {
     // Faixa do tema de temporada (criada por assets/site.js)
     'Semana do Dia das Bruxas no EAFIT!': 'Halloween week at EAFIT!',
     'Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.': "Train on Oct 31 or do 3 workouts by Nov 2 to earn the Witches' Workout badge in the app.",
+    'Outubro Rosa no EAFIT!': 'Pink October at EAFIT!',
+    'Mês de conscientização sobre o câncer de mama. Treine durante a campanha e ganhe a conquista Outubro Rosa no app.': 'Breast cancer awareness month. Work out during the campaign to earn the Pink October badge in the app.',
+    'Novembro Azul no EAFIT!': 'Movember at EAFIT!',
+    'Mês de cuidar da saúde do homem. Faça 12 treinos em novembro e ganhe a conquista Novembro Azul no app.': "Men's health month. Do 12 workouts in November to earn the Movember badge in the app.",
     'Abrir o app': 'Open the app',
     // Novidades de outubro/2026: treinador por voz, biometria, embaixadores
     'Embaixadores': 'Ambassadors',

@@ -26,7 +26,7 @@ describe('AppSettings', () => {
     banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 2 },
     flags: { feedback: false },
     moved: { enabled: false, url: '' },
-    season: { enabled: false, theme: 'halloween', startsOn: '', endsOn: '' },
+    season: { enabled: false, periods: [] },
   };
 
   beforeEach(() => {
@@ -84,20 +84,46 @@ describe('AppSettings', () => {
     expect(await screen.findByText('Erro: falhou')).toBeTruthy();
   });
 
-  it('tema de temporada: exige as duas datas para ligar e salva o período', async () => {
+  it('tema de temporada: agenda vários períodos, recusa sobreposição e salva em ordem', async () => {
     render(<AppSettings />);
     await screen.findByText('Tema de temporada');
     const boxes = screen.getAllByRole('checkbox');
     fireEvent.click(boxes[boxes.length - 1]);
+    expect(screen.getByText(/Adicione pelo menos um período/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Adicionar período' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ Adicionar período' }));
+    const themes = () => screen.getAllByLabelText(/^Tema/);
+    const starts = () => screen.getAllByLabelText('Começa em');
+    const ends = () => screen.getAllByLabelText('Termina em (inclusive)');
+    // sugere os temas na ordem do calendário
+    expect(themes().map(el => el.value)).toEqual(['outubro_rosa', 'halloween']);
     expect(screen.getByText(/Informe as duas datas/)).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('Começa em'), { target: { value: '2026-10-24' } });
-    fireEvent.change(screen.getByLabelText('Termina em (inclusive)'), { target: { value: '2026-10-20' } });
-    expect(screen.getByText(/Informe as duas datas/)).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('Termina em (inclusive)'), { target: { value: '2026-11-02' } });
+
+    fireEvent.change(starts()[1], { target: { value: '2026-10-24' } });
+    fireEvent.change(ends()[1], { target: { value: '2026-11-02' } });
+    fireEvent.change(starts()[0], { target: { value: '2026-10-19' } });
+    fireEvent.change(ends()[0], { target: { value: '2026-10-24' } });
+    expect(screen.getByText(/se sobrepõem/)).toBeTruthy();
+    fireEvent.change(ends()[0], { target: { value: '2026-10-23' } });
+
+    fireEvent.click(screen.getByRole('button', { name: '+ Adicionar período' }));
+    expect(themes()[2].value).toBe('novembro_azul');
+    fireEvent.change(starts()[2], { target: { value: '2026-11-03' } });
+    fireEvent.change(ends()[2], { target: { value: '2026-11-30' } });
+    // um período a mais, removido
+    fireEvent.click(screen.getByRole('button', { name: '+ Adicionar período' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remover período 4' }));
+
     const save = saveButtons();
     fireEvent.click(save[save.length - 1]);
     await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('season', {
-      enabled: true, theme: 'halloween', startsOn: '2026-10-24', endsOn: '2026-11-02',
+      enabled: true,
+      periods: [
+        { theme: 'outubro_rosa', startsOn: '2026-10-19', endsOn: '2026-10-23' },
+        { theme: 'halloween', startsOn: '2026-10-24', endsOn: '2026-11-02' },
+        { theme: 'novembro_azul', startsOn: '2026-11-03', endsOn: '2026-11-30' },
+      ],
     }, 'adm1'));
   });
 

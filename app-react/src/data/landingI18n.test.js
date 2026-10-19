@@ -79,7 +79,9 @@ describe('site em inglês', () => {
     // textos que só aparecem via JS (faixa de números, botão do vídeo, faixa do tema de temporada) ou vindos do admin
     const dynamic = new Set(['pessoas treinando', 'treinos concluídos', 'séries registradas', '▶ Reproduzir', 'Perfil',
       'Enviando…', 'Mensagem enviada. A resposta chega no seu e-mail.', 'Não deu pra enviar agora. Tente de novo ou escreva para contato.eafit@gmail.com.',
-      'Semana do Dia das Bruxas no EAFIT!', 'Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.', 'Abrir o app']);
+      'Semana do Dia das Bruxas no EAFIT!', 'Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.', 'Abrir o app',
+      'Novembro Azul no EAFIT!', 'Mês de cuidar da saúde do homem. Faça 12 treinos em novembro e ganhe a conquista Novembro Azul no app.',
+      'Outubro Rosa no EAFIT!', 'Mês de conscientização sobre o câncer de mama. Treine durante a campanha e ganhe a conquista Outubro Rosa no app.']);
     const orphans = Object.keys(dict.text).filter(k => !texts.has(k) && !dynamic.has(k));
     expect(orphans).toEqual([]);
   });

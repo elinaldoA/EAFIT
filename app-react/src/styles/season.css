@@ -3,7 +3,10 @@
    Ativo com <html data-season="...">. O Dia das Bruxas repinta o app inteiro
    trocando os tokens de tokens.css (fundo, superfícies, bordas e textos em
    roxo noturno; o laranja principal vira a abóbora), nos temas escuro e
-   claro, com o mesmo contraste de texto. Desligar no Perfil volta tudo.
+   claro, com o mesmo contraste de texto. O Outubro Rosa e o Novembro Azul
+   fazem o mesmo na cor da campanha, mais discretos: laço no fundo e bolhas
+   subindo devagar.
+   Desligar no Perfil volta tudo.
 ============================================================ */
 :root {
   --season-accent: #a855f7;
@@ -76,15 +79,15 @@
   --primary-glow: rgba(249,115,22,.13);
 }
 
-/* Barras com o roxo da noite e o risco de abóbora */
-[data-season="halloween"] .topbar {
+/* Barras com o toque do tema (roxo da noite / azul) e o risco de destaque */
+:is([data-season="halloween"], [data-season="outubro_rosa"], [data-season="novembro_azul"]) .topbar {
   background: linear-gradient(100deg, transparent 40%, var(--season-accent-soft)), var(--surface);
   box-shadow: inset 0 -2px 0 var(--season-accent);
 }
-[data-season="halloween"] .season-banner {
+:is([data-season="halloween"], [data-season="outubro_rosa"], [data-season="novembro_azul"]) .season-banner {
   background: linear-gradient(100deg, var(--season-accent-soft), var(--primary-glow)), var(--surface);
 }
-[data-season="halloween"] .bottom-nav {
+:is([data-season="halloween"], [data-season="outubro_rosa"], [data-season="novembro_azul"]) .bottom-nav {
   background: linear-gradient(0deg, var(--season-accent-soft), transparent 70%), var(--surface);
   border-top-color: var(--season-accent);
 }
@@ -92,9 +95,9 @@
 /* Lua, morcegos e teia atrás das telas. Fica abaixo das páginas (.page vem
    depois no DOM) e não pega toque; opaco o bastante pra não brigar com texto.
    O fundo vai no .pages porque na moldura de celular do desktop o body é preto. */
-[data-season="halloween"] .pages { background: var(--bg); }
+[data-season] .pages { background: var(--bg); }
 /* Login e telas sem .pages: só a cor, pra não apagar a faixa do status bar do .shell */
-[data-season="halloween"] .shell { background-color: var(--bg); }
+[data-season] .shell { background-color: var(--bg); }
 [data-season="halloween"] .pages::before {
   content: '';
   position: absolute;
@@ -214,13 +217,13 @@ body.live-open .season-fx { display: none; }
   filter: drop-shadow(0 0 5px rgba(249, 115, 22, .65));
 }
 
-/* Barra de progresso do treino de abóbora pra roxo */
-[data-season="halloween"] .progress-card__fill:not(.progress-card__fill--water) {
+/* Barra de progresso do treino da cor principal pra cor do tema */
+:is([data-season="halloween"], [data-season="outubro_rosa"], [data-season="novembro_azul"]) .progress-card__fill:not(.progress-card__fill--water) {
   background: linear-gradient(90deg, var(--primary), var(--primary-h) 60%, var(--season-accent));
 }
 
-/* Avisos rápidos com contorno roxo */
-[data-season="halloween"] .toast {
+/* Avisos rápidos com contorno na cor do tema */
+:is([data-season="halloween"], [data-season="outubro_rosa"], [data-season="novembro_azul"]) .toast {
   border-color: var(--season-accent);
   box-shadow: 0 0 18px var(--season-accent-soft), var(--shadow-md);
 }
@@ -273,5 +276,143 @@ body.live-open .season-fx { display: none; }
     42% { box-shadow: 0 0 16px rgba(249, 115, 22, .45); }
     60% { box-shadow: 0 0 20px rgba(251, 146, 60, .55); }
     66% { box-shadow: 0 0 11px rgba(249, 115, 22, .3); }
+  }
+}
+
+/* ── Campanhas de saúde: Outubro Rosa e Novembro Azul ──
+   Mais discretas que o Dia das Bruxas: fundo escuro puxado pra cor da
+   campanha, a cor do laço como cor principal (o texto escuro dos botões
+   continua com contraste), o laço no canto de cima e bolhas subindo devagar.
+   Cada tema só define os tokens; as regras abaixo valem para os dois. */
+[data-season="outubro_rosa"] {
+  --bg:           #170c14;
+  --surface:      #21121c;
+  --surface-2:    #271623;
+  --surface-3:    #36202f;
+  --border:       #34202d;
+  --border-2:     #573a4c;
+  --text:         #f8e9f1;
+  --text-muted:   #cfb0c1;
+  --text-dim:     #a88799;
+  --primary:      #ec4899;
+  --primary-h:    #f472b6;
+  --primary-glow: rgba(236,72,153,.20);
+  --season-accent: #f9a8d4;
+  --season-accent-soft: rgba(249, 168, 212, .14);
+  --season-glow:  rgba(236, 72, 153, .35);
+  --season-ribbon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='54' r='44' fill='%23f9a8d4' fill-opacity='.08'/%3E%3Cg transform='translate(128 18) scale(.72)' fill='none' stroke-width='9' stroke-linejoin='round'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' stroke='%23ec4899'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' stroke='%23f9a8d4'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-theme="light"][data-season="outubro_rosa"] {
+  --bg:           #fcf2f7;
+  --surface:      #ffffff;
+  --surface-2:    #faeef4;
+  --surface-3:    #f3dde9;
+  --border:       #efd6e3;
+  --border-2:     #cf9fb8;
+  --text:         #2a0f1f;
+  --text-muted:   #6b4258;
+  --text-dim:     #865a71;
+  --primary-glow: rgba(236,72,153,.13);
+  --season-accent: #be185d;
+  --season-accent-soft: rgba(190, 24, 93, .10);
+}
+[data-season="novembro_azul"] {
+  --bg:           #0b1220;
+  --surface:      #111a2d;
+  --surface-2:    #152038;
+  --surface-3:    #1e2b48;
+  --border:       #1f2c46;
+  --border-2:     #36496f;
+  --text:         #e6edf8;
+  --text-muted:   #a7b5cf;
+  --text-dim:     #7f8fac;
+  --primary:      #3b82f6;
+  --primary-h:    #60a5fa;
+  --primary-glow: rgba(59,130,246,.20);
+  --season-accent: #93c5fd;
+  --season-accent-soft: rgba(147, 197, 253, .14);
+  --season-glow:  rgba(59, 130, 246, .35);
+  --season-ribbon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='54' r='44' fill='%2393c5fd' fill-opacity='.08'/%3E%3Cg transform='translate(128 18) scale(.72)' fill='none' stroke-width='9' stroke-linejoin='round'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' stroke='%233b82f6'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' stroke='%2393c5fd'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-theme="light"][data-season="novembro_azul"] {
+  --bg:           #f1f5fc;
+  --surface:      #ffffff;
+  --surface-2:    #edf2fb;
+  --surface-3:    #dde6f5;
+  --border:       #d2ddef;
+  --border-2:     #98add0;
+  --text:         #0f1a2e;
+  --text-muted:   #44546f;
+  --text-dim:     #5d6d89;
+  --primary-glow: rgba(59,130,246,.13);
+  --season-accent: #1d4ed8;
+  --season-accent-soft: rgba(29, 78, 216, .10);
+}
+
+/* Laço da campanha no canto de cima, com um brilho atrás */
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .pages::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .45;
+  background: var(--season-ribbon) top right / 220px no-repeat;
+}
+[data-theme="light"]:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .pages::before { opacity: .35; }
+
+@media (prefers-reduced-motion: no-preference) {
+  :is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .pages::before { animation: season-sway 9s ease-in-out infinite; }
+  @keyframes season-sway {
+    0%, 100% { background-position: top right; }
+    50% { background-position: right 0 top 6px; }
+  }
+}
+
+/* Bolhas na cor do laço subindo da barra de baixo, bem apagadas (SeasonDecor) */
+.season-bubble {
+  position: absolute;
+  bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px));
+  left: 12%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--season-accent);
+  background: var(--season-accent-soft);
+  opacity: 0;
+}
+.season-bubble:nth-child(2) { left: 30%; width: 6px; height: 6px; }
+.season-bubble:nth-child(3) { left: 48%; width: 12px; height: 12px; }
+.season-bubble:nth-child(4) { left: 64%; width: 7px; height: 7px; }
+.season-bubble:nth-child(5) { left: 80%; width: 9px; height: 9px; }
+.season-bubble:nth-child(6) { left: 92%; width: 5px; height: 5px; }
+
+/* Botão principal com brilho parado; modais com a borda acesa */
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .btn--primary:not(:disabled) {
+  box-shadow: 0 0 14px var(--season-glow);
+}
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) :is(.summary-modal__panel, .plan-modal__panel, .rating-modal__panel, .photo-modal__panel, .inbox__panel, .tutorial__card) {
+  border-top: 3px solid var(--primary);
+  box-shadow: 0 -6px 28px var(--primary-glow), 0 0 40px var(--season-accent-soft), var(--shadow-lg);
+}
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .nav-item.active .nav-item__icon svg {
+  filter: drop-shadow(0 0 5px var(--season-glow));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .season-bubble { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .season-bubble { animation: season-rise 18s ease-in infinite; }
+  .season-bubble:nth-child(2) { animation-duration: 22s; animation-delay: 4s; }
+  .season-bubble:nth-child(3) { animation-duration: 26s; animation-delay: 9s; }
+  .season-bubble:nth-child(4) { animation-duration: 20s; animation-delay: 13s; }
+  .season-bubble:nth-child(5) { animation-duration: 24s; animation-delay: 6s; }
+  .season-bubble:nth-child(6) { animation-duration: 19s; animation-delay: 16s; }
+  @keyframes season-rise {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    8%   { opacity: .7; }
+    50%  { transform: translate(14px, -38vh); }
+    85%  { opacity: .4; }
+    100% { transform: translate(-6px, -72vh); opacity: 0; }
   }
 }

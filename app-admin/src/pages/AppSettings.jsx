@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
   KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
-  SEASON_THEMES, isValidSeasonWindow,
+  SEASON_THEMES, isValidSeasonWindow as isValidPeriod, seasonScheduleError, seasonStatus, seasonThemeLabel, sortPeriods,
 } from '../lib/appSettings';
 import { todayStr } from '../lib/community';
 import Loading from '../components/Loading';
@@ -270,20 +270,36 @@ function MovedCard({ saved, adminId, onSaved }) {
   );
 }
 
+const PERIOD_STATUS = { agendado: ['badge--warning', 'agendado'], no_ar: ['badge--ok', 'no ar'], encerrado: ['', 'encerrado'] };
+
 function SeasonCard({ saved, adminId, onSaved, today }) {
   const [draft, setDraft] = useState(saved);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
-  const dirty = ['enabled', 'theme', 'startsOn', 'endsOn'].some(k => draft[k] !== saved[k]);
-  const valid = !draft.enabled || isValidSeasonWindow(draft);
-  const status = !saved.enabled ? 'desligado' : bannerWindow(saved, today);
-  const STATUS = { desligado: ['', 'desligado'], agendado: ['badge--warning', 'agendado'], no_ar: ['badge--ok', 'no ar'], encerrado: ['', 'encerrado'] };
+  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  const error = seasonScheduleError(draft);
+  const status = seasonStatus(saved, today);
+  const STATUS = {
+    desligado: ['', 'desligado'],
+    no_ar: ['badge--ok', `no ar: ${seasonThemeLabel(status.theme)}`],
+    agendado: ['badge--warning', 'agendado'],
+    encerrado: ['', 'encerrado'],
+  };
+
+  const setPeriod = (i, patch) => setDraft({ ...draft, periods: draft.periods.map((p, j) => (j === i ? { ...p, ...patch } : p)) });
+  const removePeriod = i => setDraft({ ...draft, periods: draft.periods.filter((_, j) => j !== i) });
+  function addPeriod() {
+    // Sugere o tema seguinte ao último da lista, na ordem do calendário.
+    const last = SEASON_THEMES.findIndex(s => s.value === draft.periods.at(-1)?.theme);
+    const theme = SEASON_THEMES[(last + 1) % SEASON_THEMES.length].value;
+    setDraft({ ...draft, periods: [...draft.periods, { theme, startsOn: '', endsOn: '' }] });
+  }
 
   async function handleSave() {
     setBusy(true);
     setMsg('');
     try {
-      await saveSetting('season', { enabled: draft.enabled, theme: draft.theme, startsOn: draft.startsOn, endsOn: draft.endsOn }, adminId);
+      await saveSetting('season', { enabled: draft.enabled, periods: sortPeriods(draft.periods) }, adminId);
       setMsg('Salvo.');
       await onSaved();
     } catch (err) {
@@ -299,12 +315,14 @@ function SeasonCard({ saved, adminId, onSaved, today }) {
         <div>
           <h2 className="section-title" style={{ margin: 0 }}>
             Tema de temporada
-            <span className={`badge ${STATUS[status][0]}`}>{STATUS[status][1]}</span>
+            <span className={`badge ${STATUS[status.key][0]}`}>{STATUS[status.key][1]}</span>
           </h2>
           <p className="user-detail__meta" style={{ margin: '4px 0 0' }}>
             Decoração leve no app e no site (faixa do tema, detalhes de cor, card de compartilhar e falas do treinador por voz).
-            Só aparece entre as duas datas e some sozinha depois, mesmo em app antigo em cache. Cada pessoa pode desligar no Perfil.
-            A conquista Treino das Bruxas vale de 24/10 a 02/11 de cada ano, independente deste período.
+            Agende um período por tema: o app passa de um para o outro sozinho e tudo some depois do último, mesmo em app antigo em cache.
+            Cada pessoa pode desligar no Perfil.
+            As conquistas têm datas fixas, independentes destes períodos: Outubro Rosa (10 treinos de 01/10 a 23/10; em 2026, 3 treinos
+            de 19/10 a 23/10), Treino das Bruxas (24/10 a 02/11) e Novembro Azul (12 treinos em novembro).
           </p>
         </div>
         <label className="switch-row">
@@ -312,25 +330,38 @@ function SeasonCard({ saved, adminId, onSaved, today }) {
           <span>Ligado</span>
         </label>
       </div>
-      <div className="form-grid">
-        <label className="field">
-          <span className="field__label">Tema</span>
-          <select className="input" value={draft.theme} onChange={e => setDraft({ ...draft, theme: e.target.value })}>
-            {SEASON_THEMES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        </label>
-        <label className="field">
-          <span className="field__label">Começa em</span>
-          <input type="date" className="input" value={draft.startsOn} onChange={e => setDraft({ ...draft, startsOn: e.target.value })} />
-        </label>
-        <label className="field">
-          <span className="field__label">Termina em (inclusive)</span>
-          <input type="date" className="input" value={draft.endsOn} onChange={e => setDraft({ ...draft, endsOn: e.target.value })} />
-        </label>
+      {draft.periods.map((p, i) => {
+        const live = isValidPeriod(p) ? bannerWindow(p, today) : '';
+        return (
+          <div key={i} className="form-grid" style={{ alignItems: 'end' }}>
+            <label className="field">
+              <span className="field__label">
+                Tema {live && <span className={`badge ${PERIOD_STATUS[live][0]}`}>{PERIOD_STATUS[live][1]}</span>}
+              </span>
+              <select className="input" value={p.theme} onChange={e => setPeriod(i, { theme: e.target.value })}>
+                {SEASON_THEMES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span className="field__label">Começa em</span>
+              <input type="date" className="input" value={p.startsOn} onChange={e => setPeriod(i, { startsOn: e.target.value })} />
+            </label>
+            <label className="field">
+              <span className="field__label">Termina em (inclusive)</span>
+              <input type="date" className="input" value={p.endsOn} onChange={e => setPeriod(i, { endsOn: e.target.value })} />
+            </label>
+            <button type="button" className="btn btn--ghost btn--small" onClick={() => removePeriod(i)} aria-label={`Remover período ${i + 1}`}>
+              Remover
+            </button>
+          </div>
+        );
+      })}
+      <div>
+        <button type="button" className="btn btn--ghost btn--small" onClick={addPeriod}>+ Adicionar período</button>
       </div>
-      {!valid && <p className="form-msg form-msg--error">Informe as duas datas, com o fim igual ou depois do começo.</p>}
+      {error && <p className="form-msg form-msg--error">{error}</p>}
       <div className="actions-row">
-        <button className="btn btn--primary btn--small" disabled={busy || !dirty || !valid} onClick={handleSave}>Salvar</button>
+        <button className="btn btn--primary btn--small" disabled={busy || !dirty || !!error} onClick={handleSave}>Salvar</button>
         <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(saved); setMsg(''); }}>Desfazer</button>
         <SectionMessage msg={msg} />
       </div>

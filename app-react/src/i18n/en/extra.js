@@ -108,4 +108,22 @@ export default {
   'Mostrar a decoração do Dia das Bruxas': 'Show the Halloween decoration',
   'Cores, ícones, emojis, fundo e efeitos do app inteiro, faixa do tema, card de compartilhar e falas do treinador. Vale só para este aparelho e some sozinha depois do período.': 'Colors, icons, emojis, background and effects across the whole app, theme banner, share card and coach lines. Applies to this device only and goes away on its own after the period.',
   'Sequência 🎃': 'Streak 🎃',
+  // Tema de temporada: Outubro Rosa (lib/season.js)
+  'Outubro Rosa!': 'Pink October!',
+  'Mês de conscientização sobre o câncer de mama: cuide de você, com treino e exames em dia. Faça {meta} treinos até {fim} e ganhe a conquista Outubro Rosa.': 'Breast cancer awareness month: take care of yourself, with workouts and checkups up to date. Do {meta} workouts by {fim} to earn the Pink October badge.',
+  'Outubro Rosa {ano}': 'Pink October {ano}',
+  'Faça {meta} treinos entre {de} e {ate}': 'Do {meta} workouts between {de} and {ate}',
+  'Treino do Outubro Rosa concluído no EAFIT 💗 Monte o seu grátis: {SHARE_CARD_URL}': 'Pink October workout done on EAFIT 💗 Build yours for free: {SHARE_CARD_URL}',
+  'TREINO ROSA CONCLUÍDO': 'PINK OCTOBER WORKOUT DONE',
+  'Decoração do Outubro Rosa': 'Pink October decoration',
+  'Mostrar a decoração do Outubro Rosa': 'Show the Pink October decoration',
+  // Tema de temporada: Novembro Azul (lib/season.js)
+  'Novembro Azul!': 'Movember!',
+  'Mês de cuidar da saúde do homem: treino em dia e exames de rotina também. Faça {meta} treinos até {fim} e ganhe a conquista Novembro Azul.': "Men's health month: keep up your workouts and your routine checkups too. Do {meta} workouts by {fim} to earn the Movember badge.",
+  'Novembro Azul {ano}': 'Movember {ano}',
+  'Faça {meta} treinos em novembro': 'Do {meta} workouts in November',
+  'Treino do Novembro Azul concluído no EAFIT 💙 Monte o seu grátis: {SHARE_CARD_URL}': 'Movember workout done on EAFIT 💙 Build yours for free: {SHARE_CARD_URL}',
+  'TREINO AZUL CONCLUÍDO': 'MOVEMBER WORKOUT DONE',
+  'Decoração do Novembro Azul': 'Movember decoration',
+  'Mostrar a decoração do Novembro Azul': 'Show the Movember decoration',
 };

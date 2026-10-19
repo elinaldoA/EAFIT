@@ -25,14 +25,19 @@ export const DEFAULT_SETTINGS = {
   banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', startsOn: '', endsOn: '', version: 0 },
   flags: {},
   moved: { enabled: false, url: '' },
-  season: { enabled: false, theme: 'halloween', startsOn: '', endsOn: '' },
+  season: { enabled: false, periods: [] },
 };
 
 // Temas de temporada que o app e o site sabem desenhar (SEASONS em
-// app-react/src/lib/season.js e em public/landing/assets/site.js).
+// app-react/src/lib/season.js e em public/landing/assets/site.js), na ordem
+// do calendário.
 export const SEASON_THEMES = [
+  { value: 'outubro_rosa', label: '💗 Outubro Rosa' },
   { value: 'halloween', label: '🎃 Dia das Bruxas' },
+  { value: 'novembro_azul', label: '💙 Novembro Azul' },
 ];
+
+export const seasonThemeLabel = theme => SEASON_THEMES.find(s => s.value === theme)?.label || theme;
 
 const isDay = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
@@ -74,18 +79,49 @@ export function normalizeSettings(rows) {
   };
 }
 
+// season: { enabled, periods: [{ theme, startsOn, endsOn }] }. Mesma leitura
+// de normalizeSeason em app-react/src/lib/season.js, inclusive do formato
+// antigo de um tema só ({ enabled, theme, startsOn, endsOn }).
 function normalizeSeason(v = {}) {
-  return {
-    enabled: v.enabled === true,
-    theme: SEASON_THEMES.some(s => s.value === v.theme) ? v.theme : 'halloween',
-    startsOn: isDay(v.startsOn) ? v.startsOn : '',
-    endsOn: isDay(v.endsOn) ? v.endsOn : '',
-  };
+  const list = Array.isArray(v.periods) ? v.periods : (v.theme ? [v] : []);
+  const periods = list
+    .filter(p => p && SEASON_THEMES.some(s => s.value === p.theme))
+    .map(p => ({ theme: p.theme, startsOn: isDay(p.startsOn) ? p.startsOn : '', endsOn: isDay(p.endsOn) ? p.endsOn : '' }));
+  return { enabled: v.enabled === true, periods };
 }
 
 // O app só liga o tema com as duas datas, e a final não pode vir antes.
-export function isValidSeasonWindow(season) {
-  return isDay(season.startsOn) && isDay(season.endsOn) && season.startsOn <= season.endsOn;
+export function isValidSeasonWindow(period) {
+  return isDay(period.startsOn) && isDay(period.endsOn) && period.startsOn <= period.endsOn;
+}
+
+export function sortPeriods(periods) {
+  return [...periods].sort((a, b) => a.startsOn.localeCompare(b.startsOn));
+}
+
+// O que impede salvar a agenda ligada, ou ''. Períodos não podem se sobrepor:
+// o app mostraria só o primeiro.
+export function seasonScheduleError(season) {
+  if (!season.enabled) return '';
+  if (!season.periods.length) return 'Adicione pelo menos um período.';
+  if (!season.periods.every(isValidSeasonWindow)) return 'Informe as duas datas de cada período, com o fim igual ou depois do começo.';
+  const sorted = sortPeriods(season.periods);
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i].startsOn <= sorted[i - 1].endsOn) {
+      return `${seasonThemeLabel(sorted[i - 1].theme)} e ${seasonThemeLabel(sorted[i].theme)} se sobrepõem: um tem que terminar antes do outro começar.`;
+    }
+  }
+  return '';
+}
+
+// Situação da agenda hoje: 'desligado', 'no_ar' (com o tema), 'agendado'
+// (nada no ar, mas há período por vir) ou 'encerrado'.
+export function seasonStatus(season, today) {
+  if (!season.enabled) return { key: 'desligado' };
+  const valid = season.periods.filter(isValidSeasonWindow);
+  const live = valid.find(p => today >= p.startsOn && today <= p.endsOn);
+  if (live) return { key: 'no_ar', theme: live.theme };
+  return { key: valid.some(p => p.startsOn > today) ? 'agendado' : 'encerrado' };
 }
 
 // O app só aceita endereço novo absoluto em https (ver movedTarget em app-react).

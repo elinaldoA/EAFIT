@@ -25,6 +25,8 @@ const SKY = '#38bdf8';
 const EMERALD = '#34d399';
 const VIOLET = '#a78bfa';
 const PURPLE = '#a855f7';
+const BLUE = '#3b82f6';
+const PINK = '#ec4899';
 const MUTED = 'rgba(255,255,255,0.62)';
 
 // Tamanho real (em pixels) de cada metade de anatomia.jpg — diferente de
@@ -382,9 +384,13 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
 const SHARE_URL_LABEL = 'eafit.com.br';
 
 export const SHARE_TEXT = t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
-const HALLOWEEN_SHARE_TEXT = t('Treino das Bruxas concluído no EAFIT 🎃 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
+const SEASON_SHARE_TEXT = {
+  outubro_rosa: t('Treino do Outubro Rosa concluído no EAFIT 💗 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  halloween: t('Treino das Bruxas concluído no EAFIT 🎃 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  novembro_azul: t('Treino do Novembro Azul concluído no EAFIT 💙 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+};
 
-// Dia das Bruxas (lib/season.js): brilho roxo, abóbora e morcegos no topo.
+// Temas de temporada (lib/season.js). Dia das Bruxas: brilho roxo, abóbora e morcegos no topo.
 // Só enfeite em volta; os números do treino continuam no mesmo lugar.
 function drawHalloween(ctx) {
   drawGlow(ctx, CARD_WIDTH * 0.08, 300, 640, PURPLE, 0.30);
@@ -401,6 +407,29 @@ function drawHalloween(ctx) {
   });
   ctx.restore();
 }
+
+// Campanhas de saúde (Outubro Rosa, Novembro Azul): brilho na cor da campanha
+// e o laço no topo, desenhado (o emoji 🎗️ sai amarelo na maioria dos aparelhos).
+function drawRibbonTheme(ctx, glow, ribbon, ribbonLight) {
+  drawGlow(ctx, CARD_WIDTH * 0.08, 300, 640, glow, 0.30);
+  drawGlow(ctx, CARD_WIDTH * 0.9, CARD_HEIGHT * 0.72, 560, glow, 0.14);
+  ctx.save();
+  ctx.translate(CARD_WIDTH - PAD_X - 100, 196);
+  ctx.scale(1.9, 1.9);
+  ctx.lineWidth = 9;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = ribbon;
+  ctx.stroke(new Path2D('M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28'));
+  ctx.strokeStyle = ribbonLight;
+  ctx.stroke(new Path2D('M38 30c5-9 3-22-6-22'));
+  ctx.restore();
+}
+
+const SEASON_CARD = {
+  outubro_rosa: { draw: ctx => drawRibbonTheme(ctx, PINK, '#db2777', '#f9a8d4'), label: () => t('TREINO ROSA CONCLUÍDO') },
+  halloween: { draw: drawHalloween, label: () => t('TREINO DAS BRUXAS CONCLUÍDO') },
+  novembro_azul: { draw: ctx => drawRibbonTheme(ctx, BLUE, '#2563eb', '#60a5fa'), label: () => t('TREINO AZUL CONCLUÍDO') },
+};
 
 // Barra de marca no topo: logo + nome à esquerda, data à direita.
 async function drawTopBar(ctx, y, dateLabel) {
@@ -479,9 +508,9 @@ export async function renderWorkoutSummaryCard(summary) {
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext('2d');
 
-  const halloween = currentSeason() === 'halloween';
+  const seasonCard = SEASON_CARD[currentSeason()];
   drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
-  if (halloween) drawHalloween(ctx);
+  seasonCard?.draw(ctx);
   await drawTopBar(ctx, 70, formatCardDate());
 
   // Destaque: o foco do treino em letras grandes (até 2 linhas).
@@ -491,7 +520,7 @@ export async function renderWorkoutSummaryCard(summary) {
   ctx.fillStyle = ORANGE_LIGHT;
   ctx.font = `800 30px ${FONT}`;
   setTracking(ctx, 4);
-  ctx.fillText(halloween ? t('TREINO DAS BRUXAS CONCLUÍDO') : t('TREINO CONCLUÍDO'), PAD_X + 64, y);
+  ctx.fillText(seasonCard ? seasonCard.label() : t('TREINO CONCLUÍDO'), PAD_X + 64, y);
   setTracking(ctx, 0);
 
   const title = String(tFoco(day?.foco) || t(day?.dia) || t('Treino')).toUpperCase();
@@ -584,7 +613,7 @@ async function shareImageBlob(blob, filename, title, text) {
 export async function shareWorkoutSummary(summary, prepared) {
   trackFeature('share_card');
   const blob = (await prepared) || await renderWorkoutSummaryCard(summary);
-  const text = currentSeason() === 'halloween' ? HALLOWEEN_SHARE_TEXT : SHARE_TEXT;
+  const text = SEASON_SHARE_TEXT[currentSeason()] || SHARE_TEXT;
   return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), text);
 }
 

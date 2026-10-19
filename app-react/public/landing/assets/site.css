@@ -1081,3 +1081,184 @@ textarea.input { resize: vertical; min-height: 120px; }
     66% { box-shadow: 0 0 13px rgba(249, 115, 22, .32); }
   }
 }
+
+/* ── Campanhas de saúde: Outubro Rosa e Novembro Azul, igual ao app ──
+   Fundo escuro puxado pra cor da campanha e a cor do laço como principal;
+   mais discretas que o Dia das Bruxas: laço no topo e bolhas subindo. Cada
+   tema só define os tokens (os blocos claros de cada um têm que ficar iguais);
+   as regras depois valem para os dois. */
+:root[data-season="outubro_rosa"] {
+  --bg:           #160b13;
+  --bg-2:         #1b0e18;
+  --surface:      #21121c;
+  --surface-2:    #271623;
+  --surface-3:    #36202f;
+  --border:       #311d2a;
+  --border-2:     #573a4c;
+  --text:         #f9ebf2;
+  --text-muted:   #cfb0c1;
+  --text-dim:     #ad8c9e;   /* >= 4.5:1 sobre --bg e --surface */
+  --primary:      #ec4899;
+  --primary-h:    #f472b6;
+  --primary-glow: rgba(236, 72, 153, .18);
+  --primary-ink:  #f472b6;
+  --nav-bg:       rgba(22, 11, 19, .8);
+  --phone-frame:  #2a1824;
+  --season-accent: #f9a8d4;
+  --season-accent-soft: rgba(249, 168, 212, .14);
+  --season-glow:  rgba(236, 72, 153, .4);
+  --season-ribbon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='54' r='44' fill='%23f9a8d4' fill-opacity='.08'/%3E%3Cg transform='translate(128 18) scale(.72)' fill='none' stroke-width='9' stroke-linejoin='round'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' stroke='%23ec4899'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' stroke='%23f9a8d4'/%3E%3C/g%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: light) {
+  :root[data-season="outubro_rosa"]:not([data-theme="dark"]) {
+    --bg:           #fdf4f8;
+    --bg-2:         #faeaf2;
+    --surface:      #ffffff;
+    --surface-2:    #faeaf2;
+    --surface-3:    #f3dde9;
+    --border:       #f2dce7;
+    --border-2:     #e2bfd1;
+    --text:         #2a0f1f;
+    --text-muted:   #6b4258;
+    --text-dim:     #865a71;
+    --primary-glow: rgba(236, 72, 153, .14);
+    --primary-ink:  #be185d;
+    --nav-bg:       rgba(253, 244, 248, .84);
+    --phone-frame:  #2a0f1f;
+    --season-accent: #be185d;
+    --season-accent-soft: rgba(190, 24, 93, .10);
+  }
+}
+:root[data-season="outubro_rosa"][data-theme="light"] {
+  --bg:           #fdf4f8;
+  --bg-2:         #faeaf2;
+  --surface:      #ffffff;
+  --surface-2:    #faeaf2;
+  --surface-3:    #f3dde9;
+  --border:       #f2dce7;
+  --border-2:     #e2bfd1;
+  --text:         #2a0f1f;
+  --text-muted:   #6b4258;
+  --text-dim:     #865a71;
+  --primary-glow: rgba(236, 72, 153, .14);
+  --primary-ink:  #be185d;
+  --nav-bg:       rgba(253, 244, 248, .84);
+  --phone-frame:  #2a0f1f;
+  --season-accent: #be185d;
+  --season-accent-soft: rgba(190, 24, 93, .10);
+}
+:root[data-season="novembro_azul"] {
+  --bg:           #0a1120;
+  --bg-2:         #0e1628;
+  --surface:      #111a2d;
+  --surface-2:    #152038;
+  --surface-3:    #1e2b48;
+  --border:       #1c2842;
+  --border-2:     #36496f;
+  --text:         #e8eef9;
+  --text-muted:   #a7b5cf;
+  --text-dim:     #8696b3;   /* >= 4.5:1 sobre --bg e --surface */
+  --primary:      #3b82f6;
+  --primary-h:    #60a5fa;
+  --primary-glow: rgba(59, 130, 246, .18);
+  --primary-ink:  #60a5fa;
+  --nav-bg:       rgba(10, 17, 32, .8);
+  --phone-frame:  #1a2540;
+  --season-accent: #93c5fd;
+  --season-accent-soft: rgba(147, 197, 253, .14);
+  --season-glow:  rgba(59, 130, 246, .4);
+  --season-ribbon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='54' r='44' fill='%2393c5fd' fill-opacity='.08'/%3E%3Cg transform='translate(128 18) scale(.72)' fill='none' stroke-width='9' stroke-linejoin='round'%3E%3Cpath d='M22 58 38 30c5-9 3-22-6-22s-11 13-6 22l16 28' stroke='%233b82f6'/%3E%3Cpath d='M38 30c5-9 3-22-6-22' stroke='%2393c5fd'/%3E%3C/g%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: light) {
+  :root[data-season="novembro_azul"]:not([data-theme="dark"]) {
+    --bg:           #f3f6fc;
+    --bg-2:         #eaf0fa;
+    --surface:      #ffffff;
+    --surface-2:    #eaf0fa;
+    --surface-3:    #dde6f5;
+    --border:       #dbe4f2;
+    --border-2:     #c3d1e8;
+    --text:         #0f1a2e;
+    --text-muted:   #44546f;
+    --text-dim:     #5d6d89;
+    --primary-glow: rgba(59, 130, 246, .14);
+    --primary-ink:  #1d4ed8;
+    --nav-bg:       rgba(243, 246, 252, .84);
+    --phone-frame:  #0f1a2e;
+    --season-accent: #1d4ed8;
+    --season-accent-soft: rgba(29, 78, 216, .10);
+  }
+}
+:root[data-season="novembro_azul"][data-theme="light"] {
+  --bg:           #f3f6fc;
+  --bg-2:         #eaf0fa;
+  --surface:      #ffffff;
+  --surface-2:    #eaf0fa;
+  --surface-3:    #dde6f5;
+  --border:       #dbe4f2;
+  --border-2:     #c3d1e8;
+  --text:         #0f1a2e;
+  --text-muted:   #44546f;
+  --text-dim:     #5d6d89;
+  --primary-glow: rgba(59, 130, 246, .14);
+  --primary-ink:  #1d4ed8;
+  --nav-bg:       rgba(243, 246, 252, .84);
+  --phone-frame:  #0f1a2e;
+  --season-accent: #1d4ed8;
+  --season-accent-soft: rgba(29, 78, 216, .10);
+}
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .grad {
+  background-image: linear-gradient(120deg, var(--primary) 10%, var(--primary-h) 45%, var(--season-accent));
+}
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) header.nav { border-bottom-color: var(--season-accent); }
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .season-bar {
+  background: linear-gradient(100deg, var(--season-accent-soft), var(--primary-glow)), var(--surface);
+  border-bottom-color: var(--season-accent);
+}
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .hero::before {
+  background:
+    radial-gradient(40% 50% at 78% 30%, var(--primary-glow), transparent 70%),
+    radial-gradient(30% 40% at 12% 10%, var(--season-accent-soft), transparent 70%);
+}
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .page-hero::before {
+  background:
+    radial-gradient(40% 50% at 50% 20%, var(--primary-glow), transparent 70%),
+    radial-gradient(30% 40% at 15% 10%, var(--season-accent-soft), transparent 70%);
+}
+/* Laço da campanha no canto de cima das páginas */
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .hero::after,
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .page-hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  -webkit-mask-image: none; mask-image: none;
+  background: var(--season-ribbon) top 10px right 2% / clamp(200px, 26vw, 320px) no-repeat;
+}
+:is([data-season="outubro_rosa"], [data-season="novembro_azul"]) .btn-primary:not(.btn-sm) { box-shadow: 0 0 18px var(--season-glow); }
+
+/* Bolhas na cor do laço subindo do rodapé, bem apagadas */
+.season-bubble {
+  position: absolute; bottom: 0; left: 10%; width: 12px; height: 12px; border-radius: 50%;
+  border: 1px solid var(--season-accent); background: var(--season-accent-soft); opacity: 0;
+}
+.season-bubble:nth-child(2) { left: 28%; width: 7px; height: 7px; }
+.season-bubble:nth-child(3) { left: 46%; width: 14px; height: 14px; }
+.season-bubble:nth-child(4) { left: 63%; width: 8px; height: 8px; }
+.season-bubble:nth-child(5) { left: 79%; width: 11px; height: 11px; }
+.season-bubble:nth-child(6) { left: 93%; width: 6px; height: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .season-bubble { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .season-bubble { animation: season-rise 20s ease-in infinite; }
+  .season-bubble:nth-child(2) { animation-duration: 24s; animation-delay: 4s; }
+  .season-bubble:nth-child(3) { animation-duration: 28s; animation-delay: 9s; }
+  .season-bubble:nth-child(4) { animation-duration: 22s; animation-delay: 13s; }
+  .season-bubble:nth-child(5) { animation-duration: 26s; animation-delay: 6s; }
+  .season-bubble:nth-child(6) { animation-duration: 21s; animation-delay: 16s; }
+  @keyframes season-rise {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    8%   { opacity: .7; }
+    50%  { transform: translate(16px, -45vh); }
+    85%  { opacity: .4; }
+    100% { transform: translate(-6px, -85vh); opacity: 0; }
+  }
+}
