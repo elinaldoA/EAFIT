@@ -50,13 +50,21 @@ export function detectRef(search) {
   return /^[a-z0-9-]{3,30}$/.test(code) ? code : '';
 }
 
+// ?personal= de link de convite do personal (códigos como P1A2B3; vazio = sem código).
+export function detectPersonal(search) {
+  const code = String(new URLSearchParams(search || '').get('personal') ?? '').trim().toUpperCase();
+  return /^[A-Z0-9]{4,12}$/.test(code) ? code : '';
+}
+
 // No máximo 1 visita por página por dia neste navegador (aproxima
-// "visitantes por dia" sem identificar ninguém); link de embaixador conta à
-// parte, pra não sumir o clique de quem já tinha visitado no dia. Falha
+// "visitantes por dia" sem identificar ninguém); link de embaixador ou de
+// personal conta à parte, pra não sumir o clique de quem já tinha visitado no dia. Falha
 // silenciosa: métrica nunca pode atrapalhar o app.
 export async function recordVisit(page) {
   const ref = detectRef(window.location.search);
-  const key = ref ? `eafit_visit_${page}_${ref}` : `eafit_visit_${page}`;
+  const personal = detectPersonal(window.location.search);
+  const tag = [ref, personal].filter(Boolean).join('_');
+  const key = tag ? `eafit_visit_${page}_${tag}` : `eafit_visit_${page}`;
   const today = todayDate();
   try {
     if (localStorage.getItem(key) === today) return false;
@@ -69,6 +77,7 @@ export async function recordVisit(page) {
   // Do mais completo pro mais simples: banco sem as colunas novas (migration
   // ainda não aplicada) recusa a linha, e a visita é gravada sem elas.
   const attempts = [
+    ...(personal ? [{ page, source, os, browser, device, lang, campaign, ...(ref ? { ref } : {}), personal }] : []),
     ...(ref ? [{ page, source, os, browser, device, lang, campaign, ref }] : []),
     { page, source, os, browser, device, lang, campaign },
     { page, source, os },

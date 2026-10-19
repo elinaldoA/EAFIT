@@ -14,6 +14,9 @@
 .trainer-code { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .trainer-code__label { display: block; font-size: 0.75rem; color: var(--text-muted); }
 .trainer-code__value { font-size: 1.4rem; letter-spacing: .12em; }
+.trainer-link { display: flex; flex-direction: column; gap: 10px; }
+.trainer-link__url { display: block; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); font-size: 0.8rem; overflow-wrap: anywhere; }
+.trainer-link__actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .trainer-summary { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-muted); }
 .trainer-summary strong { color: var(--text); }
 .trainer-summary__warn strong { color: var(--warning); }

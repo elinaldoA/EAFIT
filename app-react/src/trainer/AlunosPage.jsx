@@ -5,6 +5,7 @@ import { clientAttention, sortClients, fetchClients, fetchTrainerCode } from '..
 import { weekOverview } from '../lib/trainerSettings';
 import { fetchUnreadReplies } from '../lib/trainerMessages';
 import { fetchTrainerAppointments, upcomingAppointments, formatWhen } from '../lib/trainerAppointments';
+import { trainerInviteLink, shareTrainerInvite, copyTrainerInviteLink, fetchInviteStats } from '../lib/trainerInvite';
 import Skeleton from '../components/Skeleton';
 import ClientDetail from './ClientDetail';
 
@@ -15,10 +16,6 @@ const FILTERS = [
   { key: 'ok', label: t('Em dia') },
 ];
 
-function inviteText(code) {
-  return t('Quer treinar comigo pelo EAFIT? Abra o app, vá em Perfil → Meu personal e digite o código {code}.', { code });
-}
-
 // Lista de alunos do personal, com quem precisa de atenção no topo.
 export default function AlunosPage({ onClientsLoaded }) {
   const toast = useToast();
@@ -28,6 +25,7 @@ export default function AlunosPage({ onClientsLoaded }) {
   const [selected, setSelected] = useState(null);
   const [replies, setReplies] = useState({});
   const [appts, setAppts] = useState([]);
+  const [inviteStats, setInviteStats] = useState(null);
   const today = todayDate();
 
   const reload = useCallback(async () => {
@@ -46,6 +44,7 @@ export default function AlunosPage({ onClientsLoaded }) {
   useEffect(() => {
     reload();
     fetchTrainerCode().then(setCode).catch(err => console.error('fetchTrainerCode:', err));
+    fetchInviteStats(30).then(setInviteStats).catch(() => { /* migration pendente */ });
   }, [reload]);
 
   const sorted = useMemo(() => (clients ? sortClients(clients, today) : []), [clients, today]);
@@ -59,13 +58,13 @@ export default function AlunosPage({ onClientsLoaded }) {
   const needAttention = sorted.filter(c => ['risco', 'atencao'].includes(clientAttention(c, today).level)).length;
 
   async function handleShare() {
-    const text = inviteText(code);
-    try {
-      if (navigator.share) await navigator.share({ title: 'EAFIT', text });
-      else { await navigator.clipboard.writeText(text); toast(t('📋 Convite copiado')); }
-    } catch (err) {
-      if (err?.name !== 'AbortError') toast(t('Seu código: {code}', { code }));
-    }
+    const result = await shareTrainerInvite(code);
+    if (result === 'copied') toast(t('📋 Convite copiado'));
+    else if (result === 'failed') toast(t('Seu código: {code}', { code }));
+  }
+
+  async function handleCopyLink() {
+    toast(await copyTrainerInviteLink(code) ? t('🔗 Link copiado') : t('⚠️ Não deu pra copiar o link'));
   }
 
   if (selected) {
@@ -88,6 +87,25 @@ export default function AlunosPage({ onClientsLoaded }) {
         <button type="button" className="btn btn--primary btn--sm" disabled={!code} onClick={handleShare}>{t('📤 Convidar aluno')}</button>
       </div>
       <p className="profile-field__hint">{t('O aluno digita esse código em Perfil → Meu personal e autoriza você a acompanhar o treino dele.')}</p>
+
+      {code && (
+        <div className="dash-card trainer-link">
+          <div className="dash-card__title">{t('🔗 Seu link de divulgação')}</div>
+          <code className="trainer-link__url">{trainerInviteLink(code)}</code>
+          <div className="trainer-link__actions">
+            <button type="button" className="btn btn--outline btn--sm" onClick={handleCopyLink}>{t('Copiar link')}</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={handleShare}>{t('Compartilhar')}</button>
+          </div>
+          <p className="profile-field__hint">{t('Poste na bio, nos stories ou mande no WhatsApp. Quem cria a conta pelo link recebe o pedido para autorizar você e já entra na sua lista.')}</p>
+          {inviteStats && (
+            <div className="recap__grid">
+              <div className="recap__stat"><span className="recap__value">{inviteStats.visits}</span><span className="recap__label">{t('visitas pelo link (30 dias)')}</span></div>
+              <div className="recap__stat"><span className="recap__value">{inviteStats.signups}</span><span className="recap__label">{t('contas criadas (30 dias)')}</span></div>
+              <div className="recap__stat"><span className="recap__value">{inviteStats.clients}</span><span className="recap__label">{t('alunos que entraram pelo link')}</span></div>
+            </div>
+          )}
+        </div>
+      )}
 
       {appts.length > 0 && (
         <div className="dash-card">

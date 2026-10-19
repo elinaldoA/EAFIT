@@ -8,6 +8,7 @@ import { isAdminAccount } from '../lib/adminGuard';
 import { isAccountDeactivated } from '../lib/accountStatus';
 import { takeEmailLink } from '../lib/emailLink';
 import { pendingRef, clearRef } from '../lib/ambassadorRef';
+import { pendingPersonalInvite } from '../lib/trainerInvite';
 import { syncLocalProfile } from '../lib/profileSync';
 import { noteFreshLogin } from '../lib/biometricLock';
 
@@ -159,11 +160,14 @@ export function AuthProvider({ children }) {
       return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
     }
     // Veio por link de embaixador: o banco vincula a conta pelo user_metadata.ref.
+    // Link de personal: user_metadata.personal só conta o cadastro; o vínculo
+    // espera o aluno autorizar (TrainerInvitePrompt).
     const ref = pendingRef();
+    const personal = pendingPersonalInvite();
     const { data, error } = await db.auth.signUp({
       email, password,
       options: {
-        data: { termsAcceptedAt: new Date().toISOString(), lang, ...(ref ? { ref: ref.code, refSource: ref.source } : {}) },
+        data: { termsAcceptedAt: new Date().toISOString(), lang, ...(ref ? { ref: ref.code, refSource: ref.source } : {}), ...(personal ? { personal } : {}) },
         emailRedirectTo: appUrl(),
       },
     });

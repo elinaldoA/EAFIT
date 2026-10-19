@@ -109,6 +109,7 @@ describe('backup cobre as tabelas do usuário', () => {
     appointment_reminder_log: 'controle interno de lembretes enviados',
     trainer_alert_log: 'controle interno de alertas do personal',
     trainer_clients: 'o vínculo com o personal vai em trainer',
+    trainer_invite_signups: 'registro interno de atribuição (por qual link de personal a conta foi criada)',
     trainer_appointments: 'as aulas do aluno vão em appointments',
     trainer_messages: 'a conversa vai em trainerMessages',
     trainer_notes: 'notas do personal sobre o aluno (do personal)',

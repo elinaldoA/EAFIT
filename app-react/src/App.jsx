@@ -38,6 +38,7 @@ import AnnouncementBanner from './components/AnnouncementBanner';
 import SeasonBanner, { SeasonDecor } from './components/SeasonBanner';
 import TermsUpdateScreen from './components/TermsUpdateScreen';
 import InstallScreen from './components/InstallScreen';
+import TrainerInvitePrompt from './components/TrainerInvitePrompt';
 import TrainerShell from './trainer/TrainerShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
@@ -143,6 +144,7 @@ function Shell() {
         <AvatarProvider>
           <WorkoutProvider>
             <ReminderScheduler />
+            <TrainerInvitePrompt />
             <div className="app-screen" style={{ display: 'flex' }}>
               <header className="topbar">
                 <TopbarProfile />

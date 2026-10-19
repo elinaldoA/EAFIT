@@ -5,6 +5,7 @@ import PasswordInput from './PasswordInput';
 import LanguageSwitch from './LanguageSwitch';
 import { isKnownUser } from '../lib/knownUser';
 import { recordVisit } from '../lib/pageVisits';
+import { pendingPersonalInvite, fetchInviteName } from '../lib/trainerInvite';
 import { trackAuthEvent } from '../lib/tracking';
 import { t } from '../lib/i18n';
 
@@ -27,6 +28,16 @@ export default function AuthScreen() {
 
   // Topo do funil do painel admin: quem chega aqui sem sessão.
   useEffect(() => { recordVisit('acesso'); }, []);
+
+  // Chegou pelo link de convite de um personal: mostra quem convidou.
+  const [inviter, setInviter] = useState('');
+  useEffect(() => {
+    const code = pendingPersonalInvite();
+    if (!code) return undefined;
+    let active = true;
+    fetchInviteName(code).then(name => { if (active && name) setInviter(name); }).catch(() => { /* sem aviso */ });
+    return () => { active = false; };
+  }, []);
 
   // Começou a preencher o cadastro (1 vez por sessão; ver lib/tracking.js).
   useEffect(() => {
@@ -92,7 +103,10 @@ export default function AuthScreen() {
           <img className="auth-logo__icon" src={logoMark} alt="" />
           <h1 className="auth-logo__name">EAFIT</h1>
           <p className="auth-logo__tagline">{t('Seu treino, sempre com você')}</p>
-          {mode === 'signup' && (
+          {inviter && (
+            <p className="auth-invite">{t('🤝 {name} convidou você para treinar com acompanhamento. Crie sua conta (ou entre) para aceitar.', { name: inviter })}</p>
+          )}
+          {mode === 'signup' && !inviter && (
             <p className="auth-logo__pitch">
               {t('Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Grátis e funciona offline.')}
             </p>

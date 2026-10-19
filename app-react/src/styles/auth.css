@@ -82,6 +82,16 @@
 .auth-logo__more:hover { text-decoration: underline; }
 .auth-logo__more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 
+.auth-invite {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--primary-glow);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
