@@ -24,7 +24,18 @@ export function SeasonDecor() {
     meta.setAttribute('content', '#120c1a');
     return () => meta.setAttribute('content', before);
   }, [theme]);
-  return null;
+  if (theme !== 'halloween') return null;
+  // Morcegos voando, aranha descendo do topo e névoa (styles/season.css).
+  // Só enfeite: sem toque, escondido do leitor de tela e no modo ao vivo.
+  return (
+    <div className="season-fx" aria-hidden="true">
+      <span className="season-bat" />
+      <span className="season-bat" />
+      <span className="season-bat" />
+      <span className="season-spider" />
+      <span className="season-fog" />
+    </div>
+  );
 }
 
 // Faixa da semana do Dia das Bruxas, explicando a conquista. Fechou, some até
