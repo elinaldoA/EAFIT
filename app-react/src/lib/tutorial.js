@@ -74,7 +74,7 @@ export const STUDENT_STEPS = [
   },
   {
     tab: 'perfil', icon: '🤝', title: t('Tem personal?'),
-    text: t('Em Perfil → "Meu personal", digite o código que ele te passou. Ele passa a montar seu treino e acompanhar sua evolução; os recados e as aulas marcadas por ele aparecem no Perfil e no topo do Treino.'),
+    text: t('Em Perfil → "Meu personal", digite o código que ele te passou (ou abra o link de convite dele e autorize). Ele passa a montar seu treino e acompanhar sua evolução; os recados e as aulas marcadas por ele aparecem no Perfil e no topo do Treino.'),
   },
   {
     tab: 'treino', icon: '🚀', title: t('Tudo pronto!'),
@@ -89,11 +89,23 @@ export const TRAINER_STEPS = [
   },
   {
     tab: 'alunos', target: nav(1), icon: '👥', title: t('Seus alunos'),
-    text: t('Toque em "Convidar aluno" para compartilhar seu código. Quando o aluno o digita em Perfil → Meu personal, ele aparece aqui. Os filtros destacam quem precisa de atenção (sem treinar, plano vencendo).'),
+    text: t('Toque em "Convidar aluno" para mandar seu código. Quando o aluno o digita em Perfil → Meu personal e autoriza, ele aparece aqui. Quem precisa de atenção fica no topo: parado há 4 dias ou mais, sumido há mais de uma semana ou que ainda não treinou. O card "Esta semana" resume quantos treinaram e quantos treinos fizeram.'),
+  },
+  {
+    tab: 'alunos', target: '.trainer-link', icon: '🔗', title: t('Seu link de divulgação'),
+    text: t('Poste o link na bio, nos stories ou mande no WhatsApp. Quem cria a conta por ele recebe o pedido para autorizar você e já entra na sua lista. O card mostra as visitas e as contas criadas pelo link nos últimos 30 dias e quantos alunos entraram por ele.'),
   },
   {
     tab: 'alunos', icon: '📋', title: t('Ficha do aluno'),
-    text: t('Abra um aluno para ver frequência, sequência, medidas, como ele tem se sentido, desconfortos e cargas máximas. Dali você monta o plano, conversa com ele e registra anotações, fotos, aulas e metas.'),
+    text: t('Abra um aluno para ver frequência contra a meta, sequência, peso, medidas, check-ins, desconfortos e cargas máximas. Em "Últimos treinos" estão as séries registradas, com sugestões de quando subir a carga. Ali você também define metas, faz anotações que só você vê e, se o aluno ligar o compartilhamento, vê as fotos de evolução.'),
+  },
+  {
+    tab: 'alunos', icon: '🏋️', title: t('Monte e envie o treino'),
+    text: t('Na ficha, toque em "Montar treino" (ou "Editar / enviar novo treino"). Escolha os dias, os exercícios, as séries e as repetições, ou comece de um modelo. Ao enviar, o treino vira o plano ativo do aluno e ele recebe um recado avisando.'),
+  },
+  {
+    tab: 'alunos', icon: '📅', title: t('Agenda de aulas'),
+    text: t('Na ficha, no card de aulas, marque data, hora, duração e local. O aluno é avisado e confirma ou recusa pelo app, e os dois recebem lembrete antes da aula. As próximas aulas, com a situação de cada uma, aparecem no topo da lista de alunos.'),
   },
   {
     tab: 'modelos', target: nav(2), icon: '🧩', title: t('Modelos de treino'),
@@ -104,16 +116,16 @@ export const TRAINER_STEPS = [
     text: t('Crie desafios com nome e prazo para toda a turma ou só para alguns alunos. Os participantes são avisados e você acompanha o andamento.'),
   },
   {
-    tab: 'recados', target: nav(4), icon: '💬', title: t('Recados'),
-    text: t('Envie incentivos e orientações para todos ou para alunos escolhidos. Eles recebem uma notificação e você vê o histórico dos enviados.'),
+    tab: 'recados', target: nav(4), icon: '💬', title: t('Recados e conversa'),
+    text: t('Envie incentivos e orientações para todos ou para alunos escolhidos. Eles recebem uma notificação e, nos enviados, você vê quantos já leram. O aluno pode responder: a resposta aparece na lista de alunos e a conversa fica na ficha dele.'),
   },
   {
     tab: 'conta', target: nav(5), icon: '⚙️', title: t('Conta e alertas'),
-    text: t('Ative as notificações para saber quando um aluno precisar de você e escolha quais alertas receber. Quer treinar também? "Usar como aluno" troca para o app de treino.'),
+    text: t('Ative as notificações neste aparelho e escolha os avisos: aluno sem treinar (você define o prazo), recorde de carga, relato de dor forte ou lesão e o resumo da semana, toda segunda. Os avisos chegam entre 8h e 20h. Quer treinar também? "Usar como aluno" troca para o app de treino.'),
   },
   {
     tab: 'alunos', icon: '🚀', title: t('Tudo pronto!'),
-    text: t('Comece convidando seu primeiro aluno. Para rever este guia: Conta → Ajuda.'),
+    text: t('Comece convidando seu primeiro aluno, pelo link ou pelo código. Para rever este guia: Conta → Ajuda.'),
   },
 ];
 
