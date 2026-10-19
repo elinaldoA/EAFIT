@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { formatDuration } from '../lib/utils';
 import { getMuscleGroupsForDay } from '../data/treinoData';
-import { shareWorkoutSummary } from '../lib/shareCard';
+import { renderWorkoutSummaryCard, shareWorkoutSummary } from '../lib/shareCard';
 import { useToast } from '../context/useToast';
 import BodyAvatar from './BodyAvatar';
 import RatingModal from './RatingModal';
@@ -27,6 +27,13 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
     return stored ? Number(stored) : null;
   });
 
+  // Card desenhado já ao abrir: no toque o share nativo sai na hora, ainda
+  // dentro do gesto do usuário (lib/shareCard.js).
+  const cardRef = useRef(null);
+  useEffect(() => {
+    cardRef.current = renderWorkoutSummaryCard(summary).catch(() => null);
+  }, [summary]);
+
   useEffect(() => {
     document.body.classList.add('modal-open');
     return () => document.body.classList.remove('modal-open');
@@ -43,7 +50,7 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
     if (sharing) return;
     setSharing(true);
     try {
-      const result = await shareWorkoutSummary(summary);
+      const result = await shareWorkoutSummary(summary, cardRef.current);
       if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
     } catch (err) {
       if (err?.name !== 'AbortError') {

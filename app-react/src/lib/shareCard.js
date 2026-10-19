@@ -354,7 +354,8 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
   drawPanel(ctx, x, y, w, MUSCLE_PANEL_H);
 
   const activeGroups = day ? getMuscleGroupsForDay(day) : new Set();
-  const img = await loadImage(bodyAnatomyImg);
+  // Sem a figura (falha de rede/cache) o card sai só com os chips, sem quebrar.
+  const img = await loadImage(bodyAnatomyImg).catch(() => null);
 
   const innerX = x + MUSCLE_PANEL_PAD;
   ctx.textAlign = 'left';
@@ -365,6 +366,10 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
   setTracking(ctx, 0);
 
   const boxY = y + MUSCLE_PANEL_PAD + 44 + 20;
+  if (!img) {
+    drawMuscleChips(ctx, innerX, boxY, w - MUSCLE_PANEL_PAD * 2, BODY_BOX_H, activeGroups);
+    return;
+  }
   drawBodyView(ctx, img, innerX, boxY, BODY_BOX_W, BODY_BOX_H, 0, FRONT_MUSCLE_PATHS, activeGroups, t('Frente'));
   drawBodyView(ctx, img, innerX + BODY_BOX_W + BODY_BOX_GAP, boxY, BODY_BOX_W, BODY_BOX_H, BODY_IMG_HALF_SIZE.width, BACK_MUSCLE_PATHS, activeGroups, t('Costas'));
 
@@ -550,8 +555,16 @@ async function shareImageBlob(blob, filename, title, text) {
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     // Link vai no texto (não em `url`): vários apps descartam `url` quando há
     // arquivo junto, e outros duplicariam o link.
-    await navigator.share({ files: [file], title, text });
-    return 'shared';
+    try {
+      await navigator.share({ files: [file], title, text });
+      return 'shared';
+    } catch (err) {
+      // Cancelou a folha de compartilhar: não baixa nada. Outros erros
+      // (NotAllowedError por gesto expirado, app de destino recusando o
+      // arquivo) caem no download, pra a pessoa não ficar sem a imagem.
+      if (err?.name === 'AbortError') throw err;
+      console.warn('navigator.share:', err);
+    }
   }
 
   const url = URL.createObjectURL(blob);
@@ -565,9 +578,12 @@ async function shareImageBlob(blob, filename, title, text) {
   return 'downloaded';
 }
 
-export async function shareWorkoutSummary(summary) {
+// `prepared`: Blob (ou promessa dele) gerado antes do toque. O share nativo
+// exige o gesto do usuário ainda ativo; desenhar o card depois do toque
+// (imagens + PNG de ~2,5 MB) estoura esse prazo no celular e o share falha.
+export async function shareWorkoutSummary(summary, prepared) {
   trackFeature('share_card');
-  const blob = await renderWorkoutSummaryCard(summary);
+  const blob = (await prepared) || await renderWorkoutSummaryCard(summary);
   const text = currentSeason() === 'halloween' ? HALLOWEEN_SHARE_TEXT : SHARE_TEXT;
   return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), text);
 }

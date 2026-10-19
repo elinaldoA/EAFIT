@@ -7,7 +7,7 @@ const h = vi.hoisted(() => ({
   toast: vi.fn(),
   photos: { fetchPhotos: vi.fn(), addPhoto: vi.fn(), deletePhoto: vi.fn() },
   hist: { fetchPreviousBests: vi.fn() },
-  share: { shareWorkoutSummary: vi.fn() },
+  share: { shareWorkoutSummary: vi.fn(), renderWorkoutSummaryCard: vi.fn(() => Promise.resolve(null)) },
 }));
 
 vi.mock('../lib/supabase', () => ({ db: {} }));
