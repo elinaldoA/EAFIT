@@ -1,4 +1,6 @@
 import { t } from '../lib/i18n';
+import { useSeason } from '../hooks/useSeason';
+import { seasonNavIcon } from '../components/seasonIcons';
 const ICONS = {
   alunos: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -31,6 +33,7 @@ const ICONS = {
 
 // Barra inferior do modo personal (mesmo visual da do aluno).
 export default function TrainerNav({ items, active, onChange }) {
+  const { theme } = useSeason();
   return (
     <nav className="bottom-nav" aria-label={t('Navegação do personal')}>
       {items.map(item => (
@@ -41,7 +44,7 @@ export default function TrainerNav({ items, active, onChange }) {
           aria-current={active === item.key ? 'page' : undefined}
           onClick={() => onChange(item.key)}
         >
-          <span className="nav-item__icon" aria-hidden="true">{ICONS[item.key] || ICONS.conta}</span>
+          <span className="nav-item__icon" aria-hidden="true">{seasonNavIcon(theme, item.key, ICONS[item.key] || ICONS.conta)}</span>
           <span>{item.label}</span>
           {item.badge > 0 && <span className="trainer-badge">{item.badge}</span>}
         </button>

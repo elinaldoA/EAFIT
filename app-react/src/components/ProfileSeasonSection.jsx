@@ -10,7 +10,7 @@ export default function ProfileSeasonSection({ theme, off }) {
         <label className="profile-field__label" htmlFor="seasonDecor">{t('Mostrar a decoração do Dia das Bruxas')}</label>
         <input type="checkbox" id="seasonDecor" checked={!off} onChange={e => setSeasonOff(theme, !e.target.checked)} />
       </div>
-      <span className="profile-field__hint">{t('Cores e fundo do app inteiro, faixa do tema, card de compartilhar e falas do treinador. Vale só para este aparelho e some sozinha depois do período.')}</span>
+      <span className="profile-field__hint">{t('Cores, ícones, emojis, fundo e efeitos do app inteiro, faixa do tema, card de compartilhar e falas do treinador. Vale só para este aparelho e some sozinha depois do período.')}</span>
     </>
   );
 }

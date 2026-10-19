@@ -93,6 +93,8 @@
    depois no DOM) e não pega toque; opaco o bastante pra não brigar com texto.
    O fundo vai no .pages porque na moldura de celular do desktop o body é preto. */
 [data-season="halloween"] .pages { background: var(--bg); }
+/* Login e telas sem .pages: só a cor, pra não apagar a faixa do status bar do .shell */
+[data-season="halloween"] .shell { background-color: var(--bg); }
 [data-season="halloween"] .pages::before {
   content: '';
   position: absolute;
@@ -191,10 +193,36 @@ body.live-open .season-fx { display: none; }
   box-shadow: 0 0 14px rgba(249, 115, 22, .35);
 }
 
-/* Resumo do treino com borda de abóbora acesa */
-[data-season="halloween"] .summary-modal__panel {
+/* Modais: fundo de noite roxa atrás, painel com borda de abóbora acesa,
+   brilho roxo em volta e teia no canto. O descanso mantém a borda laranja. */
+[data-season="halloween"] :is(.summary-modal__backdrop, .plan-modal__backdrop, .rating-modal__backdrop, .photo-modal__backdrop, .rest-modal__backdrop, .demo-modal__backdrop),
+[data-season="halloween"] .inbox__backdrop {
+  background: radial-gradient(120% 80% at 50% 0%, rgba(88, 28, 135, .55), rgba(10, 4, 18, .82));
+}
+[data-season="halloween"] :is(.summary-modal__panel, .plan-modal__panel, .rating-modal__panel, .photo-modal__panel, .rest-modal__panel, .inbox__panel, .tutorial__card) {
   border-top: 3px solid var(--primary);
-  box-shadow: 0 -6px 28px rgba(249, 115, 22, .25), var(--shadow-lg);
+  box-shadow: 0 -6px 28px rgba(249, 115, 22, .22), 0 0 40px var(--season-accent-soft), var(--shadow-lg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23a855f7' stroke-opacity='.3' stroke-width='1.2'%3E%3Cpath d='M120 0L0 0M120 0L10 46M120 0L35 85M120 0L74 110M120 0L120 120'/%3E%3Cpath d='M90 0Q90 8 92 12Q94 20 99 21Q103 26 108 28Q114 29 120 30'/%3E%3Cpath d='M58 0Q60 16 63 24Q68 40 77 43Q85 52 96 57Q106 60 120 62'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: top right;
+  background-size: 84px;
+}
+[data-season="halloween"] .rest-modal__panel { border-top-color: var(--rest-accent); }
+
+/* Aba ativa da barra de baixo acesa como abóbora */
+[data-season="halloween"] .nav-item.active .nav-item__icon svg {
+  filter: drop-shadow(0 0 5px rgba(249, 115, 22, .65));
+}
+
+/* Barra de progresso do treino de abóbora pra roxo */
+[data-season="halloween"] .progress-card__fill:not(.progress-card__fill--water) {
+  background: linear-gradient(90deg, var(--primary), var(--primary-h) 60%, var(--season-accent));
+}
+
+/* Avisos rápidos com contorno roxo */
+[data-season="halloween"] .toast {
+  border-color: var(--season-accent);
+  box-shadow: 0 0 18px var(--season-accent-soft), var(--shadow-md);
 }
 
 /* Sem animação pra quem pediu menos movimento: fica a névoa parada e a

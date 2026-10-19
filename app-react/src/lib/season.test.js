@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   normalizeSeason, activeSeason, isSeasonOff, setSeasonOff, onSeasonChange, earnedHalloween, halloweenWindow,
+  applySeason, bootSeason, cacheSeason, cachedSeason, currentSeason, seasonText,
 } from './season';
 import { normalizeConfig } from './appConfig';
 import { seasonalBadges, visibleBadges, BADGES } from './achievements';
@@ -92,5 +93,57 @@ describe('treinador por voz no tema', () => {
         for (const event of Object.keys(events)) expect(PHRASES[tone][event]).toBeDefined();
       }
     }
+  });
+});
+
+describe('tema no documento e nos textos', () => {
+  // Período em volta de hoje, pra valer em qualquer data que o teste rodar.
+  const NOW = { enabled: true, theme: 'halloween', startsOn: '2000-01-01', endsOn: '2999-12-31' };
+
+  beforeEach(() => {
+    localStorage.clear();
+    applySeason('');
+    document.head.innerHTML = '<meta name="theme-color" content="#0e0e12"><link rel="icon" href="favicon.svg">';
+  });
+
+  it('liga e desliga <html data-season>, barra de status e favicon', () => {
+    applySeason('halloween');
+    expect(document.documentElement.getAttribute('data-season')).toBe('halloween');
+    expect(document.querySelector('meta[name="theme-color"]').getAttribute('content')).toBe('#120c1a');
+    expect(document.querySelector('link[rel="icon"]').getAttribute('href')).toMatch(/^data:image\/svg\+xml/);
+    applySeason('');
+    expect(document.documentElement.hasAttribute('data-season')).toBe(false);
+    expect(document.querySelector('meta[name="theme-color"]').getAttribute('content')).toBe('#0e0e12');
+    expect(document.querySelector('link[rel="icon"]').getAttribute('href')).toBe('favicon.svg');
+  });
+
+  it('abre com o tema guardado no aparelho enquanto está no período', () => {
+    cacheSeason(NOW);
+    expect(cachedSeason()).toEqual(NOW);
+    bootSeason();
+    expect(currentSeason()).toBe('halloween');
+  });
+
+  it('tema guardado vencido ou desligado pela pessoa não liga no boot', () => {
+    cacheSeason({ ...NOW, endsOn: '2001-01-01' });
+    bootSeason();
+    expect(currentSeason()).toBe('');
+    cacheSeason(NOW);
+    setSeasonOff('halloween', true);
+    bootSeason();
+    expect(currentSeason()).toBe('');
+  });
+
+  it('cache ilegível volta ao padrão desligado', () => {
+    localStorage.setItem('eafit_season_cache', '{oops');
+    expect(cachedSeason().enabled).toBe(false);
+  });
+
+  it('troca só os emojis de enfeite, e só com o tema ligado', () => {
+    expect(seasonText('Sequência 🔥')).toBe('Sequência 🔥');
+    applySeason('halloween');
+    expect(seasonText('Sequência 🔥 · Bora 💪 🎉')).toBe('Sequência 🎃 · Bora 🦇 👻');
+    expect(seasonText('⚠️ Atenção ✅')).toBe('⚠️ Atenção ✅');
+    expect(seasonText('💪🏽 forte')).toBe('💪🏽 forte');
   });
 });

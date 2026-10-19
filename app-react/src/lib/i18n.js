@@ -1,4 +1,5 @@
 import en from '../i18n/en';
+import { seasonText } from './season';
 import { names as exNames, techniques as exTec, focos as exFocos, focoParts, repsRules } from '../i18n/en/exercises';
 
 // Textos da interface usam o próprio português como chave: 'Iniciar treino'.
@@ -30,7 +31,8 @@ const dict = lang === 'en' ? en : null;
 export function t(text, vars) {
   let out = dict?.[text] ?? text;
   if (vars) out = out.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
-  return out;
+  // Tema de temporada: emojis de enfeite trocados (lib/season.js)
+  return seasonText(out);
 }
 
 // Exercícios/planos: o dado fica em português (é a chave do histórico e dos

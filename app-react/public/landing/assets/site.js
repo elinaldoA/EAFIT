@@ -753,6 +753,24 @@
     document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
       m.setAttribute('content', /light/.test(m.getAttribute('media') || '') ? '#faf6fd' : '#110b18');
     });
+    // Abóbora na aba do navegador (mesmo desenho de app-react/src/lib/season.js)
+    var icon = document.querySelector('link[rel="icon"]');
+    if (icon) icon.setAttribute('href', HALLOWEEN_FAVICON);
+    swapSeasonEmojis(document.body);
+  }
+  var HALLOWEEN_FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 16c1-6 5-9 9-9' stroke='%2316a34a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='20' cy='38' rx='14' ry='20' fill='%23ea580c'/%3E%3Cellipse cx='44' cy='38' rx='14' ry='20' fill='%23ea580c'/%3E%3Cellipse cx='32' cy='38' rx='14' ry='21' fill='%23f97316'/%3E%3Cpath d='M17 29l9 6-10 2zM47 29l-9 6 10 2z' fill='%23fde047'/%3E%3Cpath d='M18 45q14 9 28 0l-4 5-4-3-4 4-4-4-4 3z' fill='%23fde047'/%3E%3C/svg%3E";
+  // Emojis de enfeite trocados nos textos da página, os mesmos do app
+  // (seasonText em app-react/src/lib/season.js); avisos, status e carinhas de
+  // humor ficam, e emoji dentro de sequência (🧑‍🏫) ou com tom de pele também.
+  var HALLOWEEN_EMOJI = { '🔥': '🎃', '🎉': '👻', '💪': '🦇', '🎯': '🔮', '🚀': '🧹', '💡': '🕯️' };
+  var HALLOWEEN_RE = /(\u200D)?(🔥|🎉|💪|🎯|🚀|💡)([\u{1F3FB}-\u{1F3FF}]|\uFE0F?\u200D)?/gu;
+  function swapSeasonEmojis(root) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    var node;
+    while ((node = walker.nextNode())) {
+      var next = node.nodeValue.replace(HALLOWEEN_RE, function (m, zwj, emoji, tail) { return zwj || tail ? m : HALLOWEEN_EMOJI[emoji]; });
+      if (next !== node.nodeValue) node.nodeValue = next;
+    }
   }
   fetch(SUPABASE_URL + '/rest/v1/app_settings?select=value&key=eq.season', {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },

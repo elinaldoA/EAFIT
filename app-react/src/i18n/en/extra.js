@@ -106,6 +106,6 @@ export default {
   'TREINO DAS BRUXAS CONCLUÍDO': "WITCHES' WORKOUT DONE",
   'Decoração do Dia das Bruxas': 'Halloween decoration',
   'Mostrar a decoração do Dia das Bruxas': 'Show the Halloween decoration',
-  'Cores e fundo do app inteiro, faixa do tema, card de compartilhar e falas do treinador. Vale só para este aparelho e some sozinha depois do período.': 'Colors and background across the whole app, theme banner, share card and coach lines. Applies to this device only and goes away on its own after the period.',
+  'Cores, ícones, emojis, fundo e efeitos do app inteiro, faixa do tema, card de compartilhar e falas do treinador. Vale só para este aparelho e some sozinha depois do período.': 'Colors, icons, emojis, background and effects across the whole app, theme banner, share card and coach lines. Applies to this device only and goes away on its own after the period.',
   'Sequência 🎃': 'Streak 🎃',
 };
