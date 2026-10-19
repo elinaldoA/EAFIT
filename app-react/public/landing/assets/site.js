@@ -741,6 +741,19 @@
     });
     nav.parentNode.insertBefore(bar, nav);
   }
+  // Morcegos, aranha e névoa por cima da página (assets/site.css), sem toque e
+  // escondidos do leitor de tela; e a barra do navegador no roxo do fundo.
+  function showSeasonFx() {
+    var fx = document.createElement('div');
+    fx.className = 'season-fx';
+    fx.setAttribute('aria-hidden', 'true');
+    fx.innerHTML = '<span class="season-bat"></span><span class="season-bat"></span><span class="season-bat"></span>'
+      + '<span class="season-spider"></span><span class="season-fog"></span>';
+    document.body.appendChild(fx);
+    document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) {
+      m.setAttribute('content', /light/.test(m.getAttribute('media') || '') ? '#faf6fd' : '#110b18');
+    });
+  }
   fetch(SUPABASE_URL + '/rest/v1/app_settings?select=value&key=eq.season', {
     headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
   })
@@ -754,6 +767,7 @@
       if (today < v.startsOn || today > v.endsOn) return;
       document.documentElement.setAttribute('data-season', v.theme);
       showSeasonBanner(v.theme, v.startsOn.slice(0, 4));
+      showSeasonFx();
     })
     .catch(function () { /* sem tema: site como sempre */ });
 })();

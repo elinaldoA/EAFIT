@@ -889,7 +889,9 @@ textarea.input { resize: vertical; min-height: 120px; }
 
 /* ============================================================
    TEMA DE TEMPORADA (assets/site.js liga <html data-season>)
-   Só enfeite: faixa no topo e o título em gradiente puxando pro roxo.
+   O Dia das Bruxas repinta o site inteiro igual ao app
+   (app-react/src/styles/season.css): tokens em roxo noturno, laranja como
+   abóbora, lua no topo das páginas, morcegos, aranha e névoa.
 ============================================================ */
 .season-bar {
   background: linear-gradient(100deg, rgba(168, 85, 247, .18), var(--primary-glow));
@@ -919,4 +921,163 @@ textarea.input { resize: vertical; min-height: 120px; }
 }
 [data-season="halloween"] .grad {
   background-image: linear-gradient(120deg, var(--primary) 10%, var(--primary-h) 45%, #a855f7);
+}
+
+/* ── Dia das Bruxas: paleta do site inteiro ──
+   Mesmo esquema dos tokens do topo: escuro por padrão, claro pelo sistema ou
+   pelo botão do menu (os dois blocos claros têm que ficar iguais). */
+:root[data-season="halloween"] {
+  --bg:           #110b18;
+  --bg-2:         #160f20;
+  --surface:      #1a1225;
+  --surface-2:    #21182e;
+  --surface-3:    #2e2240;
+  --border:       #2a2038;
+  --border-2:     #4a3a63;
+  --text:         #efe9f7;
+  --text-muted:   #b4a7c8;
+  --text-dim:     #9384aa;   /* >= 4.5:1 sobre --bg e --surface */
+  --nav-bg:       rgba(17, 11, 24, .8);
+  --phone-frame:  #241a30;
+  --season-accent: #a855f7;
+  --season-accent-soft: rgba(168, 85, 247, .16);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-season="halloween"]:not([data-theme="dark"]) {
+    --bg:           #faf6fd;
+    --bg-2:         #f4eefa;
+    --surface:      #ffffff;
+    --surface-2:    #f4eefa;
+    --surface-3:    #e8dff3;
+    --border:       #e6dcf1;
+    --border-2:     #d2c3e4;
+    --text:         #1e1529;
+    --text-muted:   #57476b;
+    --text-dim:     #6f5f85;
+    --nav-bg:       rgba(250, 246, 253, .84);
+    --phone-frame:  #1e1529;
+    --season-accent: #7e22ce;
+    --season-accent-soft: rgba(126, 34, 206, .10);
+  }
+}
+:root[data-season="halloween"][data-theme="light"] {
+  --bg:           #faf6fd;
+  --bg-2:         #f4eefa;
+  --surface:      #ffffff;
+  --surface-2:    #f4eefa;
+  --surface-3:    #e8dff3;
+  --border:       #e6dcf1;
+  --border-2:     #d2c3e4;
+  --text:         #1e1529;
+  --text-muted:   #57476b;
+  --text-dim:     #6f5f85;
+  --nav-bg:       rgba(250, 246, 253, .84);
+  --phone-frame:  #1e1529;
+  --season-accent: #7e22ce;
+  --season-accent-soft: rgba(126, 34, 206, .10);
+}
+
+/* A troca de paleta chega depois de buscar a config: entra suave */
+@media (prefers-reduced-motion: no-preference) {
+  body { transition: background-color .4s ease, color .4s ease; }
+}
+
+[data-season="halloween"] header.nav { border-bottom-color: var(--season-accent); }
+[data-season="halloween"] .season-bar {
+  background: linear-gradient(100deg, var(--season-accent-soft), var(--primary-glow)), var(--surface);
+}
+
+/* Brilho do topo das páginas em abóbora e roxo, com lua cheia, morcegos e teia */
+[data-season="halloween"] .hero::before {
+  background:
+    radial-gradient(40% 50% at 78% 30%, var(--primary-glow), transparent 70%),
+    radial-gradient(30% 40% at 12% 10%, var(--season-accent-soft), transparent 70%);
+}
+[data-season="halloween"] .page-hero::before {
+  background:
+    radial-gradient(40% 50% at 50% 20%, var(--primary-glow), transparent 70%),
+    radial-gradient(30% 40% at 15% 10%, var(--season-accent-soft), transparent 70%);
+}
+[data-season="halloween"] .hero::after,
+[data-season="halloween"] .page-hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .55;
+  -webkit-mask-image: none; mask-image: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='50' r='26' fill='%23fde68a' fill-opacity='.22'/%3E%3Ccircle cx='150' cy='50' r='40' fill='%23fde68a' fill-opacity='.06'/%3E%3Cg fill='%23a855f7' fill-opacity='.45'%3E%3Cpath transform='translate(70 30) scale(.7)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3Cpath transform='translate(118 92) scale(.45)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3C/g%3E%3C/svg%3E") top 10px right 2% / clamp(200px, 26vw, 320px) no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23a855f7' stroke-opacity='.35' stroke-width='1'%3E%3Cpath d='M0 0L120 0M0 0L110 46M0 0L85 85M0 0L46 110M0 0L0 120'/%3E%3Cpath d='M30 0Q30 8 28 12Q26 20 21 21Q17 26 12 28Q6 29 0 30'/%3E%3Cpath d='M62 0Q60 16 57 24Q52 40 43 43Q35 52 24 57Q14 60 0 62'/%3E%3Cpath d='M95 0Q92 26 88 38Q80 62 67 67Q56 80 38 88Q24 93 0 95'/%3E%3C/svg%3E") top left / clamp(120px, 14vw, 180px) no-repeat;
+}
+
+/* ── Efeitos por cima da página (site.js cria .season-fx no body) ──
+   Sem toque, abaixo do cabeçalho (z 30) e da barra "Abrir app" do celular. */
+.season-fx { position: fixed; inset: 0; z-index: 25; pointer-events: none; overflow: hidden; }
+.season-bat { position: absolute; left: -60px; top: 22%; width: 42px; height: 22px; opacity: 0; }
+.season-bat::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 32'%3E%3Cpath fill='%231a0f26' stroke='%23c084fc' stroke-opacity='.9' stroke-width='1.4' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3Ccircle cx='30.5' cy='15' r='.9' fill='%23f97316'/%3E%3Ccircle cx='33.5' cy='15' r='.9' fill='%23f97316'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.season-bat:nth-child(2) { top: 55%; width: 30px; height: 16px; }
+.season-bat:nth-child(3) { top: 14%; width: 36px; height: 19px; }
+.season-spider {
+  position: absolute; top: 64px; left: 82%; width: 24px; height: 24px; transform: translateY(-90px);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='1.1' stroke-linecap='round'%3E%3Cpath d='M9 10 3 6M9 12 2 12M9 14 3 18M10 15 6 22M15 10 21 6M15 12 22 12M15 14 21 18M14 15 18 22'/%3E%3Cellipse cx='12' cy='13' rx='4' ry='5' fill='%231a0f26'/%3E%3Ccircle cx='12' cy='7.5' r='2.6' fill='%231a0f26'/%3E%3Ccircle cx='11' cy='7.6' r='.7' fill='%23f97316' stroke='none'/%3E%3Ccircle cx='13' cy='7.6' r='.7' fill='%23f97316' stroke='none'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.season-spider::before {
+  content: ''; position: absolute; bottom: 70%; left: 50%; width: 1px; height: 600px;
+  background: linear-gradient(transparent, rgba(196, 181, 253, .55));
+}
+.season-fog {
+  position: absolute; left: -20%; right: -20%; bottom: 0; height: 130px; opacity: .6;
+  background:
+    radial-gradient(ellipse 40% 60% at 20% 100%, var(--season-accent-soft), transparent 70%),
+    radial-gradient(ellipse 35% 50% at 60% 100%, rgba(180, 167, 200, .14), transparent 70%),
+    radial-gradient(ellipse 45% 70% at 90% 100%, var(--season-accent-soft), transparent 70%);
+}
+
+/* Botão principal com brilho de vela de abóbora */
+[data-season="halloween"] .btn-primary:not(.btn-sm) { box-shadow: 0 0 18px rgba(249, 115, 22, .4); }
+
+@media (prefers-reduced-motion: reduce) {
+  .season-bat { display: none; }
+  .season-spider { transform: translateY(80px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .season-bat { animation: season-fly 26s linear infinite 2s; }
+  .season-bat::before { animation: season-flap .22s ease-in-out infinite alternate; }
+  .season-bat:nth-child(2) { animation-duration: 31s; animation-delay: 11s; }
+  .season-bat:nth-child(3) { animation-duration: 37s; animation-delay: 19s; }
+  @keyframes season-fly {
+    0%   { left: -60px; opacity: 0; transform: translateY(0); }
+    1%   { opacity: .9; }
+    8%   { transform: translateY(-26px); }
+    16%  { transform: translateY(14px); }
+    24%  { left: calc(100% + 60px); opacity: .9; transform: translateY(-10px); }
+    25%, 100% { left: calc(100% + 60px); opacity: 0; }
+  }
+  @keyframes season-flap {
+    from { transform: scaleY(1); }
+    to   { transform: scaleY(.45); }
+  }
+  .season-spider { animation: season-drop 19s ease-in-out infinite 5s; }
+  @keyframes season-drop {
+    0%, 70%, 100% { transform: translateY(-90px) rotate(0); }
+    10% { transform: translateY(140px) rotate(0); }
+    14% { transform: translateY(128px) rotate(6deg); }
+    20% { transform: translateY(136px) rotate(-5deg); }
+    28% { transform: translateY(132px) rotate(3deg); }
+    40% { transform: translateY(134px) rotate(0); }
+  }
+  .season-fog { animation: season-fog 14s ease-in-out infinite alternate; }
+  @keyframes season-fog {
+    from { transform: translateX(-6%); }
+    to   { transform: translateX(6%); }
+  }
+  [data-season="halloween"] .btn-primary:not(.btn-sm) { animation: season-candle 3.8s infinite; }
+  @keyframes season-candle {
+    0%, 100% { box-shadow: 0 0 14px rgba(249, 115, 22, .35); }
+    12% { box-shadow: 0 0 22px rgba(249, 115, 22, .55); }
+    18% { box-shadow: 0 0 12px rgba(249, 115, 22, .3); }
+    42% { box-shadow: 0 0 20px rgba(249, 115, 22, .5); }
+    60% { box-shadow: 0 0 26px rgba(251, 146, 60, .6); }
+    66% { box-shadow: 0 0 13px rgba(249, 115, 22, .32); }
+  }
 }
