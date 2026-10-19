@@ -172,3 +172,52 @@ describe('LiveWorkoutModal — descanso', () => {
     expect(screen.queryByRole('timer')).toBeNull();
   });
 });
+
+describe('LiveWorkoutModal — bi-set', () => {
+  const GROUP_DAY = {
+    dia: 'Segunda',
+    foco: 'Peito e costas',
+    exercicios: [
+      { nome: 'Supino Reto', series: '2', reps: '10', descanso: '0s', tecnica: '', grupo: 'A' },
+      { nome: 'Remada Curvada', series: '2', reps: '10', descanso: '90s', tecnica: '', grupo: 'A' },
+      { nome: 'Rosca Direta', series: '3', reps: '12', descanso: '45s', tecnica: '' },
+    ],
+    pos: [],
+  };
+
+  // O botão faz o papel da série marcada num bi-set: chama o passo do grupo.
+  function setupGroup(step) {
+    const renderExercise = (ex, onRestStart, onGroupStep) => (
+      <button type="button" onClick={() => onGroupStep(ex, step(ex))}>marcar {ex.nome}</button>
+    );
+    render(<LiveWorkoutModal day={GROUP_DAY} timer={timer()} renderExercise={renderExercise} onFinish={vi.fn()} onClose={vi.fn()} />);
+  }
+
+  it('mostra o grupo e quem vem depois', () => {
+    setupGroup(() => ({ rest: false, next: 'Remada Curvada' }));
+    expect(screen.getByText(/Bi-set A · 1\/2/)).toBeTruthy();
+    expect(screen.getByText(/depois:/).textContent).toContain('Remada Curvada');
+  });
+
+  it('no meio da volta vai direto para o próximo, sem descanso', () => {
+    vi.useFakeTimers();
+    setupGroup(() => ({ rest: false, next: 'Remada Curvada' }));
+    fireEvent.click(screen.getByText('marcar Supino Reto'));
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(screen.getByRole('heading', { name: 'Remada Curvada' })).toBeTruthy();
+    expect(screen.queryByRole('timer')).toBeNull();
+  });
+
+  it('ao fechar a volta descansa e volta ao primeiro do grupo', () => {
+    vi.useFakeTimers();
+    setupGroup(ex => (ex.nome === 'Supino Reto'
+      ? { rest: false, next: 'Remada Curvada' }
+      : { rest: true, seconds: 90, next: 'Supino Reto' }));
+    fireEvent.click(screen.getByText('marcar Supino Reto'));
+    act(() => { vi.advanceTimersByTime(500); });
+    fireEvent.click(screen.getByText('marcar Remada Curvada'));
+    expect(screen.getByRole('timer').textContent).toContain('01:30');
+    act(() => { vi.advanceTimersByTime(500); });
+    expect(screen.getByRole('heading', { name: 'Supino Reto' })).toBeTruthy();
+  });
+});

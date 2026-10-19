@@ -141,7 +141,7 @@ describe('frases', () => {
     const events = [
       'start', 'startOther', 'review', 'exercise', 'rest', 'rest10', 'restDone', 'pr', 'finish',
       'weekFirst', 'weekLast', 'weekGoal', 'suggestLoad', 'suggestReps', 'plateau', 'lastSet', 'exerciseDone',
-      'halfway', 'allDone', 'finishStats', 'technique', 'tip', 'idle', 'paused', 'resumed',
+      'halfway', 'allDone', 'finishStats', 'technique', 'tip', 'idle', 'paused', 'resumed', 'superset',
     ];
     for (const tone of TONES) {
       for (const ev of events) expect(PHRASES[tone][ev].length, `${tone}.${ev}`).toBeGreaterThanOrEqual(3);

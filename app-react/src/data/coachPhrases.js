@@ -14,7 +14,8 @@
 //
 // Além do roteiro fixo, o treinador comenta o que está acontecendo: a semana
 // (weekFirst, weekLast, weekGoal), a carga da última vez (suggestLoad,
-// suggestReps, plateau), o andamento (lastSet, exerciseDone, halfway, allDone)
+// suggestReps, plateau), o andamento (lastSet, exerciseDone, halfway, allDone,
+// superset = troca sem descanso dentro de um bi-set/circuito)
 // e o resumo do fim (finishStats).
 //
 // 'light' = falas que ainda saem no modo "só o essencial".
@@ -117,6 +118,11 @@ export const PHRASES = {
       'Boa! Descansa {tempo}. Depois é a última série!',
       'Mandou bem! {tempo} de descanso e falta só uma.',
       'Isso! Respira {tempo}. A próxima é a última desse exercício, dá tudo!',
+    ],
+    superset: [
+      'Sem descanso! Direto pro {exercicio}.',
+      'Boa! Agora {exercicio}, emendado!',
+      'Não para! Bi-set: {exercicio} agora.',
     ],
     exerciseDone: [
       'Exercício fechado! Descansa {tempo}, depois vem {proximo}.',
@@ -260,6 +266,11 @@ export const PHRASES = {
       '{tempo} de descanso e falta só uma. Dá pra aguentar, vai.',
       'Respira {tempo}. A próxima é a última desse, então sem economizar.',
     ],
+    superset: [
+      'Descanso? Que descanso? Vai pro {exercicio}!',
+      'Emenda no {exercicio}, sem enrolar!',
+      'Nada de sentar! {exercicio} agora.',
+    ],
     exerciseDone: [
       'Esse já era! Descansa {tempo}. Próxima vítima: {proximo}.',
       'Exercício fechado! {tempo} pra recuperar a dignidade. Depois vem {proximo}.',
@@ -395,6 +406,11 @@ export const PHRASES = {
       'Bom trabalho. Descanse {tempo}. A próxima é a última série.',
       'Muito bem. {tempo} de descanso. Falta uma série.',
       'Isso. Respire por {tempo}. Depois, a última série deste exercício.',
+    ],
+    superset: [
+      'Siga direto para {exercicio}, sem pausa.',
+      'Agora {exercicio}, em sequência.',
+      'Sem descanso agora. Próximo: {exercicio}.',
     ],
     exerciseDone: [
       'Exercício concluído. Descanse {tempo}. Em seguida, {proximo}.',

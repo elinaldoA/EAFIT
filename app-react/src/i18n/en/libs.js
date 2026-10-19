@@ -254,4 +254,8 @@ export default {
   'Conta e alertas': 'Account and alerts',
   'Ative as notificações para saber quando um aluno precisar de você e escolha quais alertas receber. Quer treinar também? "Usar como aluno" troca para o app de treino.': 'Turn on notifications to know when a client needs you and choose which alerts to receive. Want to train too? "Use as client" switches to the workout app.',
   'Comece convidando seu primeiro aluno. Para rever este guia: Conta → Ajuda.': 'Start by inviting your first client. To see this guide again: Account → Help.',
+  // Bi-set/circuito (lib/supersets.js)
+  'Circuito': 'Circuit',
+  'Tri-set': 'Tri-set',
+  'Bi-set': 'Superset',
 };

@@ -67,6 +67,7 @@ export function draftFromPlan(plan) {
       foco: d.foco || '',
       exercicios: (d.exercicios || []).map(e => ({
         nome: e.nome || '', series: e.series || '', reps: e.reps || '', descanso: e.descanso || '', tecnica: e.tecnica || '',
+        grupo: e.grupo || '', aquecimento: e.aquecimento ?? '',
       })),
     }))),
   };
@@ -87,6 +88,8 @@ export function buildPlanPayload(draft) {
         reps: String(e.reps || '').trim(),
         descanso: String(e.descanso || '').trim(),
         tecnica: String(e.tecnica || '').trim(),
+        grupo: /^[A-Z]$/.test(e.grupo || '') ? e.grupo : null,
+        aquecimento: e.aquecimento === '' || e.aquecimento == null ? null : Number(e.aquecimento),
       }))
       .filter(e => e.nome);
     if (!exercicios.length) return { ok: false, error: t('{dia}: adicione pelo menos um exercício.', { dia: d.dia }) };

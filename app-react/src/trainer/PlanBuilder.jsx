@@ -8,6 +8,7 @@ import {
   buildPlanPayload, fetchClientPlan, assignPlan, friendlyPlanError,
 } from '../lib/trainerPlan';
 import Loading from '../components/Loading';
+import ExerciseExtras from '../components/ExerciseExtras';
 
 import { t } from '../lib/i18n';
 // Montagem de treino: dias da semana, foco, exercícios (com sugestão da
@@ -163,6 +164,7 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
                 </div>
                 <input className="input input--sm" placeholder={t('Técnica / observação (opcional)')} value={ex.tecnica}
                   onChange={e => setEx(di, ei, { tecnica: e.target.value })} />
+                <ExerciseExtras grupo={ex.grupo} aquecimento={ex.aquecimento} onChange={patch => setEx(di, ei, patch)} />
               </div>
               <button type="button" className="plan-row__del" aria-label={t('Remover exercício')}
                 onClick={() => setDay(di, d => ({ ...d, exercicios: d.exercicios.filter((_, i) => i !== ei) }))}>✕</button>

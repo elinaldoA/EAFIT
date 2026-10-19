@@ -8,6 +8,7 @@ import { compareExercise, fetchPreviousBests, fmtVolume } from '../lib/workoutHi
 import { formatCardioSummary } from '../lib/cardio';
 import { useBackToClose } from '../hooks/useBackToClose';
 
+import HeartRateSummary from './HeartRateSummary';
 import { t, locale, tEx } from '../lib/i18n';
 function fmtKg(n) {
   return `${n.toLocaleString(locale, { maximumFractionDigits: 1 })}kg`;
@@ -86,6 +87,8 @@ export default function SessionDetailModal({ session, onClose }) {
               <span className="stat-card__label">{t('Avaliação')}</span>
             </div>
           </div>
+
+          <HeartRateSummary hr={session.heartRate} />
 
           {session.notes && (
             <div className="summary-section">

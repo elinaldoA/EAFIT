@@ -20,8 +20,9 @@ vi.mock('../lib/sound', () => ({ playWorkoutFinishedSound: h.finishedSound }));
 // O bloco de exercício e o modo ao vivo têm testes próprios: aqui viram stubs
 // que expõem os callbacks que o cartão entrega a eles.
 vi.mock('./ExerciseBlock', () => ({
-  default: ({ ex, started, open, version, onToggleAll, onFillOthers, onApplySuggestion }) => (
+  default: ({ ex, started, open, version, onToggleAll, onFillOthers, onApplySuggestion, onSetDone }) => (
     <div data-testid={`ex-${ex.nome}`} data-started={String(started)} data-open={String(open)} data-version={version}>
+      {onSetDone && <button type="button" onClick={() => onSetDone(1)}>serie {ex.nome}</button>}
       <button type="button" onClick={onToggleAll}>todas {ex.nome}</button>
       <button type="button" onClick={() => onFillOthers('80', '10')}>preencher {ex.nome}</button>
       <button type="button" onClick={() => onApplySuggestion('85', 9)}>sugestao {ex.nome}</button>
@@ -305,5 +306,33 @@ describe('DayCard — notas e modo ao vivo', () => {
     expect(onCloseLive).toHaveBeenCalled();
     expect(h.finishedSound).toHaveBeenCalled();
     expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('DayCard — bi-set', () => {
+  const GROUP_DAY = {
+    ...DAY,
+    exercicios: [
+      { nome: 'Supino', series: '3', reps: '10', descanso: '0s', tecnica: '', grupo: 'A' },
+      { nome: 'Remada', series: '3', reps: '10', descanso: '75s', tecnica: '', grupo: 'A' },
+      { nome: 'Rosca', series: '3', reps: '12', descanso: '45s', tecnica: '' },
+    ],
+  };
+
+  it('agrupa os exercícios do bi-set e só eles recebem o passo do grupo', () => {
+    setup({ day: GROUP_DAY });
+    expect(screen.getByText(/Bi-set A/)).toBeTruthy();
+    expect(screen.getByText('serie Supino')).toBeTruthy();
+    expect(screen.queryByText('serie Rosca')).toBeNull();
+  });
+
+  it('descanso só ao fechar a volta, com o tempo do último do grupo', () => {
+    const { onRestStart } = setup({ day: GROUP_DAY });
+    localStorage.setItem('set_Supino_1_done', 'true');
+    fireEvent.click(screen.getByText('serie Supino'));
+    expect(onRestStart).not.toHaveBeenCalled();
+    localStorage.setItem('set_Remada_1_done', 'true');
+    fireEvent.click(screen.getByText('serie Remada'));
+    expect(onRestStart).toHaveBeenCalledWith('Remada', 75);
   });
 });

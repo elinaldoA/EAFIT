@@ -10,7 +10,9 @@ import { postActivity } from '../lib/friends';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 
 import { t, tEx } from '../lib/i18n';
-export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, started }) {
+// onSetDone: só nos exercícios de bi-set/circuito — quem decide o descanso e o
+// próximo exercício é o grupo (WorkoutDayCard), não o descanso desta série.
+export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFillOthers, started }) {
   const { user } = useAuth();
   const { saveSetState, workoutIds } = useWorkout();
   const toast = useToast();
@@ -112,7 +114,8 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onFillOthers, st
     bump();
     if (next) {
       const restSeconds = parseRestSeconds(ex.descanso);
-      if (restSeconds > 0) onRestStart(ex.nome, restSeconds);
+      if (onSetDone) onSetDone(n);
+      else if (restSeconds > 0) onRestStart(ex.nome, restSeconds);
     }
     if (user) {
       const wId = await saveSetState(day.dia, ex.nome, n, { completed: next });

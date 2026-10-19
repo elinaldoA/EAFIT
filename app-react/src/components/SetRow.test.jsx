@@ -154,6 +154,14 @@ describe('SetRow — marcar a série', () => {
     expect(h.saveSetState).toHaveBeenCalledWith('Segunda', 'Supino Reto', 1, { completed: false });
   });
 
+  it('em bi-set avisa o grupo (onSetDone) em vez de iniciar o descanso do exercício', async () => {
+    const onSetDone = vi.fn();
+    const { onRestStart } = setup({ onSetDone });
+    await act(async () => { fireEvent.click(check()); });
+    expect(onSetDone).toHaveBeenCalledWith(1);
+    expect(onRestStart).not.toHaveBeenCalled();
+  });
+
   it('exercício sem descanso (-) não inicia o cronômetro', async () => {
     const { onRestStart } = setup({ ex: { ...EX, descanso: '-' } });
     await act(async () => { fireEvent.click(check()); });

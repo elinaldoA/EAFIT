@@ -12,6 +12,7 @@ import {
 } from '../lib/workoutPlans';
 import { useBackToClose } from '../hooks/useBackToClose';
 import Loading from './Loading';
+import ExerciseExtras from './ExerciseExtras';
 
 import { t } from '../lib/i18n';
 const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -97,7 +98,8 @@ function MoveButtons({ canUp, canDown, onMove }) {
   );
 }
 
-function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete }) {
+// extras: bi-set e aquecimento, só nos exercícios de força (o pós-treino não tem).
+function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = false }) {
   const [local, setLocal] = useState(ex);
   // Ressincroniza só ao trocar de exercício (por id) — incluir `ex` inteiro
   // resetaria `local` a cada render do pai, descartando edição em andamento
@@ -125,6 +127,12 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete }) {
         </div>
         <input className="input input--sm" placeholder={t('Técnica')} value={local.tecnica}
           onChange={e => setLocal(l => ({ ...l, tecnica: e.target.value }))} onBlur={() => save('tecnica')} />
+        {extras && (
+          <ExerciseExtras
+            grupo={local.grupo} aquecimento={local.aquecimento}
+            onChange={patch => { setLocal(l => ({ ...l, ...patch })); onChange(ex.id, patch); }}
+          />
+        )}
       </div>
       <button type="button" className="plan-ex-row__del" onClick={() => onDelete(ex.id)} aria-label={t('Remover exercício')}>✕</button>
     </div>
@@ -416,7 +424,7 @@ export default function PlanEditorModal({ onClose }) {
                       key={ex.id} ex={ex}
                       canUp={i > 0} canDown={i < day.exercicios.length - 1}
                       onMove={dir => handleMove(false, ex.id, dir)}
-                      onChange={handleUpdateExercise} onDelete={handleDeleteExercise}
+                      onChange={handleUpdateExercise} onDelete={handleDeleteExercise} extras
                     />
                   ))}
                   <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleAddExercise(false)}>{t('+ Exercício')}</button>

@@ -8,6 +8,9 @@ import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { postActivity } from '../lib/friends';
 import { coachSay, speechTime } from '../lib/coach';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
+import { findGroup, nextInGroup, segmentExercises, groupKindLabel } from '../lib/supersets';
+import { maxHeartRate, readSession, summarizeSession, clearSession } from '../lib/heartRate';
+import { useHeartRateRecorder } from '../hooks/useHeartRate';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
 
@@ -17,7 +20,7 @@ import { t, locale, tFoco } from '../lib/i18n';
 // que é quem tem o cronômetro e as ações de série do dia.
 export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
-  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays } = useWorkout();
+  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, saveWorkoutHeartRate, activePlanDays } = useWorkout();
   const toast = useToast();
   const [open, setOpen] = useState(isToday);
   const [checked, setChecked] = useState(() => localStorage.getItem(`treino_${day.dia}`) === 'true');
@@ -29,6 +32,8 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   // localStorage só na montagem e ficariam com os valores de antes.
   const [liveEpoch, setLiveEpoch] = useState(0);
   const timer = useWorkoutTimer(day.dia);
+  // Cinta cardíaca conectada: soma as leituras enquanto o cronômetro corre.
+  useHeartRateRecorder(day.dia, timer.status === 'running', maxHeartRate(user?.user_metadata?.idade || localStorage.getItem('profile_idade')));
 
   async function markDone(next) {
     setChecked(next);
@@ -77,6 +82,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
 
   function handleResetTimer() {
     timer.reset();
+    clearSession(day.dia);
     if (user) saveWorkoutTimer(day.dia, { startedAt: null, finishedAt: null, durationSeconds: null });
   }
 
@@ -98,6 +104,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     return {
       day, durationMs, totalCarga: calcDayTotalCarga(day),
       exercises, totalSetsDone, totalPlannedSets, weekDone, weekTotal,
+      heartRate: summarizeSession(readSession(day.dia)),
     };
   }
 
@@ -111,6 +118,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) });
     bump();
     const summary = buildSummary(accumulatedMs);
+    if (user && summary.heartRate) saveWorkoutHeartRate(day.dia, summary.heartRate);
     coachSay('finish', { feitos: summary.weekDone, meta: summary.weekTotal }, { delayMs: 900 });
     // Depois do fecho, o treinador comenta os números do treino e a semana.
     const minutes = Math.round(accumulatedMs / 60000);
@@ -225,10 +233,21 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
 
   const started = timer.status !== 'idle';
 
+  // Série marcada num bi-set/circuito: segue direto para o próximo da volta, e
+  // o descanso só entra ao fechar a volta (lib/supersets.js). No modo ao vivo
+  // quem troca de exercício e conta o descanso é o LiveWorkoutModal.
+  function handleGroupSetDone(group, ex, n, live) {
+    const step = nextInGroup(group, ex.nome, n, (nome, k) => localStorage.getItem(`set_${nome}_${k}_done`) === 'true');
+    if (live) live.onGroupStep(ex, step);
+    else if (step.rest && step.seconds > 0) onRestStart(ex.nome, step.seconds);
+  }
+
   function renderExerciseBlock(ex, live = null) {
+    const group = findGroup(day.exercicios, ex.nome);
     return (
       <ExerciseBlock
         key={ex.nome} ex={ex} day={day} bump={bump} onRestStart={live ? live.onRestStart : onRestStart}
+        onSetDone={group ? n => handleGroupSetDone(group, ex, n, live) : undefined}
         // Na lista, não busca sugestões enquanto o modo ao vivo (que tem as
         // próprias instâncias do bloco) estiver aberto por cima.
         open={live ? true : open && !liveOpen} hideName={!!live}
@@ -345,7 +364,15 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
           )}
         </div>
 
-        {day.exercicios.map(ex => renderExerciseBlock(ex))}
+        {segmentExercises(day.exercicios).map(seg => (seg.type === 'single' ? renderExerciseBlock(seg.ex) : (
+          <div className="superset" key={`grupo-${seg.members[0].nome}`}>
+            <div className="superset__head">
+              <span className="superset__badge">🔗 {groupKindLabel(seg.members.length)} {seg.letter}</span>
+              <span className="superset__hint">{t('Uma série de cada, em sequência · descanso no fim da volta')}</span>
+            </div>
+            {seg.members.map(m => renderExerciseBlock(m))}
+          </div>
+        )))}
 
         {day.pos.length > 0 && (
           <div className="post-section">
@@ -360,7 +387,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
           day={day}
           timer={timer}
           week={weekProgress()}
-          renderExercise={(ex, onLiveRest) => renderExerciseBlock(ex, { onRestStart: onLiveRest })}
+          renderExercise={(ex, onLiveRest, onGroupStep) => renderExerciseBlock(ex, { onRestStart: onLiveRest, onGroupStep })}
           onFinish={finishFromLive}
           onClose={closeLive}
         />

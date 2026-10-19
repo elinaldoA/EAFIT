@@ -10,6 +10,13 @@ import { useToast } from './useToast';
 import { WorkoutContext } from './useWorkout';
 
 import { t } from '../lib/i18n';
+// PGRST204/42703: banco ainda sem as colunas hr_* (migration
+// 20261115010000_superset_warmup_hr.sql). O resumo da cinta é descartado em vez
+// de ficar preso na fila de sincronização para sempre.
+function isMissingColumn(error) {
+  return error?.code === 'PGRST204' || error?.code === '42703';
+}
+
 // Reexecuta uma escrita que falhou (ex.: sem internet no momento) quando a fila é esvaziada.
 const SYNC_EXECUTORS = {
   workout_status: async ({ id, completed }) => {
@@ -27,6 +34,10 @@ const SYNC_EXECUTORS = {
   workout_notes: async ({ id, notes }) => {
     const { error } = await db.from('workouts').update({ notes }).eq('id', id);
     if (error) throw error;
+  },
+  workout_hr: async ({ id, ...hr }) => {
+    const { error } = await db.from('workouts').update(hr).eq('id', id);
+    if (error && !isMissingColumn(error)) throw error;
   },
   set_state: async ({ workout_id, exercise_name, set_number, patch }) => {
     const { error } = await db
@@ -55,6 +66,11 @@ const SYNC_EXECUTORS = {
     const wId = await ensureWorkoutId(userId, day);
     const { error } = await db.from('workouts').update({ notes }).eq('id', wId);
     if (error) throw error;
+  },
+  workout_hr_by_day: async ({ userId, day, ...hr }) => {
+    const wId = await ensureWorkoutId(userId, day);
+    const { error } = await db.from('workouts').update(hr).eq('id', wId);
+    if (error && !isMissingColumn(error)) throw error;
   },
   set_state_by_day: async ({ userId, day, exercise_name, set_number, patch }) => {
     const wId = await ensureWorkoutId(userId, day);
@@ -373,6 +389,27 @@ export function WorkoutProvider({ children }) {
     }
   }
 
+  // Resumo da cinta cardíaca do treino (lib/heartRate.js summarizeSession).
+  async function saveWorkoutHeartRate(dayName, { avg, max, zones }) {
+    if (!user) return;
+    const hr = { hr_avg: avg, hr_max: max, hr_zones: zones };
+    let wId;
+    try {
+      wId = workoutIds[dayName] || await ensureWorkoutId(user.id, findDay(dayName));
+      if (!workoutIds[dayName]) setWorkoutIds(ids => ({ ...ids, [dayName]: wId }));
+      const { error } = await db.from('workouts').update(hr).eq('id', wId);
+      if (error && !isMissingColumn(error)) throw error;
+    } catch (err) {
+      console.error('saveWorkoutHeartRate:', err);
+      if (wId) {
+        enqueue('workout_hr', { id: wId, ...hr });
+      } else {
+        enqueue('workout_hr_by_day', { userId: user.id, day: findDay(dayName), ...hr });
+      }
+      setSyncStatus('pending');
+    }
+  }
+
   async function saveSetState(dayName, exerciseName, setNumber, patch) {
     if (!user) return;
     let wId;
@@ -406,7 +443,7 @@ export function WorkoutProvider({ children }) {
   }
 
   return (
-    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, markPending, refreshPlan: loadUserData }}>
+    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, saveWorkoutHeartRate, syncNow, markPending, refreshPlan: loadUserData }}>
       {children}
     </WorkoutContext.Provider>
   );

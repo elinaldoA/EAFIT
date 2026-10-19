@@ -36,7 +36,9 @@ function toRpcDays(days) {
   return days.map(d => ({
     dia: d.dia,
     foco: d.foco ?? '',
-    exercicios: (d.exercicios || []).map(({ nome, series, reps, descanso, tecnica }) => ({ nome, series, reps, descanso, tecnica })),
+    exercicios: (d.exercicios || []).map(({ nome, series, reps, descanso, tecnica, grupo, aquecimento }) => ({
+      nome, series, reps, descanso, tecnica, grupo: grupo || null, aquecimento: aquecimento ?? null,
+    })),
     pos: (d.pos || []).map(({ nome, series, reps, descanso, tecnica }) => ({ nome, series, reps, descanso, tecnica })),
   }));
 }
@@ -53,6 +55,7 @@ function exercisesToRows(planDayId, day) {
   const row = post => (ex, idx) => ({
     plan_day_id: planDayId, nome: ex.nome, series: ex.series ?? '', reps: ex.reps ?? '',
     descanso: ex.descanso ?? '', tecnica: ex.tecnica ?? '', is_post_workout: post, order_index: idx,
+    ...(!post && { grupo: ex.grupo || null, aquecimento: ex.aquecimento ?? null }),
   });
   return [...(day.exercicios || []).map(row(false)), ...(day.pos || []).map(row(true))];
 }
@@ -147,6 +150,8 @@ function seedDefaultPlanOnce(userId) {
   return promise;
 }
 
+const EXERCISE_COLS = 'id, plan_day_id, nome, series, reps, descanso, tecnica, is_post_workout, order_index';
+
 export async function fetchPlanDays(planId) {
   const { data: days, error } = await db
     .from('plan_days')
@@ -158,11 +163,15 @@ export async function fetchPlanDays(planId) {
   const dayIds = (days || []).map(d => d.id);
   let exercises = [];
   if (dayIds.length) {
-    const { data: ex, error: exErr } = await db
+    const query = cols => db
       .from('plan_exercises')
-      .select('id, plan_day_id, nome, series, reps, descanso, tecnica, is_post_workout, order_index')
+      .select(cols)
       .in('plan_day_id', dayIds)
       .order('order_index', { ascending: true });
+    let { data: ex, error: exErr } = await query(`${EXERCISE_COLS}, grupo, aquecimento`);
+    // 42703: banco ainda sem a migration 20261115010000 (grupo/aquecimento) —
+    // carrega o plano sem os campos novos em vez de deixar o app sem treino.
+    if (exErr?.code === '42703') ({ data: ex, error: exErr } = await query(EXERCISE_COLS));
     if (exErr) throw exErr;
     exercises = ex || [];
   }
@@ -173,7 +182,10 @@ export async function fetchPlanDays(planId) {
     foco: d.foco,
     exercicios: exercises
       .filter(e => e.plan_day_id === d.id && !e.is_post_workout)
-      .map(e => ({ id: e.id, nome: e.nome, series: e.series, reps: e.reps, descanso: e.descanso, tecnica: e.tecnica })),
+      .map(e => ({
+        id: e.id, nome: e.nome, series: e.series, reps: e.reps, descanso: e.descanso, tecnica: e.tecnica,
+        grupo: e.grupo ?? null, aquecimento: e.aquecimento ?? null,
+      })),
     pos: exercises
       .filter(e => e.plan_day_id === d.id && e.is_post_workout)
       .map(e => ({ id: e.id, nome: e.nome, series: e.series, reps: e.reps, descanso: e.descanso, tecnica: e.tecnica })),

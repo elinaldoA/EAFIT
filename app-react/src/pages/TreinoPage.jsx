@@ -60,7 +60,7 @@ export default function TreinoPage() {
   async function handleReset() {
     if (!window.confirm(t('Limpar todos os checks e cargas salvas?'))) return;
     Object.keys(localStorage).forEach(k => {
-      if (k.startsWith('treino_') || k.startsWith('carga_') || k.startsWith('set_')) localStorage.removeItem(k);
+      if (['treino_', 'carga_', 'set_', 'warm_', 'hr_'].some(p => k.startsWith(p))) localStorage.removeItem(k);
     });
     bump();
     if (user) {

@@ -231,6 +231,19 @@
 /* Três campos lado a lado: menos recuo lateral pra sobrar espaço pro texto. */
 .plan-ex-row__nums .input { padding-left: 8px; padding-right: 8px; }
 
+/* Bi-set e aquecimento (ExerciseExtras): dois seletores lado a lado. */
+.plan-ex-row__extras { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.plan-ex-row__extra {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.plan-ex-row__extra .input { padding-left: 8px; padding-right: 8px; }
+
 @media (max-width: 380px) {
   .plan-modal { padding-left: 10px; padding-right: 10px; }
   .plan-modal__header { padding: 14px 14px 8px; }

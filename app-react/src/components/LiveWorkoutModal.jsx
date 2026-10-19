@@ -12,7 +12,9 @@ import { isCardioItem } from '../lib/cardio';
 import {
   coachSay, coachStop, coachRestTip, setDoneEvent, weekEvent, speechTime, speechDetail, speechExercise, FINISH_EVENTS,
 } from '../lib/coach';
+import { findGroup, groupKindLabel } from '../lib/supersets';
 import ExerciseDemo from './ExerciseDemo';
+import HeartRateChip from './HeartRateChip';
 import CoachPrompt from './CoachPrompt';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
@@ -59,6 +61,9 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   // apresentação de cada exercício. O primeiro entra na fila depois da abertura.
   // Também é o que a voz diz ao ser ligada pelo convite (CoachPrompt).
   const coachOpened = useRef(false);
+  // Troca automática dentro de um bi-set: a voz só diz o nome, sem repetir
+  // séries e reps a cada volta.
+  const groupHop = useRef(false);
   function announce(first) {
     if (first) {
       // Não chamar de "hoje" um treino de outro dia, nem convidar a treinar de novo
@@ -70,6 +75,11 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
       if (semana) coachSay(semana, {}, { queue: true });
     }
     const item = items[index];
+    if (groupHop.current) {
+      groupHop.current = false;
+      coachSay('superset', { exercicio: speechExercise(item.nome) });
+      return;
+    }
     coachSay('exercise', { exercicio: speechExercise(item.nome), detalhe: speechDetail(item) }, { queue: first });
   }
   useEffect(() => {
@@ -107,18 +117,29 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restDone, rest?.id]);
 
-  function handleRestStart(label, seconds) {
+  function handleRestStart(label, seconds, nextName) {
     restSeq.current += 1;
     const start = Date.now();
     setNow(start);
     // Depois da última série do treino não há "próxima" para a voz anunciar.
-    const final = announceSetDone(seconds) === 'allDone';
+    const final = announceSetDone(seconds, nextName) === 'allDone';
     setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000, final });
   }
 
   // A série acabou de ser marcada (o localStorage já tem o check): em vez de só
   // contar o descanso, o treinador comenta em que pé o treino está.
-  function announceSetDone(seconds) {
+  // Série marcada num bi-set/circuito (step de nextInGroup): ainda falta alguém
+  // na volta → vai direto pra ele; fechou a volta → descanso do grupo e já
+  // mostra o primeiro da próxima volta.
+  function handleGroupStep(doneEx, step) {
+    if (step.rest && step.seconds > 0) handleRestStart(doneEx.nome, step.seconds, step.next);
+    const to = step.next ? items.findIndex(i => i.nome === step.next) : -1;
+    if (to === -1 || to === index) return;
+    groupHop.current = !step.rest;
+    setTimeout(() => setIndex(to), 450);
+  }
+
+  function announceSetDone(seconds, nextName) {
     const details = gatherExerciseDetails(day);
     const { done, total } = countSets(details);
     const sets = details.find(d => d.nome === ex.nome)?.sets || [];
@@ -130,7 +151,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
     if (event === 'halfway') halfSaid.current = true;
     coachSay(event, {
       tempo: speechTime(seconds),
-      ...(event === 'exerciseDone' && next && { proximo: speechExercise(next.nome) }),
+      ...(event === 'exerciseDone' && (nextName || next) && { proximo: speechExercise(nextName || next.nome) }),
     });
     if (event === 'rest' || event === 'lastSet') {
       const tip = coachRestTip({ tecnica: ex.tecnica, seconds, techniqueSaid: techniqueSaid.current.has(ex.nome) });
@@ -184,6 +205,8 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   const isPos = index >= day.exercicios.length;
   const next = items[index + 1];
   const restPct = rest ? Math.min(100, ((rest.total - restLeft) / rest.total) * 100) : 0;
+  const group = isPos ? null : findGroup(day.exercicios, ex.nome);
+  const groupPos = group ? group.members.findIndex(m => m.nome === ex.nome) : -1;
 
   return createPortal(
     <div className="live" role="dialog" aria-modal="true" aria-label={t('Modo treino — {dia}', { dia: t(day.dia) })}>
@@ -194,6 +217,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
           <span className="live__focus">{tFoco(day.foco)}</span>
         </div>
         <div className="live__top-right">
+          <HeartRateChip />
           <div className={`live__clock${timer.status === 'paused' ? ' live__clock--paused' : ''}`} aria-label={t('Tempo de treino')}>
             {formatDuration(timer.elapsedMs)}
           </div>
@@ -217,6 +241,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
               i === index && 'live__step--current',
               isExerciseDone(item) && 'live__step--done',
               i >= day.exercicios.length && 'live__step--pos',
+              i < day.exercicios.length && findGroup(day.exercicios, item.nome) && 'live__step--grouped',
             ].filter(Boolean).join(' ')}
             onClick={() => setIndex(i)}
           />
@@ -229,6 +254,12 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
           <span className="live__kicker">
             {t('{v1} {v2}{setsDone}/{setsTotal} séries no total', { v1: isPos ? 'Pós-treino' : `Exercício ${index + 1} de ${day.exercicios.length}`, v2: ' · ', setsDone, setsTotal })}
           </span>
+          {group && (
+            <span className="live__group">
+              🔗 {groupKindLabel(group.members.length)} {group.letter} · {groupPos + 1}/{group.members.length}
+              {group.members[groupPos + 1] && <> · {t('depois:')} {tEx(group.members[groupPos + 1].nome)}</>}
+            </span>
+          )}
           <h2 className="live__ex-name">{tEx(ex.nome)}</h2>
           <div className="live__chips">
             {setCountOf(ex) > 0 && !isCardioItem(ex) && <span className="live__chip">{t('{series} séries', { series: ex.series })}</span>}
@@ -240,7 +271,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
         </div>
 
         {setCountOf(ex) > 0 ? (
-          <div className="live__block">{renderExercise(ex, handleRestStart)}</div>
+          <div className="live__block">{renderExercise(ex, handleRestStart, handleGroupStep)}</div>
         ) : (
           <div className="empty-state empty-state--inline">
             <p className="empty-state__text">{t('Sem séries pra registrar aqui — faça o combinado e siga pro próximo.')}</p>

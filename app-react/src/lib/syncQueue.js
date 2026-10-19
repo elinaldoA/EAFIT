@@ -35,11 +35,13 @@ function coalesceKey(type, p) {
     case 'workout_timer':
     case 'workout_rating':
     case 'workout_notes':
+    case 'workout_hr':
       return `${type}:${p.id}`;
     case 'workout_status_by_day':
     case 'workout_timer_by_day':
     case 'workout_rating_by_day':
     case 'workout_notes_by_day':
+    case 'workout_hr_by_day':
       return `${type}:${p.userId}:${p.day?.dia}`;
     case 'set_state':
       return `${type}:${p.workout_id}:${p.exercise_name}:${p.set_number}`;
