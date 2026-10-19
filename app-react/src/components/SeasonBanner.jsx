@@ -17,6 +17,12 @@ export function SeasonDecor() {
     setCurrentSeason(theme);
     if (theme) document.documentElement.setAttribute('data-season', theme);
     else document.documentElement.removeAttribute('data-season');
+    // Barra de status do celular no mesmo roxo do fundo (tokens em styles/season.css).
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta || theme !== 'halloween') return undefined;
+    const before = meta.getAttribute('content');
+    meta.setAttribute('content', '#120c1a');
+    return () => meta.setAttribute('content', before);
   }, [theme]);
   return null;
 }

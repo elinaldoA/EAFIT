@@ -1,7 +1,9 @@
 /* ============================================================
    TEMA DE TEMPORADA (lib/season.js)
-   Só enfeite: cores e contraste dos controles não mudam, e o modo treino
-   ao vivo fica de fora. Ativo com <html data-season="...">.
+   Ativo com <html data-season="...">. O Dia das Bruxas repinta o app inteiro
+   trocando os tokens de tokens.css (fundo, superfícies, bordas e textos em
+   roxo noturno; o laranja principal vira a abóbora), nos temas escuro e
+   claro, com o mesmo contraste de texto. Desligar no Perfil volta tudo.
 ============================================================ */
 :root {
   --season-accent: #a855f7;
@@ -46,8 +48,71 @@
   }
 }
 
-/* Detalhes no app enquanto o tema está no ar */
-[data-season="halloween"] .topbar { box-shadow: inset 0 -2px 0 var(--season-accent); }
+/* ── Dia das Bruxas: paleta do app inteiro ── */
+[data-season="halloween"] {
+  --bg:           #120c1a;
+  --surface:      #1b1326;
+  --surface-2:    #21182e;
+  --surface-3:    #2e2240;
+  --border:       #2f2440;
+  --border-2:     #4a3a63;
+  --text:         #ede7f6;
+  --text-muted:   #b4a7c8;
+  --text-dim:     #8c7da3;
+  --primary:      #f97316;
+  --primary-h:    #fb923c;
+  --primary-glow: rgba(249,115,22,.20);
+}
+[data-theme="light"][data-season="halloween"] {
+  --bg:           #f6f1fb;
+  --surface:      #ffffff;
+  --surface-2:    #f3ecfa;
+  --surface-3:    #e8dff3;
+  --border:       #dccfeb;
+  --border-2:     #a995c4;
+  --text:         #1e1529;
+  --text-muted:   #57476b;
+  --text-dim:     #6f5f85;
+  --primary-glow: rgba(249,115,22,.13);
+}
+
+/* Barras com o roxo da noite e o risco de abóbora */
+[data-season="halloween"] .topbar {
+  background: linear-gradient(100deg, transparent 40%, var(--season-accent-soft)), var(--surface);
+  box-shadow: inset 0 -2px 0 var(--season-accent);
+}
+[data-season="halloween"] .season-banner {
+  background: linear-gradient(100deg, var(--season-accent-soft), var(--primary-glow)), var(--surface);
+}
+[data-season="halloween"] .bottom-nav {
+  background: linear-gradient(0deg, var(--season-accent-soft), transparent 70%), var(--surface);
+  border-top-color: var(--season-accent);
+}
+
+/* Lua, morcegos e teia atrás das telas. Fica abaixo das páginas (.page vem
+   depois no DOM) e não pega toque; opaco o bastante pra não brigar com texto.
+   O fundo vai no .pages porque na moldura de celular do desktop o body é preto. */
+[data-season="halloween"] .pages { background: var(--bg); }
+[data-season="halloween"] .pages::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .5;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='50' r='26' fill='%23fde68a' fill-opacity='.22'/%3E%3Ccircle cx='150' cy='50' r='40' fill='%23fde68a' fill-opacity='.06'/%3E%3Cg fill='%23a855f7' fill-opacity='.45'%3E%3Cpath transform='translate(70 30) scale(.7)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3Cpath transform='translate(118 92) scale(.45)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3C/g%3E%3C/svg%3E") top right / 220px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23a855f7' stroke-opacity='.35' stroke-width='1'%3E%3Cpath d='M0 0L120 0M0 0L110 46M0 0L85 85M0 0L46 110M0 0L0 120'/%3E%3Cpath d='M30 0Q30 8 28 12Q26 20 21 21Q17 26 12 28Q6 29 0 30'/%3E%3Cpath d='M62 0Q60 16 57 24Q52 40 43 43Q35 52 24 57Q14 60 0 62'/%3E%3Cpath d='M95 0Q92 26 88 38Q80 62 67 67Q56 80 38 88Q24 93 0 95'/%3E%3C/svg%3E") top left / 130px no-repeat;
+}
+[data-theme="light"][data-season="halloween"] .pages::before { opacity: .35; }
+
+/* Morcegos voando de leve, só pra quem não pediu menos movimento */
+@media (prefers-reduced-motion: no-preference) {
+  [data-season="halloween"] .pages::before { animation: season-float 7s ease-in-out infinite; }
+  @keyframes season-float {
+    0%, 100% { background-position: top right, top left; }
+    50% { background-position: right 0 top 8px, top left; }
+  }
+}
 
 /* Conquista de temporada */
 .badge-card--seasonal { border-style: dashed; }
