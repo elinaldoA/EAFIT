@@ -63,9 +63,10 @@
 ============================================================ */
 .toolbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
 }
 
 .toolbar__hint { font-size: 0.73rem; color: var(--text-dim); }

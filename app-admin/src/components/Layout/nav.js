@@ -69,6 +69,7 @@ export const NAV_GROUPS = [
           { to: '/biblioteca', label: 'Biblioteca de exercícios' },
           { to: '/demonstracoes', label: 'Demonstrações' },
           { to: '/landing', label: 'Landing page' },
+          { to: '/programas', label: 'Programas de influenciadores' },
         ],
       },
     ],

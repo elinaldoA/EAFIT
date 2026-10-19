@@ -18,6 +18,8 @@ import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
 import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
+import ProgramsModal from '../components/ProgramsModal';
+import { InfluencerProgramBanner, ProgramInvite } from '../components/InfluencerProgramBanner';
 import { syncCoachPrefs } from '../lib/coach';
 
 import { t, tFoco } from '../lib/i18n';
@@ -35,6 +37,8 @@ export default function TreinoPage() {
   const [summary, setSummary] = useState(null);
   const [liveDay, setLiveDay] = useState(null);
   const [askAppRating, setAskAppRating] = useState(false);
+  // Vitrine de programas: null = fechada; {} = lista; { code } / { programId } = direto.
+  const [programs, setPrograms] = useState(null);
 
   // Fechou o resumo do treino: bom momento pra pedir a avaliação do app.
   function handleSummaryClose() {
@@ -83,6 +87,8 @@ export default function TreinoPage() {
       <PersonalMessages />
       <MyAppointments onlyPending />
       {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin />}
+      {user && <ProgramInvite onOpen={setPrograms} />}
+      {user && !planByTrainer && <InfluencerProgramBanner planKey={dataVersion} onOpen={setPrograms} />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
         <div className="plan-expired-banner">
@@ -130,6 +136,7 @@ export default function TreinoPage() {
           {loading ? t('Carregando dados salvos…') : t('Marque os treinos · salva automático')}
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
+          {user && <button className="btn btn--ghost btn--sm" onClick={() => setPrograms({})}>{t('🌟 Programas')}</button>}
           <button className="btn btn--ghost btn--sm" onClick={() => setShowPlanEditor(true)}>{t('⚙️ Editar treino')}</button>
           <button className="btn btn--ghost btn--sm" onClick={handleReset} disabled={loading}>{t('Limpar')}</button>
         </div>
@@ -162,6 +169,9 @@ export default function TreinoPage() {
           onClose={handleSummaryClose}
           onRate={value => saveWorkoutRating(summary.day.dia, value)}
         />
+      )}
+      {programs && (
+        <ProgramsModal initial={programs} toast={toast} onClose={() => setPrograms(null)} />
       )}
       {askAppRating && user && (
         <AppRatingModal userId={user.id} onClose={() => setAskAppRating(false)} />

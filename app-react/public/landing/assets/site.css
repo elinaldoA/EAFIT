@@ -1667,3 +1667,38 @@ textarea.input { resize: vertical; min-height: 120px; }
     100% { transform: translate(10px, 96vh) rotate(320deg); opacity: 0; }
   }
 }
+
+/* ---------- influenciadores (/i/, assets/influencer.js) ----------
+   --inf-accent: cor escolhida pelo influenciador (cai na do site). */
+.inf-wrap { max-width: 760px; }
+.inf-head { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.inf-ava {
+  flex-shrink: 0; border-radius: 50%; object-fit: cover; background: var(--surface-2);
+  border: 3px solid var(--inf-accent, var(--primary));
+}
+.inf-ava--initial { display: inline-grid; place-items: center; font-weight: 900; font-size: 22px; color: var(--inf-accent, var(--primary)); }
+.inf-who { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.inf-name { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+.inf-meta { color: var(--text-dim); font-size: 14px; margin: 0; }
+.inf-ig { color: var(--inf-accent, var(--primary)); font-size: 14px; font-weight: 600; }
+.inf-bio { color: var(--text-muted); font-size: 15px; margin: 0 0 8px; white-space: pre-line; }
+.inf-bio--clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; }
+.inf-section { margin: 22px 0 10px; font-size: 16px; }
+.inf-day .inf-section { margin: 0 0 10px; }
+.inf-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.inf-card, .inf-program {
+  display: flex; gap: 14px; align-items: center; color: inherit; text-decoration: none;
+  border-left: 4px solid var(--inf-accent, var(--primary)); padding: 18px;
+}
+.inf-program { flex-direction: column; align-items: flex-start; gap: 4px; }
+.inf-by { display: inline-flex; align-items: center; gap: 10px; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 6px; }
+.inf-cta { margin: 14px 0 20px; background: var(--inf-accent, var(--primary)); box-shadow: none; }
+.inf-day { margin-bottom: 12px; padding: 18px; }
+.inf-day:hover { transform: none; }
+.inf-ex { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.inf-ex li { display: flex; justify-content: space-between; gap: 12px; }
+.inf-empty { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+@media (max-width: 560px) {
+  .inf-cta { width: 100%; }
+  .inf-card, .inf-program, .inf-day { padding: 14px; }
+}

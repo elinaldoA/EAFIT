@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  fetchAmbassadors, fetchReferrals, createAmbassador, updateAmbassador,
+  fetchAmbassadors, fetchReferrals, createAmbassador, updateAmbassador, setInfluencer, influencerPageUrl,
   ambassadorLink, suggestCode, isValidCode, conversion, CHANNELS, SOURCE_LABELS,
 } from '../lib/ambassadors';
 import { formatDate } from '../lib/userDetailHelpers';
@@ -75,6 +75,26 @@ export default function Ambassadors() {
       await updateAmbassador(next);
       setMsg('Embaixador atualizado.');
       setEditing(null);
+      await load();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Influenciador: publica programas de treino no app e ganha página própria
+  // (/i/?u=código). Os programas passam por Conteúdo → Programas de influenciadores.
+  async function handleInfluencer(a) {
+    const on = !a.influencer;
+    if (!window.confirm(on
+      ? `Promover ${a.name} a influenciador? Ele passa a montar programas no app (Perfil → Influenciador EAFIT), que só vão ao ar depois da aprovação da equipe.`
+      : `Tirar ${a.name} de influenciador? A página e os programas dele saem do ar; quem já começou um programa continua com o treino.`)) return;
+    setBusy(true);
+    setMsg('');
+    try {
+      await setInfluencer(a.id, on);
+      setMsg(on ? `${a.name} agora é influenciador. Página: ${influencerPageUrl(a.code)}` : `${a.name} não é mais influenciador.`);
       await load();
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
@@ -171,6 +191,7 @@ export default function Ambassadors() {
                     onEdit={() => setEditing({ id: a.id, name: a.name, code: a.code })}
                     onEditChange={setEditing} onCancel={() => setEditing(null)}
                     onSave={changes => handleSave(a, changes)} onCopy={copy}
+                    onInfluencer={() => handleInfluencer(a)}
                   />
                 ))}
               </tbody>
@@ -187,7 +208,7 @@ export default function Ambassadors() {
   );
 }
 
-function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange, onCancel, onSave, onCopy }) {
+function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange, onCancel, onSave, onCopy, onInfluencer }) {
   return (
     <>
       <tr>
@@ -198,6 +219,7 @@ function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange,
             <>
               <strong>{a.name}</strong>{' '}
               {!a.active && <span className="badge">inativo</span>}
+              {a.influencer && <span className="badge badge--ok">influenciador</span>}
               <div className="user-detail__meta">
                 {a.userId ? <Link to={`/users/${a.userId}`}>{a.email}</Link> : 'conta excluída'}
               </div>
@@ -229,6 +251,9 @@ function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange,
                   {open ? 'Fechar' : `Vinculados (${a.total})`}
                 </button>
                 <button className="btn btn--ghost btn--small" onClick={onEdit}>Editar</button>
+                <button className="btn btn--ghost btn--small" disabled={busy} aria-pressed={a.influencer} onClick={onInfluencer}>
+                  {a.influencer ? 'Tirar de influenciador' : 'Tornar influenciador'}
+                </button>
                 <button className={`btn btn--small ${a.active ? 'btn--danger' : 'btn--ghost'}`} disabled={busy}
                   onClick={() => onSave({ active: !a.active })}>
                   {a.active ? 'Desativar' : 'Reativar'}
@@ -247,6 +272,9 @@ function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange,
                 <button key={c.key} className="btn btn--ghost btn--small" disabled={!a.active}
                   onClick={() => onCopy(ambassadorLink(a.code, c.key))}>{c.label}</button>
               ))}
+              {a.influencer && (
+                <button className="btn btn--ghost btn--small" onClick={() => onCopy(influencerPageUrl(a.code))}>Página de influenciador</button>
+              )}
               {!a.active && <span className="card-note" style={{ margin: 0 }}>Embaixador inativo: o link não vincula novas contas.</span>}
             </div>
             <ReferralList ambassadorId={a.id} />

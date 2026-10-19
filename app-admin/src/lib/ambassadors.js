@@ -29,6 +29,10 @@ const ERRORS = {
   already_ambassador: 'Essa conta já é embaixadora.',
   code_taken: 'Esse código já está em uso.',
   not_found: 'Embaixador não encontrado.',
+  not_authorized: 'Seu papel no painel não permite essa ação.',
+  ambassador_not_found: 'Embaixador não encontrado.',
+  program_not_found: 'Programa não está mais em revisão. Atualize a lista.',
+  note_required: 'Escreva o motivo da recusa: ele aparece para o influenciador.',
 };
 
 export function ambassadorError(err) {
@@ -65,7 +69,15 @@ async function rpc(name, args) {
 }
 
 export async function fetchAmbassadors(days = 30) {
-  return ((await rpc('admin_ambassadors', { days_back: days })) || []).map(r => ({
+  // is_influencer vem da tabela (o admin lê ambassadors); admin_ambassadors é
+  // anterior aos influenciadores. Banco sem a coluna: todos ficam como não.
+  const [rows, flags] = await Promise.all([
+    rpc('admin_ambassadors', { days_back: days }),
+    db.from('ambassadors').select('id, is_influencer').then(({ data, error }) => (error ? [] : data || [])),
+  ]);
+  const influencer = new Set(flags.filter(f => f.is_influencer).map(f => f.id));
+  return (rows || []).map(r => ({
+    influencer: influencer.has(r.am_id),
     id: r.am_id, userId: r.am_user, email: r.am_email, name: r.am_name, code: r.am_code,
     active: r.am_active, createdAt: r.am_created,
     visits: Number(r.am_visits) || 0, signups: Number(r.am_signups) || 0,
@@ -91,4 +103,31 @@ export function createAmbassador({ email, name, code }) {
 
 export function updateAmbassador({ id, name, code, active }) {
   return rpc('admin_update_ambassador', { p_id: id, p_name: name.trim(), p_code: code.trim().toLowerCase(), p_active: active });
+}
+
+// ---- Influenciadores (supabase/migrations/20261116010000_influencers.sql) ----
+// O embaixador promovido a influenciador publica programas no app; cada
+// programa (e cada edição) passa pela revisão do admin antes de ir ao ar.
+
+export function influencerPageUrl(code) {
+  return `${LANDING_URL}i/?u=${encodeURIComponent(code)}`;
+}
+
+export async function setInfluencer(ambassadorId, on) {
+  await rpc('admin_set_influencer', { p_ambassador: ambassadorId, p_on: on });
+}
+
+export const LEVEL_LABELS = { iniciante: 'Iniciante', intermediario: 'Intermediário', avancado: 'Avançado' };
+
+// status: 'review' (padrão) | 'approved' | 'rejected' | 'editing' | null (todos)
+export async function fetchInfluencerPrograms(status = 'review') {
+  return ((await rpc('admin_influencer_programs', { p_status: status })) || []).map(r => ({
+    id: r.ip_id, ambassadorId: r.ip_ambassador, influencer: r.ip_influencer, code: r.ip_code,
+    status: r.ip_status, draft: r.ip_draft, published: r.ip_published, reviewNote: r.ip_review_note,
+    hidden: !!r.ip_hidden, adoptions: Number(r.ip_adoptions) || 0, updatedAt: r.ip_updated_at,
+  }));
+}
+
+export async function reviewInfluencerProgram(id, approve, note = '') {
+  await rpc('admin_review_influencer_program', { p_id: id, p_approve: approve, p_note: note || null });
 }
