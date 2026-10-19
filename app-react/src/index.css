@@ -26,3 +26,4 @@
 @import './styles/trainer.css'; /* Ambiente do Personal Trainer */
 @import './styles/tutorial.css'; /* Tutorial guiado (aluno e personal) */
 @import './styles/inbox.css'; /* Central de avisos (sino) */
+@import './styles/season.css'; /* Tema de temporada (ex.: Dia das Bruxas) */

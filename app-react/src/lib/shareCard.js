@@ -2,6 +2,7 @@ import { formatDuration } from './utils';
 import { trackFeature } from './tracking';
 import { formatMinutes } from './monthlyRecap';
 import { SHARE_CARD_URL } from './links';
+import { currentSeason } from './season';
 import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE, MUSCLE_LABELS } from '../data/bodyMuscleMap';
 import bodyAnatomyImg from '../assets/anatomia.jpg';
@@ -23,6 +24,7 @@ const ORANGE_LIGHT = '#fb923c';
 const SKY = '#38bdf8';
 const EMERALD = '#34d399';
 const VIOLET = '#a78bfa';
+const PURPLE = '#a855f7';
 const MUTED = 'rgba(255,255,255,0.62)';
 
 // Tamanho real (em pixels) de cada metade de anatomia.jpg — diferente de
@@ -375,6 +377,25 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
 const SHARE_URL_LABEL = 'eafit.com.br';
 
 export const SHARE_TEXT = t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
+const HALLOWEEN_SHARE_TEXT = t('Treino das Bruxas concluído no EAFIT 🎃 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
+
+// Dia das Bruxas (lib/season.js): brilho roxo, abóbora e morcegos no topo.
+// Só enfeite em volta; os números do treino continuam no mesmo lugar.
+function drawHalloween(ctx) {
+  drawGlow(ctx, CARD_WIDTH * 0.08, 300, 640, PURPLE, 0.30);
+  drawGlow(ctx, CARD_WIDTH * 0.9, CARD_HEIGHT * 0.72, 560, PURPLE, 0.14);
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `110px ${FONT}`;
+  ctx.fillText('🎃', CARD_WIDTH - PAD_X - 60, 262);
+  ctx.globalAlpha = 0.55;
+  [[640, 205, 44], [760, 168, 34], [520, 176, 28]].forEach(([x, y, size]) => {
+    ctx.font = `${size}px ${FONT}`;
+    ctx.fillText('🦇', x, y);
+  });
+  ctx.restore();
+}
 
 // Barra de marca no topo: logo + nome à esquerda, data à direita.
 async function drawTopBar(ctx, y, dateLabel) {
@@ -453,7 +474,9 @@ export async function renderWorkoutSummaryCard(summary) {
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext('2d');
 
+  const halloween = currentSeason() === 'halloween';
   drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
+  if (halloween) drawHalloween(ctx);
   await drawTopBar(ctx, 70, formatCardDate());
 
   // Destaque: o foco do treino em letras grandes (até 2 linhas).
@@ -463,7 +486,7 @@ export async function renderWorkoutSummaryCard(summary) {
   ctx.fillStyle = ORANGE_LIGHT;
   ctx.font = `800 30px ${FONT}`;
   setTracking(ctx, 4);
-  ctx.fillText(t('TREINO CONCLUÍDO'), PAD_X + 64, y);
+  ctx.fillText(halloween ? t('TREINO DAS BRUXAS CONCLUÍDO') : t('TREINO CONCLUÍDO'), PAD_X + 64, y);
   setTracking(ctx, 0);
 
   const title = String(tFoco(day?.foco) || t(day?.dia) || t('Treino')).toUpperCase();
@@ -545,7 +568,8 @@ async function shareImageBlob(blob, filename, title, text) {
 export async function shareWorkoutSummary(summary) {
   trackFeature('share_card');
   const blob = await renderWorkoutSummaryCard(summary);
-  return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), SHARE_TEXT);
+  const text = currentSeason() === 'halloween' ? HALLOWEEN_SHARE_TEXT : SHARE_TEXT;
+  return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), text);
 }
 
 // Cartão 9:16 da retrospectiva do mês (mesmo visual/marca do resumo do treino).

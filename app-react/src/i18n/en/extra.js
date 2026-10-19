@@ -97,4 +97,15 @@ export default {
   'Outros': 'Others',
   'Outro site': 'Other site',
   'Link sem canal': 'Link without channel',
+  // Tema de temporada: Dia das Bruxas (lib/season.js)
+  'Semana do Dia das Bruxas!': 'Halloween week!',
+  'Treine no dia {dia} ou faça 3 treinos até {fim} e ganhe a conquista Treino das Bruxas.': "Train on {dia} or do 3 workouts by {fim} to earn the Witches' Workout badge.",
+  'Treino das Bruxas {ano}': "Witches' Workout {ano}",
+  'Treine em 31/10 ou faça 3 treinos entre 24/10 e 02/11': 'Train on Oct 31 or do 3 workouts between Oct 24 and Nov 2',
+  'Treino das Bruxas concluído no EAFIT 🎃 Monte o seu grátis: {SHARE_CARD_URL}': "Witches' Workout done on EAFIT 🎃 Build yours for free: {SHARE_CARD_URL}",
+  'TREINO DAS BRUXAS CONCLUÍDO': "WITCHES' WORKOUT DONE",
+  'Decoração do Dia das Bruxas': 'Halloween decoration',
+  'Mostrar a decoração do Dia das Bruxas': 'Show the Halloween decoration',
+  'Faixa do tema, detalhes de cor, card de compartilhar e falas do treinador. Vale só para este aparelho e some sozinha depois do período.': 'Theme banner, color details, share card and coach lines. Applies to this device only and goes away on its own after the period.',
+  'Sequência 🎃': 'Streak 🎃',
 };

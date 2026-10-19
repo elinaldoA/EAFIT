@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { normalizeSeason } from './season';
 
 // Configurações controladas pelo painel admin (tabela app_settings): modo
 // manutenção, aviso no app e chaves de recursos. Tudo aqui é fail-open: se a
@@ -8,6 +9,8 @@ export const DEFAULT_CONFIG = {
   banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 0 },
   flags: {},
   moved: { enabled: false, url: '' },
+  // Tema de temporada (lib/season.js). Literal aqui: season.js importa deste arquivo.
+  season: { enabled: false, theme: '', startsOn: '', endsOn: '' },
 };
 
 const BANNER_LEVELS = ['info', 'warning', 'success'];
@@ -55,6 +58,7 @@ export function normalizeConfig(rows, today = todayInAppZone()) {
     },
     flags,
     moved: { enabled: mv.enabled === true && movedUrl !== '', url: movedUrl },
+    season: normalizeSeason(map.season),
   };
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
   KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
+  SEASON_THEMES, isValidSeasonWindow,
 } from '../lib/appSettings';
 import { todayStr } from '../lib/community';
 import Loading from '../components/Loading';
@@ -269,6 +270,74 @@ function MovedCard({ saved, adminId, onSaved }) {
   );
 }
 
+function SeasonCard({ saved, adminId, onSaved, today }) {
+  const [draft, setDraft] = useState(saved);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const dirty = ['enabled', 'theme', 'startsOn', 'endsOn'].some(k => draft[k] !== saved[k]);
+  const valid = !draft.enabled || isValidSeasonWindow(draft);
+  const status = !saved.enabled ? 'desligado' : bannerWindow(saved, today);
+  const STATUS = { desligado: ['', 'desligado'], agendado: ['badge--warning', 'agendado'], no_ar: ['badge--ok', 'no ar'], encerrado: ['', 'encerrado'] };
+
+  async function handleSave() {
+    setBusy(true);
+    setMsg('');
+    try {
+      await saveSetting('season', { enabled: draft.enabled, theme: draft.theme, startsOn: draft.startsOn, endsOn: draft.endsOn }, adminId);
+      setMsg('Salvo.');
+      await onSaved();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card stack" style={{ gap: 14 }}>
+      <div className="card-head" style={{ marginBottom: 0 }}>
+        <div>
+          <h2 className="section-title" style={{ margin: 0 }}>
+            Tema de temporada
+            <span className={`badge ${STATUS[status][0]}`}>{STATUS[status][1]}</span>
+          </h2>
+          <p className="user-detail__meta" style={{ margin: '4px 0 0' }}>
+            Decoração leve no app e no site (faixa do tema, detalhes de cor, card de compartilhar e falas do treinador por voz).
+            Só aparece entre as duas datas e some sozinha depois, mesmo em app antigo em cache. Cada pessoa pode desligar no Perfil.
+            A conquista Treino das Bruxas vale de 24/10 a 02/11 de cada ano, independente deste período.
+          </p>
+        </div>
+        <label className="switch-row">
+          <input type="checkbox" checked={draft.enabled} onChange={e => setDraft({ ...draft, enabled: e.target.checked })} />
+          <span>Ligado</span>
+        </label>
+      </div>
+      <div className="form-grid">
+        <label className="field">
+          <span className="field__label">Tema</span>
+          <select className="input" value={draft.theme} onChange={e => setDraft({ ...draft, theme: e.target.value })}>
+            {SEASON_THEMES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+        <label className="field">
+          <span className="field__label">Começa em</span>
+          <input type="date" className="input" value={draft.startsOn} onChange={e => setDraft({ ...draft, startsOn: e.target.value })} />
+        </label>
+        <label className="field">
+          <span className="field__label">Termina em (inclusive)</span>
+          <input type="date" className="input" value={draft.endsOn} onChange={e => setDraft({ ...draft, endsOn: e.target.value })} />
+        </label>
+      </div>
+      {!valid && <p className="form-msg form-msg--error">Informe as duas datas, com o fim igual ou depois do começo.</p>}
+      <div className="actions-row">
+        <button className="btn btn--primary btn--small" disabled={busy || !dirty || !valid} onClick={handleSave}>Salvar</button>
+        <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(saved); setMsg(''); }}>Desfazer</button>
+        <SectionMessage msg={msg} />
+      </div>
+    </div>
+  );
+}
+
 export default function AppSettings() {
   const { adminUser } = useAdminAuth();
   const [settings, setSettings] = useState(null);
@@ -299,6 +368,7 @@ export default function AppSettings() {
       <BannerCard key={`b-${settings.banner.version}-${settings.banner.enabled}`} saved={settings.banner} adminId={adminUser?.id} onSaved={load} />
       <FlagsCard saved={settings.flags} adminId={adminUser?.id} onSaved={load} />
       <MovedCard key={`mv-${JSON.stringify(settings.moved)}`} saved={settings.moved} adminId={adminUser?.id} onSaved={load} />
+      <SeasonCard key={`s-${JSON.stringify(settings.season)}`} saved={settings.season} adminId={adminUser?.id} onSaved={load} today={todayStr()} />
     </div>
   );
 }

@@ -66,6 +66,7 @@ export function useDashboardData(active, user, toast) {
         totalTreinos: completedWorkouts.length,
         totalPhotos,
         totalWeightLogs: weights.length,
+        completedDates: completedWorkouts.map(w => w.workout_date),
       });
       setUnlockedBadges(unlockedIds);
       setWeightLogs(weights);

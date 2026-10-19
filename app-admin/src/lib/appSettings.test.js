@@ -63,3 +63,22 @@ describe('nextBannerVersion', () => {
     expect(nextBannerVersion(current, { ...current, enabled: false })).toBe(5);
   });
 });
+
+describe('tema de temporada', () => {
+  it('normaliza a chave season e valida o período', async () => {
+    const { isValidSeasonWindow } = await import('./appSettings');
+    const s = normalizeSettings([{ key: 'season', value: { enabled: true, theme: 'natal', startsOn: '2026-10-24', endsOn: 'x' } }]).season;
+    expect(s).toEqual({ enabled: true, theme: 'halloween', startsOn: '2026-10-24', endsOn: '' });
+    expect(isValidSeasonWindow(s)).toBe(false);
+    expect(isValidSeasonWindow({ startsOn: '2026-10-24', endsOn: '2026-11-02' })).toBe(true);
+    expect(isValidSeasonWindow({ startsOn: '2026-11-02', endsOn: '2026-10-24' })).toBe(false);
+  });
+
+  it('rotula a conquista de temporada de qualquer ano', async () => {
+    const { badgeLabel } = await import('./userDetailHelpers');
+    expect(badgeLabel('halloween_2026')).toBe('🎃 Treino das Bruxas 2026');
+    expect(badgeLabel('halloween_2031')).toBe('🎃 Treino das Bruxas 2031');
+    expect(badgeLabel('streak_3')).toBe('🔥 Sequência de 3 dias');
+    expect(badgeLabel('desconhecida')).toBe('desconhecida');
+  });
+});

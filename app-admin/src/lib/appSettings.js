@@ -25,7 +25,14 @@ export const DEFAULT_SETTINGS = {
   banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', startsOn: '', endsOn: '', version: 0 },
   flags: {},
   moved: { enabled: false, url: '' },
+  season: { enabled: false, theme: 'halloween', startsOn: '', endsOn: '' },
 };
+
+// Temas de temporada que o app e o site sabem desenhar (SEASONS em
+// app-react/src/lib/season.js e em public/landing/assets/site.js).
+export const SEASON_THEMES = [
+  { value: 'halloween', label: '🎃 Dia das Bruxas' },
+];
 
 const isDay = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
@@ -63,7 +70,22 @@ export function normalizeSettings(rows) {
     },
     flags,
     moved: { enabled: mv.enabled === true, url: String(mv.url || '') },
+    season: normalizeSeason(map.season),
   };
+}
+
+function normalizeSeason(v = {}) {
+  return {
+    enabled: v.enabled === true,
+    theme: SEASON_THEMES.some(s => s.value === v.theme) ? v.theme : 'halloween',
+    startsOn: isDay(v.startsOn) ? v.startsOn : '',
+    endsOn: isDay(v.endsOn) ? v.endsOn : '',
+  };
+}
+
+// O app só liga o tema com as duas datas, e a final não pode vir antes.
+export function isValidSeasonWindow(season) {
+  return isDay(season.startsOn) && isDay(season.endsOn) && season.startsOn <= season.endsOn;
 }
 
 // O app só aceita endereço novo absoluto em https (ver movedTarget em app-react).

@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { FIRST_HALLOWEEN_YEAR, earnedHalloween, seasonToday } from './season';
 
 import { t } from './i18n';
 export const BADGES = [
@@ -17,6 +18,30 @@ export const BADGES = [
   { id: 'weight_30', emoji: '📉', title: t('30 registros de peso'), desc: t('Registre seu peso 30 vezes'), check: s => s.totalWeightLogs >= 30 },
 ];
 
+// Conquistas de temporada (lib/season.js): uma por ano, desde a primeira
+// edição. Só aparecem na grade quando ganhas ou durante o tema daquele ano.
+function halloweenBadge(year) {
+  return {
+    id: `halloween_${year}`, emoji: '🎃', season: 'halloween', year,
+    title: t('Treino das Bruxas {ano}', { ano: year }),
+    desc: t('Treine em 31/10 ou faça 3 treinos entre 24/10 e 02/11'),
+    check: s => earnedHalloween(s.completedDates, year),
+  };
+}
+
+export function seasonalBadges(today = seasonToday()) {
+  const list = [];
+  for (let y = FIRST_HALLOWEEN_YEAR; y <= Number(today.slice(0, 4)); y++) list.push(halloweenBadge(y));
+  return list;
+}
+
+// Grade da tela de Evolução: as fixas + as de temporada ganhas ou do tema no ar.
+export function visibleBadges(unlockedIds, season = { theme: '', year: 0 }, today = seasonToday()) {
+  const seasonal = seasonalBadges(today).filter(b =>
+    unlockedIds.has(b.id) || (b.season === season.theme && b.year === season.year));
+  return [...BADGES, ...seasonal];
+}
+
 export async function fetchUnlockedAchievements(userId) {
   const { data, error } = await db
     .from('achievements')
@@ -32,7 +57,7 @@ export async function syncAchievements(userId, stats) {
   const unlocked = await fetchUnlockedAchievements(userId);
   const unlockedIds = new Set(unlocked.map(a => a.badge_id));
 
-  const newlyEarned = BADGES.filter(b => !unlockedIds.has(b.id) && b.check(stats));
+  const newlyEarned = [...BADGES, ...seasonalBadges()].filter(b => !unlockedIds.has(b.id) && b.check(stats));
   if (newlyEarned.length > 0) {
     const { error } = await db
       .from('achievements')

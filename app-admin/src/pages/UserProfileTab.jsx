@@ -4,7 +4,7 @@ import UserWellbeingCard from '../components/UserWellbeingCard';
 import UserFriendsCard from '../components/UserFriendsCard';
 import UserAmbassadorCard from '../components/UserAmbassadorCard';
 import UserAppDataCard from '../components/UserAppDataCard';
-import { METAS, NIVEIS, BADGE_LABELS, formatDate } from '../lib/userDetailHelpers';
+import { METAS, NIVEIS, badgeLabel, formatDate } from '../lib/userDetailHelpers';
 
 export default function UserProfileTab({ userId, detail, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
   return (
@@ -84,7 +84,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
           <div className="actions-row">
             {achievements.map(a => (
               <span key={a.id} className="badge badge--ok" title={formatDate(a.unlocked_at)}>
-                {BADGE_LABELS[a.badge_id] || a.badge_id}
+                {badgeLabel(a.badge_id)}
               </span>
             ))}
           </div>

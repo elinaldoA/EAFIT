@@ -29,6 +29,8 @@ import { isCoachAvailable } from '../lib/coach';
 import { NotificationsSection, ExportSection, CoachSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
 import ProfileBiometricSection from '../components/ProfileBiometricSection';
+import ProfileSeasonSection from '../components/ProfileSeasonSection';
+import { useSeason } from '../hooks/useSeason';
 import { isBiometricAvailable, getLock } from '../lib/biometricLock';
 import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
@@ -68,6 +70,7 @@ export default function PerfilPage({ active }) {
   const [regenerating, setRegenerating] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricOn, setBiometricOn] = useState(() => !!getLock(user?.id));
+  const season = useSeason();
 
   useEffect(() => {
     let alive = true;
@@ -327,6 +330,11 @@ export default function PerfilPage({ active }) {
 
       <div className="section-group">
         <div className="section-group__label">{t('Preferências')}</div>
+        {season.available === 'halloween' && (
+          <CollapsibleCard icon="🎃" title={t('Decoração do Dia das Bruxas')} summary={season.off ? t('Desativado') : t('Ativado')}>
+            <ProfileSeasonSection theme={season.available} off={season.off} />
+          </CollapsibleCard>
+        )}
         <CollapsibleCard icon="🌐" title={t('Idioma')} summary={lang === 'en' ? 'English' : 'Português'}>
           <LanguageSwitch />
         </CollapsibleCard>

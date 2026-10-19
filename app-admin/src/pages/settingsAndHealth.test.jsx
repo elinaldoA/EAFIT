@@ -26,6 +26,7 @@ describe('AppSettings', () => {
     banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 2 },
     flags: { feedback: false },
     moved: { enabled: false, url: '' },
+    season: { enabled: false, theme: 'halloween', startsOn: '', endsOn: '' },
   };
 
   beforeEach(() => {
@@ -81,6 +82,23 @@ describe('AppSettings', () => {
     fireEvent.click(screen.getAllByRole('checkbox')[0]);
     fireEvent.click(saveButtons()[0]);
     expect(await screen.findByText('Erro: falhou')).toBeTruthy();
+  });
+
+  it('tema de temporada: exige as duas datas para ligar e salva o período', async () => {
+    render(<AppSettings />);
+    await screen.findByText('Tema de temporada');
+    const boxes = screen.getAllByRole('checkbox');
+    fireEvent.click(boxes[boxes.length - 1]);
+    expect(screen.getByText(/Informe as duas datas/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Começa em'), { target: { value: '2026-10-24' } });
+    fireEvent.change(screen.getByLabelText('Termina em (inclusive)'), { target: { value: '2026-10-20' } });
+    expect(screen.getByText(/Informe as duas datas/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Termina em (inclusive)'), { target: { value: '2026-11-02' } });
+    const save = saveButtons();
+    fireEvent.click(save[save.length - 1]);
+    await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('season', {
+      enabled: true, theme: 'halloween', startsOn: '2026-10-24', endsOn: '2026-11-02',
+    }, 'adm1'));
   });
 
   it('banner: bloqueia link inválido', async () => {

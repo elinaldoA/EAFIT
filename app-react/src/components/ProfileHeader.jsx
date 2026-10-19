@@ -1,8 +1,10 @@
 import { getDisplayName } from '../lib/utils';
+import { useSeason } from '../hooks/useSeason';
 
 import { t, locale } from '../lib/i18n';
 export default function ProfileHeader({ user, avatarData, uploadingAvatar, onAvatarChange, stats, weeklyGoalNum }) {
   const since = user ? new Date(user.created_at) : null;
+  const { theme } = useSeason();
 
   return (
     <>
@@ -34,7 +36,7 @@ export default function ProfileHeader({ user, avatarData, uploadingAvatar, onAva
         </div>
         <div className="stat-card stat-card--streak">
           <span className="stat-card__value">{stats.streak}</span>
-          <span className="stat-card__label">{t('Sequência 🔥')}</span>
+          <span className="stat-card__label">{theme === 'halloween' ? t('Sequência 🎃') : t('Sequência 🔥')}</span>
         </div>
         <div className="stat-card">
           <span className="stat-card__value">{stats.total}</span>

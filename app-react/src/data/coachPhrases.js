@@ -447,3 +447,34 @@ export const PHRASES = {
     ],
   },
 };
+
+// Falas extras do tema de temporada (lib/season.js), somadas às do tom enquanto
+// o tema está no ar. Brincadeira leve, sem terror: o treino continua sendo o assunto.
+export const SEASON_PHRASES = {
+  halloween: {
+    animado: {
+      start: [
+        '{saudacao}! Semana do Dia das Bruxas e treino de {foco}. Bora assustar esses músculos!',
+        'Feliz Dia das Bruxas, {nome}! {foco} hoje, e sem travessura no descanso.',
+      ],
+      restDone: ['Tempo! Nada de fantasma no banco, volta pra série!'],
+      pr: ['Recorde de arrepiar! {carga} quilos em {exercicio}!'],
+      finish: ['Treino das Bruxas concluído! Mandou muito bem.'],
+    },
+    zoeira: {
+      start: [
+        '{saudacao}! Treino de {foco} na semana do Dia das Bruxas. O único susto aqui é a carga.',
+        'Doce ou travessura? Hoje é {foco}, então é travessura nos músculos.',
+      ],
+      restDone: ['Acabou o descanso. Até a abóbora já levantou!', 'Bora! Zumbi descansa, você não.'],
+      pr: ['Essa carga tá assustadora! {carga} quilos em {exercicio}!', 'Recorde! Até os morcegos aplaudiram: {carga} quilos!'],
+      finish: ['Treino fechado! Nenhum fantasma vai roubar esse progresso.'],
+    },
+    calmo: {
+      start: ['{saudacao}. Semana do Dia das Bruxas, treino de {foco}. Vamos com calma e constância.'],
+      restDone: ['Descanso concluído. Sem sustos, vamos para a próxima.'],
+      pr: ['Novo recorde em {exercicio}: {carga} quilos. Um belo presente de Dia das Bruxas.'],
+      finish: ['Treino das Bruxas concluído. Bom trabalho hoje.'],
+    },
+  },
+};

@@ -6,7 +6,8 @@ import { isFlagOn } from '../lib/appConfig';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { fmtDate, parseLocalDate, toDateStr, calcStreak } from '../lib/utils';
-import { BADGES } from '../lib/achievements';
+import { visibleBadges } from '../lib/achievements';
+import { useSeason } from '../hooks/useSeason';
 import { useDashboardData } from '../hooks/useDashboardData';
 import BodyAvatar from '../components/BodyAvatar';
 import LineChart from '../components/LineChart';
@@ -45,12 +46,17 @@ function readTab() {
 export default function DashPage({ active }) {
   const { user } = useAuth();
   const { config } = useAppConfig();
+  const season = useSeason();
   const { activePlanDays } = useWorkout();
   const toast = useToast();
   const {
     workouts, logs, allTimeLogs, loading, loadingPR, unlockedBadges, discomfortHistory, weightLogs,
     exercises, volumePoints, handleRefreshRecords,
   } = useDashboardData(active, user, toast);
+
+  // Conquista de temporada aparece no período do tema, mesmo pra quem desligou a decoração.
+  const badges = visibleBadges(unlockedBadges, { theme: season.available, year: season.year });
+  const badgesUnlocked = badges.filter(b => unlockedBadges.has(b.id)).length;
 
   const [savedTab, setTabState] = useState(readTab);
   const [selectedExercise, setSelectedExercise] = useState('');
@@ -155,7 +161,7 @@ export default function DashPage({ active }) {
           <span className="dash-kpi__label">{t('Exercícios')}<br />{t('com recorde')}</span>
         </div>
         <div className="dash-kpi">
-          <span className="dash-kpi__value">{unlockedBadges.size}/{BADGES.length}</span>
+          <span className="dash-kpi__value">{badgesUnlocked}/{badges.length}</span>
           <span className="dash-kpi__label">{t('Conquistas')}</span>
         </div>
       </div>
@@ -280,13 +286,13 @@ export default function DashPage({ active }) {
       </div>
 
       <div className="section-group">
-        <div className="section-group__label">{t('Conquistas · {size} de {length}', { size: unlockedBadges.size, length: BADGES.length })}</div>
+        <div className="section-group__label">{t('Conquistas · {size} de {length}', { size: badgesUnlocked, length: badges.length })}</div>
         <div className="dash-card">
           <div className="badge-grid">
-            {BADGES.map(b => {
+            {badges.map(b => {
               const unlocked = unlockedBadges.has(b.id);
               return (
-                <div key={b.id} className={`badge-card${unlocked ? ' badge-card--unlocked' : ''}`} title={b.desc}>
+                <div key={b.id} className={`badge-card${unlocked ? ' badge-card--unlocked' : ''}${b.season ? ' badge-card--seasonal' : ''}`} title={b.desc}>
                   <span className="badge-card__emoji">{b.emoji}</span>
                   <span className="badge-card__title">{b.title}</span>
                   {!unlocked && <span className="badge-card__desc">{b.desc}</span>}

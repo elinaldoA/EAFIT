@@ -711,6 +711,51 @@
       if (row && row.content) applyContent(row.content);
     })
     .catch(function () { /* mantém o conteúdo estático padrão acima */ });
+
+  // Tema de temporada (ex.: Dia das Bruxas): mesma chave "season" de
+  // public.app_settings que o app lê (app-react/src/lib/season.js). Só liga
+  // entre as duas datas, no fuso do app; fora delas o site fica como sempre.
+  var SEASONS = { halloween: true };
+  var SEASON_BANNER_KEY = 'eafit_season_banner_site';
+  function seasonToday() {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+  }
+  function showSeasonBanner(theme, year) {
+    var id = theme + '-' + year;
+    try { if (localStorage.getItem(SEASON_BANNER_KEY) === id) return; } catch { /* sem storage: mostra */ }
+    var nav = document.querySelector('header.nav');
+    if (!nav) return;
+    var bar = document.createElement('div');
+    bar.className = 'season-bar';
+    bar.setAttribute('role', 'status');
+    bar.innerHTML = '<div class="wrap season-bar__inner">'
+      + '<span class="season-bar__emoji" aria-hidden="true">🎃</span>'
+      + '<p><strong>Semana do Dia das Bruxas no EAFIT!</strong> '
+      + '<span>Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.</span></p>'
+      + '<a class="btn btn-primary btn-sm" href="/app/">Abrir o app</a>'
+      + '<button type="button" class="season-bar__close" aria-label="Fechar aviso">×</button>'
+      + '</div>';
+    bar.querySelector('button').addEventListener('click', function () {
+      try { localStorage.setItem(SEASON_BANNER_KEY, id); } catch { /* sem storage */ }
+      bar.remove();
+    });
+    nav.parentNode.insertBefore(bar, nav);
+  }
+  fetch(SUPABASE_URL + '/rest/v1/app_settings?select=value&key=eq.season', {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
+  })
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (rows) {
+      var v = rows && rows[0] && rows[0].value;
+      if (!v || v.enabled !== true || !SEASONS[v.theme]) return;
+      var day = /^\d{4}-\d{2}-\d{2}$/;
+      if (!day.test(v.startsOn || '') || !day.test(v.endsOn || '')) return;
+      var today = seasonToday();
+      if (today < v.startsOn || today > v.endsOn) return;
+      document.documentElement.setAttribute('data-season', v.theme);
+      showSeasonBanner(v.theme, v.startsOn.slice(0, 4));
+    })
+    .catch(function () { /* sem tema: site como sempre */ });
 })();
 
 // Seletor de idioma e tradução do texto da página (dicionário em i18n-en.js).

@@ -1,5 +1,5 @@
 import { db } from './supabase';
-import { BADGE_LABELS } from './userDetailHelpers';
+import { BADGE_LABELS, badgeLabel } from './userDetailHelpers';
 
 async function rpcRows(name, args) {
   const { data, error } = await db.rpc(name, args);
@@ -85,7 +85,7 @@ export function buildAchievements(rows, labels = BADGE_LABELS) {
   const ids = [...new Set([...Object.keys(labels), ...counts.keys()])];
   const list = ids.map(id => {
     const users = Number(counts.get(id)?.as_users ?? 0);
-    return { id, label: labels[id] || id, users, pct: pct(users, base), last: counts.get(id)?.as_last || null };
+    return { id, label: badgeLabel(id, labels), users, pct: pct(users, base), last: counts.get(id)?.as_last || null };
   }).sort((a, b) => b.users - a.users || a.label.localeCompare(b.label));
   return { base, list };
 }

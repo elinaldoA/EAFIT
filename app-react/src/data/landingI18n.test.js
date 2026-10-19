@@ -76,9 +76,10 @@ describe('site em inglês', () => {
     const texts = visibleTexts();
     const empty = Object.entries(dict.text).filter(([, v]) => !v || !v.trim()).map(([k]) => k);
     expect(empty).toEqual([]);
-    // textos que só aparecem via JS (faixa de números, botão do vídeo) ou vindos do admin
+    // textos que só aparecem via JS (faixa de números, botão do vídeo, faixa do tema de temporada) ou vindos do admin
     const dynamic = new Set(['pessoas treinando', 'treinos concluídos', 'séries registradas', '▶ Reproduzir', 'Perfil',
-      'Enviando…', 'Mensagem enviada. A resposta chega no seu e-mail.', 'Não deu pra enviar agora. Tente de novo ou escreva para contato.eafit@gmail.com.']);
+      'Enviando…', 'Mensagem enviada. A resposta chega no seu e-mail.', 'Não deu pra enviar agora. Tente de novo ou escreva para contato.eafit@gmail.com.',
+      'Semana do Dia das Bruxas no EAFIT!', 'Treine no dia 31/10 ou faça 3 treinos até 02/11 e ganhe a conquista Treino das Bruxas no app.', 'Abrir o app']);
     const orphans = Object.keys(dict.text).filter(k => !texts.has(k) && !dynamic.has(k));
     expect(orphans).toEqual([]);
   });

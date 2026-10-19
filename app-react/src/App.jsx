@@ -35,6 +35,7 @@ import { takeSurveyLink } from './lib/inactivitySurvey';
 import { movedTarget } from './lib/appConfig';
 import { cameFromOldAddress } from './lib/installPrompt';
 import AnnouncementBanner from './components/AnnouncementBanner';
+import SeasonBanner, { SeasonDecor } from './components/SeasonBanner';
 import TermsUpdateScreen from './components/TermsUpdateScreen';
 import InstallScreen from './components/InstallScreen';
 import TrainerShell from './trainer/TrainerShell';
@@ -128,7 +129,9 @@ function Shell() {
     <>
     {user && locked && <BiometricLockScreen user={user} onUnlock={unlock} />}
     <div className="shell" inert={user && locked ? true : undefined}>
+      <SeasonDecor />
       <AnnouncementBanner />
+      {user && !needsOnboarding && !trainerView && <SeasonBanner />}
       {user && <TermsUpdateScreen />}
       {(user || fromOldAddress) && <InstallScreen />}
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />

@@ -11,7 +11,8 @@
 // preenchida por syncCoachPrefs().
 import { speak, cancelSpeech, isVoiceSupported } from './voice';
 import { lang } from './i18n';
-import { PHRASES, LIGHT_EVENTS, FREE_EVENTS, TONES } from '../data/coachPhrases';
+import { PHRASES, SEASON_PHRASES, LIGHT_EVENTS, FREE_EVENTS, TONES } from '../data/coachPhrases';
+import { currentSeason } from './season';
 
 export const FREQUENCIES = ['light', 'full', 'free'];
 // Falas do fim do treino: são agendadas no instante em que o modo ao vivo fecha.
@@ -175,9 +176,11 @@ export function pickLine(lines, key, vars, random = Math.random) {
 }
 
 // Monta a fala sem falar (usado nos testes e na amostra).
-export function buildLine(event, data = {}, prefs = getCoachPrefs(), random = Math.random) {
-  const lines = PHRASES[prefs.tone]?.[event];
-  if (!lines) return null;
+export function buildLine(event, data = {}, prefs = getCoachPrefs(), random = Math.random, season = currentSeason()) {
+  const base = PHRASES[prefs.tone]?.[event];
+  if (!base) return null;
+  // Tema de temporada no ar: as falas dele entram no sorteio junto com as de sempre.
+  const lines = [...base, ...(SEASON_PHRASES[season]?.[prefs.tone]?.[event] || [])];
   const vars = {
     nome: prefs.name,
     saudacao: greeting(),

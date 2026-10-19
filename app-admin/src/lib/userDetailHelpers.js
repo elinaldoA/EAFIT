@@ -13,7 +13,16 @@ export const BADGE_LABELS = {
   workouts_10: '💪 10 treinos concluídos', workouts_50: '🏋️ 50 treinos concluídos', workouts_100: '🏆 100 treinos concluídos',
   photo_first: '📸 Primeira foto de progresso',
   weight_10: '⚖️ 10 registros de peso',
+  halloween_2026: '🎃 Treino das Bruxas 2026',
 };
+
+// Conquistas de temporada têm uma por ano (halloween_<ano>, ver
+// app-react/src/lib/achievements.js): anos sem rótulo acima saem pelo padrão.
+export function badgeLabel(id, labels = BADGE_LABELS) {
+  if (labels[id]) return labels[id];
+  const halloween = /^halloween_(\d{4})$/.exec(id || '');
+  return halloween ? `🎃 Treino das Bruxas ${halloween[1]}` : id;
+}
 
 export const SEVERITY_BADGE = { leve: 'badge--ok', moderada: 'badge--warning', forte: 'badge--danger', lesao: 'badge--danger' };
 export const SEVERITY_LABEL = { leve: 'Leve', moderada: 'Moderada', forte: 'Forte', lesao: 'Lesão' };
