@@ -1,19 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockRpc, mockSelect } = vi.hoisted(() => ({ mockRpc: vi.fn(), mockSelect: vi.fn() }));
-vi.mock('./supabase', () => ({ db: { rpc: mockRpc, from: () => ({ select: mockSelect }) } }));
+const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
+vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   ambassadorLink, suggestCode, isValidCode, conversion, ambassadorError,
   fetchAmbassadors, fetchReferrals, fetchUserAmbassador, createAmbassador, updateAmbassador,
-  setInfluencer, fetchInfluencerPrograms, reviewInfluencerProgram, influencerPageUrl,
 } from './ambassadors';
 
-beforeEach(() => {
-  mockRpc.mockReset();
-  mockSelect.mockReset();
-  mockSelect.mockResolvedValue({ data: [], error: null });
-});
+beforeEach(() => { mockRpc.mockReset(); });
 
 describe('helpers', () => {
   it('monta o link com código e canal', () => {
@@ -44,13 +39,7 @@ describe('consultas', () => {
     mockRpc.mockResolvedValue({ data: [{ am_id: 'a1', am_user: 'u1', am_email: 'a@x', am_name: 'Ana', am_code: 'ana', am_active: true, am_visits: '10', am_signups: '2', am_total: '5', am_active_7d: '1' }], error: null });
     const [a] = await fetchAmbassadors(7);
     expect(mockRpc).toHaveBeenCalledWith('admin_ambassadors', { days_back: 7 });
-    expect(a).toMatchObject({ id: 'a1', code: 'ana', visits: 10, signups: 2, total: 5, active7: 1, influencer: false });
-
-    mockSelect.mockResolvedValue({ data: [{ id: 'a1', is_influencer: true }], error: null });
-    expect((await fetchAmbassadors(7))[0].influencer).toBe(true);
-    // banco sem a coluna: segue sem quebrar a lista
-    mockSelect.mockResolvedValue({ data: null, error: { code: '42703' } });
-    expect((await fetchAmbassadors(7))[0].influencer).toBe(false);
+    expect(a).toMatchObject({ id: 'a1', code: 'ana', visits: 10, signups: 2, total: 5, active7: 1 });
 
     mockRpc.mockResolvedValue({ data: null, error: null });
     expect(await fetchReferrals('a1')).toEqual([]);
@@ -67,27 +56,5 @@ describe('consultas', () => {
 
     mockRpc.mockResolvedValue({ data: null, error: { message: 'user_not_found' } });
     await expect(createAmbassador({ email: 'x', name: '', code: 'abc' })).rejects.toThrow('Nenhuma conta com esse e-mail.');
-  });
-});
-
-describe('influenciadores', () => {
-  it('promove, lista e revisa programas', async () => {
-    expect(influencerPageUrl('ana-fit')).toBe('https://eafit.com.br/i/?u=ana-fit');
-
-    mockRpc.mockResolvedValue({ data: null, error: null });
-    await setInfluencer('a1', true);
-    expect(mockRpc).toHaveBeenCalledWith('admin_set_influencer', { p_ambassador: 'a1', p_on: true });
-
-    mockRpc.mockResolvedValue({ data: [{ ip_id: 'p1', ip_ambassador: 'a1', ip_influencer: 'Ana', ip_code: 'ana', ip_status: 'review', ip_draft: { name: 'X' }, ip_published: null, ip_review_note: null, ip_hidden: false, ip_adoptions: '3', ip_updated_at: '2026-10-19' }], error: null });
-    const [p] = await fetchInfluencerPrograms();
-    expect(mockRpc).toHaveBeenCalledWith('admin_influencer_programs', { p_status: 'review' });
-    expect(p).toMatchObject({ id: 'p1', code: 'ana', status: 'review', adoptions: 3, hidden: false });
-
-    mockRpc.mockResolvedValue({ data: null, error: null });
-    await reviewInfluencerProgram('p1', false, 'Volume alto');
-    expect(mockRpc).toHaveBeenCalledWith('admin_review_influencer_program', { p_id: 'p1', p_approve: false, p_note: 'Volume alto' });
-
-    mockRpc.mockResolvedValue({ data: null, error: { message: 'note_required' } });
-    await expect(reviewInfluencerProgram('p1', false, '')).rejects.toThrow('Escreva o motivo da recusa');
   });
 });

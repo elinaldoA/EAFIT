@@ -1,5 +1,4 @@
 import { db } from './supabase';
-import { fetchMyFollowing } from './influencers';
 import { trackFeature } from './tracking';
 import { fetchWeightLogs } from './weightLog';
 import { fetchWaterLogsRange } from './waterLog';
@@ -101,7 +100,6 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments,
-    influencers,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -116,8 +114,6 @@ export async function gatherUserData(userId) {
     safe('trainerGoals', fetchMyGoals, null),
     safe('trainerMessages', () => fetchMyThread(1000), []),
     safe('appointments', fetchMyAppointments, []),
-    // tabela 'influencer_follows', lida pela função my_followed_influencers()
-    safe('influencers', fetchMyFollowing, []),
   ]);
 
   return {
@@ -130,7 +126,6 @@ export async function gatherUserData(userId) {
     discomfortReports, achievements,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments,
-    influencers,
     feedback, notifications,
     incomplete,
   };

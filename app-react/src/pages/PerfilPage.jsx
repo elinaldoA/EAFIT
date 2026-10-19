@@ -5,7 +5,6 @@ import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
 import ProfilePauseSection from '../components/ProfilePauseSection';
 import ProfileTrainerSection from '../components/ProfileTrainerSection';
 import ProfileAmbassadorSection from '../components/ProfileAmbassadorSection';
-import ProfileInfluencerSection from '../components/ProfileInfluencerSection';
 import { activePause, formatDayBR } from '../lib/pause';
 import { isFlagOn } from '../lib/appConfig';
 import { useToast } from '../context/useToast';
@@ -306,7 +305,6 @@ export default function PerfilPage({ active }) {
         </button>
       </div>
 
-      <ProfileInfluencerSection toast={toast} />
       <ProfileAmbassadorSection toast={toast} />
 
       {isFlagOn(config.flags, 'convite_amigos') && (

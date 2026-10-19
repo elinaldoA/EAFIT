@@ -10,7 +10,6 @@ import { enableTracking, capturePushOpen } from './lib/tracking'
 import { captureInstallPrompt } from './lib/installPrompt'
 import { capturePushTarget } from './lib/appNav'
 import { captureRef } from './lib/ambassadorRef'
-import { captureProgramInvite } from './lib/influencers'
 
 // Import dinâmico que falha no preload (chunk de uma versão antiga que não
 // existe mais depois de um deploy) — recarrega uma vez pra pegar a versão nova.
@@ -24,7 +23,6 @@ capturePushTarget()
 capturePushOpen()
 captureInstallPrompt()
 captureRef()
-captureProgramInvite()
 
 // O Safari do iOS rola o documento pra mostrar o campo acima do teclado e às
 // vezes não volta ao fechar. Como o app não rola (html/body com
