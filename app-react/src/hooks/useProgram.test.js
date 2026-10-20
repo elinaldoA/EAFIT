@@ -81,6 +81,16 @@ describe('useProgram', () => {
     expect(localStorage.getItem('eafit_program_kind:u1')).toBeNull();
   });
 
+  it('desativado pelo admin: volta só para o app de aluno', async () => {
+    localStorage.setItem('eafit_program_kind:u1', 'influenciador');
+    h.fetchMyAmbassador.mockResolvedValue({ code: 'ana', kind: 'influenciador', active: false });
+    const { result } = renderHook(() => useProgram('u1'));
+    expect(result.current).toBe('influenciador');
+    await flush();
+    expect(result.current).toBeNull();
+    expect(localStorage.getItem('eafit_program_kind:u1')).toBeNull();
+  });
+
   it('sem usuário não consulta', async () => {
     renderHook(() => useProgram(null));
     await flush();

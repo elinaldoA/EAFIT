@@ -6,7 +6,8 @@ import { loadMyRef, saveMyRef } from '../lib/myRef';
 // Descobre se o usuário logado está no programa de divulgação e com que nome
 // ('embaixador' | 'influenciador' | null), para o botão e o modo do programa,
 // e guarda o código dele para o card de treino (lib/myRef.js). Falha de rede
-// mantém o último valor conhecido.
+// mantém o último valor conhecido. Desativado pelo admin = fora do programa:
+// volta só para o app de aluno.
 export function useProgram(userId) {
   const [kind, setKind] = useState(() => (userId ? readCachedProgramKind(userId) : null));
 
@@ -17,7 +18,7 @@ export function useProgram(userId) {
     fetchMyAmbassador(30)
       .then(amb => {
         if (!active) return;
-        const k = amb?.kind || null;
+        const k = amb?.active ? amb.kind || null : null;
         setKind(k);
         writeCachedProgramKind(userId, k);
         saveMyRef(userId, amb);

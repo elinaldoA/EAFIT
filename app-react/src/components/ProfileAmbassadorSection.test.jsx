@@ -42,9 +42,11 @@ describe('ProfileAmbassadorSection', () => {
     expect(h.goTo).toHaveBeenCalledWith({ mode: 'program', tab: 'resultados' });
   });
 
-  it('link pausado aparece no resumo', async () => {
+  it('desativado pelo admin: sem atalho, como usuário comum', async () => {
     h.fetchMyAmbassador.mockResolvedValue({ ...SUMMARY, active: false });
-    render(<ProfileAmbassadorSection />);
-    expect(await screen.findByText('Link pausado pela equipe EAFIT')).toBeTruthy();
+    const { container } = render(<ProfileAmbassadorSection />);
+    await waitFor(() => expect(h.fetchMyAmbassador).toHaveBeenCalled());
+    await Promise.resolve();
+    expect(container.innerHTML).toBe('');
   });
 });

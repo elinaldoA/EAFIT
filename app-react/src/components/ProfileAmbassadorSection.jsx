@@ -5,7 +5,8 @@ import { programLabels } from '../lib/programLabels';
 
 import { t } from '../lib/i18n';
 
-// Perfil → Embaixador / Influenciador: só aparece para quem está no programa.
+// Perfil → Embaixador / Influenciador: só aparece para quem está no programa
+// e ativo (desativado pelo admin volta a ser usuário comum).
 // O painel em si fica no modo do programa (app-react/src/program/); aqui fica o
 // atalho, com o total de cadastros.
 export default function ProfileAmbassadorSection() {
@@ -17,12 +18,10 @@ export default function ProfileAmbassadorSection() {
     return () => { active = false; };
   }, []);
 
-  if (!amb) return null;
+  if (!amb?.active) return null;
 
   const labels = programLabels(amb.kind);
-  const summary = amb.active
-    ? t('{total} cadastros pelo seu link', { total: amb.total })
-    : t('Link pausado pela equipe EAFIT');
+  const summary = t('{total} cadastros pelo seu link', { total: amb.total });
 
   return (
     <div className="section-group">

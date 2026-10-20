@@ -71,7 +71,6 @@ export default {
   'Embaixador EAFIT': 'EAFIT Ambassador',
   'Influenciador EAFIT': 'EAFIT Influencer',
   '{total} cadastros pelo seu link': '{total} sign-ups from your link',
-  'Link pausado pela equipe EAFIT': 'Link paused by the EAFIT team',
   '🔗 Link copiado': '🔗 Link copied',
   '⚠️ Não deu pra compartilhar. Copie o link acima': "⚠️ Couldn't share. Copy the link above",
   '⚠️ Não deu pra copiar o link': "⚠️ Couldn't copy the link",
