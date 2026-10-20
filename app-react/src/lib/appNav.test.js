@@ -35,7 +35,7 @@ describe('goTo', () => {
     expect(readMode()).toBe('aluno');
     goTo(NAV_TARGETS.personal_recados);
     expect(readMode()).toBe('trainer');
-    expect(window.location.hash).toBe('#recados');
+    expect(window.location.hash).toBe('#painel');
     goTo(NAV_TARGETS.aula);
     expect(readMode()).toBe('trainer');
   });

@@ -86,12 +86,21 @@ describe('TemplatesPage', () => {
     await waitFor(() => expect(h.api.fetchTemplates).toHaveBeenCalledTimes(2));
   });
 
-  it('Editar como novo abre o editor com o plano do modelo', async () => {
+  it('Editar abre o editor sobre o próprio modelo', async () => {
     await setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Editar como novo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
     expect(h.builder).toHaveBeenLastCalledWith(expect.objectContaining({
+      templateId: 't1',
       initialPlan: expect.objectContaining({ name: 'Hipertrofia A', duration_weeks: 8 }),
     }));
+  });
+
+  it('Duplicar abre o editor com uma cópia, sem modelo de destino', async () => {
+    await setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Duplicar' }));
+    const props = h.builder.mock.lastCall[0];
+    expect(props.templateId).toBeUndefined();
+    expect(props.initialPlan).toEqual(expect.objectContaining({ name: 'Hipertrofia A (cópia)', duration_weeks: 8 }));
   });
 
   it('apagar pede confirmação e recarrega', async () => {

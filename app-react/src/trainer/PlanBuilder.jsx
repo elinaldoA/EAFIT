@@ -2,10 +2,10 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useToast } from '../context/useToast';
 import { sendMessage } from '../lib/trainerMessages';
 import { fetchLibrary } from '../lib/exerciseSwap';
-import { fetchTemplates, saveTemplate, templateToPlan, friendlyTemplateError } from '../lib/trainerTemplates';
+import { fetchTemplates, saveTemplate, updateTemplate, templateToPlan, friendlyTemplateError } from '../lib/trainerTemplates';
 import {
   WEEK_DAYS, DURATION_CHOICES, MAX_EXERCISES, emptyDraft, emptyExercise, toggleDay, moveItem, draftFromPlan,
-  buildPlanPayload, fetchClientPlan, assignPlan, friendlyPlanError,
+  copyDay, duplicateItem, parseSeries, volumeByGroup, buildPlanPayload, fetchClientPlan, assignPlan, friendlyPlanError,
 } from '../lib/trainerPlan';
 import Loading from '../components/Loading';
 import ExerciseExtras from '../components/ExerciseExtras';
@@ -15,8 +15,9 @@ import { t } from '../lib/i18n';
 // biblioteca do app) e prazo. Com `client`, ao enviar vira o plano ativo do
 // aluno (RPC trainer_assign_plan; o plano anterior dele continua salvo) e dá
 // pra salvar como modelo. Sem `client`, é a criação de um modelo (a partir de
-// `initialPlan`, se vier). Modelos podem ser carregados em qualquer um dos dois.
-export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
+// `initialPlan`, se vier); com `templateId`, salvar atualiza aquele modelo em
+// vez de criar outro. Modelos podem ser carregados em qualquer um dos dois.
+export default function PlanBuilder({ client, initialPlan, templateId, onBack, onSent }) {
   const toast = useToast();
   const listId = useId();
   const [draft, setDraft] = useState(null);
@@ -41,6 +42,7 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
   }, [clientId, initialPlan]);
 
   const byName = useMemo(() => new Map(library.map(r => [r.nome.toLowerCase(), r])), [library]);
+  const volume = useMemo(() => (draft ? volumeByGroup(draft, byName) : []), [draft, byName]);
 
   if (!draft) return <section className="page active trainer-page"><Loading /></section>;
 
@@ -70,8 +72,9 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
     if (!payload.ok) { setError(payload.error); return; }
     setSending(true); setError('');
     try {
-      await saveTemplate(payload);
-      toast(t('💾 Modelo salvo'));
+      if (templateId) await updateTemplate(templateId, payload);
+      else await saveTemplate(payload);
+      toast(templateId ? t('💾 Modelo atualizado') : t('💾 Modelo salvo'));
       if (!client) onSent();
       else fetchTemplates().then(setTemplates).catch(() => {});
     } catch (err) {
@@ -104,7 +107,7 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
     <section className="page active trainer-page">
       <button type="button" className="btn btn--ghost btn--sm" onClick={onBack}>{client ? t('‹ Voltar à ficha') : t('‹ Voltar aos modelos')}</button>
       <div className="dash-card">
-        <div className="dash-card__title">{client ? t('📋 Treino de {name}', { name: client.name }) : t('🧩 Modelo de treino')}</div>
+        <div className="dash-card__title">{client ? t('📋 Treino de {name}', { name: client.name }) : templateId ? t('🧩 Editar modelo') : t('🧩 Modelo de treino')}</div>
         {templates.length > 0 && (
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="loadTemplate">{t('Começar de um modelo')}</label>
@@ -142,7 +145,18 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
 
       {draft.days.map((day, di) => (
         <div className="dash-card" key={day.dia}>
-          <div className="dash-card__title">{day.dia}</div>
+          <div className="dash-card__title-row">
+            <div className="dash-card__title">
+              {day.dia} <span className="trainer-delta">· {t('{n} exercício(s), {s} série(s)', { n: day.exercicios.filter(e => e.nome.trim()).length, s: day.exercicios.reduce((n, e) => n + parseSeries(e.series), 0) })}</span>
+            </div>
+            <select className="input input--sm plan-copy" value="" aria-label={t('Copiar {dia} para', { dia: day.dia })}
+              onChange={e => { if (e.target.value) setDraft(d => copyDay(d, day.dia, e.target.value)); }}>
+              <option value="">{t('Copiar para…')}</option>
+              {WEEK_DAYS.filter(x => x !== day.dia).map(x => (
+                <option key={x} value={x}>{draft.days.some(d => d.dia === x) ? t('{dia} (substitui)', { dia: x }) : x}</option>
+              ))}
+            </select>
+          </div>
           <input className="input input--sm" placeholder={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')} value={day.foco}
             onChange={e => setDay(di, d => ({ ...d, foco: e.target.value }))} />
 
@@ -166,6 +180,8 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
                   onChange={e => setEx(di, ei, { tecnica: e.target.value })} />
                 <ExerciseExtras grupo={ex.grupo} aquecimento={ex.aquecimento} onChange={patch => setEx(di, ei, patch)} />
               </div>
+              <button type="button" className="plan-row__dup" aria-label={t('Duplicar exercício')} disabled={day.exercicios.length >= MAX_EXERCISES}
+                onClick={() => setDay(di, d => ({ ...d, exercicios: duplicateItem(d.exercicios, ei) }))}>⧉</button>
               <button type="button" className="plan-row__del" aria-label={t('Remover exercício')}
                 onClick={() => setDay(di, d => ({ ...d, exercicios: d.exercicios.filter((_, i) => i !== ei) }))}>✕</button>
             </div>
@@ -176,6 +192,22 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
         </div>
       ))}
 
+      {volume.length > 0 && (
+        <div className="dash-card">
+          <div className="dash-card__title">{t('📊 Volume da semana (séries por grupo)')}</div>
+          <ul className="volume-list">
+            {volume.map(v => (
+              <li key={v.grupo}>
+                <span>{v.grupo}</span>
+                <span className="volume-list__bar"><span style={{ width: `${Math.min(100, (v.series / volume[0].series) * 100)}%` }} /></span>
+                <strong>{v.series}</strong>
+              </li>
+            ))}
+          </ul>
+          <p className="profile-field__hint" style={{ margin: 0 }}>{t('Soma das séries de trabalho de cada dia, pelo grupo do exercício na biblioteca.')}</p>
+        </div>
+      )}
+
       {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
       {client && (
         <button type="button" className="btn btn--primary btn--full" disabled={sending} onClick={handleSend}>
@@ -183,7 +215,7 @@ export default function PlanBuilder({ client, initialPlan, onBack, onSent }) {
         </button>
       )}
       <button type="button" className={client ? 'btn btn--outline btn--full' : 'btn btn--primary btn--full'} disabled={sending} onClick={handleSaveTemplate}>
-        {client ? t('💾 Salvar como modelo') : (sending ? t('Salvando…') : t('💾 Salvar modelo'))}
+        {client ? t('💾 Salvar como modelo') : (sending ? t('Salvando…') : templateId ? t('💾 Salvar alterações') : t('💾 Salvar modelo'))}
       </button>
     </section>
   );

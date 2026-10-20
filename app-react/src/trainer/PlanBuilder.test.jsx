@@ -13,6 +13,7 @@ vi.mock('../lib/trainerTemplates', async (importActual) => ({
   ...(await importActual()),
   fetchTemplates: (...a) => h.api.fetchTemplates(...a),
   saveTemplate: (...a) => h.api.saveTemplate(...a),
+  updateTemplate: (...a) => h.api.updateTemplate(...a),
 }));
 vi.mock('../lib/trainerPlan', async (importActual) => ({
   ...(await importActual()),
@@ -23,7 +24,7 @@ vi.mock('../lib/trainerPlan', async (importActual) => ({
 import PlanBuilder from './PlanBuilder';
 
 const LIB = [
-  { nome: 'Supino Reto com Barra', series: '4', reps: '8-10', descanso: '90s', tecnica: 'Controle', is_post_workout: false },
+  { nome: 'Supino Reto com Barra', grupo_muscular: 'Peito', series: '4', reps: '8-10', descanso: '90s', tecnica: 'Controle', is_post_workout: false },
   { nome: 'Prancha', series: '3', reps: '30s', descanso: '30s', tecnica: '', is_post_workout: true },
 ];
 const CLIENT = { id: 'c1', name: 'Ana' };
@@ -39,6 +40,7 @@ beforeEach(() => {
     fetchLibrary: vi.fn().mockResolvedValue(LIB),
     fetchTemplates: vi.fn().mockResolvedValue([]),
     saveTemplate: vi.fn().mockResolvedValue(undefined),
+    updateTemplate: vi.fn().mockResolvedValue(undefined),
     fetchClientPlan: vi.fn().mockResolvedValue(PLAN),
     assignPlan: vi.fn().mockResolvedValue(undefined),
   };
@@ -156,10 +158,11 @@ describe('PlanBuilder — modelo (sem aluno)', () => {
     await screen.findByLabelText('Nome do plano');
     fireEvent.click(screen.getByRole('button', { name: 'Qua' }));
     fireEvent.click(screen.getByRole('button', { name: 'Seg' }));
-    const titles = [...document.querySelectorAll('.dash-card__title')].map(e => e.textContent).filter(t => ['Segunda', 'Quarta'].includes(t));
+    const dayTitles = () => [...document.querySelectorAll('.dash-card__title')].map(e => e.textContent.split(' ·')[0]);
+    const titles = dayTitles().filter(t => ['Segunda', 'Quarta'].includes(t));
     expect(titles).toEqual(['Segunda', 'Quarta']);
     fireEvent.click(screen.getByRole('button', { name: 'Qua' }));
-    expect([...document.querySelectorAll('.dash-card__title')].map(e => e.textContent)).not.toContain('Quarta');
+    expect(dayTitles()).not.toContain('Quarta');
   });
 
   it('escolher um exercício da biblioteca preenche séries, reps, descanso e técnica', async () => {
@@ -226,5 +229,52 @@ describe('PlanBuilder — modelo (sem aluno)', () => {
     fireEvent.change(select, { target: { value: 't1' } });
     await waitFor(() => expect(screen.getByDisplayValue('Remada')).toBeTruthy());
     expect(screen.getByLabelText('Duração').value).toBe('4');
+  });
+});
+
+describe('PlanBuilder — ferramentas de montagem', () => {
+  it('copiar um dia para outro cria o dia com o mesmo foco e exercícios', async () => {
+    setup({ client: CLIENT });
+    await screen.findByDisplayValue('Peito');
+    fireEvent.change(screen.getByLabelText('Copiar Segunda para'), { target: { value: 'Quinta' } });
+    expect(screen.getAllByDisplayValue('Peito')).toHaveLength(2);
+    expect(screen.getAllByDisplayValue('Supino')).toHaveLength(2);
+    expect(screen.getByLabelText('Copiar Quinta para')).toBeTruthy();
+  });
+
+  it('duplicar exercício insere a cópia logo abaixo', async () => {
+    setup({ client: CLIENT });
+    await screen.findByDisplayValue('Supino');
+    fireEvent.click(screen.getByRole('button', { name: 'Duplicar exercício' }));
+    expect(screen.getAllByDisplayValue('Supino')).toHaveLength(2);
+  });
+
+  it('título do dia soma exercícios e séries; volume por grupo usa a biblioteca', async () => {
+    h.api.fetchClientPlan.mockResolvedValue({
+      ...PLAN,
+      days: [{ dia: 'Segunda', foco: 'Peito', exercicios: [
+        { nome: 'Supino Reto com Barra', series: '4', reps: '10' },
+        { nome: 'Exercício livre', series: '3', reps: '12' },
+      ] }],
+    });
+    setup({ client: CLIENT });
+    await screen.findByDisplayValue('Supino Reto com Barra');
+    expect(screen.getByText('· 2 exercício(s), 7 série(s)')).toBeTruthy();
+    await waitFor(() => expect(screen.getByText('📊 Volume da semana (séries por grupo)')).toBeTruthy());
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('.volume-list li')].map(li => li.textContent);
+      expect(rows).toEqual(['Peito4', 'Outros3']);
+    });
+  });
+
+  it('editando um modelo existente, salvar atualiza em vez de criar', async () => {
+    const { onSent } = setup({ initialPlan: PLAN, templateId: 't9' });
+    await screen.findByDisplayValue('Peito');
+    expect(screen.getByText('🧩 Editar modelo')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '💾 Salvar alterações' }));
+    await waitFor(() => expect(h.api.updateTemplate).toHaveBeenCalledWith('t9', expect.objectContaining({ name: 'Hipertrofia' })));
+    expect(h.api.saveTemplate).not.toHaveBeenCalled();
+    expect(h.toast).toHaveBeenCalledWith('💾 Modelo atualizado');
+    expect(onSent).toHaveBeenCalled();
   });
 });

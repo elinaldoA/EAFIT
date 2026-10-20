@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('./supabase', () => ({ db: {} }));
 
 import {
+  copyDay, duplicateItem, parseSeries, volumeByGroup,
   emptyDraft, emptyDay, toggleDay, moveItem, draftFromPlan, buildPlanPayload, friendlyPlanError,
 } from './trainerPlan';
 
@@ -73,5 +74,40 @@ describe('friendlyPlanError', () => {
     expect(friendlyPlanError({ message: 'invalid_exercises' })).toMatch(/1 a 20 exercícios/);
     expect(friendlyPlanError({ message: 'x' })).toMatch(/Tente de novo/);
     expect(emptyDay('Sexta').exercicios).toHaveLength(1);
+  });
+});
+
+describe('ferramentas do montador', () => {
+  const draft = {
+    name: 'A', weeks: '',
+    days: [
+      { dia: 'Quarta', foco: 'Costas', exercicios: [{ nome: 'Remada', series: '4' }] },
+      { dia: 'Segunda', foco: 'Peito', exercicios: [{ nome: 'Supino', series: '3-4' }, { nome: 'Livre', series: 'x' }] },
+    ],
+  };
+
+  it('copyDay cria ou substitui o dia de destino, em ordem da semana', () => {
+    const out = copyDay(draft, 'Segunda', 'Sexta');
+    expect(out.days.map(d => d.dia)).toEqual(['Segunda', 'Quarta', 'Sexta']);
+    expect(out.days[2].exercicios).toEqual(draft.days[1].exercicios);
+    expect(out.days[2].exercicios[0]).not.toBe(draft.days[1].exercicios[0]);
+    const replaced = copyDay(draft, 'Segunda', 'Quarta');
+    expect(replaced.days.find(d => d.dia === 'Quarta').foco).toBe('Peito');
+    expect(copyDay(draft, 'Domingo', 'Sexta')).toBe(draft);
+  });
+
+  it('duplicateItem insere a cópia logo depois', () => {
+    expect(duplicateItem(['a', 'b'], 0).length).toBe(3);
+    expect(duplicateItem([{ n: 1 }, { n: 2 }], 1)).toEqual([{ n: 1 }, { n: 2 }, { n: 2 }]);
+    expect(duplicateItem(['a'], 5)).toEqual(['a']);
+  });
+
+  it('parseSeries e volume por grupo', () => {
+    expect(parseSeries('3-4')).toBe(3);
+    expect(parseSeries('x')).toBe(0);
+    const byName = new Map([['supino', { grupo_muscular: 'Peito' }], ['remada', { grupo_muscular: 'Costas' }]]);
+    expect(volumeByGroup(draft, byName)).toEqual([
+      { grupo: 'Costas', series: 4 }, { grupo: 'Peito', series: 3 }, { grupo: 'Outros', series: 0 },
+    ]);
   });
 });

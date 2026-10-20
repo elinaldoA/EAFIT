@@ -18,6 +18,8 @@ vi.mock('./ClientNotes', () => ({ default: () => <div data-testid="notes" /> }))
 vi.mock('./ClientGoals', () => ({ default: () => <div data-testid="goals" /> }));
 vi.mock('./ClientPhotos', () => ({ default: () => <div data-testid="photos" /> }));
 vi.mock('./ClientAppointments', () => ({ default: () => <div data-testid="appointments" /> }));
+vi.mock('./ClientTags', () => ({ default: ({ initial }) => <div data-testid="tags">{initial.join(',')}</div> }));
+vi.mock('./ClientPlanHistory', () => ({ default: ({ version }) => <div data-testid="plan-history">{version}</div> }));
 vi.mock('./PlanBuilder', () => ({
   default: (props) => {
     h.builder(props);
@@ -43,7 +45,7 @@ vi.mock('../lib/trainerMessages', async (importActual) => ({
 
 import ClientDetail from './ClientDetail';
 
-const CLIENT = { id: 'c1', name: 'Ana', email: 'ana@x.com', last_day: '2026-10-05', paused: false };
+const CLIENT = { id: 'c1', name: 'Ana', email: 'ana@x.com', last_day: '2026-10-05', paused: false, tags: ['Online'], planName: 'Hipertrofia', planEnd: '2026-10-10', planByMe: true };
 const DETAIL = {
   profile: { meta: 'massa', nivel: 'intermediario', peso: 70.5, altura: 170, idade: 30, pesoAlvo: 68, weeklyGoal: 5 },
   training_days: ['2026-10-01', '2026-10-03', '2026-10-05', '2026-10-06', '2026-10-07'],
@@ -71,6 +73,8 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
+
+const tab = name => fireEvent.click(screen.getByRole('tab', { name }));
 
 const setup = (props = {}) => {
   const fns = { onBack: vi.fn(), onRemoved: vi.fn() };
@@ -105,63 +109,110 @@ describe('ClientDetail', () => {
     expect(screen.getByText('treinos em 30 dias')).toBeTruthy();
   });
 
-  it('peso com a variação no período e o gráfico', async () => {
+  it('peso com a variação no período e o gráfico (aba Evolução)', async () => {
     setup();
+    await screen.findByText('Frequência');
+    tab('Evolução');
     await screen.findByText(/-1,5 kg no período/);
     expect(screen.getByTestId('chart').textContent).toBe('72,70.5');
   });
 
-  it('medidas, check-ins, desconfortos e cargas máximas', async () => {
+  it('desconfortos no Resumo; cargas em Treinos; medidas e check-ins em Evolução', async () => {
     setup();
-    await screen.findByText('Medidas corporais (cm)');
-    expect(screen.getByText(/90 → 86.5 cm/)).toBeTruthy();
-    expect(screen.getByText('Como ele tem se sentido (30 dias)')).toBeTruthy();
+    await screen.findByText('Desconfortos (30 dias)');
     expect(screen.getByText('Forte')).toBeTruthy();
+    tab('Treinos');
     expect(screen.getByText('100,5 kg')).toBeTruthy();
     expect(screen.getByText('4 treino(s)', { exact: false })).toBeTruthy();
+    tab('Evolução');
+    expect(screen.getByText(/90 → 86.5 cm/)).toBeTruthy();
+    expect(screen.getByText('Como ele tem se sentido (30 dias)')).toBeTruthy();
   });
 
-  it('inclui as seções do aluno: sessões, metas, anotações, aulas, fotos e conversa', async () => {
+  it('cada aba traz as suas seções', async () => {
     setup();
-    for (const id of ['sessions', 'goals', 'notes', 'appointments', 'photos', 'chat']) {
-      expect(await screen.findByTestId(id)).toBeTruthy();
-    }
+    expect(await screen.findByTestId('goals')).toBeTruthy();
+    expect(screen.getByTestId('notes')).toBeTruthy();
+    expect(screen.queryByTestId('sessions')).toBeNull();
+    tab('Treinos');
+    expect(screen.getByTestId('sessions')).toBeTruthy();
+    expect(screen.queryByTestId('goals')).toBeNull();
+    tab('Evolução');
+    expect(screen.getByTestId('photos')).toBeTruthy();
+    tab('Plano');
+    expect(screen.getByTestId('appointments')).toBeTruthy();
+    expect(screen.getByTestId('plan-history')).toBeTruthy();
+    tab('Conversa');
     expect(screen.getByTestId('chat').textContent).toBe('Enviar recado');
+  });
+
+  it('cabeçalho: etiquetas, alerta de dor forte e atalhos para conversa e aula', async () => {
+    setup();
+    await screen.findByText('Frequência');
+    expect(screen.getByTestId('tags').textContent).toBe('Online');
+    expect(screen.getByText(/Relatou dor forte ou lesão: Supino Reto com Barra/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '💬 Recado' }));
+    expect(screen.getByTestId('chat')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '📅 Aula' }));
+    expect(screen.getByTestId('appointments')).toBeTruthy();
+  });
+
+  it('frequência por semana: 8 barras, a última com os treinos desta semana', async () => {
+    setup();
+    await screen.findByText('Frequência');
+    const cols = document.querySelectorAll('.week-bars__col');
+    expect(cols).toHaveLength(8);
+    expect(cols[7].textContent).toBe('5');
+    expect(cols[7].querySelector('.week-bars__bar--hit')).toBeTruthy();
   });
 
   it('abrir a conversa marca as respostas do aluno como lidas', async () => {
     setup();
+    await screen.findByText('Frequência');
+    expect(h.api.markThreadRead).not.toHaveBeenCalled();
+    tab('Conversa');
     await waitFor(() => expect(h.api.markThreadRead).toHaveBeenCalledWith('c1'));
     expect(h.api.fetchTrainerThread).toHaveBeenCalledWith('c1');
   });
 
-  it('plano atual: com plano oferece editar; sem plano oferece montar', async () => {
+  it('plano atual: com plano oferece editar e mostra o prazo; sem plano oferece montar', async () => {
     setup();
-    expect(await screen.findByText('Hipertrofia · 5 dia(s)')).toBeTruthy();
+    await screen.findByText('Frequência');
+    tab('Plano');
+    expect(screen.getByText('5 dia(s) por semana', { exact: false })).toBeTruthy();
+    expect(screen.getByText('Vence em 3 dia(s)')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Editar \/ enviar novo treino/ })).toBeTruthy();
     cleanup();
     h.api.fetchClientDetail.mockResolvedValue({ ...DETAIL, plan: null });
     setup();
-    expect(await screen.findByText('O aluno ainda não tem plano ativo.')).toBeTruthy();
+    await screen.findByText('Frequência');
+    tab('Plano');
+    expect(screen.getByText('O aluno ainda não tem plano ativo.')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Montar treino/ })).toBeTruthy();
   });
 
   it('montar o treino abre o editor; ao enviar volta à ficha e recarrega os dados', async () => {
     setup();
-    fireEvent.click(await screen.findByRole('button', { name: /Editar \/ enviar novo treino/ }));
+    await screen.findByText('Frequência');
+    fireEvent.click(screen.getByRole('button', { name: '📋 Treino' }));
     expect(h.builder).toHaveBeenLastCalledWith(expect.objectContaining({ client: CLIENT }));
     expect(h.api.fetchClientDetail).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole('button', { name: 'enviado builder' }));
+    await waitFor(() => expect(h.api.fetchClientDetail).toHaveBeenCalledTimes(2));
     await screen.findByText('Frequência');
-    expect(h.api.fetchClientDetail).toHaveBeenCalledTimes(2);
+    tab('Plano');
+    expect(screen.getByTestId('plan-history').textContent).toBe('1');
+    expect(screen.queryByText('Vence em 3 dia(s)')).toBeNull(); // prazo da carteira ficou velho
   });
 
-  it('voltar do editor volta à ficha sem recarregar', async () => {
+  it('voltar do editor volta à ficha, na mesma aba, sem recarregar', async () => {
     setup();
-    fireEvent.click(await screen.findByRole('button', { name: /Editar \/ enviar novo treino/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'voltar builder' }));
     await screen.findByText('Frequência');
+    tab('Plano');
+    fireEvent.click(screen.getByRole('button', { name: /Editar \/ enviar novo treino/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'voltar builder' }));
+    await screen.findByText('Plano atual');
     expect(h.api.fetchClientDetail).toHaveBeenCalledTimes(1);
   });
 
@@ -209,7 +260,10 @@ describe('ClientDetail', () => {
     await screen.findByText('Frequência');
     expect(screen.queryByText('Medidas corporais (cm)')).toBeNull();
     expect(screen.queryByText(/Desconfortos/)).toBeNull();
+    tab('Treinos');
     expect(screen.queryByText(/Cargas máximas/)).toBeNull();
+    tab('Evolução');
+    expect(screen.queryByText('Medidas corporais (cm)')).toBeNull();
     expect(screen.getByTestId('chart').textContent).toBe('O aluno ainda não registrou o peso.');
   });
 });

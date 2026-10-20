@@ -28,11 +28,12 @@ export const NAV_TARGETS = {
   peso: { mode: 'aluno', tab: 'perfil', profileCard: 'corpo' },
   feedback: { mode: 'aluno', tab: 'perfil', profileCard: 'feedback' },
   // Lembrete de aula vai pro aluno e pro personal: mantém o modo em que a
-  // pessoa está. No modo Personal 'treino' não é aba e cai em Alunos, onde
+  // pessoa está. No modo Personal 'treino' não é aba e cai no Painel, onde
   // fica a agenda.
   aula: { tab: 'treino' },
-  personal_alunos: { mode: 'trainer', tab: 'alunos' },
-  personal_recados: { mode: 'trainer', tab: 'recados' },
+  // Alertas, respostas e confirmações de aula aparecem na fila do Painel.
+  personal_alunos: { mode: 'trainer', tab: 'painel' },
+  personal_recados: { mode: 'trainer', tab: 'painel' },
   // Modo do programa (embaixador e influenciador): novos cadastros pelo link
   // (send-ambassador-alerts) e recados da equipe (admin-broadcast).
   programa: { mode: 'program', tab: 'resultados' },

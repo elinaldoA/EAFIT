@@ -12,7 +12,7 @@ import { Leaderboard } from '../components/Challenges';
 import { t } from '../lib/i18n';
 // Aba Turma do personal: cria desafios para os alunos (todos entram sozinhos),
 // acompanha o placar e encerra. O personal participa como coach, sem ranking.
-export default function ClassPage() {
+export default function ClassPage({ header }) {
   const toast = useToast();
   const [items, setItems] = useState(null);
   const [clients, setClients] = useState([]);
@@ -63,6 +63,7 @@ export default function ClassPage() {
 
   return (
     <section className="page active trainer-page">
+      {header}
       <div className="dash-card">
         <div className="dash-card__title">{t('🏆 Desafios da turma')}</div>
         {items && items.length === 0 && !creating && (

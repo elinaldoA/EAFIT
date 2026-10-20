@@ -10,6 +10,7 @@ const ERRORS = {
   too_many_templates: t('Você atingiu o limite de 50 modelos. Apague algum para salvar outro.'),
   no_recipients: t('Nenhum dos alunos escolhidos está vinculado a você.'),
   too_many_recipients: t('Escolha no máximo 50 alunos por envio.'),
+  not_found: t('Este modelo não existe mais.'),
 };
 
 export function friendlyTemplateError(err) {
@@ -43,6 +44,13 @@ export async function saveTemplate(payload) {
   });
   if (error) throw error;
   return data;
+}
+
+export async function updateTemplate(id, payload) {
+  const { error } = await db.rpc('trainer_update_template', {
+    p_id: id, p_name: payload.name, p_days: payload.days, p_weeks: payload.weeks,
+  });
+  if (error) throw error;
 }
 
 export async function deleteTemplate(id) {

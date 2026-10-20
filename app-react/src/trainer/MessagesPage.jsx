@@ -8,7 +8,7 @@ import Loading from '../components/Loading';
 import { t } from '../lib/i18n';
 // Aba Recados do personal: escolhe quem recebe (todos ou alunos específicos),
 // envia e acompanha o histórico com o "lido" de cada aluno.
-export default function MessagesPage() {
+export default function MessagesPage({ header }) {
   const [clients, setClients] = useState(null);
   const [selected, setSelected] = useState([]); // vazio = todos
   const [sent, setSent] = useState(null);
@@ -27,6 +27,7 @@ export default function MessagesPage() {
 
   return (
     <section className="page active trainer-page">
+      {header}
       <div className="dash-card">
         <div className="dash-card__title">{t('💬 Enviar recado')}</div>
         {clients && clients.length === 0 ? (

@@ -121,6 +121,7 @@ describe('backup cobre as tabelas do usuário', () => {
     league_members: 'só a adesão à liga; os resultados de cada mês vão em leagueResults',
     survey_answers: 'as respostas vão em surveyAnswers (pela função my_survey_answers, junto com a pergunta)',
     trainer_notes: 'notas do personal sobre o aluno (do personal)',
+    trainer_client_meta: 'etiquetas que o personal deu ao aluno (do personal, o aluno não vê)',
     trainer_goals: 'as metas vão em trainerGoals',
     trainer_templates: 'modelos do personal (modo personal)',
     trainer_settings: 'ajustes do personal (modo personal)',

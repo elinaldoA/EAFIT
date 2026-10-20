@@ -113,3 +113,40 @@ export async function assignPlan(clientId, payload) {
   if (error) throw error;
   return data;
 }
+
+// Copia foco e exercícios de um dia para outro (cria o dia se não existir e
+// substitui o conteúdo se já existir).
+export function copyDay(draft, fromDia, toDia) {
+  const src = draft.days.find(d => d.dia === fromDia);
+  if (!src || fromDia === toDia) return draft;
+  const copy = { dia: toDia, foco: src.foco, exercicios: src.exercicios.map(e => ({ ...e })) };
+  const rest = draft.days.filter(d => d.dia !== toDia);
+  return { ...draft, days: sortDays([...rest, copy]) };
+}
+
+export function duplicateItem(list, index) {
+  if (index < 0 || index >= list.length) return list;
+  return [...list.slice(0, index + 1), { ...list[index] }, ...list.slice(index + 1)];
+}
+
+// "3" -> 3, "3-4" -> 3, "4x" -> 4; o resto vira 0.
+export function parseSeries(value) {
+  const n = parseInt(String(value || '').trim(), 10);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+// Séries de trabalho por grupo muscular na semana, a partir da biblioteca
+// (`byName`: nome em minúsculas -> linha com grupo_muscular). Exercício fora
+// da biblioteca entra em "Outros". Do maior volume para o menor.
+export function volumeByGroup(draft, byName) {
+  const totals = new Map();
+  for (const day of draft.days) {
+    for (const e of day.exercicios) {
+      const nome = String(e.nome || '').trim();
+      if (!nome) continue;
+      const grupo = byName.get(nome.toLowerCase())?.grupo_muscular || t('Outros');
+      totals.set(grupo, (totals.get(grupo) || 0) + parseSeries(e.series));
+    }
+  }
+  return [...totals.entries()].map(([grupo, series]) => ({ grupo, series })).sort((a, b) => b.series - a.series);
+}

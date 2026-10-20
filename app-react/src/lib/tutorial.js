@@ -89,43 +89,43 @@ export const TRAINER_STEPS = [
     text: t('Este é o seu painel: acompanhe alunos, monte treinos, crie desafios e mande recados. Dá pra pular e rever depois em Conta → Ajuda.'),
   },
   {
-    tab: 'alunos', target: nav(1), icon: '👥', title: t('Seus alunos'),
-    text: t('Toque em "Convidar aluno" para mandar seu código. Quando o aluno o digita em Perfil → Meu personal e autoriza, ele aparece aqui. Quem precisa de atenção fica no topo: parado há 4 dias ou mais, sumido há mais de uma semana ou que ainda não treinou. O card "Esta semana" resume quantos treinaram e quantos treinos fizeram.'),
+    tab: 'painel', target: nav(1), icon: '⚡', title: t('Painel do dia'),
+    text: t('No topo, os números da carteira: alunos ativos, quantos treinaram na semana, a aderência média à meta e os planos vencendo. Em "Precisam de você" fica quem relatou dor forte, sumiu, respondeu um recado ou está com o plano vencido, do mais urgente ao menos. Toque no aluno para abrir a ficha. Logo abaixo, a agenda das próximas aulas.'),
   },
   {
-    tab: 'alunos', target: '.trainer-link', icon: '🔗', title: t('Seu link de divulgação'),
+    tab: 'painel', target: '.trainer-link', icon: '🔗', title: t('Seu link de divulgação'),
     text: t('Poste o link na bio, nos stories ou mande no WhatsApp. Quem cria a conta por ele recebe o pedido para autorizar você e já entra na sua lista. O card mostra as visitas e as contas criadas pelo link nos últimos 30 dias e quantos alunos entraram por ele.'),
   },
   {
+    tab: 'alunos', target: nav(2), icon: '👥', title: t('Sua carteira de alunos'),
+    text: t('Busque por nome, filtre por situação (atenção, plano vencendo, sem plano) ou por etiqueta e ordene por prioridade, nome ou aderência. Cada aluno mostra os dias treinados nas últimas 2 semanas, a meta da semana e o plano. Em "Selecionar" você manda um recado ou aplica uma etiqueta a vários alunos de uma vez.'),
+  },
+  {
     tab: 'alunos', icon: '📋', title: t('Ficha do aluno'),
-    text: t('Abra um aluno para ver frequência contra a meta, sequência, peso, medidas, check-ins, desconfortos e cargas máximas. Em "Últimos treinos" estão as séries registradas, com sugestões de quando subir a carga. Ali você também define metas, faz anotações que só você vê e, se o aluno ligar o compartilhamento, vê as fotos de evolução.'),
+    text: t('A ficha é dividida em abas. Resumo: frequência com as últimas 8 semanas, desconfortos, metas e anotações que só você vê. Treinos: séries registradas e sugestões de carga. Evolução: peso, medidas, check-ins e fotos. Plano: plano atual, histórico de ciclos e aulas. Conversa: recados com o aluno. No topo, etiquetas e atalhos.'),
   },
   {
     tab: 'alunos', icon: '🏋️', title: t('Monte e envie o treino'),
-    text: t('Na ficha, toque em "Montar treino" (ou "Editar / enviar novo treino"). Escolha os dias, os exercícios, as séries e as repetições, ou comece de um modelo. Ao enviar, o treino vira o plano ativo do aluno e ele recebe um recado avisando.'),
+    text: t('Toque em "Treino" na ficha. Escolha os dias, os exercícios, as séries e as repetições, ou comece de um modelo. Copie um dia inteiro para outro, duplique exercícios e confira o volume de séries por grupo muscular antes de enviar. Ao enviar, o treino vira o plano ativo do aluno e ele recebe um recado avisando.'),
   },
   {
     tab: 'alunos', icon: '📅', title: t('Agenda de aulas'),
-    text: t('Na ficha, no card de aulas, marque data, hora, duração e local. O aluno é avisado e confirma ou recusa pelo app, e os dois recebem lembrete antes da aula. As próximas aulas, com a situação de cada uma, aparecem no topo da lista de alunos.'),
+    text: t('Na aba Plano da ficha, marque data, hora, duração e local. O aluno é avisado e confirma ou recusa pelo app, e os dois recebem lembrete antes da aula. As próximas aulas aparecem na agenda do Painel.'),
   },
   {
-    tab: 'modelos', target: nav(2), icon: '🧩', title: t('Modelos de treino'),
-    text: t('Crie um modelo uma vez ("+ Novo modelo") e envie para vários alunos de uma só vez. "Editar como novo" ajusta uma cópia sem mexer no original.'),
+    tab: 'modelos', target: nav(3), icon: '🧩', title: t('Modelos de treino'),
+    text: t('Crie um modelo uma vez ("+ Novo modelo") e envie para vários alunos de uma só vez. "Editar" muda o próprio modelo; "Duplicar" cria uma cópia para ajustar sem mexer no original.'),
   },
   {
-    tab: 'turma', target: nav(3), icon: '🏆', title: t('Turma e desafios'),
-    text: t('Crie desafios com nome e prazo para toda a turma ou só para alguns alunos. Os participantes são avisados e você acompanha o andamento.'),
-  },
-  {
-    tab: 'recados', target: nav(4), icon: '💬', title: t('Recados e conversa'),
-    text: t('Envie incentivos e orientações para todos ou para alunos escolhidos. Eles recebem uma notificação e, nos enviados, você vê quantos já leram. O aluno pode responder: a resposta aparece na lista de alunos e a conversa fica na ficha dele.'),
+    tab: 'turma', target: nav(4), icon: '🏆', title: t('Turma: recados e desafios'),
+    text: t('Em Recados, envie incentivos e orientações para todos ou para alunos escolhidos e veja quantos já leram. Em Desafios, crie desafios com nome e prazo para toda a turma ou só para alguns alunos e acompanhe o placar.'),
   },
   {
     tab: 'conta', target: nav(5), icon: '⚙️', title: t('Conta e alertas'),
     text: t('Ative as notificações neste aparelho e escolha os avisos: aluno sem treinar (você define o prazo), recorde de carga, relato de dor forte ou lesão e o resumo da semana, toda segunda. Os avisos chegam entre 8h e 20h. Quer treinar também? "Usar como aluno" troca para o app de treino.'),
   },
   {
-    tab: 'alunos', icon: '🚀', title: t('Tudo pronto!'),
+    tab: 'painel', icon: '🚀', title: t('Tudo pronto!'),
     text: t('Comece convidando seu primeiro aluno, pelo link ou pelo código. Para rever este guia: Conta → Ajuda.'),
   },
 ];
