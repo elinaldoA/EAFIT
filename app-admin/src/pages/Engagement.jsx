@@ -4,6 +4,7 @@ import { fetchAtRiskUsers, fetchExpiringPlans, displayName } from '../lib/manage
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import ChurnRiskCard from '../components/ChurnRiskCard';
 
 const INACTIVE_OPTIONS = [7, 14, 30];
 const AHEAD_OPTIONS = [7, 14, 30];
@@ -186,6 +187,7 @@ export default function Engagement() {
       <div className="page-header">
         <h1 className="page-title">Engajamento</h1>
       </div>
+      <ChurnRiskCard />
       <AtRiskCard />
       <ExpiringPlansCard />
     </div>

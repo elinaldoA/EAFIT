@@ -9,6 +9,8 @@ const { mockRpc, mockFrom, mockInvoke, mockDownload } = vi.hoisted(() => ({
 
 vi.mock('../lib/supabase', () => ({ db: { rpc: mockRpc, from: mockFrom, functions: { invoke: mockInvoke } } }));
 vi.mock('../lib/csv', async orig => ({ ...(await orig()), downloadCsv: mockDownload }));
+// Previsão de abandono tem teste próprio (components/ChurnRiskCard.test.jsx).
+vi.mock('../components/ChurnRiskCard', () => ({ default: () => null }));
 
 import Engagement from './Engagement';
 import PlanAnalytics from './PlanAnalytics';
