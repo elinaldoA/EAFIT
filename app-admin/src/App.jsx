@@ -8,6 +8,7 @@ import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
+import MyReport from './pages/MyReport';
 import UsersList from './pages/UsersList';
 import Engagement from './pages/Engagement';
 import AutoNotifications from './pages/AutoNotifications';
@@ -68,6 +69,7 @@ function AppShell() {
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
+            <Route path="/meu-relatorio" element={<MyReport />} />
             <Route path="/users" element={<UsersList />} />
             <Route path="/users/:id" element={<UserDetail />} />
             <Route path="/analise-planos" element={<PlanAnalytics />} />

@@ -12,6 +12,7 @@ export const NAV_GROUPS = [
       {
         key: 'analises', label: 'Análises', icon: 'chart',
         tabs: [
+          { to: '/meu-relatorio', label: 'Meu relatório' },
           { to: '/engajamento', label: 'Engajamento' },
           { to: '/analise-planos', label: 'Análise dos planos' },
           { to: '/comportamento', label: 'Comportamento' },

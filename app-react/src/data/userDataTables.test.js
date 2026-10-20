@@ -115,6 +115,7 @@ describe('backup cobre as tabelas do usuário', () => {
     trainer_invite_signups: 'registro interno de atribuição (por qual link de personal a conta foi criada)',
     trainer_appointments: 'as aulas do aluno vão em appointments',
     trainer_messages: 'a conversa vai em trainerMessages',
+    admin_report_cards: 'cartões do relatório do admin no painel (preferência interna)',
     admin_access: 'permissões de admin no painel (controle interno da equipe)',
     trainer_requests: 'pedido de acesso de personal (verificação interna do CREF)',
     league_members: 'só a adesão à liga; os resultados de cada mês vão em leagueResults',
