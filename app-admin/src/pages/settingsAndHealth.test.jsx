@@ -27,6 +27,7 @@ describe('AppSettings', () => {
     flags: { feedback: false },
     moved: { enabled: false, url: '' },
     season: { enabled: false, periods: [] },
+    minVersion: { version: '', mode: 'warn', message: '' },
   };
 
   beforeEach(() => {

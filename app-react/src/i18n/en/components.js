@@ -734,4 +734,8 @@ export default {
   'Escreva aqui': 'Type here',
   'Quer contar o porquê? (opcional)': 'Want to tell us why? (optional)',
   'Enviar resposta': 'Send answer',
+  'Atualizar agora': 'Update now',
+  'Atualize o app': 'Update the app',
+  'Esta versão do app não é mais compatível. Atualize para continuar.': 'This version of the app is no longer supported. Update to continue.',
+  'Há uma versão nova do app com correções importantes.': 'A new version of the app with important fixes is available.',
 };

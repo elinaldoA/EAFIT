@@ -7,6 +7,7 @@ import {
 import { todayStr } from '../lib/community';
 import { SEASON_CHANGE_EVENT, isAdminSeasonOff, setAdminSeasonOff } from '../lib/season';
 import Loading from '../components/Loading';
+import MinVersionCard from '../components/MinVersionCard';
 
 function SectionMessage({ msg }) {
   if (!msg) return null;
@@ -414,6 +415,7 @@ export default function AppSettings() {
       <MaintenanceCard key={`m-${JSON.stringify(settings.maintenance)}`} saved={settings.maintenance} adminId={adminUser?.id} onSaved={load} />
       <BannerCard key={`b-${settings.banner.version}-${settings.banner.enabled}`} saved={settings.banner} adminId={adminUser?.id} onSaved={load} />
       <FlagsCard saved={settings.flags} adminId={adminUser?.id} onSaved={load} />
+      <MinVersionCard key={`v-${JSON.stringify(settings.minVersion)}`} saved={settings.minVersion} adminId={adminUser?.id} onSaved={load} />
       <MovedCard key={`mv-${JSON.stringify(settings.moved)}`} saved={settings.moved} adminId={adminUser?.id} onSaved={load} />
       <SeasonCard key={`s-${JSON.stringify(settings.season)}`} saved={settings.season} adminId={adminUser?.id} onSaved={load} today={todayStr()} />
     </div>

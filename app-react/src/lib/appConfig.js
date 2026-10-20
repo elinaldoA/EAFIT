@@ -13,6 +13,8 @@ export const DEFAULT_CONFIG = {
   season: { enabled: false, periods: [] },
   // Experimentos rodando para quem está logado: { chave: variante } (useExperiment).
   experiments: {},
+  // Versão mínima do app (painel → Configurações): 'warn' mostra faixa, 'block' tela cheia.
+  minVersion: { version: '', mode: 'warn', message: '' },
 };
 
 const BANNER_LEVELS = ['info', 'warning', 'success'];
@@ -77,6 +79,11 @@ export function normalizeConfig(rows, today = todayInAppZone(), experimentRows =
     moved: { enabled: mv.enabled === true && movedUrl !== '', url: movedUrl },
     season: normalizeSeason(map.season),
     experiments: applied.experiments,
+    minVersion: {
+      version: /^\d+(\.\d+){0,2}$/.test(str(map.min_version?.version)) ? str(map.min_version.version) : '',
+      mode: map.min_version?.mode === 'block' ? 'block' : 'warn',
+      message: str(map.min_version?.message),
+    },
   };
 }
 

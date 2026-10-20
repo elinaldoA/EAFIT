@@ -27,6 +27,8 @@ import BiometricLockScreen from './components/BiometricLockScreen';
 import { useBiometricLock } from './hooks/useBiometricLock';
 import PasswordRecoveryScreen from './components/PasswordRecoveryScreen';
 import MaintenanceScreen from './components/MaintenanceScreen';
+import { ForceUpdateScreen, UpdateWarnBar } from './components/ForceUpdate';
+import { isOutdated } from './lib/appVersion';
 import MovedScreen from './components/MovedScreen';
 import EmailUnsubscribeScreen from './components/EmailUnsubscribeScreen';
 import { takeUnsubscribeToken } from './lib/emailUnsubscribe';
@@ -127,6 +129,10 @@ function Shell() {
   // Manutenção ligada no painel admin: bloqueia o app inteiro (antes até do login).
   if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;
 
+  // Versão mínima do painel: abaixo dela, 'block' para tudo e 'warn' mostra a faixa.
+  const outdated = isOutdated(config.minVersion?.version);
+  if (outdated && config.minVersion.mode === 'block') return <ForceUpdateScreen message={config.minVersion.message} />;
+
   if (unsubscribeToken) return <EmailUnsubscribeScreen token={unsubscribeToken} onClose={() => setUnsubscribeToken(null)} />;
   if (surveyLink) return <InactivitySurveyScreen token={surveyLink.token} reason={surveyLink.reason} onClose={() => setSurveyLink(null)} />;
 
@@ -141,6 +147,7 @@ function Shell() {
     {user && locked && <BiometricLockScreen user={user} onUnlock={unlock} />}
     <div className="shell" inert={user && locked ? true : undefined}>
       <SeasonDecor />
+      {outdated && <UpdateWarnBar message={config.minVersion.message} />}
       <AnnouncementBanner />
       {studentView && !needsOnboarding && <SeasonBanner />}
       {user && <TermsUpdateScreen />}

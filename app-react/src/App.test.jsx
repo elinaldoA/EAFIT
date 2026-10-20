@@ -91,6 +91,20 @@ describe('App', () => {
     expect(screen.queryByText('tela-auth')).toBeNull();
   });
 
+  it('versão mínima: bloquear mostra a tela de atualizar; avisar mostra a faixa e segue', () => {
+    h.config = { maintenance: { enabled: false, message: '' }, minVersion: { version: '999.0.0', mode: 'block', message: 'Atualize já' } };
+    h.auth = { user: null, authLoading: false, recoveryMode: false };
+    const { unmount } = render(<App />);
+    expect(screen.getByText('Atualize já')).toBeTruthy();
+    expect(screen.queryByText('tela-auth')).toBeNull();
+    unmount();
+
+    h.config = { maintenance: { enabled: false, message: '' }, minVersion: { version: '999.0.0', mode: 'warn', message: '' } };
+    render(<App />);
+    expect(screen.getByRole('button', { name: 'Atualizar agora' })).toBeTruthy();
+    expect(screen.getByText('tela-auth')).toBeTruthy();
+  });
+
   it('mudança de endereço ligada bloqueia tudo e aponta pro endereço novo', () => {
     h.config = { maintenance: { enabled: false, message: '' }, moved: { enabled: true, url: 'https://eafit.com.br/app/' } };
     h.auth = { user: null, authLoading: false, recoveryMode: false };

@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS = {
   flags: {},
   moved: { enabled: false, url: '' },
   season: { enabled: false, periods: [] },
+  minVersion: { version: '', mode: 'warn', message: '' },
 };
 
 // Temas de temporada que o app e o site sabem desenhar (SEASONS em
@@ -46,6 +47,20 @@ export const SEASON_THEMES = [
 export const seasonThemeLabel = theme => SEASON_THEMES.find(s => s.value === theme)?.label || theme;
 
 const isDay = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
+// Mesmo formato aceito pelo app (lib/appConfig.js): 1, 1.4 ou 1.4.2.
+export const isVersion = v => typeof v === 'string' && /^\d+(\.\d+){0,2}$/.test(v);
+
+// "1.4.10" × "1.4.2" (igual a compareVersions em app-react/src/lib/appVersion.js).
+export function compareVersions(a, b) {
+  const pa = String(a || '').split('.').map(n => Number(n) || 0);
+  const pb = String(b || '').split('.').map(n => Number(n) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length, 3); i++) {
+    const d = (pa[i] || 0) - (pb[i] || 0);
+    if (d) return d > 0 ? 1 : -1;
+  }
+  return 0;
+}
 
 // Situação do aviso hoje, pelo período (datas YYYY-MM-DD no fuso do app;
 // vazio = sem limite). 'agendado' | 'no_ar' | 'encerrado'.
@@ -82,6 +97,11 @@ export function normalizeSettings(rows) {
     flags,
     moved: { enabled: mv.enabled === true, url: String(mv.url || '') },
     season: normalizeSeason(map.season),
+    minVersion: {
+      version: isVersion(map.min_version?.version) ? map.min_version.version : '',
+      mode: map.min_version?.mode === 'block' ? 'block' : 'warn',
+      message: String(map.min_version?.message || ''),
+    },
   };
 }
 
