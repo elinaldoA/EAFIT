@@ -1081,3 +1081,6 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 .cal__chip--desafio { background: rgba(34,197,94,0.16); }
 .cal__chip--pesquisa { background: rgba(168,85,247,0.16); }
 .cal__chip--experimento { background: rgba(20,184,166,0.16); }
+
+/* Listas simples (Visão do app) */
+.plain-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }

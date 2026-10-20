@@ -13,6 +13,7 @@ import UserProfileTab from './UserProfileTab';
 import UserWorkoutsTab from './UserWorkoutsTab';
 import UserActionsTab from './UserActionsTab';
 import UserNotesTab from './UserNotesTab';
+import UserAppViewTab from './UserAppViewTab';
 
 export default function UserDetail() {
   const { id } = useParams();
@@ -310,13 +311,13 @@ export default function UserDetail() {
       </div>
 
       <div className="tabs">
-        {['perfil', 'treinos', 'notas', 'acoes'].map(t => (
+        {['perfil', 'treinos', 'app', 'notas', 'acoes'].map(t => (
           <button
             key={t}
             className={`tabs__btn ${tab === t ? 'tabs__btn--active' : ''}`}
             onClick={() => setTab(t)}
           >
-            {t === 'perfil' ? 'Perfil' : t === 'treinos' ? 'Treinos' : t === 'notas' ? 'Notas' : 'Ações'}
+            {t === 'perfil' ? 'Perfil' : t === 'treinos' ? 'Treinos' : t === 'app' ? 'Visão do app' : t === 'notas' ? 'Notas' : 'Ações'}
           </button>
         ))}
       </div>
@@ -341,6 +342,8 @@ export default function UserDetail() {
           onFixSet={handleFixSet} onDeleteWorkout={handleDeleteWorkout}
         />
       )}
+
+      {tab === 'app' && <UserAppViewTab userId={id} plan={activePlan} metadata={md} />}
 
       {tab === 'notas' && <UserNotesTab userId={id} adminUser={adminUser} />}
 
