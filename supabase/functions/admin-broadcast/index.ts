@@ -15,6 +15,9 @@
 // lista sai do banco, nunca do corpo; fica em user_notifications com kind
 // 'influenciador' ou 'embaixador' (aba Recados do modo do programa,
 // app-react/src/program/) e o push abre essa aba. Sem e-mail.
+//
+// Título e texto podem ter {nome}, {treinos_mes} e {dias_sem_treinar}: cada
+// pessoa recebe com os próprios valores (push, caixa do app e e-mail).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { corsHeadersFor } from '../_shared/cors.ts';
@@ -25,6 +28,7 @@ import { type BulkEmailItem, bulkEmailItem, loadEmailUsers } from '../_shared/em
 import { broadcastEmail, feedbackReplyEmail } from '../_shared/emailTexts.ts';
 import { langOf } from '../_shared/lang.ts';
 import { canReceiveBulkEmail, MAX_BULK_EMAILS } from '../_shared/weeklyEmails.ts';
+import { type BroadcastVars, loadBroadcastVars, personalize, usesVars } from '../_shared/broadcastVars.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -89,24 +93,32 @@ Deno.serve(async (req) => {
     }
   }
 
-  let query = admin.from('push_subscriptions').select('endpoint, p256dh, auth');
+  let query = admin.from('push_subscriptions').select('user_id, endpoint, p256dh, auth');
   if (Array.isArray(targetUserIds) && targetUserIds.length > 0) {
     query = query.in('user_id', targetUserIds);
   }
   const { data: subs, error: subsErr } = await query;
   if (subsErr) return json({ error: subsErr.message }, 500);
 
+  const targeted = Array.isArray(targetUserIds) && targetUserIds.length > 0;
+  const vars: Map<string, BroadcastVars> | null = usesVars(title, message)
+    ? await loadBroadcastVars(admin, targeted ? targetUserIds! : null)
+    : null;
+  const textFor = (userId: string) => vars
+    ? { title: personalize(title, vars.get(userId)), body: personalize(message, vars.get(userId)) }
+    : { title, body: message };
+
   let sent = 0;
   for (const sub of subs || []) {
-    const result = await sendWebPush(sub, toProgram ? { title, body: message, tag: 'program-message' } : { title, body: message });
+    const text = textFor(sub.user_id as string);
+    const result = await sendWebPush(sub, toProgram ? { ...text, tag: 'program-message' } : text);
     if (result === 'sent') sent++;
     else if (result === 'stale') await admin.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
   }
 
-  const targeted = Array.isArray(targetUserIds) && targetUserIds.length > 0;
   const inboxIds = targeted ? targetUserIds : await listAllUserIds(admin);
   const campaign = crypto.randomUUID();
-  await saveInbox(admin, inboxIds!, { kind: programKind ?? 'aviso', title, body: message, campaign });
+  await saveInbox(admin, inboxIds!, (userId) => ({ kind: programKind ?? 'aviso', ...textFor(userId), campaign }));
 
   let emailTargetCount: number | undefined;
   let emailSent: number | undefined;
@@ -116,7 +128,7 @@ Deno.serve(async (req) => {
     if (email === 'resposta') {
       items = users.filter((u) => u.email).map((u) => {
         const lang = langOf(u.meta);
-        return { to: u.email!, email: renderEmail(lang, feedbackReplyEmail(lang, message)), options: {} };
+        return { to: u.email!, email: renderEmail(lang, feedbackReplyEmail(lang, textFor(u.id).body)), options: {} };
       });
     } else {
       let recipients = users.filter((u) => canReceiveBulkEmail(u));
@@ -126,7 +138,10 @@ Deno.serve(async (req) => {
         recipients = recipients.filter((u) => !adminIds.has(u.id));
       }
       const env = { supabaseUrl: SUPABASE_URL, secret: SERVICE_ROLE_KEY };
-      items = await Promise.all(recipients.map((u) => bulkEmailItem(u, (lang) => broadcastEmail(lang, title, message), env)));
+      items = await Promise.all(recipients.map((u) => {
+        const text = textFor(u.id);
+        return bulkEmailItem(u, (lang) => broadcastEmail(lang, text.title, text.body), env);
+      }));
     }
     // Teto diário do Gmail: o que passar disso não é enviado (o admin vê a diferença nos números).
     emailTargetCount = items.length;

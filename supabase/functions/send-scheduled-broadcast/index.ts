@@ -3,10 +3,12 @@
 // app-admin/src/pages/Broadcast.jsx). Mesmo padrão de send-reminders: sem
 // usuário logado, Verify JWT desativado, age via service role e só aceita
 // chamada com o header x-cron-secret (ver ../_shared/cronAuth.ts).
+// Variáveis ({nome} etc.) são trocadas por pessoa, como em admin-broadcast.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { listAllUserIds, saveInbox } from '../_shared/inbox.ts';
+import { loadBroadcastVars, personalize, usesVars } from '../_shared/broadcastVars.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -30,8 +32,9 @@ Deno.serve(async (req) => {
   }
 
   for (const broadcast of due) {
-    let query = supabase.from('push_subscriptions').select('endpoint, p256dh, auth');
-    if (Array.isArray(broadcast.target_user_ids) && broadcast.target_user_ids.length > 0) {
+    const targeted = Array.isArray(broadcast.target_user_ids) && broadcast.target_user_ids.length > 0;
+    let query = supabase.from('push_subscriptions').select('user_id, endpoint, p256dh, auth');
+    if (targeted) {
       query = query.in('user_id', broadcast.target_user_ids);
     }
     const { data: subs, error: subsErr } = await query;
@@ -40,9 +43,16 @@ Deno.serve(async (req) => {
       continue;
     }
 
+    const vars = usesVars(broadcast.title, broadcast.body)
+      ? await loadBroadcastVars(supabase, targeted ? broadcast.target_user_ids : null)
+      : null;
+    const textFor = (userId: string) => vars
+      ? { title: personalize(broadcast.title, vars.get(userId)), body: personalize(broadcast.body, vars.get(userId)) }
+      : { title: broadcast.title, body: broadcast.body };
+
     let sent = 0;
     for (const sub of subs || []) {
-      const result = await sendWebPush(sub, { title: broadcast.title, body: broadcast.body });
+      const result = await sendWebPush(sub, textFor(sub.user_id as string));
       if (result === 'sent') sent++;
       else if (result === 'stale') await supabase.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
     }
@@ -54,11 +64,9 @@ Deno.serve(async (req) => {
       .update({ sent_at: new Date().toISOString(), sent_count: sent, target_count: subs?.length || 0 })
       .eq('id', broadcast.id);
 
-    const inboxIds = Array.isArray(broadcast.target_user_ids) && broadcast.target_user_ids.length > 0
-      ? broadcast.target_user_ids
-      : await listAllUserIds(supabase);
+    const inboxIds = targeted ? broadcast.target_user_ids : await listAllUserIds(supabase);
     const campaign = crypto.randomUUID();
-    await saveInbox(supabase, inboxIds, { kind: 'aviso', title: broadcast.title, body: broadcast.body, campaign });
+    await saveInbox(supabase, inboxIds, (userId) => ({ kind: 'aviso', ...textFor(userId), campaign }));
 
     await supabase.from('admin_audit_log').insert({
       admin_id: broadcast.created_by,

@@ -24,9 +24,10 @@ export async function listAllUserIds(admin: SupabaseClient): Promise<string[]> {
   return ids;
 }
 
-export async function saveInbox(admin: SupabaseClient, userIds: string[], item: InboxItem): Promise<void> {
+// item pode ser uma função (texto por pessoa, com variáveis: _shared/broadcastVars.ts).
+export async function saveInbox(admin: SupabaseClient, userIds: string[], item: InboxItem | ((userId: string) => InboxItem)): Promise<void> {
   for (let i = 0; i < userIds.length; i += CHUNK) {
-    const rows = userIds.slice(i, i + CHUNK).map((user_id) => ({ user_id, ...item }));
+    const rows = userIds.slice(i, i + CHUNK).map((user_id) => ({ user_id, ...(typeof item === 'function' ? item(user_id) : item) }));
     const { error } = await admin.from('user_notifications').insert(rows);
     if (error) console.error('inbox insert error:', error.message);
   }

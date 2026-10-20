@@ -4,6 +4,7 @@ import { emailResult, testResult } from '../lib/broadcastResult';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { fetchUsers } from '../lib/users';
 import EmptyState from '../components/EmptyState';
+import MessageEditor from '../components/MessageEditor';
 import { useSearchParams } from 'react-router-dom';
 import { fetchSegments, resolveSegment } from '../lib/segments';
 
@@ -225,14 +226,7 @@ export default function Broadcast() {
             </div>
           </div>
         )}
-        <label className="field">
-          <span className="field__label">Título</span>
-          <input className="input" required value={title} onChange={e => setTitle(e.target.value)} />
-        </label>
-        <label className="field">
-          <span className="field__label">Mensagem</span>
-          <input className="input" required value={body} onChange={e => setBody(e.target.value)} />
-        </label>
+        <MessageEditor title={title} body={body} onTitle={setTitle} onBody={setBody} users={users} email={alsoEmail && !scheduleAt} />
 
         <div className="field">
           <span className="field__label">Destinatários</span>
