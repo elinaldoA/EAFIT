@@ -231,9 +231,9 @@ async function fetchBaseTemplate(meta) {
 
 // sexo/idade não influenciam a seleção de exercícios nesta versão. Aceitos
 // aqui só para manter a mesma assinatura de perfil usada na tela de onboarding.
-export async function generatePlan({ peso, altura, meta, nivel }) {
+export async function generatePlan({ peso, altura, meta, nivel, local }) {
     const base = await fetchBaseTemplate(meta);
-    const withLibrary = await withLibraryExercises(base, nivel);
+    const withLibrary = await withLibraryExercises(base, nivel, local);
     const leveled = applyLevelAdjustment(withLibrary, nivel);
     const bracket = computeImcBracket(peso, altura);
     return applyImcAdjustment(leveled, bracket);

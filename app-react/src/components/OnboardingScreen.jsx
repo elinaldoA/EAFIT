@@ -16,6 +16,7 @@ export default function OnboardingScreen() {
   const [altura, setAltura] = useState('');
   const [meta, setMeta] = useState('massa');
   const [nivel, setNivel] = useState('intermediario');
+  const [local, setLocal] = useState('academia');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -58,10 +59,10 @@ export default function OnboardingScreen() {
       // essa busca corre em paralelo com a criação do plano personalizado e
       // pode disparar o fallback de plano padrão antes dele existir,
       // gerando dois planos ativos.
-      const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel });
+      const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
       await seedGeneratedPlan(user.id, generatedDays);
 
-      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel });
+      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
       if (error) throw error;
       trackEvent('onboarding', 'done');
     } catch (err) {
@@ -129,6 +130,13 @@ export default function OnboardingScreen() {
               <option value="iniciante">{t('Iniciante')}</option>
               <option value="intermediario">{t('Intermediário')}</option>
               <option value="avancado">{t('Avançado')}</option>
+            </select>
+          </div>
+          <div className="profile-field">
+            <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
+            <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
+              <option value="academia">{t('Academia')}</option>
+              <option value="casa">{t('Em casa')}</option>
             </select>
           </div>
           <button className="btn btn--primary btn--full" disabled={busy} onClick={handleSubmit}>

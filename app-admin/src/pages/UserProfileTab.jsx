@@ -66,6 +66,13 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
             {NIVEIS.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </label>
+        <label className="field">
+          <span className="field__label">Onde treina</span>
+          <select className="input" value={form.local} onChange={e => setForm({ ...form, local: e.target.value })}>
+            <option value="academia">academia</option>
+            <option value="casa">casa</option>
+          </select>
+        </label>
         <div className="form-grid__actions">
           <button className="btn btn--primary" type="submit" disabled={busy}>Salvar perfil</button>
         </div>

@@ -3,7 +3,7 @@ import { db } from '../lib/supabase';
 // Isso é espelhado (copiado à mão) em supabase/functions/_shared/exerciseLibrary.ts,
 // usado por admin-generate-plan — a Edge Function roda em Deno e não
 // compartilha build com o app (ver "Convenções" no README). Se mudar
-// FOCO_TO_GRUPOS, allowedNiveis, pickExercisesForFoco ou as constantes abaixo,
+// FOCO_TO_GRUPOS, allowedNiveis, EQUIPAMENTOS_POR_LOCAL, pickExercisesForFoco ou as constantes abaixo,
 // replique a mudança lá também.
 
 // Mapeia o `foco` (texto exibido no dia do treino) pros grupos musculares de
@@ -40,6 +40,20 @@ const NIVEL_ORDER = ['iniciante', 'intermediario', 'avancado'];
 export function allowedNiveis(nivel) {
   const idx = NIVEL_ORDER.indexOf(nivel);
   return NIVEL_ORDER.slice(0, (idx === -1 ? 1 : idx) + 1);
+}
+
+// Equipamentos (exercise_library.equipamento) que cada local de treino tem.
+// Sem esse filtro o sorteio misturava peso corporal/elástico (um terço da
+// biblioteca) no treino de quem vai à academia. Halteres valem nos dois.
+export const LOCAIS = ['academia', 'casa'];
+export const EQUIPAMENTOS_POR_LOCAL = {
+  academia: ['barra', 'halteres', 'máquina', 'polia', 'anilha'],
+  casa: ['peso corporal', 'elástico', 'halteres', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
+};
+
+// Local ausente/desconhecido conta como academia (perfis de antes do campo).
+export function allowedEquipamentos(local) {
+  return EQUIPAMENTOS_POR_LOCAL[local] || EQUIPAMENTOS_POR_LOCAL.academia;
 }
 
 function shuffle(arr) {
@@ -114,12 +128,13 @@ export function pickExercisesForFoco(candidates, { count = TARGET_COUNT, compost
   return picked.map(toExerciseShape);
 }
 
-async function fetchLibraryRows(grupos, nivel) {
+async function fetchLibraryRows(grupos, nivel, local) {
   const { data, error } = await db
     .from('exercise_library')
     .select('nome, grupo_muscular, tipo, series, reps, descanso, tecnica')
     .in('grupo_muscular', grupos)
     .in('nivel_minimo', allowedNiveis(nivel))
+    .in('equipamento', allowedEquipamentos(local))
     .eq('is_post_workout', false);
   if (error) throw error;
   return data || [];
@@ -130,17 +145,17 @@ async function fetchLibraryRows(grupos, nivel) {
 // intactos. Busca a biblioteca uma vez só (todos os grupos da semana) e
 // filtra por nível de experiência (exercise_library.nivel_minimo), pra
 // iniciante não receber levantamento livre técnico que LEVEL_EXERCISE_SUBS não
-// cobre. Dias sem mapeamento de foco (rest/cardio-leve/corrida) ou com pool
+// cobre, e pelos equipamentos do local de treino (allowedEquipamentos). Dias sem mapeamento de foco (rest/cardio-leve/corrida) ou com pool
 // insuficiente ficam como vieram do template — mesmo espírito de resiliência
 // de fetchBaseTemplate (rede indisponível não quebra a geração, só reduz a
 // variedade).
-export async function withLibraryExercises(days, nivel) {
+export async function withLibraryExercises(days, nivel, local) {
   const allGrupos = [...new Set(days.flatMap(d => FOCO_TO_GRUPOS[d.foco] || []))];
   if (!allGrupos.length) return days;
 
   let rows;
   try {
-    rows = await fetchLibraryRows(allGrupos, nivel);
+    rows = await fetchLibraryRows(allGrupos, nivel, local);
   } catch (err) {
     console.warn('withLibraryExercises:', err);
     return days;

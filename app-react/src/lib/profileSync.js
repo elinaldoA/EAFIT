@@ -7,7 +7,7 @@ import { db } from './supabase';
 // que existem só aqui sobem para a conta (user_metadata). Nunca sobrescreve o
 // que a conta já tem.
 
-const FIELDS = ['nome', 'sobrenome', 'apelido', 'sexo', 'idade', 'peso', 'altura', 'meta', 'nivel', 'pesoAlvo', 'macroAgua', 'weeklyGoal'];
+const FIELDS = ['nome', 'sobrenome', 'apelido', 'sexo', 'idade', 'peso', 'altura', 'meta', 'nivel', 'local', 'pesoAlvo', 'macroAgua', 'weeklyGoal'];
 const OWNER_KEY = 'eafit_data_owner'; // lib/localData.js
 
 const empty = v => v === undefined || v === null || String(v).trim() === '';

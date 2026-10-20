@@ -1,7 +1,7 @@
 // Espelha app-react/src/data/exerciseLibrary.test.js — mesmos casos principais,
 // pra confirmar que o PORT pro Deno se comporta igual ao original em JS.
 import { assert, assertEquals } from 'jsr:@std/assert@1';
-import { allowedNiveis, pickExercisesForFoco, withLibraryExercises, type LibraryClient, type LibraryRow } from './exerciseLibrary.ts';
+import { allowedNiveis, EQUIPAMENTOS_POR_LOCAL, pickExercisesForFoco, withLibraryExercises, type LibraryClient, type LibraryRow } from './exerciseLibrary.ts';
 import type { Day } from './workoutAdjustments.ts';
 
 function row(nome: string, tipo: string, grupo_muscular = 'peito'): LibraryRow {
@@ -54,4 +54,14 @@ Deno.test('withLibraryExercises - uma consulta só, filtrada pelo nível, manten
   assertEquals(seg.pos, days[0].pos);
   assertEquals(dom, days[1]);
   assertEquals(calls.find(([col]) => col === 'nivel_minimo')?.[1], ['iniciante']);
+  assertEquals(calls.find(([col]) => col === 'equipamento')?.[1], EQUIPAMENTOS_POR_LOCAL.academia);
+});
+
+Deno.test('withLibraryExercises - treino em casa filtra pelos equipamentos de casa', async () => {
+  const calls: Array<[string, unknown]> = [];
+  const client = fakeClient([row('P1', 'composto'), row('P2', 'isolado'), row('T1', 'isolado', 'triceps')], calls);
+  await withLibraryExercises(client, [{ dia: 'Segunda', foco: 'Peito / Tríceps', exercicios: [], pos: [] }], 'iniciante', 'casa');
+  const equip = calls.find(([col]) => col === 'equipamento')?.[1] as string[];
+  assert(equip.includes('peso corporal'));
+  assert(!equip.includes('máquina'));
 });

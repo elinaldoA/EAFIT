@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
     const altura = parseFloat(md.altura);
     const meta = md.meta || 'saude';
     const nivel = md.nivel || 'intermediario';
+    const local = md.local || 'academia';
 
     if (!(peso > 0) || !(altura > 0)) {
       return json({ error: 'Este usuário ainda não completou o perfil (peso/altura).' }, 400);
@@ -78,7 +79,7 @@ Deno.serve(async (req) => {
       .from('workout_templates').select('days').eq('meta', meta).single();
     if (tplErr || !tpl?.days) throw tplErr || new Error('Template não encontrado.');
 
-    const withLibrary = await withLibraryExercises(admin as unknown as LibraryClient, tpl.days as Day[], nivel);
+    const withLibrary = await withLibraryExercises(admin as unknown as LibraryClient, tpl.days as Day[], nivel, local);
     const leveled = applyLevelAdjustment(withLibrary, nivel);
     const bracket = computeImcBracket(peso, altura);
     const generatedDays = applyImcAdjustment(leveled, bracket);
@@ -96,7 +97,7 @@ Deno.serve(async (req) => {
     });
     if (planErr) throw planErr;
 
-    await admin.from('admin_audit_log').insert({ admin_id: callerId, target_user_id: targetUserId, action: 'generateWorkout', details: { meta, nivel } });
+    await admin.from('admin_audit_log').insert({ admin_id: callerId, target_user_id: targetUserId, action: 'generateWorkout', details: { meta, nivel, local } });
     return json({ ok: true, planId: plan.id });
   } catch (err) {
     console.error('admin-generate-plan error:', err);

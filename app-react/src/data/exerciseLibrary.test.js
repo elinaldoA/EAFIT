@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const { mockDb } = vi.hoisted(() => ({ mockDb: { from: vi.fn() } }));
 vi.mock('../lib/supabase', () => ({ db: mockDb }));
 
-import { pickExercisesForFoco, withLibraryExercises, allowedNiveis, FOCO_TO_GRUPOS } from './exerciseLibrary';
+import { pickExercisesForFoco, withLibraryExercises, allowedNiveis, allowedEquipamentos, EQUIPAMENTOS_POR_LOCAL, FOCO_TO_GRUPOS } from './exerciseLibrary';
 
 function row(nome, tipo, grupo_muscular = 'peito') {
   return { nome, tipo, grupo_muscular, series: '3', reps: '10-12', descanso: '60s', tecnica: 'x' };
@@ -96,6 +96,24 @@ describe('allowedNiveis', () => {
   });
 });
 
+describe('allowedEquipamentos', () => {
+  it('academia não recebe peso corporal nem elástico', () => {
+    expect(allowedEquipamentos('academia')).not.toContain('peso corporal');
+    expect(allowedEquipamentos('academia')).not.toContain('elástico');
+    expect(allowedEquipamentos('academia')).toEqual(expect.arrayContaining(['barra', 'máquina', 'polia']));
+  });
+
+  it('casa não recebe máquina, polia nem barra', () => {
+    expect(allowedEquipamentos('casa')).toEqual(expect.not.arrayContaining(['máquina', 'polia', 'barra']));
+    expect(allowedEquipamentos('casa')).toContain('peso corporal');
+  });
+
+  it('local ausente ou desconhecido conta como academia', () => {
+    expect(allowedEquipamentos(undefined)).toEqual(EQUIPAMENTOS_POR_LOCAL.academia);
+    expect(allowedEquipamentos('praia')).toEqual(EQUIPAMENTOS_POR_LOCAL.academia);
+  });
+});
+
 function chainResolving(result, calls = []) {
   const chain = {
     select: () => chain,
@@ -167,6 +185,7 @@ describe('withLibraryExercises', () => {
 
     expect(mockDb.from).toHaveBeenCalledTimes(1);
     expect(calls).toContainEqual(['nivel_minimo', ['iniciante']]);
+    expect(calls).toContainEqual(['equipamento', EQUIPAMENTOS_POR_LOCAL.academia]);
     const [, grupos] = calls.find(([col]) => col === 'grupo_muscular');
     expect(grupos.sort()).toEqual(['biceps', 'costas', 'peito', 'quadriceps', 'triceps']);
   });

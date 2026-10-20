@@ -42,7 +42,7 @@ export function profileFormFromMetadata(md = {}) {
   return {
     nome: str(md.nome), sobrenome: str(md.sobrenome), apelido: str(md.apelido),
     sexo: str(md.sexo), idade: str(md.idade), peso: str(md.peso), altura: str(md.altura),
-    meta: md.meta || 'massa', nivel: md.nivel || 'intermediario', pesoAlvo: str(md.pesoAlvo),
+    meta: md.meta || 'massa', nivel: md.nivel || 'intermediario', local: md.local || 'academia', pesoAlvo: str(md.pesoAlvo),
     weeklyGoal: str(md.weeklyGoal), macroAgua: str(md.macroAgua),
   };
 }

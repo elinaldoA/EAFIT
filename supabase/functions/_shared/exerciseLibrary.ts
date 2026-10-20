@@ -1,7 +1,7 @@
 // PORT literal de app-react/src/data/exerciseLibrary.js — mesmo motivo da
 // duplicação de _shared/workoutAdjustments.ts (app-react e Edge Functions não
 // compartilham build). Usado por admin-generate-plan/index.ts. Se
-// exerciseLibrary.js mudar — sobretudo FOCO_TO_GRUPOS, allowedNiveis,
+// exerciseLibrary.js mudar — sobretudo FOCO_TO_GRUPOS, allowedNiveis, EQUIPAMENTOS_POR_LOCAL,
 // pickExercisesForFoco ou as constantes — espelhar aqui também.
 // exerciseLibrary.test.ts cobre este arquivo isoladamente.
 import type { Day, Exercise } from './workoutAdjustments.ts';
@@ -37,6 +37,15 @@ const NIVEL_ORDER = ['iniciante', 'intermediario', 'avancado'];
 export function allowedNiveis(nivel: string | undefined): string[] {
   const idx = NIVEL_ORDER.indexOf(nivel ?? '');
   return NIVEL_ORDER.slice(0, (idx === -1 ? 1 : idx) + 1);
+}
+
+export const EQUIPAMENTOS_POR_LOCAL: Record<string, string[]> = {
+  academia: ['barra', 'halteres', 'máquina', 'polia', 'anilha'],
+  casa: ['peso corporal', 'elástico', 'halteres', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
+};
+
+export function allowedEquipamentos(local: string | undefined): string[] {
+  return EQUIPAMENTOS_POR_LOCAL[local ?? ''] || EQUIPAMENTOS_POR_LOCAL.academia;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -104,7 +113,7 @@ export function pickExercisesForFoco(
   return picked.map(toExerciseShape);
 }
 
-export async function withLibraryExercises(client: LibraryClient, days: Day[], nivel: string | undefined): Promise<Day[]> {
+export async function withLibraryExercises(client: LibraryClient, days: Day[], nivel: string | undefined, local?: string): Promise<Day[]> {
   const allGrupos = [...new Set(days.flatMap(d => FOCO_TO_GRUPOS[d.foco] || []))];
   if (!allGrupos.length) return days;
 
@@ -115,6 +124,7 @@ export async function withLibraryExercises(client: LibraryClient, days: Day[], n
       .select('nome, grupo_muscular, tipo, series, reps, descanso, tecnica')
       .in('grupo_muscular', allGrupos)
       .in('nivel_minimo', allowedNiveis(nivel))
+      .in('equipamento', allowedEquipamentos(local))
       .eq('is_post_workout', false);
     if (error) throw error;
     rows = data || [];

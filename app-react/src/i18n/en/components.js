@@ -345,6 +345,9 @@ export default {
   'Iniciante': 'Beginner',
   'Intermediário': 'Intermediate',
   'Avançado': 'Advanced',
+  'Onde você treina': 'Where you train',
+  'Academia': 'Gym',
+  'Em casa': 'At home',
   'Gerando seu plano…': 'Building your plan…',
   'Gerar meu treino': 'Generate my workout',
 

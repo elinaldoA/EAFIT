@@ -10,7 +10,7 @@ describe('formulário do perfil', () => {
   it('traz todos os campos que o app grava, números como texto', () => {
     expect(profileFormFromMetadata({ nome: 'Ana', idade: 30, peso: 0, weeklyGoal: '4', macroAgua: '2.8' })).toEqual({
       nome: 'Ana', sobrenome: '', apelido: '', sexo: '', idade: '30', peso: '0', altura: '',
-      meta: 'massa', nivel: 'intermediario', pesoAlvo: '', weeklyGoal: '4', macroAgua: '2.8',
+      meta: 'massa', nivel: 'intermediario', local: 'academia', pesoAlvo: '', weeklyGoal: '4', macroAgua: '2.8',
     });
   });
 
