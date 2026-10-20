@@ -61,6 +61,7 @@ export const NAV_GROUPS = [
           { to: '/historico-envios', label: 'Histórico' },
           { to: '/resultados-envios', label: 'Resultados' },
           { to: '/automacoes', label: 'Automáticas' },
+          { to: '/calendario', label: 'Calendário' },
         ],
       },
     ],

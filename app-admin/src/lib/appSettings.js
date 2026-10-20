@@ -229,3 +229,13 @@ export async function saveSetting(key, value, adminId) {
   });
   if (auditError) console.error('audit log:', auditError.message);
 }
+
+// Usuários por versão do app e quantos ficam abaixo da mínima (Versão mínima).
+export function versionShare(rows, min) {
+  const list = (rows || []).filter(r => r.dimension === 'app_version' && r.value)
+    .map(r => ({ version: r.value, users: Number(r.users) || 0 }))
+    .sort((a, b) => compareVersions(b.version, a.version));
+  const total = list.reduce((a, r) => a + r.users, 0);
+  const below = min && isVersion(min) ? list.filter(r => compareVersions(r.version, min) < 0).reduce((a, r) => a + r.users, 0) : 0;
+  return { list, total, below, latest: list[0]?.version || '' };
+}

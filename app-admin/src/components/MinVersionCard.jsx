@@ -1,18 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { compareVersions, isVersion, saveSetting } from '../lib/appSettings';
+import { compareVersions, isVersion, saveSetting, versionShare } from '../lib/appSettings';
 import { fetchClientBreakdown } from '../lib/behavior';
 
 // Configurações do app → Versão mínima. Abaixo dela, o app avisa (faixa com
 // "Atualizar agora") ou bloqueia (tela cheia). Ver app-react/src/components/ForceUpdate.jsx.
-export function versionShare(rows, min) {
-  const list = (rows || []).filter(r => r.dimension === 'app_version' && r.value)
-    .map(r => ({ version: r.value, users: Number(r.users) || 0 }))
-    .sort((a, b) => compareVersions(b.version, a.version));
-  const total = list.reduce((a, r) => a + r.users, 0);
-  const below = min && isVersion(min) ? list.filter(r => compareVersions(r.version, min) < 0).reduce((a, r) => a + r.users, 0) : 0;
-  return { list, total, below, latest: list[0]?.version || '' };
-}
-
 export default function MinVersionCard({ saved, adminId, onSaved }) {
   const [draft, setDraft] = useState(saved);
   const [rows, setRows] = useState(null);

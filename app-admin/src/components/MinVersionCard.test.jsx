@@ -5,7 +5,8 @@ import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/re
 const { mockRpc, mockFrom, upsert } = vi.hoisted(() => ({ mockRpc: vi.fn(), mockFrom: vi.fn(), upsert: vi.fn() }));
 vi.mock('../lib/supabase', () => ({ db: { rpc: mockRpc, from: mockFrom } }));
 
-import MinVersionCard, { versionShare } from './MinVersionCard';
+import MinVersionCard from './MinVersionCard';
+import { versionShare } from '../lib/appSettings';
 import { compareVersions, normalizeSettings } from '../lib/appSettings';
 
 const ROWS = [
