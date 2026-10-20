@@ -3,6 +3,7 @@ import UserClientCard from '../components/UserClientCard';
 import UserWellbeingCard from '../components/UserWellbeingCard';
 import UserFriendsCard from '../components/UserFriendsCard';
 import UserAmbassadorCard from '../components/UserAmbassadorCard';
+import UserTrainerInviteCard from '../components/UserTrainerInviteCard';
 import UserAppDataCard from '../components/UserAppDataCard';
 import { METAS, NIVEIS, badgeLabel, formatDate } from '../lib/userDetailHelpers';
 
@@ -80,6 +81,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
 
       <UserAppDataCard detail={detail} />
       <UserAmbassadorCard userId={userId} />
+      <UserTrainerInviteCard userId={userId} />
       <UserClientCard userId={userId} />
       <UserWellbeingCard userId={userId} />
       <UserFriendsCard userId={userId} />

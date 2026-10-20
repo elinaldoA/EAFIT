@@ -39,3 +39,36 @@ export async function fetchUpcomingAppointments(maxRows = 30) {
     starts: r.ua_starts, duration: r.ua_duration, status: r.ua_status,
   }));
 }
+
+// Link de divulgação do personal (https://eafit.com.br/app/?personal=CODIGO):
+// quem cada um trouxe, como em Embaixadores e influenciadores.
+// supabase/migrations/20261124010000_admin_trainer_invites.sql.
+export const TRAINER_LINK_BASE = 'https://eafit.com.br/app/?personal=';
+
+// Números do link por personal, indexados pelo id do usuário.
+export async function fetchTrainerInvites(days = 30) {
+  const rows = await rpcRows('admin_trainer_invites', { days_back: days });
+  return Object.fromEntries(rows.filter(r => r.ti_user).map(r => [r.ti_user, {
+    visits: Number(r.ti_visits) || 0, signups: Number(r.ti_signups) || 0, total: Number(r.ti_total) || 0,
+    linked: Number(r.ti_linked) || 0, active7: Number(r.ti_active_7d) || 0, lastSignup: r.ti_last_signup,
+  }]));
+}
+
+// Contas criadas pelo link de um personal; `client` = virou aluno dele.
+export async function fetchTrainerInviteSignups(trainerId) {
+  const rows = await rpcRows('admin_trainer_invite_signups', { p_trainer: trainerId });
+  return rows.map(r => ({
+    userId: r.ts_user, email: r.ts_email, name: r.ts_name, createdAt: r.ts_created,
+    confirmed: !!r.ts_confirmed, lastSeen: r.ts_last_seen, workouts: Number(r.ts_workouts) || 0, client: !!r.ts_client,
+  }));
+}
+
+// Ficha do usuário: por qual personal a conta chegou (null = nenhum).
+export async function fetchUserTrainerInvite(userId) {
+  const r = (await rpcRows('admin_user_trainer_invite', { p_user: userId }))[0];
+  return r ? { trainerId: r.ti_trainer, name: r.ti_name, code: r.ti_code, createdAt: r.ti_created, client: !!r.ti_client } : null;
+}
+
+export function inviteConversion(visits, signups) {
+  return visits > 0 ? Math.round((signups / visits) * 100) : null;
+}
