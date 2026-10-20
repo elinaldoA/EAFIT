@@ -12,6 +12,7 @@ import UsersList from './pages/UsersList';
 import Engagement from './pages/Engagement';
 import AutoNotifications from './pages/AutoNotifications';
 import SystemHealth from './pages/SystemHealth';
+import Costs from './pages/Costs';
 import DigestAlerts from './pages/DigestAlerts';
 import Segments from './pages/Segments';
 import AppSettings from './pages/AppSettings';
@@ -82,6 +83,7 @@ function AppShell() {
             <Route path="/configuracoes" element={<AppSettings />} />
             <Route path="/experimentos" element={<Experiments />} />
             <Route path="/saude" element={<SystemHealth />} />
+            <Route path="/custos" element={<Costs />} />
             <Route path="/relatorios" element={<DigestAlerts />} />
             <Route path="/segmentos" element={<Segments />} />
             <Route path="/notificacoes" element={<Broadcast />} />

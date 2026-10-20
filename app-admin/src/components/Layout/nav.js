@@ -92,6 +92,7 @@ export const NAV_GROUPS = [
           { to: '/configuracoes', label: 'Configurações do app' },
           { to: '/experimentos', label: 'Experimentos' },
           { to: '/saude', label: 'Saúde do sistema' },
+          { to: '/custos', label: 'Custos' },
           { to: '/relatorios', label: 'Relatórios e alertas' },
           { to: '/auditoria', label: 'Auditoria' },
           { to: '/erros', label: 'Erros do app' },

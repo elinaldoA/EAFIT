@@ -1104,3 +1104,7 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 
 /* Permissões por admin (components/AdminAccessEditor.jsx) */
 .access-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+
+/* Custos (pages/Costs.jsx) */
+.dist__fill--warn { background: var(--warning); }
+.spark { display: block; width: 120px; height: 28px; color: var(--primary); }
