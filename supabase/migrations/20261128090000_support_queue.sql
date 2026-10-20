@@ -29,7 +29,10 @@ revoke all on public.support_assignments from anon;
 -- Fila: p_status '' = todas; 'abertos' = novo + em_andamento; ou uma situação.
 -- sq_account = conta do app de quem escreveu (contato: pelo e-mail).
 -- sq_errors7 = erros do app dessa conta nos últimos 7 dias.
-create or replace function public.admin_support_queue(p_status text default 'abertos', max_rows int default 300)
+-- support_queue_rows faz a consulta (uso interno: painel, relatório e alertas
+-- da equipe em supabase/functions/send-admin-digest); admin_support_queue é a
+-- entrada do painel, só para admin.
+create or replace function public.support_queue_rows(p_status text default 'abertos', max_rows int default 300)
 returns table (
   sq_source text, sq_id uuid, sq_created_at timestamptz, sq_kind text, sq_message text, sq_status text,
   sq_name text, sq_email text, sq_account uuid, sq_assigned_to uuid, sq_answered_at timestamptz,
@@ -41,8 +44,6 @@ security definer
 set search_path = public, auth
 as $$
 begin
-  if not public.is_admin() then raise exception 'not_authorized'; end if;
-
   return query
     with items as (
       select 'feedback'::text as source, f.id, f.created_at, f.kind, f.message, f.status,
@@ -77,6 +78,26 @@ begin
 end;
 $$;
 
+revoke execute on function public.support_queue_rows(text, int) from public, anon, authenticated;
+grant execute on function public.support_queue_rows(text, int) to service_role;
+
+create or replace function public.admin_support_queue(p_status text default 'abertos', max_rows int default 300)
+returns table (
+  sq_source text, sq_id uuid, sq_created_at timestamptz, sq_kind text, sq_message text, sq_status text,
+  sq_name text, sq_email text, sq_account uuid, sq_assigned_to uuid, sq_answered_at timestamptz,
+  sq_errors7 bigint, sq_reply text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then raise exception 'not_authorized'; end if;
+  return query select * from public.support_queue_rows(p_status, max_rows);
+end;
+$$;
+
 -- Números da fila: abertos, sem responsável e tempo até a primeira resposta
 -- (mediana, em horas) dos itens criados nos últimos 30 dias.
 create or replace function public.admin_support_stats()
@@ -90,7 +111,7 @@ begin
   if not public.is_admin() then raise exception 'not_authorized'; end if;
 
   return query
-    with q as (select * from public.admin_support_queue('', 1000))
+    with q as (select * from public.support_queue_rows('', 1000))
     select count(*) filter (where q.sq_status <> 'resolvido'),
            count(*) filter (where q.sq_status <> 'resolvido' and q.sq_assigned_to is null),
            count(*) filter (where q.sq_status <> 'resolvido' and q.sq_created_at < now() - interval '48 hours'),

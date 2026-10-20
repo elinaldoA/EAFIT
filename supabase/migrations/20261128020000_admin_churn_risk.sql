@@ -12,7 +12,10 @@
 --   sem_abrir      10   não abriu o app nos últimos 7 dias
 -- last_contact = último aviso recebido no sino (manual ou automático); a fila
 -- "contatar hoje" do painel deixa de fora quem recebeu algo nos últimos 3 dias.
-create or replace function public.admin_churn_risk(max_rows int default 300)
+-- churn_risk_rows faz a conta (uso interno: painel e relatório semanal da
+-- equipe, supabase/functions/send-admin-digest); admin_churn_risk é a entrada
+-- do painel, só para admin.
+create or replace function public.churn_risk_rows(max_rows int default 300)
 returns table (
   cr_user uuid, cr_email text, cr_name text,
   cr_score int, cr_reasons text[],
@@ -28,8 +31,6 @@ as $$
 declare
   today date := (now() at time zone 'America/Sao_Paulo')::date;
 begin
-  if not public.is_admin() then raise exception 'not_authorized'; end if;
-
   return query
     with td as (
       select t.user_id, t.day from public.training_days() t where t.day >= today - 60 and t.day <= today
@@ -92,6 +93,28 @@ begin
     from pts x
     order by 4 desc, x.ds desc
     limit greatest(1, least(coalesce(max_rows, 300), 1000));
+end;
+$$;
+
+revoke execute on function public.churn_risk_rows(int) from public, anon, authenticated;
+grant execute on function public.churn_risk_rows(int) to service_role;
+
+create or replace function public.admin_churn_risk(max_rows int default 300)
+returns table (
+  cr_user uuid, cr_email text, cr_name text,
+  cr_score int, cr_reasons text[],
+  cr_last_day date, cr_days_since int, cr_typical_gap numeric,
+  cr_recent14 bigint, cr_prev14 numeric, cr_wellbeing numeric,
+  cr_plan_end date, cr_last_open date, cr_last_contact timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then raise exception 'not_authorized'; end if;
+  return query select * from public.churn_risk_rows(max_rows);
 end;
 $$;
 
