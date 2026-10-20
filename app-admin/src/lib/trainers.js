@@ -72,3 +72,54 @@ export async function fetchUserTrainerInvite(userId) {
 export function inviteConversion(visits, signups) {
   return visits > 0 ? Math.round((signups / visits) * 100) : null;
 }
+
+// Saúde da carteira (supabase/migrations/20261126010000_admin_trainer_health.sql).
+// Os critérios de "parado" e "sem contato" valem igual no banco e em clientFlags.
+export const IDLE_DAYS = 14;
+export const NO_CONTACT_DAYS = 30;
+
+// Por personal, indexado pelo id do usuário. Novos/encerrados seguem o período
+// (0 = desde sempre); o resto é a situação de hoje.
+export async function fetchTrainerHealth(days = 30) {
+  const rows = await rpcRows('admin_trainer_health', { days_back: days });
+  return Object.fromEntries(rows.filter(r => r.th_user).map(r => [r.th_user, {
+    active: Number(r.th_active) || 0, added: Number(r.th_new) || 0, lost: Number(r.th_lost) || 0,
+    withGoal: Number(r.th_with_goal) || 0, goalWeeks: Number(r.th_goal_weeks) || 0, goalHit: Number(r.th_goal_hit) || 0,
+    idle: Number(r.th_idle14) || 0, noContact: Number(r.th_no_contact30) || 0,
+  }]));
+}
+
+// Alunos ativos de um personal com treino, meta e último contato.
+export async function fetchTrainerClientsDetail(trainerId) {
+  const rows = await rpcRows('admin_trainer_clients_detail', { p_trainer: trainerId });
+  return rows.map(r => ({
+    userId: r.tcd_user, name: r.tcd_name, since: r.tcd_since, days30: Number(r.tcd_days30) || 0,
+    lastDay: r.tcd_last_day, weeklyGoal: r.tcd_weekly_goal ?? null,
+    goalWeeks: Number(r.tcd_goal_weeks) || 0, goalHit: Number(r.tcd_goal_hit) || 0, lastContact: r.tcd_last_contact,
+  }));
+}
+
+// % das semanas avaliadas em que o aluno bateu a meta; sem semana, sem taxa.
+export function goalRate(weeks, hit) {
+  return weeks > 0 ? Math.round((hit / weeks) * 100) : null;
+}
+
+const DAY_MS = 86400000;
+
+// Dias de calendário desde uma data 'AAAA-MM-DD' (no fuso do navegador).
+function daysSinceDate(ymd, now) {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((today - new Date(y, m - 1, d)) / DAY_MS);
+}
+
+// Alertas de um aluno: 'idle' (parado) e 'noContact' (sem contato do personal).
+export function clientFlags(c, now = new Date()) {
+  const linkedMs = now - new Date(c.since);
+  const flags = [];
+  if (linkedMs >= IDLE_DAYS * DAY_MS && (!c.lastDay || daysSinceDate(c.lastDay, now) >= IDLE_DAYS)) flags.push('idle');
+  if (linkedMs >= NO_CONTACT_DAYS * DAY_MS && (!c.lastContact || now - new Date(c.lastContact) > NO_CONTACT_DAYS * DAY_MS)) {
+    flags.push('noContact');
+  }
+  return flags;
+}

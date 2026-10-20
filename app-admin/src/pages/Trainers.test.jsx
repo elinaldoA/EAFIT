@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const h = vi.hoisted(() => ({ rpc: vi.fn(), invites: vi.fn(), signups: vi.fn() }));
+const h = vi.hoisted(() => ({ rpc: vi.fn(), invites: vi.fn(), signups: vi.fn(), health: vi.fn(), clients: vi.fn() }));
 vi.mock('../lib/supabase', () => ({ db: { rpc: (...a) => h.rpc(...a) } }));
 vi.mock('../lib/trainers', async orig => ({
   ...(await orig()),
@@ -11,6 +11,8 @@ vi.mock('../lib/trainers', async orig => ({
   fetchUpcomingAppointments: () => Promise.resolve([]),
   fetchTrainerInvites: (...a) => h.invites(...a),
   fetchTrainerInviteSignups: (...a) => h.signups(...a),
+  fetchTrainerHealth: (...a) => h.health(...a),
+  fetchTrainerClientsDetail: (...a) => h.clients(...a),
 }));
 
 import Trainers from './Trainers';
@@ -23,6 +25,11 @@ beforeEach(() => {
   h.invites.mockReset().mockResolvedValue({ p1: { visits: 10, signups: 2, total: 5, linked: 1, active7: 3, lastSignup: null } });
   h.signups.mockReset().mockResolvedValue([
     { userId: 'u1', email: 'lia@x', name: 'Lia', createdAt: '2026-10-18', confirmed: true, lastSeen: '2026-10-20', workouts: 4, client: true },
+  ]);
+  h.health.mockReset().mockResolvedValue({ p1: { active: 3, added: 2, lost: 1, withGoal: 2, goalWeeks: 4, goalHit: 3, idle: 1, noContact: 1 } });
+  h.clients.mockReset().mockResolvedValue([
+    { userId: 'c1', name: 'Bia', since: '2026-10-15T10:00:00Z', days30: 3, lastDay: '2026-10-19', weeklyGoal: 3, goalWeeks: 0, goalHit: 0, lastContact: null },
+    { userId: 'c2', name: 'Caio', since: '2025-01-01T10:00:00Z', days30: 0, lastDay: null, weeklyGoal: 4, goalWeeks: 4, goalHit: 1, lastContact: null },
   ]);
 });
 afterEach(cleanup);
@@ -52,5 +59,28 @@ describe('Trainers (indicados pelo link)', () => {
     expect(await screen.findByText('lia@x')).toBeTruthy();
     expect(screen.getByText('https://eafit.com.br/app/?personal=PAULO1')).toBeTruthy();
     expect(h.signups).toHaveBeenCalledWith('p1');
+  });
+});
+
+describe('Trainers (saúde da carteira)', () => {
+  it('mostra os totais e a carteira de cada personal', async () => {
+    renderPage();
+    expect(await screen.findByText('+2 / −1')).toBeTruthy();
+    expect(screen.getByText('75%')).toBeTruthy();
+    expect(screen.getByText('2 com meta')).toBeTruthy();
+    expect(screen.getByText('1 parado(s)')).toBeTruthy();
+    expect(screen.getByText('1 sem contato')).toBeTruthy();
+    expect(h.health).toHaveBeenCalledWith(30);
+  });
+
+  it('lista os alunos com meta e alertas, quem precisa de atenção primeiro', async () => {
+    renderPage();
+    fireEvent.click(await screen.findByText('Ver alunos'));
+    const caio = await screen.findByText('Caio');
+    expect(screen.getByText('bateu 1 de 4 semana(s) · 25%')).toBeTruthy();
+    expect(screen.getByText('parado')).toBeTruthy();
+    expect(screen.getByText('sem contato')).toBeTruthy();
+    expect(caio.compareDocumentPosition(screen.getByText('Bia')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(h.clients).toHaveBeenCalledWith('p1');
   });
 });

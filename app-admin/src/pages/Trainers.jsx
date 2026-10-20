@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/supabase';
 import {
-  APPOINTMENT_STATUS, TRAINER_LINK_BASE, confirmRate, fetchTrainerActivity, fetchTrainerInvites, fetchTrainerInviteSignups,
-  fetchUpcomingAppointments, inviteConversion,
+  APPOINTMENT_STATUS, IDLE_DAYS, NO_CONTACT_DAYS, TRAINER_LINK_BASE, clientFlags, confirmRate, fetchTrainerActivity,
+  fetchTrainerClientsDetail, fetchTrainerHealth, fetchTrainerInvites, fetchTrainerInviteSignups, fetchUpcomingAppointments,
+  goalRate, inviteConversion,
 } from '../lib/trainers';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
@@ -68,6 +69,8 @@ function TrainerInviteSignups({ trainerId, code }) {
   );
 }
 
+// Alunos ativos com treino, meta semanal e último contato do personal. Quem
+// está parado ou sem contato aparece primeiro, marcado.
 function TrainerClients({ trainerId }) {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
@@ -75,19 +78,20 @@ function TrainerClients({ trainerId }) {
   // Encerra o vínculo (o mesmo que o aluno faz pelo app): o personal deixa de
   // ver os dados dele. Fica na auditoria.
   async function handleRevoke(r) {
-    if (!window.confirm(`Encerrar o vínculo com ${r.tcl_name}? O personal deixa de ver o treino e os dados desse aluno.`)) return;
-    const { error: err } = await db.rpc('admin_revoke_trainer_link', { p_trainer: trainerId, p_client: r.tcl_user });
+    if (!window.confirm(`Encerrar o vínculo com ${r.name}? O personal deixa de ver o treino e os dados desse aluno.`)) return;
+    const { error: err } = await db.rpc('admin_revoke_trainer_link', { p_trainer: trainerId, p_client: r.userId });
     if (err) { setError(err.message); return; }
-    setRows(prev => prev.filter(x => x.tcl_user !== r.tcl_user));
+    setRows(prev => prev.filter(x => x.userId !== r.userId));
   }
 
   useEffect(() => {
     let active = true;
-    db.rpc('admin_trainer_clients', { p_trainer: trainerId })
-      .then(({ data, error: err }) => {
+    fetchTrainerClientsDetail(trainerId)
+      .then(r => {
         if (!active) return;
-        if (err) throw err;
-        setRows(data || []);
+        const withFlags = r.map(c => ({ ...c, flags: clientFlags(c) }));
+        // sort estável: mantém a ordem de vínculo dentro de cada grupo
+        setRows(withFlags.sort((a, b) => b.flags.length - a.flags.length));
       })
       .catch(err => { if (active) setError(err.message); });
     return () => { active = false; };
@@ -99,16 +103,33 @@ function TrainerClients({ trainerId }) {
 
   return (
     <table className="resp-table">
-      <thead><tr><th>Aluno</th><th>Vinculado em</th><th>Dias treinados (30d)</th><th /></tr></thead>
+      <thead><tr><th>Aluno</th><th>Vinculado em</th><th>Dias treinados (30d)</th><th>Último treino</th><th>Meta semanal</th><th>Último contato</th><th /></tr></thead>
       <tbody>
-        {rows.map(r => (
-          <tr key={r.tcl_user}>
-            <td data-label="Aluno"><Link className="btn btn--ghost btn--small" to={`/users/${r.tcl_user}`}>{r.tcl_name}</Link></td>
-            <td data-label="Vinculado em">{fmtDate(r.tcl_since)}</td>
-            <td data-label="Dias treinados (30d)">{r.tcl_days30}</td>
-            <td data-label=""><button className="btn btn--ghost btn--small" onClick={() => handleRevoke(r)}>Encerrar vínculo</button></td>
-          </tr>
-        ))}
+        {rows.map(r => {
+          const rate = goalRate(r.goalWeeks, r.goalHit);
+          return (
+            <tr key={r.userId}>
+              <td data-label="Aluno">
+                <Link className="btn btn--ghost btn--small" to={`/users/${r.userId}`}>{r.name}</Link>
+                {r.flags.includes('idle') && <span className="badge badge--warning">parado</span>}
+                {r.flags.includes('noContact') && <span className="badge badge--danger">sem contato</span>}
+              </td>
+              <td data-label="Vinculado em">{fmtDate(r.since)}</td>
+              <td data-label="Dias treinados (30d)">{r.days30}</td>
+              <td data-label="Último treino">{r.lastDay ? fmtDate(`${r.lastDay}T12:00:00`) : 'nunca'}</td>
+              <td data-label="Meta semanal">
+                {r.weeklyGoal ? (
+                  <>
+                    {r.weeklyGoal}x por semana
+                    {r.goalWeeks > 0 && <div className="user-detail__meta">bateu {r.goalHit} de {r.goalWeeks} semana(s) · {rate}%</div>}
+                  </>
+                ) : 'sem meta'}
+              </td>
+              <td data-label="Último contato">{r.lastContact ? fmtDate(r.lastContact) : 'nunca'}</td>
+              <td data-label=""><button className="btn btn--ghost btn--small" onClick={() => handleRevoke(r)}>Encerrar vínculo</button></td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -165,6 +186,7 @@ export default function Trainers() {
   const [openInvites, setOpenInvites] = useState(null);
   const [days, setDays] = useState(30);
   const [invites, setInvites] = useState({});
+  const [health, setHealth] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -185,6 +207,7 @@ export default function Trainers() {
   useEffect(() => {
     let active = true;
     fetchTrainerInvites(days).then(i => { if (active) setInvites(i); }).catch(() => {});
+    fetchTrainerHealth(days).then(h => { if (active) setHealth(h); }).catch(() => {});
     return () => { active = false; };
   }, [days]);
 
@@ -192,6 +215,11 @@ export default function Trainers() {
   const totals = Object.values(invites).reduce((acc, i) => ({
     visits: acc.visits + i.visits, signups: acc.signups + i.signups, total: acc.total + i.total, linked: acc.linked + i.linked,
   }), { visits: 0, signups: 0, total: 0, linked: 0 });
+  const healthTotals = Object.values(health).reduce((acc, h) => ({
+    added: acc.added + h.added, lost: acc.lost + h.lost, goalWeeks: acc.goalWeeks + h.goalWeeks,
+    goalHit: acc.goalHit + h.goalHit, idle: acc.idle + h.idle, noContact: acc.noContact + h.noContact,
+  }), { added: 0, lost: 0, goalWeeks: 0, goalHit: 0, idle: 0, noContact: 0 });
+  const totalGoalRate = goalRate(healthTotals.goalWeeks, healthTotals.goalHit);
 
   return (
     <div>
@@ -228,13 +256,28 @@ export default function Trainers() {
         </div>
       )}
 
+      {!loading && !error && rows.length > 0 && Object.keys(health).length > 0 && (
+        <div className="tile-grid" style={{ marginBottom: 16 }}>
+          <div className="tile">
+            <div className="tile__value">+{healthTotals.added} / −{healthTotals.lost}</div>
+            <div className="tile__label">Vínculos novos / encerrados no período</div>
+          </div>
+          <div className="tile">
+            <div className="tile__value">{totalGoalRate === null ? '—' : `${totalGoalRate}%`}</div>
+            <div className="tile__label">Semanas com a meta batida (últimas 4)</div>
+          </div>
+          <div className="tile"><div className="tile__value">{healthTotals.idle}</div><div className="tile__label">Alunos parados há {IDLE_DAYS}+ dias</div></div>
+          <div className="tile"><div className="tile__value">{healthTotals.noContact}</div><div className="tile__label">Alunos sem contato há {NO_CONTACT_DAYS}+ dias</div></div>
+        </div>
+      )}
+
       {loading && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
 
       {!loading && !error && (
         <table className="resp-table">
           <thead>
-            <tr><th>Personal</th><th>Código</th><th>Alunos</th><th>Link (período)</th><th>Indicados</th><th>Aulas (30d)</th><th>Recados (30d)</th><th>Liberado em</th><th /></tr>
+            <tr><th>Personal</th><th>Código</th><th>Alunos</th><th>Link (período)</th><th>Indicados</th><th>Carteira</th><th>Aulas (30d)</th><th>Recados (30d)</th><th>Liberado em</th><th /></tr>
           </thead>
           <tbody>
             {rows.map(r => {
@@ -242,6 +285,8 @@ export default function Trainers() {
               const rate = confirmRate(a);
               const inv = invites[r.tc_user];
               const conv = inv ? inviteConversion(inv.visits, inv.signups) : null;
+              const hl = health[r.tc_user];
+              const hlRate = hl ? goalRate(hl.goalWeeks, hl.goalHit) : null;
               return (
                 <tr key={r.tc_user}>
                   <td data-label="Personal">
@@ -265,6 +310,21 @@ export default function Trainers() {
                       <>
                         {inv.total}
                         {inv.total > 0 && <div className="user-detail__meta">{inv.linked} viraram aluno · {inv.active7} ativos 7d</div>}
+                      </>
+                    ) : '—'}
+                  </td>
+                  <td data-label="Carteira">
+                    {hl ? (
+                      <>
+                        {hl.withGoal} com meta
+                        {hlRate !== null && <span className="user-detail__meta"> · {hlRate}% das semanas batidas</span>}
+                        {(hl.idle > 0 || hl.noContact > 0) && (
+                          <div>
+                            {hl.idle > 0 && <span className="badge badge--warning">{hl.idle} parado(s)</span>}
+                            {hl.noContact > 0 && <span className="badge badge--danger">{hl.noContact} sem contato</span>}
+                          </div>
+                        )}
+                        {(hl.added > 0 || hl.lost > 0) && <div className="user-detail__meta">+{hl.added} / −{hl.lost} no período</div>}
                       </>
                     ) : '—'}
                   </td>
@@ -302,7 +362,7 @@ export default function Trainers() {
               );
             })}
             {rows.length === 0 && (
-              <tr><td colSpan={9}><EmptyState icon="🧑‍🏫" label="Nenhum personal liberado ainda. Libere em Usuários → Ações." /></td></tr>
+              <tr><td colSpan={10}><EmptyState icon="🧑‍🏫" label="Nenhum personal liberado ainda. Libere em Usuários → Ações." /></td></tr>
             )}
           </tbody>
         </table>

@@ -157,13 +157,13 @@ describe('Trainers', () => {
   it('expande e recolhe os alunos de um personal', async () => {
     mockRpc.mockImplementation(async fn => {
       if (fn === 'admin_list_trainers') return { data: trainers, error: null };
-      return { data: [{ tcl_user: 'u9', tcl_name: 'Aluno Nove', tcl_since: '2026-02-01T12:00:00Z', tcl_days30: 12 }], error: null };
+      return { data: [{ tcd_user: 'u9', tcd_name: 'Aluno Nove', tcd_since: '2026-02-01T12:00:00Z', tcd_days30: 12, tcd_last_day: '2026-10-19', tcd_weekly_goal: null, tcd_goal_weeks: 0, tcd_goal_hit: 0, tcd_last_contact: null }], error: null };
     });
     wrap(<Trainers />);
     await screen.findByText('Carlos');
     fireEvent.click(screen.getAllByText('Ver alunos')[0]);
     expect(await screen.findByText('Aluno Nove')).toBeTruthy();
-    expect(mockRpc).toHaveBeenCalledWith('admin_trainer_clients', { p_trainer: 't1' });
+    expect(mockRpc).toHaveBeenCalledWith('admin_trainer_clients_detail', { p_trainer: 't1' });
     fireEvent.click(screen.getByText('Ocultar alunos'));
     expect(screen.queryByText('Aluno Nove')).toBeNull();
   });
