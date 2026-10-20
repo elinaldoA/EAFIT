@@ -31,6 +31,7 @@ export const NAV_GROUPS = [
           { to: '/users', label: 'Usuários' },
           { to: '/personais', label: 'Personais' },
           { to: '/embaixadores', label: 'Embaixadores e influenciadores' },
+          { to: '/comissoes', label: 'Comissões' },
           { to: '/segmentos', label: 'Segmentos' },
         ],
       },

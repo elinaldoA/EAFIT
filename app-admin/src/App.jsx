@@ -35,6 +35,7 @@ import ClientErrors from './pages/ClientErrors';
 import Safety from './pages/Safety';
 import Trainers from './pages/Trainers';
 import Ambassadors from './pages/Ambassadors';
+import Commissions from './pages/Commissions';
 import Profile from './pages/Profile';
 import LandingEditor from './pages/LandingEditor';
 import ExerciseMedia from './pages/ExerciseMedia';
@@ -89,6 +90,7 @@ function AppShell() {
             <Route path="/seguranca" element={<Safety />} />
             <Route path="/personais" element={<Trainers />} />
             <Route path="/embaixadores" element={<Ambassadors />} />
+            <Route path="/comissoes" element={<Commissions />} />
             <Route path="/landing" element={<LandingEditor />} />
             <Route path="/biblioteca" element={<ExerciseLibrary />} />
             <Route path="/demonstracoes" element={<ExerciseMedia />} />
