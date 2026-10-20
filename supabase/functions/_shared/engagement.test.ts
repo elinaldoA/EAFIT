@@ -1,5 +1,5 @@
 import { assertEquals } from 'jsr:@std/assert@1';
-import { isRuleDue, nowInSaoPaulo, pickRuleText, renderTemplate } from './engagement.ts';
+import { applyWeeklyCap, isRuleDue, nowInSaoPaulo, pickRuleText, renderTemplate, weeklyCap } from './engagement.ts';
 
 Deno.test('nowInSaoPaulo converte de UTC para Brasília (UTC-3)', () => {
   // 2026-10-07 02:30 UTC = 2026-10-06 23:30 em Brasília (terça-feira)
@@ -47,4 +47,19 @@ Deno.test('pickRuleText: inglês só quando a regra tem as duas versões', () =>
   assertEquals(pickRuleText(rule, 'pt'), { title: 'Oi', body: 'Corpo' });
   assertEquals(pickRuleText({ ...rule, body_en: null }, 'en'), { title: 'Oi', body: 'Corpo' });
   assertEquals(pickRuleText({ title: 'Oi', body: 'Corpo' }, 'en'), { title: 'Oi', body: 'Corpo' });
+});
+
+Deno.test('weeklyCap: só inteiros de 1 a 50 ligam o limite', () => {
+  assertEquals(weeklyCap({ maxPerWeek: 3 }), 3);
+  assertEquals(weeklyCap({ maxPerWeek: 0 }), 0);
+  assertEquals(weeklyCap({ maxPerWeek: 2.5 }), 0);
+  assertEquals(weeklyCap({ maxPerWeek: 99 }), 0);
+  assertEquals(weeklyCap(null), 0);
+});
+
+Deno.test('applyWeeklyCap: tira quem já chegou ao limite na semana', () => {
+  const list = [{ user_id: 'a' }, { user_id: 'b' }, { user_id: 'c' }];
+  const sent = new Map([['a', 3], ['b', 2]]);
+  assertEquals(applyWeeklyCap(list, sent, 3), { allowed: [{ user_id: 'b' }, { user_id: 'c' }], capped: 1 });
+  assertEquals(applyWeeklyCap(list, sent, 0), { allowed: list, capped: 0 });
 });

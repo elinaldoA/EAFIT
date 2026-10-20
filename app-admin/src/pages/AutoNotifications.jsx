@@ -6,6 +6,7 @@ import {
 } from '../lib/autoNotifications';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
+import PushCapCard from '../components/PushCapCard';
 
 function RuleCard({ rule, stats, onSaved }) {
   const saved = rule;
@@ -236,12 +237,15 @@ export default function AutoNotifications() {
           <h1 className="page-title">Notificações automáticas</h1>
           <p className="page-subtitle">
             Mensagens enviadas pelo sistema para estimular o uso do app. Só vão para quem tem push ativo e não
-            desligou "Lembretes e incentivos"; cada pessoa recebe no máximo uma por dia. Para um envio manual,
+            desligou "Lembretes e incentivos"; cada pessoa recebe no máximo uma por dia (e respeita o limite semanal
+            abaixo). Para um envio manual,
             use <Link to="/notificacoes">Notificações</Link>.
           </p>
         </div>
         <span className="badge badge--admin">{total7} enviadas em 7 dias</span>
       </div>
+
+      <PushCapCard />
 
       {rules.map(rule => (
         <RuleCard key={`${rule.kind}-${rule.updated_at}`} rule={rule} stats={stats[rule.kind]} onSaved={load} />

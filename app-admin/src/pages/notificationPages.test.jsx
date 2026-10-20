@@ -16,6 +16,8 @@ vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => ({ adminUser: { 
 vi.mock('../lib/autoNotifications', async orig => ({ ...(await orig()), ...an }));
 vi.mock('../lib/users', () => users);
 vi.mock('../lib/segments', () => seg);
+// Limite por pessoa tem teste próprio (components/PushCapCard.test.jsx).
+vi.mock('../components/PushCapCard', () => ({ default: () => null }));
 
 import AutoNotifications from './AutoNotifications';
 import Broadcast from './Broadcast';

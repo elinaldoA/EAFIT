@@ -61,3 +61,22 @@ export function renderTemplate(template: string, values: Record<string, string |
     .replace(/\s{2,}/g, ' ')
     .trim();
 }
+
+// Limite de avisos por pessoa (app_settings 'push_cap', painel →
+// Comunicação → Automáticas): quem já recebeu `maxPerWeek` avisos nos últimos
+// 7 dias (qualquer tipo, manual ou automático — linhas da central de avisos)
+// não recebe a automática agora. 0 ou ausente = sem limite.
+export function weeklyCap(value: unknown): number {
+  const n = Number((value as { maxPerWeek?: unknown } | null)?.maxPerWeek);
+  return Number.isInteger(n) && n > 0 && n <= 50 ? n : 0;
+}
+
+export function applyWeeklyCap<T extends { user_id: string }>(
+  candidates: T[],
+  sentLast7: Map<string, number>,
+  cap: number,
+): { allowed: T[]; capped: number } {
+  if (!cap) return { allowed: candidates, capped: 0 };
+  const allowed = candidates.filter((c) => (sentLast7.get(c.user_id) ?? 0) < cap);
+  return { allowed, capped: candidates.length - allowed.length };
+}

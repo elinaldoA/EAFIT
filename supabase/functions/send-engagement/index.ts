@@ -5,12 +5,15 @@
 //
 // Quem recebe cada tipo (e todas as travas: opt-out, push ativo, intervalo
 // mínimo, 1 por dia) é decidido no banco por engagement_candidates() — aqui só
-// se escolhe as regras do horário atual, renderiza o texto e envia.
+// se escolhe as regras do horário atual, aplica o limite semanal por pessoa
+// (app_settings 'push_cap'), renderiza o texto e envia.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { saveInbox } from '../_shared/inbox.ts';
-import { isRuleDue, nowInSaoPaulo, pickRuleText, renderTemplate, type EngagementRule } from '../_shared/engagement.ts';
+import {
+  applyWeeklyCap, isRuleDue, nowInSaoPaulo, pickRuleText, renderTemplate, weeklyCap, type EngagementRule,
+} from '../_shared/engagement.ts';
 import { loadLangs, trVars } from '../_shared/lang.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -39,7 +42,30 @@ Deno.serve(async (req) => {
     .order('priority', { ascending: true });
   if (rulesErr) return json({ error: rulesErr.message }, 500);
 
-  const summary: { kind: string; candidates: number; sent: number }[] = [];
+  const { data: capRow } = await supabase.from('app_settings').select('value').eq('key', 'push_cap').maybeSingle();
+  const cap = weeklyCap(capRow?.value);
+
+  // Avisos recebidos nos últimos 7 dias por pessoa (atualizado a cada envio).
+  const sentLast7 = new Map<string, number>();
+  async function loadSentLast7(ids: string[]) {
+    const missing = ids.filter((id) => !sentLast7.has(id));
+    for (let i = 0; i < missing.length; i += 500) {
+      const chunk = missing.slice(i, i + 500);
+      const { data, error } = await supabase
+        .from('user_notifications')
+        .select('user_id')
+        .in('user_id', chunk)
+        .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString());
+      if (error) {
+        console.error('user_notifications (limite) error:', error.message);
+        continue;
+      }
+      for (const id of chunk) sentLast7.set(id, 0);
+      for (const r of data || []) sentLast7.set(r.user_id as string, (sentLast7.get(r.user_id as string) ?? 0) + 1);
+    }
+  }
+
+  const summary: { kind: string; candidates: number; sent: number; capped?: number }[] = [];
 
   // Em sequência (não em paralelo): cada regra grava o log antes da próxima
   // consultar candidatos, é isso que garante no máximo 1 push por usuário/dia.
@@ -52,9 +78,11 @@ Deno.serve(async (req) => {
       summary.push({ kind: rule.kind, candidates: 0, sent: 0 });
       continue;
     }
-    const list = (candidates || []) as Candidate[];
+    const all = (candidates || []) as Candidate[];
+    if (cap) await loadSentLast7(all.map((c) => c.user_id));
+    const { allowed: list, capped } = applyWeeklyCap(all, sentLast7, cap);
     if (!list.length) {
-      summary.push({ kind: rule.kind, candidates: 0, sent: 0 });
+      summary.push({ kind: rule.kind, candidates: all.length, sent: 0, capped });
       continue;
     }
 
@@ -97,9 +125,10 @@ Deno.serve(async (req) => {
           .insert({ user_id: c.user_id, kind: rule.kind, title, body });
         if (logErr) console.error('notification_log insert error:', logErr.message);
         await saveInbox(supabase, [c.user_id], { kind: rule.kind, title, body });
+        if (cap) sentLast7.set(c.user_id, (sentLast7.get(c.user_id) ?? 0) + 1);
       }
     }
-    summary.push({ kind: rule.kind, candidates: list.length, sent: sentUsers });
+    summary.push({ kind: rule.kind, candidates: all.length, sent: sentUsers, capped });
   }
 
   return json({ hour, dow, rules: summary });
