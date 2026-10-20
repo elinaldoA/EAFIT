@@ -11,6 +11,7 @@ vi.mock('../lib/supabase', () => ({ db: { rpc: mockRpc, from: mockFrom, function
 vi.mock('../lib/csv', async orig => ({ ...(await orig()), downloadCsv: mockDownload }));
 // Previsão de abandono tem teste próprio (components/ChurnRiskCard.test.jsx).
 vi.mock('../components/ChurnRiskCard', () => ({ default: () => null }));
+vi.mock('../components/TrainingPatternsCard', () => ({ default: () => null }));
 
 import Engagement from './Engagement';
 import PlanAnalytics from './PlanAnalytics';

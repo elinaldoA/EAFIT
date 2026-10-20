@@ -6,6 +6,7 @@ import {
 } from '../lib/planAnalytics';
 import { fetchCardio } from '../lib/insights';
 import Loading from '../components/Loading';
+import TrainingPatternsCard from '../components/TrainingPatternsCard';
 
 const DIMENSIONS = [
   { key: 'meta', title: 'Por objetivo' },
@@ -204,6 +205,8 @@ export default function PlanAnalytics() {
           </p>
         </div>
       </div>
+
+      <TrainingPatternsCard />
 
       <CardioCard />
     </div>

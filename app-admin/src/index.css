@@ -1050,3 +1050,14 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   .media-thumb { width: 96px; }
   .dist__row { grid-template-columns: minmax(0, 96px) 1fr auto !important; }
 }
+
+/* Mapa dia × hora dos treinos (Análise dos planos) */
+.heatgrid { display: grid; gap: 2px; overflow-x: auto; padding-bottom: 4px; }
+.heatgrid__row { display: grid; grid-template-columns: 34px repeat(24, minmax(10px, 1fr)); gap: 2px; align-items: center; }
+.heatgrid__day { font-size: 12px; color: var(--text-muted); }
+.heatgrid__hour { font-size: 10px; color: var(--text-dim); text-align: left; }
+.heatgrid__cell { height: 18px; border-radius: 3px; background: var(--surface-3); }
+.heatgrid__cell--l1 { background: color-mix(in srgb, var(--primary) 22%, var(--surface-3)); }
+.heatgrid__cell--l2 { background: color-mix(in srgb, var(--primary) 45%, var(--surface-3)); }
+.heatgrid__cell--l3 { background: color-mix(in srgb, var(--primary) 70%, var(--surface-3)); }
+.heatgrid__cell--l4 { background: var(--primary); }
