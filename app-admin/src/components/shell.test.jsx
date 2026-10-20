@@ -3,10 +3,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-const { mockAuth } = vi.hoisted(() => ({ mockAuth: { current: {} } }));
+const { mockAuth, mockAccess } = vi.hoisted(() => ({ mockAuth: { current: {} }, mockAccess: { current: null } }));
 
 vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => mockAuth.current }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
+vi.mock('../lib/adminAccess', async orig => ({
+  ...(await orig()),
+  fetchMyAccess: () => (mockAccess.current ? Promise.resolve(mockAccess.current) : Promise.reject(new Error('sem migration'))),
+}));
 
 import { NAV_GROUPS, ALL_SECTIONS, sectionForPath, tabForPath, titleForPath } from './Layout/nav';
 import ProtectedRoute from './ProtectedRoute';
@@ -19,6 +23,7 @@ import ThemeToggle from './ThemeToggle';
 
 beforeEach(() => {
   mockAuth.current = { adminUser: { email: 'admin@x.com' }, authLoading: false, logout: vi.fn() };
+  mockAccess.current = null;
   localStorage.clear();
   window.matchMedia = () => ({ matches: false });
   document.documentElement.removeAttribute('data-theme');
@@ -165,6 +170,15 @@ describe('Layout', () => {
     expect(container.querySelector('.sidebar--open')).toBeTruthy();
     fireEvent.click(container.querySelector('.sidebar__backdrop'));
     expect(container.querySelector('.sidebar--open')).toBeNull();
+  });
+
+  it('tela oculta para o admin some do menu e fica bloqueada', async () => {
+    mockAccess.current = { role: 'suporte', extraAreas: [], hiddenScreens: ['/users'] };
+    renderAt('/users/1');
+    expect(await screen.findByText(/não tem acesso a esta tela/)).toBeTruthy();
+    expect(screen.queryByText('detalhe')).toBeNull();
+    const pessoas = screen.getAllByRole('link', { name: /Pessoas/ })[0];
+    expect(pessoas.getAttribute('href')).toBe('/personais');
   });
 
   it('topbar mostra e-mail e chama logout', () => {

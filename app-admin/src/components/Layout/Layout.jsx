@@ -3,12 +3,23 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { sectionForPath, tabForPath } from './nav';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import AdminAccessProvider from '../../context/AdminAccessProvider';
+import { useAdminAccess } from '../../context/useAdminAccess';
+import { isHidden } from '../../lib/adminAccess';
+import EmptyState from '../EmptyState';
 
-export default function Layout() {
+function Shell() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname } = useLocation();
+  const { hiddenScreens } = useAdminAccess();
   const section = sectionForPath(pathname);
-  const showTabs = section && section.tabs.length > 1 && tabForPath(pathname);
+  const tabs = section ? section.tabs.filter(t => !isHidden(hiddenScreens, t.to)) : [];
+  const showTabs = section && tabs.length > 1 && tabForPath(pathname);
+  // Tela oculta para este admin (Sistema → Administradores): só interface.
+  const blocked = isHidden(hiddenScreens, pathname);
+  const content = blocked
+    ? <EmptyState icon="🔒" label="Você não tem acesso a esta tela. Fale com um superadmin se precisar dela." />
+    : <Outlet />;
 
   return (
     <div className="shell">
@@ -20,7 +31,7 @@ export default function Layout() {
             <>
               <h1 className="section-title-main">{section.label}</h1>
               <nav className="tabs" aria-label={section.label}>
-                {section.tabs.map(t => (
+                {tabs.map(t => (
                   <NavLink
                     key={t.to}
                     to={t.to}
@@ -31,11 +42,15 @@ export default function Layout() {
                   </NavLink>
                 ))}
               </nav>
-              <div className="section-body"><Outlet /></div>
+              <div className="section-body">{content}</div>
             </>
-          ) : <Outlet />}
+          ) : content}
         </main>
       </div>
     </div>
   );
+}
+
+export default function Layout() {
+  return <AdminAccessProvider><Shell /></AdminAccessProvider>;
 }

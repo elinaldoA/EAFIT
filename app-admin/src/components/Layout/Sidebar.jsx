@@ -3,11 +3,15 @@ import logoMark from '../../assets/logo-mark.png';
 import { NAV_GROUPS, sectionForPath } from './nav';
 import NavIcon from './NavIcon';
 import { useAttention } from '../../lib/attention';
+import { useAdminAccess } from '../../context/useAdminAccess';
+import { visibleNav } from '../../lib/adminAccess';
 
 export default function Sidebar({ open, onClose }) {
   const { pathname } = useLocation();
   const current = sectionForPath(pathname);
   const attention = useAttention();
+  const { hiddenScreens } = useAdminAccess();
+  const groups = visibleNav(NAV_GROUPS, hiddenScreens);
 
   return (
     <>
@@ -21,7 +25,7 @@ export default function Sidebar({ open, onClose }) {
           </span>
         </div>
         <nav className="sidebar__nav" aria-label="Principal">
-          {NAV_GROUPS.map(group => (
+          {groups.map(group => (
             <div className="sidebar__group" key={group.label}>
               <div className="sidebar__group-label">{group.label}</div>
               {group.sections.map(section => {

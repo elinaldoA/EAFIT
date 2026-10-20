@@ -1101,3 +1101,6 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 .msg-preview__email h3 { margin: 6px 0; font-size: 18px; }
 .msg-preview__email-head { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; }
 .msg-preview__btn { display: inline-block; background: #18181b; color: #fff; border-radius: 8px; padding: 8px 14px; margin: 6px 0 10px; font-weight: 600; }
+
+/* Permissões por admin (components/AdminAccessEditor.jsx) */
+.access-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }

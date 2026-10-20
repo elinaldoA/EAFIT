@@ -24,6 +24,8 @@ const ACTION_LABEL = {
   updateAppSettings: 'Alterou configurações do app',
   promoteAdmin: 'Promoveu a admin',
   promoteTrainer: 'Liberou como personal trainer',
+  setAdminRole: 'Mudou o papel de admin',
+  setAdminAccess: 'Mudou as permissões de admin',
   approveTrainerRequest: 'Aprovou pedido de personal (CREF)',
   rejectTrainerRequest: 'Recusou pedido de personal (CREF)',
   setTrainerCref: 'Registrou o CREF do personal',
