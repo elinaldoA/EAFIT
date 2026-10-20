@@ -9,3 +9,9 @@ export const AppConfigContext = createContext({ config: DEFAULT_CONFIG, loaded: 
 export function useAppConfig() {
   return useContext(AppConfigContext);
 }
+
+// Variante do experimento A/B para quem está logado, ou null (fora do público,
+// experimento parado ou ainda carregando). Ver Sistema → Experimentos no painel.
+export function useExperiment(key) {
+  return useContext(AppConfigContext).config.experiments?.[key] ?? null;
+}

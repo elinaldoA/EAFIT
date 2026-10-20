@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('./supabase', () => ({ db: {} }));
+const { db } = vi.hoisted(() => ({ db: {} }));
+vi.mock('./supabase', () => ({ db }));
 
-import { normalizeConfig, isFlagOn, safeLink, movedTarget, linksToHere, DEFAULT_CONFIG } from './appConfig';
+import { normalizeConfig, isFlagOn, safeLink, movedTarget, linksToHere, DEFAULT_CONFIG, applyExperiments, fetchAppConfig } from './appConfig';
 
 describe('normalizeConfig', () => {
   it('sem linhas devolve o padrão (tudo liberado)', () => {
@@ -93,5 +94,33 @@ describe('safeLink', () => {
     expect(safeLink('javascript:alert(1)')).toBe('');
     expect(safeLink('data:text/html,x')).toBe('');
     expect(safeLink(null)).toBe('');
+  });
+});
+
+describe('experimentos', () => {
+  it('liberação gradual sobrepõe a chave; A/B só expõe a variante', () => {
+    const { flags, experiments } = applyExperiments({ desafios: false, amigos: true }, [
+      { key: 'desafios_50', variant: 'on', flag: 'desafios' },
+      { key: 'amigos_off', variant: 'off', flag: 'amigos' },
+      { key: 'onb_curto', variant: 'b', flag: null },
+      { key: 'ruim', variant: 3 },
+    ]);
+    expect(flags).toEqual({ desafios: true, amigos: false });
+    expect(experiments).toEqual({ desafios_50: 'on', amigos_off: 'off', onb_curto: 'b' });
+    expect(isFlagOn(flags, 'desafios')).toBe(true);
+  });
+
+  it('fetchAppConfig junta configurações e experimentos; falha nos experimentos não derruba', async () => {
+    db.from = () => ({ select: async () => ({ data: [{ key: 'flags', value: { desafios: false } }], error: null }) });
+    db.rpc = vi.fn(async () => ({ data: [{ key: 'desafios_50', variant: 'on', flag: 'desafios' }], error: null }));
+    let cfg = await fetchAppConfig();
+    expect(cfg.flags.desafios).toBe(true);
+    expect(cfg.experiments).toEqual({ desafios_50: 'on' });
+    expect(db.rpc).toHaveBeenCalledWith('my_experiments');
+
+    db.rpc = vi.fn(async () => { throw new Error('offline'); });
+    cfg = await fetchAppConfig();
+    expect(cfg.flags.desafios).toBe(false);
+    expect(cfg.experiments).toEqual({});
   });
 });

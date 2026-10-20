@@ -14,6 +14,7 @@ import AutoNotifications from './pages/AutoNotifications';
 import SystemHealth from './pages/SystemHealth';
 import Segments from './pages/Segments';
 import AppSettings from './pages/AppSettings';
+import Experiments from './pages/Experiments';
 import ExerciseLibrary from './pages/ExerciseLibrary';
 import PlanAnalytics from './pages/PlanAnalytics';
 import Behavior from './pages/Behavior';
@@ -68,6 +69,7 @@ function AppShell() {
             <Route path="/engajamento" element={<Engagement />} />
             <Route path="/automacoes" element={<AutoNotifications />} />
             <Route path="/configuracoes" element={<AppSettings />} />
+            <Route path="/experimentos" element={<Experiments />} />
             <Route path="/saude" element={<SystemHealth />} />
             <Route path="/segmentos" element={<Segments />} />
             <Route path="/notificacoes" element={<Broadcast />} />

@@ -11,6 +11,8 @@ export const DEFAULT_CONFIG = {
   moved: { enabled: false, url: '' },
   // Tema de temporada (lib/season.js). Literal aqui: season.js importa deste arquivo.
   season: { enabled: false, periods: [] },
+  // Experimentos rodando para quem está logado: { chave: variante } (useExperiment).
+  experiments: {},
 };
 
 const BANNER_LEVELS = ['info', 'warning', 'success'];
@@ -35,7 +37,21 @@ export function safeLink(url) {
   return /^(https?:\/\/|\/)/i.test(u) ? u : '';
 }
 
-export function normalizeConfig(rows, today = todayInAppZone()) {
+// Experimentos do painel (Sistema → Experimentos), já sorteados no banco
+// (my_experiments). Liberação gradual sobrepõe a chave de recurso: variante
+// 'on' liga, 'off' desliga — assim todo isFlagOn respeita o percentual.
+export function applyExperiments(flags, rows) {
+  const out = { ...flags };
+  const experiments = {};
+  for (const r of rows || []) {
+    if (!r || typeof r.key !== 'string' || typeof r.variant !== 'string') continue;
+    experiments[r.key] = r.variant;
+    if (typeof r.flag === 'string' && r.flag && (r.variant === 'on' || r.variant === 'off')) out[r.flag] = r.variant === 'on';
+  }
+  return { flags: out, experiments };
+}
+
+export function normalizeConfig(rows, today = todayInAppZone(), experimentRows = []) {
   const map = Object.fromEntries((rows || []).map(r => [r.key, r.value && typeof r.value === 'object' ? r.value : {}]));
   const m = map.maintenance || {};
   const b = map.banner || {};
@@ -43,6 +59,7 @@ export function normalizeConfig(rows, today = todayInAppZone()) {
   for (const [k, v] of Object.entries(map.flags || {})) {
     if (typeof v === 'boolean') flags[k] = v;
   }
+  const applied = applyExperiments(flags, experimentRows);
   const bannerMessage = str(b.message);
   const mv = map.moved || {};
   const movedUrl = /^https:\/\//i.test(str(mv.url)) ? str(mv.url) : '';
@@ -56,9 +73,10 @@ export function normalizeConfig(rows, today = todayInAppZone()) {
       linkLabel: str(b.linkLabel),
       version: Number.isFinite(Number(b.version)) ? Number(b.version) : 0,
     },
-    flags,
+    flags: applied.flags,
     moved: { enabled: mv.enabled === true && movedUrl !== '', url: movedUrl },
     season: normalizeSeason(map.season),
+    experiments: applied.experiments,
   };
 }
 
@@ -92,9 +110,13 @@ export function isFlagOn(flags, name) {
 
 export async function fetchAppConfig() {
   const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), FETCH_TIMEOUT_MS));
-  const { data, error } = await Promise.race([db.from('app_settings').select('key, value'), timeout]);
-  if (error) throw error;
-  return normalizeConfig(data);
+  const [settings, experiments] = await Promise.all([
+    Promise.race([db.from('app_settings').select('key, value'), timeout]),
+    // Sem login (ou função ainda não criada) = sem experimentos; nunca derruba a configuração.
+    Promise.race([Promise.resolve(db.rpc('my_experiments')), timeout]).catch(() => null),
+  ]);
+  if (settings.error) throw settings.error;
+  return normalizeConfig(settings.data, todayInAppZone(), experiments && !experiments.error ? experiments.data : []);
 }
 
 const DISMISSED_KEY = 'eafit_banner_dismissed';

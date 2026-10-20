@@ -83,6 +83,7 @@ export const NAV_GROUPS = [
         key: 'sistema', label: 'Sistema', icon: 'sliders',
         tabs: [
           { to: '/configuracoes', label: 'Configurações do app' },
+          { to: '/experimentos', label: 'Experimentos' },
           { to: '/saude', label: 'Saúde do sistema' },
           { to: '/auditoria', label: 'Auditoria' },
           { to: '/erros', label: 'Erros do app' },

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppConfigContext } from './useAppConfig';
 import { DEFAULT_CONFIG, fetchAppConfig } from '../lib/appConfig';
+import { db } from '../lib/supabase';
 
 const REFRESH_MS = 5 * 60_000;
 
@@ -25,10 +26,15 @@ export function AppConfigProvider({ children }) {
     const timer = setInterval(load, REFRESH_MS);
     const onVisible = () => { if (document.visibilityState === 'visible') load(); };
     document.addEventListener('visibilitychange', onVisible);
+    // Entrar ou sair muda os experimentos (sorteados por conta): relê na hora.
+    const auth = db.auth?.onAuthStateChange?.(event => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') load();
+    });
     return () => {
       active = false;
       clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisible);
+      auth?.data?.subscription?.unsubscribe();
     };
   }, []);
 
