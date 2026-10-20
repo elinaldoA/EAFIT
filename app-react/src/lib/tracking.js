@@ -70,6 +70,18 @@ export function trackEvent(event, detail = '') {
 
 export const trackFeature = name => trackEvent('feature', name);
 
+// Troca de exercício no plano (painel: Conteúdo → Biblioteca → Ranking).
+// reason: 'escolha' ("Trocar exercício") ou 'dor' (troca sugerida após dor).
+export function logExerciseSwap(from, to, reason = 'escolha') {
+  if (!enabled || !userId || !from || !to || from === to) return false;
+  try {
+    Promise.resolve(db.rpc('log_exercise_swap', { p_from: from, p_to: to, p_reason: reason })).catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function pushPermission() {
   try {
     return typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;

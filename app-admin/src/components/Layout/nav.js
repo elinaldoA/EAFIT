@@ -69,6 +69,7 @@ export const NAV_GROUPS = [
           { to: '/conteudo', label: 'Modelos' },
           { to: '/biblioteca', label: 'Biblioteca de exercícios' },
           { to: '/demonstracoes', label: 'Demonstrações' },
+          { to: '/ranking-conteudo', label: 'Ranking e qualidade' },
           { to: '/landing', label: 'Landing page' },
         ],
       },

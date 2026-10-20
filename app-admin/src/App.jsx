@@ -33,6 +33,7 @@ import Ambassadors from './pages/Ambassadors';
 import Profile from './pages/Profile';
 import LandingEditor from './pages/LandingEditor';
 import ExerciseMedia from './pages/ExerciseMedia';
+import ContentRanking from './pages/ContentRanking';
 import Challenges from './pages/Challenges';
 import SocialFeed from './pages/SocialFeed';
 import Wellbeing from './pages/Wellbeing';
@@ -79,6 +80,7 @@ function AppShell() {
             <Route path="/landing" element={<LandingEditor />} />
             <Route path="/biblioteca" element={<ExerciseLibrary />} />
             <Route path="/demonstracoes" element={<ExerciseMedia />} />
+            <Route path="/ranking-conteudo" element={<ContentRanking />} />
             <Route path="/desafios" element={<Challenges />} />
             <Route path="/amigos" element={<SocialFeed />} />
             <Route path="/bem-estar" element={<Wellbeing />} />

@@ -5,6 +5,7 @@ import { useToast } from '../context/useToast';
 import { fetchProgressionSuggestion, fetchPlateauStatus } from '../lib/records';
 import { fetchRecentDiscomfort } from '../lib/discomfort';
 import { substituteExercise } from '../lib/workoutPlans';
+import { logExerciseSwap } from '../lib/tracking';
 import { getSaferAlternative } from '../data/workoutTemplates';
 import { allSetsDone } from '../lib/workoutSets';
 import { DiscomfortPanel } from './DiscomfortWidgets';
@@ -81,6 +82,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
         nome: alternative.nome, series: ex.series, reps: ex.reps,
         descanso: ex.descanso, tecnica: alternative.tecnica,
       });
+      logExerciseSwap(ex.nome, alternative.nome, 'dor');
       toast(t('🔄 Trocado por {nome}', { nome: tEx(alternative.nome) }));
       await refreshPlan();
     } catch (err) {

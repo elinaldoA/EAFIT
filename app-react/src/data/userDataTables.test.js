@@ -92,6 +92,7 @@ describe('backup cobre as tabelas do usuário', () => {
     notification_log: 'controle interno de envio (as mensagens em si estão em notifications)',
     client_errors: 'diagnóstico técnico de erros do navegador',
     user_events: 'métrica de uso do app (telas e funcionalidades abertas), não é conteúdo do usuário',
+    exercise_swaps: 'métrica de uso (trocas de exercício feitas no plano, para o ranking da biblioteca); o plano atual já está no backup',
     user_client: 'retrato técnico do aparelho (sistema, navegador, versão do app)',
     app_access_days: 'métrica de uso (dias em que abriu o app, com IP e localização aproximada), mesma natureza de user_client',
     app_installs: 'métrica de instalação do app no aparelho (datas de instalação e de abertura pelo ícone)',

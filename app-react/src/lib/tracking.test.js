@@ -91,6 +91,17 @@ describe('tracking', () => {
     expect(t.trackFeature('water')).toBe(true);
   });
 
+  it('troca de exercício vai para log_exercise_swap, sem repetir o mesmo nome', async () => {
+    const t = await freshTracking();
+    expect(t.logExerciseSwap('A', 'B')).toBe(false);
+    t.enableTracking();
+    t.setTrackingUser('u1');
+    expect(t.logExerciseSwap('Crucifixo Máquina', 'Crucifixo Reto com Halteres', 'dor')).toBe(true);
+    expect(t.logExerciseSwap('A', 'A')).toBe(false);
+    expect(mockRpc).toHaveBeenCalledTimes(1);
+    expect(mockRpc).toHaveBeenCalledWith('log_exercise_swap', { p_from: 'Crucifixo Máquina', p_to: 'Crucifixo Reto com Halteres', p_reason: 'dor' });
+  });
+
   it('limpa o detalhe pro formato do banco e recusa evento inválido', async () => {
     const t = await freshTracking();
     t.enableTracking();

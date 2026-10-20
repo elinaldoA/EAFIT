@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { fetchSwapContext, pickAlternatives } from '../lib/exerciseSwap';
 import { substituteExercise } from '../lib/workoutPlans';
+import { logExerciseSwap } from '../lib/tracking';
 
 import { t, tEx } from '../lib/i18n';
 // "Trocar exercício": lista alternativas da biblioteca (mesmo grupo muscular e
@@ -36,6 +37,7 @@ export default function ExerciseSwap({ ex, day, user, toast, onSwapped }) {
       await substituteExercise(ex.id, {
         nome: option.nome, series: ex.series, reps: ex.reps, descanso: ex.descanso, tecnica: option.tecnica || '',
       });
+      logExerciseSwap(ex.nome, option.nome, 'escolha');
       toast(t('🔄 Trocado por {nome}', { nome: tEx(option.nome) }));
       setOpen(false);
       await onSwapped();
