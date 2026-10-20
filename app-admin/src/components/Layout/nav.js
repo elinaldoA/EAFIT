@@ -30,6 +30,7 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/users', label: 'Usuários' },
           { to: '/personais', label: 'Personais' },
+          { to: '/verificacao-cref', label: 'Verificação de CREF' },
           { to: '/embaixadores', label: 'Embaixadores e influenciadores' },
           { to: '/comissoes', label: 'Comissões' },
           { to: '/segmentos', label: 'Segmentos' },

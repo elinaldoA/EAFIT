@@ -35,6 +35,7 @@ import AuditLog from './pages/AuditLog';
 import ClientErrors from './pages/ClientErrors';
 import Safety from './pages/Safety';
 import Trainers from './pages/Trainers';
+import TrainerVerification from './pages/TrainerVerification';
 import Ambassadors from './pages/Ambassadors';
 import Commissions from './pages/Commissions';
 import Profile from './pages/Profile';
@@ -92,6 +93,7 @@ function AppShell() {
             <Route path="/erros" element={<ClientErrors />} />
             <Route path="/seguranca" element={<Safety />} />
             <Route path="/personais" element={<Trainers />} />
+            <Route path="/verificacao-cref" element={<TrainerVerification />} />
             <Route path="/embaixadores" element={<Ambassadors />} />
             <Route path="/comissoes" element={<Commissions />} />
             <Route path="/landing" element={<LandingEditor />} />

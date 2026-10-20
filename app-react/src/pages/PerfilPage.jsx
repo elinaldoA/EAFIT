@@ -4,6 +4,7 @@ import { useAppConfig } from '../context/useAppConfig';
 import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
 import ProfilePauseSection from '../components/ProfilePauseSection';
 import ProfileTrainerSection from '../components/ProfileTrainerSection';
+import ProfileTrainerRequestSection from '../components/ProfileTrainerRequestSection';
 import ProfileAmbassadorSection from '../components/ProfileAmbassadorSection';
 import { activePause, formatDayBR } from '../lib/pause';
 import { isFlagOn } from '../lib/appConfig';
@@ -369,6 +370,9 @@ export default function PerfilPage({ active }) {
         )}
         <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal trainer')}>
           <ProfileTrainerSection toast={toast} />
+        </CollapsibleCard>
+        <CollapsibleCard icon="🧑‍🏫" title={t('Sou personal trainer')} summary={t('Peça o acesso ao modo Personal')}>
+          <ProfileTrainerRequestSection toast={toast} />
         </CollapsibleCard>
         <CollapsibleCard icon="💾" title={t('Exportar e backup')} summary={t('CSV, JSON ou relatório para imprimir')}>
           <ExportSection exporting={exporting} onExport={handleExport} />
