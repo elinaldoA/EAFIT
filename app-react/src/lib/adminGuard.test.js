@@ -21,6 +21,16 @@ describe('isAdminAccount', () => {
     expect(await isAdminAccount('u1')).toBe(true);
   });
 
+  it('admin marca o navegador pra não contar nas métricas; usuário comum não', async () => {
+    localStorage.clear();
+    profile({ data: { is_admin: false }, error: null });
+    await isAdminAccount('u1');
+    expect(localStorage.getItem('eafit_staff_device')).toBeNull();
+    profile({ data: { is_admin: true }, error: null });
+    await isAdminAccount('u1');
+    expect(localStorage.getItem('eafit_staff_device')).toBe('1');
+  });
+
   it('usuário comum e falha de leitura passam', async () => {
     profile({ data: { is_admin: false }, error: null });
     expect(await isAdminAccount('u1')).toBe(false);

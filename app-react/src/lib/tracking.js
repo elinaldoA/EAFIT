@@ -2,6 +2,7 @@ import { db } from './supabase';
 import { todayDate } from '../data/treinoData';
 import { lang } from './i18n';
 import { readClientInfo, detectDisplayMode } from './clientInfo';
+import { isStaffDevice } from './staffDevice';
 import { version as APP_VERSION } from '../../package.json';
 
 // Métricas de uso pro painel admin (Análises → Comportamento). Tabelas e
@@ -143,7 +144,7 @@ const INSTALL_EVENTS = ['screen_shown', 'prompt_accepted', 'prompt_dismissed', '
 // screen_shown conta 1 vez por sessão do navegador; open (abriu pelo ícone),
 // 1 vez por dia. Os demais acontecem uma vez por instalação.
 export function trackInstall(event) {
-  if (!enabled || !INSTALL_EVENTS.includes(event)) return false;
+  if (!enabled || !INSTALL_EVENTS.includes(event) || isStaffDevice()) return false;
   try {
     const id = deviceId();
     if (!id) return false;
@@ -172,7 +173,7 @@ const AUTH_EVENTS = ['signup_start', 'signup_submit', 'signup_error', 'signup_ok
 
 // Evento anônimo da tela de acesso: 1 por sessão do navegador por evento+detalhe.
 export function trackAuthEvent(event, detail = '') {
-  if (!enabled || !AUTH_EVENTS.includes(event)) return false;
+  if (!enabled || !AUTH_EVENTS.includes(event) || isStaffDevice()) return false;
   const d = cleanDetail(detail);
   try {
     const key = `eafit_auth_${event}_${d}`;

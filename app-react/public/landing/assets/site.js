@@ -668,6 +668,8 @@
     } catch { /* sem armazenamento */ }
   })();
   (function recordVisit() {
+    // Navegador de admin não conta (chave de app-react/src/lib/staffDevice.js).
+    try { if (localStorage.getItem('eafit_staff_device') === '1') return; } catch { /* sem armazenamento */ }
     // Link de embaixador conta à parte (não some o clique de quem já visitou hoje).
     var key = ref ? 'eafit_visit_landing_' + ref : 'eafit_visit_landing';
     var today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import { AdminAuthContext } from './useAdminAuth';
 import { takeEmailLink } from '../lib/emailLink';
+import { markStaffDevice } from '../lib/staffDevice';
 
 // Só existe um papel aqui: super admin. O login usa o mesmo Supabase Auth do
 // app do aluno — a diferença é que, depois de autenticar, checamos
@@ -32,6 +33,7 @@ export function AdminAuthProvider({ children }) {
       const isAdmin = await checkIsAdmin(session.user.id);
       if (!active) return;
       if (isAdmin) {
+        markStaffDevice();
         setAdminUser(session.user);
       } else {
         setAdminUser(null);
@@ -83,6 +85,7 @@ export function AdminAuthProvider({ children }) {
       return { error: 'Esta conta não tem acesso ao backoffice.' };
     }
 
+    markStaffDevice();
     setAdminUser(data.user);
     return {};
   }

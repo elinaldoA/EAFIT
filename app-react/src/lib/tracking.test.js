@@ -137,6 +137,16 @@ describe('tracking', () => {
     expect(mockInsert).toHaveBeenCalledWith({ event: 'signup_error', detail: 'termos' });
   });
 
+  it('navegador de admin: sem evento anônimo nem instalação', async () => {
+    const t = await freshTracking();
+    t.enableTracking();
+    localStorage.setItem('eafit_staff_device', '1');
+    expect(t.trackAuthEvent('signup_start')).toBe(false);
+    expect(t.trackInstall('installed')).toBe(false);
+    expect(mockInsert).not.toHaveBeenCalled();
+    expect(mockRpc).not.toHaveBeenCalled();
+  });
+
   it('abertura por notificação: tira ?push=1 da URL e grava quando o usuário é conhecido', async () => {
     const t = await freshTracking();
     t.enableTracking();

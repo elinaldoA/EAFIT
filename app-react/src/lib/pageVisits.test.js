@@ -85,6 +85,12 @@ describe('recordVisit', () => {
     expect(mockInsert).toHaveBeenCalledWith({ page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro' });
   });
 
+  it('navegador de admin não conta', async () => {
+    localStorage.setItem('eafit_staff_device', '1');
+    expect(await recordVisit('acesso')).toBe(false);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
   it('banco sem as colunas novas: cai pra linha mais simples que ele aceita', async () => {
     mockInsert.mockResolvedValueOnce({ error: { message: 'column "browser" does not exist' } });
     expect(await recordVisit('acesso')).toBe(true);
