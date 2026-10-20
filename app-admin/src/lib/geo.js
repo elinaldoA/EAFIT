@@ -14,6 +14,8 @@ async function rpcRows(name, args) {
 export const fetchVisitGeo = (days = 30) => rpcRows('admin_visit_geo', { days_back: days });
 export const fetchAppGeo = (days = 30) => rpcRows('admin_app_geo', { days_back: days });
 export const fetchUserGeo = (days = 30) => rpcRows('admin_user_geo', { days_back: days });
+// Período atual × anterior (20261125010000_geo_panel_compare.sql).
+export const fetchGeoCompare = (days = 30) => rpcRows('admin_geo_period_compare', { days_back: days });
 
 // Qual página conta em cada modo do mapa. 'acesso' é a tela de login do app
 // (quem chega sem sessão); 'app' são os dias de uso de quem está logado
@@ -31,9 +33,11 @@ export function selectAccessRows(visitRows, appRows, mode) {
 }
 
 // Visitas ao site × acessos ao app (tela de login + logados), pro resumo.
-export function splitSiteApp(rows) {
+// `place` ({ uf } ou { country }) restringe a um estado ou país.
+export function splitSiteApp(rows, place = {}) {
   let site = 0, app = 0;
   for (const r of rows || []) {
+    if (!inPlace(r, place)) continue;
     const n = Number(r.visits) || 0;
     if (r.page === 'landing') site += n; else app += n;
   }
@@ -69,7 +73,7 @@ function rank(map, build) {
 }
 
 // Filtro de um estado ou de um país (clique no mapa ou na lista).
-function inPlace(r, { uf = null, country = null } = {}) {
+export function inPlace(r, { uf = null, country = null } = {}) {
   if (uf) return r.uf === uf;
   if (country) return r.country === country;
   return true;
@@ -154,4 +158,45 @@ export function legendSteps(max) {
     if (to >= from) out.push({ step: s, from, to });
   }
   return out;
+}
+
+// Linhas de admin_geo_period_compare → atual × anterior no total, por estado e
+// por país, só com as páginas do modo.
+export function compareGeo(rows, mode = 'tudo') {
+  const pages = ACCESS_PAGES[mode] || ACCESS_PAGES.tudo;
+  const total = { cur: 0, prev: 0 };
+  const byUf = new Map();
+  const byCountry = new Map();
+  const add = (map, key, cur, prev) => {
+    const v = map.get(key) || { cur: 0, prev: 0 };
+    v.cur += cur; v.prev += prev;
+    map.set(key, v);
+  };
+  for (const r of rows || []) {
+    if (!pages.includes(r.page) || !r.country) continue;
+    const cur = Number(r.cur) || 0;
+    const prev = Number(r.prev) || 0;
+    total.cur += cur; total.prev += prev;
+    add(byCountry, r.country, cur, prev);
+    if (r.country === 'BR' && r.uf) add(byUf, r.uf, cur, prev);
+  }
+  return { total, byUf, byCountry };
+}
+
+// Variação do período anterior pro atual: { dir: 'up' | 'down' | 'flat' | 'new', pct }.
+// null quando não houve nada em nenhum dos dois.
+export function trend(v) {
+  const cur = v?.cur || 0;
+  const prev = v?.prev || 0;
+  if (!cur && !prev) return null;
+  if (!prev) return { dir: 'new', pct: null };
+  const pct = Math.round(((cur - prev) / prev) * 100);
+  return { dir: pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat', pct };
+}
+
+export function trendLabel(t) {
+  if (!t) return '';
+  if (t.dir === 'new') return 'novo';
+  if (t.dir === 'flat') return '=';
+  return `${t.pct > 0 ? '↑' : '↓'} ${Math.abs(t.pct)}%`;
 }

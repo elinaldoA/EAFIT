@@ -856,6 +856,15 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .br-map { margin: 0; }
 .geo-view { margin-bottom: 10px; }
 .geo-selected__actions { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.dist__end { display: inline-flex; align-items: baseline; gap: 6px; justify-content: flex-end; }
+.geo-trend { font-size: 11px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.geo-trend--up { color: var(--ok); }
+.geo-trend--down { color: var(--danger); }
+.geo-trend--flat, .geo-trend--new { color: var(--text-dim); font-weight: 500; }
+.geo-body { transition: opacity .15s ease; }
+.geo-body--updating { opacity: .6; }
+.geo-more { margin-top: 8px; }
+.geo-place-split { margin: 4px 0 0; }
 .world-map svg { max-width: none; }
 .world-map .br-map__state { stroke-width: 0.5; }
 .world-map .br-map__state:hover, .world-map .br-map__state:focus-visible { stroke-width: 1; }

@@ -1,5 +1,9 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { fetchVisitGeo, fetchAppGeo, fetchUserGeo, selectAccessRows, splitSiteApp, summarizeGeo, demographics, countryName, flag, UF_NAMES } from '../lib/geo';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo,
+  compareGeo, trend, trendLabel, demographics, countryName, flag, UF_NAMES,
+} from '../lib/geo';
+import { toCsv, downloadCsv } from '../lib/csv';
 import BrazilMap from './BrazilMap';
 import Loading from './Loading';
 
@@ -23,18 +27,28 @@ const MODES = [
   { key: 'contas', label: 'Contas', unit: 'contas', note: 'Contas que abriram o app no período, pelo último acesso.' },
 ];
 
-// Contas: uma linha por localização/sexo/faixa. Demais modos: visitas ao site
-// e acessos ao app no mesmo formato, filtrados pelo modo.
-async function loadRows(mode, days) {
-  if (mode === 'contas') return fetchUserGeo(days);
-  const [visits, app] = await Promise.all([
-    fetchVisitGeo(days),
-    mode === 'site' ? [] : fetchAppGeo(days),
-  ]);
-  return selectAccessRows(visits, app, mode);
+const CITIES_PREVIEW = 10;
+
+// Chaves do cache: Tudo, Site e App saem das mesmas consultas (visitas + app),
+// então trocar entre eles não consulta de novo. `round` muda no "Atualizar".
+const dataKey = (round, mode, days) => `${round}:${mode === 'contas' ? 'contas' : 'acessos'}:${days}`;
+const compareKey = (round, days) => `${round}:comparar:${days}`;
+
+async function loadAccess(days) {
+  const [visits, app] = await Promise.all([fetchVisitGeo(days), fetchAppGeo(days)]);
+  return { visits, app };
 }
 
-function Bars({ rows, onPick, selected }) {
+function Trend({ t, days }) {
+  if (!t) return null;
+  return (
+    <span className={`geo-trend geo-trend--${t.dir}`} title={`Em relação aos ${days} dias anteriores`}>
+      {trendLabel(t)}
+    </span>
+  );
+}
+
+function Bars({ rows, onPick, selected, trends, days }) {
   if (!rows?.length) return <p className="card-note">Sem dados.</p>;
   return (
     <ul className="dist">
@@ -44,7 +58,10 @@ function Bars({ rows, onPick, selected }) {
           <>
             <span className="dist__label">{r.label}</span>
             <span className="dist__track"><span className="dist__fill" style={{ width: `${Math.max(2, r.pct)}%` }} /></span>
-            <span className="dist__value">{r.total} · {r.pct}%</span>
+            <span className="dist__end">
+              <span className="dist__value">{r.total} · {r.pct}%</span>
+              {trends && <Trend t={trend(trends.get(key))} days={days} />}
+            </span>
           </>
         );
         return (
@@ -65,35 +82,88 @@ function Bars({ rows, onPick, selected }) {
 export default function GeoPanel() {
   const [days, setDays] = useState(30);
   const [mode, setMode] = useState('tudo');
-  const [rows, setRows] = useState([]);
   const [view, setView] = useState('brasil');
   const [uf, setUf] = useState(null);
   const [country, setCountry] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [round, setRound] = useState(0);
+  const [store, setStore] = useState({});
+  const [failure, setFailure] = useState(null);
+  const [allCities, setAllCities] = useState(false);
+  const requested = useRef(new Set());
+
+  const wantKey = dataKey(round, mode, days);
+  const wantCompare = mode === 'contas' ? null : compareKey(round, days);
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError('');
-    loadRows(mode, days)
-      .then(r => { if (active) setRows(r); })
-      .catch(err => { if (active) setError(err.message); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [days, mode]);
+    const load = (key, fn) => {
+      if (requested.current.has(key)) return;
+      requested.current.add(key);
+      fn()
+        .then(value => setStore(s => ({ ...s, [key]: value })))
+        .catch(err => { requested.current.delete(key); setFailure({ key, message: err.message }); });
+    };
+    load(wantKey, () => (mode === 'contas' ? fetchUserGeo(days) : loadAccess(days)));
+    // A comparação é um extra: se falhar, o painel segue sem as setas.
+    if (wantCompare) load(wantCompare, () => fetchGeoCompare(days).catch(() => null));
+  }, [wantKey, wantCompare, mode, days]);
 
-  const countKey = mode === 'contas' ? 'users' : 'visits';
-  const current = MODES.find(m => m.key === mode);
+  // Enquanto o período novo carrega, continua mostrando o anterior.
+  // Só o erro da consulta atual aparece (trocar de período tenta de novo).
+  const error = failure?.key === wantKey && !(wantKey in store) ? failure.message : '';
+  const [shown, setShown] = useState(null);
+  if (wantKey in store && (shown?.key !== wantKey || shown.mode !== mode)) setShown({ key: wantKey, mode, days, round });
+  const updating = !(wantKey in store) && !error;
+
+  const shownMode = shown?.mode ?? mode;
+  const shownDays = shown?.days ?? days;
+  const raw = shown ? store[shown.key] : null;
+  const rawCompare = shown && shownMode !== 'contas' ? store[compareKey(shown.round, shownDays)] : null;
+
+  const rows = useMemo(() => {
+    if (!raw) return [];
+    return shownMode === 'contas' ? raw : selectAccessRows(raw.visits, raw.app, shownMode);
+  }, [raw, shownMode]);
+
+  const countKey = shownMode === 'contas' ? 'users' : 'visits';
+  const current = MODES.find(m => m.key === shownMode);
   // Brasil: filtra por estado; Mundo: por país.
   const place = useMemo(() => (view === 'brasil' ? { uf } : { country }), [view, uf, country]);
-  const placeName = view === 'brasil' ? uf : country && countryName(country);
+  const placeName = view === 'brasil' ? uf && (UF_NAMES[uf] || uf) : country && countryName(country);
   const summary = useMemo(() => summarizeGeo(rows, countKey, place), [rows, countKey, place]);
-  const demo = useMemo(() => (mode === 'contas' ? demographics(rows, place) : null), [rows, mode, place]);
+  const demo = useMemo(() => (shownMode === 'contas' ? demographics(rows, place) : null), [rows, shownMode, place]);
+  const cmp = useMemo(() => (rawCompare ? compareGeo(rawCompare, shownMode) : null), [rawCompare, shownMode]);
   const ufTotal = uf ? summary.byUf.get(uf) || 0 : 0;
   const countryTotal = country ? summary.byCountry.get(country) || 0 : 0;
-  const pickView = v => { setView(v); setUf(null); setCountry(null); };
-  const split = mode === 'tudo' ? splitSiteApp(rows) : null;
+  const split = shownMode === 'tudo' ? splitSiteApp(rows) : null;
+  const placeSplit = shownMode === 'tudo' && placeName ? splitSiteApp(rows, place) : null;
+  const cities = allCities ? summary.cities : summary.cities.slice(0, CITIES_PREVIEW);
+
+  const pickView = v => { setView(v); setUf(null); setCountry(null); setAllCities(false); };
+  const pickUf = v => { setUf(v); setAllCities(false); };
+  const pickCountry = v => { setCountry(v); setAllCities(false); };
+  const refresh = () => setRound(r => r + 1);
+
+  const exportCsv = () => {
+    const withTrend = (map, key) => {
+      const v = map?.get(key);
+      return { anterior: v ? v.prev : '', variacao: trendLabel(trend(v)) };
+    };
+    const out = [
+      ...summary.states.map(s => ({ tipo: 'Estado', nome: s.label, total: s.total, pct: s.pct, ...withTrend(cmp?.byUf, s.uf) })),
+      ...summary.countries.map(c => ({ tipo: 'País', nome: c.label, total: c.total, pct: c.pct, ...withTrend(cmp?.byCountry, c.code) })),
+      ...summary.cities.map(c => ({ tipo: 'Cidade', nome: [c.city, c.place, c.country].filter(Boolean).join(' · '), total: c.total })),
+      ...(demo ? [
+        ...demo.sexo.map(x => ({ tipo: 'Sexo', nome: x.label, total: x.total, pct: x.pct })),
+        ...demo.faixa.map(x => ({ tipo: 'Faixa etária', nome: x.label, total: x.total, pct: x.pct })),
+      ] : []),
+    ];
+    const columns = [
+      { key: 'tipo', label: 'Tipo' }, { key: 'nome', label: 'Local' }, { key: 'total', label: current.unit }, { key: 'pct', label: '%' },
+      ...(cmp ? [{ key: 'anterior', label: `${shownDays} dias anteriores` }, { key: 'variacao', label: 'Variação' }] : []),
+    ];
+    const suffix = placeName ? `_${(uf || country).toLowerCase()}` : '';
+    downloadCsv(`localizacao_${shownMode}_${shownDays}d${suffix}.csv`, toCsv(out, columns));
+  };
 
   return (
     <div className="card">
@@ -105,7 +175,7 @@ export default function GeoPanel() {
               <button
                 key={m.key} type="button" aria-pressed={mode === m.key}
                 className={`seg__btn${mode === m.key ? ' seg__btn--active' : ''}`}
-                onClick={() => { setMode(m.key); setUf(null); setCountry(null); }}
+                onClick={() => setMode(m.key)}
               >
                 {m.label}
               </button>
@@ -122,19 +192,24 @@ export default function GeoPanel() {
               </button>
             ))}
           </div>
+          <button type="button" className="btn btn--ghost btn--small" onClick={refresh} disabled={updating}>Atualizar</button>
+          <button type="button" className="btn btn--ghost btn--small" onClick={exportCsv} disabled={!shown}>Exportar CSV</button>
         </div>
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : (
-        <>
+      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {!shown ? (!error && <Loading />) : (
+        <div className={updating ? 'geo-body geo-body--updating' : 'geo-body'} aria-busy={updating}>
           <p className="card-note" style={{ marginTop: 0 }}>
             {current.note}
             {split && <> Site: <strong>{split.site}</strong> · App: <strong>{split.app}</strong>.</>}
             {' '}<strong>{summary.located}</strong> localizados de {summary.total}
+            {cmp && <> <Trend t={trend(cmp.total)} days={shownDays} /></>}
             {summary.pending > 0 && <> · {summary.pending} aguardando localização</>}
             {summary.noLocation > 0 && <> · {summary.noLocation} sem localização</>}
             {summary.brNoUf > 0 && <> · {summary.brNoUf} no Brasil sem estado identificado</>}
             {summary.abroad > 0 && <> · {summary.abroad} fora do Brasil{view === 'brasil' && ' (veja em Mundo)'}</>}
+            {updating && <> · <em>atualizando…</em></>}
           </p>
 
           <div className="geo-grid">
@@ -151,10 +226,10 @@ export default function GeoPanel() {
                 ))}
               </div>
               {view === 'brasil' ? (
-                <BrazilMap byUf={summary.byUf} max={summary.maxUf} selected={uf} onSelect={setUf} unit={current.unit} />
+                <BrazilMap byUf={summary.byUf} max={summary.maxUf} selected={uf} onSelect={pickUf} unit={current.unit} />
               ) : (
                 <Suspense fallback={<Loading />}>
-                  <WorldMap byCountry={summary.byCountry} max={summary.maxCountry} selected={country} onSelect={setCountry} unit={current.unit} />
+                  <WorldMap byCountry={summary.byCountry} max={summary.maxCountry} selected={country} onSelect={pickCountry} unit={current.unit} />
                 </Suspense>
               )}
             </div>
@@ -165,32 +240,37 @@ export default function GeoPanel() {
                   <h3 className="subsection-title" style={{ marginTop: 0 }}>
                     <span aria-hidden="true">{flag(country)}</span> {countryName(country)} · {countryTotal} {current.unit}
                     {summary.located > 0 && <> ({Math.round((countryTotal / summary.located) * 100)}% dos localizados)</>}
+                    {cmp && <> <Trend t={trend(cmp.byCountry.get(country))} days={shownDays} /></>}
                   </h3>
                   <span className="geo-selected__actions">
                     {country === 'BR' && (
                       <button type="button" className="btn btn--ghost btn--small" onClick={() => pickView('brasil')}>Ver por estado</button>
                     )}
-                    <button type="button" className="btn btn--ghost btn--small" onClick={() => setCountry(null)}>Ver o mundo todo</button>
+                    <button type="button" className="btn btn--ghost btn--small" onClick={() => pickCountry(null)}>Ver o mundo todo</button>
                   </span>
                 </div>
               ) : (
                 <>
                   <h3 className="subsection-title" style={{ marginTop: 0 }}>Países</h3>
-                  <Bars rows={summary.countries} onPick={setCountry} selected={country} />
+                  <Bars rows={summary.countries} onPick={pickCountry} selected={country} trends={cmp?.byCountry} days={shownDays} />
                 </>
               )) : uf ? (
                 <div className="geo-selected">
                   <h3 className="subsection-title" style={{ marginTop: 0 }}>
-                    {UF_NAMES[uf]} · {ufTotal} {current.unit}
+                    {UF_NAMES[uf] || uf} · {ufTotal} {current.unit}
                     {summary.brTotal > 0 && <> ({Math.round((ufTotal / summary.brTotal) * 100)}% do Brasil)</>}
+                    {cmp && <> <Trend t={trend(cmp.byUf.get(uf))} days={shownDays} /></>}
                   </h3>
-                  <button type="button" className="btn btn--ghost btn--small" onClick={() => setUf(null)}>Ver o Brasil todo</button>
+                  <button type="button" className="btn btn--ghost btn--small" onClick={() => pickUf(null)}>Ver o Brasil todo</button>
                 </div>
               ) : (
                 <>
                   <h3 className="subsection-title" style={{ marginTop: 0 }}>Estados</h3>
-                  <Bars rows={summary.states} onPick={setUf} selected={uf} />
+                  <Bars rows={summary.states} onPick={pickUf} selected={uf} trends={cmp?.byUf} days={shownDays} />
                 </>
+              )}
+              {placeSplit && (
+                <p className="card-note geo-place-split">Site: <strong>{placeSplit.site}</strong> · App: <strong>{placeSplit.app}</strong></p>
               )}
 
               {demo && (
@@ -204,19 +284,26 @@ export default function GeoPanel() {
 
               <h3 className="subsection-title">Cidades{placeName ? ` em ${placeName}` : ''}</h3>
               {summary.cities.length ? (
-                <div className="table-wrap">
-                  <table className="source-table">
-                    <thead><tr><th scope="col">Cidade</th><th scope="col">Total</th></tr></thead>
-                    <tbody>
-                      {summary.cities.slice(0, 10).map(c => (
-                        <tr key={`${c.city}|${c.place}|${c.country}`}>
-                          <th scope="row">{c.city}{c.place ? ` · ${c.place}` : ''}{c.country !== 'BR' ? ` · ${c.country}` : ''}</th>
-                          <td>{c.total}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <>
+                  <div className="table-wrap">
+                    <table className="source-table">
+                      <thead><tr><th scope="col">Cidade</th><th scope="col">Total</th></tr></thead>
+                      <tbody>
+                        {cities.map(c => (
+                          <tr key={`${c.city}|${c.place}|${c.country}`}>
+                            <th scope="row">{c.city}{c.place ? ` · ${c.place}` : ''}{c.country !== 'BR' ? ` · ${c.country}` : ''}</th>
+                            <td>{c.total}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {summary.cities.length > CITIES_PREVIEW && (
+                    <button type="button" className="btn btn--ghost btn--small geo-more" onClick={() => setAllCities(v => !v)}>
+                      {allCities ? 'Mostrar menos' : `Ver todas as ${summary.cities.length} cidades`}
+                    </button>
+                  )}
+                </>
               ) : <p className="card-note" style={{ marginTop: 0 }}>Sem cidade identificada no período.</p>}
             </div>
           </div>
@@ -225,20 +312,21 @@ export default function GeoPanel() {
           {view === 'mundo' ? null : summary.countries.length ? (
             <div className="table-wrap">
               <table className="source-table">
-                <thead><tr><th scope="col">País</th><th scope="col">Total</th><th scope="col">%</th></tr></thead>
+                <thead><tr><th scope="col">País</th><th scope="col">Total</th><th scope="col">%</th>{cmp && <th scope="col">Variação</th>}</tr></thead>
                 <tbody>
                   {summary.countries.map(c => (
                     <tr key={c.code}>
                       <th scope="row"><span aria-hidden="true">{c.flag}</span> {c.label}</th>
                       <td>{c.total}</td>
                       <td>{c.pct}%</td>
+                      {cmp && <td><Trend t={trend(cmp.byCountry.get(c.code))} days={shownDays} /></td>}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no período ainda.</p>}
-        </>
+        </div>
       )}
     </div>
   );

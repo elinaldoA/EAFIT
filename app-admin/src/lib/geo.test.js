@@ -4,8 +4,8 @@ const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
-  fetchVisitGeo, fetchAppGeo, fetchUserGeo, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep, legendSteps,
-  countryName, flag, UF_NAMES,
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
+  legendSteps, compareGeo, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -23,6 +23,8 @@ describe('consultas', () => {
     expect(mockRpc).toHaveBeenCalledWith('admin_app_geo', { days_back: 7 });
     await fetchUserGeo(90);
     expect(mockRpc).toHaveBeenCalledWith('admin_user_geo', { days_back: 90 });
+    await fetchGeoCompare(7);
+    expect(mockRpc).toHaveBeenCalledWith('admin_geo_period_compare', { days_back: 7 });
   });
 
   it('propagam o erro da RPC', async () => {
@@ -44,6 +46,16 @@ describe('modos do mapa', () => {
 
   it('splitSiteApp separa site de app (tela de login conta como app)', () => {
     expect(splitSiteApp([...v, ...a])).toEqual({ site: 3, app: 7 });
+  });
+
+  it('splitSiteApp filtra por estado ou país', () => {
+    const rows = [
+      { page: 'landing', country: 'BR', uf: 'SP', visits: 3 },
+      { page: 'app', country: 'BR', uf: 'BA', visits: 5 },
+      { page: 'acesso', country: 'PT', uf: null, visits: 1 },
+    ];
+    expect(splitSiteApp(rows, { uf: 'BA' })).toEqual({ site: 0, app: 5 });
+    expect(splitSiteApp(rows, { country: 'BR' })).toEqual({ site: 3, app: 5 });
   });
 });
 
@@ -160,5 +172,41 @@ describe('país', () => {
     expect(countryName(null)).toBe('Sem localização');
     expect(flag('BR')).toBe('🇧🇷');
     expect(flag('x')).toBe('');
+  });
+});
+
+describe('comparação com o período anterior', () => {
+  const rows = [
+    { page: 'landing', country: 'BR', uf: 'SP', cur: 6, prev: 3 },
+    { page: 'app', country: 'BR', uf: 'SP', cur: 2, prev: 1 },
+    { page: 'acesso', country: 'BR', uf: null, cur: 1, prev: 0 },
+    { page: 'landing', country: 'PT', uf: null, cur: '2', prev: '4' },
+    { page: 'outra', country: 'BR', uf: 'RJ', cur: 9, prev: 9 },
+  ];
+
+  it('compareGeo soma só as páginas do modo, por estado e país', () => {
+    const t = compareGeo(rows);
+    expect(t.total).toEqual({ cur: 11, prev: 8 });
+    expect(t.byUf.get('SP')).toEqual({ cur: 8, prev: 4 });
+    expect(t.byUf.has('RJ')).toBe(false);
+    expect(t.byCountry.get('BR')).toEqual({ cur: 9, prev: 4 });
+    expect(t.byCountry.get('PT')).toEqual({ cur: 2, prev: 4 });
+    expect(compareGeo(rows, 'site').total).toEqual({ cur: 8, prev: 7 });
+    expect(compareGeo(rows, 'app').byUf.get('SP')).toEqual({ cur: 2, prev: 1 });
+    expect(compareGeo(null).total).toEqual({ cur: 0, prev: 0 });
+  });
+
+  it('trend e trendLabel', () => {
+    expect(trend(undefined)).toBeNull();
+    expect(trend({ cur: 0, prev: 0 })).toBeNull();
+    expect(trend({ cur: 3, prev: 0 })).toEqual({ dir: 'new', pct: null });
+    expect(trend({ cur: 6, prev: 4 })).toEqual({ dir: 'up', pct: 50 });
+    expect(trend({ cur: 0, prev: 4 })).toEqual({ dir: 'down', pct: -100 });
+    expect(trend({ cur: 4, prev: 4 })).toEqual({ dir: 'flat', pct: 0 });
+    expect(trendLabel(trend({ cur: 6, prev: 4 }))).toBe('↑ 50%');
+    expect(trendLabel(trend({ cur: 1, prev: 4 }))).toBe('↓ 75%');
+    expect(trendLabel(trend({ cur: 4, prev: 4 }))).toBe('=');
+    expect(trendLabel(trend({ cur: 1, prev: 0 }))).toBe('novo');
+    expect(trendLabel(null)).toBe('');
   });
 });
