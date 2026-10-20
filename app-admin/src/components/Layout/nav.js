@@ -50,6 +50,7 @@ export const NAV_GROUPS = [
         key: 'comunidade', label: 'Comunidade', icon: 'message',
         tabs: [
           { to: '/desafios', label: 'Desafios' },
+          { to: '/ligas', label: 'Ligas' },
           { to: '/amigos', label: 'Amigos e feed' },
           { to: '/moderacao', label: 'Moderação' },
         ],

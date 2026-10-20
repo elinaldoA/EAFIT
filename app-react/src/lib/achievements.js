@@ -1,6 +1,7 @@
 import { db } from './supabase';
 import { SEASONS, SEASON_CHALLENGES, earnedSeason, seasonToday, seasonWindow } from './season';
 import { challengeVars } from './seasonLabels';
+import { DIVISIONS, MEDALS, monthLabel, parseLeagueBadge } from './league';
 
 import { t } from './i18n';
 export const BADGES = [
@@ -64,11 +65,28 @@ export function seasonalBadges(today = seasonToday()) {
   return list;
 }
 
-// Grade da tela de Evolução: as fixas + as de temporada ganhas ou do tema no ar.
+// Medalhas da liga mensal (lib/league.js): gravadas pelo servidor no
+// fechamento do mês, então só aparecem quando ganhas e nunca são "batidas" aqui.
+export function leagueBadges(unlockedIds) {
+  return [...unlockedIds].map(id => ({ id, info: parseLeagueBadge(id) })).filter(b => b.info)
+    .sort((a, b) => b.info.month.localeCompare(a.info.month))
+    .map(({ id, info }) => {
+      const v = { position: info.position, division: DIVISIONS[info.division].label, month: monthLabel(info.month) };
+      return {
+        id, emoji: MEDALS[info.position], league: true,
+        title: t('Liga {division} · {position}º', v),
+        desc: t('{position}º lugar na divisão {division} da liga de {month}', v),
+        check: () => false,
+      };
+    });
+}
+
+// Grade da tela de Evolução: as fixas + as de temporada ganhas ou do tema no ar
+// + as da liga ganhas.
 export function visibleBadges(unlockedIds, season = { theme: '', year: 0 }, today = seasonToday()) {
   const seasonal = seasonalBadges(today).filter(b =>
     unlockedIds.has(b.id) || (b.season === season.theme && b.year === season.year));
-  return [...BADGES, ...seasonal];
+  return [...BADGES, ...seasonal, ...leagueBadges(unlockedIds)];
 }
 
 export async function fetchUnlockedAchievements(userId) {

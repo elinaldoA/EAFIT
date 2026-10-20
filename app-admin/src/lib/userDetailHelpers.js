@@ -28,6 +28,8 @@ const SEASON_BADGE_NAMES = {
 // app-react/src/lib/achievements.js): anos sem rótulo acima saem pelo padrão.
 export function badgeLabel(id, labels = BADGE_LABELS) {
   if (labels[id]) return labels[id];
+  const liga = /^liga_(bronze|prata|ouro)_([123])_(\d{4})-(\d{2})$/.exec(id || '');
+  if (liga) return `Liga ${liga[1][0].toUpperCase()}${liga[1].slice(1)} · ${liga[2]}º (${liga[4]}/${liga[3]})`;
   const m = /^([a-z_]+)_(\d{4})$/.exec(id || '');
   return m && SEASON_BADGE_NAMES[m[1]] ? `${SEASON_BADGE_NAMES[m[1]]} ${m[2]}` : id;
 }

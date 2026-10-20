@@ -83,7 +83,7 @@ describe('backup cobre as tabelas do usuário', () => {
   const exportSrc = fs.existsSync(path.resolve(process.cwd(), 'src/lib/exportData.js'))
     ? fs.readFileSync(path.resolve(process.cwd(), 'src/lib/exportData.js'), 'utf8')
     : '';
-  const libSrc = ['bodyMeasurements', 'checkin', 'challenges', 'friends', 'inbox', 'trainer', 'trainerInsights', 'trainerMessages', 'trainerAppointments', 'weightLog', 'waterLog', 'discomfort', 'achievements']
+  const libSrc = ['bodyMeasurements', 'checkin', 'challenges', 'friends', 'inbox', 'trainer', 'trainerInsights', 'trainerMessages', 'trainerAppointments', 'weightLog', 'waterLog', 'discomfort', 'achievements', 'league']
     .map(f => fs.readFileSync(path.resolve(process.cwd(), `src/lib/${f}.js`), 'utf8')).join('\n');
 
   // tabela -> motivo de não estar no backup
@@ -115,6 +115,7 @@ describe('backup cobre as tabelas do usuário', () => {
     trainer_invite_signups: 'registro interno de atribuição (por qual link de personal a conta foi criada)',
     trainer_appointments: 'as aulas do aluno vão em appointments',
     trainer_messages: 'a conversa vai em trainerMessages',
+    league_members: 'só a adesão à liga; os resultados de cada mês vão em leagueResults',
     survey_answers: 'as respostas vão em surveyAnswers (pela função my_survey_answers, junto com a pergunta)',
     trainer_notes: 'notas do personal sobre o aluno (do personal)',
     trainer_goals: 'as metas vão em trainerGoals',

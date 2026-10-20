@@ -14,6 +14,7 @@ import LineChart from '../components/LineChart';
 import ProgressPhotos from '../components/ProgressPhotos';
 import MonthlyRecap from '../components/MonthlyRecap';
 import Challenges from '../components/Challenges';
+import LeagueCard from '../components/LeagueCard';
 import Friends from '../components/Friends';
 import { addDays } from '../lib/pause';
 import BodyMeasurements from '../components/BodyMeasurements';
@@ -179,6 +180,7 @@ export default function DashPage({ active }) {
       {tab === 'treinos' && (<>
       <MonthlyRecap userId={user.id} allTimeLogs={allTimeLogs} loadingLogs={loadingPR} />
       {isFlagOn(config.flags, 'desafios') && <Challenges />}
+      {isFlagOn(config.flags, 'desafios') && <LeagueCard />}
       <div className="dash-card">
         <div className="dash-card__title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
           <div className="dash-card__title" style={{ marginBottom: 0 }}>{t('Visualização Anatômica')}</div>

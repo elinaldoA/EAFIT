@@ -13,6 +13,7 @@ import { fetchMyTrainer } from './trainer';
 import { fetchMyGoals } from './trainerInsights';
 import { fetchMyThread } from './trainerMessages';
 import { fetchMyAppointments } from './trainerAppointments';
+import { fetchMyLeagueResults } from './league';
 
 const PHOTO_BACKUP_TTL = 7 * 24 * 3600; // links das fotos no backup valem 7 dias
 
@@ -99,7 +100,7 @@ export async function gatherUserData(userId) {
 
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
-    friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers,
+    friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers, leagueResults,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -115,6 +116,7 @@ export async function gatherUserData(userId) {
     safe('trainerMessages', () => fetchMyThread(1000), []),
     safe('appointments', fetchMyAppointments, []),
     safe('surveyAnswers', fetchMySurveyAnswers, []),
+    safe('leagueResults', fetchMyLeagueResults, []),
   ]);
 
   return {
@@ -127,7 +129,7 @@ export async function gatherUserData(userId) {
     discomfortReports, achievements,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments,
-    feedback, notifications, surveyAnswers,
+    feedback, notifications, surveyAnswers, leagueResults,
     incomplete,
   };
 }

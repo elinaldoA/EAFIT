@@ -24,6 +24,7 @@ const ACTION_LABEL = {
   updateAppSettings: 'Alterou configurações do app',
   promoteAdmin: 'Promoveu a admin',
   promoteTrainer: 'Liberou como personal trainer',
+  closeLeague: 'Fechou o mês da liga',
   viewAsUser: 'Abriu a visão do app do usuário',
   demoteTrainer: 'Removeu o acesso de personal trainer',
   demoteAdmin: 'Removeu admin',
