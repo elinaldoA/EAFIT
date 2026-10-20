@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import {
   fetchAmbassadors, fetchReferrals, createAmbassador, updateAmbassador,
   ambassadorLink, suggestCode, isValidCode, conversion, kindLabel, CHANNELS, KINDS, SOURCE_LABELS,
+  sendInfluencerMessage, MESSAGE_TITLE_MAX, MESSAGE_BODY_MAX,
 } from '../lib/ambassadors';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import PromoMaterialsAdmin from '../components/PromoMaterialsAdmin';
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -108,8 +110,8 @@ export default function Ambassadors() {
           <p className="page-subtitle">
             Os dois tipos têm o mesmo programa, só muda o nome. Cada um tem um código e um link de divulgação: quem
             abre o link e cria conta em até 30 dias fica vinculado a ele (vale o primeiro link aberto naquele navegador).
-            A pessoa acompanha os números (sem saber quem se cadastrou) no app, em Perfil → Painel do embaixador
-            (ou do influenciador).
+            O embaixador acompanha os números (sem saber quem se cadastrou) no app, em Perfil → Painel do
+            embaixador; o influenciador, no modo Influenciador, que também recebe os recados e o material de divulgação abaixo.
           </p>
         </div>
         <div className="seg" role="group" aria-label="Período">
@@ -153,6 +155,13 @@ export default function Ambassadors() {
           <button className="btn btn--primary" type="submit" disabled={busy || !isValidCode(form.code)}>Criar {kindLabel(form.kind).toLowerCase()}</button>
         </div>
       </form>
+
+      <InfluencerMessageForm
+        count={rows.filter(a => a.kind === 'influenciador' && a.active && a.userId).length}
+        loading={loading}
+      />
+
+      <PromoMaterialsAdmin />
 
       {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
       {loading && <Loading />}
@@ -328,5 +337,61 @@ function ReferralList({ ambassadorId }) {
         ))}
       </tbody>
     </table>
+  );
+}
+
+// Recado para todos os influenciadores ativos: chega por push (se a pessoa
+// ativou as notificações) e fica na aba Recados do modo Influenciador.
+function InfluencerMessageForm({ count, loading }) {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState('');
+
+  async function handleSend(e) {
+    e.preventDefault();
+    if (!window.confirm(`Enviar este recado para ${count} influenciador(es)?`)) return;
+    setBusy(true);
+    setResult('');
+    try {
+      const { recipients, sent } = await sendInfluencerMessage({ title, body });
+      setResult(`Recado enviado para ${recipients} influenciador(es); a notificação chegou em ${sent} aparelho(s).`);
+      setTitle('');
+      setBody('');
+    } catch (err) {
+      setResult(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="card stack" onSubmit={handleSend}>
+      <div>
+        <h2 className="section-title" style={{ margin: 0 }}>Recado para os influenciadores</h2>
+        <p className="card-note" style={{ margin: '4px 0 0' }}>
+          Campanhas, novidades e datas importantes. Vai para os {loading ? '…' : count} influenciador(es) ativo(s): notificação
+          no celular (para quem ativou) e na aba Recados do modo Influenciador. Embaixadores não recebem.
+        </p>
+      </div>
+      <label className="field">
+        <span className="field__label">Título</span>
+        <input className="input" value={title} maxLength={MESSAGE_TITLE_MAX} placeholder="Ex.: Campanha de Black Friday"
+          onChange={e => setTitle(e.target.value)} />
+      </label>
+      <label className="field">
+        <span className="field__label">Mensagem</span>
+        <textarea className="input" rows={4} value={body} maxLength={MESSAGE_BODY_MAX}
+          placeholder="O que você quer que eles saibam ou postem"
+          onChange={e => setBody(e.target.value)} />
+      </label>
+      <div className="form-grid__actions">
+        <span className="card-note" style={{ margin: 0 }}>{body.length}/{MESSAGE_BODY_MAX}</span>
+        <button className="btn btn--primary" type="submit" disabled={busy || !count || !title.trim() || !body.trim()}>
+          {busy ? 'Enviando…' : 'Enviar recado'}
+        </button>
+      </div>
+      {result && <p className={`form-msg ${result.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{result}</p>}
+    </form>
   );
 }

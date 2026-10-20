@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { timeAgo, inboxTarget, fetchInbox } from './inbox';
+import { timeAgo, inboxTarget, fetchInbox, fetchInfluencerMessages } from './inbox';
 
 const q = vi.hoisted(() => {
   const query = { calls: [] };
-  for (const m of ['select', 'is', 'order', 'limit']) {
+  for (const m of ['select', 'is', 'neq', 'eq', 'order', 'limit']) {
     query[m] = (...args) => { query.calls.push([m, ...args]); return m === 'limit' ? Promise.resolve({ data: [], error: null }) : query; };
   }
   return query;
@@ -15,8 +15,16 @@ describe('fetchInbox', () => {
     q.calls = [];
     await fetchInbox(30);
     expect(q.calls).toContainEqual(['is', 'read_at', null]);
+    expect(q.calls).toContainEqual(['neq', 'kind', 'influenciador']);
     q.calls = [];
     await fetchInbox(1000, { unreadOnly: false });
+    expect(q.calls.some(c => c[0] === 'is' || c[0] === 'neq')).toBe(false);
+  });
+
+  it('recados do influenciador: só o kind dele, lidos e não lidos', async () => {
+    q.calls = [];
+    await fetchInfluencerMessages();
+    expect(q.calls).toContainEqual(['eq', 'kind', 'influenciador']);
     expect(q.calls.some(c => c[0] === 'is')).toBe(false);
   });
 });

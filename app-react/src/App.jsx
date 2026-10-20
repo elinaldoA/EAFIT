@@ -40,7 +40,9 @@ import TermsUpdateScreen from './components/TermsUpdateScreen';
 import InstallScreen from './components/InstallScreen';
 import TrainerInvitePrompt from './components/TrainerInvitePrompt';
 import TrainerShell from './trainer/TrainerShell';
+import InfluencerShell from './influencer/InfluencerShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
+import { useInfluencer } from './hooks/useInfluencer';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
 import { useTrainerGoalsSync } from './hooks/useTrainerGoalsSync';
 import { useSyncLang } from './hooks/useSyncLang';
@@ -70,6 +72,7 @@ function Shell() {
   const { config } = useAppConfig();
   const [page, setPage] = useHashTab(TABS, 'treino');
   const { isTrainer, mode, setMode } = useTrainerMode(user?.id);
+  const isInfluencer = useInfluencer(user?.id);
   const unreadMessages = useUnreadMessages(user?.id);
   useTrainerGoalsSync(user?.id);
   useSyncLang(user);
@@ -100,11 +103,16 @@ function Shell() {
     flushPushOpen();
   }, [user]);
 
+  const trainerView = !!user && isTrainer && mode === 'trainer';
+  const influencerView = !!user && isInfluencer && mode === 'influencer';
+
   // Métrica de uso: qual aba cada usuário abre (1 vez por dia por aba). Antes
-  // do onboarding não há aba; no modo Personal conta como uma tela só.
+  // do onboarding não há aba; os modos Personal e Influenciador contam como
+  // uma tela só.
   const trackedPage = !user ? null
-    : (isTrainer && mode === 'trainer') ? 'personal'
-      : user.user_metadata?.peso ? page : null;
+    : trainerView ? 'personal'
+      : influencerView ? 'influenciador'
+        : user.user_metadata?.peso ? page : null;
   useEffect(() => {
     if (trackedPage) trackEvent('page', trackedPage);
   }, [trackedPage, user]);
@@ -123,8 +131,8 @@ function Shell() {
   if (authLoading) return <BootSplash />;
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;
 
-  const trainerView = !!user && isTrainer && mode === 'trainer';
-  const needsOnboarding = user && !trainerView && !user.user_metadata?.peso;
+  const studentView = !!user && !trainerView && !influencerView;
+  const needsOnboarding = studentView && !user.user_metadata?.peso;
 
   return (
     <>
@@ -132,15 +140,16 @@ function Shell() {
     <div className="shell" inert={user && locked ? true : undefined}>
       <SeasonDecor />
       <AnnouncementBanner />
-      {user && !needsOnboarding && !trainerView && <SeasonBanner />}
+      {studentView && !needsOnboarding && <SeasonBanner />}
       {user && <TermsUpdateScreen />}
       {(user || fromOldAddress) && <InstallScreen />}
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}
       {trainerView && <TrainerShell onSwitchToStudent={() => setMode('aluno')} />}
+      {influencerView && <InfluencerShell onSwitchToStudent={() => setMode('aluno')} />}
 
-      {user && !needsOnboarding && !trainerView && (
+      {studentView && !needsOnboarding && (
         <AvatarProvider>
           <WorkoutProvider>
             <ReminderScheduler />
@@ -151,6 +160,9 @@ function Shell() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {isTrainer && (
                     <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>{t('🧑‍🏫 Personal')}</button>
+                  )}
+                  {isInfluencer && (
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('influencer')}>{t('📣 Influenciador')}</button>
                   )}
                   <InboxBell />
                   <ThemeToggle />

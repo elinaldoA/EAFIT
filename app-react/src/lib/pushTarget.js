@@ -33,6 +33,9 @@ export const NAV_TARGETS = {
   aula: { tab: 'treino' },
   personal_alunos: { mode: 'trainer', tab: 'alunos' },
   personal_recados: { mode: 'trainer', tab: 'recados' },
+  // Novos cadastros pelo link do influenciador (send-ambassador-alerts).
+  influenciador: { mode: 'influencer', tab: 'resultados' },
+  influenciador_recados: { mode: 'influencer', tab: 'recados' },
 };
 
 // Tipo de lembrete automático -> chave de destino (ou null).
@@ -52,6 +55,8 @@ const TAG_RULES = [
   [/^trainer-reply-/, 'personal_recados'],
   [/^trainer-message$/, 'treino'], // o recado novo aparece no topo da tela de Treino
   [/^trainer-(alerts|weekly)-/, 'personal_alunos'],
+  [/^influencer-signups-/, 'influenciador'],
+  [/^influencer-message$/, 'influenciador_recados'], // recado da equipe (admin-broadcast)
 ];
 const ENGAGEMENT_TAG = /^engagement-(.+)-\d{4}-\d{2}-\d{2}$/;
 

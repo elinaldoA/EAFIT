@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { STUDENT_STEPS, TRAINER_STEPS, stepsFor, visibleSteps, hasSeenTutorial, markTutorialSeen } from './tutorial';
+import { STUDENT_STEPS, TRAINER_STEPS, INFLUENCER_STEPS, stepsFor, visibleSteps, hasSeenTutorial, markTutorialSeen } from './tutorial';
 
 const STUDENT_TABS = ['treino', 'historico', 'hidratacao', 'dash', 'perfil'];
 const TRAINER_TABS = ['alunos', 'modelos', 'turma', 'recados', 'conta'];
+const INFLUENCER_TABS = ['resultados', 'divulgar', 'recados', 'conta'];
 const DASH_TABS = ['treinos', 'recordes', 'corpo', 'amigos'];
 
 describe('passos do tutorial', () => {
   it('escolhe os passos pelo papel', () => {
     expect(stepsFor('trainer')).toBe(TRAINER_STEPS);
+    expect(stepsFor('influencer')).toBe(INFLUENCER_STEPS);
     expect(stepsFor('aluno')).toBe(STUDENT_STEPS);
   });
 
@@ -19,6 +21,10 @@ describe('passos do tutorial', () => {
     for (const s of TRAINER_STEPS) {
       expect(s.title && s.text).toBeTruthy();
       if (s.tab) expect(TRAINER_TABS).toContain(s.tab);
+    }
+    for (const s of INFLUENCER_STEPS) {
+      expect(s.title && s.text).toBeTruthy();
+      if (s.tab) expect(INFLUENCER_TABS).toContain(s.tab);
     }
   });
 
@@ -32,6 +38,7 @@ describe('passos do tutorial', () => {
   it('cobre todas as abas de cada modo', () => {
     expect(new Set(STUDENT_STEPS.map(s => s.tab).filter(Boolean))).toEqual(new Set(STUDENT_TABS));
     expect(new Set(TRAINER_STEPS.map(s => s.tab).filter(Boolean))).toEqual(new Set(TRAINER_TABS));
+    expect(new Set(INFLUENCER_STEPS.map(s => s.tab).filter(Boolean))).toEqual(new Set(INFLUENCER_TABS));
   });
 });
 

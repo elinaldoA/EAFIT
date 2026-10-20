@@ -1,7 +1,9 @@
 import { formatDuration } from './utils';
 import { trackFeature } from './tracking';
 import { formatMinutes } from './monthlyRecap';
-import { SHARE_CARD_URL } from './links';
+import { SHARE_CARD_URL, ambassadorLink } from './links';
+import { myRefCode } from './myRef';
+import { drawQr } from './qr';
 import { currentSeason } from './season';
 import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE, MUSCLE_LABELS } from '../data/bodyMuscleMap';
@@ -383,18 +385,27 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
 // não o conhece (a raiz do app abre direto no login).
 const SHARE_URL_LABEL = 'eafit.com.br';
 
-export const SHARE_TEXT = t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
-const SEASON_SHARE_TEXT = {
-  carnaval: t('Treino de Carnaval concluído no EAFIT 🎭 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  pascoa: t('Treino de Páscoa concluído no EAFIT 🐰 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  namorados: t('Treino dos Namorados concluído no EAFIT 💕 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  festa_junina: t('Treino do Arraiá concluído no EAFIT 🌽 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  natal: t('Treino de Natal concluído no EAFIT 🎄 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  ano_novo: t('Primeiro treino do ano concluído no EAFIT 🎆 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  outubro_rosa: t('Treino do Outubro Rosa concluído no EAFIT 💗 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  halloween: t('Treino das Bruxas concluído no EAFIT 🎃 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-  novembro_azul: t('Treino do Novembro Azul concluído no EAFIT 💙 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
-};
+// Influenciador compartilha com o próprio link (lib/myRef.js); os demais, com
+// o link do card.
+function cardUrl(refCode) {
+  return refCode ? ambassadorLink(refCode, 'card') : SHARE_CARD_URL;
+}
+
+function shareText(url) {
+  const SHARE_CARD_URL = url;
+  const season = {
+    carnaval: () => t('Treino de Carnaval concluído no EAFIT 🎭 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    pascoa: () => t('Treino de Páscoa concluído no EAFIT 🐰 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    namorados: () => t('Treino dos Namorados concluído no EAFIT 💕 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    festa_junina: () => t('Treino do Arraiá concluído no EAFIT 🌽 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    natal: () => t('Treino de Natal concluído no EAFIT 🎄 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    ano_novo: () => t('Primeiro treino do ano concluído no EAFIT 🎆 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    outubro_rosa: () => t('Treino do Outubro Rosa concluído no EAFIT 💗 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    halloween: () => t('Treino das Bruxas concluído no EAFIT 🎃 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+    novembro_azul: () => t('Treino do Novembro Azul concluído no EAFIT 💙 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }),
+  }[currentSeason()];
+  return season ? season() : t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
+}
 
 // Temas de temporada (lib/season.js). Dia das Bruxas: brilho roxo, abóbora e morcegos no topo.
 // Só enfeite em volta; os números do treino continuam no mesmo lugar.
@@ -482,9 +493,25 @@ async function drawTopBar(ctx, y, dateLabel) {
   }
 }
 
+// QR num quadro branco (a margem clara em volta é parte do código).
+function drawQrPanel(ctx, url, x, y, size) {
+  ctx.save();
+  roundedRectPath(ctx, x, y, size, size, 22);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.restore();
+  const pad = Math.round(size * 0.09);
+  drawQr(ctx, url, x + pad, y + pad, size - pad * 2, '#09090d');
+}
+
 // Rodapé: o card circula como imagem solta (status, stories, download), então
-// a marca e o endereço do app precisam estar NA imagem.
-async function drawFooter(ctx, y, cta) {
+// a marca e o endereço do app precisam estar NA imagem. Com `qrUrl` (link do
+// influenciador) o texto vai para a esquerda e o QR fica à direita.
+async function drawFooter(ctx, y, cta, qrUrl = '') {
+  if (qrUrl) {
+    await drawQrFooter(ctx, y, cta, qrUrl);
+    return;
+  }
   const lineG = ctx.createLinearGradient(PAD_X, 0, CARD_WIDTH - PAD_X, 0);
   lineG.addColorStop(0, withAlpha(ORANGE, 0));
   lineG.addColorStop(0.5, withAlpha(ORANGE, 0.8));
@@ -518,11 +545,42 @@ async function drawFooter(ctx, y, cta) {
   ctx.fillText(SHARE_URL_LABEL, tx, gy + 68);
 }
 
+async function drawQrFooter(ctx, y, cta, qrUrl) {
+  const lineG = ctx.createLinearGradient(PAD_X, 0, CARD_WIDTH - PAD_X, 0);
+  lineG.addColorStop(0, withAlpha(ORANGE, 0));
+  lineG.addColorStop(0.5, withAlpha(ORANGE, 0.8));
+  lineG.addColorStop(1, withAlpha(ORANGE, 0));
+  ctx.fillStyle = lineG;
+  ctx.fillRect(PAD_X, y, CONTENT_W, 3);
+
+  const qrSize = 176;
+  const qrX = CARD_WIDTH - PAD_X - qrSize;
+  drawQrPanel(ctx, qrUrl, qrX, y + 24, qrSize);
+
+  const textW = qrX - PAD_X - 32;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  fitFont(ctx, cta, textW, 34, 800);
+  ctx.fillText(cta, PAD_X, y + 70);
+
+  const size = 76;
+  const gy = y + 100;
+  const hasLogo = await drawLogo(ctx, PAD_X, gy, size);
+  const tx = hasLogo ? PAD_X + size + 22 : PAD_X;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `900 44px ${FONT}`;
+  ctx.fillText('EAFIT', tx, gy + 36);
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `600 26px ${FONT}`;
+  ctx.fillText(t('Aponte a câmera para o QR'), tx, gy + 68);
+}
+
 function formatCardDate(date = new Date()) {
   return date.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '');
 }
 
-export async function renderWorkoutSummaryCard(summary) {
+export async function renderWorkoutSummaryCard(summary, refCode = myRefCode()) {
   const {
     day, durationMs, totalCarga, weekDone, weekTotal,
     exercises = [], totalSetsDone, totalPlannedSets,
@@ -595,7 +653,7 @@ export async function renderWorkoutSummaryCard(summary) {
   y += goalH + 28 + bonus;
   await drawMusclesPanel(ctx, PAD_X, y, CONTENT_W, day);
 
-  await drawFooter(ctx, footerY, t('Monte o seu treino grátis'));
+  await drawFooter(ctx, footerY, t('Monte o seu treino grátis'), refCode ? cardUrl(refCode) : '');
 
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
@@ -635,16 +693,17 @@ async function shareImageBlob(blob, filename, title, text) {
 // `prepared`: Blob (ou promessa dele) gerado antes do toque. O share nativo
 // exige o gesto do usuário ainda ativo; desenhar o card depois do toque
 // (imagens + PNG de ~2,5 MB) estoura esse prazo no celular e o share falha.
+// O card preparado foi desenhado com o código do momento (myRefCode).
 export async function shareWorkoutSummary(summary, prepared) {
   trackFeature('share_card');
-  const blob = (await prepared) || await renderWorkoutSummaryCard(summary);
-  const text = SEASON_SHARE_TEXT[currentSeason()] || SHARE_TEXT;
-  return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), text);
+  const refCode = myRefCode();
+  const blob = (await prepared) || await renderWorkoutSummaryCard(summary, refCode);
+  return shareImageBlob(blob, 'meu-treino.png', t('Meu treino'), shareText(cardUrl(refCode)));
 }
 
 // Cartão 9:16 da retrospectiva do mês (mesmo visual/marca do resumo do treino).
 // `recap` vem de buildMonthlyRecap.
-export async function renderMonthlyRecapCard(recap) {
+export async function renderMonthlyRecapCard(recap, refCode = myRefCode()) {
   const canvas = document.createElement('canvas');
   canvas.width = CARD_WIDTH;
   canvas.height = CARD_HEIGHT;
@@ -705,13 +764,59 @@ export async function renderMonthlyRecapCard(recap) {
     ctx.fillText(t('em relação ao mês anterior'), PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 + 38);
   }
 
-  await drawFooter(ctx, CARD_HEIGHT - 214, t('Monte o seu treino grátis'));
+  await drawFooter(ctx, CARD_HEIGHT - 214, t('Monte o seu treino grátis'), refCode ? cardUrl(refCode) : '');
 
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
 export async function shareMonthlyRecap(recap) {
   trackFeature('share_card');
-  const blob = await renderMonthlyRecapCard(recap);
-  return shareImageBlob(blob, 'meu-mes-eafit.png', t('Meu mês no EAFIT'), t('Meu mês no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL }));
+  const refCode = myRefCode();
+  const blob = await renderMonthlyRecapCard(recap, refCode);
+  return shareImageBlob(blob, 'meu-mes-eafit.png', t('Meu mês no EAFIT'), t('Meu mês no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL: cardUrl(refCode) }));
+}
+
+// Imagem 4:5 (post do Instagram) com o QR do link de divulgação, para levar
+// à academia, a eventos ou mostrar num vídeo. `code` é o código do influenciador.
+const QR_CARD_HEIGHT = 1350;
+
+export async function renderInviteQrCard(code) {
+  const url = ambassadorLink(code, 'qr');
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = QR_CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+
+  drawBackground(ctx, CARD_WIDTH, QR_CARD_HEIGHT);
+  await drawTopBar(ctx, 64, '');
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `800 30px ${FONT}`;
+  setTracking(ctx, 4);
+  ctx.fillText(t('TREINE COMIGO NO EAFIT'), CARD_WIDTH / 2, 250);
+  setTracking(ctx, 0);
+
+  const qrSize = 640;
+  drawQrPanel(ctx, url, (CARD_WIDTH - qrSize) / 2, 300, qrSize);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `800 40px ${FONT}`;
+  ctx.fillText(t('Aponte a câmera e crie sua conta grátis'), CARD_WIDTH / 2, 1030);
+  ctx.fillStyle = MUTED;
+  ctx.font = `600 30px ${FONT}`;
+  ctx.fillText(t('Monte, registre e acompanhe seus treinos'), CARD_WIDTH / 2, 1084);
+
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `700 32px ${FONT}`;
+  setTracking(ctx, 2);
+  ctx.fillText(`${SHARE_URL_LABEL} · ${code.toUpperCase()}`, CARD_WIDTH / 2, 1230);
+  setTracking(ctx, 0);
+
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+export async function shareInviteQr(code) {
+  const blob = await renderInviteQrCard(code);
+  return shareImageBlob(blob, `eafit-qr-${code}.png`, 'EAFIT', t('Treine comigo no EAFIT 💪 É grátis: {link}', { link: ambassadorLink(code, 'qr') }));
 }

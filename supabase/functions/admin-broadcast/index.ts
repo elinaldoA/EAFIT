@@ -9,6 +9,11 @@
 //              todos" os admins ficam de fora;
 //   'resposta' resposta a um feedback da própria pessoa — vai sempre, por ser
 //              continuação de uma conversa que ela começou.
+//
+// Com `audience: 'influenciadores'` (Pessoas → Embaixadores e influenciadores)
+// é um recado da equipe para os influenciadores ativos: a lista sai do banco,
+// nunca do corpo; fica no sino com kind 'influenciador' (aba Recados do modo
+// Influenciador, app-react/src/influencer/) e o push abre essa aba. Sem e-mail.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { configureVapid, sendWebPush } from '../_shared/webpush.ts';
 import { corsHeadersFor } from '../_shared/cors.ts';
@@ -57,12 +62,27 @@ Deno.serve(async (req) => {
     return json({ error: 'Corpo inválido.' }, 400);
   }
 
-  const { title, body: message, targetUserIds, email } = body as {
-    title?: string; body?: string; targetUserIds?: string[]; email?: 'aviso' | 'resposta';
+  const { title, body: message, email, audience } = body as {
+    title?: string; body?: string; targetUserIds?: string[]; email?: 'aviso' | 'resposta'; audience?: string;
   };
+  let { targetUserIds } = body as { targetUserIds?: string[] };
   if (!title || !message) return json({ error: 'Faltam "title" e "body".' }, 400);
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+  const toInfluencers = audience === 'influenciadores';
+  if (audience !== undefined && !toInfluencers) return json({ error: 'Público inválido.' }, 400);
+  if (toInfluencers) {
+    const { data: infl, error: inflErr } = await admin
+      .from('ambassadors')
+      .select('user_id')
+      .eq('kind', 'influenciador')
+      .eq('active', true)
+      .not('user_id', 'is', null);
+    if (inflErr) return json({ error: inflErr.message }, 500);
+    targetUserIds = (infl || []).map((r) => r.user_id as string);
+    if (!targetUserIds.length) return json({ error: 'Nenhum influenciador ativo.' }, 400);
+  }
 
   let query = admin.from('push_subscriptions').select('endpoint, p256dh, auth');
   if (Array.isArray(targetUserIds) && targetUserIds.length > 0) {
@@ -73,18 +93,18 @@ Deno.serve(async (req) => {
 
   let sent = 0;
   for (const sub of subs || []) {
-    const result = await sendWebPush(sub, { title, body: message });
+    const result = await sendWebPush(sub, toInfluencers ? { title, body: message, tag: 'influencer-message' } : { title, body: message });
     if (result === 'sent') sent++;
     else if (result === 'stale') await admin.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
   }
 
   const targeted = Array.isArray(targetUserIds) && targetUserIds.length > 0;
   const inboxIds = targeted ? targetUserIds : await listAllUserIds(admin);
-  await saveInbox(admin, inboxIds, { kind: 'aviso', title, body: message });
+  await saveInbox(admin, inboxIds!, { kind: toInfluencers ? 'influenciador' : 'aviso', title, body: message });
 
   let emailTargetCount: number | undefined;
   let emailSent: number | undefined;
-  if (email === 'aviso' || email === 'resposta') {
+  if (!toInfluencers && (email === 'aviso' || email === 'resposta')) {
     const users = await loadEmailUsers(admin, targeted ? targetUserIds : undefined);
     let items: BulkEmailItem[];
     if (email === 'resposta') {
@@ -111,8 +131,14 @@ Deno.serve(async (req) => {
     admin_id: callerId,
     target_user_id: null,
     action: 'broadcastPush',
-    details: { title, body: message, targetCount: subs?.length || 0, sent, emailTargetCount, emailSent },
+    details: {
+      title, body: message, targetCount: subs?.length || 0, sent, emailTargetCount, emailSent,
+      ...(toInfluencers ? { audience, recipients: targetUserIds!.length } : {}),
+    },
   });
 
-  return json({ ok: true, targetCount: subs?.length || 0, sent, emailTargetCount, emailSent });
+  return json({
+    ok: true, targetCount: subs?.length || 0, sent, emailTargetCount, emailSent,
+    ...(toInfluencers ? { recipients: targetUserIds!.length } : {}),
+  });
 });

@@ -4,10 +4,11 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 
 const h = vi.hoisted(() => ({
   fetchMyAmbassador: vi.fn(), fetchMyAmbassadorChannels: vi.fn(), fetchMyAmbassadorDaily: vi.fn(),
-  shareAmbassadorLink: vi.fn(), copyAmbassadorLink: vi.fn(),
+  shareAmbassadorLink: vi.fn(), copyAmbassadorLink: vi.fn(), goTo: vi.fn(),
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../lib/ambassador', async orig => ({ ...(await orig()), ...h }));
+vi.mock('../lib/appNav', () => ({ goTo: (...a) => h.goTo(...a) }));
 
 import ProfileAmbassadorSection from './ProfileAmbassadorSection';
 
@@ -51,13 +52,14 @@ describe('ProfileAmbassadorSection', () => {
     expect(toast).toHaveBeenCalledWith('🔗 Link copiado');
   });
 
-  it('influenciador vê o mesmo painel com o próprio nome', async () => {
+  it('influenciador vê o atalho para o modo Influenciador', async () => {
     h.fetchMyAmbassador.mockResolvedValue({ ...SUMMARY, kind: 'influenciador' });
     render(<ProfileAmbassadorSection toast={vi.fn()} />);
     expect(await screen.findByText('Influenciador EAFIT')).toBeTruthy();
-    fireEvent.click(screen.getByText('Painel do influenciador'));
-    expect(screen.getByText('https://eafit.com.br/?ref=anafit')).toBeTruthy();
+    expect(screen.getByText('12 cadastros pelo seu link')).toBeTruthy();
     expect(screen.queryByText('Painel do embaixador')).toBeNull();
+    fireEvent.click(screen.getByText('Abrir modo Influenciador'));
+    expect(h.goTo).toHaveBeenCalledWith({ mode: 'influencer', tab: 'resultados' });
   });
 
   it('embaixador pausado vê o aviso e não compartilha', async () => {

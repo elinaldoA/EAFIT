@@ -29,7 +29,7 @@ export function kindLabel(kind) {
 export const SOURCE_LABELS = {
   instagram: 'Instagram', whatsapp: 'WhatsApp', tiktok: 'TikTok', youtube: 'YouTube',
   facebook: 'Facebook', x: 'X', google: 'Google', direto: 'Direto / sem canal',
-  landing: 'Site', 'outro-site': 'Outro site',
+  landing: 'Site', 'outro-site': 'Outro site', card: 'Card de treino', qr: 'QR Code',
 };
 
 const ERRORS = {
@@ -102,4 +102,19 @@ export function createAmbassador({ email, name, code, kind = 'embaixador' }) {
 
 export function updateAmbassador({ id, name, code, active, kind }) {
   return rpc('admin_update_ambassador', { p_id: id, p_name: name.trim(), p_code: code.trim().toLowerCase(), p_active: active, p_kind: kind || null });
+}
+
+// Recado da equipe para os influenciadores ativos (push + aba Recados do modo
+// Influenciador). A lista de destinatários é montada no servidor
+// (supabase/functions/admin-broadcast, audience 'influenciadores').
+export const MESSAGE_TITLE_MAX = 60;
+export const MESSAGE_BODY_MAX = 500;
+
+export async function sendInfluencerMessage({ title, body }) {
+  const { data, error } = await db.functions.invoke('admin-broadcast', {
+    body: { title: title.trim(), body: body.trim(), audience: 'influenciadores' },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return { recipients: data?.recipients ?? 0, sent: data?.sent ?? 0 };
 }

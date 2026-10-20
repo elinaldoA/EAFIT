@@ -1,0 +1,38 @@
+/* Modo Influenciador (influencer/): reaproveita topbar e páginas do Personal
+   (trainer.css) e o painel do embaixador (.amb, profile.css). */
+.influencer-hero__total { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+.influencer-hero__total strong { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-right: 4px; }
+.influencer-hero .amb__notice { margin-top: 10px; }
+.influencer-caption { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 0; border-top: 1px solid var(--border); }
+.influencer-caption:first-of-type { border-top: 0; }
+.influencer-caption .amb__label { margin-bottom: 0; }
+.influencer-caption__text { margin: 0; font-size: 0.85rem; line-height: 1.45; word-break: break-word; }
+.influencer-tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+.amb-qr { display: flex; align-items: center; gap: 14px; }
+.amb-qr__code { width: 132px; height: 132px; flex-shrink: 0; border-radius: var(--r-md); }
+.amb-qr__side { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; }
+.influencer-messages { display: flex; flex-direction: column; gap: 8px; }
+.influencer-messages .inbox__body { white-space: pre-line; }
+.influencer-goals__next { margin: 0 0 8px; display: flex; justify-content: space-between; gap: 8px; font-weight: 700; font-size: 0.9rem; }
+.influencer-goals__next span { font-weight: 600; font-size: 0.8rem; color: var(--text-muted); }
+.influencer-goals__bar { height: 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; }
+.influencer-goals__bar > div { height: 100%; background: var(--primary); border-radius: 999px; transition: width .4s ease; }
+.influencer-goals__badges { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.influencer-goals__badges li { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; color: var(--text-dim); background: var(--surface-2); border: 1px solid var(--border); }
+.influencer-goals__badges li.is-done { color: var(--text); border-color: var(--primary); background: var(--primary-glow); }
+.promo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.promo-list__item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+.promo-list__item:first-child { border-top: 0; }
+.promo-list__icon { font-size: 1.4rem; flex-shrink: 0; }
+.promo-list__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; }
+.promo-list__text span { color: var(--text-muted); line-height: 1.35; overflow-wrap: anywhere; }
+.promo-list__text small { color: var(--text-dim); font-size: 0.72rem; }
+.promo-list__item .btn { flex-shrink: 0; }
+.influencer-ranking__me { margin: 10px 0 0; font-size: 0.86rem; font-weight: 600; }
+.influencer-ranking__list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.influencer-ranking__row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-md); background: var(--surface-2); font-size: 0.86rem; }
+.influencer-ranking__row.is-me { border: 1px solid var(--primary); background: var(--primary-glow); font-weight: 700; }
+.influencer-ranking__pos { width: 28px; text-align: center; font-weight: 800; flex-shrink: 0; }
+.influencer-ranking__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.influencer-ranking__n { font-weight: 800; }
+.influencer-ranking__gap { text-align: center; color: var(--text-dim); line-height: 1; }

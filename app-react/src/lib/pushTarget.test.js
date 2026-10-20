@@ -21,12 +21,14 @@ describe('pushTargetKey', () => {
       'engagement-workout_today-2026-10-08': 'treino',
       'engagement-first_workout_late-2026-10-08': 'treino',
       'engagement-invite_friends-2026-10-08': 'amigos',
+      'influencer-signups-2026-10-20-9': 'influenciador',
+      'influencer-message': 'influenciador_recados',
     };
     for (const [tag, key] of Object.entries(cases)) expect(pushTargetKey({ tag }), tag).toBe(key);
   });
 
   it('toda chave devolvida tem destino definido', () => {
-    const keys = ['agua', 'treino', 'semana', 'peso', 'recordes', 'aula', 'personal_alunos', 'personal_recados', 'amigos', 'feedback'];
+    const keys = ['agua', 'treino', 'semana', 'peso', 'recordes', 'aula', 'personal_alunos', 'personal_recados', 'amigos', 'feedback', 'influenciador', 'influenciador_recados'];
     for (const key of keys) expect(NAV_TARGETS[key]?.tab, key).toBeTruthy();
   });
 

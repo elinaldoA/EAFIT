@@ -52,7 +52,7 @@ import { fetchPhotos, addPhoto, countPhotos, deletePhoto } from './progressPhoto
 import { fetchWeightLogs, upsertWeightLog } from './weightLog';
 import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from './waterLog';
 import { imcInfo, metaProgress } from './profileCalc';
-import { readMode, writeMode, readCachedIsTrainer, writeCachedIsTrainer } from './appMode';
+import { readMode, writeMode, readCachedIsTrainer, writeCachedIsTrainer, readCachedIsInfluencer, writeCachedIsInfluencer } from './appMode';
 import { isChunkLoadError, reloadOnceForChunkError, clearChunkReloadFlag } from './chunkReload';
 import { isKnownUser, markKnownUser } from './knownUser';
 import { assertValidImage, MAX_DIMENSION } from './imageUtils';
@@ -350,6 +350,18 @@ describe('appMode, knownUser e chunkReload', () => {
     expect(readCachedIsTrainer('u2')).toBe(false);
     writeCachedIsTrainer('u1', false);
     expect(readCachedIsTrainer('u1')).toBe(false);
+  });
+
+  it('modo influenciador e papel de influenciador guardados à parte', () => {
+    writeMode('influencer');
+    expect(readMode()).toBe('influencer');
+    writeMode('qualquer');
+    expect(readMode()).toBe('trainer');
+    writeCachedIsInfluencer('u1', true);
+    expect(readCachedIsInfluencer('u1')).toBe(true);
+    expect(readCachedIsTrainer('u1')).toBe(false);
+    writeCachedIsInfluencer('u1', false);
+    expect(readCachedIsInfluencer('u1')).toBe(false);
   });
 
   it('aparelho conhecido', () => {

@@ -1,5 +1,5 @@
 import { db } from './supabase';
-import { LANDING_URL } from './links';
+import { ambassadorLink } from './links';
 import { t } from './i18n';
 
 // Painel do embaixador (Perfil → Embaixador): só números, nunca quem se
@@ -20,6 +20,7 @@ export const AMBASSADOR_CHANNELS = [
 const SOURCE_LABELS = {
   instagram: 'Instagram', whatsapp: 'WhatsApp', tiktok: 'TikTok', youtube: 'YouTube',
   facebook: 'Facebook', x: 'X', google: 'Google', landing: 'Site', 'outro-site': t('Outro site'),
+  card: t('Card de treino'), qr: t('QR Code'),
 };
 
 export function sourceLabel(source) {
@@ -27,11 +28,7 @@ export function sourceLabel(source) {
   return SOURCE_LABELS[source] || source;
 }
 
-export function ambassadorLink(code, channel = '') {
-  const params = new URLSearchParams({ ref: code });
-  if (channel) params.set('origem', channel);
-  return `${LANDING_URL}?${params}`;
-}
+export { ambassadorLink };
 
 // % das visitas que viraram conta (sem visita, sem taxa).
 export function conversion(visits, signups) {
@@ -92,6 +89,36 @@ export async function shareAmbassadorLink(code, channel = '') {
 export async function copyAmbassadorLink(code, channel = '') {
   try {
     await navigator.clipboard.writeText(ambassadorLink(code, channel));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Textos prontos do modo Influenciador (aba Divulgar): o link já vai com o
+// canal onde o texto costuma ser postado.
+export const INFLUENCER_CAPTIONS = [
+  {
+    key: 'bio', label: () => t('Bio'), channel: 'instagram',
+    text: link => t('Meu treino é montado e registrado no EAFIT. Grátis: {link}', { link }),
+  },
+  {
+    key: 'stories', label: () => t('Stories e posts'), channel: 'instagram',
+    text: link => t('Meu app de treino é o EAFIT: monta a semana, marca as séries e mostra a evolução. É grátis e funciona offline 👉 {link}', { link }),
+  },
+  {
+    key: 'whatsapp', label: () => t('WhatsApp'), channel: 'whatsapp',
+    text: link => t('Bora treinar junto? Tô usando o EAFIT pra montar e registrar meus treinos. É grátis: {link}', { link }),
+  },
+];
+
+export function captionText(code, caption) {
+  return caption.text(ambassadorLink(code, caption.channel));
+}
+
+export async function copyCaption(code, caption) {
+  try {
+    await navigator.clipboard.writeText(captionText(code, caption));
     return true;
   } catch {
     return false;

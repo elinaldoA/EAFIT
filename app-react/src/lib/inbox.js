@@ -8,15 +8,39 @@ import { FEEDBACK_REPLY_TITLE, NAV_TARGETS, kindTargetKey } from './pushTarget';
 // marcou como lido, sai da lista. A exportação de dados pede todos.
 export const INBOX_PAGE = 30;
 
+// Recados da equipe para influenciadores (kind 'influenciador') ficam na aba
+// Recados do modo Influenciador, não no sino; a exportação leva tudo.
+export const INFLUENCER_KIND = 'influenciador';
+
 export async function fetchInbox(limit = INBOX_PAGE, { unreadOnly = true } = {}) {
   let query = db.from('user_notifications')
     .select('id, kind, title, body, created_at, read_at');
-  if (unreadOnly) query = query.is('read_at', null);
+  if (unreadOnly) query = query.is('read_at', null).neq('kind', INFLUENCER_KIND);
   const { data, error } = await query
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
   return data || [];
+}
+
+// Aba Recados do modo Influenciador: lidos e não lidos, mais novos primeiro.
+export async function fetchInfluencerMessages(limit = INBOX_PAGE) {
+  const { data, error } = await db.from('user_notifications')
+    .select('id, title, body, created_at, read_at')
+    .eq('kind', INFLUENCER_KIND)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function countUnreadInfluencerMessages() {
+  const { count, error } = await db.from('user_notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('kind', INFLUENCER_KIND)
+    .is('read_at', null);
+  if (error) throw error;
+  return count || 0;
 }
 
 export async function markInboxRead() {
