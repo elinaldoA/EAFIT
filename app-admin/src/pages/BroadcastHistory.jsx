@@ -74,7 +74,7 @@ export default function BroadcastHistory() {
           </tbody>
         </table>
       )}
-      <p className="user-detail__meta">Mostra os últimos 100 de cada tipo. "Entregues" conta o que o serviço de push aceitou; o painel não sabe se a pessoa abriu.</p>
+      <p className="user-detail__meta">Mostra os últimos 100 de cada tipo. "Entregues" conta o que o serviço de push aceitou; quem leu, abriu o app e treinou depois está em Comunicação → Resultados.</p>
     </div>
   );
 }

@@ -3,7 +3,9 @@
 // falha aqui nunca derruba o envio do push.
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
-export type InboxItem = { kind: string; title: string; body: string };
+// campaign: id do envio manual/agendado, para medir o efeito no painel
+// (admin_campaign_effect). As automáticas não têm.
+export type InboxItem = { kind: string; title: string; body: string; campaign?: string };
 
 const CHUNK = 500;
 

@@ -105,7 +105,8 @@ Deno.serve(async (req) => {
 
   const targeted = Array.isArray(targetUserIds) && targetUserIds.length > 0;
   const inboxIds = targeted ? targetUserIds : await listAllUserIds(admin);
-  await saveInbox(admin, inboxIds!, { kind: programKind ?? 'aviso', title, body: message });
+  const campaign = crypto.randomUUID();
+  await saveInbox(admin, inboxIds!, { kind: programKind ?? 'aviso', title, body: message, campaign });
 
   let emailTargetCount: number | undefined;
   let emailSent: number | undefined;
@@ -137,7 +138,7 @@ Deno.serve(async (req) => {
     target_user_id: null,
     action: 'broadcastPush',
     details: {
-      title, body: message, targetCount: subs?.length || 0, sent, emailTargetCount, emailSent,
+      title, body: message, campaign, targetCount: subs?.length || 0, sent, emailTargetCount, emailSent,
       ...(toProgram ? { audience, recipients: targetUserIds!.length } : {}),
     },
   });

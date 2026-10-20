@@ -54,6 +54,7 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/notificacoes', label: 'Enviar notificação' },
           { to: '/historico-envios', label: 'Histórico' },
+          { to: '/resultados-envios', label: 'Resultados' },
           { to: '/automacoes', label: 'Automáticas' },
         ],
       },

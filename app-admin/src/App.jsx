@@ -23,6 +23,7 @@ import ContactMessages from './pages/ContactMessages';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import BroadcastHistory from './pages/BroadcastHistory';
+import CampaignResults from './pages/CampaignResults';
 import Templates from './pages/Templates';
 import AuditLog from './pages/AuditLog';
 import ClientErrors from './pages/ClientErrors';
@@ -68,6 +69,7 @@ function AppShell() {
             <Route path="/segmentos" element={<Segments />} />
             <Route path="/notificacoes" element={<Broadcast />} />
             <Route path="/historico-envios" element={<BroadcastHistory />} />
+            <Route path="/resultados-envios" element={<CampaignResults />} />
             <Route path="/conteudo" element={<Templates />} />
             <Route path="/auditoria" element={<AuditLog />} />
             <Route path="/erros" element={<ClientErrors />} />

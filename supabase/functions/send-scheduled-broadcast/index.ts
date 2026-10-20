@@ -57,13 +57,14 @@ Deno.serve(async (req) => {
     const inboxIds = Array.isArray(broadcast.target_user_ids) && broadcast.target_user_ids.length > 0
       ? broadcast.target_user_ids
       : await listAllUserIds(supabase);
-    await saveInbox(supabase, inboxIds, { kind: 'aviso', title: broadcast.title, body: broadcast.body });
+    const campaign = crypto.randomUUID();
+    await saveInbox(supabase, inboxIds, { kind: 'aviso', title: broadcast.title, body: broadcast.body, campaign });
 
     await supabase.from('admin_audit_log').insert({
       admin_id: broadcast.created_by,
       target_user_id: null,
       action: 'broadcastPush',
-      details: { title: broadcast.title, body: broadcast.body, targetCount: subs?.length || 0, sent, scheduled: true },
+      details: { title: broadcast.title, body: broadcast.body, campaign, targetCount: subs?.length || 0, sent, scheduled: true },
     });
   }
 
