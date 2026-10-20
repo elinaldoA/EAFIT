@@ -8,6 +8,7 @@ import {
 } from '../lib/trainers';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
+import TrainerResultsCard from '../components/TrainerResultsCard';
 import EmptyState from '../components/EmptyState';
 
 const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('pt-BR') : '—');
@@ -368,6 +369,7 @@ export default function Trainers() {
         </table>
       )}
 
+      {!loading && !error && rows.length > 0 && <TrainerResultsCard trainers={rows} days={days} />}
       {!loading && !error && <UpcomingAppointments />}
     </div>
   );

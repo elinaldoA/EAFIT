@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const h = vi.hoisted(() => ({ rpc: vi.fn(), invites: vi.fn(), signups: vi.fn(), health: vi.fn(), clients: vi.fn() }));
+const h = vi.hoisted(() => ({ rpc: vi.fn(), invites: vi.fn(), signups: vi.fn(), health: vi.fn(), clients: vi.fn(), results: vi.fn() }));
 vi.mock('../lib/supabase', () => ({ db: { rpc: (...a) => h.rpc(...a) } }));
 vi.mock('../lib/trainers', async orig => ({
   ...(await orig()),
@@ -13,11 +13,14 @@ vi.mock('../lib/trainers', async orig => ({
   fetchTrainerInviteSignups: (...a) => h.signups(...a),
   fetchTrainerHealth: (...a) => h.health(...a),
   fetchTrainerClientsDetail: (...a) => h.clients(...a),
+  fetchTrainerResults: (...a) => h.results(...a),
 }));
 
 import Trainers from './Trainers';
+import { mapTrainerResult, rankTrainers } from '../lib/trainers';
 
 beforeEach(() => {
+  h.results.mockReset().mockResolvedValue({ p1: mapTrainerResult({ tr_clients: 3, tr_trained14: 2, tr_train_days: 18, tr_days: 30, tr_pr_clients: 1, tr_old: 2, tr_old_active: 1, tr_no_plan: 1, tr_appt_past: 4, tr_appt_attended: 3 }) });
   h.rpc.mockReset().mockResolvedValue({
     data: [{ tc_user: 'p1', tc_name: 'Paulo', tc_email: 'p@x', tc_code: 'PAULO1', tc_clients: 3, tc_since: '2026-10-01' }],
     error: null,
@@ -82,5 +85,27 @@ describe('Trainers (saúde da carteira)', () => {
     expect(screen.getByText('sem contato')).toBeTruthy();
     expect(caio.compareDocumentPosition(screen.getByText('Bia')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(h.clients).toHaveBeenCalledWith('p1');
+  });
+});
+
+describe('ranking por resultado dos alunos', () => {
+  it('calcula as taxas e ordena só quem tem 3+ alunos', () => {
+    const r = mapTrainerResult({ tr_clients: 3, tr_trained14: 2, tr_train_days: 18, tr_days: 30, tr_pr_clients: 1, tr_old: 2, tr_old_active: 1, tr_no_plan: 1, tr_appt_past: 4, tr_appt_attended: 3 });
+    expect(r).toMatchObject({ activePct: 67, daysPerWeek: 1.4, prPct: 33, retentionPct: 50, attendancePct: 75 });
+    const list = rankTrainers([
+      { id: 'a', clients: 5, activePct: 40, daysPerWeek: 2 },
+      { id: 'b', clients: 4, activePct: 80, daysPerWeek: 1 },
+      { id: 'c', clients: 1, activePct: 100, daysPerWeek: 4 },
+    ]);
+    expect(list.map(t => [t.id, t.position])).toEqual([['b', 1], ['a', 2], ['c', null]]);
+  });
+
+  it('aparece na página com o período escolhido', async () => {
+    render(<MemoryRouter><Trainers /></MemoryRouter>);
+    expect(await screen.findByText('Ranking por resultado dos alunos')).toBeTruthy();
+    expect(await screen.findByText('75% de 4')).toBeTruthy();
+    expect(h.results).toHaveBeenCalledWith(30);
+    fireEvent.click(screen.getByRole('button', { name: '90 dias' }));
+    await waitFor(() => expect(h.results).toHaveBeenCalledWith(90));
   });
 });

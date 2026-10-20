@@ -123,3 +123,41 @@ export function clientFlags(c, now = new Date()) {
   }
   return flags;
 }
+
+// Resultado dos alunos por personal (Ranking por resultado). SQL em
+// supabase/migrations/20261128120000_admin_trainer_results.sql.
+const share = (part, whole) => (whole ? Math.round((part / whole) * 100) : null);
+
+export function mapTrainerResult(r) {
+  const clients = Number(r.tr_clients) || 0;
+  const days = Number(r.tr_days) || 30;
+  const old = Number(r.tr_old) || 0;
+  const apptPast = Number(r.tr_appt_past) || 0;
+  return {
+    clients,
+    activePct: share(Number(r.tr_trained14) || 0, clients),
+    daysPerWeek: clients ? Math.round(((Number(r.tr_train_days) || 0) / clients / days) * 7 * 10) / 10 : null,
+    prClients: Number(r.tr_pr_clients) || 0,
+    prPct: share(Number(r.tr_pr_clients) || 0, clients),
+    old,
+    retentionPct: share(Number(r.tr_old_active) || 0, old),
+    noPlan: Number(r.tr_no_plan) || 0,
+    apptPast,
+    attendancePct: share(Number(r.tr_appt_attended) || 0, apptPast),
+  };
+}
+
+// Ordem do ranking: só quem tem 3+ alunos entra na disputa (amostra pequena
+// engana); depois % de alunos treinando, dias por semana e % com recorde.
+export const MIN_CLIENTS_FOR_RANK = 3;
+export function rankTrainers(list) {
+  const ranked = list.filter(t => t.clients >= MIN_CLIENTS_FOR_RANK)
+    .sort((a, b) => (b.activePct ?? -1) - (a.activePct ?? -1) || (b.daysPerWeek ?? -1) - (a.daysPerWeek ?? -1) || (b.prPct ?? -1) - (a.prPct ?? -1));
+  const rest = list.filter(t => t.clients < MIN_CLIENTS_FOR_RANK).sort((a, b) => b.clients - a.clients);
+  return [...ranked.map((t, i) => ({ ...t, position: i + 1 })), ...rest.map(t => ({ ...t, position: null }))];
+}
+
+export async function fetchTrainerResults(days = 30) {
+  const rows = await rpcRows('admin_trainer_results', { days_back: days });
+  return Object.fromEntries(rows.filter(r => r.tr_user).map(r => [r.tr_user, mapTrainerResult(r)]));
+}
