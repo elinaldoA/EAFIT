@@ -41,8 +41,6 @@ async function rows(name, days) {
   return data || [];
 }
 
-export const isInfluencer = amb => amb?.kind === 'influenciador';
-
 // null = a conta não é embaixadora.
 export async function fetchMyAmbassador(days = 30) {
   const r = (await rows('my_ambassador_summary', days))[0];
@@ -95,7 +93,7 @@ export async function copyAmbassadorLink(code, channel = '') {
   }
 }
 
-// Textos prontos do modo Influenciador (aba Divulgar): o link já vai com o
+// Textos prontos do modo do programa (aba Divulgar): o link já vai com o
 // canal onde o texto costuma ser postado.
 export const INFLUENCER_CAPTIONS = [
   {

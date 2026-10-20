@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { STUDENT_STEPS, TRAINER_STEPS, INFLUENCER_STEPS, stepsFor, visibleSteps, hasSeenTutorial, markTutorialSeen } from './tutorial';
+import { STUDENT_STEPS, TRAINER_STEPS, INFLUENCER_STEPS, AMBASSADOR_STEPS, stepsFor, visibleSteps, hasSeenTutorial, markTutorialSeen } from './tutorial';
 
 const STUDENT_TABS = ['treino', 'historico', 'hidratacao', 'dash', 'perfil'];
 const TRAINER_TABS = ['alunos', 'modelos', 'turma', 'recados', 'conta'];
@@ -10,6 +10,9 @@ describe('passos do tutorial', () => {
   it('escolhe os passos pelo papel', () => {
     expect(stepsFor('trainer')).toBe(TRAINER_STEPS);
     expect(stepsFor('influencer')).toBe(INFLUENCER_STEPS);
+    expect(stepsFor('ambassador')).toBe(AMBASSADOR_STEPS);
+    expect(AMBASSADOR_STEPS[0].title).toBe('Bem-vindo, Embaixador');
+    expect(AMBASSADOR_STEPS.at(-2).text).toContain('📣 Embaixador');
     expect(stepsFor('aluno')).toBe(STUDENT_STEPS);
   });
 

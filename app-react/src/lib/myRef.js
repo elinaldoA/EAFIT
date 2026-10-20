@@ -1,7 +1,7 @@
-// Código do influenciador logado, para o card de treino sair com o link (e o
-// QR) dele. O App
+// Código do embaixador ou influenciador logado, para o card de treino sair
+// com o link (e o QR) dele. O App
 // carrega o valor guardado no aparelho ao entrar e o servidor confirma
-// (hooks/useInfluencer.js); link pausado não entra no card.
+// (hooks/useProgram.js); link pausado não entra no card.
 const KEY = 'eafit_my_ref';
 let current = '';
 

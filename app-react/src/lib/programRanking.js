@@ -1,12 +1,13 @@
 import { db } from './supabase';
 
-// Ranking do mês entre influenciadores (cadastros pelo link). O nome dos
-// outros só vem para quem ligou "Mostrar meu nome no ranking"; os demais
-// chegam com name null. supabase/migrations/20261122010000_influencer_ranking.sql.
+// Ranking do mês com o próprio grupo (embaixadores ou influenciadores), por
+// cadastros pelo link. O nome dos outros só vem para quem ligou "Mostrar meu
+// nome no ranking"; os demais chegam com name null. RPC influencer_ranking
+// (supabase/migrations/20261122010000_influencer_ranking.sql e 20261123010000_ambassador_mode.sql).
 export const RANKING_TOP = 10;
 
 // offset: 0 = este mês, 1 = mês passado.
-export async function fetchInfluencerRanking(offset = 0) {
+export async function fetchProgramRanking(offset = 0) {
   const { data, error } = await db.rpc('influencer_ranking', { p_month_offset: offset });
   if (error) throw error;
   return (data || []).map(r => ({

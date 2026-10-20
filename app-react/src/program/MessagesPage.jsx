@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { fetchInfluencerMessages, markInboxItemRead, timeAgo } from '../lib/inbox';
+import { fetchProgramMessages, markInboxItemRead, timeAgo } from '../lib/inbox';
 
 import { t } from '../lib/i18n';
 
-// Influenciador → Recados: o que a equipe EAFIT mandou para os influenciadores
+// Modo do programa → Recados: o que a equipe EAFIT mandou para o grupo da
+// pessoa (embaixadores ou influenciadores)
 // (Pessoas → Embaixadores e influenciadores, no admin). Abrir a aba marca os
 // novos como lidos; eles ficam destacados até sair da tela.
 export default function MessagesPage({ onRead }) {
@@ -12,7 +13,7 @@ export default function MessagesPage({ onRead }) {
 
   useEffect(() => {
     let active = true;
-    fetchInfluencerMessages()
+    fetchProgramMessages()
       .then(list => {
         if (!active) return;
         setItems(list);
@@ -22,7 +23,7 @@ export default function MessagesPage({ onRead }) {
           .then(() => { if (active) onRead?.(); })
           .catch(err => console.error('markInboxItemRead:', err));
       })
-      .catch(err => { console.error('fetchInfluencerMessages:', err); if (active) setError(true); });
+      .catch(err => { console.error('fetchProgramMessages:', err); if (active) setError(true); });
     return () => { active = false; };
   }, [onRead]);
 

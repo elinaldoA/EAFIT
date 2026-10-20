@@ -5,12 +5,12 @@ import { useReminders } from '../hooks/useReminders';
 import { isNotificationSupported } from '../lib/notifications';
 import { getDisplayName } from '../lib/utils';
 import { startTutorial } from '../lib/tutorial';
-import { fetchInfluencerRanking, setRankingPublic } from '../lib/influencerRanking';
+import { fetchProgramRanking, setRankingPublic } from '../lib/programRanking';
 
 import { t } from '../lib/i18n';
-// Conta do influenciador: código, troca para o modo aluno, avisos de novos
-// cadastros, ajuda e saída.
-export default function InfluencerAccount({ amb, onSwitchToStudent }) {
+// Conta do modo do programa (embaixador ou influenciador): código, troca para
+// o modo aluno, notificações, nome no ranking, ajuda e saída.
+export default function ProgramAccount({ amb, labels, onSwitchToStudent }) {
   const { user, logout } = useAuth();
   const toast = useToast();
   const [notifyOn, toggleNotify] = useReminders(toast, user);
@@ -20,9 +20,9 @@ export default function InfluencerAccount({ amb, onSwitchToStudent }) {
 
   useEffect(() => {
     let active = true;
-    fetchInfluencerRanking(0)
+    fetchProgramRanking(0)
       .then(rows => { if (active) setRankingPublicState(!!rows.find(r => r.me)?.public); })
-      .catch(err => console.error('fetchInfluencerRanking:', err));
+      .catch(err => console.error('fetchProgramRanking:', err));
     return () => { active = false; };
   }, []);
 
@@ -43,13 +43,13 @@ export default function InfluencerAccount({ amb, onSwitchToStudent }) {
   return (
     <section className="page active trainer-page">
       <div className="dash-card">
-        <div className="dash-card__title">{t('📣 Modo Influenciador')}</div>
+        <div className="dash-card__title">{labels.mode}</div>
         <p className="profile-field__hint" style={{ marginTop: 0 }}>
           {getDisplayName(user)}<br />{user?.email}
           {amb?.code && <><br />{t('Seu código')}: <strong>{amb.code}</strong></>}
         </p>
         <p className="profile-field__hint">
-          {t('Quer treinar também? Troque para o modo aluno para usar o app de treino normal. Você volta ao modo Influenciador pelo botão no topo.')}
+          {labels.backHint}
         </p>
         <button type="button" className="btn btn--primary btn--full" onClick={onSwitchToStudent}>{t('Usar como aluno')}</button>
       </div>
@@ -71,7 +71,7 @@ export default function InfluencerAccount({ amb, onSwitchToStudent }) {
           <input type="checkbox" checked={!!rankingPublic} disabled={rankingPublic === null || savingRanking}
             onChange={e => toggleRanking(e.target.checked)} />
           <span><strong>{t('Mostrar meu nome no ranking')}</strong><br />
-            {t('Desligado, os outros influenciadores veem você como anônimo. Seus números continuam contando.')}</span>
+            {labels.rankingHint}</span>
         </label>
       </div>
 

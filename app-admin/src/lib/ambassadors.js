@@ -104,15 +104,21 @@ export function updateAmbassador({ id, name, code, active, kind }) {
   return rpc('admin_update_ambassador', { p_id: id, p_name: name.trim(), p_code: code.trim().toLowerCase(), p_active: active, p_kind: kind || null });
 }
 
-// Recado da equipe para os influenciadores ativos (push + aba Recados do modo
-// Influenciador). A lista de destinatários é montada no servidor
-// (supabase/functions/admin-broadcast, audience 'influenciadores').
+// Recado da equipe para um grupo do programa, só os ativos (push + aba Recados
+// do modo Embaixador/Influenciador). A lista de destinatários é montada no
+// servidor (supabase/functions/admin-broadcast, audience 'embaixadores' ou
+// 'influenciadores').
 export const MESSAGE_TITLE_MAX = 60;
 export const MESSAGE_BODY_MAX = 500;
 
-export async function sendInfluencerMessage({ title, body }) {
+export const MESSAGE_AUDIENCES = [
+  { key: 'influenciadores', kind: 'influenciador', label: 'Influenciadores' },
+  { key: 'embaixadores', kind: 'embaixador', label: 'Embaixadores' },
+];
+
+export async function sendProgramMessage({ title, body, audience }) {
   const { data, error } = await db.functions.invoke('admin-broadcast', {
-    body: { title: title.trim(), body: body.trim(), audience: 'influenciadores' },
+    body: { title: title.trim(), body: body.trim(), audience },
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);

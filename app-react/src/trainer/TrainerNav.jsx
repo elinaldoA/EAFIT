@@ -32,7 +32,7 @@ const ICONS = {
 };
 
 // Barra inferior do modo personal (mesmo visual da do aluno). O modo
-// Influenciador usa a mesma barra com os próprios ícones (item.icon) e rótulo.
+// do programa (embaixador/influenciador) usa a mesma barra com os próprios ícones (item.icon) e rótulo.
 export default function TrainerNav({ items, active, onChange, label }) {
   const { theme } = useSeason();
   return (

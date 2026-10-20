@@ -14,8 +14,8 @@ const PERIODS = [
   { days: 90, label: () => t('90 dias') },
 ];
 
-// Peças do painel do embaixador/influenciador: usadas no Perfil
-// (ProfileAmbassadorSection) e no modo Influenciador (influencer/).
+// Peças do painel do embaixador/influenciador, usadas no modo do programa
+// (program/).
 
 // Código, link e botões de compartilhar por canal.
 export function AmbassadorLink({ amb, toast }) {
@@ -55,7 +55,7 @@ export function AmbassadorLink({ amb, toast }) {
 }
 
 // QR Code do link (origem=qr) e a imagem pronta para baixar ou compartilhar
-// (só no modo Influenciador).
+// (aba Divulgar do modo do programa).
 export function AmbassadorQr({ amb, toast }) {
   const url = ambassadorLink(amb.code, 'qr');
   const qr = useMemo(() => qrSvgPath(url), [url]);

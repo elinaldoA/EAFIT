@@ -7,7 +7,7 @@ const h = vi.hoisted(() => ({ fetch: vi.fn(), markOne: vi.fn() }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../lib/inbox', async orig => ({
   ...(await orig()),
-  fetchInfluencerMessages: (...a) => h.fetch(...a),
+  fetchProgramMessages: (...a) => h.fetch(...a),
   markInboxItemRead: (...a) => h.markOne(...a),
 }));
 

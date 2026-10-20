@@ -37,9 +37,9 @@ describe('promoMaterials (admin)', () => {
   });
 
   it('sobe o arquivo, grava a linha e registra na auditoria', async () => {
-    await uploadPromoMaterial({ title: ' Logo ', description: ' PNG ', file: file('logo.png', 'image/png'), adminId: 'adm' });
+    await uploadPromoMaterial({ title: ' Logo ', description: ' PNG ', audience: 'embaixador', file: file('logo.png', 'image/png'), adminId: 'adm' });
     expect(h.upload).toHaveBeenCalled();
-    expect(h.insert).toHaveBeenCalledWith(expect.objectContaining({ title: 'Logo', description: 'PNG', file_name: 'logo.png', created_by: 'adm' }));
+    expect(h.insert).toHaveBeenCalledWith(expect.objectContaining({ title: 'Logo', description: 'PNG', file_name: 'logo.png', created_by: 'adm', audience: 'embaixador' }));
     expect(h.audit).toHaveBeenCalledWith(expect.objectContaining({ action: 'promoMaterialUpload' }));
   });
 

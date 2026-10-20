@@ -1,9 +1,10 @@
 import { db } from './supabase';
 
-// Material de divulgação dos influenciadores: o arquivo vai para o bucket
-// privado promo-materials e a linha para public.promo_materials (o app baixa
-// por URL assinada). Subir e remover é da área 'content' (admin_can).
-// supabase/migrations/20261121010000_promo_materials.sql.
+// Material de divulgação do programa: o arquivo vai para o bucket privado
+// promo-materials e a linha para public.promo_materials (o app baixa por URL
+// assinada). Cada material tem um público: influenciadores, embaixadores ou
+// todos. Subir e remover é da área 'content' (admin_can).
+// supabase/migrations/20261121010000_promo_materials.sql e 20261123010000_ambassador_mode.sql.
 export const BUCKET = 'promo-materials';
 export const MAX_BYTES = 50 * 1024 * 1024; // igual ao file_size_limit do bucket
 
@@ -14,6 +15,16 @@ const TYPES = [
   'application/pdf', 'application/zip',
 ];
 export const ACCEPT = TYPES.join(',');
+
+export const PROMO_AUDIENCES = [
+  { key: 'todos', label: 'Embaixadores e influenciadores' },
+  { key: 'influenciador', label: 'Só influenciadores' },
+  { key: 'embaixador', label: 'Só embaixadores' },
+];
+
+export function audienceLabel(key) {
+  return PROMO_AUDIENCES.find(a => a.key === key)?.label || key;
+}
 
 export function validatePromoFile(file) {
   if (!file) return 'Escolha um arquivo.';
@@ -40,7 +51,7 @@ export function formatSize(bytes) {
 
 export async function fetchPromoMaterials() {
   const { data, error } = await db.from('promo_materials')
-    .select('id, title, description, storage_path, file_name, mime_type, size_bytes, created_at')
+    .select('id, title, description, storage_path, file_name, mime_type, size_bytes, created_at, audience')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
@@ -51,20 +62,20 @@ async function audit(adminId, action, details) {
   if (error) console.warn('admin_audit_log:', error);
 }
 
-export async function uploadPromoMaterial({ title, description, file, adminId }) {
+export async function uploadPromoMaterial({ title, description, audience = 'todos', file, adminId }) {
   const path = storagePathFor(file);
   const { error: upErr } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (upErr) throw upErr;
 
   const { error } = await db.from('promo_materials').insert({
     title: title.trim(), description: description.trim(), storage_path: path,
-    file_name: String(file.name).slice(0, 120), mime_type: file.type, size_bytes: file.size, created_by: adminId,
+    file_name: String(file.name).slice(0, 120), mime_type: file.type, size_bytes: file.size, created_by: adminId, audience,
   });
   if (error) {
     await db.storage.from(BUCKET).remove([path]); // não deixa arquivo órfão
     throw error;
   }
-  await audit(adminId, 'promoMaterialUpload', { title: title.trim(), path });
+  await audit(adminId, 'promoMaterialUpload', { title: title.trim(), path, audience });
 }
 
 export async function removePromoMaterial({ item, adminId }) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MILESTONES, goalProgress } from './influencerGoals';
+import { MILESTONES, goalProgress } from './programGoals';
 
 describe('goalProgress', () => {
   it('sem cadastros: primeira meta é 1', () => {

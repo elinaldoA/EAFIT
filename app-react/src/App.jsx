@@ -40,9 +40,10 @@ import TermsUpdateScreen from './components/TermsUpdateScreen';
 import InstallScreen from './components/InstallScreen';
 import TrainerInvitePrompt from './components/TrainerInvitePrompt';
 import TrainerShell from './trainer/TrainerShell';
-import InfluencerShell from './influencer/InfluencerShell';
+import ProgramShell from './program/ProgramShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
-import { useInfluencer } from './hooks/useInfluencer';
+import { useProgram } from './hooks/useProgram';
+import { programLabels } from './lib/programLabels';
 import { useUnreadMessages } from './hooks/useUnreadMessages';
 import { useTrainerGoalsSync } from './hooks/useTrainerGoalsSync';
 import { useSyncLang } from './hooks/useSyncLang';
@@ -72,7 +73,7 @@ function Shell() {
   const { config } = useAppConfig();
   const [page, setPage] = useHashTab(TABS, 'treino');
   const { isTrainer, mode, setMode } = useTrainerMode(user?.id);
-  const isInfluencer = useInfluencer(user?.id);
+  const programKind = useProgram(user?.id);
   const unreadMessages = useUnreadMessages(user?.id);
   useTrainerGoalsSync(user?.id);
   useSyncLang(user);
@@ -104,14 +105,15 @@ function Shell() {
   }, [user]);
 
   const trainerView = !!user && isTrainer && mode === 'trainer';
-  const influencerView = !!user && isInfluencer && mode === 'influencer';
+  const programView = !!user && !!programKind && mode === 'program';
 
   // Métrica de uso: qual aba cada usuário abre (1 vez por dia por aba). Antes
-  // do onboarding não há aba; os modos Personal e Influenciador contam como
+  // do onboarding não há aba; os modos Personal e do programa (Embaixador ou
+  // Influenciador) contam como
   // uma tela só.
   const trackedPage = !user ? null
     : trainerView ? 'personal'
-      : influencerView ? 'influenciador'
+      : programView ? programKind
         : user.user_metadata?.peso ? page : null;
   useEffect(() => {
     if (trackedPage) trackEvent('page', trackedPage);
@@ -131,7 +133,7 @@ function Shell() {
   if (authLoading) return <BootSplash />;
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;
 
-  const studentView = !!user && !trainerView && !influencerView;
+  const studentView = !!user && !trainerView && !programView;
   const needsOnboarding = studentView && !user.user_metadata?.peso;
 
   return (
@@ -147,7 +149,7 @@ function Shell() {
       {!user && <AuthScreen />}
       {user && needsOnboarding && <OnboardingScreen />}
       {trainerView && <TrainerShell onSwitchToStudent={() => setMode('aluno')} />}
-      {influencerView && <InfluencerShell onSwitchToStudent={() => setMode('aluno')} />}
+      {programView && <ProgramShell kind={programKind} onSwitchToStudent={() => setMode('aluno')} />}
 
       {studentView && !needsOnboarding && (
         <AvatarProvider>
@@ -161,8 +163,8 @@ function Shell() {
                   {isTrainer && (
                     <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>{t('🧑‍🏫 Personal')}</button>
                   )}
-                  {isInfluencer && (
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('influencer')}>{t('📣 Influenciador')}</button>
+                  {programKind && (
+                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('program')}>{programLabels(programKind).button}</button>
                   )}
                   <InboxBell />
                   <ThemeToggle />

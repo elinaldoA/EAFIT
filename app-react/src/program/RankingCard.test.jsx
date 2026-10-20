@@ -4,9 +4,12 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 
 const h = vi.hoisted(() => ({ fetch: vi.fn() }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
-vi.mock('../lib/influencerRanking', async orig => ({ ...(await orig()), fetchInfluencerRanking: (...a) => h.fetch(...a) }));
+vi.mock('../lib/programRanking', async orig => ({ ...(await orig()), fetchProgramRanking: (...a) => h.fetch(...a) }));
 
 import RankingCard from './RankingCard';
+import { programLabels } from '../lib/programLabels';
+
+const LABELS = programLabels('influenciador');
 
 beforeEach(() => {
   h.fetch.mockReset().mockResolvedValue([
@@ -20,7 +23,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('RankingCard', () => {
   it('mostra a posição, anônimos e quem é você', async () => {
-    render(<RankingCard />);
+    render(<RankingCard labels={LABELS} />);
     expect(await screen.findByText('Você está em 2º lugar entre 3 influenciadores.')).toBeTruthy();
     expect(screen.getByText('Influenciador anônimo')).toBeTruthy();
     expect(screen.getByText('Ana (você)')).toBeTruthy();
@@ -30,7 +33,7 @@ describe('RankingCard', () => {
   });
 
   it('troca para o mês passado', async () => {
-    render(<RankingCard />);
+    render(<RankingCard labels={LABELS} />);
     await screen.findByText('Ana (você)');
     fireEvent.click(screen.getByText('Mês passado'));
     await waitFor(() => expect(h.fetch).toHaveBeenCalledWith(1));
@@ -38,13 +41,20 @@ describe('RankingCard', () => {
 
   it('sem cadastros no mês incentiva', async () => {
     h.fetch.mockResolvedValue([{ position: 1, name: 'Ana', signups: 0, me: true, public: false }]);
-    render(<RankingCard />);
+    render(<RankingCard labels={LABELS} />);
     expect(await screen.findByText(/ainda não tem cadastros neste mês/)).toBeTruthy();
+  });
+
+  it('embaixador vê o ranking do próprio grupo', async () => {
+    render(<RankingCard labels={programLabels('embaixador')} />);
+    expect(await screen.findByText('Você está em 2º lugar entre 3 embaixadores.')).toBeTruthy();
+    expect(screen.getByText('🏁 Ranking dos embaixadores')).toBeTruthy();
+    expect(screen.getByText('Embaixador anônimo')).toBeTruthy();
   });
 
   it('erro avisa', async () => {
     h.fetch.mockRejectedValue(new Error('x'));
-    render(<RankingCard />);
+    render(<RankingCard labels={LABELS} />);
     expect(await screen.findByText(/Não foi possível carregar o ranking/)).toBeTruthy();
   });
 });

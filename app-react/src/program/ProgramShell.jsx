@@ -6,12 +6,13 @@ import Tutorial from '../components/Tutorial';
 import TrainerNav from '../trainer/TrainerNav';
 import { useAuth } from '../context/useAuth';
 import { fetchMyAmbassador } from '../lib/ambassador';
-import { countUnreadInfluencerMessages } from '../lib/inbox';
+import { countUnreadProgramMessages } from '../lib/inbox';
+import { programLabels } from '../lib/programLabels';
 import { NAV_EVENT } from '../lib/appNav';
 import ResultsPage from './ResultsPage';
 import SharePage from './SharePage';
 import MessagesPage from './MessagesPage';
-import InfluencerAccount from './InfluencerAccount';
+import ProgramAccount from './ProgramAccount';
 
 import { t } from '../lib/i18n';
 const TABS = ['resultados', 'divulgar', 'recados', 'conta'];
@@ -34,13 +35,15 @@ const ICONS = {
   ),
 };
 
-// Casca do app no modo Influenciador: outra navegação e outras páginas, mas o
-// mesmo login, tema e visual do app de aluno (como o modo Personal). É o
-// mesmo programa do embaixador (ambassadors.kind = 'influenciador').
-export default function InfluencerShell({ onSwitchToStudent }) {
+// Casca do app no modo do programa (Embaixador ou Influenciador — o mesmo
+// programa com nomes diferentes, ambassadors.kind): outra navegação e outras
+// páginas, mas o mesmo login, tema e visual do app de aluno (como o modo
+// Personal). `kind` vem do App (hooks/useProgram.js) e só muda os nomes.
+export default function ProgramShell({ kind, onSwitchToStudent }) {
+  const labels = programLabels(kind);
   const { user } = useAuth();
   const [page, setPage] = useHashTab(TABS, 'resultados');
-  // undefined = carregando; null = a conta não é mais influenciadora
+  // undefined = carregando; null = a conta saiu do programa
   const [amb, setAmb] = useState(undefined);
   const [failed, setFailed] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -50,7 +53,7 @@ export default function InfluencerShell({ onSwitchToStudent }) {
   // aberto (NAV_EVENT), que também recarrega a aba — quem já estava em
   // Recados vê o recado que acabou de chegar.
   const refreshUnread = useCallback(() => {
-    countUnreadInfluencerMessages().then(setUnread).catch(err => console.error('countUnreadInfluencerMessages:', err));
+    countUnreadProgramMessages().then(setUnread).catch(err => console.error('countUnreadProgramMessages:', err));
   }, []);
   useEffect(() => {
     refreshUnread();
@@ -78,7 +81,7 @@ export default function InfluencerShell({ onSwitchToStudent }) {
   return (
     <div className="app-screen" style={{ display: 'flex' }}>
       <header className="topbar">
-        <div className="trainer-topbar__title">{t('📣 EAFIT')} <span>{t('Influenciador')}</span></div>
+        <div className="trainer-topbar__title">{t('📣 EAFIT')} <span>{labels.role}</span></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <ThemeToggle />
         </div>
@@ -87,22 +90,22 @@ export default function InfluencerShell({ onSwitchToStudent }) {
       <main className="pages">
         <ErrorBoundary variant="page" key={`${page}:${navSeq}`}>
           <Suspense fallback={null}>
-            {page === 'conta' && <InfluencerAccount amb={amb} onSwitchToStudent={onSwitchToStudent} />}
+            {page === 'conta' && <ProgramAccount amb={amb} labels={labels} onSwitchToStudent={onSwitchToStudent} />}
             {page === 'recados' && <MessagesPage onRead={handleRead} />}
             {(page === 'resultados' || page === 'divulgar') && (
-              <InfluencerContent page={page} amb={amb} failed={failed} onSwitchToStudent={onSwitchToStudent} />
+              <ProgramContent page={page} amb={amb} labels={labels} failed={failed} onSwitchToStudent={onSwitchToStudent} />
             )}
           </Suspense>
         </ErrorBoundary>
       </main>
 
-      <TrainerNav items={items} active={page} onChange={setPage} label={t('Navegação do influenciador')} />
-      <Tutorial role="influencer" userId={user?.id} onNavigate={setPage} />
+      <TrainerNav items={items} active={page} onChange={setPage} label={labels.nav} />
+      <Tutorial role={labels.tutorialRole} userId={user?.id} onNavigate={setPage} />
     </div>
   );
 }
 
-function InfluencerContent({ page, amb, failed, onSwitchToStudent }) {
+function ProgramContent({ page, amb, labels, failed, onSwitchToStudent }) {
   if (failed && amb === undefined) {
     return (
       <section className="page active trainer-page">
@@ -124,12 +127,12 @@ function InfluencerContent({ page, amb, failed, onSwitchToStudent }) {
     return (
       <section className="page active trainer-page">
         <div className="dash-card">
-          <div className="dash-card__title">{t('📣 Modo Influenciador')}</div>
-          <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Sua conta não está mais no programa de influenciadores. Fale com a equipe EAFIT se isso for um engano.')}</p>
+          <div className="dash-card__title">{labels.mode}</div>
+          <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Sua conta não está mais no programa de divulgação do EAFIT. Fale com a equipe EAFIT se isso for um engano.')}</p>
           <button type="button" className="btn btn--primary btn--full" onClick={onSwitchToStudent}>{t('Usar como aluno')}</button>
         </div>
       </section>
     );
   }
-  return page === 'divulgar' ? <SharePage amb={amb} /> : <ResultsPage amb={amb} />;
+  return page === 'divulgar' ? <SharePage amb={amb} /> : <ResultsPage amb={amb} labels={labels} />;
 }

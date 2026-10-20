@@ -14,7 +14,7 @@ afterEach(cleanup);
 
 describe('ResultsPage', () => {
   it('mostra o total, a próxima meta e os selos batidos', () => {
-    render(<ResultsPage amb={AMB} />);
+    render(<ResultsPage labels={{}} amb={AMB} />);
     expect(screen.getByText('Próxima meta: 10 cadastros')).toBeTruthy();
     expect(screen.getByText('faltam 3')).toBeTruthy();
     expect(screen.getByRole('progressbar').firstChild.style.width).toBe('40%');
@@ -23,13 +23,13 @@ describe('ResultsPage', () => {
   });
 
   it('todas as metas batidas', () => {
-    render(<ResultsPage amb={{ ...AMB, total: 1200 }} />);
+    render(<ResultsPage labels={{}} amb={{ ...AMB, total: 1200 }} />);
     expect(screen.getByText(/bateu todas as metas/)).toBeTruthy();
     expect(screen.queryByRole('progressbar')).toBeNull();
   });
 
   it('link pausado avisa', () => {
-    render(<ResultsPage amb={{ ...AMB, active: false }} />);
+    render(<ResultsPage labels={{}} amb={{ ...AMB, active: false }} />);
     expect(screen.getByText(/Seu link está pausado/)).toBeTruthy();
   });
 });

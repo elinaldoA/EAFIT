@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { timeAgo, inboxTarget, fetchInbox, fetchInfluencerMessages } from './inbox';
+import { timeAgo, inboxTarget, fetchInbox, fetchProgramMessages } from './inbox';
 
 const q = vi.hoisted(() => {
   const query = { calls: [] };
-  for (const m of ['select', 'is', 'neq', 'eq', 'order', 'limit']) {
+  for (const m of ['select', 'is', 'not', 'in', 'order', 'limit']) {
     query[m] = (...args) => { query.calls.push([m, ...args]); return m === 'limit' ? Promise.resolve({ data: [], error: null }) : query; };
   }
   return query;
@@ -15,16 +15,16 @@ describe('fetchInbox', () => {
     q.calls = [];
     await fetchInbox(30);
     expect(q.calls).toContainEqual(['is', 'read_at', null]);
-    expect(q.calls).toContainEqual(['neq', 'kind', 'influenciador']);
+    expect(q.calls).toContainEqual(['not', 'kind', 'in', '(embaixador,influenciador)']);
     q.calls = [];
     await fetchInbox(1000, { unreadOnly: false });
-    expect(q.calls.some(c => c[0] === 'is' || c[0] === 'neq')).toBe(false);
+    expect(q.calls.some(c => c[0] === 'is' || c[0] === 'not')).toBe(false);
   });
 
-  it('recados do influenciador: só o kind dele, lidos e não lidos', async () => {
+  it('recados do programa: embaixador e influenciador, lidos e não lidos', async () => {
     q.calls = [];
-    await fetchInfluencerMessages();
-    expect(q.calls).toContainEqual(['eq', 'kind', 'influenciador']);
+    await fetchProgramMessages();
+    expect(q.calls).toContainEqual(['in', 'kind', ['embaixador', 'influenciador']]);
     expect(q.calls.some(c => c[0] === 'is')).toBe(false);
   });
 });

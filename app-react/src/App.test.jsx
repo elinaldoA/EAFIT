@@ -7,7 +7,7 @@ const h = vi.hoisted(() => ({
   config: { maintenance: { enabled: false, message: '' } },
   tab: { page: 'treino', setPage: vi.fn() },
   trainer: { isTrainer: false, mode: 'aluno', setMode: vi.fn() },
-  influencer: false,
+  program: null,
   unread: 0,
   markKnownUser: vi.fn(),
   hooks: { goalsSync: vi.fn(), syncLang: vi.fn(), rollover: vi.fn() },
@@ -27,7 +27,7 @@ vi.mock('./lib/appConfig', () => ({ movedTarget: moved => (moved?.enabled ? move
 vi.mock('./lib/knownUser', () => ({ markKnownUser: (...a) => h.markKnownUser(...a) }));
 vi.mock('./hooks/useHashTab', () => ({ useHashTab: () => [h.tab.page, h.tab.setPage] }));
 vi.mock('./hooks/useTrainerMode', () => ({ useTrainerMode: () => h.trainer }));
-vi.mock('./hooks/useInfluencer', () => ({ useInfluencer: () => h.influencer }));
+vi.mock('./hooks/useProgram', () => ({ useProgram: () => h.program }));
 vi.mock('./hooks/useUnreadMessages', () => ({ useUnreadMessages: () => h.unread }));
 vi.mock('./hooks/useTrainerGoalsSync', () => ({ useTrainerGoalsSync: (...a) => h.hooks.goalsSync(...a) }));
 vi.mock('./hooks/useSyncLang', () => ({ useSyncLang: (...a) => h.hooks.syncLang(...a) }));
@@ -58,8 +58,8 @@ vi.mock('./components/InstallScreen', () => ({ default: () => <div>tela-instalar
 vi.mock('./trainer/TrainerShell', () => ({
   default: ({ onSwitchToStudent }) => <div>painel-personal<button onClick={onSwitchToStudent}>usar-como-aluno</button></div>,
 }));
-vi.mock('./influencer/InfluencerShell', () => ({
-  default: ({ onSwitchToStudent }) => <div>painel-influenciador<button onClick={onSwitchToStudent}>usar-como-aluno</button></div>,
+vi.mock('./program/ProgramShell', () => ({
+  default: ({ kind, onSwitchToStudent }) => <div>painel-programa:{kind}<button onClick={onSwitchToStudent}>usar-como-aluno</button></div>,
 }));
 vi.mock('./pages/TreinoPage', () => ({ default: () => <div>pg-treino</div> }));
 vi.mock('./pages/HistoricoPage', () => ({ default: () => <div>pg-historico</div> }));
@@ -77,7 +77,7 @@ beforeEach(() => {
   h.config = { maintenance: { enabled: false, message: '' } };
   h.tab.page = 'treino';
   h.trainer = { isTrainer: false, mode: 'aluno', setMode: vi.fn() };
-  h.influencer = false;
+  h.program = null;
   h.unread = 0;
 });
 afterEach(cleanup);
@@ -219,30 +219,38 @@ describe('App', () => {
   });
 
   it('influenciador no modo aluno vê o botão para o painel e troca de modo', () => {
-    h.influencer = true;
+    h.program = 'influenciador';
     render(<App />);
     expect(screen.getByText('pg-treino')).toBeTruthy();
     fireEvent.click(screen.getByText('📣 Influenciador'));
-    expect(h.trainer.setMode).toHaveBeenCalledWith('influencer');
+    expect(h.trainer.setMode).toHaveBeenCalledWith('program');
   });
 
-  it('influenciador no modo influenciador vê só o painel (e não precisa de peso)', () => {
-    h.auth = { user: loggedIn({}), authLoading: false, recoveryMode: false };
-    h.influencer = true;
-    h.trainer = { isTrainer: false, mode: 'influencer', setMode: vi.fn() };
+  it('embaixador também tem o botão, com o próprio nome', () => {
+    h.program = 'embaixador';
     render(<App />);
-    expect(screen.getByText('painel-influenciador')).toBeTruthy();
+    expect(screen.queryByText('📣 Influenciador')).toBeNull();
+    fireEvent.click(screen.getByText('📣 Embaixador'));
+    expect(h.trainer.setMode).toHaveBeenCalledWith('program');
+  });
+
+  it('no modo do programa vê só o painel (e não precisa de peso)', () => {
+    h.auth = { user: loggedIn({}), authLoading: false, recoveryMode: false };
+    h.program = 'embaixador';
+    h.trainer = { isTrainer: false, mode: 'program', setMode: vi.fn() };
+    render(<App />);
+    expect(screen.getByText('painel-programa:embaixador')).toBeTruthy();
     expect(screen.queryByText('tela-onboarding')).toBeNull();
     expect(screen.queryByTestId('workout-provider')).toBeNull();
     fireEvent.click(screen.getByText('usar-como-aluno'));
     expect(h.trainer.setMode).toHaveBeenCalledWith('aluno');
   });
 
-  it('modo influenciador só vale para quem é influenciador', () => {
-    h.trainer = { isTrainer: false, mode: 'influencer', setMode: vi.fn() };
+  it('modo do programa só vale para quem está no programa', () => {
+    h.trainer = { isTrainer: false, mode: 'program', setMode: vi.fn() };
     render(<App />);
-    expect(screen.queryByText('painel-influenciador')).toBeNull();
-    expect(screen.queryByText('📣 Influenciador')).toBeNull();
+    expect(screen.queryByText(/painel-programa/)).toBeNull();
+    expect(screen.queryByText('📣 Embaixador')).toBeNull();
     expect(screen.getByText('pg-treino')).toBeTruthy();
   });
 

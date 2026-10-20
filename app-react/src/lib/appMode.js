@@ -1,16 +1,19 @@
 // Quem é personal pode usar o app nos dois modos: "trainer" (painel de alunos)
-// ou "aluno" (o app de treino normal, pra treinar ele mesmo). Influenciador
-// tem o modo "influencer" (painel de divulgação), aberto pelo botão do topo.
-// A escolha fica no aparelho; o padrão é "trainer", que só vale para personal
-// (os outros caem no app de aluno).
+// ou "aluno" (o app de treino normal, pra treinar ele mesmo). Embaixador e
+// influenciador têm o modo "program" (painel de divulgação), aberto pelo botão
+// do topo. A escolha fica no aparelho; o padrão é "trainer", que só vale para
+// personal (os outros caem no app de aluno).
 const MODE_KEY = 'eafit_mode';
 const TRAINER_KEY = 'eafit_is_trainer';
-const INFLUENCER_KEY = 'eafit_is_influencer';
-const MODES = ['aluno', 'trainer', 'influencer'];
+const PROGRAM_KEY = 'eafit_program_kind';
+const MODES = ['aluno', 'trainer', 'program'];
+// Nome antigo do modo do programa, quando só o influenciador tinha.
+const LEGACY = { influencer: 'program' };
 
 export function readMode() {
   try {
-    const mode = localStorage.getItem(MODE_KEY);
+    const stored = localStorage.getItem(MODE_KEY);
+    const mode = LEGACY[stored] || stored;
     return MODES.includes(mode) ? mode : 'trainer';
   } catch {
     return 'trainer';
@@ -22,19 +25,31 @@ export function writeMode(mode) {
 }
 
 // Último valor conhecido do papel por usuário: evita piscar o app de aluno na
-// abertura de quem é personal ou influenciador (a confirmação vem do servidor).
-function readCached(prefix, userId) {
-  try { return localStorage.getItem(`${prefix}:${userId}`) === '1'; } catch { return false; }
+// abertura de quem é personal, embaixador ou influenciador (a confirmação vem
+// do servidor).
+export function readCachedIsTrainer(userId) {
+  try { return localStorage.getItem(`${TRAINER_KEY}:${userId}`) === '1'; } catch { return false; }
 }
 
-function writeCached(prefix, userId, value) {
+export function writeCachedIsTrainer(userId, value) {
   try {
-    if (value) localStorage.setItem(`${prefix}:${userId}`, '1');
-    else localStorage.removeItem(`${prefix}:${userId}`);
+    if (value) localStorage.setItem(`${TRAINER_KEY}:${userId}`, '1');
+    else localStorage.removeItem(`${TRAINER_KEY}:${userId}`);
   } catch { /* sem storage */ }
 }
 
-export const readCachedIsTrainer = userId => readCached(TRAINER_KEY, userId);
-export const writeCachedIsTrainer = (userId, value) => writeCached(TRAINER_KEY, userId, value);
-export const readCachedIsInfluencer = userId => readCached(INFLUENCER_KEY, userId);
-export const writeCachedIsInfluencer = (userId, value) => writeCached(INFLUENCER_KEY, userId, value);
+export function readCachedProgramKind(userId) {
+  try {
+    const v = localStorage.getItem(`${PROGRAM_KEY}:${userId}`);
+    return v === 'embaixador' || v === 'influenciador' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeCachedProgramKind(userId, kind) {
+  try {
+    if (kind) localStorage.setItem(`${PROGRAM_KEY}:${userId}`, kind);
+    else localStorage.removeItem(`${PROGRAM_KEY}:${userId}`);
+  } catch { /* sem storage */ }
+}

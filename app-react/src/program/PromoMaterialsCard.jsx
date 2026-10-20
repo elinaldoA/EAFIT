@@ -4,7 +4,7 @@ import { timeAgo } from '../lib/inbox';
 
 import { t } from '../lib/i18n';
 
-// Influenciador → Divulgar: material que a equipe EAFIT preparou para postar.
+// Modo do programa → Divulgar: material que a equipe EAFIT preparou para postar.
 export default function PromoMaterialsCard({ toast }) {
   const [items, setItems] = useState(null);
   const [error, setError] = useState(false);

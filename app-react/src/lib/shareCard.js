@@ -385,7 +385,7 @@ async function drawMusclesPanel(ctx, x, y, w, day) {
 // não o conhece (a raiz do app abre direto no login).
 const SHARE_URL_LABEL = 'eafit.com.br';
 
-// Influenciador compartilha com o próprio link (lib/myRef.js); os demais, com
+// Embaixador e influenciador compartilham com o próprio link (lib/myRef.js); os demais, com
 // o link do card.
 function cardUrl(refCode) {
   return refCode ? ambassadorLink(refCode, 'card') : SHARE_CARD_URL;
@@ -506,7 +506,7 @@ function drawQrPanel(ctx, url, x, y, size) {
 
 // Rodapé: o card circula como imagem solta (status, stories, download), então
 // a marca e o endereço do app precisam estar NA imagem. Com `qrUrl` (link do
-// influenciador) o texto vai para a esquerda e o QR fica à direita.
+// embaixador ou influenciador) o texto vai para a esquerda e o QR fica à direita.
 async function drawFooter(ctx, y, cta, qrUrl = '') {
   if (qrUrl) {
     await drawQrFooter(ctx, y, cta, qrUrl);
@@ -777,7 +777,7 @@ export async function shareMonthlyRecap(recap) {
 }
 
 // Imagem 4:5 (post do Instagram) com o QR do link de divulgação, para levar
-// à academia, a eventos ou mostrar num vídeo. `code` é o código do influenciador.
+// à academia, a eventos ou mostrar num vídeo. `code` é o código de quem divulga.
 const QR_CARD_HEIGHT = 1350;
 
 export async function renderInviteQrCard(code) {

@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc, functions: { invoke: mockInvo
 
 import {
   ambassadorLink, suggestCode, isValidCode, conversion, ambassadorError,
-  fetchAmbassadors, fetchReferrals, fetchUserAmbassador, createAmbassador, updateAmbassador, sendInfluencerMessage,
+  fetchAmbassadors, fetchReferrals, fetchUserAmbassador, createAmbassador, updateAmbassador, sendProgramMessage,
 } from './ambassadors';
 
 beforeEach(() => { mockRpc.mockReset(); });
@@ -64,17 +64,17 @@ describe('consultas', () => {
   });
 });
 
-describe('sendInfluencerMessage', () => {
-  it('manda para o público de influenciadores (a lista sai do servidor)', async () => {
+describe('sendProgramMessage', () => {
+  it('manda para o grupo escolhido (a lista sai do servidor)', async () => {
     mockInvoke.mockResolvedValue({ data: { ok: true, recipients: 3, sent: 2 }, error: null });
-    await expect(sendInfluencerMessage({ title: ' Campanha ', body: ' Poste até sexta ' })).resolves.toEqual({ recipients: 3, sent: 2 });
+    await expect(sendProgramMessage({ title: ' Campanha ', body: ' Poste até sexta ', audience: 'embaixadores' })).resolves.toEqual({ recipients: 3, sent: 2 });
     expect(mockInvoke).toHaveBeenCalledWith('admin-broadcast', {
-      body: { title: 'Campanha', body: 'Poste até sexta', audience: 'influenciadores' },
+      body: { title: 'Campanha', body: 'Poste até sexta', audience: 'embaixadores' },
     });
   });
 
   it('repassa o erro do servidor', async () => {
     mockInvoke.mockResolvedValue({ data: { error: 'Nenhum influenciador ativo.' }, error: null });
-    await expect(sendInfluencerMessage({ title: 'a', body: 'b' })).rejects.toThrow('Nenhum influenciador ativo.');
+    await expect(sendProgramMessage({ title: 'a', body: 'b', audience: 'influenciadores' })).rejects.toThrow('Nenhum influenciador ativo.');
   });
 });

@@ -52,7 +52,7 @@ import { fetchPhotos, addPhoto, countPhotos, deletePhoto } from './progressPhoto
 import { fetchWeightLogs, upsertWeightLog } from './weightLog';
 import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from './waterLog';
 import { imcInfo, metaProgress } from './profileCalc';
-import { readMode, writeMode, readCachedIsTrainer, writeCachedIsTrainer, readCachedIsInfluencer, writeCachedIsInfluencer } from './appMode';
+import { readMode, writeMode, readCachedIsTrainer, writeCachedIsTrainer, readCachedProgramKind, writeCachedProgramKind } from './appMode';
 import { isChunkLoadError, reloadOnceForChunkError, clearChunkReloadFlag } from './chunkReload';
 import { isKnownUser, markKnownUser } from './knownUser';
 import { assertValidImage, MAX_DIMENSION } from './imageUtils';
@@ -352,16 +352,20 @@ describe('appMode, knownUser e chunkReload', () => {
     expect(readCachedIsTrainer('u1')).toBe(false);
   });
 
-  it('modo influenciador e papel de influenciador guardados à parte', () => {
+  it('modo do programa (o nome antigo "influencer" vale) e papel guardado à parte', () => {
+    writeMode('program');
+    expect(readMode()).toBe('program');
     writeMode('influencer');
-    expect(readMode()).toBe('influencer');
+    expect(readMode()).toBe('program');
     writeMode('qualquer');
     expect(readMode()).toBe('trainer');
-    writeCachedIsInfluencer('u1', true);
-    expect(readCachedIsInfluencer('u1')).toBe(true);
+    writeCachedProgramKind('u1', 'embaixador');
+    expect(readCachedProgramKind('u1')).toBe('embaixador');
     expect(readCachedIsTrainer('u1')).toBe(false);
-    writeCachedIsInfluencer('u1', false);
-    expect(readCachedIsInfluencer('u1')).toBe(false);
+    localStorage.setItem('eafit_program_kind:u1', 'outro');
+    expect(readCachedProgramKind('u1')).toBeNull();
+    writeCachedProgramKind('u1', null);
+    expect(readCachedProgramKind('u1')).toBeNull();
   });
 
   it('aparelho conhecido', () => {

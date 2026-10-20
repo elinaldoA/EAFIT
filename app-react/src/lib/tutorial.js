@@ -1,8 +1,8 @@
 import { t, lang } from './i18n';
 import { isFlagOn } from './appConfig';
 import { isVoiceSupported } from './voice';
-// Tutorial guiado do app: passos do aluno, do personal e do influenciador +
-// controle de "já viu".
+// Tutorial guiado do app: passos do aluno, do personal e do modo do programa
+// (embaixador e influenciador) + controle de "já viu".
 // Cada passo pode levar a uma aba (`tab`) e destacar um elemento (`target`, um
 // seletor CSS). Se o elemento não existir na tela, o passo aparece centralizado.
 // `dashTab` abre essa aba dentro da Evolução; `flag` e `when` escondem o passo
@@ -130,44 +130,53 @@ export const TRAINER_STEPS = [
   },
 ];
 
-export const INFLUENCER_STEPS = [
-  {
-    icon: '📣', title: t('Bem-vindo, Influenciador'),
-    text: t('Este é o seu painel de divulgação do EAFIT: seu link, os números do que ele traz e textos prontos para postar. Dá pra pular e rever depois em Conta → Ajuda.'),
-  },
-  {
-    tab: 'resultados', target: nav(1), icon: '📊', title: t('Resultados'),
-    text: t('Acompanhe as metas (1, 5, 10, 25… cadastros, com um selo para cada uma), o ranking do mês entre influenciadores e veja as visitas ao seu link, quantas viraram conta e a conversão em 7, 30 ou 90 dias, além de onde veio cada cadastro. Por privacidade, aparecem só números, nunca quem se cadastrou.'),
-  },
-  {
-    tab: 'divulgar', target: nav(2), icon: '🔗', title: t('Divulgar'),
-    text: t('Copie seu link ou compartilhe pelo botão do canal onde vai postar (Instagram, WhatsApp, TikTok, YouTube): assim os Resultados mostram de onde vem cada cadastro.'),
-  },
-  {
-    tab: 'divulgar', target: '.amb-qr', icon: '📱', title: t('QR Code e card de treino'),
-    text: t('Baixe a imagem com o seu QR para a academia, eventos ou vídeos. E ao compartilhar um treino feito no modo aluno, o card já sai com o seu link e o seu QR.'),
-  },
-  {
-    tab: 'divulgar', target: '.influencer-captions', icon: '✍️', title: t('Textos prontos e material'),
-    text: t('Textos para bio, stories e WhatsApp com o seu link já no lugar, e logos, imagens e vídeos que a equipe EAFIT prepara para você baixar e postar.'),
-  },
-  {
-    tab: 'recados', target: nav(3), icon: '💬', title: t('Recados da equipe'),
-    text: t('Aqui chegam as campanhas, novidades e datas importantes que a equipe EAFIT manda para os influenciadores. O número na aba mostra os recados novos.'),
-  },
-  {
-    tab: 'conta', target: nav(4), icon: '⚙️', title: t('Conta'),
-    text: t('Ative as notificações para saber quando alguém criar conta pelo seu link ou chegar um recado. Aqui você escolhe se seu nome aparece no ranking e ficam seu código e o botão "Usar como aluno", que troca para o app de treino. Para voltar a este painel, toque em "📣 Influenciador" no topo do app.'),
-  },
-  {
-    tab: 'resultados', icon: '🚀', title: t('Tudo pronto!'),
-    text: t('Poste seu link e acompanhe aqui quem chega por ele. Para rever este guia: Conta → Ajuda.'),
-  },
-];
+// Modo do programa: mesmos passos para embaixador e influenciador, com o nome
+// de cada um no título e no botão do topo.
+function programSteps(influencer) {
+  const button = influencer ? t('📣 Influenciador') : t('📣 Embaixador');
+  return [
+    {
+      icon: '📣', title: influencer ? t('Bem-vindo, Influenciador') : t('Bem-vindo, Embaixador'),
+      text: t('Este é o seu painel de divulgação do EAFIT: seu link, os números do que ele traz e textos prontos para postar. Dá pra pular e rever depois em Conta → Ajuda.'),
+    },
+    {
+      tab: 'resultados', target: nav(1), icon: '📊', title: t('Resultados'),
+      text: t('Acompanhe as metas (1, 5, 10, 25… cadastros, com um selo para cada uma), o ranking do mês com o seu grupo e veja as visitas ao seu link, quantas viraram conta e a conversão em 7, 30 ou 90 dias, além de onde veio cada cadastro. Por privacidade, aparecem só números, nunca quem se cadastrou.'),
+    },
+    {
+      tab: 'divulgar', target: nav(2), icon: '🔗', title: t('Divulgar'),
+      text: t('Copie seu link ou compartilhe pelo botão do canal onde vai postar (Instagram, WhatsApp, TikTok, YouTube): assim os Resultados mostram de onde vem cada cadastro.'),
+    },
+    {
+      tab: 'divulgar', target: '.amb-qr', icon: '📱', title: t('QR Code e card de treino'),
+      text: t('Baixe a imagem com o seu QR para a academia, eventos ou vídeos. E ao compartilhar um treino feito no modo aluno, o card já sai com o seu link e o seu QR.'),
+    },
+    {
+      tab: 'divulgar', target: '.influencer-captions', icon: '✍️', title: t('Textos prontos e material'),
+      text: t('Textos para bio, stories e WhatsApp com o seu link já no lugar, e logos, imagens e vídeos que a equipe EAFIT prepara para você baixar e postar.'),
+    },
+    {
+      tab: 'recados', target: nav(3), icon: '💬', title: t('Recados da equipe'),
+      text: t('Aqui chegam as campanhas, novidades e datas importantes que a equipe EAFIT manda para o seu grupo. O número na aba mostra os recados novos.'),
+    },
+    {
+      tab: 'conta', target: nav(4), icon: '⚙️', title: t('Conta'),
+      text: t('Ative as notificações para saber quando alguém criar conta pelo seu link ou chegar um recado. Aqui você escolhe se seu nome aparece no ranking e ficam seu código e o botão "Usar como aluno", que troca para o app de treino. Para voltar a este painel, toque em "{button}" no topo do app.', { button }),
+    },
+    {
+      tab: 'resultados', icon: '🚀', title: t('Tudo pronto!'),
+      text: t('Poste seu link e acompanhe aqui quem chega por ele. Para rever este guia: Conta → Ajuda.'),
+    },
+  ];
+}
+
+export const INFLUENCER_STEPS = programSteps(true);
+export const AMBASSADOR_STEPS = programSteps(false);
 
 export function stepsFor(role) {
   if (role === 'trainer') return TRAINER_STEPS;
   if (role === 'influencer') return INFLUENCER_STEPS;
+  if (role === 'ambassador') return AMBASSADOR_STEPS;
   return STUDENT_STEPS;
 }
 

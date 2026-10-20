@@ -5,7 +5,7 @@ import PromoMaterialsCard from './PromoMaterialsCard';
 
 import { t } from '../lib/i18n';
 
-// Influenciador → Divulgar: link com código, compartilhar por canal, QR,
+// Modo do programa → Divulgar: link com código, compartilhar por canal, QR,
 // textos prontos para copiar (o link de cada texto já vai com o canal) e o
 // material de divulgação da equipe.
 export default function SharePage({ amb }) {

@@ -1,12 +1,12 @@
 import { AmbassadorResults } from '../components/AmbassadorPanel';
-import { MILESTONES, goalProgress } from '../lib/influencerGoals';
+import { MILESTONES, goalProgress } from '../lib/programGoals';
 import RankingCard from './RankingCard';
 
 import { t } from '../lib/i18n';
 
-// Influenciador → Resultados: os números do que o link trouxe (só números,
+// Modo do programa → Resultados: os números do que o link trouxe (só números,
 // nunca quem se cadastrou).
-export default function ResultsPage({ amb }) {
+export default function ResultsPage({ amb, labels }) {
   return (
     <section className="page active trainer-page">
       <div className="dash-card influencer-hero">
@@ -19,7 +19,7 @@ export default function ResultsPage({ amb }) {
 
       <GoalsCard total={amb.total} />
 
-      <RankingCard />
+      <RankingCard labels={labels} />
 
       <div className="dash-card">
         <div className="dash-card__title">{t('📊 Seus números')}</div>
@@ -31,7 +31,7 @@ export default function ResultsPage({ amb }) {
   );
 }
 
-// Próxima meta e os selos dos marcos já batidos (lib/influencerGoals.js).
+// Próxima meta e os selos dos marcos já batidos (lib/programGoals.js).
 function GoalsCard({ total }) {
   const g = goalProgress(total);
   return (

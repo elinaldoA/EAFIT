@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchInfluencerRanking, rankingView } from '../lib/influencerRanking';
+import { fetchProgramRanking, rankingView } from '../lib/programRanking';
 
 import { t } from '../lib/i18n';
 
@@ -10,9 +10,10 @@ const MONTHS = [
 
 const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-// Influenciador → Resultados: ranking do mês entre influenciadores, por
-// cadastros pelo link. Quem não quis aparecer vai como anônimo.
-export default function RankingCard() {
+// Modo do programa → Resultados: ranking do mês com o próprio grupo
+// (embaixadores ou influenciadores), por cadastros pelo link. Quem não quis
+// aparecer vai como anônimo.
+export default function RankingCard({ labels }) {
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState(false);
@@ -21,9 +22,9 @@ export default function RankingCard() {
     let active = true;
     setRows(null);
     setError(false);
-    fetchInfluencerRanking(offset)
+    fetchProgramRanking(offset)
       .then(r => { if (active) setRows(r); })
-      .catch(err => { console.error('fetchInfluencerRanking:', err); if (active) setError(true); });
+      .catch(err => { console.error('fetchProgramRanking:', err); if (active) setError(true); });
     return () => { active = false; };
   }, [offset]);
 
@@ -31,7 +32,7 @@ export default function RankingCard() {
 
   return (
     <div className="dash-card influencer-ranking">
-      <div className="dash-card__title">{t('🏁 Ranking dos influenciadores')}</div>
+      <div className="dash-card__title">{labels.rankingTitle}</div>
       <div className="recap__toggle amb__period" role="group" aria-label={t('Mês do ranking')}>
         {MONTHS.map(m => (
           <button
@@ -50,16 +51,16 @@ export default function RankingCard() {
         <p className="influencer-ranking__me">
           {view.me.signups === 0
             ? t('Você ainda não tem cadastros neste mês. O primeiro já te coloca na disputa!')
-            : t('Você está em {pos}º lugar entre {total} influenciadores.', { pos: view.me.position, total: view.total })}
+            : labels.rankingPos(view.me.position, view.total)}
         </p>
       )}
       {view && view.head.length > 0 && (
         <ol className="influencer-ranking__list">
-          {view.head.map((r, i) => <RankRow key={i} r={r} />)}
+          {view.head.map((r, i) => <RankRow key={i} r={r} anonymous={labels.anonymous} />)}
           {view.meOutside && (
             <>
               <li className="influencer-ranking__gap" aria-hidden="true">…</li>
-              <RankRow r={view.meOutside} />
+              <RankRow r={view.meOutside} anonymous={labels.anonymous} />
             </>
           )}
         </ol>
@@ -71,12 +72,12 @@ export default function RankingCard() {
   );
 }
 
-function RankRow({ r }) {
+function RankRow({ r, anonymous }) {
   return (
     <li className={`influencer-ranking__row${r.me ? ' is-me' : ''}`}>
       <span className="influencer-ranking__pos">{MEDALS[r.position] && r.signups > 0 ? MEDALS[r.position] : `${r.position}º`}</span>
       <span className="influencer-ranking__name">
-        {r.me ? t('{name} (você)', { name: r.name || t('Você') }) : (r.name || t('Influenciador anônimo'))}
+        {r.me ? t('{name} (você)', { name: r.name || t('Você') }) : (r.name || anonymous)}
       </span>
       <span className="influencer-ranking__n">{r.signups}</span>
     </li>

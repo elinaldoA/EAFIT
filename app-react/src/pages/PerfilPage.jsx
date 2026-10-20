@@ -307,7 +307,7 @@ export default function PerfilPage({ active }) {
         </button>
       </div>
 
-      <ProfileAmbassadorSection toast={toast} />
+      <ProfileAmbassadorSection />
 
       {isFlagOn(config.flags, 'convite_amigos') && (
         <div className="section-group">

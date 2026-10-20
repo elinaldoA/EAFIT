@@ -1,4 +1,4 @@
-// Metas do influenciador: marcos de cadastros pelo link (total desde o
+// Metas do modo do programa (embaixador e influenciador): marcos de cadastros pelo link (total desde o
 // início). A mesma lista está em supabase/functions/_shared/ambassadorAlerts.ts,
 // que comemora no aviso de novo cadastro o marco que acabou de ser batido.
 export const MILESTONES = [1, 5, 10, 25, 50, 100, 250, 500, 1000];

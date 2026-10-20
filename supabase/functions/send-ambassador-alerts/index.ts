@@ -1,7 +1,6 @@
-// Edge Function chamada de hora em hora pelo pg_cron: avisa o influenciador
-// quando entram contas novas pelo link dele. Embaixador não recebe: é só
-// marcado como avisado, para não acumular cadastros se um dia virar
-// influenciador. Mesmo padrão de
+// Edge Function chamada de hora em hora pelo pg_cron: avisa embaixadores e
+// influenciadores quando entram contas novas pelo link deles (o toque abre o
+// modo do programa no app). Mesmo padrão de
 // send-trainer-alerts: sem usuário logado, Verify JWT desativado, age via
 // service role e só aceita x-cron-secret.
 //
@@ -74,7 +73,7 @@ Deno.serve(async (req) => {
     const subs = subsByUser.get(r.as_user) || [];
     if (!subs.length) continue;
 
-    const push = buildSignupPush({ fresh: Number(r.as_new), total: Number(r.as_total) }, langs.get(r.as_user) ?? 'pt');
+    const push = buildSignupPush({ kind: r.as_kind, fresh: Number(r.as_new), total: Number(r.as_total) }, langs.get(r.as_user) ?? 'pt');
     let delivered = false;
     for (const sub of subs) {
       const result = await sendWebPush(sub, { ...push, tag: signupTag(date, hour) });
