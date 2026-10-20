@@ -97,6 +97,14 @@ export async function reactToEvent(eventId, emoji) {
   if (error) throw error;
 }
 
+// Denúncia de uma publicação de amigo (vai para Comunidade → Moderação no painel).
+export const REPORT_REASONS = ['ofensivo', 'spam', 'falso', 'outro'];
+
+export async function reportFeedEvent(eventId, reason) {
+  const { error } = await db.rpc('report_feed_event', { p_event: eventId, p_reason: reason, p_note: null });
+  if (error) throw error;
+}
+
 // Publica no feed dos amigos. Não bloqueia nem quebra o fluxo do treino: sem
 // internet ou com o compartilhamento desligado, simplesmente não aparece.
 export function postActivity(kind, title, detail = null) {

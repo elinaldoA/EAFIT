@@ -661,3 +661,7 @@
 .feed__react { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-full); border: 1px solid var(--border-2); background: transparent; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; }
 .feed__react span { font-size: 0.72rem; font-variant-numeric: tabular-nums; }
 .feed__react--on { border-color: var(--primary); background: var(--surface-2); color: var(--text); }
+
+/* Denúncia de publicação do feed (Friends.jsx) */
+.feed__report { margin-left: auto; color: var(--text-dim); }
+.feed__report-menu { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }

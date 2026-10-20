@@ -17,6 +17,7 @@ vi.mock('../lib/friends', async (importActual) => ({
   removeFriendship: (...a) => h.api.removeFriendship(...a),
   setShareActivity: (...a) => h.api.setShareActivity(...a),
   reactToEvent: (...a) => h.api.reactToEvent(...a),
+  reportFeedEvent: (...a) => h.api.reportFeedEvent(...a),
 }));
 
 import Friends from './Friends';
@@ -37,6 +38,7 @@ beforeEach(() => {
     removeFriendship: vi.fn().mockResolvedValue(undefined),
     setShareActivity: vi.fn().mockResolvedValue(undefined),
     reactToEvent: vi.fn().mockResolvedValue(undefined),
+    reportFeedEvent: vi.fn().mockResolvedValue(undefined),
   };
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -59,6 +61,16 @@ describe('Friends', () => {
     expect(rows[0].textContent).toMatch(/1º/);
     expect(rows.map(r => r.textContent).join(' ')).toMatch(/Bia/);
     expect(screen.getByText(/Novo recorde em Supino/)).toBeTruthy();
+  });
+
+  it('denunciar publicação de amigo: escolhe o motivo, envia e esconde o botão', async () => {
+    render(<Friends myWeek={2} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Denunciar publicação' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ofensivo' }));
+    await waitFor(() => expect(h.api.reportFeedEvent).toHaveBeenCalledWith(10, 'ofensivo'));
+    expect(h.toast).toHaveBeenCalledWith('🚩 Denúncia enviada. A equipe vai analisar.');
+    expect(await screen.findByText('Denúncia enviada')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Denunciar publicação' })).toBeNull();
   });
 
   it('sem amigos mostra a dica; sem atividade mostra o vazio do feed', async () => {

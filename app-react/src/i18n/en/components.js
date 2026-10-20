@@ -738,4 +738,11 @@ export default {
   'Atualize o app': 'Update the app',
   'Esta versão do app não é mais compatível. Atualize para continuar.': 'This version of the app is no longer supported. Update to continue.',
   'Há uma versão nova do app com correções importantes.': 'A new version of the app with important fixes is available.',
+  'Spam': 'Spam',
+  'Ofensivo': 'Offensive',
+  'Informação falsa': 'False information',
+  'Denunciar publicação': 'Report post',
+  'Denúncia enviada': 'Report sent',
+  'Motivo da denúncia': 'Reason for the report',
+  '🚩 Denúncia enviada. A equipe vai analisar.': '🚩 Report sent. The team will review it.',
 };

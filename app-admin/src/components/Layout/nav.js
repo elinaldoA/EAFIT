@@ -49,6 +49,7 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/desafios', label: 'Desafios' },
           { to: '/amigos', label: 'Amigos e feed' },
+          { to: '/moderacao', label: 'Moderação' },
         ],
       },
       {

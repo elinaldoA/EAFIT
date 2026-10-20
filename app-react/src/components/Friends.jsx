@@ -4,12 +4,23 @@ import { timeAgo } from '../lib/inbox';
 import {
   REACTIONS, KIND_ICON, friendlyFriendError, normalizeFriendCode, shareFriendCode, weeklyRanking,
   fetchMyFriendProfile, setShareActivity, requestFriend, respondFriend, removeFriendship,
-  fetchMyFriends, fetchFeed, reactToEvent,
+  fetchMyFriends, fetchFeed, reactToEvent, REPORT_REASONS, reportFeedEvent,
 } from '../lib/friends';
 import Loading from './Loading';
 
 import { t } from '../lib/i18n';
-function FeedItem({ ev, onReact }) {
+const REASON_LABELS = () => ({ ofensivo: t('Ofensivo'), spam: t('Spam'), falso: t('Informação falsa'), outro: t('Outro motivo') });
+
+function FeedItem({ ev, onReact, onReport }) {
+  const [reporting, setReporting] = useState(false);
+  const [reported, setReported] = useState(false);
+  const labels = REASON_LABELS();
+
+  async function report(reason) {
+    if (await onReport(ev.id, reason)) setReported(true);
+    setReporting(false);
+  }
+
   return (
     <li className="feed__item">
       <span className="feed__icon" aria-hidden="true">{KIND_ICON[ev.kind]}</span>
@@ -30,7 +41,22 @@ function FeedItem({ ev, onReact }) {
               >{emoji}{n > 0 && <span>{n}</span>}</button>
             );
           })}
+          {!ev.isMe && !reported && (
+            <button
+              type="button" className="feed__react feed__report" aria-expanded={reporting}
+              aria-label={t('Denunciar publicação')} onClick={() => setReporting(r => !r)}
+            >⋯</button>
+          )}
+          {reported && <span className="feed__meta">{t('Denúncia enviada')}</span>}
         </div>
+        {reporting && (
+          <div className="feed__report-menu" role="group" aria-label={t('Motivo da denúncia')}>
+            {REPORT_REASONS.map(r => (
+              <button key={r} type="button" className="btn btn--outline btn--sm" onClick={() => report(r)}>{labels[r]}</button>
+            ))}
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setReporting(false)}>{t('Cancelar')}</button>
+          </div>
+        )}
       </div>
     </li>
   );
@@ -87,6 +113,17 @@ export default function Friends({ myWeek }) {
     const result = await shareFriendCode(profile.code);
     if (result === 'copied') toast(t('📋 Convite copiado'));
     else if (result === 'failed') toast(t('Código: {code}', { code: profile.code }));
+  }
+
+  async function handleReport(id, reason) {
+    try {
+      await reportFeedEvent(id, reason);
+      toast(t('🚩 Denúncia enviada. A equipe vai analisar.'));
+      return true;
+    } catch (err) {
+      toast(`❌ ${friendlyFriendError(err)}`);
+      return false;
+    }
   }
 
   async function handleReact(id, emoji) {
@@ -183,7 +220,7 @@ export default function Friends({ myWeek }) {
       {feed.length === 0 ? (
         <p className="dash-empty">{t('Quando você ou seus amigos concluírem treinos e baterem recordes, aparece aqui.')}</p>
       ) : (
-        <ul className="feed">{feed.map(ev => <FeedItem key={ev.id} ev={ev} onReact={handleReact} />)}</ul>
+        <ul className="feed">{feed.map(ev => <FeedItem key={ev.id} ev={ev} onReact={handleReact} onReport={handleReport} />)}</ul>
       )}
       {profile && (
         <label className="friends__privacy">

@@ -40,6 +40,7 @@ import ExerciseMedia from './pages/ExerciseMedia';
 import ContentRanking from './pages/ContentRanking';
 import Challenges from './pages/Challenges';
 import SocialFeed from './pages/SocialFeed';
+import Moderation from './pages/Moderation';
 import Wellbeing from './pages/Wellbeing';
 import Achievements from './pages/Achievements';
 import Admins from './pages/Admins';
@@ -92,6 +93,7 @@ function AppShell() {
             <Route path="/ranking-conteudo" element={<ContentRanking />} />
             <Route path="/desafios" element={<Challenges />} />
             <Route path="/amigos" element={<SocialFeed />} />
+            <Route path="/moderacao" element={<Moderation />} />
             <Route path="/bem-estar" element={<Wellbeing />} />
             <Route path="/conquistas" element={<Achievements />} />
             <Route path="/admins" element={<Admins />} />
