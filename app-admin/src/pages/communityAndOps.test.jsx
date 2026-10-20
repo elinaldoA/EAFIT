@@ -24,6 +24,7 @@ vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => ({ adminUser: { 
 vi.mock('../lib/community', async orig => ({ ...(await orig()), ...cm }));
 vi.mock('../lib/insights', async orig => ({ ...(await orig()), ...ins }));
 vi.mock('../lib/ops', async orig => ({ ...(await orig()), ...ops }));
+vi.mock('../components/ChallengeSeriesCard', () => ({ default: () => null }));
 
 import Challenges from './Challenges';
 import SocialFeed from './SocialFeed';

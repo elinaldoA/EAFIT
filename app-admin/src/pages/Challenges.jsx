@@ -7,6 +7,7 @@ import {
 } from '../lib/community';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import ChallengeSeriesCard from '../components/ChallengeSeriesCard';
 
 function Leaderboard({ challengeId }) {
   const [rows, setRows] = useState(null);
@@ -168,6 +169,7 @@ export default function Challenges() {
       </div>
 
       <OfficialChallengeForm onCreated={load} />
+      <ChallengeSeriesCard onSpawned={load} />
 
       {loading && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
