@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('../lib/supabase', () => ({ db: { rpc: mockRpc } }));
 
 import Behavior from './Behavior';
 import UserClientCard from '../components/UserClientCard';
+import { buildAdoption, buildTutorialFunnel } from '../lib/adoption';
+
+const render = ui => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 const DATA = {
   admin_visit_breakdown: [
@@ -28,6 +32,14 @@ const DATA = {
     { event: 'feature', detail: 'live_mode', users: 5, days: 9 },
     { event: 'onboarding', detail: 'view', users: 4, days: 4 },
     { event: 'push', detail: 'open', users: 2, days: 2 },
+    { event: 'tutorial', detail: 'aluno_1', users: 8, days: 8 },
+    { event: 'tutorial', detail: 'aluno_2', users: 6, days: 6 },
+    { event: 'tutorial', detail: 'aluno_pulou_2', users: 3, days: 3 },
+    { event: 'tutorial', detail: 'aluno_fim', users: 2, days: 2 },
+  ],
+  admin_feature_adoption: [
+    { fa_feature: '__active__', fa_users: 10, fa_prev_users: 8, fa_trained7: 6 },
+    { fa_feature: 'live_mode', fa_users: 5, fa_prev_users: 4, fa_trained7: 4 },
   ],
   admin_client_breakdown: [
     { dimension: 'os', value: 'android', users: 7 },
@@ -49,8 +61,12 @@ describe('Behavior', () => {
 
     expect(await screen.findByText('Agachamento Livre')).toBeTruthy();
     expect(screen.getByText('Não aceitou os Termos de Uso').closest('tr').textContent).toContain('4');
-    expect(screen.getByText('Modo treino ao vivo').closest('li').textContent).toContain('5 · 50%');
-    expect(screen.getByText('Registro de água').closest('li').textContent).toContain('0 · 0%');
+    expect(screen.getAllByText('Modo treino ao vivo')[0].closest('li').textContent).toContain('5 · 50%');
+    expect(screen.getAllByText('Registro de água')[0].closest('li').textContent).toContain('0 · 0%');
+    expect(screen.getByText(/Pouco descobertas/).closest('p').textContent).toContain('Registro de água');
+    expect(screen.getByText('+40 p.p.')).toBeTruthy();
+    expect(screen.getByText(/Aluno: 8 começaram · 2 concluíram \(25%\)/)).toBeTruthy();
+    expect(screen.getByText('Passo 2 · 3 pularam aqui')).toBeTruthy();
     expect(screen.getAllByText('75%').length).toBeGreaterThan(0);
     expect(screen.getByText('19h')).toBeTruthy();
     expect(screen.getByText(/abriram o app por uma notificação/).textContent).toContain('20%');
@@ -72,7 +88,24 @@ describe('Behavior', () => {
     render(<Behavior />);
 
     expect(await screen.findByText('Agachamento Livre')).toBeTruthy();
-    expect(screen.getAllByText('function admin_user_events does not exist').length).toBe(2);
+    expect(screen.getAllByText('function admin_user_events does not exist').length).toBe(3);
+  });
+});
+
+describe('adoption', () => {
+  it('compara com o período anterior e a retenção de quem usou com a dos demais', () => {
+    const a = buildAdoption(DATA.admin_feature_adoption);
+    const live = a.items.find(i => i.key === 'live_mode');
+    expect(live).toMatchObject({ users: 5, pct: 50, change: 25, usedRate: 80, notUsedRate: 40, retentionLift: 40, low: false });
+    expect(a.items.find(i => i.key === 'water')).toMatchObject({ users: 0, pct: 0, change: null, usedRate: null, low: true });
+    expect(buildAdoption([]).low).toEqual([]);
+  });
+
+  it('funil do tutorial por papel com o passo de mais desistências', () => {
+    const [aluno, ...rest] = buildTutorialFunnel(DATA.admin_user_events);
+    expect(rest).toEqual([]);
+    expect(aluno).toMatchObject({ role: 'aluno', started: 8, done: 2, donePct: 25, worstStep: { n: 2, skipped: 3 } });
+    expect(aluno.steps.map(s => s.pctOfStart)).toEqual([100, 75]);
   });
 });
 

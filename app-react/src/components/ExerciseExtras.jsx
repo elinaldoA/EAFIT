@@ -1,4 +1,5 @@
 import { GROUP_LETTERS } from '../lib/supersets';
+import { trackFeature } from '../lib/tracking';
 
 import { t } from '../lib/i18n';
 // Campos de bi-set/circuito e aquecimento de um exercício do plano, usados no
@@ -14,7 +15,7 @@ export default function ExerciseExtras({ grupo, aquecimento, onChange }) {
         <select
           className="input input--sm" value={grupo || ''}
           title={t('Exercícios seguidos com a mesma letra são feitos em sequência, sem descanso entre eles')}
-          onChange={e => onChange({ grupo: e.target.value || null })}
+          onChange={e => { if (e.target.value) trackFeature('superset'); onChange({ grupo: e.target.value || null }); }}
         >
           <option value="">{t('Não')}</option>
           {GROUP_LETTERS.map(l => <option key={l} value={l}>{t('Grupo {l}', { l })}</option>)}

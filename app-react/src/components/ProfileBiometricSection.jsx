@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getLock, enableLock, disableLock, isCancelled } from '../lib/biometricLock';
+import { trackFeature } from '../lib/tracking';
 
 import { t } from '../lib/i18n';
 // Liga/desliga a trava de biometria deste aparelho (lib/biometricLock.js).
@@ -20,6 +21,7 @@ export default function ProfileBiometricSection({ user, toast, onChange }) {
     setBusy(true);
     try {
       await enableLock(user);
+      trackFeature('bio_lock');
       setEnabled(true);
       onChange?.(true);
       toast(t('🔒 Bloqueio com biometria ativado'));

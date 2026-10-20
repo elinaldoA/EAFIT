@@ -5,6 +5,8 @@ import {
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents, buildInstallRetention, buildCompletion,
   OS_LABELS, BROWSER_LABELS, DEVICE_LABELS, LANG_LABELS, MODE_LABELS, PUSH_LABELS,
 } from '../lib/behavior';
+import { Link } from 'react-router-dom';
+import { buildTutorialFunnel, fetchAdoption } from '../lib/adoption';
 import Loading from '../components/Loading';
 
 const PERIODS = [
@@ -32,7 +34,7 @@ function useLoad(load, days) {
 }
 
 const loadAuth = days => fetchAuthEvents(days).then(buildSignup);
-const loadEvents = days => fetchUserEvents(days).then(buildUserEvents);
+const loadEvents = days => fetchUserEvents(days).then(rows => ({ ...buildUserEvents(rows), tutorial: buildTutorialFunnel(rows) }));
 const loadInstall = () => fetchInstallRetention().then(buildInstallRetention);
 const loadWorkouts = days => Promise.all([fetchWorkoutCompletion(days), fetchWorkoutDropoff(days, 10)])
   .then(([c, d]) => ({ completion: buildCompletion(c), dropoff: d }));
@@ -120,6 +122,7 @@ export default function Behavior() {
   const clients = useLoad(fetchClientBreakdown, days);
   const install = useLoad(loadInstall, 0);
   const workouts = useLoad(loadWorkouts, days);
+  const adoption = useLoad(fetchAdoption, days);
 
   return (
     <div className="stack">
@@ -241,6 +244,62 @@ export default function Behavior() {
             </div>
           </>
         )}
+      </Card>
+
+      <Card
+        title="Adoção e retenção" state={adoption}
+        note="Período anterior = o mesmo número de dias logo antes. Retenção = % que treinou nos últimos 7 dias, entre quem usou e entre os demais ativos do período. Usar e reter juntos não prova causa, mas mostra o que vale divulgar. No “Todos”, compara com os 30 dias."
+      >
+        {data => (
+          <>
+            {data.low.length > 0 && (
+              <p className="card-note" style={{ margin: '0 0 8px' }}>
+                <strong>Pouco descobertas</strong> (menos de 10% dos ativos): {data.low.map(i => i.label).join(', ')}.{' '}
+                <Link to="/notificacoes">Divulgar com uma notificação</Link>
+              </p>
+            )}
+            <div className="table-wrap">
+              <table className="resp-table">
+                <thead>
+                  <tr><th>Funcionalidade</th><th>Usuários</th><th>% dos ativos</th><th>vs. anterior</th><th>Retenção de quem usou</th><th>Dos demais</th><th>Diferença</th></tr>
+                </thead>
+                <tbody>
+                  {data.items.map(i => (
+                    <tr key={i.key}>
+                      <td data-label="Funcionalidade">{i.label}{i.low && <> <span className="badge badge--warning">pouco usada</span></>}</td>
+                      <td data-label="Usuários">{i.users}</td>
+                      <td data-label="% dos ativos">{i.pct == null ? '—' : `${i.pct}%`}</td>
+                      <td data-label="vs. anterior">{i.change == null ? (i.users ? 'novo' : '—') : `${i.change > 0 ? '+' : ''}${i.change}%`}</td>
+                      <td data-label="Retenção de quem usou">{i.usedRate == null ? '—' : `${i.usedRate}%`}</td>
+                      <td data-label="Dos demais">{i.notUsedRate == null ? '—' : `${i.notUsedRate}%`}</td>
+                      <td data-label="Diferença">{i.retentionLift == null ? '—' : `${i.retentionLift > 0 ? '+' : ''}${i.retentionLift} p.p.`}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </Card>
+
+      <Card
+        title="Tutorial" state={events}
+        note="Pessoas que viram cada passo do tutorial (o número é a posição na lista completa; passos de recursos desligados não aparecem). “Pularam aqui” = tocaram em Pular ou fecharam nesse passo."
+      >
+        {data => (data.tutorial.length === 0
+          ? <p className="card-note" style={{ marginTop: 0 }}>Nenhum tutorial registrado no período.</p>
+          : data.tutorial.map(f => (
+            <div key={f.role} style={{ marginBottom: 12 }}>
+              <h3 className="subsection-title" style={{ marginTop: 0 }}>
+                {f.label}: {f.started} começaram · {f.done} concluíram{f.donePct == null ? '' : ` (${f.donePct}%)`}
+                {f.worstStep && <> · mais desistências no passo {f.worstStep.n}</>}
+              </h3>
+              <Steps steps={f.steps.map(st => ({
+                key: `${f.role}-${st.n}`, label: `Passo ${st.n}${st.skipped ? ` · ${st.skipped} pularam aqui` : ''}`,
+                count: st.viewed, pctOfStart: st.pctOfStart,
+              }))} />
+            </div>
+          )))}
       </Card>
 
       <Card

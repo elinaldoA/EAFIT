@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { useAppConfig } from '../context/useAppConfig';
 import { goTo } from '../lib/appNav';
-import { TUTORIAL_EVENT, hasSeenTutorial, markTutorialSeen, visibleSteps } from '../lib/tutorial';
+import { TUTORIAL_EVENT, hasSeenTutorial, markTutorialSeen, stepsFor, visibleSteps } from '../lib/tutorial';
+import { trackEvent } from '../lib/tracking';
 
 import { t } from '../lib/i18n';
 const PAD = 6;
@@ -33,12 +34,22 @@ export default function Tutorial({ role, userId, onNavigate }) {
 
   const open = index !== null;
   const step = open ? steps[index] : null;
+  // Número do passo na lista completa do papel (não muda quando o painel
+  // desliga um recurso): é o que o painel admin mostra em "Tutorial".
+  const stepNo = step ? stepsFor(role).indexOf(step) + 1 : 0;
+
+  useEffect(() => {
+    if (stepNo) trackEvent('tutorial', `${role}_${stepNo}`);
+  }, [role, stepNo]);
 
   const close = useCallback(() => {
+    if (index !== null) {
+      trackEvent('tutorial', index === steps.length - 1 ? `${role}_fim` : `${role}_pulou_${stepsFor(role).indexOf(steps[index]) + 1}`);
+    }
     markTutorialSeen(role, userId);
     setIndex(null);
     setRect(null);
-  }, [role, userId]);
+  }, [role, userId, index, steps]);
 
   useEffect(() => {
     if (!open) return undefined;

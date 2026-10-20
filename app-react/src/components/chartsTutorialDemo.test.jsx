@@ -8,10 +8,12 @@ const h = vi.hoisted(() => ({
   goals: { fetchMyGoals: vi.fn() },
   auth: { refreshSession: vi.fn() },
   store: { snapshot: {}, loadCustomMedia: vi.fn(), listeners: new Set() },
+  trackEvent: vi.fn(),
 }));
 
 vi.mock('../lib/supabase', () => ({ db: { auth: h.auth } }));
 vi.mock('../lib/trainerInsights', () => h.goals);
+vi.mock('../lib/tracking', async orig => ({ ...(await orig()), trackEvent: (...a) => h.trackEvent(...a) }));
 vi.mock('../data/treinoData', async orig => ({ ...(await orig()), todayDate: () => '2026-10-07' }));
 vi.mock('../data/exerciseMedia', async orig => ({
   ...(await orig()),
@@ -195,6 +197,24 @@ describe('Tutorial', () => {
     expect(onNavigate).toHaveBeenCalledWith('treino');
     fireEvent.click(screen.getByText('Voltar'));
     expect(screen.getByText(STUDENT_STEPS[0].title)).toBeTruthy();
+  });
+
+  it('registra cada passo visto, onde pulou e quem concluiu', async () => {
+    await open();
+    expect(h.trackEvent).toHaveBeenCalledWith('tutorial', 'student_1');
+    fireEvent.click(screen.getByText('Próximo'));
+    expect(h.trackEvent).toHaveBeenCalledWith('tutorial', 'student_2');
+    fireEvent.click(screen.getByText('Pular'));
+    expect(h.trackEvent).toHaveBeenCalledWith('tutorial', 'student_pulou_2');
+
+    cleanup();
+    localStorage.clear();
+    h.trackEvent.mockClear();
+    await open();
+    const total = visibleSteps('student', {}).length;
+    for (let i = 1; i < total; i++) fireEvent.click(screen.getByText('Próximo'));
+    fireEvent.click(screen.getByText('Concluir'));
+    expect(h.trackEvent).toHaveBeenCalledWith('tutorial', 'student_fim');
   });
 
   it('pular fecha e marca como visto', async () => {

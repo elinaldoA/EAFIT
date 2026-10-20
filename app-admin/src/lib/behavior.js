@@ -147,6 +147,10 @@ export const FEATURE_LABELS = {
   invite: 'Convidar amigo',
   export: 'Exportar dados',
   feedback: 'Enviar feedback',
+  heart_rate: 'Cinta cardíaca',
+  superset: 'Bi-set e circuito',
+  warmup: 'Séries de aquecimento',
+  bio_lock: 'Bloqueio por biometria',
 };
 
 // Linhas (event, detail, users, days) → o que a página de Comportamento

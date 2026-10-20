@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { isWarmupDone, setWarmupDone, warmupSets } from '../lib/warmup';
+import { trackFeature } from '../lib/tracking';
 
 import { t, locale } from '../lib/i18n';
 // Séries de aquecimento antes das de trabalho (ver lib/warmup.js): carga em %
@@ -11,6 +12,7 @@ export default function WarmupSets({ ex, day, count, workKg, started }) {
 
   function toggle(i) {
     const next = !done[i];
+    if (next) trackFeature('warmup');
     setWarmupDone(day.dia, ex.nome, sets[i].n, next);
     setDone(d => d.map((v, j) => (j === i ? next : v)));
   }
