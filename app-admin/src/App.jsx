@@ -44,6 +44,7 @@ import Wellbeing from './pages/Wellbeing';
 import Achievements from './pages/Achievements';
 import Admins from './pages/Admins';
 import AccountDeletions from './pages/AccountDeletions';
+import PrivacyRequests from './pages/PrivacyRequests';
 import Legal from './pages/Legal';
 
 // Fora do HashRouter de propósito: o link de "esqueci minha senha" volta com
@@ -95,6 +96,7 @@ function AppShell() {
             <Route path="/conquistas" element={<Achievements />} />
             <Route path="/admins" element={<Admins />} />
             <Route path="/exclusoes" element={<AccountDeletions />} />
+            <Route path="/lgpd" element={<PrivacyRequests />} />
             <Route path="/termos" element={<Legal />} />
             <Route path="/perfil" element={<Profile />} />
           </Route>

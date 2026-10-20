@@ -91,6 +91,7 @@ export const NAV_GROUPS = [
           { to: '/erros', label: 'Erros do app' },
           { to: '/admins', label: 'Administradores' },
           { to: '/exclusoes', label: 'Exclusões de conta' },
+          { to: '/lgpd', label: 'Pedidos LGPD' },
           { to: '/termos', label: 'Termos e privacidade' },
         ],
       },
