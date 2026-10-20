@@ -15,6 +15,7 @@ export const NAV_GROUPS = [
           { to: '/engajamento', label: 'Engajamento' },
           { to: '/analise-planos', label: 'Análise dos planos' },
           { to: '/comportamento', label: 'Comportamento' },
+          { to: '/campanhas', label: 'Campanhas' },
           { to: '/bem-estar', label: 'Bem-estar' },
           { to: '/conquistas', label: 'Conquistas e recordes' },
         ],

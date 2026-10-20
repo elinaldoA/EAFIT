@@ -141,6 +141,20 @@ describe('AuthProvider', () => {
     expect(localStorage.getItem('eafit_ref')).toBeNull();
   });
 
+  it('signup leva a origem da chegada (utm) e limpa depois', async () => {
+    localStorage.setItem('eafit_utm', JSON.stringify({ source: 'instagram', campaign: 'outubro_rosa', medium: 'story', content: '', at: Date.now() }));
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signUp.mockResolvedValue({ data: { session: null, user: { id: 'u5' } }, error: null });
+    await act(async () => {
+      await result.current.signup('c@d.com', 'segredo123');
+    });
+
+    expect(mockAuth.signUp.mock.calls.at(-1)[0].options.data.utm).toEqual({ source: 'instagram', campaign: 'outubro_rosa', medium: 'story', content: '' });
+    expect(localStorage.getItem('eafit_utm')).toBeNull();
+  });
+
   it('signup com e-mail que já tem conta (identities vazio) avisa em vez de fingir sucesso', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.authLoading).toBe(false));

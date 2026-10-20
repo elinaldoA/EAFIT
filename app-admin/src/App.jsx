@@ -19,6 +19,7 @@ import Experiments from './pages/Experiments';
 import ExerciseLibrary from './pages/ExerciseLibrary';
 import PlanAnalytics from './pages/PlanAnalytics';
 import Behavior from './pages/Behavior';
+import Campaigns from './pages/Campaigns';
 import Feedback from './pages/Feedback';
 import Inactivity from './pages/Inactivity';
 import Surveys from './pages/Surveys';
@@ -66,6 +67,7 @@ function AppShell() {
             <Route path="/users/:id" element={<UserDetail />} />
             <Route path="/analise-planos" element={<PlanAnalytics />} />
             <Route path="/comportamento" element={<Behavior />} />
+            <Route path="/campanhas" element={<Campaigns />} />
             <Route path="/suporte" element={<Support />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/inatividade" element={<Inactivity />} />

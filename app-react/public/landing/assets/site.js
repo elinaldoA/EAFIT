@@ -667,6 +667,22 @@
       localStorage.setItem('eafit_ref', JSON.stringify({ code: ref, source: detectSource(), at: Date.now() }));
     } catch { /* sem armazenamento */ }
   })();
+  // Origem do cadastro (primeiro toque, 30 dias): cópia de
+  // app-react/src/lib/attribution.js (mesma chave e regra) — o app manda no
+  // cadastro em user_metadata.utm.
+  (function captureAttribution() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('eafit_utm') || 'null');
+      if (saved && saved.source && Date.now() - Number(saved.at) < 30 * 24 * 60 * 60 * 1000) return;
+      var source = detectSource();
+      if (source === 'direto' || source === 'landing') return;
+      var p = new URLSearchParams(window.location.search);
+      var clean = function (v) { return String(v || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40); };
+      localStorage.setItem('eafit_utm', JSON.stringify({
+        source: source, campaign: clean(p.get('utm_campaign')), medium: clean(p.get('utm_medium')), content: clean(p.get('utm_content')), at: Date.now(),
+      }));
+    } catch { /* sem armazenamento */ }
+  })();
   (function recordVisit() {
     // Navegador de admin não conta (chave de app-react/src/lib/staffDevice.js).
     try { if (localStorage.getItem('eafit_staff_device') === '1') return; } catch { /* sem armazenamento */ }

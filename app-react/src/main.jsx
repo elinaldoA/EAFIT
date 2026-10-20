@@ -10,6 +10,7 @@ import { enableTracking, capturePushOpen } from './lib/tracking'
 import { captureInstallPrompt } from './lib/installPrompt'
 import { capturePushTarget } from './lib/appNav'
 import { captureRef } from './lib/ambassadorRef'
+import { captureAttribution } from './lib/attribution'
 import { capturePersonalInvite } from './lib/trainerInvite'
 
 // Import dinâmico que falha no preload (chunk de uma versão antiga que não
@@ -24,6 +25,7 @@ capturePushTarget()
 capturePushOpen()
 captureInstallPrompt()
 captureRef()
+captureAttribution()
 capturePersonalInvite()
 
 // O Safari do iOS rola o documento pra mostrar o campo acima do teclado e às
