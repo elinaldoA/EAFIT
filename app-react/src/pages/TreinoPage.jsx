@@ -13,6 +13,8 @@ import PlanEditorModal from '../components/PlanEditorModal';
 import WorkoutSummaryModal from '../components/WorkoutSummaryModal';
 import AppRatingModal from '../components/AppRatingModal';
 import { noteWorkoutFinished } from '../lib/appRating';
+import SurveyPrompt from '../components/SurveyPrompt';
+import { fetchPendingSurvey } from '../lib/surveys';
 import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
@@ -35,6 +37,7 @@ export default function TreinoPage() {
   const [summary, setSummary] = useState(null);
   const [liveDay, setLiveDay] = useState(null);
   const [askAppRating, setAskAppRating] = useState(false);
+  const [survey, setSurvey] = useState(null);
 
   // Fechou o resumo do treino: bom momento pra pedir a avaliação do app.
   function handleSummaryClose() {
@@ -44,6 +47,16 @@ export default function TreinoPage() {
 
   // Traz as preferências do treinador por voz da conta para este aparelho.
   useEffect(() => { syncCoachPrefs(user); }, [user]);
+
+  // Pesquisa do painel (NPS etc.): uma de cada vez, um pouco depois de abrir.
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let active = true;
+    const timer = setTimeout(() => {
+      fetchPendingSurvey().then(s => { if (active && s) setSurvey(s); });
+    }, 2500);
+    return () => { active = false; clearTimeout(timer); };
+  }, [user?.id]);
 
   function handleRestStart(label, seconds) {
     restKey.current += 1;
@@ -165,6 +178,9 @@ export default function TreinoPage() {
       )}
       {askAppRating && user && (
         <AppRatingModal userId={user.id} onClose={() => setAskAppRating(false)} />
+      )}
+      {survey && !summary && !askAppRating && !liveDay && (
+        <SurveyPrompt survey={survey} onClose={() => setSurvey(null)} />
       )}
     </section>
   );

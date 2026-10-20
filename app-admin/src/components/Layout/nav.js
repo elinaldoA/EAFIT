@@ -38,6 +38,7 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/feedback', label: 'Feedback' },
           { to: '/inatividade', label: 'Por que pararam' },
+          { to: '/pesquisas', label: 'Pesquisas' },
           { to: '/contato', label: 'Contato do site' },
           { to: '/seguranca', label: 'Segurança' },
         ],

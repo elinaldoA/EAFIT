@@ -113,6 +113,7 @@ describe('backup cobre as tabelas do usuário', () => {
     trainer_invite_signups: 'registro interno de atribuição (por qual link de personal a conta foi criada)',
     trainer_appointments: 'as aulas do aluno vão em appointments',
     trainer_messages: 'a conversa vai em trainerMessages',
+    survey_answers: 'as respostas vão em surveyAnswers (pela função my_survey_answers, junto com a pergunta)',
     trainer_notes: 'notas do personal sobre o aluno (do personal)',
     trainer_goals: 'as metas vão em trainerGoals',
     trainer_templates: 'modelos do personal (modo personal)',

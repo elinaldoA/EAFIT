@@ -183,6 +183,25 @@
 
 .app-rating__star--on { color: var(--primary); }
 
+/* Pesquisa do painel (SurveyPrompt): escala de 0 a 10 em duas linhas no celular */
+.survey__scale { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 4px; }
+.survey__score {
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+.survey__score--on { border-color: var(--primary); background: var(--primary); color: #fff; }
+.survey__ends { display: flex; justify-content: space-between; font-size: .75rem; color: var(--text-dim); }
+.survey__options { display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 360px) {
+  .survey__scale { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
 /* Convite pra função Amigos (FriendsPrompt) */
 .friends-invite {
   display: flex;

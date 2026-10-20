@@ -99,7 +99,7 @@ export async function gatherUserData(userId) {
 
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
-    friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments,
+    friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -114,6 +114,7 @@ export async function gatherUserData(userId) {
     safe('trainerGoals', fetchMyGoals, null),
     safe('trainerMessages', () => fetchMyThread(1000), []),
     safe('appointments', fetchMyAppointments, []),
+    safe('surveyAnswers', fetchMySurveyAnswers, []),
   ]);
 
   return {
@@ -126,7 +127,7 @@ export async function gatherUserData(userId) {
     discomfortReports, achievements,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments,
-    feedback, notifications,
+    feedback, notifications, surveyAnswers,
     incomplete,
   };
 }
@@ -153,6 +154,13 @@ async function fetchWorkoutExercises(workoutIds) {
     out.push(...(data || []));
   }
   return out;
+}
+
+// Respostas às pesquisas do app (NPS etc.), com a pergunta.
+async function fetchMySurveyAnswers() {
+  const { data, error } = await db.rpc('my_survey_answers');
+  if (error) throw error;
+  return data || [];
 }
 
 async function fetchMyFeedback(userId) {

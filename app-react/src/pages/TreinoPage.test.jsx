@@ -2,7 +2,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 
-const { workout, mockToast, deleteChain } = vi.hoisted(() => ({
+const { workout, mockToast, deleteChain, surveys } = vi.hoisted(() => ({
+  surveys: { fetchPendingSurvey: vi.fn() },
   workout: {},
   mockToast: vi.fn(),
   deleteChain: { result: { error: null }, in: vi.fn(), eq: vi.fn() },
@@ -26,6 +27,8 @@ vi.mock('../components/RestTimer', () => ({ default: () => null }));
 vi.mock('../components/WorkoutDayCard', () => ({ default: ({ day }) => <div data-testid="day-card">{day.dia}</div> }));
 vi.mock('../components/PlanEditorModal', () => ({ default: () => <div role="dialog">editor de plano</div> }));
 vi.mock('../components/WorkoutSummaryModal', () => ({ default: () => null }));
+vi.mock('../lib/surveys', async orig => ({ ...(await orig()), fetchPendingSurvey: (...a) => surveys.fetchPendingSurvey(...a) }));
+vi.mock('../components/SurveyPrompt', () => ({ default: ({ survey }) => <div role="dialog">pesquisa: {survey.question}</div> }));
 
 import TreinoPage from './TreinoPage';
 
@@ -37,6 +40,7 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  surveys.fetchPendingSurvey.mockResolvedValue(null);
   deleteChain.result = { error: null };
   deleteChain.eq = vi.fn(() => deleteChain);
   deleteChain.in = vi.fn(() => Promise.resolve(deleteChain.result));
@@ -48,6 +52,16 @@ beforeEach(() => {
 });
 
 describe('TreinoPage', () => {
+  it('mostra a pesquisa pendente do painel um pouco depois de abrir', async () => {
+    vi.useFakeTimers();
+    surveys.fetchPendingSurvey.mockResolvedValue({ id: 's1', kind: 'nps', question: 'Indicaria?', options: [] });
+    render(<TreinoPage />);
+    expect(screen.queryByText('pesquisa: Indicaria?')).toBeNull();
+    await vi.advanceTimersByTimeAsync(2600);
+    vi.useRealTimers();
+    expect(await screen.findByText('pesquisa: Indicaria?')).toBeTruthy();
+  });
+
   it('mostra o treino de hoje e um card por dia do plano', () => {
     render(<TreinoPage />);
     expect(screen.getByText('Treino de hoje')).toBeTruthy();
