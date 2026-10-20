@@ -22,6 +22,7 @@ import Feedback from './pages/Feedback';
 import Inactivity from './pages/Inactivity';
 import Surveys from './pages/Surveys';
 import ContactMessages from './pages/ContactMessages';
+import Support from './pages/Support';
 import UserDetail from './pages/UserDetail';
 import Broadcast from './pages/Broadcast';
 import BroadcastHistory from './pages/BroadcastHistory';
@@ -62,6 +63,7 @@ function AppShell() {
             <Route path="/users/:id" element={<UserDetail />} />
             <Route path="/analise-planos" element={<PlanAnalytics />} />
             <Route path="/comportamento" element={<Behavior />} />
+            <Route path="/suporte" element={<Support />} />
             <Route path="/feedback" element={<Feedback />} />
             <Route path="/inatividade" element={<Inactivity />} />
             <Route path="/pesquisas" element={<Surveys />} />
