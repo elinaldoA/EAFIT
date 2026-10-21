@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
-vi.mock('../context/useAuth', () => ({
-  useAuth: () => ({ login: vi.fn(), signup: vi.fn(), requestPasswordReset: vi.fn(), resendConfirmation: vi.fn() }),
-}));
+const auth = vi.hoisted(() => ({ login: vi.fn(), signup: vi.fn(), requestPasswordReset: vi.fn(), resendConfirmation: vi.fn() }));
+vi.mock('../context/useAuth', () => ({ useAuth: () => auth }));
 
 vi.mock('../lib/pageVisits', () => ({ recordVisit: vi.fn() }));
 
@@ -23,6 +22,16 @@ describe('AuthScreen', () => {
     expect(screen.getByRole('tab', { name: 'Criar conta' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByText(/Plano de treino pro seu objetivo/)).toBeTruthy();
     expect(screen.getByRole('link', { name: /Conheça o app/ }).getAttribute('href')).toBe('../');
+  });
+
+  it('e-mail sem formato válido não vai pro servidor', () => {
+    render(<AuthScreen />);
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'ana@gmail' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }));
+    expect(screen.getByText('E-mail inválido.')).toBeTruthy();
+    expect(auth.signup).not.toHaveBeenCalled();
   });
 
   it('aparelho que já teve conta abre em "Entrar", sem o convite', () => {

@@ -40,6 +40,7 @@ import { shareInvite } from '../lib/invite';
 import { takeProfileCardToOpen } from '../lib/appNav';
 import { startTutorial } from '../lib/tutorial';
 
+import { validateBody, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
 import { t, locale, lang } from '../lib/i18n';
 export default function PerfilPage({ active }) {
   const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
@@ -112,11 +113,15 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleSavePersonal() {
-    const { error } = await updateProfile({ nome, sobrenome, apelido });
+    const fields = { nome: cleanName(nome), sobrenome: cleanName(sobrenome), apelido: cleanName(apelido) };
+    const { error } = await updateProfile(fields);
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
-    localStorage.setItem('profile_nome', nome);
-    localStorage.setItem('profile_sobrenome', sobrenome);
-    localStorage.setItem('profile_apelido', apelido);
+    setNome(fields.nome);
+    setSobrenome(fields.sobrenome);
+    setApelido(fields.apelido);
+    localStorage.setItem('profile_nome', fields.nome);
+    localStorage.setItem('profile_sobrenome', fields.sobrenome);
+    localStorage.setItem('profile_apelido', fields.apelido);
     toast(t('✅ Dados pessoais salvos!'));
   }
 
@@ -127,6 +132,9 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleSave() {
+    const invalid = validateBody({ sexo, idade, peso, altura, pesoAlvo });
+    if (invalid) return toast(`⚠️ ${invalid.message}`);
+
     // O peso só muda o treino pela faixa de IMC (applyImcAdjustment). Como
     // generatePlan sorteia os exercícios da biblioteca, regenerar a cada
     // pesagem trocaria o treino inteiro toda semana e zeraria a progressão —
@@ -199,6 +207,7 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleSaveWeeklyGoal() {
+    if (!validWeeklyGoal(weeklyGoal)) return toast(t('⚠️ Escolha de 1 a 7 treinos por semana.'));
     const { error } = await updateProfile({ weeklyGoal });
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_weeklyGoal', weeklyGoal);
@@ -206,6 +215,7 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleSaveWaterGoal() {
+    if (!validWaterGoal(macroAgua)) return toast(t('⚠️ Meta de água entre 0,5 e 10 L.'));
     const { error } = await updateProfile({ macroAgua });
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_macroAgua', macroAgua);
@@ -213,8 +223,8 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleUpdateEmail() {
-    if (!newEmail) return;
-    const { error } = await updateEmail(newEmail);
+    if (!newEmail.trim()) return;
+    const { error } = await updateEmail(newEmail.trim());
     if (error) return toast(`⚠️ ${error}`);
     toast(t('✅ Confirme o e-mail enviado para a nova conta'));
     setNewEmail('');

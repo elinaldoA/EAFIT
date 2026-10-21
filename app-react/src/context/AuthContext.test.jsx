@@ -95,6 +95,19 @@ describe('AuthProvider', () => {
     expect(mockAuth.signUp).not.toHaveBeenCalled();
   });
 
+  it('signup recusa senha acima do limite do Supabase (72) antes de chamar o backend', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    let response;
+    await act(async () => {
+      response = await result.current.signup('a@b.com', 'x'.repeat(73));
+    });
+
+    expect(response).toEqual({ error: 'Senha: máximo 72 caracteres.' });
+    expect(mockAuth.signUp).not.toHaveBeenCalled();
+  });
+
   it('signup sem sessão imediata (confirmação por e-mail) não seta usuário', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.authLoading).toBe(false));

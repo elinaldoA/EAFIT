@@ -414,6 +414,17 @@ describe('OnboardingScreen', () => {
     submit();
     expect(await screen.findByText('⚠️ Não foi possível gerar seu plano — tente novamente.')).toBeTruthy();
   });
+
+  it('tentar de novo depois de falhar só o perfil não cria um segundo plano', async () => {
+    h.auth.updateProfile.mockResolvedValueOnce({ error: new Error('rede') }).mockResolvedValueOnce({});
+    render(<OnboardingScreen />);
+    fill();
+    submit();
+    await screen.findByText('⚠️ Não foi possível gerar seu plano — tente novamente.');
+    submit();
+    await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalledTimes(2));
+    expect(h.plans.seedGeneratedPlan).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('ReminderScheduler', () => {

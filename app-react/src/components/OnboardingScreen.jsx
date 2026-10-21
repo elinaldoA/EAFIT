@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
+import { validateBody } from '../lib/profileValidation';
 
 import { t } from '../lib/i18n';
 export default function OnboardingScreen() {
@@ -19,6 +20,9 @@ export default function OnboardingScreen() {
   const [local, setLocal] = useState('academia');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar
+  // de novo não cria um segundo plano.
+  const seeded = useRef(false);
 
   // Métrica do painel: até onde cada pessoa chega no preenchimento.
   useEffect(() => { trackEvent('onboarding', 'view'); }, []);
@@ -34,19 +38,10 @@ export default function OnboardingScreen() {
     const pesoNum = parseFloat(peso);
     const alturaNum = parseFloat(altura);
 
-    if (!sexo || !idadeNum || idadeNum < 14 || idadeNum > 100) {
-      trackEvent('onboarding', 'erro_idade');
-      setMsg(t('Preencha sexo e uma idade válida (14–100).'));
-      return;
-    }
-    if (!pesoNum || pesoNum < 30 || pesoNum > 300) {
-      trackEvent('onboarding', 'erro_peso');
-      setMsg(t('Informe um peso válido (kg).'));
-      return;
-    }
-    if (!alturaNum || alturaNum < 100 || alturaNum > 250) {
-      trackEvent('onboarding', 'erro_altura');
-      setMsg(t('Informe uma altura válida (cm).'));
+    const invalid = validateBody({ sexo, idade, peso, altura }, { onboarding: true });
+    if (invalid) {
+      trackEvent('onboarding', `erro_${invalid.field}`);
+      setMsg(invalid.message);
       return;
     }
 
@@ -59,8 +54,11 @@ export default function OnboardingScreen() {
       // essa busca corre em paralelo com a criação do plano personalizado e
       // pode disparar o fallback de plano padrão antes dele existir,
       // gerando dois planos ativos.
-      const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
-      await seedGeneratedPlan(user.id, generatedDays);
+      if (!seeded.current) {
+        const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
+        await seedGeneratedPlan(user.id, generatedDays);
+        seeded.current = true;
+      }
 
       const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
       if (error) throw error;

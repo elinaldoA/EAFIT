@@ -265,4 +265,11 @@ export default {
   'Circuito': 'Circuit',
   'Tri-set': 'Tri-set',
   'Bi-set': 'Superset',
+  // Validação do cadastro (lib/profileValidation.js, Perfil, cadastro)
+  'Selecione o sexo biológico.': 'Select your biological sex.',
+  'Informe uma idade válida (14–100).': 'Enter a valid age (14–100).',
+  'Informe um peso alvo válido (kg).': 'Enter a valid target weight (kg).',
+  '⚠️ Escolha de 1 a 7 treinos por semana.': '⚠️ Choose 1 to 7 workouts per week.',
+  '⚠️ Meta de água entre 0,5 e 10 L.': '⚠️ Water goal must be between 0.5 and 10 L.',
+  'Senha: máximo {MAX_PASSWORD} caracteres.': 'Password: at most {MAX_PASSWORD} characters.',
 };

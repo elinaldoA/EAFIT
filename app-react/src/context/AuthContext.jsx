@@ -15,6 +15,14 @@ import { noteFreshLogin } from '../lib/biometricLock';
 
 import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 6;
+// Limite do bcrypt no Supabase Auth: acima disso o servidor recusa a senha.
+const MAX_PASSWORD = 72;
+
+function passwordProblem(password) {
+  if (password.length < MIN_PASSWORD) return t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD });
+  if (password.length > MAX_PASSWORD) return t('Senha: máximo {MAX_PASSWORD} caracteres.', { MAX_PASSWORD });
+  return null;
+}
 
 // Links de e-mail (confirmação de cadastro, redefinição de senha) voltam pra
 // esta mesma página do app (ex.: https://eafit.com.br/app/), não pra Site URL raiz
@@ -156,9 +164,10 @@ export function AuthProvider({ children }) {
   }
 
   async function signup(email, password) {
-    if (password.length < MIN_PASSWORD) {
-      trackAuthEvent('signup_error', 'senha_curta');
-      return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
+    const problem = passwordProblem(password);
+    if (problem) {
+      trackAuthEvent('signup_error', password.length < MIN_PASSWORD ? 'senha_curta' : 'senha_longa');
+      return { error: problem };
     }
     // Veio por link de embaixador: o banco vincula a conta pelo user_metadata.ref.
     // Link de personal: user_metadata.personal só conta o cadastro; o vínculo
@@ -226,12 +235,13 @@ export function AuthProvider({ children }) {
   }
 
   async function updateEmail(email) {
-    const { error } = await db.auth.updateUser({ email }, { emailRedirectTo: appUrl() });
+    const { error } = await db.auth.updateUser({ email: email.trim() }, { emailRedirectTo: appUrl() });
     return { error: error ? translateAuthError(error) : undefined };
   }
 
   async function updatePassword(password) {
-    if (password.length < MIN_PASSWORD) return { error: t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD }) };
+    const problem = passwordProblem(password);
+    if (problem) return { error: problem };
     const { error } = await db.auth.updateUser({ password });
     return { error: error ? translateAuthError(error) : undefined };
   }

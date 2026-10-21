@@ -9,6 +9,9 @@ import { visibleInvite, fetchInviteName } from '../lib/trainerInvite';
 import { trackAuthEvent } from '../lib/tracking';
 import { t } from '../lib/i18n';
 
+// Só o formato básico (algo@algo.algo); o resto o Supabase confere.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const MODES = {
   login: { title: t('Entrar'), submit: t('Entrar'), busy: t('Entrando…') },
   signup: { title: t('Criar conta'), submit: t('Criar conta'), busy: t('Criando conta…') },
@@ -58,6 +61,10 @@ export default function AuthScreen() {
     if (!cleanEmail) {
       if (signingUp) trackAuthEvent('signup_error', 'sem_email');
       setMsg({ text: t('Informe seu e-mail.'), type: 'error' }); return;
+    }
+    if (!EMAIL_RE.test(cleanEmail)) {
+      if (signingUp) trackAuthEvent('signup_error', 'email_invalido');
+      setMsg({ text: t('E-mail inválido.'), type: 'error' }); return;
     }
     if (mode !== 'forgot' && !password) {
       if (signingUp) trackAuthEvent('signup_error', 'sem_senha');

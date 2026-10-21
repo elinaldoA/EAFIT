@@ -115,7 +115,8 @@
   color: var(--text-muted);
   line-height: 1.4;
 }
-.auth-form__terms input { margin-top: 3px; flex-shrink: 0; }
+/* 20px em vez dos 13px padrão: alvo de toque maior no celular. */
+.auth-form__terms input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--primary); }
 
 .app-version {
   text-align: center;

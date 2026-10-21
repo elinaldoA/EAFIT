@@ -143,6 +143,14 @@ describe('PerfilPage', () => {
       expect(localStorage.getItem('profile_nome')).toBe('Carla');
     });
 
+    it('tira espaços sobrando dos nomes', async () => {
+      render(<PerfilPage active />);
+      type('nome', '  Carla  ');
+      fireEvent.click(screen.getByText('salvar pessoais'));
+      await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith({ nome: 'Carla', sobrenome: '', apelido: '' }));
+      expect(localStorage.getItem('profile_nome')).toBe('Carla');
+    });
+
     it('falha ao salvar: avisa e não grava o cache', async () => {
       auth.updateProfile.mockResolvedValue({ error: new Error('rede') });
       render(<PerfilPage active />);
@@ -162,6 +170,19 @@ describe('PerfilPage', () => {
       expect(auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ peso: '72.5', altura: '175' }));
       expect(weight.upsertWeightLog).toHaveBeenCalledWith('u1', '2026-10-07', 72.5);
       expect(localStorage.getItem('profile_peso')).toBe('72.5');
+    });
+
+    it.each([
+      ['peso', '', '⚠️ Informe um peso válido (kg).'],
+      ['peso', '3', '⚠️ Informe um peso válido (kg).'],
+      ['altura', '1.75', '⚠️ Informe uma altura válida (cm).'],
+    ])('%s "%s" não salva (peso vazio mandaria de volta ao onboarding)', (field, value, message) => {
+      render(<PerfilPage active />);
+      type(field, value);
+      fireEvent.click(screen.getByText('salvar corpo'));
+      expect(mockToast).toHaveBeenCalledWith(message);
+      expect(auth.updateProfile).not.toHaveBeenCalled();
+      expect(weight.upsertWeightLog).not.toHaveBeenCalled();
     });
 
     it('peso novo na mesma faixa de IMC não mexe no treino', async () => {
@@ -274,6 +295,17 @@ describe('PerfilPage', () => {
       await waitFor(() => expect(mockToast).toHaveBeenCalledWith('🎯 Meta de água salva!'));
       expect(auth.updateProfile).toHaveBeenCalledWith({ macroAgua: '3' });
     });
+  });
+
+  it('metas fora da faixa não salvam', () => {
+    render(<PerfilPage active />);
+    type('meta semanal', '9');
+    fireEvent.click(screen.getByText('salvar meta semanal'));
+    expect(mockToast).toHaveBeenCalledWith('⚠️ Escolha de 1 a 7 treinos por semana.');
+    type('meta de água', '40');
+    fireEvent.click(screen.getByText('salvar meta de água'));
+    expect(mockToast).toHaveBeenCalledWith('⚠️ Meta de água entre 0,5 e 10 L.');
+    expect(auth.updateProfile).not.toHaveBeenCalled();
   });
 
   describe('conta', () => {

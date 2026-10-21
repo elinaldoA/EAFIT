@@ -25,6 +25,7 @@ const BY_MESSAGE = [
   [/invalid login credentials/i, BY_CODE.invalid_credentials],
   [/email not confirmed/i, BY_CODE.email_not_confirmed],
   [/already registered|already exists/i, BY_CODE.user_already_exists],
+  [/cannot be longer than 72/i, t('Senha: máximo {MAX_PASSWORD} caracteres.', { MAX_PASSWORD: 72 })],
   [/password should be|weak password/i, BY_CODE.weak_password],
   [/should be different from the old password/i, BY_CODE.same_password],
   [/for security purposes|rate limit|too many requests/i, BY_CODE.over_request_rate_limit],

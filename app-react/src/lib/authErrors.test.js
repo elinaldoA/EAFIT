@@ -11,6 +11,7 @@ describe('translateAuthError', () => {
     expect(translateAuthError({ message: 'Email not confirmed' })).toMatch(/Confirme seu e-mail/);
     expect(translateAuthError({ message: 'For security purposes, you can only request this after 42 seconds.' })).toMatch(/Aguarde/);
     expect(translateAuthError(new TypeError('Failed to fetch'))).toMatch(/Sem conexão/);
+    expect(translateAuthError({ message: 'Password cannot be longer than 72 characters' })).toBe('Senha: máximo 72 caracteres.');
   });
 
   it('nunca repassa texto técnico em inglês — usa mensagem genérica', () => {
