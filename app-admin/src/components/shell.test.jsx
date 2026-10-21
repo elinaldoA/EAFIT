@@ -164,6 +164,21 @@ describe('Layout', () => {
     expect(link.getAttribute('aria-current')).toBe('page');
   });
 
+  it('menu começa recolhido e a seta expande e lembra a escolha', () => {
+    const { container, unmount } = renderAt('/');
+    expect(container.querySelector('.sidebar--collapsed')).toBeTruthy();
+    // recolhido, o nome continua acessível (só escondido da tela) e vira dica no hover
+    const link = screen.getAllByRole('link', { name: /Pessoas/ })[0];
+    expect(link.getAttribute('title')).toMatch(/Pessoas/);
+    fireEvent.click(screen.getByRole('button', { name: 'Expandir menu' }));
+    expect(container.querySelector('.sidebar--collapsed')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Recolher menu' }).getAttribute('aria-expanded')).toBe('true');
+    expect(localStorage.getItem('sidebarCollapsed')).toBe('0');
+    unmount();
+    const again = renderAt('/');
+    expect(again.container.querySelector('.sidebar--collapsed')).toBeNull();
+  });
+
   it('abre e fecha o menu mobile', () => {
     const { container } = renderAt('/');
     fireEvent.click(screen.getByLabelText('Abrir menu'));

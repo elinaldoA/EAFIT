@@ -8,8 +8,22 @@ import { useAdminAccess } from '../../context/useAdminAccess';
 import { isHidden } from '../../lib/adminAccess';
 import EmptyState from '../EmptyState';
 
+const COLLAPSED_KEY = 'sidebarCollapsed';
+
+// Menu lateral do desktop começa recolhido (só ícones); a escolha fica salva.
+function initialCollapsed() {
+  try { return localStorage.getItem(COLLAPSED_KEY) !== '0'; } catch { return true; }
+}
+
 function Shell() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  function toggleCollapsed() {
+    setCollapsed(c => {
+      try { localStorage.setItem(COLLAPSED_KEY, c ? '0' : '1'); } catch { /* sem storage: vale só nesta visita */ }
+      return !c;
+    });
+  }
   const { pathname } = useLocation();
   const { hiddenScreens } = useAdminAccess();
   const section = sectionForPath(pathname);
@@ -48,7 +62,7 @@ function Shell() {
 
   return (
     <div className="shell">
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
       <div className="shell__main">
         <Topbar menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />
         <main className="shell__content">
