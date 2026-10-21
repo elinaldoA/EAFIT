@@ -14,6 +14,7 @@ export const AUDIENCE_LABELS = {
   novos: 'Novos (conta com até 30 dias)',
   personal: 'Alunos de personal',
   academia: 'Treinam na academia',
+  condominio: 'Treinam no condomínio',
   casa: 'Treinam em casa',
 };
 export const FLAG_OPTIONS = KNOWN_FLAGS;

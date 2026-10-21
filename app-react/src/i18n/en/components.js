@@ -347,6 +347,7 @@ export default {
   'Avançado': 'Advanced',
   'Onde você treina': 'Where you train',
   'Academia': 'Gym',
+  'Academia do condomínio': 'Building gym',
   'Em casa': 'At home',
   'Gerando seu plano…': 'Building your plan…',
   'Gerar meu treino': 'Generate my workout',

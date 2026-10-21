@@ -2,10 +2,10 @@ import { db } from './supabase';
 import { WEEKDAYS } from './planAnalytics';
 
 // Padrões de treino (Análises → Análise dos planos): mapa dia × hora e
-// academia × casa. SQL em
+// academia × condomínio × casa. SQL em
 // supabase/migrations/20261128040000_admin_training_patterns.sql.
 
-export const PLACE_LABELS = { academia: 'Academia', casa: 'Em casa' };
+export const PLACE_LABELS = { academia: 'Academia', condominio: 'Condomínio', casa: 'Em casa' };
 
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : null);
 const hh = h => `${String(h).padStart(2, '0')}h`;

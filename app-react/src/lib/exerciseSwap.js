@@ -1,5 +1,5 @@
 import { db } from './supabase';
-import { allowedNiveis } from '../data/exerciseLibrary';
+import { allowedEquipamentos, allowedNiveis } from '../data/exerciseLibrary';
 
 import { locale } from './i18n';
 // Troca de exercício "geral": qualquer exercício do plano pode ser trocado por
@@ -19,20 +19,24 @@ export function findLibraryRow(library, name) {
 }
 
 // Alternativas pro exercício `current`: mesmo grupo e tipo, só força, nível
-// permitido, fora do dia e fora da lista de evitar. Mesmo equipamento primeiro
-// (a troca mais natural), depois ordem alfabética.
-export function pickAlternatives({ current, library, nivel, dayNames = [], avoidNames = [], limit = 6 }) {
+// permitido, fora do dia e fora da lista de evitar. Fora da academia (casa,
+// condomínio) só sugere o que dá pra fazer com o equipamento do local; na
+// academia tudo vale. Mesmo equipamento primeiro (a troca mais natural),
+// depois ordem alfabética.
+export function pickAlternatives({ current, library, nivel, local, dayNames = [], avoidNames = [], limit = 6 }) {
   const row = findLibraryRow(library, current?.nome);
   if (!row) return { known: false, options: [] };
 
   const blocked = new Set([current.nome, ...dayNames, ...avoidNames].map(normalizeName));
   const allowed = allowedNiveis(nivel);
+  const equipamentos = local && local !== 'academia' ? allowedEquipamentos(local) : null;
 
   const options = (library || [])
     .filter(r => r.grupo_muscular === row.grupo_muscular
       && r.tipo === row.tipo
       && !r.is_post_workout
       && allowed.includes(r.nivel_minimo)
+      && (!equipamentos || equipamentos.includes(r.equipamento))
       && !blocked.has(normalizeName(r.nome)))
     .sort((a, b) => {
       const sameA = a.equipamento === row.equipamento ? 0 : 1;

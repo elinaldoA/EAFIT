@@ -37,6 +37,13 @@ describe('pickAlternatives', () => {
     expect(options.map(o => o.nome)).toEqual(['Supino Declinado', 'Supino Inclinado com Barra', 'Supino Reto com Halteres']);
   });
 
+  it('fora da academia só sugere o equipamento do local', () => {
+    const names = local => pickAlternatives({ current, library: lib, nivel: 'avancado', local }).options.map(o => o.nome);
+    expect(names('condominio')).toEqual(['Supino Reto com Halteres']);
+    expect(names('casa')).toEqual(['Supino Reto com Halteres']);
+    expect(names('academia')).toHaveLength(3);
+  });
+
   it('respeita o nível do usuário', () => {
     const { options } = pickAlternatives({ current, library: lib, nivel: 'iniciante' });
     expect(options.map(o => o.nome)).toEqual(['Supino Reto com Halteres']);

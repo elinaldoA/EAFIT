@@ -20,7 +20,7 @@ export default function ExerciseSwap({ ex, day, user, toast, onSwapped }) {
     try {
       const { library, avoidNames } = await fetchSwapContext(user.id);
       const { known, options } = pickAlternatives({
-        current: ex, library, nivel: user.user_metadata?.nivel,
+        current: ex, library, nivel: user.user_metadata?.nivel, local: user.user_metadata?.local,
         dayNames: [...day.exercicios, ...day.pos].map(e => e.nome), avoidNames,
       });
       setState({ loading: false, known, options, error: '' });

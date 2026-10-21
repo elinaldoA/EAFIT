@@ -41,6 +41,7 @@ export function allowedNiveis(nivel: string | undefined): string[] {
 
 export const EQUIPAMENTOS_POR_LOCAL: Record<string, string[]> = {
   academia: ['barra', 'halteres', 'máquina', 'polia', 'anilha'],
+  condominio: ['halteres', 'polia', 'peso corporal', 'elástico', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
   casa: ['peso corporal', 'elástico', 'halteres', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
 };
 

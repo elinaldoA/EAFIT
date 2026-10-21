@@ -108,6 +108,11 @@ describe('allowedEquipamentos', () => {
     expect(allowedEquipamentos('casa')).toContain('peso corporal');
   });
 
+  it('condomínio tem halteres e polia, sem barra, anilha nem máquina guiada', () => {
+    expect(allowedEquipamentos('condominio')).toEqual(expect.arrayContaining(['halteres', 'polia', 'peso corporal', 'elástico']));
+    expect(allowedEquipamentos('condominio')).toEqual(expect.not.arrayContaining(['máquina', 'barra', 'anilha']));
+  });
+
   it('local ausente ou desconhecido conta como academia', () => {
     expect(allowedEquipamentos(undefined)).toEqual(EQUIPAMENTOS_POR_LOCAL.academia);
     expect(allowedEquipamentos('praia')).toEqual(EQUIPAMENTOS_POR_LOCAL.academia);

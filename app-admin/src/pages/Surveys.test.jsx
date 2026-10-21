@@ -40,6 +40,7 @@ describe('lib/surveys', () => {
     const answers = ANSWERS.map(a => ({ score: a.sa_score, comment: a.sa_comment, local: a.sa_local, at: a.sa_at, accountDays: 40 }));
     const r = buildResults(survey, answers, 'local');
     expect(r.breakdown).toEqual([{ label: 'Em casa', total: 2, nps: 0, top: null }, { label: 'Academia', total: 1, nps: 100, top: null }]);
+    expect(buildResults(survey, [{ score: 10, local: 'condominio', at: '2026-10-06T12:00:00Z', accountDays: 40 }], 'local').breakdown[0].label).toBe('Condomínio');
     expect(r.distribution[10]).toMatchObject({ total: 1, pct: 33 });
     expect(r.comments).toHaveLength(2);
     expect(r.weekly).toEqual([{ week: '2026-10-05', total: 3, nps: 34 }]);

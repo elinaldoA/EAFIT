@@ -44,10 +44,14 @@ export function allowedNiveis(nivel) {
 
 // Equipamentos (exercise_library.equipamento) que cada local de treino tem.
 // Sem esse filtro o sorteio misturava peso corporal/elástico (um terço da
-// biblioteca) no treino de quem vai à academia. Halteres valem nos dois.
-export const LOCAIS = ['academia', 'casa'];
+// biblioteca) no treino de quem vai à academia. Halteres valem em todos.
+// Academia de condomínio: halteres, estação com polia (puxada, remada,
+// tríceps) e o que se usa no chão — sem barra livre, anilhas nem máquinas
+// guiadas (leg press, cadeiras, Smith), que quase nunca existem lá.
+export const LOCAIS = ['academia', 'condominio', 'casa'];
 export const EQUIPAMENTOS_POR_LOCAL = {
   academia: ['barra', 'halteres', 'máquina', 'polia', 'anilha'],
+  condominio: ['halteres', 'polia', 'peso corporal', 'elástico', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
   casa: ['peso corporal', 'elástico', 'halteres', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
 };
 

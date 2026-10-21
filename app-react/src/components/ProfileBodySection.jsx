@@ -62,6 +62,7 @@ export default function ProfileBodySection({
         <label className="profile-field__label" htmlFor="profileLocal">{t('Onde você treina')}</label>
         <select id="profileLocal" className="input input--sm" value={local} onChange={e => setLocal(e.target.value)}>
           <option value="academia">{t('Academia')}</option>
+          <option value="condominio">{t('Academia do condomínio')}</option>
           <option value="casa">{t('Em casa')}</option>
         </select>
       </div>

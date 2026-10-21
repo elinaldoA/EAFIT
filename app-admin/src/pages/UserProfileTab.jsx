@@ -71,6 +71,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
           <span className="field__label">Onde treina</span>
           <select className="input" value={form.local} onChange={e => setForm({ ...form, local: e.target.value })}>
             <option value="academia">academia</option>
+            <option value="condominio">condomínio</option>
             <option value="casa">casa</option>
           </select>
         </label>

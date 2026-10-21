@@ -11,6 +11,7 @@ export const AUDIENCE_LABELS = {
   novos: 'Novos (conta com até 30 dias)',
   personal: 'Alunos de personal',
   academia: 'Treinam na academia',
+  condominio: 'Treinam no condomínio',
   casa: 'Treinam em casa',
 };
 export const MAX_OPTIONS = 6;
@@ -92,7 +93,7 @@ export function npsOf(answers) {
 function groupValue(a, key) {
   if (key === 'personal') return a.personal ? 'Com personal' : 'Sem personal';
   if (key === 'active30') return a.active30 ? 'Sim' : 'Não';
-  if (key === 'local') return a.local === 'casa' ? 'Em casa' : 'Academia';
+  if (key === 'local') return { casa: 'Em casa', condominio: 'Condomínio' }[a.local] || 'Academia';
   if (key === 'tenure') {
     if (a.accountDays < 30) return 'Até 30 dias';
     if (a.accountDays < 90) return '1 a 3 meses';

@@ -35,11 +35,12 @@ describe('trainingPatterns', () => {
     expect(buildHeatmap([]).peakHour).toBeNull();
   });
 
-  it('academia e casa sempre aparecem, com as taxas', () => {
-    const [gym, home] = buildPlaces(PLACES);
+  it('academia, condomínio e casa sempre aparecem, com as taxas', () => {
+    const [gym, condo, home] = buildPlaces(PLACES);
     expect(gym).toMatchObject({ label: 'Academia', trained30Pct: 60, neverPct: 20, retentionPct: 75, painPct: 10 });
+    expect(condo).toMatchObject({ label: 'Condomínio', users: 0 });
     expect(home).toMatchObject({ label: 'Em casa', retentionPct: null });
-    expect(buildPlaces([]).map(p => p.users)).toEqual([0, 0]);
+    expect(buildPlaces([]).map(p => p.users)).toEqual([0, 0, 0]);
   });
 });
 
