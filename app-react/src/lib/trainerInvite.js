@@ -10,6 +10,9 @@ import { t } from './i18n';
 // supabase/migrations/20261119010000_trainer_invite_link.sql.
 
 const KEY = 'eafit_personal_invite';
+// Aba aberta pelo link: só nela o app fala do convite antes do cadastro.
+// Quem volta depois por "Abrir app" (sem ?personal=) entra sem citar ninguém.
+const VISIT_KEY = 'eafit_personal_invite_visit';
 const TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export const APP_URL = `${LANDING_URL}app/`;
@@ -28,6 +31,7 @@ export function capturePersonalInvite(search = window.location.search, now = Dat
   try {
     localStorage.setItem(KEY, JSON.stringify({ code, at: now }));
   } catch { /* sem armazenamento: o aluno ainda pode digitar o código */ }
+  try { sessionStorage.setItem(VISIT_KEY, code); } catch { /* sem armazenamento */ }
 }
 
 // Código ainda válido, ou ''.
@@ -40,8 +44,21 @@ export function pendingPersonalInvite(now = Date.now()) {
   return '';
 }
 
+// Convite a mostrar na tela: o desta aba (chegou pelo link) ou, com a conta
+// aberta, o que foi usado no cadastro (confirmação de e-mail abre outra aba).
+// Fora disso, '' — o convite guardado só segue no cadastro, sem aparecer.
+export function visibleInvite(user = null, now = Date.now()) {
+  const code = pendingPersonalInvite(now);
+  if (!code) return '';
+  let visit = '';
+  try { visit = sessionStorage.getItem(VISIT_KEY) || ''; } catch { /* sem armazenamento */ }
+  if (visit === code) return code;
+  return user?.user_metadata?.personal === code ? code : '';
+}
+
 export function clearPersonalInvite() {
   try { localStorage.removeItem(KEY); } catch { /* sem armazenamento */ }
+  try { sessionStorage.removeItem(VISIT_KEY); } catch { /* sem armazenamento */ }
 }
 
 // Primeiro nome de quem convidou, ou null se o código não é de nenhum personal.

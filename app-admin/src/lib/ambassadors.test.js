@@ -12,8 +12,8 @@ beforeEach(() => { mockRpc.mockReset(); });
 
 describe('helpers', () => {
   it('monta o link com código e canal', () => {
-    expect(ambassadorLink('anafit')).toBe('https://eafit.com.br/?ref=anafit');
-    expect(ambassadorLink('anafit', 'whatsapp')).toBe('https://eafit.com.br/?ref=anafit&origem=whatsapp');
+    expect(ambassadorLink('anafit')).toBe('https://eafit.com.br/app/?ref=anafit');
+    expect(ambassadorLink('anafit', 'whatsapp')).toBe('https://eafit.com.br/app/?ref=anafit&origem=whatsapp');
   });
 
   it('sugere código sem acento e valida o formato do banco', () => {

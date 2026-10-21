@@ -23,7 +23,7 @@ afterEach(cleanup);
 describe('SharePage', () => {
   it('mostra o link e os textos prontos com o link do canal', () => {
     render(<SharePage amb={AMB} />);
-    expect(screen.getByText('https://eafit.com.br/?ref=anafit')).toBeTruthy();
+    expect(screen.getByText('https://eafit.com.br/app/?ref=anafit')).toBeTruthy();
     expect(screen.getByText(/^Bora treinar junto\?.*\?ref=anafit&origem=whatsapp$/)).toBeTruthy();
     expect(screen.getAllByText(/origem=instagram$/)).toHaveLength(2);
   });
@@ -32,7 +32,7 @@ describe('SharePage', () => {
     render(<SharePage amb={AMB} />);
     fireEvent.click(screen.getAllByText('Copiar texto')[0]);
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('📋 Texto copiado'));
-    expect(h.writeText).toHaveBeenCalledWith('Meu treino é montado e registrado no EAFIT. Grátis: https://eafit.com.br/?ref=anafit&origem=instagram');
+    expect(h.writeText).toHaveBeenCalledWith('Meu treino é montado e registrado no EAFIT. Grátis: https://eafit.com.br/app/?ref=anafit&origem=instagram');
   });
 
   it('mostra o QR do link e baixa a imagem', async () => {

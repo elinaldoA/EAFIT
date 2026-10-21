@@ -1,6 +1,7 @@
 import { detectSource, detectRef } from './pageVisits';
 
-// Link de embaixador (https://eafit.com.br/?ref=CODIGO): o código fica
+// Link de embaixador (https://eafit.com.br/app/?ref=CODIGO; links antigos
+// apontam para o site, que guarda igual): o código fica
 // guardado no navegador e vai no cadastro (user_metadata.ref), onde o banco
 // vincula a conta ao embaixador — ver
 // supabase/migrations/20261108010000_ambassadors.sql. A landing guarda com a

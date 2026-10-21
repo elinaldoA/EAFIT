@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useToast } from '../context/useToast';
+import { useAuth } from '../context/useAuth';
 import { fetchMyTrainer, friendlyTrainerError } from '../lib/trainer';
-import { pendingPersonalInvite, clearPersonalInvite, fetchInviteName, acceptTrainerInvite } from '../lib/trainerInvite';
+import { visibleInvite, clearPersonalInvite, fetchInviteName, acceptTrainerInvite } from '../lib/trainerInvite';
 
 import { t } from '../lib/i18n';
 
 // Chegou pelo link de convite de um personal: com a conta aberta, pergunta uma
-// vez se o aluno autoriza o vínculo. Sem resposta (fechou o app), pergunta de
-// novo na próxima abertura, enquanto o convite valer (30 dias).
+// vez se o aluno autoriza o vínculo. Só na aba aberta pelo link ou para quem se
+// cadastrou por ele (ver visibleInvite) — abrir o app direto não cita ninguém.
 export default function TrainerInvitePrompt() {
   const toast = useToast();
+  const { user } = useAuth();
   const [invite, setInvite] = useState(null); // { code, name }
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const code = pendingPersonalInvite();
+    const code = visibleInvite(user);
     if (!code) return undefined;
     let active = true;
     Promise.all([fetchInviteName(code), fetchMyTrainer()])
@@ -28,7 +30,7 @@ export default function TrainerInvitePrompt() {
       })
       .catch(() => { /* sem rede: pergunta na próxima abertura */ });
     return () => { active = false; };
-  }, []);
+  }, [user]);
 
   if (!invite) return null;
 

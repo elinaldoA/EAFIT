@@ -51,7 +51,7 @@ export function ambassadorError(err) {
 export function ambassadorLink(code, channel = '') {
   const params = new URLSearchParams({ ref: code });
   if (channel) params.set('origem', channel);
-  return `${LANDING_URL}?${params}`;
+  return `${LANDING_URL}app/?${params}`;
 }
 
 // "Ana Souza Fit" -> "anasouzafit" (sem acento, só o que o banco aceita).

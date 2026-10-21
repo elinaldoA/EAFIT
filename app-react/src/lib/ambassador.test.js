@@ -13,8 +13,8 @@ beforeEach(() => { mockRpc.mockReset(); });
 
 describe('helpers', () => {
   it('link com código e canal', () => {
-    expect(ambassadorLink('anafit')).toBe('https://eafit.com.br/?ref=anafit');
-    expect(ambassadorLink('anafit', 'tiktok')).toBe('https://eafit.com.br/?ref=anafit&origem=tiktok');
+    expect(ambassadorLink('anafit')).toBe('https://eafit.com.br/app/?ref=anafit');
+    expect(ambassadorLink('anafit', 'tiktok')).toBe('https://eafit.com.br/app/?ref=anafit&origem=tiktok');
   });
 
   it('conversão e nomes dos canais', () => {
@@ -54,7 +54,7 @@ describe('shareAmbassadorLink', () => {
     Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     expect(await shareAmbassadorLink('ana', 'whatsapp')).toBe('copied');
-    expect(writeText).toHaveBeenCalledWith('https://eafit.com.br/?ref=ana&origem=whatsapp');
+    expect(writeText).toHaveBeenCalledWith('https://eafit.com.br/app/?ref=ana&origem=whatsapp');
   });
 
   it('cancelar o compartilhar não copia', async () => {

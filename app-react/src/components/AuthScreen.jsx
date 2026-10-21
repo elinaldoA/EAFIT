@@ -5,7 +5,7 @@ import PasswordInput from './PasswordInput';
 import LanguageSwitch from './LanguageSwitch';
 import { isKnownUser } from '../lib/knownUser';
 import { recordVisit } from '../lib/pageVisits';
-import { pendingPersonalInvite, fetchInviteName } from '../lib/trainerInvite';
+import { visibleInvite, fetchInviteName } from '../lib/trainerInvite';
 import { trackAuthEvent } from '../lib/tracking';
 import { t } from '../lib/i18n';
 
@@ -32,7 +32,7 @@ export default function AuthScreen() {
   // Chegou pelo link de convite de um personal: mostra quem convidou.
   const [inviter, setInviter] = useState('');
   useEffect(() => {
-    const code = pendingPersonalInvite();
+    const code = visibleInvite();
     if (!code) return undefined;
     let active = true;
     fetchInviteName(code).then(name => { if (active && name) setInviter(name); }).catch(() => { /* sem aviso */ });

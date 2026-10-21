@@ -4,9 +4,11 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 
 const h = vi.hoisted(() => ({
   fetchInviteName: vi.fn(), acceptTrainerInvite: vi.fn(), fetchMyTrainer: vi.fn(), toast: vi.fn(),
+  auth: { user: { id: 'u1', user_metadata: {} } },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
+vi.mock('../context/useAuth', () => ({ useAuth: () => h.auth }));
 vi.mock('../lib/trainerInvite', async orig => ({
   ...(await orig()), fetchInviteName: h.fetchInviteName, acceptTrainerInvite: h.acceptTrainerInvite,
 }));
@@ -17,7 +19,9 @@ import { capturePersonalInvite, pendingPersonalInvite } from '../lib/trainerInvi
 
 beforeEach(() => {
   localStorage.clear();
-  Object.values(h).forEach(fn => fn.mockReset());
+  sessionStorage.clear();
+  [h.fetchInviteName, h.acceptTrainerInvite, h.fetchMyTrainer, h.toast].forEach(fn => fn.mockReset());
+  h.auth = { user: { id: 'u1', user_metadata: {} } };
   h.fetchInviteName.mockResolvedValue('Ana');
   h.fetchMyTrainer.mockResolvedValue(null);
   capturePersonalInvite('?personal=P1A2B3');
@@ -31,6 +35,21 @@ describe('TrainerInvitePrompt', () => {
     await Promise.resolve();
     expect(h.fetchInviteName).not.toHaveBeenCalled();
     expect(container.innerHTML).toBe('');
+  });
+
+  it('convite guardado de outra visita não aparece ao abrir o app direto', async () => {
+    sessionStorage.clear();
+    const { container } = render(<TrainerInvitePrompt />);
+    await Promise.resolve();
+    expect(h.fetchInviteName).not.toHaveBeenCalled();
+    expect(container.innerHTML).toBe('');
+  });
+
+  it('em outra aba, pergunta a quem se cadastrou pelo convite', async () => {
+    sessionStorage.clear();
+    h.auth = { user: { id: 'u1', user_metadata: { personal: 'P1A2B3' } } };
+    render(<TrainerInvitePrompt />);
+    expect(await screen.findByText('🤝 Ana quer acompanhar seu treino')).toBeTruthy();
   });
 
   it('autorizar vincula pelo convite e apaga o convite', async () => {

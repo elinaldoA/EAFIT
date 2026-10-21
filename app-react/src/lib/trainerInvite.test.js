@@ -5,7 +5,7 @@ const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
-  trainerInviteLink, capturePersonalInvite, pendingPersonalInvite, clearPersonalInvite,
+  trainerInviteLink, capturePersonalInvite, visibleInvite, pendingPersonalInvite, clearPersonalInvite,
   fetchInviteName, acceptTrainerInvite, fetchInviteStats, trainerInviteText,
 } from './trainerInvite';
 import { detectPersonal } from './pageVisits';
@@ -13,7 +13,7 @@ import { detectPersonal } from './pageVisits';
 const DAY = 24 * 60 * 60 * 1000;
 const NOW = 1_800_000_000_000;
 
-beforeEach(() => { localStorage.clear(); mockRpc.mockReset(); });
+beforeEach(() => { localStorage.clear(); sessionStorage.clear(); mockRpc.mockReset(); });
 
 describe('link de convite do personal', () => {
   it('monta o link do app com o código', () => {
@@ -43,6 +43,18 @@ describe('link de convite do personal', () => {
     expect(pendingPersonalInvite(NOW)).toBe('');
     localStorage.setItem('eafit_personal_invite', '{quebrado');
     expect(pendingPersonalInvite(NOW)).toBe('');
+  });
+
+  it('só mostra o convite na aba do link ou a quem se cadastrou por ele', () => {
+    capturePersonalInvite('?personal=P11111', NOW);
+    expect(visibleInvite(null, NOW)).toBe('P11111');
+    // volta depois pelo "Abrir app" do site (outra aba, sem ?personal=)
+    sessionStorage.clear();
+    capturePersonalInvite('', NOW);
+    expect(visibleInvite(null, NOW)).toBe('');
+    expect(pendingPersonalInvite(NOW)).toBe('P11111');
+    expect(visibleInvite({ user_metadata: { personal: 'P11111' } }, NOW)).toBe('P11111');
+    expect(visibleInvite({ user_metadata: { personal: 'P99999' } }, NOW)).toBe('');
   });
 
   it('consultas chamam as RPCs e convertem os números', async () => {
