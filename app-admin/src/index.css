@@ -592,6 +592,10 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   .resp-table td:empty::before { content: none; }
   .table-wrap > .resp-table td { overflow-wrap: anywhere; }
   .resp-table td[data-label] > .actions-row { justify-content: flex-end; }
+  /* bloco com várias linhas de controles (ex.: aprovar/recusar CREF): desce
+     pra baixo do rótulo e usa a largura toda */
+  .resp-table td[data-label] > .stack { clear: both; padding-top: 6px; }
+  .resp-table td[data-label] > .stack > .actions-row { justify-content: flex-end; }
 
   /* Conteúdo de bloco (detalhes de erro, JSON) desce pra baixo do rótulo e usa a largura toda. */
   .resp-table td pre,
@@ -609,6 +613,24 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   .resp-table thead.resp-table__title { display: block; }
   .resp-table__title tr { display: block; padding: 0; }
   .resp-table__title th { display: block; white-space: normal; }
+}
+
+/* Lista de usuários: uma coluna "Usuário" (nome, status, e-mail) no lugar de
+   cinco; no celular ela é o topo do cartão e o resto é só acompanhamento. */
+.users-table td.users-table__head { min-width: 200px; }
+.users-table th, .users-table td { padding-left: 12px; padding-right: 12px; }
+.users-table thead th { white-space: normal; }
+.users-table__name { font-weight: 700; font-size: 15px; color: var(--text); text-decoration: none; }
+.users-table__badges { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 2px; }
+.users-table__badges .badge { margin-left: 0; }
+@media (max-width: 900px) {
+  .users-table tr { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; }
+  .users-table td { grid-column: 1 / -1; }
+  .users-table td.users-table__check { grid-column: 1; padding-top: 3px; }
+  .users-table td.users-table__head { grid-column: 2; display: block; min-width: 0; text-align: left; padding-bottom: 8px; }
+  .users-table td.users-table__head::before { content: none; }
+  .users-table td.hide-mobile { display: none; }
+  .users-table td[colspan] { grid-column: 1 / -1; }
 }
 
 /* ---------- auth screen ---------- */
@@ -856,7 +878,8 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .muted { color: var(--text-muted); font-size: 13px; }
 
 .media-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.media-custom { display: flex; gap: 8px; flex: 1 1 320px; min-width: 0; }
+.media-custom { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 320px; min-width: 0; }
+.media-custom .input { flex: 1 1 220px; }
 .media-custom .input { min-width: 0; }
 
 .media-thumb {
@@ -1125,6 +1148,22 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 .cal__chip--desafio { background: rgba(34,197,94,0.16); }
 .cal__chip--pesquisa { background: rgba(168,85,247,0.16); }
 .cal__chip--experimento { background: rgba(20,184,166,0.16); }
+
+/* Celular: o mês inteiro cabe na tela. Os eventos viram barrinhas coloridas
+   (o texto não caberia); o detalhe de cada um está na lista "No mês". */
+@media (max-width: 640px) {
+  .cal__row { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .cal__cell { min-height: 54px; padding: 3px; gap: 3px; }
+  .cal__day { font-size: 11px; }
+  .cal__cell .cal__chip { height: 5px; padding: 0; font-size: 0; border-radius: 3px; background: var(--text-dim); }
+  .cal__cell .cal__chip--tema { background: rgb(236,72,153); }
+  .cal__cell .cal__chip--aviso { background: rgb(59,130,246); }
+  .cal__cell .cal__chip--envio { background: rgb(245,158,11); }
+  .cal__cell .cal__chip--desafio { background: rgb(34,197,94); }
+  .cal__cell .cal__chip--pesquisa { background: rgb(168,85,247); }
+  .cal__cell .cal__chip--experimento { background: rgb(20,184,166); }
+  .cal__more { font-size: 10px; }
+}
 
 /* Listas simples (Visão do app) */
 .plain-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }

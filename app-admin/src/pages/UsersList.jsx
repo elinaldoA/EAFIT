@@ -40,9 +40,11 @@ const SORT_OPTIONS = [
   { value: 'trainings_desc', label: 'Mais treinos (30 dias)' },
 ];
 
-function formatDate(value) {
+// Sem segundos: a coluna fica estreita e a tabela cabe sem rolar de lado.
+function formatDate(value, withTime = true) {
   if (!value) return '—';
-  return new Date(value).toLocaleString('pt-BR');
+  const d = new Date(value);
+  return withTime ? d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : d.toLocaleDateString('pt-BR');
 }
 
 // Página de usuários com a marca de conta desativada em cada linha.
@@ -55,6 +57,18 @@ function formatDay(iso) {
   if (!iso) return '—';
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
+}
+
+function StatusBadges({ u }) {
+  return (
+    <>
+      {u.is_admin && <span className="badge badge--admin">admin</span>}
+      {u.deactivated && <span className="badge badge--danger">desativado</span>}
+      {!u.deactivated && u.banned_until && new Date(u.banned_until) > new Date() && <span className="badge badge--danger">banido</span>}
+      {!u.email_confirmed_at && <span className="badge badge--warning">não confirmado</span>}
+      {!u.is_admin && !u.banned_until && u.email_confirmed_at && <span className="badge badge--ok">ativo</span>}
+    </>
+  );
 }
 
 export default function UsersList() {
@@ -252,7 +266,7 @@ export default function UsersList() {
 
       {!loading && !error && (
         <>
-          <div className="table-wrap"><table className="resp-table">
+          <div className="table-wrap"><table className="resp-table users-table">
             <thead>
               <tr>
                 <th>
@@ -262,10 +276,7 @@ export default function UsersList() {
                     onChange={() => setSelected(sel => toggleAll(sel, visibleIds))}
                   />
                 </th>
-                <th>Nome</th>
-                <th>Sobrenome</th>
-                <th>Apelido</th>
-                <th>E-mail</th>
+                <th>Usuário</th>
                 <th>Peso alvo</th>
                 <th>Nível / objetivo</th>
                 <th>Último treino</th>
@@ -273,45 +284,38 @@ export default function UsersList() {
                 <th>Fim do plano</th>
                 <th>Criado em</th>
                 <th>Último login</th>
-                <th>Status</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
               {users.map(u => (
                 <tr key={u.id}>
-                  <td data-label="">
+                  <td data-label="" className="users-table__check">
                     <input
                       type="checkbox" aria-label={`Selecionar ${u.email}`}
                       checked={selected.has(u.id)}
                       onChange={() => setSelected(sel => toggleId(sel, u.id))}
                     />
                   </td>
-                  <td data-label="Nome">{u.nome || '—'}</td>
-                  <td data-label="Sobrenome">{u.sobrenome || '—'}</td>
-                  <td data-label="Apelido">{u.apelido || '—'}</td>
-                  <td data-label="E-mail">{u.email}</td>
-                  <td data-label="Peso alvo">{u.peso_alvo ? `${u.peso_alvo} kg` : '—'}</td>
+                  {/* nome (link para a ficha), status e e-mail; no celular é o topo do cartão */}
+                  <td data-label="Usuário" className="users-table__head">
+                    <Link className="users-table__name" to={`/users/${u.id}`}>
+                      {[u.nome, u.sobrenome].filter(Boolean).join(' ') || u.email}
+                    </Link>
+                    {u.apelido && <span className="user-detail__meta"> ({u.apelido})</span>}
+                    <div className="users-table__badges"><StatusBadges u={u} /></div>
+                    <div className="user-detail__meta">{u.email}</div>
+                  </td>
+                  <td data-label="Peso alvo" className="hide-mobile">{u.peso_alvo ? `${u.peso_alvo} kg` : '—'}</td>
                   <td data-label="Nível / objetivo">{[u.nivel, u.meta].filter(Boolean).join(' · ') || '—'}</td>
                   <td data-label="Último treino">{formatDay(u.last_training)}</td>
                   <td data-label="Treinos (30d)">{u.trainings_30d}</td>
                   <td data-label="Fim do plano">{formatDay(u.plan_end_date)}</td>
-                  <td data-label="Criado em">{formatDate(u.created_at)}</td>
+                  <td data-label="Criado em" className="hide-mobile">{formatDate(u.created_at, false)}</td>
                   <td data-label="Último login">{formatDate(u.last_sign_in_at)}</td>
-                  <td data-label="Status">
-                    {u.is_admin && <span className="badge badge--admin">admin</span>}
-                    {u.deactivated && <span className="badge badge--danger">desativado</span>}
-                    {!u.deactivated && u.banned_until && new Date(u.banned_until) > new Date() && <span className="badge badge--danger">banido</span>}
-                    {!u.email_confirmed_at && <span className="badge badge--warning">não confirmado</span>}
-                    {!u.is_admin && !u.banned_until && u.email_confirmed_at && <span className="badge badge--ok">ativo</span>}
-                  </td>
-                  <td data-label="">
-                    <Link className="btn btn--ghost btn--small" to={`/users/${u.id}`}>Ver</Link>
-                  </td>
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={14}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
+                <tr><td colSpan={9}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
               )}
             </tbody>
           </table></div>
