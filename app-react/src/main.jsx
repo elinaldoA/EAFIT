@@ -39,10 +39,17 @@ window.addEventListener('focusout', () => {
   }, 120)
 })
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </StrictMode>,
-)
+// Sem frame-ancestors no GitHub Pages (e a CSP por <meta> ignora essa
+// diretiva): dentro de um iframe de outro site, tenta sair dele e não desenha
+// nada, pra ninguém induzir cliques na conta logada (clickjacking).
+if (window.top !== window.self) {
+  try { window.top.location.replace(window.location.href) } catch { /* frame com sandbox */ }
+} else {
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </StrictMode>,
+  )
+}
