@@ -50,6 +50,13 @@ export async function fetchDigestPage(adminId) {
   };
 }
 
+// Só as preferências de e-mail do admin (usado em Meu perfil). Sem linha = tudo ligado.
+export async function fetchMyPrefs(adminId) {
+  const { data, error } = await db.from('admin_notify_prefs').select('weekly_digest, alerts').eq('user_id', adminId).maybeSingle();
+  if (error) throw error;
+  return { weeklyDigest: data?.weekly_digest ?? true, alerts: data?.alerts ?? true };
+}
+
 export async function savePrefs(adminId, prefs) {
   const { error } = await db.from('admin_notify_prefs').upsert({
     user_id: adminId, weekly_digest: prefs.weeklyDigest, alerts: prefs.alerts, updated_at: new Date().toISOString(),

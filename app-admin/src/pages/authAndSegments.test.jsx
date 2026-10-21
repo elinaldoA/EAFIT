@@ -3,13 +3,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const { auth, seg } = vi.hoisted(() => ({
+const { auth, seg, dbm, access } = vi.hoisted(() => ({
   auth: { current: {} },
+  dbm: { rpc: null, signOut: null, listFactors: null },
+  access: { current: { role: null, extraAreas: [], hiddenScreens: [], loaded: false } },
   seg: { fetchSegments: vi.fn(), deleteSegment: vi.fn(), countSegment: vi.fn(), describeFilters: vi.fn() },
 }));
 
 vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => auth.current }));
-vi.mock('../lib/supabase', () => ({ db: {} }));
+vi.mock('../lib/supabase', () => ({
+  db: {
+    rpc: (...a) => dbm.rpc(...a),
+    auth: { signOut: (...a) => dbm.signOut(...a), mfa: { listFactors: () => dbm.listFactors() } },
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: null, error: null }) }) }) }),
+  },
+}));
+vi.mock('../context/useAdminAccess', () => ({ useAdminAccess: () => access.current }));
 vi.mock('../lib/segments', () => seg);
 
 import Login from './Login';
@@ -135,8 +144,13 @@ describe('ResetPassword', () => {
 
 describe('Profile', () => {
   beforeEach(() => {
-    auth.current.adminUser = { email: 'adm@x.com', user_metadata: { nome: 'Ana' } };
+    auth.current.adminUser = { id: 'a1', email: 'adm@x.com', user_metadata: { nome: 'Ana' }, created_at: '2026-01-10T12:00:00Z' };
+    access.current = { role: null, extraAreas: [], hiddenScreens: [], loaded: true };
+    dbm.rpc = vi.fn().mockResolvedValue({ data: [], error: null });
+    dbm.signOut = vi.fn().mockResolvedValue({ error: null });
+    dbm.listFactors = vi.fn().mockResolvedValue({ data: { totp: [{ status: 'verified', created_at: '2026-10-21T12:00:00Z' }] }, error: null });
   });
+  const render = ui => wrap(ui);
 
   it('carrega e-mail e nome atuais', () => {
     render(<Profile />);
@@ -182,6 +196,42 @@ describe('Profile', () => {
     render(<Profile />);
     fireEvent.click(screen.getByText('Sair'));
     expect(auth.current.logout).toHaveBeenCalled();
+  });
+
+  it('não troca a senha quando a confirmação não confere', async () => {
+    render(<Profile />);
+    typeInto('Nova senha', 'abcdefgh');
+    typeInto('Confirmar nova senha', 'abcdefgX');
+    fireEvent.click(screen.getByText('Atualizar senha'));
+    expect(await screen.findByText('Erro: as senhas não conferem.')).toBeTruthy();
+    expect(auth.current.updatePassword).not.toHaveBeenCalled();
+  });
+
+  it('mostra papel e o que o admin pode alterar', () => {
+    access.current = { role: 'suporte', extraAreas: [], hiddenScreens: ['/x'], loaded: true };
+    render(<Profile />);
+    expect(screen.getAllByText('Suporte').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Segmentos/)).toBeTruthy();
+    expect(screen.getByText('1 tela(s) estão ocultas no seu menu.')).toBeTruthy();
+  });
+
+  it('lista só as ações feitas por este admin', async () => {
+    dbm.rpc.mockResolvedValue({ data: [
+      { id: 1, admin_email: 'adm@x.com', action: 'ban', target_email: 'u@x.com', created_at: '2026-10-20T12:00:00Z' },
+      { id: 2, admin_email: 'outro@x.com', action: 'unban', target_email: 'adm@x.com', created_at: '2026-10-19T12:00:00Z' },
+    ], error: null });
+    render(<Profile />);
+    expect(await screen.findByText('Baniu')).toBeTruthy();
+    expect(screen.queryByText('Desbaniu')).toBeNull();
+    expect(dbm.rpc).toHaveBeenCalledWith('admin_search_audit_log', expect.objectContaining({ p_search: 'adm@x.com' }));
+  });
+
+  it('desconecta os outros dispositivos', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    render(<Profile />);
+    fireEvent.click(screen.getByText('Sair dos outros dispositivos'));
+    expect(await screen.findByText(/outros dispositivos foram desconectados/)).toBeTruthy();
+    expect(dbm.signOut).toHaveBeenCalledWith({ scope: 'others' });
   });
 });
 

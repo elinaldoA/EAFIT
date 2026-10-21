@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { ACTION_LABEL } from '../lib/auditActions';
 
 const PAGE_SIZE = 50;
 
@@ -9,45 +10,6 @@ function formatDate(value) {
   if (!value) return '—';
   return new Date(value).toLocaleString('pt-BR');
 }
-
-const ACTION_LABEL = {
-  ban: 'Baniu',
-  unban: 'Desbaniu',
-  deactivate: 'Desativou conta',
-  reactivate: 'Reativou conta',
-  resetPassword: 'Gerou link de senha',
-  updateProfile: 'Editou perfil',
-  deleteUser: 'Excluiu conta',
-  broadcastPush: 'Notificação em massa',
-  promoMaterialUpload: 'Material de divulgação publicado',
-  promoMaterialRemove: 'Material de divulgação removido',
-  updateAppSettings: 'Alterou configurações do app',
-  promoteAdmin: 'Promoveu a admin',
-  promoteTrainer: 'Liberou como personal trainer',
-  setAdminRole: 'Mudou o papel de admin',
-  setAdminAccess: 'Mudou as permissões de admin',
-  approveTrainerRequest: 'Aprovou pedido de personal (CREF)',
-  rejectTrainerRequest: 'Recusou pedido de personal (CREF)',
-  setTrainerCref: 'Registrou o CREF do personal',
-  closeLeague: 'Fechou o mês da liga',
-  viewAsUser: 'Abriu a visão do app do usuário',
-  demoteTrainer: 'Removeu o acesso de personal trainer',
-  demoteAdmin: 'Removeu admin',
-  generateWorkout: 'Gerou novo treino',
-  confirmUser: 'Confirmou e-mail',
-  fixWorkoutSet: 'Corrigiu série de treino',
-  deleteWorkout: 'Apagou treino',
-  exportUserData: 'Exportou dados do usuário',
-  purgeOldData: 'Limpou dados antigos',
-  revokeTrainerLink: 'Encerrou vínculo com personal',
-  removeFriendship: 'Removeu amizade',
-  createOfficialChallenge: 'Criou desafio oficial',
-  deleteChallenge: 'Apagou desafio',
-  deleteFeedEvent: 'Removeu publicação do feed',
-  blockFeed: 'Bloqueou no feed',
-  unblockFeed: 'Desbloqueou no feed',
-  publishLegalVersion: 'Registrou versão de documento legal',
-};
 
 export default function AuditLog() {
   const [rows, setRows] = useState([]);
