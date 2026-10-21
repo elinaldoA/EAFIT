@@ -3,7 +3,7 @@
 // nada disso é alcançável via PostgREST/RLS. Mesmo padrão de
 // delete-account/index.ts: cliente anon com o JWT de quem chamou pra
 // identificar o admin, cliente service role pra agir. Diferente dele, aqui
-// SEMPRE se confirma antes que quem chamou é admin (profiles.is_admin).
+// SEMPRE se confirma antes que quem chamou é admin (rpc is_admin, que exige 2ª etapa).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { deleteUserData } from '../_shared/deleteUserData.ts';
@@ -37,12 +37,9 @@ Deno.serve(async (req) => {
   }
   const callerId = userRes.user.id;
 
-  const { data: profile, error: profileErr } = await callerClient
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', callerId)
-    .single();
-  if (profileErr || !profile?.is_admin) {
+  // is_admin() exige sessão com 2ª etapa (aal2): senha sozinha não basta.
+  const { data: isAdmin, error: adminErr } = await callerClient.rpc('is_admin');
+  if (adminErr || isAdmin !== true) {
     return json({ error: 'Acesso negado.' }, 403);
   }
 

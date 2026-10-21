@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
 import { AdminAuthContext } from './useAdminAuth';
 import { takeEmailLink } from '../lib/emailLink';
@@ -10,6 +10,14 @@ import { markStaffDevice } from '../lib/staffDevice';
 // e derrubamos a sessão na hora se não for admin. Isso é só UX: a proteção
 // de verdade é a policy "admin full access" (is_admin()) no banco e o check
 // server-side na edge function admin-users.
+//
+// Segunda etapa obrigatória: além de is_admin, o painel só abre numa sessão
+// aal2 (código do app autenticador confirmado). Até lá adminUser fica null e
+// `mfa` diz qual tela mostrar no lugar do login: 'enroll' (primeiro acesso,
+// com QR code) ou 'verify' (pede o código). O banco exige o mesmo — is_admin()
+// e admin_can() só valem em aal2 —, então isto também é só UX.
+const MFA_ISSUER = 'EAFIT Admin';
+
 export function AdminAuthProvider({ children }) {
   const [adminUser, setAdminUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -21,6 +29,12 @@ export function AdminAuthProvider({ children }) {
   // Link de e-mail que não valeu (expirado ou já usado): o login abre
   // mostrando o motivo.
   const [linkError, setLinkError] = useState('');
+  const [mfa, setMfa] = useState(null);
+  // Admin que passou da senha e espera a segunda etapa; e de quem a etapa já
+  // foi aberta (os eventos de auth chegam repetidos e cada cadastro novo
+  // trocaria o QR code na frente da pessoa).
+  const pendingUser = useRef(null);
+  const mfaOpenedFor = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -33,8 +47,7 @@ export function AdminAuthProvider({ children }) {
       const isAdmin = await checkIsAdmin(session.user.id);
       if (!active) return;
       if (isAdmin) {
-        markStaffDevice();
-        setAdminUser(session.user);
+        await requireSecondFactor(session.user);
       } else {
         setAdminUser(null);
         await db.auth.signOut();
@@ -70,6 +83,60 @@ export function AdminAuthProvider({ children }) {
     };
   }, []);
 
+  async function requireSecondFactor(user) {
+    const { data, error } = await db.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (!error && data?.currentLevel === 'aal2') {
+      pendingUser.current = null;
+      mfaOpenedFor.current = null;
+      setMfa(null);
+      markStaffDevice();
+      setAdminUser(user);
+      return;
+    }
+    setAdminUser(null);
+    pendingUser.current = user;
+    if (mfaOpenedFor.current === user.id) return;
+    mfaOpenedFor.current = user.id;
+    try {
+      setMfa(await openSecondFactor());
+    } catch (err) {
+      console.error('mfa:', err);
+      mfaOpenedFor.current = null;
+      setMfa({ stage: 'error' });
+    }
+  }
+
+  async function openSecondFactor() {
+    const { data, error } = await db.auth.mfa.listFactors();
+    if (error) throw error;
+    const verified = data.totp.find(f => f.status === 'verified');
+    if (verified) return { stage: 'verify', factorId: verified.id };
+
+    // Cadastro que ficou pela metade (fechou a aba antes de confirmar o
+    // código): descarta e começa de novo, senão o enroll recusa o nome repetido.
+    for (const f of data.all) {
+      if (f.factor_type === 'totp' && f.status !== 'verified') await db.auth.mfa.unenroll({ factorId: f.id });
+    }
+    const { data: enrolled, error: enrollErr } = await db.auth.mfa.enroll({
+      factorType: 'totp', friendlyName: MFA_ISSUER, issuer: MFA_ISSUER,
+    });
+    if (enrollErr) throw enrollErr;
+    return { stage: 'enroll', factorId: enrolled.id, qr: enrolled.totp.qr_code, secret: enrolled.totp.secret };
+  }
+
+  async function verifySecondFactor(code) {
+    if (!mfa?.factorId) return { error: 'Recomece o login.' };
+    const { error } = await db.auth.mfa.challengeAndVerify({ factorId: mfa.factorId, code: code.replace(/\s/g, '') });
+    if (error) return { error: 'Código inválido ou expirado. Confira se o relógio do celular está certo e tente de novo.' };
+    const user = pendingUser.current;
+    pendingUser.current = null;
+    mfaOpenedFor.current = null;
+    setMfa(null);
+    markStaffDevice();
+    setAdminUser(user);
+    return {};
+  }
+
   async function checkIsAdmin(userId) {
     const { data, error } = await db.from('profiles').select('is_admin').eq('id', userId).single();
     return !error && data?.is_admin === true;
@@ -85,13 +152,15 @@ export function AdminAuthProvider({ children }) {
       return { error: 'Esta conta não tem acesso ao backoffice.' };
     }
 
-    markStaffDevice();
-    setAdminUser(data.user);
+    await requireSecondFactor(data.user);
     return {};
   }
 
   async function logout() {
     await db.auth.signOut();
+    pendingUser.current = null;
+    mfaOpenedFor.current = null;
+    setMfa(null);
     setAdminUser(null);
   }
 
@@ -122,6 +191,7 @@ export function AdminAuthProvider({ children }) {
     <AdminAuthContext.Provider value={{
       adminUser, authLoading, login, logout, updateProfile, updatePassword,
       recoveryMode, requestPasswordReset, finishRecovery, linkError,
+      mfa, verifySecondFactor,
     }}>
       {children}
     </AdminAuthContext.Provider>

@@ -71,6 +71,36 @@ describe('Login', () => {
     wrap(<Login />);
     expect(screen.queryByRole('button', { name: 'Entrar' })).toBeNull();
   });
+
+  it('primeiro acesso mostra o QR code e a chave do autenticador', async () => {
+    auth.current.mfa = { stage: 'enroll', factorId: 'f1', qr: 'data:image/svg+xml;utf-8,<svg/>', secret: 'ABC123' };
+    auth.current.verifySecondFactor = vi.fn().mockResolvedValue({});
+    wrap(<Login />);
+    expect(screen.queryByLabelText('Senha')).toBeNull();
+    expect(screen.getByAltText(/QR code/).getAttribute('src')).toBe('data:image/svg+xml;utf-8,<svg/>');
+    expect(screen.getByText('ABC123')).toBeTruthy();
+    typeInto('Código', '123456');
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar e entrar' }));
+    await waitFor(() => expect(auth.current.verifySecondFactor).toHaveBeenCalledWith('123456'));
+  });
+
+  it('código errado mostra o erro e limpa o campo', async () => {
+    auth.current.mfa = { stage: 'verify', factorId: 'f9' };
+    auth.current.verifySecondFactor = vi.fn().mockResolvedValue({ error: 'Código inválido ou expirado.' });
+    wrap(<Login />);
+    expect(screen.queryByAltText(/QR code/)).toBeNull();
+    typeInto('Código', '000000');
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    expect(await screen.findByText('Código inválido ou expirado.')).toBeTruthy();
+    expect(screen.getByLabelText('Código').value).toBe('');
+  });
+
+  it('sair na segunda etapa chama logout', () => {
+    auth.current.mfa = { stage: 'verify', factorId: 'f9' };
+    wrap(<Login />);
+    fireEvent.click(screen.getByRole('button', { name: 'Sair' }));
+    expect(auth.current.logout).toHaveBeenCalled();
+  });
 });
 
 describe('ResetPassword', () => {

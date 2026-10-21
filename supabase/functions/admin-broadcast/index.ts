@@ -1,6 +1,6 @@
 // Envia push manual (do backoffice) pra todos os usuários ou pra uma lista
 // específica. Mesmo padrão de auth de admin-users/index.ts: cliente anon com
-// o JWT do chamador pra identificar quem pediu, confirma profiles.is_admin
+// o JWT do chamador pra identificar quem pediu, confirma is_admin() (com 2ª etapa)
 // antes de qualquer coisa, só então usa a service role pra agir.
 //
 // Com `email` no corpo, manda também por e-mail:
@@ -53,12 +53,9 @@ Deno.serve(async (req) => {
   if (userErr || !userRes?.user) return json({ error: 'Não autenticado.' }, 401);
   const callerId = userRes.user.id;
 
-  const { data: profile, error: profileErr } = await callerClient
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', callerId)
-    .single();
-  if (profileErr || !profile?.is_admin) return json({ error: 'Acesso negado.' }, 403);
+  // is_admin() exige sessão com 2ª etapa (aal2): senha sozinha não basta.
+  const { data: isAdmin, error: adminErr } = await callerClient.rpc('is_admin');
+  if (adminErr || isAdmin !== true) return json({ error: 'Acesso negado.' }, 403);
 
   let body: Record<string, unknown>;
   try {

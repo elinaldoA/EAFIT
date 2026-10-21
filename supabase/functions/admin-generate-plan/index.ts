@@ -44,9 +44,9 @@ Deno.serve(async (req) => {
   if (userErr || !userRes?.user) return json({ error: 'Não autenticado.' }, 401);
   const callerId = userRes.user.id;
 
-  const { data: profile, error: profileErr } = await callerClient
-    .from('profiles').select('is_admin').eq('id', callerId).single();
-  if (profileErr || !profile?.is_admin) return json({ error: 'Acesso negado.' }, 403);
+  // is_admin() exige sessão com 2ª etapa (aal2): senha sozinha não basta.
+  const { data: isAdmin, error: adminErr } = await callerClient.rpc('is_admin');
+  if (adminErr || isAdmin !== true) return json({ error: 'Acesso negado.' }, 403);
 
   let body: Record<string, unknown>;
   try {

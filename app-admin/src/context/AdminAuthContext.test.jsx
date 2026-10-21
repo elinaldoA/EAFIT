@@ -10,6 +10,13 @@ const { mockAuth, mockFrom } = vi.hoisted(() => ({
     signOut: vi.fn(),
     updateUser: vi.fn(),
     verifyOtp: vi.fn(),
+    mfa: {
+      getAuthenticatorAssuranceLevel: vi.fn(),
+      listFactors: vi.fn(),
+      enroll: vi.fn(),
+      unenroll: vi.fn(),
+      challengeAndVerify: vi.fn(),
+    },
   },
   mockFrom: vi.fn(),
 }));
@@ -41,7 +48,14 @@ beforeEach(() => {
   mockAuth.getSession.mockResolvedValue({ data: { session: null } });
   mockAuth.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
   mockAuth.signOut.mockResolvedValue({});
+  // Padrão: sessão já com a segunda etapa (os testes de MFA trocam isto).
+  mockAuth.mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: 'aal2' }, error: null });
 });
+
+async function loginAs(result, id) {
+  mockAuth.signInWithPassword.mockResolvedValue({ data: { user: { id } }, error: null });
+  await act(async () => { await result.current.login('admin@eafit.com', 'segredo123'); });
+}
 
 describe('AdminAuthProvider', () => {
   it('começa com authLoading=true e resolve pra adminUser=null sem sessão', async () => {
@@ -194,5 +208,77 @@ describe('AdminAuthProvider', () => {
 
     expect(mockAuth.updateUser).toHaveBeenCalledWith({ password: 'novaSenha123' });
     expect(response).toEqual({ error: undefined });
+  });
+
+  describe('segunda etapa', () => {
+    beforeEach(() => {
+      mockProfile(true);
+      mockAuth.mfa.getAuthenticatorAssuranceLevel.mockResolvedValue({ data: { currentLevel: 'aal1' }, error: null });
+    });
+
+    it('primeiro acesso: só senha não entra e abre o cadastro do autenticador', async () => {
+      mockAuth.mfa.listFactors.mockResolvedValue({
+        data: { totp: [], all: [{ id: 'velho', factor_type: 'totp', status: 'unverified' }] }, error: null,
+      });
+      mockAuth.mfa.unenroll.mockResolvedValue({ error: null });
+      mockAuth.mfa.enroll.mockResolvedValue({
+        data: { id: 'f1', totp: { qr_code: 'data:image/svg+xml;utf-8,<svg/>', secret: 'ABC123' } }, error: null,
+      });
+      const { result } = renderHook(() => useAdminAuth(), { wrapper });
+      await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+      await loginAs(result, 'u1');
+
+      expect(result.current.adminUser).toBeNull();
+      expect(mockAuth.mfa.unenroll).toHaveBeenCalledWith({ factorId: 'velho' });
+      expect(result.current.mfa).toEqual({ stage: 'enroll', factorId: 'f1', qr: 'data:image/svg+xml;utf-8,<svg/>', secret: 'ABC123' });
+    });
+
+    it('com autenticador cadastrado pede o código e libera depois de confirmar', async () => {
+      mockAuth.mfa.listFactors.mockResolvedValue({ data: { totp: [{ id: 'f9', status: 'verified' }], all: [] }, error: null });
+      const { result } = renderHook(() => useAdminAuth(), { wrapper });
+      await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+      await loginAs(result, 'u1');
+      expect(result.current.mfa).toEqual({ stage: 'verify', factorId: 'f9' });
+      expect(mockAuth.mfa.enroll).not.toHaveBeenCalled();
+
+      mockAuth.mfa.challengeAndVerify.mockResolvedValue({ error: { message: 'Invalid TOTP code entered' } });
+      let response;
+      await act(async () => { response = await result.current.verifySecondFactor('000000'); });
+      expect(response.error).toMatch(/Código inválido/);
+      expect(result.current.adminUser).toBeNull();
+
+      mockAuth.mfa.challengeAndVerify.mockResolvedValue({ error: null });
+      await act(async () => { response = await result.current.verifySecondFactor('123 456'); });
+      expect(mockAuth.mfa.challengeAndVerify).toHaveBeenLastCalledWith({ factorId: 'f9', code: '123456' });
+      expect(response).toEqual({});
+      expect(result.current.mfa).toBeNull();
+      expect(result.current.adminUser).toEqual({ id: 'u1' });
+    });
+
+    it('sessão guardada sem a segunda etapa não abre o painel', async () => {
+      mockAuth.getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+      mockAuth.mfa.listFactors.mockResolvedValue({ data: { totp: [{ id: 'f9', status: 'verified' }], all: [] }, error: null });
+      const { result } = renderHook(() => useAdminAuth(), { wrapper });
+
+      await waitFor(() => expect(result.current.authLoading).toBe(false));
+      expect(result.current.adminUser).toBeNull();
+      expect(result.current.mfa).toEqual({ stage: 'verify', factorId: 'f9' });
+    });
+
+    it('falha ao abrir a verificação mostra erro e sair limpa tudo', async () => {
+      mockAuth.mfa.listFactors.mockResolvedValue({ data: null, error: { message: 'mfa disabled' } });
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { result } = renderHook(() => useAdminAuth(), { wrapper });
+      await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+      await loginAs(result, 'u1');
+      expect(result.current.mfa).toEqual({ stage: 'error' });
+
+      await act(async () => { await result.current.logout(); });
+      expect(result.current.mfa).toBeNull();
+      expect(result.current.adminUser).toBeNull();
+    });
   });
 });
