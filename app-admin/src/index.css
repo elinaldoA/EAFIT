@@ -436,6 +436,8 @@ a { color: var(--primary); }
 }
 
 select.input { width: auto; max-width: 100%; }
+/* dentro de um campo de formulário o select acompanha a largura dos inputs */
+.field > select.input { width: 100%; }
 textarea.input { resize: vertical; }
 
 .field { display: flex; flex-direction: column; gap: 5px; }
@@ -516,7 +518,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   gap: 16px;
 }
 
-.form-grid__actions { grid-column: 1 / -1; }
+.form-grid__actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
 
 /* ---------- responsive table ---------- */
 
@@ -1147,37 +1149,62 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 /* Permissões por admin (components/AdminAccessEditor.jsx) */
 .access-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 
-/* Personais (pages/Trainers.jsx): um cartão por personal */
+/* Cartão por pessoa (Personais, Embaixadores e influenciadores) */
 /* blocos de 4 totais: sempre 4 lado a lado (no celular a regra geral põe 2) */
 .tile-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.trainer-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-.trainer__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 16px; }
-.trainer__id { flex: 1 1 260px; min-width: 0; }
-.trainer__name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
-.trainer__name:hover { color: var(--primary); }
-.trainer__meta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 3px; font-size: 12.5px; color: var(--text-muted); overflow-wrap: anywhere; }
-.trainer__meta code { color: var(--text); }
-.trainer__flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.trainer__flags .badge { margin-left: 0; }
-.trainer__actions { flex: none; }
+.pcard-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.pcard__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 16px; }
+.pcard__id { flex: 1 1 260px; min-width: 0; }
+.pcard__name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
+.pcard__name:hover { color: var(--primary); }
+.pcard__title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.pcard__title .badge { margin-left: 0; }
+.pcard__edit { margin-top: 14px; padding: 14px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); }
+.pcard__meta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 3px; font-size: 12.5px; color: var(--text-muted); overflow-wrap: anywhere; }
+.pcard__meta code { color: var(--text); }
+.pcard__flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pcard__flags .badge { margin-left: 0; }
+.pcard__actions { flex: none; }
 /* 6 indicadores: 6, 3 ou 2 colunas pela largura do cartão (nunca sobra um sozinho) */
-.trainer { container-type: inline-size; }
-.trainer__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 0; }
-@container (min-width: 900px) { .trainer__stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
-@container (max-width: 480px) { .trainer__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.trainer__stat { min-width: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); }
-.trainer__stat-label { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-dim); }
-.trainer__stat dd { margin: 0; }
-.trainer__stat-value { margin-top: 3px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.trainer__stat-sub { margin-top: 3px; font-size: 12px; color: var(--text-muted); line-height: 1.35; }
-.trainer__panel { margin-top: 16px; padding-top: 4px; border-top: 1px solid var(--border); }
-.trainer__panel .subsection-title { margin-top: 12px; }
+.pcard { container-type: inline-size; }
+.pcard__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 0; }
+@container (min-width: 900px) { .pcard__stats { grid-template-columns: repeat(var(--stat-cols, 6), minmax(0, 1fr)); } }
+@container (max-width: 480px) {
+  .pcard__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* número ímpar de indicadores: o último ocupa a linha em vez de ficar sozinho */
+  .pcard__stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+.pcard__stat { min-width: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); }
+.pcard__stat-label { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-dim); }
+.pcard__stat dd { margin: 0; }
+.pcard__stat-value { margin-top: 3px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.pcard__stat-sub { margin-top: 3px; font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+.pcard__panel { margin-top: 16px; padding-top: 4px; border-top: 1px solid var(--border); }
+.pcard__panel .subsection-title { margin-top: 12px; }
 @media (max-width: 640px) {
-  .trainer__actions { width: 100%; }
-  .trainer__actions > .btn { flex: 1 1 auto; }
-  .trainer__stat-value { font-size: 16px; }
+  .pcard__actions { width: 100%; }
+  .pcard__actions > .btn { flex: 1 1 auto; }
+  .pcard__stat-value { font-size: 16px; }
 }
 
 /* Custos (pages/Costs.jsx) */
 .dist__fill--warn { background: var(--warning); }
 .spark { display: block; width: 120px; height: 28px; color: var(--primary); }
+
+/* Aviso flutuante (ex.: "Link copiado") — aparece onde o admin está olhando,
+   não no topo da página que pode estar fora da tela. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 50;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  box-shadow: var(--shadow-md);
+  overflow-wrap: anywhere;
+}

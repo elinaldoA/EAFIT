@@ -9,6 +9,7 @@ import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import PromoMaterialsAdmin from '../components/PromoMaterialsAdmin';
+import PersonStat from '../components/PersonStat';
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -97,10 +98,18 @@ export default function Ambassadors() {
     }
   }
 
+  // Aviso some sozinho: aparece flutuando, perto de onde o admin clicou.
+  useEffect(() => {
+    if (!msg) return undefined;
+    const t = setTimeout(() => setMsg(''), msg.startsWith('Erro') ? 8000 : 6000);
+    return () => clearTimeout(t);
+  }, [msg]);
+
   const shown = filter ? rows.filter(a => a.kind === filter) : rows;
   const totals = shown.reduce((acc, a) => ({
     visits: acc.visits + a.visits, signups: acc.signups + a.signups, total: acc.total + a.total, active7: acc.active7 + a.active7,
   }), { visits: 0, signups: 0, total: 0, active7: 0 });
+  const ready = !loading && !error;
 
   return (
     <div className="stack">
@@ -108,10 +117,8 @@ export default function Ambassadors() {
         <div>
           <h1 className="page-title">Embaixadores e influenciadores</h1>
           <p className="page-subtitle">
-            Os dois tipos têm o mesmo programa, só muda o nome. Cada um tem um código e um link de divulgação: quem
-            abre o link e cria conta em até 30 dias fica vinculado a ele (vale o primeiro link aberto naquele navegador).
-            No app, cada um tem o próprio modo (Embaixador ou Influenciador) com os números (sem saber quem se
-            cadastrou), metas, ranking do mês com o próprio grupo, o material de divulgação e os recados enviados abaixo.
+            Os dois tipos têm o mesmo programa, só muda o nome. Quem abre o link de divulgação e cria conta em até 30 dias
+            fica vinculado a quem divulgou.
           </p>
         </div>
         <div className="seg" role="group" aria-label="Período">
@@ -127,48 +134,11 @@ export default function Ambassadors() {
         </div>
       </div>
 
-      <form className="card form-grid" onSubmit={handleCreate}>
-        <label className="field">
-          <span className="field__label">Tipo</span>
-          <select className="input" value={form.kind} onChange={e => setForm({ ...form, kind: e.target.value })}>
-            {KINDS.map(k => <option key={k.key} value={k.key}>{k.label}</option>)}
-          </select>
-        </label>
-        <label className="field">
-          <span className="field__label">E-mail da conta no app</span>
-          <input className="input" type="email" required value={form.email} placeholder="pessoa@exemplo.com"
-            onChange={e => setForm({ ...form, email: e.target.value })} />
-        </label>
-        <label className="field">
-          <span className="field__label">Nome de exibição</span>
-          <input className="input" value={form.name} placeholder="Ex.: Ana Souza" onChange={e => setName(e.target.value)} />
-        </label>
-        <label className="field">
-          <span className="field__label">Código do link</span>
-          <input className="input" required value={form.code} placeholder="anasouza"
-            onChange={e => { setCodeTouched(true); setForm({ ...form, code: e.target.value.toLowerCase() }); }} />
-        </label>
-        <div className="form-grid__actions">
-          <span className="card-note" style={{ margin: 0 }}>
-            {form.code ? ambassadorLink(form.code) : 'A pessoa precisa ter conta no app.'}
-          </span>
-          <button className="btn btn--primary" type="submit" disabled={busy || !isValidCode(form.code)}>Criar {kindLabel(form.kind).toLowerCase()}</button>
-        </div>
-      </form>
-
-      <ProgramMessageForm
-        counts={Object.fromEntries(MESSAGE_AUDIENCES.map(g => [g.key, rows.filter(a => a.kind === g.kind && a.active && a.userId).length]))}
-        loading={loading}
-      />
-
-      <PromoMaterialsAdmin />
-
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
       {loading && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
 
-      {!loading && !error && rows.length > 0 && (
-        <div className="seg" role="group" aria-label="Tipo">
+      {ready && rows.length > 0 && (
+        <div className="seg" role="group" aria-label="Tipo" style={{ alignSelf: 'flex-start' }}>
           {FILTERS.map(f => (
             <button
               key={f.key || 'todos'} type="button" aria-pressed={filter === f.key}
@@ -181,122 +151,180 @@ export default function Ambassadors() {
         </div>
       )}
 
-      {!loading && !error && shown.length === 0 && (
-        <EmptyState icon="📣" label={filter === 'influenciador' ? 'Nenhum influenciador ainda.' : 'Nenhum embaixador ainda.'} />
+      {ready && shown.length === 0 && (
+        <div className="card">
+          <EmptyState icon="📣" label={filter === 'influenciador' ? 'Nenhum influenciador ainda.' : 'Nenhum embaixador ainda.'} />
+        </div>
       )}
 
-      {!loading && !error && shown.length > 0 && (
+      {ready && shown.length > 0 && (
         <>
-          <div className="tile-grid">
+          <div className="tile-grid tile-grid--4">
             <div className="tile"><div className="tile__value">{totals.visits}</div><div className="tile__label">Visitas pelos links no período</div></div>
             <div className="tile"><div className="tile__value">{totals.signups}</div><div className="tile__label">Contas criadas no período</div></div>
             <div className="tile"><div className="tile__value">{totals.total}</div><div className="tile__label">Vinculados no total</div></div>
             <div className="tile"><div className="tile__value">{totals.active7}</div><div className="tile__label">Vinculados ativos (7 dias)</div></div>
           </div>
 
-          <div className="table-wrap">
-            <table className="resp-table">
-              <thead>
-                <tr><th>Nome</th><th>Tipo</th><th>Código</th><th>Visitas</th><th>Cadastros</th><th>Conversão</th><th>Total</th><th>Ativos 7d</th><th /></tr>
-              </thead>
-              <tbody>
-                {shown.map(a => (
-                  <AmbassadorRow
-                    key={a.id} a={a} open={openId === a.id} editing={editing?.id === a.id ? editing : null} busy={busy}
-                    onToggle={() => setOpenId(openId === a.id ? '' : a.id)}
-                    onEdit={() => setEditing({ id: a.id, name: a.name, code: a.code, kind: a.kind })}
-                    onEditChange={setEditing} onCancel={() => setEditing(null)}
-                    onSave={changes => handleSave(a, changes)} onCopy={copy}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="card-note">
-            Visitas = aberturas do link (no máximo 1 por dia por navegador). Ativos 7d = vinculados que abriram o app
-            nos últimos 7 dias. O canal vem do link usado (?origem=); prefira os links por canal para saber de onde vem
-            cada cadastro.
+          <ul className="pcard-list">
+            {shown.map(a => (
+              <AmbassadorCard
+                key={a.id} a={a} open={openId === a.id} editing={editing?.id === a.id ? editing : null} busy={busy}
+                onToggle={() => setOpenId(openId === a.id ? '' : a.id)}
+                onEdit={() => setEditing({ id: a.id, name: a.name, code: a.code, kind: a.kind })}
+                onEditChange={setEditing} onCancel={() => setEditing(null)}
+                onSave={changes => handleSave(a, changes)} onCopy={copy}
+              />
+            ))}
+          </ul>
+          <p className="card-note" style={{ margin: 0 }}>
+            Visitas = aberturas do link (no máximo 1 por dia por navegador; vale o primeiro link aberto naquele
+            navegador). Ativos 7d = vinculados que abriram o app nos últimos 7 dias. O canal vem do link usado
+            (?origem=); prefira os links por canal para saber de onde vem cada cadastro.
           </p>
         </>
+      )}
+
+      <h2 className="section-label">Gerenciar o programa</h2>
+      <p className="card-note" style={{ margin: '-8px 0 0' }}>
+        No app, cada um tem o próprio modo (Embaixador ou Influenciador) com os números (sem saber quem se cadastrou),
+        metas, ranking do mês com o próprio grupo, o material de divulgação e os recados enviados aqui.
+      </p>
+
+      <div className="two-col">
+        <form className="card stack" onSubmit={handleCreate}>
+          <div>
+            <h2 className="section-title" style={{ margin: 0 }}>Adicionar ao programa</h2>
+            <p className="card-note" style={{ margin: '4px 0 0' }}>A pessoa precisa ter conta no app.</p>
+          </div>
+          <div className="form-grid">
+            <label className="field">
+              <span className="field__label">Tipo</span>
+              <select className="input" value={form.kind} onChange={e => setForm({ ...form, kind: e.target.value })}>
+                {KINDS.map(k => <option key={k.key} value={k.key}>{k.label}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span className="field__label">E-mail da conta no app</span>
+              <input className="input" type="email" required value={form.email} placeholder="pessoa@exemplo.com"
+                onChange={e => setForm({ ...form, email: e.target.value })} />
+            </label>
+            <label className="field">
+              <span className="field__label">Nome de exibição</span>
+              <input className="input" value={form.name} placeholder="Ex.: Ana Souza" onChange={e => setName(e.target.value)} />
+            </label>
+            <label className="field">
+              <span className="field__label">Código do link</span>
+              <input className="input" required value={form.code} placeholder="anasouza"
+                onChange={e => { setCodeTouched(true); setForm({ ...form, code: e.target.value.toLowerCase() }); }} />
+            </label>
+            <div className="form-grid__actions">
+              <span className="card-note" style={{ margin: 0, overflowWrap: 'anywhere' }}>
+                {form.code ? ambassadorLink(form.code) : 'O código vira o link de divulgação.'}
+              </span>
+              <button className="btn btn--primary" type="submit" disabled={busy || !isValidCode(form.code)}>Criar {kindLabel(form.kind).toLowerCase()}</button>
+            </div>
+          </div>
+        </form>
+
+        <ProgramMessageForm
+          counts={Object.fromEntries(MESSAGE_AUDIENCES.map(g => [g.key, rows.filter(a => a.kind === g.kind && a.active && a.userId).length]))}
+          loading={loading}
+        />
+      </div>
+
+      <PromoMaterialsAdmin />
+
+      {msg && (
+        <div className="toast" role="status">
+          <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>
+        </div>
       )}
     </div>
   );
 }
 
-function AmbassadorRow({ a, open, editing, busy, onToggle, onEdit, onEditChange, onCancel, onSave, onCopy }) {
+function AmbassadorCard({ a, open, editing, busy, onToggle, onEdit, onEditChange, onCancel, onSave, onCopy }) {
+  const conv = conversion(a.visits, a.signups);
   return (
-    <>
-      <tr>
-        <td data-label="Nome">
-          {editing ? (
-            <input className="input" value={editing.name} aria-label="Nome" onChange={e => onEditChange({ ...editing, name: e.target.value })} />
-          ) : (
-            <>
-              <strong>{a.name}</strong>{' '}
-              {!a.active && <span className="badge">inativo</span>}
-              <div className="user-detail__meta">
-                {a.userId ? <Link to={`/users/${a.userId}`}>{a.email}</Link> : 'conta excluída'}
-              </div>
-            </>
-          )}
-        </td>
-        <td data-label="Tipo">
-          {editing ? (
-            <select className="input" value={editing.kind} aria-label="Tipo" onChange={e => onEditChange({ ...editing, kind: e.target.value })}>
+    <li className="card pcard" style={{ '--stat-cols': 5 }}>
+      <div className="pcard__head">
+        <div className="pcard__id">
+          <div className="pcard__title">
+            <strong className="pcard__name">{a.name}</strong>
+            <span className={`badge ${a.kind === 'influenciador' ? 'badge--warning' : 'badge--admin'}`}>{kindLabel(a.kind)}</span>
+            {!a.active && <span className="badge badge--danger">inativo</span>}
+          </div>
+          <div className="pcard__meta">
+            <span>{a.userId ? <Link to={`/users/${a.userId}`}>{a.email}</Link> : 'conta excluída'}</span>
+            <span>Código <code>{a.code}</code></span>
+          </div>
+        </div>
+        {!editing && (
+          <div className="actions-row pcard__actions">
+            <button className="btn btn--small" aria-expanded={open} onClick={onToggle}>
+              {open ? 'Fechar' : `Vinculados (${a.total})`}
+            </button>
+            <button className="btn btn--ghost btn--small" onClick={onEdit}>Editar</button>
+            <button className={`btn btn--small ${a.active ? 'btn--danger' : 'btn--ghost'}`} disabled={busy}
+              onClick={() => onSave({ active: !a.active })}>
+              {a.active ? 'Desativar' : 'Reativar'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {editing && (
+        <form className="pcard__edit form-grid"
+          onSubmit={e => { e.preventDefault(); onSave({ name: editing.name, code: editing.code, kind: editing.kind }); }}>
+          <label className="field">
+            <span className="field__label">Nome</span>
+            <input className="input" value={editing.name} onChange={e => onEditChange({ ...editing, name: e.target.value })} />
+          </label>
+          <label className="field">
+            <span className="field__label">Tipo</span>
+            <select className="input" value={editing.kind} onChange={e => onEditChange({ ...editing, kind: e.target.value })}>
               {KINDS.map(k => <option key={k.key} value={k.key}>{k.label}</option>)}
             </select>
-          ) : kindLabel(a.kind)}
-        </td>
-        <td data-label="Código">
-          {editing ? (
-            <input className="input" value={editing.code} aria-label="Código"
+          </label>
+          <label className="field">
+            <span className="field__label">Código</span>
+            <input className="input" value={editing.code}
               onChange={e => onEditChange({ ...editing, code: e.target.value.toLowerCase() })} />
-          ) : <code>{a.code}</code>}
-        </td>
-        <td data-label="Visitas">{a.visits}</td>
-        <td data-label="Cadastros">{a.signups}</td>
-        <td data-label="Conversão">{conversion(a.visits, a.signups) == null ? '—' : `${conversion(a.visits, a.signups)}%`}</td>
-        <td data-label="Total">{a.total}</td>
-        <td data-label="Ativos 7d">{a.active7}</td>
-        <td>
-          <div className="actions-row">
-            {editing ? (
-              <>
-                <button className="btn btn--primary btn--small" disabled={busy || !isValidCode(editing.code) || !editing.name.trim()}
-                  onClick={() => onSave({ name: editing.name, code: editing.code, kind: editing.kind })}>Salvar</button>
-                <button className="btn btn--ghost btn--small" onClick={onCancel}>Cancelar</button>
-              </>
-            ) : (
-              <>
-                <button className="btn btn--ghost btn--small" aria-expanded={open} onClick={onToggle}>
-                  {open ? 'Fechar' : `Vinculados (${a.total})`}
-                </button>
-                <button className="btn btn--ghost btn--small" onClick={onEdit}>Editar</button>
-                <button className={`btn btn--small ${a.active ? 'btn--danger' : 'btn--ghost'}`} disabled={busy}
-                  onClick={() => onSave({ active: !a.active })}>
-                  {a.active ? 'Desativar' : 'Reativar'}
-                </button>
-              </>
-            )}
-          </div>
-        </td>
-      </tr>
-      {open && (
-        <tr>
-          <td colSpan={9}>
-            <div className="actions-row" style={{ marginBottom: 12 }}>
-              <span className="card-note" style={{ margin: 0 }}>Copiar link:</span>
-              {CHANNELS.map(c => (
-                <button key={c.key} className="btn btn--ghost btn--small" disabled={!a.active}
-                  onClick={() => onCopy(ambassadorLink(a.code, c.key))}>{c.label}</button>
-              ))}
-              {!a.active && <span className="card-note" style={{ margin: 0 }}>{kindLabel(a.kind)} inativo: o link não vincula novas contas.</span>}
+          </label>
+          <div className="form-grid__actions">
+            <span className="card-note" style={{ margin: 0, overflowWrap: 'anywhere' }}>{ambassadorLink(editing.code)}</span>
+            <div className="actions-row">
+              <button type="button" className="btn btn--ghost btn--small" onClick={onCancel}>Cancelar</button>
+              <button type="submit" className="btn btn--primary btn--small" disabled={busy || !isValidCode(editing.code) || !editing.name.trim()}>Salvar</button>
             </div>
-            <ReferralList ambassadorId={a.id} />
-          </td>
-        </tr>
+          </div>
+        </form>
       )}
-    </>
+
+      <dl className="pcard__stats">
+        <PersonStat label="Visitas" value={a.visits} sub="no período" />
+        <PersonStat label="Cadastros" value={a.signups} sub="no período" />
+        <PersonStat label="Conversão" value={conv == null ? '—' : `${conv}%`} sub="visita → cadastro" />
+        <PersonStat label="Vinculados" value={a.total} sub="no total" />
+        <PersonStat label="Ativos 7d" value={a.active7} sub="abriram o app" />
+      </dl>
+
+      {open && (
+        <section className="pcard__panel">
+          <h3 className="subsection-title">Copiar link de divulgação</h3>
+          <div className="actions-row">
+            {CHANNELS.map(c => (
+              <button key={c.key} className="btn btn--ghost btn--small" disabled={!a.active}
+                onClick={() => onCopy(ambassadorLink(a.code, c.key))}>{c.label}</button>
+            ))}
+          </div>
+          {!a.active && <p className="card-note">{kindLabel(a.kind)} inativo: o link não vincula novas contas.</p>}
+          <h3 className="subsection-title">Contas vinculadas</h3>
+          <ReferralList ambassadorId={a.id} />
+        </section>
+      )}
+    </li>
   );
 }
 
@@ -317,26 +345,28 @@ function ReferralList({ ambassadorId }) {
   if (rows.length === 0) return <p className="card-note">Nenhuma conta vinculada ainda.</p>;
 
   return (
-    <table className="resp-table">
-      <thead><tr><th>Usuário</th><th>Canal</th><th>Cadastro</th><th>E-mail confirmado</th><th>Último acesso</th><th>Treinos</th></tr></thead>
-      <tbody>
-        {rows.map(r => (
-          <tr key={r.userId}>
-            <td data-label="Usuário">
-              <Link className="btn btn--ghost btn--small" to={`/users/${r.userId}`}>{r.email}</Link>
-              {r.name && <div className="user-detail__meta">{r.name}</div>}
-            </td>
-            <td data-label="Canal">{SOURCE_LABELS[r.source] || r.source}</td>
-            <td data-label="Cadastro">{formatDate(r.linkedAt)}</td>
-            <td data-label="E-mail confirmado">
-              <span className={`badge ${r.confirmed ? 'badge--ok' : 'badge--warning'}`}>{r.confirmed ? 'sim' : 'não'}</span>
-            </td>
-            <td data-label="Último acesso">{r.lastSeen ? formatDate(r.lastSeen) : 'nunca'}</td>
-            <td data-label="Treinos">{r.workouts}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="table-wrap">
+      <table className="resp-table">
+        <thead><tr><th>Usuário</th><th>Canal</th><th>Cadastro</th><th>E-mail confirmado</th><th>Último acesso</th><th>Treinos</th></tr></thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.userId}>
+              <td data-label="Usuário">
+                <Link to={`/users/${r.userId}`}>{r.email}</Link>
+                {r.name && <div className="user-detail__meta">{r.name}</div>}
+              </td>
+              <td data-label="Canal">{SOURCE_LABELS[r.source] || r.source}</td>
+              <td data-label="Cadastro">{formatDate(r.linkedAt)}</td>
+              <td data-label="E-mail confirmado">
+                <span className={`badge ${r.confirmed ? 'badge--ok' : 'badge--warning'}`}>{r.confirmed ? 'sim' : 'não'}</span>
+              </td>
+              <td data-label="Último acesso">{r.lastSeen ? formatDate(r.lastSeen) : 'nunca'}</td>
+              <td data-label="Treinos">{r.workouts}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

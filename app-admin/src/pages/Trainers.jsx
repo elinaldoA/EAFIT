@@ -10,19 +10,9 @@ import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import TrainerResultsCard from '../components/TrainerResultsCard';
 import EmptyState from '../components/EmptyState';
+import PersonStat from '../components/PersonStat';
 
 const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('pt-BR') : '—');
-
-// Um indicador do cartão do personal: rótulo, número e um detalhe opcional.
-function Stat({ label, value, sub }) {
-  return (
-    <div className="trainer__stat">
-      <dt className="trainer__stat-label">{label}</dt>
-      <dd className="trainer__stat-value">{value}</dd>
-      {sub && <dd className="trainer__stat-sub">{sub}</dd>}
-    </div>
-  );
-}
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -304,7 +294,7 @@ export default function Trainers() {
       {ready && rows.length > 0 && (
         <>
           <h2 className="section-label" style={{ margin: '0 0 12px' }}>Personais liberados</h2>
-          <ul className="trainer-list">
+          <ul className="pcard-list">
             {rows.map(r => {
               const a = activity[r.tc_user];
               const rate = confirmRate(a);
@@ -316,23 +306,23 @@ export default function Trainers() {
               const invitesOpen = openInvites === r.tc_user;
               const joinSub = parts => parts.filter(Boolean).join(' · ') || null;
               return (
-                <li key={r.tc_user} className="card trainer">
-                  <div className="trainer__head">
-                    <div className="trainer__id">
-                      <Link className="trainer__name" to={`/users/${r.tc_user}`}>{r.tc_name}</Link>
-                      <div className="trainer__meta">
+                <li key={r.tc_user} className="card pcard">
+                  <div className="pcard__head">
+                    <div className="pcard__id">
+                      <Link className="pcard__name" to={`/users/${r.tc_user}`}>{r.tc_name}</Link>
+                      <div className="pcard__meta">
                         <span>{r.tc_email}</span>
                         <span>Código <code>{r.tc_code}</code></span>
                         <span>Liberado em {fmtDate(r.tc_since)}</span>
                       </div>
                       {hl && (hl.idle > 0 || hl.noContact > 0) && (
-                        <div className="trainer__flags">
+                        <div className="pcard__flags">
                           {hl.idle > 0 && <span className="badge badge--warning">{hl.idle} parado(s)</span>}
                           {hl.noContact > 0 && <span className="badge badge--danger">{hl.noContact} sem contato</span>}
                         </div>
                       )}
                     </div>
-                    <div className="actions-row trainer__actions">
+                    <div className="actions-row pcard__actions">
                       <button className="btn btn--small" aria-expanded={clientsOpen}
                         onClick={() => setOpen(clientsOpen ? null : r.tc_user)}>
                         {clientsOpen ? 'Ocultar alunos' : 'Ver alunos'}
@@ -344,29 +334,29 @@ export default function Trainers() {
                     </div>
                   </div>
 
-                  <dl className="trainer__stats">
-                    <Stat label="Alunos" value={Number(r.tc_clients)}
+                  <dl className="pcard__stats">
+                    <PersonStat label="Alunos" value={Number(r.tc_clients)}
                       sub={hl && (hl.added > 0 || hl.lost > 0) ? `+${hl.added} / −${hl.lost} no período` : null} />
-                    <Stat label="Link (período)" value={inv ? `${inv.visits} visita(s)` : '—'}
+                    <PersonStat label="Link (período)" value={inv ? `${inv.visits} visita(s)` : '—'}
                       sub={inv ? joinSub([`${inv.signups} cadastro(s)`, conv !== null && `${conv}% de conversão`]) : null} />
-                    <Stat label="Indicados" value={inv ? inv.total : '—'}
+                    <PersonStat label="Indicados" value={inv ? inv.total : '—'}
                       sub={inv && inv.total > 0 ? `${inv.linked} viraram aluno · ${inv.active7} ativos 7d` : null} />
-                    <Stat label="Meta semanal" value={hlRate !== null ? `${hlRate}%` : '—'}
+                    <PersonStat label="Meta semanal" value={hlRate !== null ? `${hlRate}%` : '—'}
                       sub={hl ? joinSub([`${hl.withGoal} com meta`, hlRate !== null && 'semanas batidas']) : null} />
-                    <Stat label="Aulas (30d)" value={a ? a.appts : '—'}
+                    <PersonStat label="Aulas (30d)" value={a ? a.appts : '—'}
                       sub={a ? joinSub([rate !== null && `${rate}% confirmadas`, a.upcoming > 0 && `${a.upcoming} marcada(s) à frente`]) : null} />
-                    <Stat label="Recados (30d)" value={a ? a.messages : '—'}
+                    <PersonStat label="Recados (30d)" value={a ? a.messages : '—'}
                       sub={a ? joinSub([a.messages > 0 && `${a.read} lido(s)`, a.lastMessage && `último em ${fmtDate(a.lastMessage)}`]) : null} />
                   </dl>
 
                   {clientsOpen && (
-                    <section className="trainer__panel">
+                    <section className="pcard__panel">
                       <h3 className="subsection-title">Alunos ativos</h3>
                       <TrainerClients trainerId={r.tc_user} />
                     </section>
                   )}
                   {invitesOpen && (
-                    <section className="trainer__panel">
+                    <section className="pcard__panel">
                       <h3 className="subsection-title">Indicados pelo link</h3>
                       <TrainerInviteSignups trainerId={r.tc_user} code={r.tc_code} />
                     </section>
