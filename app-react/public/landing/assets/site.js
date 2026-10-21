@@ -576,8 +576,12 @@
   }
 
   document.addEventListener('click', function (e) {
-    var a = e.target.closest && e.target.closest('a[href="/app/"]');
+    var a = e.target.closest && e.target.closest('a[href="/app/"], a[data-app-ref]');
     if (a) track('cta_click', clickPlace(a));
+    // "Começar grátis" / "Abrir app" abre o app limpo: sem código de
+    // embaixador, influenciador ou personal guardado de outra visita.
+    if (a && !ref) forgetReferrals();
+    if (a && ref && a.getAttribute('href') === '/app/') a.setAttribute('href', appRefUrl);
     if (e.target.closest && e.target.closest('#install-btn')) track('install_click', 'install');
   });
   window.addEventListener('appinstalled', function () { track('install_done', 'install'); });
@@ -654,19 +658,33 @@
     if (/iphone|ipod|mobile/.test(ua)) return 'celular';
     return 'desktop';
   }
-  // Link de embaixador (?ref=CODIGO): cópia de app-react/src/lib/ambassadorRef.js
-  // (mesma chave e regra) — o app lê o código daqui no cadastro. O primeiro
-  // link vale por 30 dias.
+  // Link antigo de embaixador/influenciador apontando pro site (?ref=CODIGO;
+  // os novos já abrem /app/?ref=): os botões que levam ao app passam o código
+  // na URL e o app guarda (app-react/src/lib/ambassadorRef.js). O site não
+  // guarda nada — sem ?ref= na página, o botão abre o app sem citar ninguém.
   var ref = (new URLSearchParams(window.location.search).get('ref') || '').trim().toLowerCase();
   if (!/^[a-z0-9-]{3,30}$/.test(ref)) ref = '';
-  (function captureRef() {
+  var appRefUrl = '';
+  (function passRef() {
     if (!ref) return;
-    try {
-      var saved = JSON.parse(localStorage.getItem('eafit_ref') || 'null');
-      if (saved && /^[a-z0-9-]{3,30}$/.test(String(saved.code)) && Date.now() - Number(saved.at) < 30 * 24 * 60 * 60 * 1000) return;
-      localStorage.setItem('eafit_ref', JSON.stringify({ code: ref, source: detectSource(), at: Date.now() }));
-    } catch { /* sem armazenamento */ }
+    // O canal de chegada (?origem= ou Instagram, WhatsApp…) vai junto.
+    var params = new URLSearchParams({ ref: ref });
+    var origem = detectSource();
+    if (origem !== 'direto' && origem !== 'landing') params.set('origem', origem);
+    appRefUrl = '/app/?' + params;
+    document.querySelectorAll('a[href="/app/"]').forEach(function (a) {
+      a.setAttribute('href', appRefUrl);
+      a.setAttribute('data-app-ref', '');
+    });
   })();
+  // Chaves de app-react/src/lib/ambassadorRef.js e lib/trainerInvite.js.
+  function forgetReferrals() {
+    try {
+      localStorage.removeItem('eafit_ref');
+      localStorage.removeItem('eafit_personal_invite');
+      sessionStorage.removeItem('eafit_personal_invite_visit');
+    } catch { /* sem armazenamento: nada guardado */ }
+  }
   // Origem do cadastro (primeiro toque, 30 dias): cópia de
   // app-react/src/lib/attribution.js (mesma chave e regra) — o app manda no
   // cadastro em user_metadata.utm.
