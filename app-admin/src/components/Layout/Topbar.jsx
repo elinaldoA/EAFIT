@@ -1,13 +1,10 @@
-import { Link, useLocation } from 'react-router-dom';
-import { useAdminAuth } from '../../context/useAdminAuth';
-import ThemeToggle from '../ThemeToggle';
+import { useLocation } from 'react-router-dom';
+import UserMenu from './UserMenu';
 import { titleForPath } from './nav';
 
 export default function Topbar({ menuOpen, onMenuClick }) {
-  const { adminUser, logout } = useAdminAuth();
   const { pathname } = useLocation();
   const title = titleForPath(pathname);
-  const email = adminUser?.email || '';
 
   return (
     <header className="topbar">
@@ -17,14 +14,7 @@ export default function Topbar({ menuOpen, onMenuClick }) {
         {title && <><span aria-hidden="true">/</span><strong>{title}</strong></>}
       </div>
       <div className="topbar__spacer" />
-      {email && (
-        <Link className="topbar__user" to="/perfil" title="Meu perfil" aria-label="Meu perfil">
-          <span className="topbar__avatar" aria-hidden="true">{email[0]}</span>
-          <span className="topbar__email">{email}</span>
-        </Link>
-      )}
-      <ThemeToggle />
-      <button className="btn btn--ghost btn--small" onClick={logout}>Sair</button>
+      <UserMenu />
     </header>
   );
 }

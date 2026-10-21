@@ -17,9 +17,9 @@ import ProtectedRoute from './ProtectedRoute';
 import EmptyState from './EmptyState';
 import Loading from './Loading';
 import Layout from './Layout/Layout';
+import UserMenu from './Layout/UserMenu';
 import { ThemeProvider } from '../context/ThemeContext';
 import { useTheme } from '../context/useTheme';
-import ThemeToggle from './ThemeToggle';
 
 beforeEach(() => {
   mockAuth.current = { adminUser: { email: 'admin@x.com' }, authLoading: false, logout: vi.fn() };
@@ -112,12 +112,13 @@ describe('EmptyState e Loading', () => {
   });
 });
 
-describe('ThemeProvider e ThemeToggle', () => {
-  it('alterna o tema, grava no localStorage e na raiz', () => {
+describe('ThemeProvider', () => {
+  it('alterna o tema pelo menu da conta, grava no localStorage e na raiz', () => {
     localStorage.setItem('theme', 'dark');
-    render(<ThemeProvider><ThemeToggle /></ThemeProvider>);
+    render(<MemoryRouter><ThemeProvider><UserMenu /></ThemeProvider></MemoryRouter>);
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-    fireEvent.click(screen.getByLabelText('Alternar tema'));
+    fireEvent.click(screen.getByRole('button', { name: 'Menu da conta' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Tema claro/ }));
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     expect(localStorage.getItem('theme')).toBe('light');
   });
@@ -196,10 +197,28 @@ describe('Layout', () => {
     expect(pessoas.getAttribute('href')).toBe('/personais');
   });
 
-  it('topbar mostra e-mail e chama logout', () => {
+  it('topbar mostra e-mail e o menu da conta tem perfil, links e sair', () => {
     renderAt('/');
     expect(screen.getByText('admin@x.com')).toBeTruthy();
-    fireEvent.click(screen.getByText('Sair'));
+    expect(screen.queryByRole('menu')).toBeNull();
+    const btn = screen.getByRole('button', { name: 'Menu da conta' });
+    fireEvent.click(btn);
+    expect(btn.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('menuitem', { name: /Meu perfil/ }).getAttribute('href')).toBe('/perfil');
+    expect(screen.getByRole('menuitem', { name: /Site/ }).getAttribute('href')).toBe('https://eafit.com.br/');
+    expect(screen.getByRole('menuitem', { name: /App/ }).getAttribute('href')).toBe('https://eafit.com.br/app/');
+    fireEvent.click(screen.getByRole('menuitem', { name: /Sair/ }));
     expect(mockAuth.current.logout).toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('menu da conta fecha com Esc e com clique fora', () => {
+    renderAt('/');
+    fireEvent.click(screen.getByRole('button', { name: 'Menu da conta' }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Menu da conta' }));
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole('menu')).toBeNull();
   });
 });
