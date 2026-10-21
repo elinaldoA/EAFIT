@@ -45,8 +45,8 @@ export default function PasswordRecoveryScreen() {
             <h2 className="auth-form__title">{t('Crie uma nova senha')}</h2>
             <p className="auth-form__subtitle">{t('Escolha uma senha que você não usa em outros sites.')}</p>
           </div>
-          <PasswordInput label={t('Nova senha')} value={password} onChange={setPassword} autoComplete="new-password" autoFocus minLength={6} hint={t('Mínimo de 6 caracteres.')} />
-          <PasswordInput label={t('Confirmar nova senha')} value={confirm} onChange={setConfirm} autoComplete="new-password" minLength={6} />
+          <PasswordInput label={t('Nova senha')} value={password} onChange={setPassword} autoComplete="new-password" autoFocus minLength={8} hint={t('Mínimo de 8 caracteres.')} />
+          <PasswordInput label={t('Confirmar nova senha')} value={confirm} onChange={setConfirm} autoComplete="new-password" minLength={8} />
           <button type="submit" className="btn btn--primary btn--full" disabled={busy}>
             {busy ? t('Salvando…') : t('Salvar nova senha')}
           </button>

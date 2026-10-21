@@ -31,7 +31,7 @@ export default {
   // authErrors
   'Confirme seu e-mail antes de entrar — enviamos um link quando você criou a conta.': 'Confirm your email before signing in — we sent a link when you created the account.',
   'Já existe uma conta com este e-mail. Entre ou redefina a senha.': 'An account with this email already exists. Sign in or reset your password.',
-  'Senha fraca: use pelo menos 6 caracteres, misturando letras e números.': 'Weak password: use at least 6 characters, mixing letters and numbers.',
+  'Senha fraca: use pelo menos 8 caracteres, misturando letras e números.': 'Weak password: use at least 8 characters, mixing letters and numbers.',
   'A nova senha precisa ser diferente da atual.': 'The new password must be different from the current one.',
   'Muitos e-mails enviados. Aguarde alguns minutos e tente de novo.': 'Too many emails sent. Wait a few minutes and try again.',
   'Muitas tentativas seguidas. Aguarde um pouco e tente de novo.': 'Too many attempts in a row. Wait a bit and try again.',

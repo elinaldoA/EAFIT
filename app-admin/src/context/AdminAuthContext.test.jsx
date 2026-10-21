@@ -192,7 +192,7 @@ describe('AdminAuthProvider', () => {
       response = await result.current.updatePassword('123');
     });
 
-    expect(response).toEqual({ error: 'Senha: mínimo 6 caracteres.' });
+    expect(response).toEqual({ error: 'Senha: mínimo 8 caracteres.' });
     expect(mockAuth.updateUser).not.toHaveBeenCalled();
   });
 

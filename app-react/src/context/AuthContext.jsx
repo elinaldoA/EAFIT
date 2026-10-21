@@ -14,7 +14,7 @@ import { syncLocalProfile } from '../lib/profileSync';
 import { noteFreshLogin } from '../lib/biometricLock';
 
 import { t, lang } from '../lib/i18n';
-const MIN_PASSWORD = 6;
+const MIN_PASSWORD = 8;
 // Limite do bcrypt no Supabase Auth: acima disso o servidor recusa a senha.
 const MAX_PASSWORD = 72;
 

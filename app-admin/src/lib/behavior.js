@@ -78,7 +78,7 @@ const AUTH_ERROR_LABELS = {
   termos: 'Não aceitou os Termos de Uso',
   sem_email: 'Enviou sem e-mail',
   sem_senha: 'Enviou sem senha',
-  senha_curta: 'Senha com menos de 6 caracteres',
+  senha_curta: 'Senha curta demais',
   weak_password: 'Senha fraca (recusada pelo servidor)',
   user_already_exists: 'E-mail já tem conta',
   email_exists: 'E-mail já tem conta',

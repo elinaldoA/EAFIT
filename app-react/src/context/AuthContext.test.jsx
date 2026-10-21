@@ -91,7 +91,7 @@ describe('AuthProvider', () => {
       response = await result.current.signup('a@b.com', '123');
     });
 
-    expect(response).toEqual({ error: 'Senha: mínimo 6 caracteres.' });
+    expect(response).toEqual({ error: 'Senha: mínimo 8 caracteres.' });
     expect(mockAuth.signUp).not.toHaveBeenCalled();
   });
 

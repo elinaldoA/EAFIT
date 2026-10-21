@@ -161,7 +161,7 @@ export default function AuthScreen() {
               onChange={setPassword}
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
               minLength={mode === 'signup' ? 6 : undefined}
-              hint={mode === 'signup' ? t('Mínimo de 6 caracteres.') : undefined}
+              hint={mode === 'signup' ? t('Mínimo de 8 caracteres.') : undefined}
             />
           )}
 

@@ -37,7 +37,7 @@ export default function ResetPassword() {
         <label className="field">
           <span className="field__label">Nova senha</span>
           <input
-            className="input" type="password" required autoFocus minLength={6}
+            className="input" type="password" required autoFocus minLength={8}
             value={password} onChange={e => setPassword(e.target.value)}
           />
         </label>
@@ -45,7 +45,7 @@ export default function ResetPassword() {
         <label className="field">
           <span className="field__label">Confirmar nova senha</span>
           <input
-            className="input" type="password" required minLength={6}
+            className="input" type="password" required minLength={8}
             value={confirm} onChange={e => setConfirm(e.target.value)}
           />
         </label>

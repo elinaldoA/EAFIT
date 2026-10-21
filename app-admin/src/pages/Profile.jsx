@@ -56,7 +56,7 @@ export default function Profile() {
         <label className="field">
           <span className="field__label">Nova senha</span>
           <input
-            className="input" type="password" placeholder="Mínimo 6 caracteres"
+            className="input" type="password" placeholder="Mínimo 8 caracteres"
             value={newPassword} onChange={e => setNewPassword(e.target.value)}
           />
         </label>

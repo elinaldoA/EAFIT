@@ -35,7 +35,7 @@ export default function ProfileAccountSection({
             <div className="profile-field">
               <label className="profile-field__label" htmlFor="newPassword">{t('Nova senha')}</label>
               <input
-                type="password" id="newPassword" className="input input--sm" placeholder={t('Mínimo 6 caracteres')}
+                type="password" id="newPassword" className="input input--sm" placeholder={t('Mínimo 8 caracteres')}
                 value={newPassword} onChange={e => setNewPassword(e.target.value)}
               />
               <button className="btn btn--outline btn--sm" onClick={onUpdatePassword}>{t('Atualizar senha')}</button>

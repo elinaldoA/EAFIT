@@ -8,7 +8,7 @@ const BY_CODE = {
   email_not_confirmed: t('Confirme seu e-mail antes de entrar — enviamos um link quando você criou a conta.'),
   user_already_exists: t('Já existe uma conta com este e-mail. Entre ou redefina a senha.'),
   email_exists: t('Já existe uma conta com este e-mail. Entre ou redefina a senha.'),
-  weak_password: t('Senha fraca: use pelo menos 6 caracteres, misturando letras e números.'),
+  weak_password: t('Senha fraca: use pelo menos 8 caracteres, misturando letras e números.'),
   same_password: t('A nova senha precisa ser diferente da atual.'),
   over_email_send_rate_limit: t('Muitos e-mails enviados. Aguarde alguns minutos e tente de novo.'),
   over_request_rate_limit: t('Muitas tentativas seguidas. Aguarde um pouco e tente de novo.'),

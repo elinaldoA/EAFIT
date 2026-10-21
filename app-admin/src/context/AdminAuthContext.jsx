@@ -171,7 +171,7 @@ export function AdminAuthProvider({ children }) {
   }
 
   async function updatePassword(password) {
-    if (password.length < 6) return { error: 'Senha: mínimo 6 caracteres.' };
+    if (password.length < 8) return { error: 'Senha: mínimo 8 caracteres.' };
     const { error } = await db.auth.updateUser({ password });
     return { error: error?.message };
   }
