@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
   fetchVisitBreakdown, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
-  fetchWorkoutCompletion, fetchWorkoutDropoff,
+  fetchWorkoutCompletion, fetchWorkoutDropoff, fetchVisitorStages, fetchLostVisitors,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents, buildInstallRetention, buildCompletion,
+  buildVisitorJourney, stageLabel, authErrorLabel,
   OS_LABELS, BROWSER_LABELS, DEVICE_LABELS, LANG_LABELS, MODE_LABELS, PUSH_LABELS,
 } from '../lib/behavior';
+import { sourceLabel } from '../lib/activation';
+import { formatDateTime } from '../lib/installs';
 import { Link } from 'react-router-dom';
 import { buildTutorialFunnel, fetchAdoption } from '../lib/adoption';
 import Loading from '../components/Loading';
@@ -35,6 +38,8 @@ function useLoad(load, days) {
 
 const loadAuth = days => fetchAuthEvents(days).then(buildSignup);
 const loadEvents = days => fetchUserEvents(days).then(rows => ({ ...buildUserEvents(rows), tutorial: buildTutorialFunnel(rows) }));
+const loadJourney = days => Promise.all([fetchVisitorStages(days), fetchLostVisitors(days, 50)])
+  .then(([stages, lost]) => ({ ...buildVisitorJourney(stages), recent: lost }));
 const loadInstall = () => fetchInstallRetention().then(buildInstallRetention);
 const loadWorkouts = days => Promise.all([fetchWorkoutCompletion(days), fetchWorkoutDropoff(days, 10)])
   .then(([c, d]) => ({ completion: buildCompletion(c), dropoff: d }));
@@ -118,6 +123,7 @@ export default function Behavior() {
 
   const visits = useLoad(fetchVisitBreakdown, days);
   const auth = useLoad(loadAuth, days);
+  const journey = useLoad(loadJourney, days);
   const events = useLoad(loadEvents, days);
   const clients = useLoad(fetchClientBreakdown, days);
   const install = useLoad(loadInstall, 0);
@@ -207,6 +213,69 @@ export default function Behavior() {
             />
           </>
         )}
+      </Card>
+
+      <Card
+        title="Visitantes que não converteram" state={journey}
+        note="Cada navegador é contado uma vez, pela etapa mais avançada a que chegou no período (site, tela de acesso e cadastro). “Converteu” = criou conta ou entrou numa conta que já tinha neste navegador. Nunca diz qual conta; só conta visitas a partir desta medição. Quem tem conta mas nunca entrou neste navegador aparece como não convertido."
+      >
+        {data => (data.total === 0
+          ? <p className="card-note" style={{ marginTop: 0 }}>Nenhuma visita com identificador no período ainda.</p>
+          : (
+            <>
+              <div className="tile-grid" style={{ marginBottom: 14 }}>
+                <div className="tile"><div className="tile__value">{data.total}</div><div className="tile__label">Navegadores no período</div></div>
+                <div className="tile"><div className="tile__value">{data.lostPct == null ? '—' : `${data.lostPct}%`}</div><div className="tile__label">Não converteram ({data.lost})</div></div>
+                <div className="tile"><div className="tile__value">{data.lostReturningPct == null ? '—' : `${data.lostReturningPct}%`}</div><div className="tile__label">Desses, voltaram em 2+ dias ({data.lostReturning})</div></div>
+                <div className="tile"><div className="tile__value">{data.converted}</div><div className="tile__label">Converteram</div></div>
+              </div>
+              <h3 className="subsection-title" style={{ marginTop: 0 }}>Até onde chegaram</h3>
+              <CountTable
+                head={['Etapa mais avançada', 'Navegadores', '% do total', 'Voltaram em 2+ dias']} empty=""
+                rows={data.stages.map(s => ({ key: s.key, label: s.label, cells: [s.total, s.pct == null ? '—' : `${s.pct}%`, s.returning] }))}
+              />
+              <div className="two-col">
+                <div>
+                  <h3 className="subsection-title">Quantos dias vieram</h3>
+                  <Bars rows={data.days} />
+                </div>
+                <div>
+                  <h3 className="subsection-title">De onde vieram</h3>
+                  <Bars rows={data.sources.map(s => ({ ...s, label: sourceLabel(s.value) }))} />
+                </div>
+                <div>
+                  <h3 className="subsection-title">Aparelho</h3>
+                  <Bars rows={data.devices} />
+                </div>
+              </div>
+              <h3 className="subsection-title">Mais recentes</h3>
+              {data.recent.length === 0
+                ? <p className="card-note" style={{ marginTop: 0 }}>Ninguém deixou de converter no período.</p>
+                : (
+                  <div className="table-wrap">
+                    <table className="resp-table">
+                      <thead>
+                        <tr><th>Navegador</th><th>Primeira visita</th><th>Última</th><th>Dias</th><th>Origem</th><th>Aparelho</th><th>Parou em</th><th>Último erro</th></tr>
+                      </thead>
+                      <tbody>
+                        {data.recent.map(v => (
+                          <tr key={v.lv_visitor}>
+                            <td data-label="Navegador"><code>{v.lv_visitor}</code></td>
+                            <td data-label="Primeira visita">{formatDateTime(v.lv_first_at)}</td>
+                            <td data-label="Última">{formatDateTime(v.lv_last_at)}</td>
+                            <td data-label="Dias">{v.lv_days}</td>
+                            <td data-label="Origem">{sourceLabel(v.lv_source)}{v.lv_campaign ? ` · ${v.lv_campaign}` : ''}</td>
+                            <td data-label="Aparelho">{DEVICE_LABELS[v.lv_device] || v.lv_device}</td>
+                            <td data-label="Parou em">{stageLabel(v.lv_stage)}</td>
+                            <td data-label="Último erro">{v.lv_error ? authErrorLabel(v.lv_error) : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+            </>
+          ))}
       </Card>
 
       <div className="section-label">Usuários registrados</div>

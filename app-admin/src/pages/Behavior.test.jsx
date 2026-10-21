@@ -49,6 +49,22 @@ const DATA = {
   admin_install_retention: [{ display_mode: 'standalone', users: 4, trained_7d: 3 }],
   admin_workout_completion: [{ started: 20, completed: 15, avg_duration_seconds: 2700, median_duration_seconds: 2400 }],
   admin_workout_dropoff: [{ exercise_name: 'Agachamento Livre', total: 3 }],
+  admin_visitor_stages: [
+    { dimension: 'stage', value: 'so_landing', visitors: 5 },
+    { dimension: 'stage', value: 'erro_cadastro', visitors: 3 },
+    { dimension: 'stage', value: 'cadastrou', visitors: 2 },
+    { dimension: 'stage_return', value: 'so_landing', visitors: 2 },
+    { dimension: 'stage_return', value: 'erro_cadastro', visitors: 2 },
+    { dimension: 'lost_days', value: '1', visitors: 4 },
+    { dimension: 'lost_days', value: '3-5', visitors: 4 },
+    { dimension: 'lost_source', value: 'instagram', visitors: 6 },
+    { dimension: 'lost_source', value: 'direto', visitors: 2 },
+    { dimension: 'lost_device', value: 'celular', visitors: 8 },
+  ],
+  admin_lost_visitors: [
+    { lv_visitor: 'abcd1234', lv_first_at: '2026-10-18T22:00:00Z', lv_last_at: '2026-10-20T22:00:00Z', lv_days: 3,
+      lv_source: 'instagram', lv_campaign: 'promo', lv_device: 'celular', lv_stage: 'erro_cadastro', lv_error: 'senha_curta' },
+  ],
 };
 
 beforeEach(() => {
@@ -72,6 +88,19 @@ describe('Behavior', () => {
     expect(screen.getByText(/abriram o app por uma notificação/).textContent).toContain('20%');
     expect(screen.getAllByText('App instalado').length).toBeGreaterThan(0);
     expect(mockRpc).toHaveBeenCalledWith('admin_user_events', { days_back: 30 });
+  });
+
+  it('mostra quem visitou e não converteu, e onde parou', async () => {
+    render(<Behavior />);
+
+    const row = (await screen.findByText('abcd1234')).closest('tr');
+    expect(row.textContent).toContain('Deu erro no cadastro');
+    expect(row.textContent).toContain('Senha curta demais');
+    expect(row.textContent).toContain('promo');
+    expect(screen.getByText('Não converteram (8)').previousSibling.textContent).toBe('80%');
+    expect(screen.getByText('Desses, voltaram em 2+ dias (4)').previousSibling.textContent).toBe('50%');
+    expect(screen.getByText('Só viram a landing').closest('tr').textContent).toContain('50%');
+    expect(mockRpc).toHaveBeenCalledWith('admin_lost_visitors', { days_back: 30, max_rows: 50 });
   });
 
   it('trocar o período recarrega as consultas', async () => {

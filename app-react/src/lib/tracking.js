@@ -184,6 +184,9 @@ export function trackInstall(event) {
 const AUTH_EVENTS = ['signup_start', 'signup_submit', 'signup_error', 'signup_ok', 'login_error'];
 
 // Evento anônimo da tela de acesso: 1 por sessão do navegador por evento+detalhe.
+// Vai com o identificador do navegador (jornada de quem não converte,
+// supabase/migrations/20261130010000_visitor_journey.sql); banco sem a coluna
+// recusa a linha e o evento é gravado sem ele.
 export function trackAuthEvent(event, detail = '') {
   if (!enabled || !AUTH_EVENTS.includes(event) || isStaffDevice()) return false;
   const d = cleanDetail(detail);
@@ -193,7 +196,31 @@ export function trackAuthEvent(event, detail = '') {
       if (sessionStorage.getItem(key)) return false;
       sessionStorage.setItem(key, '1');
     } catch { /* sem armazenamento: envia mesmo assim */ }
-    Promise.resolve(db.from('auth_events').insert({ event, detail: d })).catch(() => {});
+    const row = { event, detail: d };
+    const vid = deviceId();
+    Promise.resolve(db.from('auth_events').insert(vid ? { ...row, visitor_id: vid } : row))
+      .then(res => { if (res?.error && vid) return db.from('auth_events').insert(row); })
+      .catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Este navegador entrou numa conta: as visitas dele deixam de contar como
+// "não converteu". Grava só o identificador do navegador, nunca qual conta;
+// 1 vez por navegador.
+export function markVisitor() {
+  if (!enabled || !userId || isStaffDevice()) return false;
+  try {
+    const id = deviceId();
+    if (!id) return false;
+    const key = 'eafit_visitor_marked';
+    try {
+      if (localStorage.getItem(key) === id) return false;
+      localStorage.setItem(key, id);
+    } catch { /* sem armazenamento: envia mesmo assim */ }
+    Promise.resolve(db.rpc('mark_visitor', { p_visitor: id })).catch(() => {});
     return true;
   } catch {
     return false;

@@ -145,7 +145,40 @@ describe('tracking', () => {
     expect(t.trackAuthEvent('signup_error', 'weak_password')).toBe(true);
     expect(t.trackAuthEvent('evento_que_nao_existe')).toBe(false);
     expect(mockInsert).toHaveBeenCalledTimes(2);
-    expect(mockInsert).toHaveBeenCalledWith({ event: 'signup_error', detail: 'termos' });
+    expect(mockInsert).toHaveBeenCalledWith({ event: 'signup_error', detail: 'termos', visitor_id: t.deviceId() });
+  });
+
+  it('evento anônimo: banco sem a coluna visitor_id grava sem ele', async () => {
+    const t = await freshTracking();
+    t.enableTracking();
+    mockInsert.mockReset()
+      .mockResolvedValueOnce({ error: { message: 'column "visitor_id" does not exist' } })
+      .mockResolvedValue({ error: null });
+    expect(t.trackAuthEvent('signup_start')).toBe(true);
+    await vi.waitFor(() => expect(mockInsert).toHaveBeenCalledTimes(2));
+    expect(mockInsert).toHaveBeenLastCalledWith({ event: 'signup_start', detail: '' });
+  });
+
+  it('navegador que entrou numa conta: marca só o identificador, 1 vez', async () => {
+    const t = await freshTracking();
+    t.enableTracking();
+    expect(t.markVisitor()).toBe(false);
+    t.setTrackingUser('u1');
+    expect(t.markVisitor()).toBe(true);
+    expect(t.markVisitor()).toBe(false);
+    t.setTrackingUser('u2');
+    expect(t.markVisitor()).toBe(false);
+    expect(mockRpc).toHaveBeenCalledTimes(1);
+    expect(mockRpc).toHaveBeenCalledWith('mark_visitor', { p_visitor: t.deviceId() });
+  });
+
+  it('navegador de admin não marca conversão', async () => {
+    const t = await freshTracking();
+    t.enableTracking();
+    t.setTrackingUser('u1');
+    localStorage.setItem('eafit_staff_device', '1');
+    expect(t.markVisitor()).toBe(false);
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
   it('navegador de admin: sem evento anônimo nem instalação', async () => {

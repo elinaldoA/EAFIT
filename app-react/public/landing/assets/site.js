@@ -550,21 +550,53 @@
   // Cliques nos CTAs que levam ao app, instalação e seções alcançadas.
   // Sem identificar ninguém; 1 registro por evento+lugar por sessão;
   // falha em silêncio. Lugar = seção do clique (ou nav/sticky).
+  // Identificador aleatório do navegador: cópia de deviceId() em
+  // app-react/src/lib/tracking.js (mesma chave — site e app são a mesma
+  // origem). Liga as visitas e cliques do mesmo navegador entre si, pra jornada
+  // de quem não converte (20261130010000_visitor_journey.sql); nunca à conta.
+  function visitorId() {
+    try {
+      var id = localStorage.getItem('eafit_device_id');
+      if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)) {
+        if (window.crypto && crypto.randomUUID) {
+          id = crypto.randomUUID();
+        } else {
+          var b = new Uint8Array(16);
+          crypto.getRandomValues(b);
+          b[6] = (b[6] & 0x0f) | 0x40;
+          b[8] = (b[8] & 0x3f) | 0x80;
+          var h = Array.prototype.map.call(b, function (x) { return (x < 16 ? '0' : '') + x.toString(16); }).join('');
+          id = h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+        }
+        localStorage.setItem('eafit_device_id', id);
+      }
+      return id;
+    } catch { return ''; }
+  }
+  function postAnon(table, row) {
+    return fetch(SUPABASE_URL + '/rest/v1/' + table, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(row),
+      keepalive: true,
+    });
+  }
+
   function track(event, place) {
     var key = 'eafit_ev_' + event + ':' + place;
     try {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, '1');
     } catch { /* sem armazenamento: conta mesmo assim */ }
-    fetch(SUPABASE_URL + '/rest/v1/landing_events', {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json', Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ event: event, place: place }),
-      keepalive: true,
-    }).catch(function () {});
+    // Banco sem a coluna visitor_id recusa a linha: grava sem ela.
+    var row = { event: event, place: place };
+    var vid = visitorId();
+    postAnon('landing_events', vid ? Object.assign({ visitor_id: vid }, row) : row)
+      .then(function (r) { if (!r.ok && vid) return postAnon('landing_events', row); })
+      .catch(function () {});
   }
 
   function clickPlace(a) {
@@ -712,17 +744,7 @@
       localStorage.setItem(key, today);
     } catch { /* sem armazenamento: conta mesmo assim */ }
     var source = detectSource();
-    function send(row) {
-      return fetch(SUPABASE_URL + '/rest/v1/page_visits', {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json', Prefer: 'return=minimal',
-        },
-        body: JSON.stringify(row),
-        keepalive: true,
-      });
-    }
+    function send(row) { return postAnon('page_visits', row); }
     // Do mais completo pro mais simples: banco sem as colunas novas
     // (migration ainda não aplicada) recusa a linha e a visita é gravada sem elas.
     var os = detectOS();
@@ -731,7 +753,9 @@
     var visitLang = window.LANDING_LANG === 'en' ? 'en' : 'pt';
     var full = { page: 'landing', source: source, os: os, browser: detectBrowser(), device: detectDevice(), lang: visitLang, campaign: campaign };
     var withRef = ref ? Object.assign({ ref: ref }, full) : full;
-    send(withRef)
+    var vid = visitorId();
+    (vid ? send(Object.assign({ visitor_id: vid }, withRef)) : send(withRef))
+      .then(function (r) { if (!r.ok && vid) return send(withRef); return r; })
       .then(function (r) { if (!r.ok && ref) return send(full); return r; })
       .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source, os: os }); return r; })
       .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source }); })

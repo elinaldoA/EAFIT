@@ -3,6 +3,7 @@ import { todayDate } from '../data/treinoData';
 import { lang } from './i18n';
 import { readClientInfo } from './clientInfo';
 import { isStaffDevice } from './staffDevice';
+import { deviceId } from './tracking';
 
 export { detectOS } from './clientInfo';
 
@@ -78,13 +79,17 @@ export async function recordVisit(page) {
   const campaign = detectCampaign(window.location.search);
   // Do mais completo pro mais simples: banco sem as colunas novas (migration
   // ainda não aplicada) recusa a linha, e a visita é gravada sem elas.
-  const attempts = [
+  const full = [
     ...(personal ? [{ page, source, os, browser, device, lang, campaign, ...(ref ? { ref } : {}), personal }] : []),
     ...(ref ? [{ page, source, os, browser, device, lang, campaign, ref }] : []),
     { page, source, os, browser, device, lang, campaign },
     { page, source, os },
     { page, source },
   ];
+  // A mais completa vai também com o identificador do navegador (jornada de
+  // quem não converte, 20261130010000_visitor_journey.sql).
+  const vid = deviceId();
+  const attempts = vid ? [{ ...full[0], visitor_id: vid }, ...full] : full;
   try {
     let error;
     for (const row of attempts) {

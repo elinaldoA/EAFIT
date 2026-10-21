@@ -82,7 +82,17 @@ describe('recordVisit', () => {
     expect(await recordVisit('acesso')).toBe(true);
     expect(await recordVisit('acesso')).toBe(false);
     expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledWith({ page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro' });
+    expect(mockInsert).toHaveBeenCalledWith({
+      page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro',
+      visitor_id: localStorage.getItem('eafit_device_id'),
+    });
+    expect(localStorage.getItem('eafit_device_id')).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('banco sem a coluna visitor_id: grava a visita sem ele', async () => {
+    mockInsert.mockResolvedValueOnce({ error: { message: 'column "visitor_id" does not exist' } });
+    expect(await recordVisit('acesso')).toBe(true);
+    expect(mockInsert).toHaveBeenLastCalledWith({ page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro' });
   });
 
   it('navegador de admin não conta', async () => {
@@ -92,12 +102,15 @@ describe('recordVisit', () => {
   });
 
   it('banco sem as colunas novas: cai pra linha mais simples que ele aceita', async () => {
-    mockInsert.mockResolvedValueOnce({ error: { message: 'column "browser" does not exist' } });
+    mockInsert
+      .mockResolvedValueOnce({ error: { message: 'column "visitor_id" does not exist' } })
+      .mockResolvedValueOnce({ error: { message: 'column "browser" does not exist' } });
     expect(await recordVisit('acesso')).toBe(true);
     expect(mockInsert).toHaveBeenLastCalledWith({ page: 'acesso', source: 'convite', os: 'android' });
 
     localStorage.clear();
     mockInsert.mockReset()
+      .mockResolvedValueOnce({ error: { message: 'x' } })
       .mockResolvedValueOnce({ error: { message: 'x' } })
       .mockResolvedValueOnce({ error: { message: 'x' } })
       .mockResolvedValue({ error: null });

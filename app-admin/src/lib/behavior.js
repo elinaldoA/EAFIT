@@ -17,6 +17,9 @@ export const fetchClientBreakdown = (days = 30) => rpcRows('admin_client_breakdo
 export const fetchInstallRetention = () => rpcRows('admin_install_retention');
 export const fetchWorkoutDropoff = (days = 30, maxRows = 10) => rpcRows('admin_workout_dropoff', { days_back: days, max_rows: maxRows });
 
+export const fetchVisitorStages = (days = 30) => rpcRows('admin_visitor_stages', { days_back: days });
+export const fetchLostVisitors = (days = 30, maxRows = 50) => rpcRows('admin_lost_visitors', { days_back: days, max_rows: maxRows });
+
 export async function fetchWorkoutCompletion(days = 30) {
   return (await rpcRows('admin_workout_completion', { days_back: days }))[0] || null;
 }
@@ -111,6 +114,53 @@ export function buildSignup(rows) {
     .map(r => ({ detail: r.detail, label: authErrorLabel(r.detail), total: Number(r.total) || 0 }))
     .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
   return { steps, signupErrors: errorsOf('signup_error'), loginErrors: errorsOf('login_error') };
+}
+
+// Jornada por navegador (20261130010000_visitor_journey.sql): etapa mais
+// avançada, da mais rasa pra mais funda. As duas últimas são conversão.
+export const VISITOR_STAGES = [
+  { key: 'so_landing', label: 'Só viram a landing' },
+  { key: 'clicou_cta', label: 'Clicaram para ir ao app' },
+  { key: 'tela_acesso', label: 'Chegaram à tela de acesso' },
+  { key: 'comecou_cadastro', label: 'Começaram o cadastro' },
+  { key: 'enviou', label: 'Enviaram o cadastro' },
+  { key: 'erro_cadastro', label: 'Deu erro no cadastro' },
+  { key: 'cadastrou', label: 'Criaram a conta', converted: true },
+  { key: 'ja_tinha_conta', label: 'Já tinham conta (entraram)', converted: true },
+];
+const STAGE_LABELS = Object.fromEntries(VISITOR_STAGES.map(s => [s.key, s.label]));
+export const stageLabel = key => STAGE_LABELS[key] || key || '—';
+
+const DAYS_BUCKETS = [
+  { value: '1', label: '1 dia' },
+  { value: '2', label: '2 dias' },
+  { value: '3-5', label: '3 a 5 dias' },
+  { value: '6+', label: '6 dias ou mais' },
+];
+
+// Linhas (dimension, value, visitors) → resumo de quem não converteu.
+// `stages` traz todas as etapas (com zero) e quantos voltaram em 2+ dias.
+export function buildVisitorJourney(rows) {
+  const list = rows || [];
+  const count = (dimension, value) => Number(list.find(r => r.dimension === dimension && r.value === value)?.visitors) || 0;
+  const total = VISITOR_STAGES.reduce((t, s) => t + count('stage', s.key), 0);
+  const lost = VISITOR_STAGES.filter(s => !s.converted).reduce((t, s) => t + count('stage', s.key), 0);
+  const converted = total - lost;
+  const lostReturning = VISITOR_STAGES.filter(s => !s.converted).reduce((t, s) => t + count('stage_return', s.key), 0);
+  const stages = VISITOR_STAGES.map(s => {
+    const n = count('stage', s.key);
+    return { ...s, value: s.key, total: n, returning: count('stage_return', s.key), pct: pct(n, total) };
+  });
+  const dimRows = (dimension, labels = {}) => groupDimension(list, dimension, labels, 'visitors');
+  const days = DAYS_BUCKETS.map(b => ({ ...b, total: count('lost_days', b.value) }))
+    .map(b => ({ ...b, pct: pct(b.total, lost) }));
+  return {
+    total, lost, converted, lostReturning,
+    lostPct: pct(lost, total), lostReturningPct: pct(lostReturning, lost),
+    stages, days,
+    sources: dimRows('lost_source'),
+    devices: dimRows('lost_device', DEVICE_LABELS),
+  };
 }
 
 const ONBOARDING_STEPS = [
