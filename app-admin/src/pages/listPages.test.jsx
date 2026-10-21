@@ -181,9 +181,8 @@ describe('Trainers', () => {
     });
     wrap(<Trainers />);
     await screen.findByText('Carlos');
-    expect(await screen.findByText('· 75% confirmadas')).toBeTruthy();
-    expect(screen.getByText('3 marcada(s) à frente')).toBeTruthy();
-    expect(screen.getByText('· 7 lido(s)')).toBeTruthy();
+    expect(await screen.findByText('75% confirmadas · 3 marcada(s) à frente')).toBeTruthy();
+    expect(screen.getByText(/^7 lido\(s\) · último em /)).toBeTruthy();
     expect(mockRpc).toHaveBeenCalledWith('admin_trainer_activity', { days_back: 30 });
     expect(await screen.findByText('Próximas aulas')).toBeTruthy();
     expect(screen.getByText('Aluno Nove').getAttribute('href')).toBe('/users/u9');

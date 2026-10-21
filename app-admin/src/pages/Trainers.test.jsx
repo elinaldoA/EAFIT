@@ -42,8 +42,8 @@ const renderPage = () => render(<MemoryRouter><Trainers /></MemoryRouter>);
 describe('Trainers (indicados pelo link)', () => {
   it('mostra os números do link e os totais', async () => {
     renderPage();
-    expect(await screen.findByText(/10 visita\(s\) · 2 cadastro\(s\)/)).toBeTruthy();
-    expect(screen.getByText('· 20%')).toBeTruthy();
+    expect(await screen.findByText('10 visita(s)')).toBeTruthy();
+    expect(screen.getByText('2 cadastro(s) · 20% de conversão')).toBeTruthy();
     expect(screen.getByText('1 viraram aluno · 3 ativos 7d')).toBeTruthy();
     expect(screen.getByText('Indicados no total')).toBeTruthy();
     expect(h.invites).toHaveBeenCalledWith(30);
@@ -51,7 +51,7 @@ describe('Trainers (indicados pelo link)', () => {
 
   it('troca o período', async () => {
     renderPage();
-    await screen.findByText(/10 visita/);
+    await screen.findByText('10 visita(s)');
     fireEvent.click(screen.getByText('7 dias'));
     await waitFor(() => expect(h.invites).toHaveBeenCalledWith(7));
   });
@@ -69,8 +69,9 @@ describe('Trainers (saúde da carteira)', () => {
   it('mostra os totais e a carteira de cada personal', async () => {
     renderPage();
     expect(await screen.findByText('+2 / −1')).toBeTruthy();
-    expect(screen.getByText('75%')).toBeTruthy();
-    expect(screen.getByText('2 com meta')).toBeTruthy();
+    // total no bloco de carteira e taxa do personal no cartão dele
+    expect(screen.getAllByText('75%')).toHaveLength(2);
+    expect(screen.getByText('2 com meta · semanas batidas')).toBeTruthy();
     expect(screen.getByText('1 parado(s)')).toBeTruthy();
     expect(screen.getByText('1 sem contato')).toBeTruthy();
     expect(h.health).toHaveBeenCalledWith(30);

@@ -3,7 +3,7 @@ import { useAdminAuth } from '../../context/useAdminAuth';
 import ThemeToggle from '../ThemeToggle';
 import { titleForPath } from './nav';
 
-export default function Topbar({ onMenuClick }) {
+export default function Topbar({ menuOpen, onMenuClick }) {
   const { adminUser, logout } = useAdminAuth();
   const { pathname } = useLocation();
   const title = titleForPath(pathname);
@@ -11,7 +11,7 @@ export default function Topbar({ onMenuClick }) {
 
   return (
     <header className="topbar">
-      <button className="topbar__menu-btn" onClick={onMenuClick} aria-label="Abrir menu">☰</button>
+      <button className="topbar__menu-btn" onClick={onMenuClick} aria-label="Abrir menu" aria-expanded={!!menuOpen}>☰</button>
       <div className="topbar__crumb">
         <span>Admin</span>
         {title && <><span aria-hidden="true">/</span><strong>{title}</strong></>}

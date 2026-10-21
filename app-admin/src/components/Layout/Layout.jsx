@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { sectionForPath, tabForPath } from './nav';
 import Sidebar from './Sidebar';
@@ -17,6 +17,31 @@ function Shell() {
   const showTabs = section && tabs.length > 1 && tabForPath(pathname);
   // Tela oculta para este admin (Sistema → Administradores): só interface.
   const blocked = isHidden(hiddenScreens, pathname);
+  const tabsRef = useRef(null);
+
+  // Menu lateral (celular): Esc fecha, a página de trás não rola, e se a
+  // janela crescer até o layout de desktop ele fecha sozinho.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = e => { if (e.key === 'Escape') setMenuOpen(false); };
+    const wide = window.matchMedia?.('(min-width: 901px)');
+    const onWide = e => { if (e.matches) setMenuOpen(false); };
+    document.addEventListener('keydown', onKey);
+    wide?.addEventListener?.('change', onWide);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      wide?.removeEventListener?.('change', onWide);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [menuOpen]);
+
+  // Faixa de abas rola de lado no celular: mantém a aba atual à vista.
+  useEffect(() => {
+    tabsRef.current?.querySelector('.tabs__btn--active')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  }, [pathname]);
+
   const content = blocked
     ? <EmptyState icon="🔒" label="Você não tem acesso a esta tela. Fale com um superadmin se precisar dela." />
     : <Outlet />;
@@ -25,12 +50,12 @@ function Shell() {
     <div className="shell">
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
       <div className="shell__main">
-        <Topbar onMenuClick={() => setMenuOpen(true)} />
+        <Topbar menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />
         <main className="shell__content">
           {showTabs ? (
             <>
               <h1 className="section-title-main">{section.label}</h1>
-              <nav className="tabs" aria-label={section.label}>
+              <nav className="tabs" aria-label={section.label} ref={tabsRef}>
                 {tabs.map(t => (
                   <NavLink
                     key={t.to}

@@ -82,25 +82,29 @@ export default function InstallPanel() {
             <div className="two-col" style={{ marginTop: 20 }}>
               <div>
                 <h3 className="subsection-title" style={{ marginTop: 0 }}>Tela "Instale o app"</h3>
-                <table className="source-table">
-                  <tbody>
-                    <tr><th scope="row">Viram a tela</th><td>{s.screen.shown}</td></tr>
-                    <tr><th scope="row">Aceitaram no botão "Instalar app"</th><td>{s.screen.accepted}</td></tr>
-                    <tr><th scope="row">Recusaram no botão</th><td>{s.screen.dismissed}</td></tr>
-                    <tr><th scope="row">Taxa de aceite do botão</th><td>{s.screen.acceptedPct == null ? '—' : `${s.screen.acceptedPct}%`}</td></tr>
-                  </tbody>
-                </table>
+                <div className="table-wrap">
+                  <table className="source-table">
+                    <tbody>
+                      <tr><th scope="row">Viram a tela</th><td>{s.screen.shown}</td></tr>
+                      <tr><th scope="row">Aceitaram no botão "Instalar app"</th><td>{s.screen.accepted}</td></tr>
+                      <tr><th scope="row">Recusaram no botão</th><td>{s.screen.dismissed}</td></tr>
+                      <tr><th scope="row">Taxa de aceite do botão</th><td>{s.screen.acceptedPct == null ? '—' : `${s.screen.acceptedPct}%`}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
                 <p className="card-note">O botão só existe no Chrome, Edge e Samsung; no iPhone a tela mostra o passo a passo.</p>
               </div>
               <div>
                 <h3 className="subsection-title" style={{ marginTop: 0 }}>Como instalaram</h3>
-                <table className="source-table">
-                  <tbody>
-                    {s.sources.map(x => (
-                      <tr key={x.key}><th scope="row">{x.label}</th><td>{x.total}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="table-wrap">
+                  <table className="source-table">
+                    <tbody>
+                      {s.sources.map(x => (
+                        <tr key={x.key}><th scope="row">{x.label}</th><td>{x.total}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
