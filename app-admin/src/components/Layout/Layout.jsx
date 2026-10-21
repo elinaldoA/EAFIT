@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { sectionForPath, tabForPath } from './nav';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -7,6 +7,7 @@ import AdminAccessProvider from '../../context/AdminAccessProvider';
 import { useAdminAccess } from '../../context/useAdminAccess';
 import { isHidden } from '../../lib/adminAccess';
 import EmptyState from '../EmptyState';
+import { LANDING_URL } from '../../lib/ambassadors';
 
 const COLLAPSED_KEY = 'sidebarCollapsed';
 
@@ -85,6 +86,14 @@ function Shell() {
             </>
           ) : content}
         </main>
+        <footer className="shell__footer">
+          <span>© {new Date().getFullYear()} EAFIT · Painel administrativo</span>
+          <nav className="shell__footer-links" aria-label="Rodapé">
+            <Link to="/perfil">Meu perfil</Link>
+            <a href={LANDING_URL} target="_blank" rel="noreferrer">Site ↗</a>
+            <a href={`${LANDING_URL}app/`} target="_blank" rel="noreferrer">App ↗</a>
+          </nav>
+        </footer>
       </div>
     </div>
   );

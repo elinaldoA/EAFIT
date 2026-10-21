@@ -18,7 +18,7 @@ export default function Topbar({ menuOpen, onMenuClick }) {
       </div>
       <div className="topbar__spacer" />
       {email && (
-        <Link className="topbar__user" to="/perfil" title="Meu perfil">
+        <Link className="topbar__user" to="/perfil" title="Meu perfil" aria-label="Meu perfil">
           <span className="topbar__avatar" aria-hidden="true">{email[0]}</span>
           <span className="topbar__email">{email}</span>
         </Link>

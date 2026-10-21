@@ -63,13 +63,6 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed })
             </div>
           ))}
         </nav>
-        <div className="sidebar__footer">
-          <Link to="/perfil" onClick={onClose} title={collapsed ? 'Meu perfil' : undefined}>
-            <span className="sidebar__link-icon"><NavIcon name="user" /></span>
-            <span className="sidebar__label">Meu perfil</span>
-          </Link>
-          <span className="sidebar__footer-note">Gestão do projeto EAFIT</span>
-        </div>
       </aside>
     </>
   );

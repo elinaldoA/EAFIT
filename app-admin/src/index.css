@@ -111,6 +111,28 @@ a { color: var(--primary); }
   }
 }
 
+/* Rodapé da página: fica no fim do conteúdo (shell__main é coluna flex e o
+   conteúdo cresce), não preso na tela. */
+.shell__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 16px 32px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.shell__footer-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.shell__footer-links a { color: var(--text-muted); text-decoration: none; }
+.shell__footer-links a:hover { color: var(--primary); }
+@media (min-width: 901px) and (max-width: 1200px) { .shell__footer { padding-left: 22px; padding-right: 22px; } }
+@media (max-width: 900px) { .shell__footer { padding-left: 16px; padding-right: 16px; } }
+
 .page-loading {
   padding: 40px;
   text-align: center;
@@ -213,17 +235,6 @@ a { color: var(--primary); }
 .sidebar__link-icon svg { width: 18px; height: 18px; }
 .sidebar__count { margin-left: auto; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 700; line-height: 1.5; text-align: center; font-variant-numeric: tabular-nums; }
 
-.sidebar__footer { display: flex; flex-direction: column; gap: 4px; }
-.sidebar__footer a { display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 500; }
-.sidebar__footer .sidebar__link-icon, .sidebar__footer .sidebar__link-icon svg { width: 16px; height: 16px; }
-.sidebar__footer a:hover { color: var(--primary); }
-.sidebar__footer {
-  padding: 12px 18px;
-  border-top: 1px solid var(--border);
-  font-size: 11.5px;
-  color: var(--text-dim);
-}
-
 .sidebar__backdrop { display: none; }
 
 /* Botão de recolher/expandir: seta redonda presa na borda direita, na altura
@@ -258,8 +269,7 @@ a { color: var(--primary); }
   .sidebar--collapsed .sidebar__brand { justify-content: center; padding-left: 0; padding-right: 0; }
   .sidebar--collapsed .sidebar__brand-text,
   .sidebar--collapsed .sidebar__label,
-  .sidebar--collapsed .sidebar__group-label,
-  .sidebar--collapsed .sidebar__footer-note {
+  .sidebar--collapsed .sidebar__group-label {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
@@ -272,11 +282,6 @@ a { color: var(--primary); }
     position: absolute; top: 5px; right: 9px; min-width: 0; width: 9px; height: 9px; padding: 0;
     font-size: 0; box-shadow: 0 0 0 2px var(--surface);
   }
-  .sidebar--collapsed .sidebar__footer { align-items: center; padding-left: 0; padding-right: 0; }
-  .sidebar--collapsed .sidebar__footer a { padding: 6px; border-radius: 8px; }
-  .sidebar--collapsed .sidebar__footer a:hover { background: var(--surface-2); }
-  .sidebar--collapsed .sidebar__footer .sidebar__link-icon,
-  .sidebar--collapsed .sidebar__footer .sidebar__link-icon svg { width: 18px; height: 18px; }
 }
 
 @media (max-width: 900px) {
@@ -299,7 +304,7 @@ a { color: var(--primary); }
   }
   .sidebar--open { transform: translateX(0); visibility: visible; transition: transform 0.2s ease; }
   .sidebar__toggle { display: none; }
-  .sidebar__footer { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .sidebar__nav { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 
   .sidebar__backdrop {
     display: block;
@@ -381,7 +386,8 @@ a { color: var(--primary); }
   .topbar__crumb strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 @media (max-width: 640px) {
-  .topbar__user { display: none; }
+  .topbar__user { padding: 4px; }
+  .topbar__email { display: none; }
   /* sobra espaço só pro nome da tela: o "Admin /" é redundante no celular */
   .topbar__crumb > span { display: none; }
 }
