@@ -703,6 +703,9 @@
     var params = new URLSearchParams({ ref: ref });
     var origem = detectSource();
     if (origem !== 'direto' && origem !== 'landing') params.set('origem', origem);
+    // Campanha de parceiro (app-react/src/lib/partnerCampaign.js) vai junto.
+    var campanha = (new URLSearchParams(window.location.search).get('utm_campaign') || '').toLowerCase();
+    if (/^[a-z0-9-]{3,40}$/.test(campanha)) params.set('utm_campaign', campanha);
     appRefUrl = '/app/?' + params;
     document.querySelectorAll('a[href="/app/"]').forEach(function (a) {
       a.setAttribute('href', appRefUrl);

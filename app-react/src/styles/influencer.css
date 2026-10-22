@@ -36,3 +36,11 @@
 .influencer-ranking__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .influencer-ranking__n { font-weight: 800; }
 .influencer-ranking__gap { text-align: center; color: var(--text-dim); line-height: 1; }
+/* Campanhas de parceiros (components/PartnerCampaignsCard.jsx): modo do programa e modo Personal. */
+.partner-campaign { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-top: 1px solid var(--border); }
+.partner-campaign:first-of-type { border-top: 0; padding-top: 4px; }
+.partner-campaign__head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.partner-campaign__head small { font-size: 0.78rem; color: var(--text-muted); }
+.partner-campaign__text { margin: 0; font-size: 0.85rem; line-height: 1.45; white-space: pre-line; word-break: break-word; }
+.partner-campaign__goal { margin: 0; font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+.partner-campaign .influencer-caption { border-top: 0; padding: 4px 0 0; }

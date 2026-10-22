@@ -2,6 +2,7 @@ import { useToast } from '../context/useToast';
 import { AmbassadorLink, AmbassadorQr } from '../components/AmbassadorPanel';
 import { INFLUENCER_CAPTIONS, captionText, copyCaption } from '../lib/ambassador';
 import PromoMaterialsCard from './PromoMaterialsCard';
+import PartnerCampaignsCard from '../components/PartnerCampaignsCard';
 
 import { t } from '../lib/i18n';
 
@@ -17,6 +18,8 @@ export default function SharePage({ amb }) {
 
   return (
     <section className="page active trainer-page">
+      <PartnerCampaignsCard toast={toast} />
+
       <div className="dash-card">
         <div className="dash-card__title">{t('🔗 Seu link')}</div>
         <div className="amb">

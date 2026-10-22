@@ -10,6 +10,7 @@ const URL_TTL = 300;
 export async function fetchPromoMaterials() {
   const { data, error } = await db.from('promo_materials')
     .select('id, title, description, storage_path, file_name, mime_type, size_bytes, created_at')
+    .is('campaign_id', null) // material de campanha aparece na campanha (PartnerCampaignsCard)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];

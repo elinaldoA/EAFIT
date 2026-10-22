@@ -275,4 +275,13 @@ export default {
   'Aqui chegam as campanhas, novidades e datas importantes que a equipe EAFIT manda para o seu grupo. O número na aba mostra os recados novos.': 'Campaigns, news and key dates the EAFIT team sends to your group arrive here. The number on the tab shows new messages.',
   'Ative as notificações para saber quando alguém criar conta pelo seu link ou chegar um recado. Aqui você escolhe se seu nome aparece no ranking e ficam seu código e o botão "Usar como aluno", que troca para o app de treino. Para voltar a este painel, toque em "{button}" no topo do app.': 'Turn on notifications to know when someone signs up through your link or a message arrives. Here you choose whether your name shows in the ranking, and find your code and the "Use as client" button, which switches to the workout app. To come back to this dashboard, tap "{button}" at the top of the app.',
   'Sua conta não está mais no programa de divulgação do EAFIT. Fale com a equipe EAFIT se isso for um engano.': 'Your account is no longer in the EAFIT referral program. Contact the EAFIT team if this is a mistake.',
+  // Campanhas de parceiros (components/PartnerCampaignsCard.jsx)
+  '📣 Campanhas': '📣 Campaigns',
+  'Campanhas da equipe EAFIT. Use o link de cada uma: assim os cadastros contam para você nela.': 'Campaigns from the EAFIT team. Use each campaign link so sign-ups count for you in it.',
+  'Encerrada em {date}': 'Ended on {date}',
+  'Até {date}': 'Until {date}',
+  'Sem data para acabar': 'No end date',
+  'visitas pelo link da campanha': 'visits through the campaign link',
+  'contas criadas na campanha': 'accounts created in the campaign',
+  'Texto sugerido': 'Suggested text',
 };

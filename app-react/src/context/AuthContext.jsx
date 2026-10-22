@@ -9,6 +9,7 @@ import { isAccountDeactivated } from '../lib/accountStatus';
 import { takeEmailLink } from '../lib/emailLink';
 import { pendingRef, clearRef } from '../lib/ambassadorRef';
 import { pendingAttribution, clearAttribution } from '../lib/attribution';
+import { clearPartnerCampaign, pendingPartnerCampaign } from '../lib/partnerCampaign';
 import { pendingPersonalInvite } from '../lib/trainerInvite';
 import { syncLocalProfile } from '../lib/profileSync';
 import { noteFreshLogin } from '../lib/biometricLock';
@@ -176,10 +177,12 @@ export function AuthProvider({ children }) {
     const personal = pendingPersonalInvite();
     // Origem da chegada (primeiro toque, 30 dias): Análises → Campanhas no painel.
     const utm = pendingAttribution();
+    // Campanha de parceiro do link (lib/partnerCampaign.js): o cadastro conta para ela.
+    const partnerCampaign = pendingPartnerCampaign();
     const { data, error } = await db.auth.signUp({
       email, password,
       options: {
-        data: { termsAcceptedAt: new Date().toISOString(), lang, ...(ref ? { ref: ref.code, refSource: ref.source } : {}), ...(personal ? { personal } : {}), ...(utm ? { utm } : {}) },
+        data: { termsAcceptedAt: new Date().toISOString(), lang, ...(ref ? { ref: ref.code, refSource: ref.source } : {}), ...(personal ? { personal } : {}), ...(utm ? { utm } : {}), ...(partnerCampaign ? { partnerCampaign } : {}) },
         emailRedirectTo: appUrl(),
       },
     });
@@ -196,6 +199,7 @@ export function AuthProvider({ children }) {
     trackAuthEvent('signup_ok');
     clearRef();
     clearAttribution();
+    clearPartnerCampaign();
     if (data.session) {
       claimLocalData(data.user.id);
       setUser(data.user);

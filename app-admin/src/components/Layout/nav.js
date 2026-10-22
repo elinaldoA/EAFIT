@@ -34,6 +34,7 @@ export const NAV_GROUPS = [
           { to: '/verificacao-cref', label: 'Verificação de CREF' },
           { to: '/embaixadores', label: 'Embaixadores e influenciadores' },
           { to: '/comissoes', label: 'Comissões' },
+          { to: '/campanhas-parceiros', label: 'Campanhas de parceiros' },
           { to: '/segmentos', label: 'Segmentos' },
         ],
       },

@@ -8,6 +8,7 @@ import { fetchUnreadReplies } from '../lib/trainerMessages';
 import { fetchTrainerAppointments, upcomingAppointments } from '../lib/trainerAppointments';
 import { trainerInviteLink, shareTrainerInvite, copyTrainerInviteLink, fetchInviteStats } from '../lib/trainerInvite';
 import Skeleton from '../components/Skeleton';
+import PartnerCampaignsCard from '../components/PartnerCampaignsCard';
 
 import { t, locale } from '../lib/i18n';
 const QUEUE_PREVIEW = 6;
@@ -183,6 +184,8 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
           )}
         </div>
       )}
+
+      <PartnerCampaignsCard toast={toast} />
     </section>
   );
 }

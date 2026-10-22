@@ -52,6 +52,7 @@ export function formatSize(bytes) {
 export async function fetchPromoMaterials() {
   const { data, error } = await db.from('promo_materials')
     .select('id, title, description, storage_path, file_name, mime_type, size_bytes, created_at, audience')
+    .is('campaign_id', null) // os de campanha ficam na campanha (lib/partnerCampaigns.js)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
@@ -62,7 +63,8 @@ async function audit(adminId, action, details) {
   if (error) console.warn('admin_audit_log:', error);
 }
 
-export async function uploadPromoMaterial({ title, description, audience = 'todos', file, adminId }) {
+// Com campaignId, o material é da campanha e segue o público dela.
+export async function uploadPromoMaterial({ title, description, audience = 'todos', file, adminId, campaignId = null }) {
   const path = storagePathFor(file);
   const { error: upErr } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (upErr) throw upErr;
@@ -70,12 +72,13 @@ export async function uploadPromoMaterial({ title, description, audience = 'todo
   const { error } = await db.from('promo_materials').insert({
     title: title.trim(), description: description.trim(), storage_path: path,
     file_name: String(file.name).slice(0, 120), mime_type: file.type, size_bytes: file.size, created_by: adminId, audience,
+    ...(campaignId ? { campaign_id: campaignId } : {}),
   });
   if (error) {
     await db.storage.from(BUCKET).remove([path]); // não deixa arquivo órfão
     throw error;
   }
-  await audit(adminId, 'promoMaterialUpload', { title: title.trim(), path, audience });
+  await audit(adminId, 'promoMaterialUpload', { title: title.trim(), path, audience, ...(campaignId ? { campaignId } : {}) });
 }
 
 export async function removePromoMaterial({ item, adminId }) {

@@ -40,6 +40,7 @@ import Trainers from './pages/Trainers';
 import TrainerVerification from './pages/TrainerVerification';
 import Ambassadors from './pages/Ambassadors';
 import Commissions from './pages/Commissions';
+import PartnerCampaigns from './pages/PartnerCampaigns';
 import Profile from './pages/Profile';
 import LandingEditor from './pages/LandingEditor';
 import ExerciseMedia from './pages/ExerciseMedia';
@@ -100,6 +101,7 @@ function AppShell() {
             <Route path="/verificacao-cref" element={<TrainerVerification />} />
             <Route path="/embaixadores" element={<Ambassadors />} />
             <Route path="/comissoes" element={<Commissions />} />
+            <Route path="/campanhas-parceiros" element={<PartnerCampaigns />} />
             <Route path="/landing" element={<LandingEditor />} />
             <Route path="/biblioteca" element={<ExerciseLibrary />} />
             <Route path="/demonstracoes" element={<ExerciseMedia />} />
