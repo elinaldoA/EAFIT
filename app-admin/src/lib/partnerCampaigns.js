@@ -56,6 +56,80 @@ export function draftFrom(c) {
   };
 }
 
+// Modelos prontos para começar uma campanha (Nova campanha → "Começar de um
+// modelo"). Só citam o que o app faz de verdade; o painel deixa editar tudo.
+export const CAMPAIGN_TEMPLATES = [
+  {
+    key: 'amigo', label: 'Traga um amigo (todos)', days: 30,
+    audiences: ['embaixador', 'influenciador', 'personal'],
+    title: 'Traga um amigo para treinar',
+    description: 'Durante 30 dias, convide quem você conhece para treinar com o EAFIT. Poste o seu link nos stories, '
+      + 'deixe na bio e mande no WhatsApp para quem vive dizendo que vai começar a treinar.',
+    caption: 'Treinar junto é mais fácil! Eu monto e registro meus treinos no EAFIT: é grátis e funciona até sem internet. '
+      + 'Baixa e bora comigo 👉 {link}',
+    goal: '',
+  },
+  {
+    key: 'ano-novo', label: 'Ano novo, treino novo (todos)', days: 31,
+    audiences: ['embaixador', 'influenciador', 'personal'],
+    title: 'Ano novo, treino novo',
+    description: 'Janeiro é quando mais gente decide voltar a treinar. Mostre como você organiza a sua semana no app '
+      + 'e convide seu público a começar o ano com um plano de treino pronto.',
+    caption: 'A meta deste ano é não parar 💪 Meu treino está todo no EAFIT: monta a semana, marca as séries e mostra a evolução. '
+      + 'Grátis 👉 {link}',
+    goal: '',
+  },
+  {
+    key: 'desafio', label: 'Desafio de 30 dias (embaixadores e influenciadores)', days: 30,
+    audiences: ['embaixador', 'influenciador'],
+    title: 'Desafio 30 dias com o EAFIT',
+    description: 'Chame seu público para treinar com você por 30 dias. Poste o seu treino marcado no app (o card de treino '
+      + 'já sai com o seu link) e lembre o desafio pelo menos uma vez por semana nos stories.',
+    caption: 'Topa treinar comigo pelos próximos 30 dias? Eu registro tudo no EAFIT e você pode fazer o mesmo, de graça 👉 {link}',
+    goal: '',
+  },
+  {
+    key: 'personal-alunos', label: 'Leve seus alunos para o app (personais)', days: 30,
+    audiences: ['personal'],
+    title: 'Seus alunos no EAFIT',
+    description: 'Mande o seu link para os alunos: quem cria a conta por ele pede para você acompanhar o treino e já entra na '
+      + 'sua lista, com ficha, treinos, recados e agenda no modo Personal.',
+    caption: 'Agora o seu treino comigo fica no app EAFIT: você vê a ficha da semana, marca as séries e eu acompanho a sua evolução. '
+      + 'Crie a sua conta por aqui 👉 {link}',
+    goal: '',
+  },
+  {
+    key: 'lancamento', label: 'Apresente o EAFIT (influenciadores)', days: 15,
+    audiences: ['influenciador'],
+    title: 'Conheça o EAFIT',
+    description: 'Faça um post ou vídeo mostrando o app em uso: montar a semana, marcar uma série e ver a evolução convence mais '
+      + 'que um print. Deixe o link na bio enquanto a campanha estiver no ar.',
+    caption: 'Achei o app de treino que faltava: o EAFIT monta a semana, registra cada série e mostra a evolução. É grátis 👉 {link}',
+    goal: '',
+  },
+];
+
+function addDays(iso, days) {
+  const d = new Date(`${iso}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// Rascunho preenchido com o modelo; o endereço leva mês e ano do início
+// (ex.: "traga-um-amigo-para-treinar-11-2026") para não repetir campanhas antigas.
+export function applyTemplate(draft, key) {
+  const tpl = CAMPAIGN_TEMPLATES.find(t => t.key === key);
+  if (!tpl) return draft;
+  const startsOn = draft.startsOn || todaySp();
+  const [y, m] = startsOn.split('-');
+  return {
+    ...draft,
+    title: tpl.title, slug: `${slugify(tpl.title).slice(0, 32)}-${m}-${y}`.replace(/-+/g, '-'), slugTouched: true,
+    description: tpl.description, caption: tpl.caption, goal: tpl.goal, audiences: [...tpl.audiences],
+    startsOn, endsOn: addDays(startsOn, tpl.days - 1),
+  };
+}
+
 // '' = ok; senão, o problema em português.
 export function validateDraft(d) {
   if (!d.title.trim()) return 'Dê um título para a campanha.';

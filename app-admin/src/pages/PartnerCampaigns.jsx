@@ -3,8 +3,8 @@ import { useAdminAuth } from '../context/useAdminAuth';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import {
-  AUDIENCES, GOAL_MAX, KIND_LABELS, STATUS, TEXT_MAX, TITLE_MAX,
-  audienceLabel, campaignStatus, deleteCampaign, draftFrom, emptyDraft, fetchCampaignMaterials, fetchCampaignResults,
+  AUDIENCES, CAMPAIGN_TEMPLATES, GOAL_MAX, KIND_LABELS, STATUS, TEXT_MAX, TITLE_MAX,
+  applyTemplate, audienceLabel, campaignStatus, deleteCampaign, draftFrom, emptyDraft, fetchCampaignMaterials, fetchCampaignResults,
   fetchCampaigns, linkExample, noticeFor, notifyPartners, saveCampaign, slugify, uploadCampaignMaterial, validateDraft,
 } from '../lib/partnerCampaigns';
 import { ACCEPT, formatSize, promoMaterialUrl, removePromoMaterial, validatePromoFile } from '../lib/promoMaterials';
@@ -48,6 +48,16 @@ function CampaignForm({ initial, onSaved, onCancel }) {
   return (
     <form className="card stack" onSubmit={e => { e.preventDefault(); submit(undefined); }}>
       <h2 className="section-title" style={{ margin: 0 }}>{d.id ? 'Editar campanha' : 'Nova campanha'}</h2>
+      {!d.id && (
+        <label className="field">
+          <span className="field__label">Começar de um modelo (opcional)</span>
+          <select className="input" defaultValue="" onChange={e => { if (e.target.value) { setD(prev => applyTemplate(prev, e.target.value)); setError(''); } }}>
+            <option value="">Em branco</option>
+            {CAMPAIGN_TEMPLATES.map(tpl => <option key={tpl.key} value={tpl.key}>{tpl.label}</option>)}
+          </select>
+          <span className="card-note" style={{ margin: 0 }}>Preenche título, público, período e textos. Revise e ajuste antes de publicar.</span>
+        </label>
+      )}
       <div className="form-grid">
         <label className="field">
           <span className="field__label">Título</span>

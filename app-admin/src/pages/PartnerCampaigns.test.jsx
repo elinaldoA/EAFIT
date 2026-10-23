@@ -52,6 +52,18 @@ describe('lib/partnerCampaigns', () => {
     expect(lib.campaignStatus({ published_at: 'x', starts_on: '2026-10-01', ends_on: null }, '2026-10-21')).toBe('ativa');
   });
 
+  it('modelo preenche o rascunho com período e endereço do mês', () => {
+    const d = lib.applyTemplate(lib.emptyDraft('2026-11-05'), 'personal-alunos');
+    expect(d).toMatchObject({ title: 'Seus alunos no EAFIT', slug: 'seus-alunos-no-eafit-11-2026', audiences: ['personal'], startsOn: '2026-11-05', endsOn: '2026-12-04' });
+    expect(d.caption).toContain('{link}');
+    expect(lib.validateDraft(d)).toBe('');
+    for (const tpl of lib.CAMPAIGN_TEMPLATES) {
+      const filled = lib.applyTemplate(lib.emptyDraft('2026-01-01'), tpl.key);
+      expect(lib.validateDraft(filled)).toBe('');
+      expect(filled.caption.length).toBeLessThanOrEqual(lib.TEXT_MAX);
+    }
+  });
+
   it('valida o rascunho', () => {
     const d = { ...lib.emptyDraft('2026-10-21'), title: 'Verão', slug: 'verao' };
     expect(lib.validateDraft(d)).toBe('');
@@ -99,6 +111,15 @@ describe('PartnerCampaigns', () => {
     expect(adminId).toBe('adm1');
     expect(publish).toBe(true);
     expect(await screen.findByText(/Campanha publicada/)).toBeTruthy();
+  });
+
+  it('começa de um modelo', async () => {
+    renderPage();
+    await screen.findByText('Verão 2026');
+    fireEvent.click(screen.getByText('Nova campanha'));
+    fireEvent.change(screen.getByDisplayValue('Em branco'), { target: { value: 'amigo' } });
+    expect(screen.getByDisplayValue('Traga um amigo para treinar')).toBeTruthy();
+    expect(screen.getByPlaceholderText('verao-2026').value).toMatch(/^traga-um-amigo-para-treinar-\d{2}-\d{4}$/);
   });
 
   it('envia o aviso aos parceiros', async () => {
