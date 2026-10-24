@@ -1,0 +1,302 @@
+/* ============================================================
+   TREINO NO TEMPO DISPONÍVEL (QuickWorkoutModal + card de hoje)
+============================================================ */
+.today-card__quick {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  background: var(--primary-glow);
+  color: var(--primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.today-card__link {
+  align-self: center;
+  margin-top: -6px;
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.76rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.quick__options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.quick__option {
+  padding: 12px 6px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.quick__option--on { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+.quick__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.quick__preview-title { font-size: 0.85rem; font-weight: 700; }
+.quick__changes { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 3px; font-size: 0.8rem; color: var(--text-muted); }
+.quick__note { margin: 0; font-size: 0.72rem; color: var(--text-dim); }
+.quick__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+
+/* ============================================================
+   MOBILIDADE GUIADA (MobilityButton + MobilitySession)
+============================================================ */
+.mobility-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
+.mobility {
+  position: fixed;
+  inset: 0;
+  z-index: 995;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  padding: max(14px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+}
+
+.mobility__top { display: flex; align-items: center; gap: 10px; }
+.mobility__kicker {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--primary);
+}
+.mobility__count { font-size: 0.78rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+.mobility__body {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 0;
+}
+.mobility__body--run { align-items: center; text-align: center; }
+
+.mobility__lead { margin: 0; font-size: 0.9rem; line-height: 1.45; color: var(--text-muted); }
+.mobility__list { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; font-size: 0.86rem; }
+.mobility__list li span:first-child { margin-right: 6px; }
+.mobility__dose { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+.mobility__phase {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--primary);
+}
+.mobility__name { margin: 0; font-size: 1.35rem; font-weight: 900; line-height: 1.2; }
+.mobility__cue { margin: 0; max-width: 32ch; font-size: 0.92rem; line-height: 1.45; color: var(--text-muted); }
+
+.mobility__ring {
+  --pct: 0;
+  width: min(180px, 45vw);
+  height: min(180px, 45vw);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--primary) calc(var(--pct) * 1%), var(--surface-3) 0);
+}
+.mobility__ring--prep { background: conic-gradient(var(--text-dim) calc(var(--pct) * 1%), var(--surface-3) 0); }
+.mobility__ring span {
+  width: 82%;
+  height: 82%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  font-size: clamp(2rem, 9vw, 2.8rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mobility__controls { display: flex; gap: 10px; }
+.mobility__next { margin: 0; font-size: 0.8rem; color: var(--text-dim); }
+.mobility__done { font-size: 3rem; text-align: center; }
+.mobility__body:has(.mobility__done) { text-align: center; }
+
+/* ============================================================
+   CALCULADORA DE ANILHAS (PlateCalc, dentro do ExerciseBlock)
+============================================================ */
+.plates { margin-top: 6px; }
+.plates__toggle,
+.plates__edit {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.plates__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.plates__row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.plates__label { min-width: 70px; font-size: 0.76rem; color: var(--text-muted); }
+.plates__input { width: 90px; }
+.plates__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.plates__chip {
+  padding: 5px 10px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.plates__chip--on { border-color: var(--primary); background: var(--primary-glow); color: var(--primary); }
+
+/* Ponta da barra com as anilhas de um lado, da mais pesada (junto ao
+   batente) para a mais leve. Cores no padrão de competição. */
+.plates__bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 64px;
+  padding: 0 4px;
+  overflow-x: auto;
+}
+.plates__sleeve {
+  flex-shrink: 0;
+  width: 18px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--border-2);
+}
+.plate {
+  flex-shrink: 0;
+  min-width: 22px;
+  height: var(--h);
+  display: grid;
+  place-items: center;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, .35);
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #fff;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.plate--25 { background: #dc2626; }
+.plate--20 { background: #2563eb; }
+.plate--15 { background: #eab308; color: #18181b; }
+.plate--10 { background: #16a34a; }
+.plate--5 { background: #f4f4f5; color: #18181b; }
+.plate--2_5 { background: #3f3f46; }
+.plate--1_25 { background: #a1a1aa; color: #18181b; }
+
+.plates__result { margin: 0; font-size: 0.86rem; font-weight: 700; }
+.plates__msg { margin: 0; font-size: 0.74rem; color: var(--warning); }
+
+.ex-block__goal { margin: 2px 0 0; font-size: 0.68rem; color: var(--success); }
+
+/* ============================================================
+   VOLUME DA SEMANA POR MÚSCULO (MuscleVolumeCard)
+============================================================ */
+.muscle--lvl-none { opacity: 0; }
+.muscle--lvl-low { opacity: 0.45; fill: var(--warning); stroke: var(--warning); stroke-opacity: 0.8; }
+.muscle--lvl-ok { opacity: 0.55; fill: var(--success); stroke: var(--success); stroke-opacity: 0.9; }
+.muscle--lvl-high { opacity: 0.6; fill: var(--primary); stroke: var(--primary); stroke-opacity: 0.9; }
+
+.body-avatar__legend:has(.body-avatar__legend-dot--ok) { flex-wrap: wrap; justify-content: center; }
+.body-avatar__legend-dot--low { background: var(--warning); border-color: var(--warning); }
+.body-avatar__legend-dot--ok { background: var(--success); border-color: var(--success); }
+.body-avatar__legend-dot--high { background: var(--primary); border-color: var(--primary); }
+
+.volume__behind {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  background: rgba(251, 191, 36, .12);
+  border: 1px solid rgba(251, 191, 36, .4);
+  font-size: 0.8rem;
+}
+.volume__list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.volume__row { display: grid; grid-template-columns: 96px 1fr 62px; align-items: center; gap: 8px; font-size: 0.76rem; }
+.volume__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.volume__count { text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.volume__track { position: relative; height: 10px; border-radius: var(--r-full); background: var(--surface-3); overflow: hidden; }
+.volume__band { position: absolute; top: 0; bottom: 0; background: rgba(74, 222, 128, .2); border-left: 1px dashed var(--success); border-right: 1px dashed var(--success); }
+.volume__fill { position: absolute; left: 0; top: 2px; bottom: 2px; border-radius: var(--r-full); background: var(--text-dim); }
+.volume__row--low .volume__fill { background: var(--warning); }
+.volume__row--ok .volume__fill { background: var(--success); }
+.volume__row--high .volume__fill { background: var(--primary); }
+.volume__note { margin: 10px 0 0; font-size: 0.68rem; color: var(--text-dim); }
+
+/* ============================================================
+   METAS DE CARGA (StrengthGoals)
+============================================================ */
+.goal-list { display: flex; flex-direction: column; gap: 12px; }
+.goal-list:not(:empty) { margin-bottom: 12px; }
+
+.goal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.goal-card--achieved { border-color: rgba(74, 222, 128, .5); }
+.goal-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.goal-card__title { font-size: 0.92rem; font-weight: 800; }
+.goal-card__meta { font-size: 0.74rem; color: var(--text-muted); }
+.goal-card__remove {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.goal-card__progress { height: 8px; border-radius: var(--r-full); background: var(--surface-3); overflow: hidden; }
+.goal-card__progress span { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+.goal-card--achieved .goal-card__progress span { background: var(--success); }
+.goal-card__numbers { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; font-size: 0.72rem; color: var(--text-muted); }
+.goal-card__text { margin: 0; font-size: 0.8rem; line-height: 1.4; }
+
+.goal-chart { width: 100%; height: auto; }
+.goal-chart__line { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linejoin: round; }
+.goal-chart__dot { fill: var(--primary); stroke: var(--bg); stroke-width: 1.2; }
+.goal-chart__proj { stroke: var(--primary); stroke-width: 1.6; stroke-dasharray: 4 4; opacity: 0.7; }
+.goal-chart__target { stroke: var(--success); stroke-width: 1.2; stroke-dasharray: 2 3; }
+.goal-chart__label { font-size: 8.5px; fill: var(--text-dim); }
+
+.goal-form { display: flex; flex-direction: column; gap: 10px; }
+.goal-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.goal-form__field { display: flex; flex-direction: column; gap: 4px; font-size: 0.74rem; color: var(--text-muted); }
+.goal-form__hint { margin: 0; font-size: 0.74rem; color: var(--text-dim); }
+.goal-form__actions { display: flex; justify-content: flex-end; gap: 8px; }

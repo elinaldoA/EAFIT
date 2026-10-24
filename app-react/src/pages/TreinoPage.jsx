@@ -21,6 +21,10 @@ import DailyCheckin from '../components/DailyCheckin';
 import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
 import { syncCoachPrefs } from '../lib/coach';
+import QuickWorkoutModal from '../components/QuickWorkoutModal';
+import MobilityButton from '../components/MobilityButton';
+import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice } from '../lib/quickWorkout';
+import { trackFeature } from '../lib/tracking';
 
 import { t, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
@@ -38,6 +42,7 @@ export default function TreinoPage() {
   const [liveDay, setLiveDay] = useState(null);
   const [askAppRating, setAskAppRating] = useState(false);
   const [survey, setSurvey] = useState(null);
+  const [showQuick, setShowQuick] = useState(false);
 
   // Fechou o resumo do treino: bom momento pra pedir a avaliação do app.
   function handleSummaryClose() {
@@ -58,6 +63,18 @@ export default function TreinoPage() {
     return () => { active = false; clearTimeout(timer); };
   }, [user?.id]);
 
+  function handleQuickChoice(minutes) {
+    saveQuickChoice(fullToday.dia, minutes);
+    if (minutes) {
+      trackFeature('quick_workout');
+      toast(t('⏱ Treino de hoje ajustado para {m} min', { m: minutes }));
+    } else {
+      toast(t('Treino completo de volta'));
+    }
+    setShowQuick(false);
+    bump();
+  }
+
   function handleRestStart(label, seconds) {
     restKey.current += 1;
     setRestSession({ key: restKey.current, label, seconds });
@@ -66,7 +83,13 @@ export default function TreinoPage() {
   const workDays = activePlanDays.filter(d => d.dia !== 'Sábado' && d.dia !== 'Domingo');
   const done = workDays.filter(d => localStorage.getItem(`treino_${d.dia}`) === 'true').length;
   const total = workDays.length;
-  const today = activePlanDays.find(d => d.dia === todayName());
+  // Treino no tempo disponível (lib/quickWorkout.js): só o dia de hoje muda,
+  // e só nesta tela — o plano salvo continua o mesmo.
+  const quickOn = isFlagOn(config.flags, 'treino_rapido');
+  const fullToday = activePlanDays.find(d => d.dia === todayName());
+  const quickMinutes = quickOn && fullToday ? readQuickChoice(fullToday.dia) : null;
+  const today = quickMinutes ? fitDayToTime(fullToday, quickMinutes).day : fullToday;
+  const planDays = activePlanDays.map(d => (d === fullToday ? today : d));
   const todaySets = today ? countSets(gatherExerciseDetails(today)) : { done: 0, total: 0 };
   const todayDone = today && localStorage.getItem(`treino_${today.dia}`) === 'true';
 
@@ -109,6 +132,9 @@ export default function TreinoPage() {
         <TodayCard
           day={today} sets={todaySets} done={todayDone}
           onStart={() => setLiveDay(today.dia)}
+          quickMinutes={quickMinutes}
+          onQuick={quickOn ? () => setShowQuick(true) : null}
+          mobility={isFlagOn(config.flags, 'mobilidade')}
         />
       )}
       <div className="progress-card">
@@ -149,7 +175,7 @@ export default function TreinoPage() {
       </div>
       <div id="treinoContainer">
         <div className={`accordion${loading ? ' accordion--loading' : ''}`} key={dataVersion}>
-          {activePlanDays.map(day => (
+          {planDays.map(day => (
             <DayCard
               key={day.dia} day={day} isToday={day.dia === todayName()} bump={bump}
               onRestStart={handleRestStart} onFinish={setSummary}
@@ -165,6 +191,12 @@ export default function TreinoPage() {
       </footer>
       {restSession && (
         <RestTimer session={restSession} onClose={() => setRestSession(null)} />
+      )}
+      {showQuick && fullToday && (
+        <QuickWorkoutModal
+          day={fullToday} current={quickMinutes}
+          onChoose={handleQuickChoice} onClose={() => setShowQuick(false)}
+        />
       )}
       {showPlanEditor && (
         <PlanEditorModal onClose={() => setShowPlanEditor(false)} />
@@ -186,7 +218,7 @@ export default function TreinoPage() {
   );
 }
 
-function TodayCard({ day, sets, done, onStart }) {
+function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility }) {
   const hasSets = sets.total > 0;
   const pct = hasSets ? (sets.done / sets.total) * 100 : 0;
   let cta = t('⚡ Começar treino');
@@ -201,7 +233,9 @@ function TodayCard({ day, sets, done, onStart }) {
           <h2 className="today-card__title">{tFoco(day.foco)}</h2>
           <span className="today-card__meta">
             {t('{dia} · {length} exercícios {v1}', { dia: t(day.dia), length: day.exercicios.length, v1: hasSets && ` · ${sets.done}/${sets.total} séries` })}
+            {hasSets && !done && ` · ${t('~{m} min', { m: estimateMinutes(day) })}`}
           </span>
+          {quickMinutes && <span className="today-card__quick">{t('⏱ Versão de {m} min', { m: quickMinutes })}</span>}
         </div>
         {hasSets && (
           <div className="today-card__ring" style={{ '--pct': pct }} aria-label={t('{v1}% das séries', { v1: Math.round(pct) })}>
@@ -214,6 +248,12 @@ function TodayCard({ day, sets, done, onStart }) {
       ) : (
         <p className="today-card__rest">{t('Dia de recuperação — descanse bem ou faça um cardio leve. 🧘')}</p>
       )}
+      {hasSets && !done && onQuick && (
+        <button type="button" className="today-card__link" onClick={onQuick}>
+          {quickMinutes ? t('Mudar o tempo ou voltar ao treino completo') : t('⏱ Pouco tempo hoje? Enxugar o treino')}
+        </button>
+      )}
+      {!hasSets && mobility && <MobilityButton kind="rest" minutes={8} className="btn btn--outline btn--full" />}
     </div>
   );
 }

@@ -22,6 +22,8 @@ import CheckinInsights from '../components/CheckinInsights';
 import Skeleton from '../components/Skeleton';
 import { Heatmap, WeeklyBars, PRList, WeekCompare, LoadHistory } from '../components/DashCharts';
 import { DiscomfortPanel, DiscomfortHistory } from '../components/DiscomfortWidgets';
+import MuscleVolumeCard from '../components/MuscleVolumeCard';
+import StrengthGoals from '../components/StrengthGoals';
 
 import { t, tEx, tFoco } from '../lib/i18n';
 const TABS = [
@@ -207,6 +209,10 @@ export default function DashPage({ active }) {
         <BodyAvatar activeGroups={viewActiveGroups} />
       </div>
 
+      {isFlagOn(config.flags, 'volume_musculo') && (
+        <MuscleVolumeCard userId={user.id} planDays={activePlanDays} active={active} />
+      )}
+
       <div className="section-group">
         <div className="dash-card">
           <div className="dash-card__title">{t('Soma de cargas por treino')}</div>
@@ -274,6 +280,7 @@ export default function DashPage({ active }) {
       {tab === 'amigos' && <Friends myWeek={myWeek} />}
 
       {tab === 'recordes' && (<>
+      {isFlagOn(config.flags, 'metas_carga') && <StrengthGoals exercises={exercises} allTimeLogs={allTimeLogs} />}
       <div className="section-group">
         <div className="section-group__label">{t('Recordes pessoais')}</div>
         <div className="dash-card">

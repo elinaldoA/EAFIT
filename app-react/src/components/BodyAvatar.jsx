@@ -18,63 +18,79 @@ function AnatomyImg({ alt, className }) {
   return <img key={attempt} src={src} alt={alt} className={className} decoding="sync" onError={handleError} />;
 }
 
-function cls(active, muscle) {
+// levels: { músculo: 'none' | 'low' | 'ok' | 'high' } pinta por volume da
+// semana (MuscleVolumeCard) em vez do liga/desliga de `active`.
+function cls(active, muscle, levels) {
+  if (levels) return `muscle muscle--lvl-${levels[muscle] || 'none'}`;
   return `muscle${active.has(muscle) ? ' muscle--active' : ''}`;
 }
 
-function Muscle({ active, muscle, as: Tag, ...props }) {
+function Muscle({ active, levels, muscle, as: Tag, ...props }) {
   return (
-    <Tag className={cls(active, muscle)} data-muscle={muscle} {...props}>
+    <Tag className={cls(active, muscle, levels)} data-muscle={muscle} {...props}>
       <title>{MUSCLE_LABELS[muscle]}</title>
     </Tag>
   );
 }
 
-function FrontView({ active }) {
+function FrontView({ active, levels }) {
   return (
     <div className="body-avatar__view">
       <AnatomyImg alt={t('Frente')} className="body-avatar__img-bg body-avatar__img-bg--front" />
       <svg viewBox={`0 0 ${BODY_VIEW_SIZE.width} ${BODY_VIEW_SIZE.height}`} className="body-avatar__svg">
         {FRONT_MUSCLE_PATHS.map((p, i) => (
-          <Muscle key={`${p.muscle}-${i}`} active={active} muscle={p.muscle} as="path" d={p.d} />
+          <Muscle key={`${p.muscle}-${i}`} active={active} levels={levels} muscle={p.muscle} as="path" d={p.d} />
         ))}
       </svg>
     </div>
   );
 }
 
-function BackView({ active }) {
+function BackView({ active, levels }) {
   return (
     <div className="body-avatar__view">
       <AnatomyImg alt={t('Costas')} className="body-avatar__img-bg body-avatar__img-bg--back" />
       <svg viewBox={`0 0 ${BODY_VIEW_SIZE.width} ${BODY_VIEW_SIZE.height}`} className="body-avatar__svg">
         {BACK_MUSCLE_PATHS.map((p, i) => (
-          <Muscle key={`${p.muscle}-${i}`} active={active} muscle={p.muscle} as="path" d={p.d} />
+          <Muscle key={`${p.muscle}-${i}`} active={active} levels={levels} muscle={p.muscle} as="path" d={p.d} />
         ))}
       </svg>
     </div>
   );
 }
 
-export default function BodyAvatar({ activeGroups }) {
+export default function BodyAvatar({ activeGroups = new Set(), levels = null }) {
   return (
     <div className="body-avatar">
       <div className="body-avatar__figures">
         <div className="body-avatar__col">
-          <FrontView active={activeGroups} />
+          <FrontView active={activeGroups} levels={levels} />
           <span className="body-avatar__label">{t('Frente')}</span>
         </div>
         <div className="body-avatar__col">
-          <BackView active={activeGroups} />
+          <BackView active={activeGroups} levels={levels} />
           <span className="body-avatar__label">{t('Costas')}</span>
         </div>
       </div>
-      <div className="body-avatar__legend">
-        <span className="body-avatar__legend-dot body-avatar__legend-dot--active" />
-        <span>{t('Trabalhado hoje')}</span>
-        <span className="body-avatar__legend-dot" />
-        <span>{t('Não trabalhado')}</span>
-      </div>
+      {levels ? (
+        <div className="body-avatar__legend">
+          <span className="body-avatar__legend-dot body-avatar__legend-dot--low" />
+          <span>{t('Pouco')}</span>
+          <span className="body-avatar__legend-dot body-avatar__legend-dot--ok" />
+          <span>{t('Na faixa')}</span>
+          <span className="body-avatar__legend-dot body-avatar__legend-dot--high" />
+          <span>{t('Acima')}</span>
+          <span className="body-avatar__legend-dot" />
+          <span>{t('Nada')}</span>
+        </div>
+      ) : (
+        <div className="body-avatar__legend">
+          <span className="body-avatar__legend-dot body-avatar__legend-dot--active" />
+          <span>{t('Trabalhado hoje')}</span>
+          <span className="body-avatar__legend-dot" />
+          <span>{t('Não trabalhado')}</span>
+        </div>
+      )}
     </div>
   );
 }

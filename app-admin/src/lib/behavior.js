@@ -201,6 +201,10 @@ export const FEATURE_LABELS = {
   superset: 'Bi-set e circuito',
   warmup: 'Séries de aquecimento',
   bio_lock: 'Bloqueio por biometria',
+  quick_workout: 'Treino no tempo disponível',
+  mobility: 'Mobilidade guiada',
+  plate_calc: 'Calculadora de anilhas',
+  strength_goals: 'Metas de carga',
 };
 
 // Linhas (event, detail, users, days) → o que a página de Comportamento

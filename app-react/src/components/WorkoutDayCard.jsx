@@ -13,6 +13,10 @@ import { maxHeartRate, readSession, summarizeSession, clearSession } from '../li
 import { useHeartRateRecorder } from '../hooks/useHeartRate';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
+import MobilityButton from './MobilityButton';
+import { useAppConfig } from '../context/useAppConfig';
+import { isFlagOn } from '../lib/appConfig';
+import { dayMuscles } from '../lib/muscleVolume';
 
 import { t, locale, tFoco } from '../lib/i18n';
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
@@ -22,6 +26,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   const { user } = useAuth();
   const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, saveWorkoutHeartRate, activePlanDays } = useWorkout();
   const toast = useToast();
+  const { config } = useAppConfig();
   const [open, setOpen] = useState(isToday);
   const [checked, setChecked] = useState(() => localStorage.getItem(`treino_${day.dia}`) === 'true');
   const [markVersions, setMarkVersions] = useState({});
@@ -351,6 +356,14 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         <div className="day-card__total">
           {t('Carga total do treino: {v1} kg', { v1: calcDayTotalCarga(day).toLocaleString(locale) })}
         </div>
+
+        {isFlagOn(config.flags, 'mobilidade') && setsTotal > 0 && (
+          <div className="mobility-row">
+            {setsDone === 0 && timer.status !== 'finished'
+              ? <MobilityButton kind="pre" muscles={dayMuscles(day)} minutes={4} />
+              : <MobilityButton kind="pos" muscles={dayMuscles(day)} minutes={5} />}
+          </div>
+        )}
 
         <div className="workout-notes">
           <button type="button" className="workout-notes__toggle" onClick={() => setNotesOpen(o => !o)}>

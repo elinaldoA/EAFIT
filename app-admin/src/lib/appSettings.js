@@ -12,6 +12,11 @@ export const KNOWN_FLAGS = [
   { key: 'amigos', label: 'Amigos e feed', hint: 'Aba Amigos do Dashboard (lista de amigos, ranking semanal e feed).' },
   { key: 'checkin_diario', label: 'Check-in diário', hint: 'Pergunta de energia, sono e humor na tela de Treino e o resumo em Dashboard → Corpo.' },
   { key: 'medidas_corporais', label: 'Medidas corporais', hint: 'Registro de cintura, quadril, peito, braço e coxa em Dashboard → Corpo.' },
+  { key: 'treino_rapido', label: 'Treino no tempo disponível', hint: '"Pouco tempo hoje?" no card do treino de hoje: enxuga o treino do dia para 20, 30 ou 45 min.' },
+  { key: 'mobilidade', label: 'Mobilidade e alongamento', hint: 'Rotina guiada antes e depois do treino (no dia do treino) e alongamento no dia de descanso.' },
+  { key: 'anilhas', label: 'Calculadora de anilhas', hint: 'Botão "Anilhas" nos exercícios com barra ou leg press: quais anilhas pôr em cada lado.' },
+  { key: 'volume_musculo', label: 'Volume por músculo', hint: 'Card de séries da semana por grupo muscular em Dashboard → Treinos.' },
+  { key: 'metas_carga', label: 'Metas de carga', hint: 'Metas com prazo e projeção em Dashboard → Recordes, e a meta no exercício durante o treino.' },
 ];
 
 export const BANNER_LEVELS = [

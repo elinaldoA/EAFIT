@@ -75,3 +75,14 @@ export function playWorkoutFinishedSound() {
   } catch { /* som indisponível */ }
   if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 250]);
 }
+
+// Bip curto e suave entre os movimentos da mobilidade (e na troca de lado):
+// avisa sem assustar, já que a pessoa está parada alongando.
+export function playStepSound() {
+  try {
+    const ctx = getAudioCtx();
+    tone(ctx, 880, ctx.currentTime, 0.14, 0.2);
+    tone(ctx, 1174.66, ctx.currentTime + 0.12, 0.22, 0.2);
+  } catch { /* som indisponível */ }
+  if (navigator.vibrate) navigator.vibrate([90, 60, 90]);
+}

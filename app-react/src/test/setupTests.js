@@ -9,5 +9,7 @@ if (typeof globalThis.localStorage === 'undefined') {
     setItem: (key, value) => store.set(key, String(value)),
     removeItem: key => store.delete(key),
     clear: () => store.clear(),
+    key: i => [...store.keys()][i] ?? null,
+    get length() { return store.size; },
   };
 }

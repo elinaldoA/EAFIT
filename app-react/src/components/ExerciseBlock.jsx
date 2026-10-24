@@ -17,6 +17,11 @@ import { warmupCount } from '../lib/warmup';
 import CardioRow from './CardioRow';
 import ExerciseDemo from './ExerciseDemo';
 import ExerciseSwap from './ExerciseSwap';
+import PlateCalc from './PlateCalc';
+import { useAppConfig } from '../context/useAppConfig';
+import { isFlagOn } from '../lib/appConfig';
+import { goalFor } from '../lib/strengthGoals';
+import { fmtDate } from '../lib/utils';
 
 import { t, tEx, tReps } from '../lib/i18n';
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
@@ -24,6 +29,7 @@ import { t, tEx, tReps } from '../lib/i18n';
 export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, open, version, onToggleAll, onFillOthers, onApplySuggestion, started, hideName = false }) {
   const { user } = useAuth();
   const { refreshPlan } = useWorkout();
+  const { config } = useAppConfig();
   const toast = useToast();
   const [suggestion, setSuggestion] = useState(null);
   const [plateau, setPlateau] = useState(null);
@@ -99,6 +105,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
   const workKg = localStorage.getItem(`set_${ex.nome}_1_carga`) || plateau?.suggestedDeload || suggestion?.suggestedCarga || null;
   // Troca geral só pros exercícios de força do plano (não o pós-treino) que têm id.
   const canSwap = !!user && !!ex.id && day.exercicios.some(e => e.nome === ex.nome);
+  const goal = isFlagOn(config.flags, 'metas_carga') ? goalFor(user, ex.nome) : null;
   return (
     <div className="ex-block">
       <div className="ex-block__header">
@@ -109,6 +116,9 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
               <span className="ex-block__meta">{t('{reps} reps · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso })}</span>
               <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
+          )}
+          {goal && (
+            <p className="ex-block__goal">{t('🎯 Meta: {target} kg até {data}', { target: goal.target, data: fmtDate(goal.by) })}</p>
           )}
           {plateau ? (
             <p className="ex-block__suggestion ex-block__suggestion--plateau">
@@ -143,6 +153,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
           <SetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} onFillOthers={onFillOthers} started={started} />
         ))}
       </div>
+
+      {isFlagOn(config.flags, 'anilhas') && <PlateCalc ex={ex} setCount={setCount} />}
 
       {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
       {showSwap && (

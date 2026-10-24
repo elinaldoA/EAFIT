@@ -7,5 +7,6 @@ import pages from './pages';
 import dates from './dates';
 import extra from './extra';
 import trainer from './trainer';
+import tools from './tools';
 
-export default { ...components, ...libs, ...pages, ...dates, ...extra, ...trainer };
+export default { ...components, ...libs, ...pages, ...dates, ...extra, ...trainer, ...tools };
