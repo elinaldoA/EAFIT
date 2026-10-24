@@ -99,8 +99,19 @@ describe('Safety', () => {
     expect(await screen.findByText('Supino')).toBeTruthy();
     expect(mockRpc).toHaveBeenCalledWith('admin_list_discomfort', { only_severe: true, page_size: 50, page_offset: 0 });
     expect(screen.getByText('Forte')).toBeTruthy();
-    expect(screen.getByText('—')).toBeTruthy();
+    expect(screen.getAllByText('—')).toHaveLength(2); // sem nota e sem resposta
     expect(screen.getByText('a@x.com').getAttribute('href')).toBe('/users/u1');
+  });
+
+  it('mostra a resposta automática enviada e se o aluno já leu', async () => {
+    mockRpc.mockResolvedValue({ data: [
+      { ...row, reply_title: '🩹 Sobre a dor que você relatou', reply_body: 'Dor forte em Supino é sinal para parar.', reply_read_at: null },
+      { ...row, id: 'r2', exercise_name: 'Remada', reply_title: '🩹 Recebemos seu relato', reply_body: 'b', reply_read_at: '2026-03-02T10:00:00Z' },
+    ], error: null });
+    wrap(<Safety />);
+    expect(await screen.findByText('Enviada')).toBeTruthy();
+    expect(screen.getByText('Lida')).toBeTruthy();
+    expect(screen.getByText('Dor forte em Supino é sinal para parar.')).toBeTruthy();
   });
 
   it('checkbox inclui leve/moderada', async () => {

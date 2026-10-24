@@ -11,6 +11,8 @@ const SEVERITY_LABEL = { leve: 'Leve', moderada: 'Moderada', forte: 'Forte', les
 // Visão consolidada de dor/desconforto reportado por TODOS os usuários — o
 // UserDetail já mostra isso por usuário, mas dor forte/lesão é sinal de
 // segurança e precisa ser visível sem precisar abrir usuário por usuário.
+// Cada relato recebe na hora uma orientação automática na central de avisos
+// do aluno (supabase/migrations/20261130030000_discomfort_auto_reply.sql).
 export default function Safety() {
   const [onlySevere, setOnlySevere] = useState(true);
   const [rows, setRows] = useState([]);
@@ -54,7 +56,7 @@ export default function Safety() {
       {!loading && !error && (
         <>
           <table className="resp-table">
-            <thead><tr><th>Data</th><th>Usuário</th><th>Exercício</th><th>Severidade</th><th>Nota</th></tr></thead>
+            <thead><tr><th>Data</th><th>Usuário</th><th>Exercício</th><th>Severidade</th><th>Nota</th><th>Resposta automática</th></tr></thead>
             <tbody>
               {rows.map(r => (
                 <tr key={r.id}>
@@ -63,10 +65,19 @@ export default function Safety() {
                   <td data-label="Exercício">{r.exercise_name}</td>
                   <td data-label="Severidade"><span className={`badge ${SEVERITY_BADGE[r.severity] || ''}`}>{SEVERITY_LABEL[r.severity] || r.severity}</span></td>
                   <td data-label="Nota">{r.note || '—'}</td>
+                  <td data-label="Resposta automática">
+                    {r.reply_title ? (
+                      <details>
+                        <summary><span className={`badge ${r.reply_read_at ? 'badge--ok' : ''}`}>{r.reply_read_at ? 'Lida' : 'Enviada'}</span></summary>
+                        <p><strong>{r.reply_title}</strong></p>
+                        <p>{r.reply_body}</p>
+                      </details>
+                    ) : '—'}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
-                <tr><td colSpan={5}><EmptyState icon="🩹" label={onlySevere ? 'Nenhum relato de dor forte ou lesão.' : 'Nenhum relato de dor ou desconforto.'} /></td></tr>
+                <tr><td colSpan={6}><EmptyState icon="🩹" label={onlySevere ? 'Nenhum relato de dor forte ou lesão.' : 'Nenhum relato de dor ou desconforto.'} /></td></tr>
               )}
             </tbody>
           </table>

@@ -43,6 +43,7 @@ export const NAV_TARGETS = {
 // Tipo de lembrete automático -> chave de destino (ou null).
 export function kindTargetKey(kind) {
   if (kind === 'invite_friends') return 'amigos';
+  if (kind === 'seguranca') return 'recordes'; // resposta automática a relato de dor: histórico em Dashboard → Recordes
   return WORKOUT_KINDS.includes(kind) ? 'treino' : null;
 }
 

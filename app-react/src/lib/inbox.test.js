@@ -58,6 +58,10 @@ describe('inboxTarget', () => {
     expect(inboxTarget({ kind: 'aviso', title: '💬 Resposta ao seu feedback' })).toMatchObject({ tab: 'perfil', profileCard: 'feedback' });
   });
 
+  it('resposta automática a relato de dor leva ao histórico em Recordes', () => {
+    expect(inboxTarget({ kind: 'seguranca', title: 'x' })).toMatchObject({ tab: 'dash', dashTab: 'recordes', label: 'Ver histórico de dores' });
+  });
+
   it('comunicado comum ou tipo desconhecido não leva a lugar nenhum', () => {
     expect(inboxTarget({ kind: 'aviso', title: 'Novidade no app' })).toBeNull();
     expect(inboxTarget({ kind: 'outro', title: 'x' })).toBeNull();
