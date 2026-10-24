@@ -41,6 +41,7 @@ export default {
   'Esta conta está desativada ou suspensa. Fale com o suporte.': 'This account is deactivated or suspended. Contact support.',
   'Sua sessão expirou. Entre de novo.': 'Your session has expired. Sign in again.',
   'Este link expirou ou já foi usado. Peça um novo.': 'This link has expired or was already used. Request a new one.',
+  'Não conseguimos enviar o e-mail de confirmação agora. Tente de novo mais tarde.': "We couldn't send the confirmation email right now. Try again later.",
   'Sem conexão com a internet. Verifique e tente de novo.': 'No internet connection. Check it and try again.',
   'Não foi possível concluir agora. Tente de novo em instantes.': 'Could not complete this right now. Try again in a moment.',
 

@@ -30,6 +30,8 @@ const BY_MESSAGE = [
   [/should be different from the old password/i, BY_CODE.same_password],
   [/for security purposes|rate limit|too many requests/i, BY_CODE.over_request_rate_limit],
   [/unable to validate email|invalid email|email address .* is invalid/i, BY_CODE.email_address_invalid],
+  // SMTP do Auth fora do ar ou sem cota: o GoTrue desfaz o cadastro e responde 500.
+  [/error sending .*email/i, t('Não conseguimos enviar o e-mail de confirmação agora. Tente de novo mais tarde.')],
   [/failed to fetch|network ?error|load failed/i, t('Sem conexão com a internet. Verifique e tente de novo.')],
   [/expired|invalid.*(token|link)/i, BY_CODE.otp_expired],
 ];
