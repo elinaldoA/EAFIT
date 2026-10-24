@@ -1,6 +1,8 @@
 // Treinador por voz: preferências do aparelho, sorteio de frases (sem repetir
 // a mesma logo em seguida) e a fala em si. Sem IA — é um banco de frases por
-// situação (data/coachPhrases.js) escolhido por regras.
+// situação (data/coachPhrases.js) escolhido por regras. Além de saber em que
+// ponto do treino você está, ele lê a série anotada (repetições e carga) e
+// comenta quando ela fugiu da meta (setFeedbackEvent).
 //
 // Quanto ele fala (prefs.frequency): 'light' só o essencial; 'full' o roteiro
 // do treino mais os comentários sobre o andamento; 'free' ("à vontade") também
@@ -16,7 +18,11 @@ import { currentSeason } from './season';
 
 export const FREQUENCIES = ['light', 'full', 'free'];
 // Falas do fim do treino: são agendadas no instante em que o modo ao vivo fecha.
-export const FINISH_EVENTS = ['finish', 'finishStats', 'weekGoal'];
+export const FINISH_EVENTS = ['finish', 'finishStats', 'finishRecord', 'finishRecords', 'weekGoal'];
+// Queda de repetições entre duas séries que já conta como cansaço: ao menos
+// 3 repetições e 20% da série anterior (de 10 para 7, de 20 para 16).
+const DROP_MIN_REPS = 3;
+const DROP_MIN_SHARE = 0.2;
 // Descanso mínimo para caber uma dica depois da fala do descanso, sem atropelar
 // o aviso dos dez segundos.
 const TIP_MIN_REST_SECONDS = 45;
@@ -143,6 +149,64 @@ export function setDoneEvent({ leftInExercise, leftInWorkout, crossedHalf }) {
   if (crossedHalf) return 'halfway';
   if (leftInExercise === 1) return 'lastSet';
   return 'rest';
+}
+
+// Meta de repetições do plano: "8-10" -> { min: 8, max: 10 }, "15" -> { min: 15, max: 15 }.
+// Meta por tempo ("30s", "20min") ou sem número no começo ("até a falha"): null.
+export function repsTarget(reps) {
+  const text = String(reps ?? '').trim();
+  if (/\d\s*(?:s|seg|min)\b/i.test(text)) return null;
+  const m = text.match(/^(\d+)(?:\s*-\s*(\d+))?/);
+  if (!m) return null;
+  const min = parseInt(m[1], 10);
+  const max = m[2] ? parseInt(m[2], 10) : min;
+  return max >= min ? { min, max } : null;
+}
+
+// Como foi a série que acabou de ser marcada, comparando as repetições com a
+// meta do plano e a carga com a série anterior, ou null quando não há o que
+// comentar (sem repetições anotadas, meta por tempo, tudo dentro do esperado).
+// `sets`: as séries do exercício ({ n, done, carga, reps }); `n`: a marcada.
+export function setFeedbackEvent(target, sets, n) {
+  const range = repsTarget(target);
+  const cur = sets.find(s => s.n === n);
+  const reps = parseInt(cur?.reps, 10);
+  if (!range || !Number.isFinite(reps) || reps <= 0) return null;
+  if (reps < range.min) return 'repsLow';
+  if (reps > range.max) return 'repsHigh';
+  const prev = sets.find(s => s.n === n - 1);
+  if (!prev?.done) return null;
+  const load = kg => parseFloat(String(kg ?? '').replace(',', '.'));
+  if (load(cur.carga) > load(prev.carga)) return 'loadUp';
+  // Mesma carga (ou menos) e as repetições despencaram: é cansaço, pede mais descanso.
+  const prevReps = parseInt(prev.reps, 10);
+  const drop = prevReps - reps;
+  if (drop >= DROP_MIN_REPS && drop >= prevReps * DROP_MIN_SHARE) return 'repsDrop';
+  return null;
+}
+
+// Recordes batidos em cada treino (dia -> nomes dos exercícios), para o
+// treinador citar no fim. Só na memória: se a página recarrega no meio do
+// treino, os anteriores se perdem e ele simplesmente não os menciona.
+const sessionRecords = new Map();
+
+export function noteRecord(dia, exercicio) {
+  if (!sessionRecords.has(dia)) sessionRecords.set(dia, new Set());
+  sessionRecords.get(dia).add(exercicio);
+}
+
+// Lê e esquece os recordes do treino (uma vez, ao finalizar).
+export function takeRecords(dia) {
+  const list = [...(sessionRecords.get(dia) || [])];
+  sessionRecords.delete(dia);
+  return list;
+}
+
+// Fala do fim sobre os recordes do treino, ou null se não houve nenhum.
+export function coachRecords(records, opts) {
+  if (!records.length) return null;
+  if (records.length === 1) return coachSay('finishRecord', { exercicio: speechExercise(records[0]) }, opts) ? 'finishRecord' : null;
+  return coachSay('finishRecords', { recordes: records.length }, opts) ? 'finishRecords' : null;
 }
 
 // Comentário sobre a semana logo depois da abertura do treino, ou null.

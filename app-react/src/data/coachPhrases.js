@@ -5,7 +5,7 @@
 //
 // Placeholders: {nome} {saudacao} {foco} {exercicio} {detalhe}
 // {tempo} {carga} {feitos} {meta} {dia} {proximo} {ultimaCarga} {ultimasReps}
-// {sugestao} {repsAlvo} {dica} {duracao} {series}.
+// {sugestao} {repsAlvo} {dica} {duracao} {series} {reps} {recordes}.
 //
 // Aberturas: start = treino do dia ainda por fazer; startOther = treino de outro
 // dia da semana (nunca dizer "hoje"); review = treino que já foi concluído. Linha com {nome} só é sorteada quando o
@@ -15,15 +15,18 @@
 // Além do roteiro fixo, o treinador comenta o que está acontecendo: a semana
 // (weekFirst, weekLast, weekGoal), a carga da última vez (suggestLoad,
 // suggestReps, plateau), o andamento (lastSet, exerciseDone, halfway, allDone,
-// superset = troca sem descanso dentro de um bi-set/circuito)
-// e o resumo do fim (finishStats).
+// superset = troca sem descanso dentro de um bi-set/circuito),
+// a série anotada (repsHigh/repsLow = repetições fora da meta, loadUp = subiu
+// a carga e manteve a meta, repsDrop = repetições caíram por cansaço; trocam
+// a fala do descanso, então levam {tempo})
+// e o resumo do fim (finishStats, finishRecord/finishRecords = recordes do treino).
 //
 // 'light' = falas que ainda saem no modo "só o essencial".
 // 'free' = falas que só saem no modo "à vontade", em que ele toma a iniciativa:
 // dicas no descanso, pausa/retomada e um chamado quando o treino fica parado.
 export const TONES = ['animado', 'zoeira', 'calmo'];
 
-export const LIGHT_EVENTS = ['start', 'startOther', 'review', 'restDone', 'pr', 'finish', 'weekFirst', 'weekLast', 'weekGoal'];
+export const LIGHT_EVENTS = ['start', 'startOther', 'review', 'restDone', 'pr', 'finish', 'finishRecord', 'finishRecords', 'weekFirst', 'weekLast', 'weekGoal'];
 
 export const FREE_EVENTS = ['technique', 'tip', 'idle', 'paused', 'resumed'];
 
@@ -119,6 +122,26 @@ export const PHRASES = {
       'Mandou bem! {tempo} de descanso e falta só uma.',
       'Isso! Respira {tempo}. A próxima é a última desse exercício, dá tudo!',
     ],
+    repsHigh: [
+      '{reps} repetições? Sobrou gás! Na próxima série, sobe um pouco a carga. Descansa {tempo}.',
+      'Passou da meta! Tá leve pra você, dá pra subir a carga. {tempo} de descanso.',
+      'Mandou {reps}! Acima do combinado. Bora pôr mais peso na próxima? Descansa {tempo}.',
+    ],
+    repsLow: [
+      'Ficou em {reps}, um pouco abaixo da meta. Sem problema! Se a próxima não sair, baixa a carga. Descansa {tempo}.',
+      'Pesou, né? Aproveita bem os {tempo} de descanso. Se precisar, tira um pouco de carga.',
+      '{reps} repetições, abaixo do alvo. Respira {tempo}, e na próxima ajusta a carga pra caber a meta.',
+    ],
+    loadUp: [
+      'Subiu a carga e manteve as repetições! Isso é evolução. Descansa {tempo}.',
+      'Mais peso e a execução segurou! Muito bem. {tempo} de descanso.',
+      'Carga maior e meta batida! Respira {tempo}, você tá voando.',
+    ],
+    repsDrop: [
+      'As repetições caíram um pouco, é o cansaço chegando. Se precisar, toca no mais quinze segundos. Descansa {tempo}.',
+      'Sentiu, né? Caiu pra {reps}. Respira fundo esses {tempo}, e pega mais uns segundos se precisar.',
+      'O corpo pediu arrego nessa! {tempo} de descanso, e se não der, estica um pouco o tempo.',
+    ],
     superset: [
       'Sem descanso! Direto pro {exercicio}.',
       'Boa! Agora {exercicio}, emendado!',
@@ -144,6 +167,16 @@ export const PHRASES = {
       'Foram {series} séries em {duracao}.',
       'Você fez {series} séries em {duracao}. Baita treino!',
       '{duracao} de treino e {series} séries no total.',
+    ],
+    finishRecord: [
+      'E ainda teve recorde em {exercicio}! Dia histórico!',
+      'Não esquece: hoje saiu recorde em {exercicio}. Que orgulho!',
+      'Bônus do dia: recorde novo em {exercicio}!',
+    ],
+    finishRecords: [
+      'E foram {recordes} recordes hoje! Você tá em outro nível!',
+      '{recordes} recordes num treino só! Que dia!',
+      'Contabilizando: {recordes} recordes batidos hoje. Absurdo!',
     ],
     technique: [
       'Dica desse exercício: {dica}.',
@@ -266,6 +299,26 @@ export const PHRASES = {
       '{tempo} de descanso e falta só uma. Dá pra aguentar, vai.',
       'Respira {tempo}. A próxima é a última desse, então sem economizar.',
     ],
+    repsHigh: [
+      '{reps} repetições? Esse peso tá te pedindo desculpas. Sobe a carga na próxima. Descansa {tempo}.',
+      'Passou da meta! Ou o peso encolheu ou você cresceu. Põe mais na próxima. {tempo} de descanso.',
+      'Mandou {reps}, acima do combinado. Tá de brincadeira com essa carga! Descansa {tempo} e aumenta.',
+    ],
+    repsLow: [
+      'Ficou em {reps}. O peso ganhou essa rodada. Descansa {tempo} e, se precisar, tira um pouquinho.',
+      'Pesou, hein? Ninguém tá vendo, pode baixar a carga. {tempo} de descanso.',
+      '{reps} repetições, abaixo da meta. Respira {tempo} e ajusta a carga, que ego não levanta peso.',
+    ],
+    loadUp: [
+      'Subiu a carga e não tremeu! Quem é você e o que fez com o sedentário? Descansa {tempo}.',
+      'Mais peso e a meta ainda saiu! Tô começando a ficar com medo. {tempo} de descanso.',
+      'Carga maior, repetições no lugar. Respeita! Respira {tempo}.',
+    ],
+    repsDrop: [
+      'Caiu pra {reps}? O cansaço chegou sem avisar. Toca no mais quinze, ninguém vai te julgar. Descansa {tempo}.',
+      'As repetições foram embora mais cedo. Respira {tempo}, e estica o descanso se o pulmão pedir.',
+      'Bateu a fadiga, hein! {tempo} de descanso, e pode roubar uns segundinhos a mais.',
+    ],
     superset: [
       'Descanso? Que descanso? Vai pro {exercicio}!',
       'Emenda no {exercicio}, sem enrolar!',
@@ -291,6 +344,16 @@ export const PHRASES = {
       'Foram {series} séries em {duracao}. Nada mau pra quem não queria vir.',
       '{series} séries em {duracao}. Eu contei, pode confiar.',
       '{duracao} de treino e {series} séries. O sofá vai ouvir falar disso.',
+    ],
+    finishRecord: [
+      'E ainda bateu recorde em {exercicio}. Vai postar, né? Pode, hoje eu deixo.',
+      'Recorde em {exercicio} hoje. O peso antigo tá se sentindo humilhado.',
+      'Bônus: recorde em {exercicio}. Já pode contar pros amigos que não perguntaram.',
+    ],
+    finishRecords: [
+      '{recordes} recordes num treino só? Isso tá ficando suspeito.',
+      'Foram {recordes} recordes hoje. A academia vai ter que comprar mais anilha.',
+      '{recordes} recordes! Daqui a pouco eu que vou pedir dica pra você.',
     ],
     technique: [
       'Dica de quem só olha e não levanta nada: {dica}.',
@@ -407,6 +470,26 @@ export const PHRASES = {
       'Muito bem. {tempo} de descanso. Falta uma série.',
       'Isso. Respire por {tempo}. Depois, a última série deste exercício.',
     ],
+    repsHigh: [
+      '{reps} repetições, acima da meta. Na próxima série, pode aumentar a carga. Descanse {tempo}.',
+      'Passou da meta. A carga está leve; vale subir um pouco. {tempo} de descanso.',
+      'Muito bem, {reps} repetições. Considere mais carga na próxima. Respire por {tempo}.',
+    ],
+    repsLow: [
+      '{reps} repetições, um pouco abaixo da meta. Tudo bem. Se a próxima não sair, reduza a carga. Descanse {tempo}.',
+      'Essa pesou. Use bem os {tempo} de descanso e, se precisar, diminua a carga.',
+      'Abaixo do alvo desta vez. Respire por {tempo} e ajuste a carga para caber a meta.',
+    ],
+    loadUp: [
+      'Carga maior e repetições mantidas. Isso é progresso. Descanse {tempo}.',
+      'Mais peso, com a execução firme. Muito bem. {tempo} de descanso.',
+      'Subiu a carga e cumpriu a meta. Respire por {tempo}.',
+    ],
+    repsDrop: [
+      'As repetições caíram em relação à série anterior. É cansaço. Se precisar, acrescente quinze segundos. Descanse {tempo}.',
+      'Caiu para {reps} repetições. Respire com calma por {tempo} e, se quiser, estenda o descanso.',
+      'O cansaço apareceu nesta série. Use bem os {tempo} de descanso, e aumente o tempo se for preciso.',
+    ],
     superset: [
       'Siga direto para {exercicio}, sem pausa.',
       'Agora {exercicio}, em sequência.',
@@ -432,6 +515,16 @@ export const PHRASES = {
       'Foram {series} séries em {duracao}.',
       'Você completou {series} séries em {duracao}.',
       '{duracao} de treino, com {series} séries.',
+    ],
+    finishRecord: [
+      'E houve um recorde hoje, em {exercicio}. Parabéns.',
+      'Vale registrar: recorde novo em {exercicio}.',
+      'Hoje você bateu seu recorde em {exercicio}. Muito bem.',
+    ],
+    finishRecords: [
+      'Foram {recordes} recordes neste treino. Ótimo trabalho.',
+      '{recordes} recordes hoje. Sua evolução está clara.',
+      'Neste treino, {recordes} recordes novos. Parabéns pela consistência.',
     ],
     technique: [
       'Uma orientação para este exercício: {dica}.',

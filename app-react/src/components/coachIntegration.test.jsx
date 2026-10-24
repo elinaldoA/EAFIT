@@ -103,7 +103,7 @@ describe('treinador por voz no modo treino', () => {
   it('ao sair, para a fala mas mantém a de fim de treino', () => {
     const { unmount } = setup();
     unmount();
-    expect(h.coachStop).toHaveBeenCalledWith({ keep: ['finish', 'finishStats', 'weekGoal'] });
+    expect(h.coachStop).toHaveBeenCalledWith({ keep: ['finish', 'finishStats', 'finishRecord', 'finishRecords', 'weekGoal'] });
   });
 });
 
@@ -156,6 +156,23 @@ describe('treinador comenta o andamento do treino', () => {
     expect(h.coachSay).toHaveBeenLastCalledWith('halfway', { tempo: '1 minuto e 30 segundos' });
     mark('Crucifixo');
     expect(h.coachSay).toHaveBeenLastCalledWith('lastSet', { tempo: '1 minuto e 30 segundos' });
+  });
+
+  it('comenta a série anotada fora da meta, uma vez por exercício', () => {
+    setupMarking();
+    h.coachSay.mockClear();
+    // Supino: meta 8-10. A 1ª série saiu com 13 repetições.
+    localStorage.setItem('set_Supino Reto_1_reps', '13');
+    mark('Supino Reto');
+    expect(h.coachSay).toHaveBeenLastCalledWith('repsHigh', { tempo: '1 minuto e 30 segundos', reps: 13 });
+    // De novo acima da meta: não repete o conselho, volta ao roteiro.
+    localStorage.setItem('set_Supino Reto_2_reps', '12');
+    mark('Supino Reto');
+    expect(h.coachSay).toHaveBeenLastCalledWith('lastSet', { tempo: '1 minuto e 30 segundos' });
+    // O fim do exercício tem prioridade sobre o comentário da série.
+    localStorage.setItem('set_Supino Reto_3_reps', '5');
+    mark('Supino Reto');
+    expect(h.coachSay).toHaveBeenLastCalledWith('exerciseDone', { tempo: '1 minuto e 30 segundos', proximo: 'Crucifixo' });
   });
 
   it('quem reabre o treino além da metade não ouve "metade" de novo', () => {

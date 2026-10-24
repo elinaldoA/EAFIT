@@ -10,7 +10,7 @@ vi.mock('./voice', () => ({
 import {
   getCoachPrefs, saveCoachPrefs, syncCoachPrefs, buildLine, coachSay, coachStop, coachSample,
   pickLine, greeting, speechTime, speechReps, speechExercise, speechDetail, isCoachAvailable,
-  speechLoad, speechTip, setDoneEvent, weekEvent, coachSuggest, coachRestTip, FINISH_EVENTS,
+  speechLoad, speechTip, setDoneEvent, setFeedbackEvent, repsTarget, noteRecord, takeRecords, coachRecords, weekEvent, coachSuggest, coachRestTip, FINISH_EVENTS,
 } from './coach';
 import { PHRASES, TONES, LIGHT_EVENTS, FREE_EVENTS } from '../data/coachPhrases';
 
@@ -126,6 +126,40 @@ describe('contexto do treino', () => {
     expect(setDoneEvent({ leftInExercise: 2, leftInWorkout: 6, crossedHalf: false })).toBe('rest');
   });
 
+  it('repsTarget entende faixa e número fixo, e ignora meta por tempo', () => {
+    expect(repsTarget('8-10')).toEqual({ min: 8, max: 10 });
+    expect(repsTarget('15')).toEqual({ min: 15, max: 15 });
+    expect(repsTarget('20 cada perna')).toEqual({ min: 20, max: 20 });
+    expect(repsTarget('30s')).toBeNull();
+    expect(repsTarget('45s cada lado')).toBeNull();
+    expect(repsTarget('20min · Moderado')).toBeNull();
+    expect(repsTarget('até a falha (máx 20)')).toBeNull();
+    expect(repsTarget('-')).toBeNull();
+    expect(repsTarget(undefined)).toBeNull();
+  });
+
+  it('setFeedbackEvent compara a série com a meta e com a anterior', () => {
+    const sets = (...list) => list.map(([carga, reps], i) => ({ n: i + 1, done: true, carga, reps }));
+    expect(setFeedbackEvent('8-10', sets(['40', '6']), 1)).toBe('repsLow');
+    expect(setFeedbackEvent('8-10', sets(['40', '13']), 1)).toBe('repsHigh');
+    expect(setFeedbackEvent('8-10', sets(['40', '10'], ['42.5', '9']), 2)).toBe('loadUp');
+    expect(setFeedbackEvent('8-10', sets(['40', '10'], ['42,5', '8']), 2)).toBe('loadUp');
+    // Subiu a carga mas não fechou a meta: o que importa é a meta.
+    expect(setFeedbackEvent('8-10', sets(['40', '10'], ['45', '6']), 2)).toBe('repsLow');
+    expect(setFeedbackEvent('8-10', sets(['40', '10'], ['40', '9']), 2)).toBeNull();
+    expect(setFeedbackEvent('8-10', sets(['40', null]), 1)).toBeNull();
+    expect(setFeedbackEvent('30s', sets(['', '50']), 1)).toBeNull();
+    // Mesma carga e as repetições despencaram (dentro da meta): cansaço.
+    expect(setFeedbackEvent('15-20', sets(['20', '20'], ['20', '16']), 2)).toBe('repsDrop');
+    expect(setFeedbackEvent('8-12', sets(['40', '12'], ['40', '9']), 2)).toBe('repsDrop');
+    // Queda pequena é normal.
+    expect(setFeedbackEvent('15-20', sets(['20', '20'], ['20', '18']), 2)).toBeNull();
+    // Abaixo da meta, o conselho de carga tem prioridade sobre o de cansaço.
+    expect(setFeedbackEvent('8-10', sets(['40', '10'], ['40', '6']), 2)).toBe('repsLow');
+    // Série anterior não marcada não conta para a comparação de carga.
+    expect(setFeedbackEvent('8-10', [{ n: 1, done: false, carga: '40', reps: '10' }, { n: 2, done: true, carga: '45', reps: '9' }], 2)).toBeNull();
+  });
+
   it('weekEvent comenta só o primeiro e o último treino da meta', () => {
     expect(weekEvent({ done: 0, total: 5 })).toBe('weekFirst');
     expect(weekEvent({ done: 4, total: 5 })).toBe('weekLast');
@@ -142,6 +176,7 @@ describe('frases', () => {
       'start', 'startOther', 'review', 'exercise', 'rest', 'rest10', 'restDone', 'pr', 'finish',
       'weekFirst', 'weekLast', 'weekGoal', 'suggestLoad', 'suggestReps', 'plateau', 'lastSet', 'exerciseDone',
       'halfway', 'allDone', 'finishStats', 'technique', 'tip', 'idle', 'paused', 'resumed', 'superset',
+      'repsHigh', 'repsLow', 'loadUp', 'repsDrop', 'finishRecord', 'finishRecords',
     ];
     for (const tone of TONES) {
       for (const ev of events) expect(PHRASES[tone][ev].length, `${tone}.${ev}`).toBeGreaterThanOrEqual(3);
@@ -165,7 +200,7 @@ describe('frases', () => {
   it('todo placeholder usado nas frases é conhecido', () => {
     const known = new Set([
       'dia', 'nome', 'saudacao', 'foco', 'exercicio', 'detalhe', 'tempo', 'carga', 'feitos', 'meta',
-      'proximo', 'ultimaCarga', 'ultimasReps', 'sugestao', 'repsAlvo', 'dica', 'duracao', 'series',
+      'proximo', 'ultimaCarga', 'ultimasReps', 'sugestao', 'repsAlvo', 'dica', 'duracao', 'series', 'reps', 'recordes',
     ]);
     for (const tone of TONES) for (const lines of Object.values(PHRASES[tone])) for (const l of lines) {
       for (const m of l.matchAll(/\{(\w+)\}/g)) expect(known.has(m[1]), `${m[1]} em "${l}"`).toBe(true);
@@ -205,6 +240,7 @@ describe('frases', () => {
         const text = buildLine(ev, {
           foco: 'Peito', dia: 'Segunda', exercicio: 'Supino', detalhe: '3 séries', tempo: '60 segundos', carga: 40, feitos: 2, meta: 5,
           proximo: 'Crucifixo', ultimaCarga: '40', ultimasReps: 10, sugestao: '42,5', repsAlvo: 11, dica: 'cotovelos fixos', duracao: '50 minutos', series: 24,
+          reps: 13, recordes: 3,
         }, { ...getCoachPrefs(), tone, name: i % 2 ? 'Ana' : '' });
         expect(text, `${tone}.${ev}`).not.toMatch(/[{}]/);
       }
@@ -303,6 +339,22 @@ describe('coachSay', () => {
     vi.advanceTimersByTime(5000);
     expect(h.speak).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
+  });
+
+  it('recordes do treino: um pelo nome, vários pela conta, e só uma vez', () => {
+    saveCoachPrefs({ enabled: true, frequency: 'light' });
+    noteRecord('Segunda', '🏋️ Supino Reto');
+    noteRecord('Segunda', '🏋️ Supino Reto');
+    expect(takeRecords('Segunda')).toEqual(['🏋️ Supino Reto']);
+    expect(takeRecords('Segunda')).toEqual([]);
+    expect(coachRecords(['🏋️ Supino Reto'])).toBe('finishRecord');
+    expect(h.speak.mock.calls.at(-1)[0]).toMatch(/Supino Reto/);
+    expect(h.speak.mock.calls.at(-1)[0]).not.toMatch(/🏋/);
+    expect(coachRecords(['Supino', 'Remada', 'Agachamento'])).toBe('finishRecords');
+    expect(h.speak.mock.calls.at(-1)[0]).toMatch(/3/);
+    h.speak.mockClear();
+    expect(coachRecords([])).toBeNull();
+    expect(h.speak).not.toHaveBeenCalled();
   });
 
   it('coachSample fala mesmo com a voz desligada', () => {

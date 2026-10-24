@@ -6,7 +6,7 @@ import { formatDuration } from '../lib/utils';
 import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { postActivity } from '../lib/friends';
-import { coachSay, speechTime } from '../lib/coach';
+import { coachSay, coachRecords, takeRecords, speechTime } from '../lib/coach';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import { findGroup, nextInGroup, segmentExercises, groupKindLabel } from '../lib/supersets';
 import { maxHeartRate, readSession, summarizeSession, clearSession } from '../lib/heartRate';
@@ -120,11 +120,12 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     const summary = buildSummary(accumulatedMs);
     if (user && summary.heartRate) saveWorkoutHeartRate(day.dia, summary.heartRate);
     coachSay('finish', { feitos: summary.weekDone, meta: summary.weekTotal }, { delayMs: 900 });
-    // Depois do fecho, o treinador comenta os números do treino e a semana.
+    // Depois do fecho, o treinador comenta os números do treino, os recordes e a semana.
     const minutes = Math.round(accumulatedMs / 60000);
     if (summary.totalSetsDone > 0 && minutes > 0) {
       coachSay('finishStats', { series: summary.totalSetsDone, duracao: speechTime(minutes * 60) }, { delayMs: 950, queue: true });
     }
+    coachRecords(takeRecords(day.dia), { delayMs: 975, queue: true });
     if (summary.weekTotal > 1 && summary.weekDone === summary.weekTotal) {
       coachSay('weekGoal', {}, { delayMs: 1000, queue: true });
     }

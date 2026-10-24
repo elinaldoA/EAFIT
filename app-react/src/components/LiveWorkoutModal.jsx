@@ -10,7 +10,7 @@ import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { isCardioItem } from '../lib/cardio';
 import {
-  coachSay, coachStop, coachRestTip, setDoneEvent, weekEvent, speechTime, speechDetail, speechExercise, FINISH_EVENTS,
+  coachSay, coachStop, coachRestTip, setDoneEvent, setFeedbackEvent, weekEvent, speechTime, speechDetail, speechExercise, FINISH_EVENTS,
 } from '../lib/coach';
 import { findGroup, groupKindLabel } from '../lib/supersets';
 import ExerciseDemo from './ExerciseDemo';
@@ -149,6 +149,17 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
       crossedHalf: !halfSaid.current && done * 2 >= total,
     });
     if (event === 'halfway') halfSaid.current = true;
+    // Num descanso comum, o treinador comenta a série anotada quando ela fugiu
+    // da meta — cada comentário uma vez por exercício, para não virar sermão.
+    // Os marcos (fim do exercício, metade, fim do treino) têm prioridade.
+    const justDone = [...sets].reverse().find(s => s.done);
+    const feedback = (event === 'rest' || event === 'lastSet') && justDone && setFeedbackEvent(ex.reps, sets, justDone.n);
+    const feedbackKey = feedback && `${ex.nome}:${feedback}`;
+    if (feedback && !feedbackSaid.current.has(feedbackKey)) {
+      feedbackSaid.current.add(feedbackKey);
+      coachSay(feedback, { tempo: speechTime(seconds), reps: parseInt(justDone.reps, 10) });
+      return event;
+    }
     coachSay(event, {
       tempo: speechTime(seconds),
       ...(event === 'exerciseDone' && (nextName || next) && { proximo: speechExercise(nextName || next.nome) }),
@@ -171,6 +182,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   // Quem reabre o treino já além da metade não ouve "metade do treino" de novo.
   const halfSaid = useRef(setsDone * 2 >= setsTotal);
   const techniqueSaid = useRef(new Set());
+  const feedbackSaid = useRef(new Set());
 
   // Modo "à vontade": avisa a pausa e a retomada do cronômetro.
   const prevStatus = useRef(timer.status);

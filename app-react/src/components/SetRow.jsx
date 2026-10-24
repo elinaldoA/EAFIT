@@ -4,7 +4,7 @@ import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { parseRestSeconds } from '../lib/utils';
 import { checkForNewPR } from '../lib/records';
-import { coachSay, speechExercise, speechLoad } from '../lib/coach';
+import { coachSay, noteRecord, speechExercise, speechLoad } from '../lib/coach';
 import { isNotifyEnabled } from '../lib/notifications';
 import { postActivity } from '../lib/friends';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
@@ -129,6 +129,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
             if (pr) {
               toast(t('🏆 Novo recorde em {nome}!', { nome: tEx(ex.nome) }));
               coachSay('pr', { exercicio: speechExercise(ex.nome), carga: speechLoad(cargaNum) }, { queue: true });
+              noteRecord(day.dia, ex.nome);
               postActivity('recorde', t('Novo recorde em {nome}', { nome: ex.nome }), `${cargaNum}kg`);
               if (isNotifyEnabled(user.user_metadata, 'notifyRecords')) {
                 sendPushToSelf({
