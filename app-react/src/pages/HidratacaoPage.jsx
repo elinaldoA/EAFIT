@@ -7,6 +7,7 @@ import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from '../lib/water
 import { enqueue } from '../lib/syncQueue';
 import { parseLocalDate, toDateStr } from '../lib/utils';
 import { buildDailySeries, waterStats } from '../lib/waterStats';
+import { computeNutritionGoals } from '../lib/nutritionGoals';
 import WaterBars from '../components/WaterBars';
 import Skeleton from '../components/Skeleton';
 
@@ -34,6 +35,7 @@ export default function HidratacaoPage({ active }) {
   const toast = useToast();
   const waterGoalLiters = useMemo(() => getWaterGoalLiters(user), [user]);
   const goalMl = waterGoalLiters * 1000;
+  const nutrition = useMemo(() => computeNutritionGoals(user?.user_metadata), [user]);
 
   const [_tick, setTick] = useState(0);
   const bump = () => setTick(t => t + 1);
@@ -177,6 +179,14 @@ export default function HidratacaoPage({ active }) {
           <span className="stat-card__label">{t('Dias na meta')}</span>
         </div>
       </div>
+
+      {nutrition && (
+        <div className="dash-card water-nutrition">
+          <span className="water-hero__kicker">{t('Meta de nutrição hoje')}</span>
+          <strong>{t('{protein} g de proteína · {kcal} kcal', { protein: nutrition.protein, kcal: nutrition.kcal })}</strong>
+          <p className="dash-card__subtitle">{t('Estimativa pelo seu perfil · detalhes em Perfil › Nutrição')}</p>
+        </div>
+      )}
 
       <div className="section-group">
         <div className="section-group__label">{t('Últimos {HISTORY_DAYS} dias', { HISTORY_DAYS })}</div>

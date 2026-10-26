@@ -13,9 +13,10 @@ const FAT_KCAL_SHARE = 0.25;
 const MIN_KCAL = { M: 1500, F: 1200 };
 
 // Fator de atividade pela frequência semanal de treino.
+// Sem meta salva vale o padrão do app (5 treinos), o mesmo do Perfil.
 function activityFactor(weeklyGoal) {
-  const days = Number(weeklyGoal);
-  if (!Number.isFinite(days) || days <= 1) return 1.2;
+  const days = parseInt(weeklyGoal, 10) || 5;
+  if (days <= 1) return 1.2;
   if (days <= 3) return 1.375;
   if (days <= 5) return 1.55;
   return 1.725;

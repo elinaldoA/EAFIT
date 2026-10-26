@@ -24,6 +24,11 @@ describe('computeNutritionGoals', () => {
     expect(computeNutritionGoals({ ...base, meta: 'emagrecer' }).kcal).toBeLessThan(maintain);
   });
 
+  it('sem treinos por semana salvos usa o padrão de 5', () => {
+    const { weeklyGoal: _w, ...semMeta } = base;
+    expect(computeNutritionGoals(semMeta).kcal).toBe(computeNutritionGoals({ ...base, weeklyGoal: 5 }).kcal);
+  });
+
   it('as calorias dos macros fecham com a meta', () => {
     const g = computeNutritionGoals({ ...base, meta: 'definicao' });
     expect(Math.abs(g.protein * 4 + g.carbs * 4 + g.fat * 9 - g.kcal)).toBeLessThan(10);
