@@ -1,4 +1,5 @@
 import { t } from '../lib/i18n';
+import { usesLocal } from '../lib/modalidade';
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
   meta, setMeta, nivel, setNivel, local, setLocal, modalidade, setModalidade, corridaObjetivo, setCorridaObjetivo, pesoAlvo, setPesoAlvo,
@@ -76,8 +77,8 @@ export default function ProfileBodySection({
           </select>
         </div>
       )}
-      {/* Corrida não depende do local de treino (o programa é só de corrida) */}
-      {modalidade !== 'corrida' && (
+      {/* Só a musculação muda com o local (calistenia e corrida usam sempre o mesmo) */}
+      {usesLocal(modalidade) && (
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileLocal">{t('Onde você treina')}</label>
           <select id="profileLocal" className="input input--sm" value={local} onChange={e => setLocal(e.target.value)}>

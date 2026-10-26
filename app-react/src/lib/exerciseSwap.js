@@ -1,5 +1,6 @@
 import { db } from './supabase';
 import { allowedEquipamentos, allowedNiveis } from '../data/exerciseLibrary';
+import { usesLocal } from './modalidade';
 
 import { locale } from './i18n';
 // Troca de exercício "geral": qualquer exercício do plano pode ser trocado por
@@ -21,15 +22,17 @@ export function findLibraryRow(library, name) {
 // Alternativas pro exercício `current`: mesmo grupo e tipo, só força, nível
 // permitido, fora do dia e fora da lista de evitar. Fora da academia (casa,
 // condomínio) só sugere o que dá pra fazer com o equipamento do local; na
-// academia tudo vale. Mesmo equipamento primeiro (a troca mais natural),
+// academia tudo vale. Na calistenia vale sempre só o que é de peso corporal,
+// fita ou elástico, em qualquer local (a modalidade manda, não o local). Mesmo equipamento primeiro (a troca mais natural),
 // depois ordem alfabética.
-export function pickAlternatives({ current, library, nivel, local, dayNames = [], avoidNames = [], limit = 6 }) {
+export function pickAlternatives({ current, library, nivel, local, modalidade, dayNames = [], avoidNames = [], limit = 6 }) {
   const row = findLibraryRow(library, current?.nome);
   if (!row) return { known: false, options: [] };
 
   const blocked = new Set([current.nome, ...dayNames, ...avoidNames].map(normalizeName));
   const allowed = allowedNiveis(nivel);
-  const equipamentos = local && local !== 'academia' ? allowedEquipamentos(local) : null;
+  const equipamentos = !usesLocal(modalidade) ? allowedEquipamentos(local, modalidade)
+    : local && local !== 'academia' ? allowedEquipamentos(local) : null;
 
   const options = (library || [])
     .filter(r => r.grupo_muscular === row.grupo_muscular

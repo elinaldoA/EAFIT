@@ -414,12 +414,14 @@ describe('OnboardingScreen', () => {
     expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ modalidade: 'corrida', corridaObjetivo: '10k' }));
   });
 
-  it('corrida: o campo "Onde você treina" some, e volta ao trocar de modalidade', () => {
+  it('o campo "Onde você treina" só aparece na musculação (some na corrida e na calistenia)', () => {
     render(<OnboardingScreen />);
     expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
     expect(screen.queryByLabelText('Onde você treina')).toBeNull();
     fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'calistenia' } });
+    expect(screen.queryByLabelText('Onde você treina')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'musculacao' } });
     expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
   });
 

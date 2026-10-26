@@ -11,7 +11,9 @@ const lib = [
   { nome: 'Supino Declinado', grupo_muscular: 'peito', tipo: 'composto', equipamento: 'barra', nivel_minimo: 'avancado', is_post_workout: false },
   { nome: 'Crucifixo', grupo_muscular: 'peito', tipo: 'isolado', equipamento: 'halteres', nivel_minimo: 'iniciante', is_post_workout: false },
   { nome: 'Agachamento', grupo_muscular: 'quadriceps', tipo: 'composto', equipamento: 'barra', nivel_minimo: 'iniciante', is_post_workout: false },
-  { nome: 'Flexão', grupo_muscular: 'peito', tipo: 'composto', equipamento: 'peso corporal', nivel_minimo: 'iniciante', is_post_workout: true },
+  { nome: 'Flexão', grupo_muscular: 'peito', tipo: 'composto', equipamento: 'peso corporal', nivel_minimo: 'iniciante', is_post_workout: true },  { nome: 'Flexão de Braço', grupo_muscular: 'peito', tipo: 'composto', equipamento: 'peso corporal', nivel_minimo: 'iniciante', is_post_workout: false },
+  { nome: 'Flexão Diamante', grupo_muscular: 'peito', tipo: 'composto', equipamento: 'peso corporal', nivel_minimo: 'intermediario', is_post_workout: false },
+  { nome: 'Flexão na Fita', grupo_muscular: 'peito', tipo: 'composto', equipamento: 'fita de suspensão', nivel_minimo: 'iniciante', is_post_workout: false },
 ];
 
 describe('normalizeName', () => {
@@ -34,30 +36,44 @@ describe('pickAlternatives', () => {
   it('mesmo grupo e tipo, mesmo equipamento primeiro, sem o atual', () => {
     const { known, options } = pickAlternatives({ current, library: lib, nivel: 'avancado' });
     expect(known).toBe(true);
-    expect(options.map(o => o.nome)).toEqual(['Supino Declinado', 'Supino Inclinado com Barra', 'Supino Reto com Halteres']);
+    expect(options.map(o => o.nome)).toEqual(['Supino Declinado', 'Supino Inclinado com Barra', 'Flexão de Braço', 'Flexão Diamante', 'Flexão na Fita', 'Supino Reto com Halteres']);
   });
 
   it('fora da academia só sugere o equipamento do local', () => {
     const names = local => pickAlternatives({ current, library: lib, nivel: 'avancado', local }).options.map(o => o.nome);
-    expect(names('condominio')).toEqual(['Supino Reto com Halteres']);
-    expect(names('casa')).toEqual(['Supino Reto com Halteres']);
-    expect(names('academia')).toHaveLength(3);
+    expect(names('condominio')).toEqual(['Flexão de Braço', 'Flexão Diamante', 'Flexão na Fita', 'Supino Reto com Halteres']);
+    expect(names('casa')).toEqual(['Flexão de Braço', 'Flexão Diamante', 'Flexão na Fita', 'Supino Reto com Halteres']);
+    expect(names('academia')).toHaveLength(6);
+  });
+
+  it('calistenia só sugere peso corporal, fita e elástico, em qualquer local (a modalidade manda)', () => {
+    const names = local => pickAlternatives({ current: { nome: 'Flexão de Braço' }, library: lib, nivel: 'avancado', local, modalidade: 'calistenia' }).options.map(o => o.nome);
+    const expected = ['Flexão Diamante', 'Flexão na Fita'];
+    expect(names('academia')).toEqual(expected);
+    expect(names('casa')).toEqual(expected);
+    expect(names(undefined)).toEqual(expected);
+  });
+
+  it('musculação e modalidade ausente seguem o local, como antes', () => {
+    const names = modalidade => pickAlternatives({ current, library: lib, nivel: 'avancado', local: 'casa', modalidade }).options.map(o => o.nome);
+    expect(names('musculacao')).toEqual(names(undefined));
+    expect(names('musculacao')).toContain('Supino Reto com Halteres');
   });
 
   it('respeita o nível do usuário', () => {
     const { options } = pickAlternatives({ current, library: lib, nivel: 'iniciante' });
-    expect(options.map(o => o.nome)).toEqual(['Supino Reto com Halteres']);
+    expect(options.map(o => o.nome)).toEqual(['Flexão de Braço', 'Flexão na Fita', 'Supino Reto com Halteres']);
   });
 
   it('nível desconhecido conta como intermediário', () => {
     const { options } = pickAlternatives({ current, library: lib, nivel: undefined });
-    expect(options.map(o => o.nome)).toEqual(['Supino Inclinado com Barra', 'Supino Reto com Halteres']);
+    expect(options.map(o => o.nome)).toEqual(['Supino Inclinado com Barra', 'Flexão de Braço', 'Flexão Diamante', 'Flexão na Fita', 'Supino Reto com Halteres']);
   });
 
   it('exclui exercícios do dia e os que causaram dor', () => {
     const { options } = pickAlternatives({
       current, library: lib, nivel: 'avancado',
-      dayNames: ['Supino Inclinado com Barra'], avoidNames: ['supino declinado'],
+      dayNames: ['Supino Inclinado com Barra', 'Flexão de Braço', 'Flexão Diamante', 'Flexão na Fita'], avoidNames: ['supino declinado'],
     });
     expect(options.map(o => o.nome)).toEqual(['Supino Reto com Halteres']);
   });

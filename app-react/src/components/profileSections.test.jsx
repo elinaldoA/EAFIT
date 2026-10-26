@@ -169,7 +169,7 @@ describe('ProfileBodySection', () => {
     expect(p.setPesoAlvo).toHaveBeenCalledWith('75');
   });
 
-  it('o local de treino só aparece fora da corrida; o objetivo de corrida só na corrida', () => {
+  it('o local de treino só aparece na musculação; o objetivo de corrida só na corrida', () => {
     const p = { ...base(), local: 'academia', setLocal: vi.fn(), modalidade: 'musculacao', setModalidade: vi.fn(), corridaObjetivo: '5k', setCorridaObjetivo: vi.fn() };
     const { rerender } = render(<ProfileBodySection {...p} />);
     expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
@@ -180,6 +180,9 @@ describe('ProfileBodySection', () => {
     expect(screen.getByLabelText('Objetivo de corrida')).toBeTruthy();
 
     rerender(<ProfileBodySection {...p} modalidade="calistenia" />);
+    expect(screen.queryByLabelText('Onde você treina')).toBeNull();
+
+    rerender(<ProfileBodySection {...p} modalidade="musculacao" />);
     expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
   });
 

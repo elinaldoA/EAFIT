@@ -92,7 +92,8 @@ export default function TrainingPatternsCard() {
           </table>
         </div>
         <p className="card-note">
-          Local = o que a pessoa escolheu no cadastro ou no Perfil (sem escolha conta como academia, o padrão). Retenção =
+          Só musculação (calistenia e corrida não dependem do local). Local = o que a pessoa escolheu no cadastro ou no Perfil
+          (sem escolha conta como academia, o padrão). Retenção =
           entre quem criou conta há 4 a 12 semanas, % que treinou nas últimas 2. Dor = desconforto forte ou lesão em 30 dias.
         </p>
       </div>

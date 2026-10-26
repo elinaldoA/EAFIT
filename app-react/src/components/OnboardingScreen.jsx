@@ -3,6 +3,7 @@ import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan, createRunningProgram } from '../lib/workoutPlans';
+import { usesLocal } from '../lib/modalidade';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
 import { validateBody } from '../lib/profileValidation';
@@ -154,8 +155,8 @@ export default function OnboardingScreen() {
               </select>
             </div>
           )}
-          {/* Corrida não depende do local de treino (o programa é só de corrida) */}
-          {modalidade !== 'corrida' && (
+          {/* Só a musculação muda com o local (calistenia e corrida usam sempre o mesmo) */}
+          {usesLocal(modalidade) && (
             <div className="profile-field">
               <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
               <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
