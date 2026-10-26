@@ -7,6 +7,8 @@ import { formatPace, parsePlannedMinutes, readCardio, toPositive, writeCardioFie
 import { parseRunWalk, phaseAt } from '../lib/runIntervals';
 import { playRunCue } from '../lib/sound';
 import { isRunItem, checkForRunPR, describeRunPR } from '../lib/runStats';
+import { useGeoTracker, geoSupported } from '../hooks/useGeoTracker';
+import { useWakeLock } from '../hooks/useWakeLock';
 
 import { t } from '../lib/i18n';
 // Cronômetro guardado em localStorage (sobrevive ao modo ao vivo remontar o
@@ -28,6 +30,11 @@ function writeTimer(nome, t) {
 
 const elapsedOf = (t, now) => t.accumulatedMs + (t.runningSince ? now - t.runningSince : 0);
 
+// Preferência do GPS (vale para todas as corridas deste aparelho).
+const GPS_KEY = 'cardio_gps_on';
+const readGpsPref = () => { try { return localStorage.getItem(GPS_KEY) === 'true'; } catch { return false; } };
+const writeGpsPref = on => { try { localStorage.setItem(GPS_KEY, String(on)); } catch { /* sem storage */ } };
+
 // Registro de um item de cardio (sem séries): cronômetro que preenche a
 // duração ao parar, distância opcional, ritmo e check. Salva como a série 1
 // do item em exercise_sets.
@@ -43,6 +50,9 @@ export default function CardioRow({ ex, day, bump, started }) {
   const planned = parsePlannedMinutes(ex.reps);
   const runWalk = parseRunWalk(ex.reps);
   const lastPhase = useRef(null);
+  const gpsAvailable = isRunItem(ex.nome) && geoSupported();
+  const [gpsOn, setGpsOn] = useState(readGpsPref);
+  const gpsActive = gpsAvailable && gpsOn && !!timer.runningSince;
 
   useEffect(() => {
     if (!running) return;
@@ -73,6 +83,22 @@ export default function CardioRow({ ex, day, bump, started }) {
     return () => Object.values(timers).forEach(clearTimeout);
   }, []);
 
+  // GPS: com o cronômetro correndo, a distância é somada e preenchida ao vivo
+  // (a pessoa ainda pode corrigir o campo). Mantém a tela acesa, porque o
+  // navegador não rastreia em segundo plano.
+  const gps = useGeoTracker({
+    active: gpsActive,
+    baseKm: vals.distancia,
+    onDistance: km => setField('distancia_km', String(km)),
+  });
+  useWakeLock(gpsActive);
+
+  function toggleGps() {
+    const next = !gpsOn;
+    setGpsOn(next);
+    writeGpsPref(next);
+  }
+
   function startTimer() {
     const next = { ...timer, runningSince: Date.now() };
     setTimer(next);
@@ -93,6 +119,7 @@ export default function CardioRow({ ex, day, bump, started }) {
     const next = { accumulatedMs: 0, runningSince: null };
     setTimer(next);
     writeTimer(ex.nome, next);
+    if (gpsActive) flush('distancia_km', vals.distancia);
     if (ms >= 1000) {
       const minutes = String(Math.round((ms / 60000) * 10) / 10);
       setVals(v => ({ ...v, duracao: minutes }));
@@ -151,6 +178,25 @@ export default function CardioRow({ ex, day, bump, started }) {
         )}
         {hasTimer && <button type="button" className="btn btn--ghost btn--sm" onClick={stopTimer}>{t('⏹ Parar')}</button>}
       </div>
+
+      {gpsAvailable && (
+        <div className="cardio-row__gps">
+          <button
+            type="button" className={`btn btn--sm ${gpsOn ? 'btn--primary' : 'btn--outline'}`}
+            aria-pressed={gpsOn} onClick={toggleGps}
+          >{gpsOn ? t('📍 GPS ligado') : t('📍 Usar GPS')}</button>
+          {gpsOn && (
+            <span className="cardio-row__gps-status" role="status" aria-live="polite">
+              {gps.status === 'searching' && t('Buscando sinal de GPS…')}
+              {gps.status === 'tracking' && t('GPS ativo · precisão ±{n} m', { n: gps.accuracy })}
+              {gps.status === 'weak' && t('⚠️ Sinal de GPS fraco — continue com a tela ligada')}
+              {gps.status === 'denied' && t('🚫 Localização negada no navegador — digite a distância')}
+              {gps.status === 'error' && t('⚠️ Não foi possível ler o GPS — digite a distância')}
+              {gps.status === 'idle' && t('O GPS mede enquanto o cronômetro corre. Mantenha a tela ligada e o app aberto: o navegador não rastreia em segundo plano. O trajeto não é salvo, só a distância.')}
+            </span>
+          )}
+        </div>
+      )}
 
       {cue && (
         <div className={`cardio-row__cue cardio-row__cue--${cue.phase}`} role="status" aria-live="polite">
