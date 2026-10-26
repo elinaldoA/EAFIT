@@ -658,11 +658,118 @@ export async function renderWorkoutSummaryCard(summary, refCode = myRefCode()) {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
+// Retângulo de origem/destino pra desenhar uma foto preenchendo a caixa toda
+// (como object-fit: cover), centralizada e sem esticar.
+export function coverRect(imgW, imgH, boxW, boxH) {
+  const scale = Math.max(boxW / imgW, boxH / imgH);
+  const w = imgW * scale;
+  const h = imgH * scale;
+  return { x: (boxW - w) / 2, y: (boxH - h) / 2, w, h };
+}
+
+export const PHOTO_STATS = ['duracao', 'carga', 'series', 'exercicios'];
+
+// Cartão 9:16 com a foto da pessoa de fundo e os dados do treino por cima
+// (marca no topo, foco do treino e números embaixo), no estilo dos apps de
+// academia. `show` escolhe quais números aparecem; `img` é uma imagem já carregada.
+export async function renderWorkoutPhotoCard(summary, img, show = {}) {
+  const { day, durationMs, totalCarga, exercises = [], totalSetsDone, totalPlannedSets } = summary;
+  const on = k => show[k] !== false;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#09090d';
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  const r = coverRect(img.naturalWidth || img.width, img.naturalHeight || img.height, CARD_WIDTH, CARD_HEIGHT);
+  ctx.drawImage(img, r.x, r.y, r.w, r.h);
+
+  const top = ctx.createLinearGradient(0, 0, 0, 340);
+  top.addColorStop(0, 'rgba(0,0,0,0.65)');
+  top.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = top;
+  ctx.fillRect(0, 0, CARD_WIDTH, 340);
+  await drawTopBar(ctx, 70, formatCardDate());
+
+  const stats = [
+    on('duracao') && [formatDuration(durationMs), t('duração')],
+    on('carga') && [`${(totalCarga || 0).toLocaleString(locale)} kg`, t('carga total')],
+    on('series') && [`${totalSetsDone}/${totalPlannedSets}`, t('séries concluídas')],
+    on('exercicios') && [String(exercises.length), t('exercícios')],
+  ].filter(Boolean);
+
+  const rowH = 150;
+  const rows = Math.ceil(stats.length / 2);
+  const gridTop = CARD_HEIGHT - 150 - rows * rowH;
+  const title = String(tFoco(day?.foco) || t(day?.dia) || t('Treino')).toUpperCase();
+
+  const shadeTop = Math.max(CARD_HEIGHT * 0.45, gridTop - 400);
+  const bottom = ctx.createLinearGradient(0, shadeTop, 0, CARD_HEIGHT);
+  bottom.addColorStop(0, 'rgba(0,0,0,0)');
+  bottom.addColorStop(0.55, 'rgba(0,0,0,0.7)');
+  bottom.addColorStop(1, 'rgba(0,0,0,0.9)');
+  ctx.fillStyle = bottom;
+  ctx.fillRect(0, shadeTop, CARD_WIDTH, CARD_HEIGHT - shadeTop);
+
+  ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = 18;
+  let titlePx = 92;
+  let lines;
+  for (;;) {
+    ctx.font = `900 ${titlePx}px ${FONT}`;
+    const full = wrapLines(ctx, title, CONTENT_W, 12);
+    if (full.length <= 2 || titlePx <= 52) {
+      lines = full.length <= 2 ? full : wrapLines(ctx, title, CONTENT_W, 2);
+      break;
+    }
+    titlePx -= 4;
+  }
+  const lineH = titlePx * 1.04;
+  const titleBottom = gridTop - 36;
+  const titleTop = titleBottom - (lines.length - 1) * lineH;
+  ctx.fillStyle = '#ffffff';
+  lines.forEach((line, i) => ctx.fillText(line, PAD_X, titleTop + i * lineH));
+  ctx.font = `700 30px ${FONT}`;
+  ctx.fillStyle = ORANGE_LIGHT;
+  setTracking(ctx, 4);
+  ctx.fillText(t('TREINO CONCLUÍDO'), PAD_X, titleTop - titlePx - 14);
+  setTracking(ctx, 0);
+
+  const colW = CONTENT_W / 2;
+  stats.forEach(([value, label], i) => {
+    const x = PAD_X + (i % 2) * colW;
+    const y = gridTop + Math.floor(i / 2) * rowH;
+    ctx.fillStyle = '#ffffff';
+    fitFont(ctx, value, colW - 24, 78, 900, 36);
+    ctx.fillText(value, x, y + 70);
+    ctx.font = `700 24px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    setTracking(ctx, 2.5);
+    ctx.fillText(String(label).toUpperCase(), x, y + 110);
+    setTracking(ctx, 0);
+  });
+  ctx.shadowBlur = 0;
+
+  const brandY = CARD_HEIGHT - 110;
+  const hasLogo = await drawLogo(ctx, PAD_X, brandY, 64);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `900 38px ${FONT}`;
+  ctx.fillText('EAFIT', PAD_X + (hasLogo ? 82 : 0), brandY + 30);
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `600 24px ${FONT}`;
+  ctx.fillText(SHARE_URL_LABEL, PAD_X + (hasLogo ? 82 : 0), brandY + 58);
+
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+}
+
 // Compartilha a imagem pelo share nativo (quando suporta arquivos) ou baixa.
 async function shareImageBlob(blob, filename, title, text) {
   if (!blob) throw new Error(t('Não foi possível gerar a imagem.'));
 
-  const file = new File([blob], filename, { type: 'image/png' });
+  const file = new File([blob], filename, { type: blob.type || 'image/png' });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     // Link vai no texto (não em `url`): vários apps descartam `url` quando há
@@ -688,6 +795,12 @@ async function shareImageBlob(blob, filename, title, text) {
   a.remove();
   URL.revokeObjectURL(url);
   return 'downloaded';
+}
+
+// Compartilha o cartão com a foto da pessoa (renderWorkoutPhotoCard).
+export async function shareWorkoutPhoto(blob) {
+  trackFeature('share_photo_card');
+  return shareImageBlob(blob, 'meu-treino.jpg', t('Meu treino'), shareText(cardUrl(myRefCode())));
 }
 
 // `prepared`: Blob (ou promessa dele) gerado antes do toque. O share nativo

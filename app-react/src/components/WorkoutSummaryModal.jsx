@@ -8,6 +8,7 @@ import { useToast } from '../context/useToast';
 import BodyAvatar from './BodyAvatar';
 import RatingModal from './RatingModal';
 import PushPrompt from './PushPrompt';
+import WorkoutPhotoShare from './WorkoutPhotoShare';
 import FriendsPrompt from './FriendsPrompt';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { formatCardioSummary } from '../lib/cardio';
@@ -24,6 +25,7 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
   const toast = useToast();
   const [sharing, setSharing] = useState(false);
   const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const [rating, setRating] = useState(() => {
     const stored = localStorage.getItem(`treino_${day.dia}_rating`);
     return stored ? Number(stored) : null;
@@ -154,12 +156,14 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
               <button type="button" className="btn btn--outline btn--full" disabled={sharing} onClick={handleShare}>
                 {sharing ? t('Gerando imagem…') : t('📤 Compartilhar treino')}
               </button>
+              <button type="button" className="btn btn--outline btn--full" onClick={() => setPhotoOpen(true)}>{t('📸 Compartilhar com foto')}</button>
               <button type="button" className="btn btn--primary btn--full" onClick={onClose}>{t('Fechar')}</button>
             </div>
           </div>
         </div>,
         getModalRoot()
       )}
+      {photoOpen && <WorkoutPhotoShare summary={summary} onClose={() => setPhotoOpen(false)} />}
       {ratingModalOpen && (
         <RatingModal value={rating} onSelect={handleRate} onClose={() => setRatingModalOpen(false)} />
       )}

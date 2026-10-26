@@ -295,3 +295,8 @@
 /* Convite pra ativar lembretes (PushPrompt), dentro do resumo do treino */
 .push-prompt__text { margin: 0 0 10px; font-size: 0.82rem; line-height: 1.4; color: var(--text-muted); }
 .push-prompt__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Compartilhar com foto */
+.photo-share__preview { display: block; width: 100%; max-width: 280px; aspect-ratio: 9 / 16; object-fit: cover; margin: 0 auto 12px; border-radius: 16px; background: #09090d; }
+.photo-share__pick { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.photo-share__toggles { display: flex; flex-wrap: wrap; gap: 8px; }
