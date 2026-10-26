@@ -350,6 +350,10 @@ export default {
   'Academia': 'Gym',
   'Academia do condomínio': 'Building gym',
   'Em casa': 'At home',
+  'Modalidade de treino': 'Training style',
+  'Musculação': 'Weight training',
+  'Calistenia (peso do corpo)': 'Calisthenics (bodyweight)',
+  '✅ Perfil salvo — seu treino foi refeito para a nova modalidade': '✅ Profile saved — your workout was rebuilt for the new training style',
   'Gerando seu plano…': 'Building your plan…',
   'Gerar meu treino': 'Generate my workout',
 

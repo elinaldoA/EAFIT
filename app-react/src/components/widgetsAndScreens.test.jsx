@@ -391,9 +391,9 @@ describe('OnboardingScreen', () => {
     submit();
     await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalled());
     expect(order).toEqual(['generate', 'seed', 'profile']);
-    expect(h.tpl.generatePlan).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa' });
+    expect(h.tpl.generatePlan).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', modalidade: 'musculacao' });
     expect(h.plans.seedGeneratedPlan).toHaveBeenCalledWith('u1', [{ dia: 'Seg' }]);
-    expect(h.auth.updateProfile).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa' });
+    expect(h.auth.updateProfile).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', modalidade: 'musculacao' });
   });
 
   it('erro ao gerar o plano mostra mensagem e toast, e não salva o perfil', async () => {

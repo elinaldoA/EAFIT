@@ -57,6 +57,13 @@ Deno.test('withLibraryExercises - uma consulta só, filtrada pelo nível, manten
   assertEquals(calls.find(([col]) => col === 'equipamento')?.[1], EQUIPAMENTOS_POR_LOCAL.academia);
 });
 
+Deno.test('withLibraryExercises - calistenia filtra por peso corporal, fita e elástico', async () => {
+  const calls: Array<[string, unknown]> = [];
+  const client = fakeClient([row('P1', 'composto'), row('P2', 'isolado'), row('T1', 'isolado', 'triceps')], calls);
+  await withLibraryExercises(client, [{ dia: 'Segunda', foco: 'Peito / Tríceps', exercicios: [], pos: [] }], 'iniciante', 'academia', 'calistenia');
+  assertEquals(calls.find(([col]) => col === 'equipamento')?.[1], ['peso corporal', 'fita de suspensão', 'elástico']);
+});
+
 Deno.test('withLibraryExercises - treino em casa filtra pelos equipamentos de casa', async () => {
   const calls: Array<[string, unknown]> = [];
   const client = fakeClient([row('P1', 'composto'), row('P2', 'isolado'), row('T1', 'isolado', 'triceps')], calls);

@@ -207,7 +207,46 @@ const RESISTENCIA = [
     ], pos: []},
 ];
 
+// Calistenia: um único template para todos os objetivos (a modalidade, não a
+// meta, define a base). Os dias de força vêm sorteados da biblioteca só com
+// exercícios de peso corporal/fita/elástico (ver withLibraryExercises); estes
+// itens são o fallback sem rede e os dias fixos (core, recuperação, descanso).
+const CALISTENIA = [
+    { dia: 'Segunda', foco: 'Peito / Ombro / Tríceps', exercicios: [
+        { nome: 'Flexão de Braço',            series: '4', reps: '8-10', descanso: '90s', tecnica: 'Core travado, amplitude completa' },
+        { nome: 'Flexão Diamante',            series: '3', reps: '8-10', descanso: '90s', tecnica: 'Mãos juntas formando um losango' },
+        { nome: 'Mergulho no Banco (Tríceps)', series: '3', reps: '8-10', descanso: '90s', tecnica: 'Cotovelos próximos ao corpo' },
+    ], pos: [
+        { nome: '🔷 Prancha Frontal Estática', series: '3', reps: '40s', descanso: '30s', tecnica: 'Isometria, corpo alinhado' },
+    ]},
+    { dia: 'Terça', foco: 'Costas / Bíceps', exercicios: [
+        { nome: 'Barra Fixa (peso corporal)',        series: '4', reps: '6-8', descanso: '90s', tecnica: 'Amplitude completa' },
+        { nome: 'Remada Invertida (Peso Corporal)',  series: '4', reps: '8-10', descanso: '90s', tecnica: 'Barra fixa baixa, corpo inclinado' },
+    ], pos: [
+        { nome: '🔷 Hollow Hold (Canoa)', series: '3', reps: '30s', descanso: '30s', tecnica: 'Lombar colada no chão' },
+    ]},
+    { dia: 'Quarta', foco: 'Pernas / Quadríceps', exercicios: [
+        { nome: 'Pistol Squat Assistido', series: '3', reps: '6-8 cada perna', descanso: '90s', tecnica: 'Segura num apoio, desce numa perna só' },
+    ], pos: []},
+    { dia: 'Quinta', foco: 'Cardio Leve / Recuperação', exercicios: [
+        { nome: 'Caminhada Rápida ou Bicicleta', series: '-', reps: '30min', descanso: '-', tecnica: '5-6km/h ou 130bpm' },
+    ], pos: []},
+    { dia: 'Sexta', foco: 'Superiores', exercicios: [
+        { nome: 'Flexão de Braço',            series: '4', reps: '8-10', descanso: '90s', tecnica: 'Core travado, amplitude completa' },
+        { nome: 'Barra Fixa (peso corporal)', series: '4', reps: '6-8', descanso: '90s', tecnica: 'Amplitude completa' },
+    ], pos: [
+        { nome: '🔷 Prancha Frontal Estática', series: '3', reps: '40s', descanso: '30s', tecnica: 'Isometria, corpo alinhado' },
+    ]},
+    { dia: 'Sábado', foco: 'Posterior / Glúteos', exercicios: [
+        { nome: 'Elevação Pélvica', series: '4', reps: '12-15', descanso: '60s', tecnica: 'Pausa 3s no topo' },
+    ], pos: []},
+    { dia: 'Domingo', foco: 'Descanso Total', exercicios: [
+        { nome: 'Sem treino', series: '-', reps: '-', descanso: '-', tecnica: 'Recuperação ativa' },
+    ], pos: []},
+];
+
 const BASE_TEMPLATES = {
+    calistenia: CALISTENIA,
     massa: treinoData,
     forca: FORCA,
     emagrecer: EMAGRECER,
@@ -216,6 +255,7 @@ const BASE_TEMPLATES = {
     resistencia: RESISTENCIA,
 };
 
+export const MODALIDADES = ['musculacao', 'calistenia'];
 export const METAS = ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia'];
 export const RESTRICOES = ['padrao', 'vegetariano', 'low_carb'];
 
@@ -231,9 +271,9 @@ async function fetchBaseTemplate(meta) {
 
 // sexo/idade não influenciam a seleção de exercícios nesta versão. Aceitos
 // aqui só para manter a mesma assinatura de perfil usada na tela de onboarding.
-export async function generatePlan({ peso, altura, meta, nivel, local }) {
-    const base = await fetchBaseTemplate(meta);
-    const withLibrary = await withLibraryExercises(base, nivel, local);
+export async function generatePlan({ peso, altura, meta, nivel, local, modalidade }) {
+    const base = await fetchBaseTemplate(modalidade === 'calistenia' ? 'calistenia' : meta);
+    const withLibrary = await withLibraryExercises(base, nivel, local, modalidade);
     const leveled = applyLevelAdjustment(withLibrary, nivel);
     const bracket = computeImcBracket(peso, altura);
     return applyImcAdjustment(leveled, bracket);

@@ -3,7 +3,7 @@ import { db } from '../lib/supabase';
 import WorkoutTemplateEditor from '../components/WorkoutTemplateEditor';
 import Loading from '../components/Loading';
 
-const METAS = ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia'];
+const METAS = ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia', 'calistenia'];
 
 export default function Templates() {
   const [meta, setMeta] = useState('massa');

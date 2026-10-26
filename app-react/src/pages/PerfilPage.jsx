@@ -61,6 +61,7 @@ export default function PerfilPage({ active }) {
   const [meta, setMeta] = useState(md.meta || localStorage.getItem('profile_meta') || 'massa');
   const [nivel, setNivel] = useState(md.nivel || localStorage.getItem('profile_nivel') || 'intermediario');
   const [local, setLocal] = useState(md.local || localStorage.getItem('profile_local') || 'academia');
+  const [modalidade, setModalidade] = useState(md.modalidade || localStorage.getItem('profile_modalidade') || 'musculacao');
   const [pesoAlvo, setPesoAlvo] = useState(md.pesoAlvo || localStorage.getItem('profile_pesoAlvo') || '');
   const [macroAgua, setMacroAgua] = useState(md.macroAgua || localStorage.getItem('profile_macroAgua') || '');
   const [weeklyGoal, setWeeklyGoal] = useState(md.weeklyGoal || localStorage.getItem('profile_weeklyGoal') || DEFAULT_WEEKLY_GOAL);
@@ -126,7 +127,7 @@ export default function PerfilPage({ active }) {
   }
 
   async function generateAndActivatePlan() {
-    const generatedDays = await generatePlan({ peso: parseFloat(peso), altura: parseFloat(altura), meta, nivel, local });
+    const generatedDays = await generatePlan({ peso: parseFloat(peso), altura: parseFloat(altura), meta, nivel, local, modalidade });
     await createGeneratedPlan(user.id, t('Plano gerado {v1}', { v1: new Date().toLocaleDateString(locale) }), generatedDays);
     await refreshPlan();
   }
@@ -145,7 +146,11 @@ export default function PerfilPage({ active }) {
     const bracketChanged = !!prevBracket && !!parseFloat(peso) && !!parseFloat(altura)
       && computeImcBracket(peso, altura) !== prevBracket;
 
-    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, local, pesoAlvo });
+    // Trocar de modalidade (musculação ↔ calistenia) refaz o treino na hora:
+    // manter o plano antigo contradiria a escolha.
+    const modalidadeChanged = (md.modalidade || 'musculacao') !== modalidade;
+
+    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, local, modalidade, pesoAlvo });
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_sexo', sexo);
     localStorage.setItem('profile_idade', idade);
@@ -154,6 +159,7 @@ export default function PerfilPage({ active }) {
     localStorage.setItem('profile_meta', meta);
     localStorage.setItem('profile_nivel', nivel);
     localStorage.setItem('profile_local', local);
+    localStorage.setItem('profile_modalidade', modalidade);
     localStorage.setItem('profile_pesoAlvo', pesoAlvo);
 
     if (user && peso) {
@@ -167,11 +173,13 @@ export default function PerfilPage({ active }) {
       }
     }
 
-    if (user && bracketChanged && !planByTrainer && !regenerating) {
+    if (user && (bracketChanged || modalidadeChanged) && !planByTrainer && !regenerating) {
       setRegenerating(true);
       try {
         await generateAndActivatePlan();
-        toast(t('✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente'));
+        toast(modalidadeChanged
+          ? t('✅ Perfil salvo — seu treino foi refeito para a nova modalidade')
+          : t('✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente'));
       } catch (err) {
         console.error('autoRegeneratePlan:', err);
         toast(t('⚠️ Perfil salvo, mas não deu pra atualizar o treino — use "Gerar novo treino com esses dados"'));
@@ -289,7 +297,7 @@ export default function PerfilPage({ active }) {
           <ProfileBodySection
             sexo={sexo} setSexo={setSexo} idade={idade} setIdade={setIdade}
             peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
-            meta={meta} setMeta={setMeta} nivel={nivel} setNivel={setNivel} local={local} setLocal={setLocal}
+            meta={meta} setMeta={setMeta} nivel={nivel} setNivel={setNivel} local={local} setLocal={setLocal} modalidade={modalidade} setModalidade={setModalidade}
             pesoAlvo={pesoAlvo} setPesoAlvo={setPesoAlvo}
             progress={progress} imc={imc} onSave={handleSave}
             regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}

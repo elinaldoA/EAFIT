@@ -55,8 +55,16 @@ export const EQUIPAMENTOS_POR_LOCAL = {
   casa: ['peso corporal', 'elástico', 'halteres', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
 };
 
-// Local ausente/desconhecido conta como academia (perfis de antes do campo).
-export function allowedEquipamentos(local) {
+// Modalidades de treino (perfil.modalidade). Calistenia só usa o próprio corpo
+// (barra fixa, paralelas e flexões são 'peso corporal'), a fita de suspensão e o
+// elástico pra regredir/progredir; vale em qualquer local, então ignora `local`.
+export const MODALIDADES = ['musculacao', 'calistenia'];
+export const EQUIPAMENTOS_CALISTENIA = ['peso corporal', 'fita de suspensão', 'elástico'];
+
+// Local ausente/desconhecido conta como academia (perfis de antes do campo);
+// modalidade ausente/desconhecida conta como musculação.
+export function allowedEquipamentos(local, modalidade) {
+  if (modalidade === 'calistenia') return EQUIPAMENTOS_CALISTENIA;
   return EQUIPAMENTOS_POR_LOCAL[local] || EQUIPAMENTOS_POR_LOCAL.academia;
 }
 
@@ -132,13 +140,13 @@ export function pickExercisesForFoco(candidates, { count = TARGET_COUNT, compost
   return picked.map(toExerciseShape);
 }
 
-async function fetchLibraryRows(grupos, nivel, local) {
+async function fetchLibraryRows(grupos, nivel, local, modalidade) {
   const { data, error } = await db
     .from('exercise_library')
     .select('nome, grupo_muscular, tipo, series, reps, descanso, tecnica')
     .in('grupo_muscular', grupos)
     .in('nivel_minimo', allowedNiveis(nivel))
-    .in('equipamento', allowedEquipamentos(local))
+    .in('equipamento', allowedEquipamentos(local, modalidade))
     .eq('is_post_workout', false);
   if (error) throw error;
   return data || [];
@@ -149,17 +157,17 @@ async function fetchLibraryRows(grupos, nivel, local) {
 // intactos. Busca a biblioteca uma vez só (todos os grupos da semana) e
 // filtra por nível de experiência (exercise_library.nivel_minimo), pra
 // iniciante não receber levantamento livre técnico que LEVEL_EXERCISE_SUBS não
-// cobre, e pelos equipamentos do local de treino (allowedEquipamentos). Dias sem mapeamento de foco (rest/cardio-leve/corrida) ou com pool
+// cobre, e pelos equipamentos do local de treino e da modalidade (allowedEquipamentos). Dias sem mapeamento de foco (rest/cardio-leve/corrida) ou com pool
 // insuficiente ficam como vieram do template — mesmo espírito de resiliência
 // de fetchBaseTemplate (rede indisponível não quebra a geração, só reduz a
 // variedade).
-export async function withLibraryExercises(days, nivel, local) {
+export async function withLibraryExercises(days, nivel, local, modalidade) {
   const allGrupos = [...new Set(days.flatMap(d => FOCO_TO_GRUPOS[d.foco] || []))];
   if (!allGrupos.length) return days;
 
   let rows;
   try {
-    rows = await fetchLibraryRows(allGrupos, nivel, local);
+    rows = await fetchLibraryRows(allGrupos, nivel, local, modalidade);
   } catch (err) {
     console.warn('withLibraryExercises:', err);
     return days;

@@ -18,6 +18,7 @@ export default function OnboardingScreen() {
   const [meta, setMeta] = useState('massa');
   const [nivel, setNivel] = useState('intermediario');
   const [local, setLocal] = useState('academia');
+  const [modalidade, setModalidade] = useState('musculacao');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar
@@ -55,12 +56,12 @@ export default function OnboardingScreen() {
       // pode disparar o fallback de plano padrão antes dele existir,
       // gerando dois planos ativos.
       if (!seeded.current) {
-        const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
+        const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade });
         await seedGeneratedPlan(user.id, generatedDays);
         seeded.current = true;
       }
 
-      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
+      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade });
       if (error) throw error;
       trackEvent('onboarding', 'done');
     } catch (err) {
@@ -128,6 +129,13 @@ export default function OnboardingScreen() {
               <option value="iniciante">{t('Iniciante')}</option>
               <option value="intermediario">{t('Intermediário')}</option>
               <option value="avancado">{t('Avançado')}</option>
+            </select>
+          </div>
+          <div className="profile-field">
+            <label className="profile-field__label" htmlFor="onbModalidade">{t('Modalidade de treino')}</label>
+            <select id="onbModalidade" className="input" value={modalidade} onChange={e => setModalidade(e.target.value)}>
+              <option value="musculacao">{t('Musculação')}</option>
+              <option value="calistenia">{t('Calistenia (peso do corpo)')}</option>
             </select>
           </div>
           <div className="profile-field">

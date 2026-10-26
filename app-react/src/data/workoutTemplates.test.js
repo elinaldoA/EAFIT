@@ -140,4 +140,14 @@ describe('generatePlan', () => {
     const plan = await generatePlan({ peso: 80, altura: 178, meta: 'inexistente', nivel: 'intermediario' });
     expect(plan).toHaveLength(7);
   });
+
+  it('calistenia usa o template próprio, igual para qualquer objetivo', async () => {
+    const a = await generatePlan({ peso: 70, altura: 175, meta: 'massa', nivel: 'intermediario', modalidade: 'calistenia' });
+    const b = await generatePlan({ peso: 70, altura: 175, meta: 'resistencia', nivel: 'intermediario', modalidade: 'calistenia' });
+    expect(a).toHaveLength(7);
+    expect(a.map(d => d.foco)).toEqual(b.map(d => d.foco));
+    const nomes = a.flatMap(d => d.exercicios.map(e => e.nome));
+    expect(nomes).toContain('Barra Fixa (peso corporal)');
+    expect(nomes.some(n => /Supino|Agachamento Livre|Leg Press/.test(n))).toBe(false);
+  });
 });

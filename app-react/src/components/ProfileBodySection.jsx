@@ -1,7 +1,7 @@
 import { t } from '../lib/i18n';
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
-  meta, setMeta, nivel, setNivel, local, setLocal, pesoAlvo, setPesoAlvo,
+  meta, setMeta, nivel, setNivel, local, setLocal, modalidade, setModalidade, pesoAlvo, setPesoAlvo,
   progress, imc, onSave, regenerating, onRegeneratePlan,
 }) {
   return (
@@ -56,6 +56,13 @@ export default function ProfileBodySection({
           <option value="iniciante">{t('Iniciante')}</option>
           <option value="intermediario">{t('Intermediário')}</option>
           <option value="avancado">{t('Avançado')}</option>
+        </select>
+      </div>
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="profileModalidade">{t('Modalidade de treino')}</label>
+        <select id="profileModalidade" className="input input--sm" value={modalidade} onChange={e => setModalidade(e.target.value)}>
+          <option value="musculacao">{t('Musculação')}</option>
+          <option value="calistenia">{t('Calistenia (peso do corpo)')}</option>
         </select>
       </div>
       <div className="profile-field">

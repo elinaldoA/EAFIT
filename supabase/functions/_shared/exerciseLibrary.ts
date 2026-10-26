@@ -45,7 +45,11 @@ export const EQUIPAMENTOS_POR_LOCAL: Record<string, string[]> = {
   casa: ['peso corporal', 'elástico', 'halteres', 'kettlebell', 'caneleira', 'fita de suspensão', 'bola', 'medicine ball'],
 };
 
-export function allowedEquipamentos(local: string | undefined): string[] {
+export const MODALIDADES = ['musculacao', 'calistenia'];
+export const EQUIPAMENTOS_CALISTENIA = ['peso corporal', 'fita de suspensão', 'elástico'];
+
+export function allowedEquipamentos(local: string | undefined, modalidade?: string): string[] {
+  if (modalidade === 'calistenia') return EQUIPAMENTOS_CALISTENIA;
   return EQUIPAMENTOS_POR_LOCAL[local ?? ''] || EQUIPAMENTOS_POR_LOCAL.academia;
 }
 
@@ -114,7 +118,7 @@ export function pickExercisesForFoco(
   return picked.map(toExerciseShape);
 }
 
-export async function withLibraryExercises(client: LibraryClient, days: Day[], nivel: string | undefined, local?: string): Promise<Day[]> {
+export async function withLibraryExercises(client: LibraryClient, days: Day[], nivel: string | undefined, local?: string, modalidade?: string): Promise<Day[]> {
   const allGrupos = [...new Set(days.flatMap(d => FOCO_TO_GRUPOS[d.foco] || []))];
   if (!allGrupos.length) return days;
 
@@ -125,7 +129,7 @@ export async function withLibraryExercises(client: LibraryClient, days: Day[], n
       .select('nome, grupo_muscular, tipo, series, reps, descanso, tecnica')
       .in('grupo_muscular', allGrupos)
       .in('nivel_minimo', allowedNiveis(nivel))
-      .in('equipamento', allowedEquipamentos(local))
+      .in('equipamento', allowedEquipamentos(local, modalidade))
       .eq('is_post_workout', false);
     if (error) throw error;
     rows = data || [];
