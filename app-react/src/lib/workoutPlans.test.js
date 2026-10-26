@@ -13,7 +13,7 @@ vi.mock('./supabase', () => ({ db: mockDb }));
 // histórico de séries/peso/aderência que evaluateCycleEvolution.test.js já cobre.
 vi.mock('./planEvolution', () => ({ evaluateCycleEvolution: vi.fn() }));
 
-import { adjustNivelForVerdict, autoGenerateNextCycle, fetchActivePlan, createGeneratedPlan, setActivePlan, isMissingRpc } from './workoutPlans';
+import { adjustNivelForVerdict, autoGenerateNextCycle, fetchActivePlan, createGeneratedPlan, createRunningProgram, setActivePlan, isMissingRpc } from './workoutPlans';
 import { evaluateCycleEvolution } from './planEvolution';
 import { todayDate } from '../data/treinoData';
 
@@ -232,6 +232,20 @@ describe('fetchActivePlan (fluxo de vencimento do ciclo)', () => {
     expect(result.switchInfo.verdict).toBe('negativo');
   });
 
+  it('semana de corrida repetida (regression = ela mesma) não soma as semanas extras do ciclo negativo', async () => {
+    evaluateCycleEvolution.mockResolvedValue({ verdict: 'negativo' });
+    mockWorkoutPlans([
+      { data: [activePlan({ id: 'wk-3', duration_weeks: 1, next_plan_id: 'wk-4', regression_plan_id: 'wk-3' })], error: null },
+      { data: { id: 'wk-3', name: 'Semana 3', duration_weeks: 1 }, error: null },
+      { data: [{ id: 'wk-3', name: 'Semana 3', created_at: '2024-01-01', start_date: isoDate(0), end_date: isoDate(7), duration_weeks: 1, next_plan_id: 'wk-4', regression_plan_id: 'wk-3' }], error: null },
+    ]);
+
+    const result = await fetchActivePlan('u1', baseMeta);
+
+    expect(result.id).toBe('wk-3');
+    expect(mockDb.rpc).toHaveBeenCalledWith('activate_workout_plan', { p_plan_id: 'wk-3', p_start_date: todayDate(), p_duration_weeks: 1 });
+  });
+
   it('gera um novo ciclo automaticamente quando não há sucessor configurado', async () => {
     evaluateCycleEvolution.mockResolvedValue({ verdict: 'neutro' });
     defaultRpcMock('gen-1'); // create_workout_plan cria e ativa gen-1
@@ -380,5 +394,70 @@ describe('fetchActivePlan com plano do personal', () => {
     const result = await fetchActivePlan('u1', {});
     expect(result).toMatchObject({ byTrainer: true, endDate: null });
     expect(result.expiredNoSuccessor).toBeUndefined();
+  });
+});
+
+describe('createRunningProgram', () => {
+  let counter;
+  let updates;
+
+  beforeEach(() => {
+    counter = 0;
+    updates = [];
+    mockDb.rpc.mockImplementation((fn, args) => {
+      if (fn === 'create_workout_plan') {
+        counter += 1;
+        return Promise.resolve({ data: { id: `wk-${counter}`, name: args.p_name }, error: null });
+      }
+      return Promise.resolve({ data: null, error: null });
+    });
+    mockDb.from.mockImplementation(() => {
+      const chain = {
+        update(payload) { chain._payload = payload; return chain; },
+        delete() { chain._delete = true; return chain; },
+        eq(col, id) { updates.push({ id, payload: chain._payload, del: chain._delete }); return chain; },
+        then: (ok, bad) => Promise.resolve({ data: null, error: null }).then(ok, bad),
+      };
+      return chain;
+    });
+  });
+
+  it('cria uma semana por plano, todas inativas, e ativa só a primeira por 1 semana', async () => {
+    const first = await createRunningProgram('u1', { goal: '5k', nivel: 'intermediario' });
+
+    const creates = mockDb.rpc.mock.calls.filter(([fn]) => fn === 'create_workout_plan');
+    expect(creates).toHaveLength(8);
+    creates.forEach(([, args]) => expect(args.p_activate).toBe(false));
+    expect(creates[0][1].p_name).toBe('Corrida 5K · semana 1 de 8');
+    expect(creates[0][1].p_days).toHaveLength(7);
+    expect(first.id).toBe('wk-1');
+    expect(mockDb.rpc).toHaveBeenCalledWith('activate_workout_plan', { p_plan_id: 'wk-1', p_start_date: todayDate(), p_duration_weeks: 1 });
+    expect(mockDb.rpc.mock.calls.filter(([fn]) => fn === 'activate_workout_plan')).toHaveLength(1);
+  });
+
+  it('encadeia as semanas: próxima = seguinte, ruim = repete a mesma, última sem próxima', async () => {
+    await createRunningProgram('u1', { goal: '5k', nivel: 'intermediario' });
+    const linked = Object.fromEntries(updates.filter(u => u.payload && 'next_plan_id' in u.payload).map(u => [u.id, u.payload]));
+    expect(linked['wk-1']).toEqual({ next_plan_id: 'wk-2', regression_plan_id: 'wk-1' });
+    expect(linked['wk-7']).toEqual({ next_plan_id: 'wk-8', regression_plan_id: 'wk-7' });
+    expect(linked['wk-8']).toEqual({ next_plan_id: null, regression_plan_id: 'wk-8' });
+  });
+
+  it('iniciante pedindo meia maratona recebe o programa de 10K', async () => {
+    await createRunningProgram('u1', { goal: 'meia', nivel: 'iniciante' });
+    expect(mockDb.rpc.mock.calls.filter(([fn]) => fn === 'create_workout_plan')).toHaveLength(10);
+  });
+
+  it('falha no meio apaga as semanas já criadas e propaga o erro', async () => {
+    mockDb.rpc.mockImplementation((fn, args) => {
+      if (fn !== 'create_workout_plan') return Promise.resolve({ data: null, error: null });
+      counter += 1;
+      return counter === 3
+        ? Promise.resolve({ data: null, error: { code: 'XX', message: 'boom' } })
+        : Promise.resolve({ data: { id: `wk-${counter}`, name: args.p_name }, error: null });
+    });
+    await expect(createRunningProgram('u1', { goal: '5k', nivel: 'intermediario' })).rejects.toMatchObject({ message: 'boom' });
+    const deleted = updates.filter(u => u.del && String(u.id).startsWith('wk-')).map(u => u.id).sort();
+    expect(deleted).toEqual(['wk-1', 'wk-2']);
   });
 });

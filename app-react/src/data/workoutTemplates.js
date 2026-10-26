@@ -2,6 +2,7 @@ import { db } from '../lib/supabase';
 import { treinoData } from './treinoData';
 import { computeImcBracket, applyImcAdjustment, applyLevelAdjustment, NIVEIS, getSaferAlternative } from './workoutAdjustments';
 import { withLibraryExercises } from './exerciseLibrary';
+import { buildRunningMaintenance } from '../lib/runningProgram';
 
 export { computeImcBracket, applyImcAdjustment, applyLevelAdjustment, NIVEIS, getSaferAlternative };
 
@@ -255,7 +256,7 @@ const BASE_TEMPLATES = {
     resistencia: RESISTENCIA,
 };
 
-export const MODALIDADES = ['musculacao', 'calistenia'];
+export const MODALIDADES = ['musculacao', 'calistenia', 'corrida'];
 export const METAS = ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia'];
 export const RESTRICOES = ['padrao', 'vegetariano', 'low_carb'];
 
@@ -272,6 +273,9 @@ async function fetchBaseTemplate(meta) {
 // sexo/idade não influenciam a seleção de exercícios nesta versão. Aceitos
 // aqui só para manter a mesma assinatura de perfil usada na tela de onboarding.
 export async function generatePlan({ peso, altura, meta, nivel, local, modalidade }) {
+    // Corrida: o programa de semanas nasce em createRunningProgram; aqui só sai
+    // a semana de manutenção (o ciclo seguinte ao fim do programa).
+    if (modalidade === 'corrida') return buildRunningMaintenance({ nivel });
     const base = await fetchBaseTemplate(modalidade === 'calistenia' ? 'calistenia' : meta);
     const withLibrary = await withLibraryExercises(base, nivel, local, modalidade);
     const leveled = applyLevelAdjustment(withLibrary, nivel);

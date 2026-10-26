@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
-import { seedGeneratedPlan } from '../lib/workoutPlans';
+import { seedGeneratedPlan, createRunningProgram } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
 import { validateBody } from '../lib/profileValidation';
@@ -19,6 +19,7 @@ export default function OnboardingScreen() {
   const [nivel, setNivel] = useState('intermediario');
   const [local, setLocal] = useState('academia');
   const [modalidade, setModalidade] = useState('musculacao');
+  const [corridaObjetivo, setCorridaObjetivo] = useState('5k');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar
@@ -56,12 +57,16 @@ export default function OnboardingScreen() {
       // pode disparar o fallback de plano padrão antes dele existir,
       // gerando dois planos ativos.
       if (!seeded.current) {
-        const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade });
-        await seedGeneratedPlan(user.id, generatedDays);
+        if (modalidade === 'corrida') {
+          await createRunningProgram(user.id, { goal: corridaObjetivo, nivel });
+        } else {
+          const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade });
+          await seedGeneratedPlan(user.id, generatedDays);
+        }
         seeded.current = true;
       }
 
-      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade });
+      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade, corridaObjetivo });
       if (error) throw error;
       trackEvent('onboarding', 'done');
     } catch (err) {
@@ -136,8 +141,19 @@ export default function OnboardingScreen() {
             <select id="onbModalidade" className="input" value={modalidade} onChange={e => setModalidade(e.target.value)}>
               <option value="musculacao">{t('Musculação')}</option>
               <option value="calistenia">{t('Calistenia (peso do corpo)')}</option>
+              <option value="corrida">{t('Corrida')}</option>
             </select>
           </div>
+          {modalidade === 'corrida' && (
+            <div className="profile-field">
+              <label className="profile-field__label" htmlFor="onbCorridaObjetivo">{t('Objetivo de corrida')}</label>
+              <select id="onbCorridaObjetivo" className="input" value={corridaObjetivo} onChange={e => setCorridaObjetivo(e.target.value)}>
+                <option value="5k">{t('5 km')}</option>
+                <option value="10k">{t('10 km')}</option>
+                <option value="meia" disabled={nivel === 'iniciante'}>{t('Meia maratona (21 km)')}</option>
+              </select>
+            </div>
+          )}
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
             <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>

@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
+import { useToast } from '../context/useToast';
 import { formatDuration } from '../lib/utils';
 import { formatPace, parsePlannedMinutes, readCardio, toPositive, writeCardioField } from '../lib/cardio';
+import { parseRunWalk, phaseAt } from '../lib/runIntervals';
+import { playRunCue } from '../lib/sound';
+import { isRunItem, checkForRunPR, describeRunPR } from '../lib/runStats';
 
 import { t } from '../lib/i18n';
 // Cronômetro guardado em localStorage (sobrevive ao modo ao vivo remontar o
@@ -29,13 +33,16 @@ const elapsedOf = (t, now) => t.accumulatedMs + (t.runningSince ? now - t.runnin
 // do item em exercise_sets.
 export default function CardioRow({ ex, day, bump, started }) {
   const { user } = useAuth();
-  const { saveSetState } = useWorkout();
+  const { saveSetState, workoutIds } = useWorkout();
+  const toast = useToast();
   const [vals, setVals] = useState(() => readCardio(ex.nome));
   const [timer, setTimer] = useState(() => readTimer(ex.nome));
   const [now, setNow] = useState(() => Date.now());
   const saveTimers = useRef({});
   const running = !!timer.runningSince;
   const planned = parsePlannedMinutes(ex.reps);
+  const runWalk = parseRunWalk(ex.reps);
+  const lastPhase = useRef(null);
 
   useEffect(() => {
     if (!running) return;
@@ -95,14 +102,22 @@ export default function CardioRow({ ex, day, bump, started }) {
     }
   }
 
-  function toggleDone() {
+  async function toggleDone() {
     const next = !vals.done;
     setVals(v => ({ ...v, done: next }));
     writeCardioField(ex.nome, 'done', String(next));
     bump();
     // Ao concluir com cronômetro ainda correndo, fecha ele primeiro.
     if (next && (running || timer.accumulatedMs)) stopTimer();
-    persist({ completed: next });
+    if (!user) return;
+    const wId = await saveSetState(day.dia, ex.nome, 1, { completed: next });
+    if (!next || !isRunItem(ex.nome)) return;
+    try {
+      const prs = await checkForRunPR(user.id, { minutes: vals.duracao, km: vals.distancia }, { workoutId: wId ?? workoutIds?.[day.dia], setNumber: 1 });
+      if (prs) toast(t('🏆 Novo recorde de corrida — {itens}!', { itens: prs.map(describeRunPR).join(' · ') }));
+    } catch (err) {
+      console.error('checkForRunPR:', err);
+    }
   }
 
   const pace = formatPace(vals.duracao, vals.distancia);
@@ -110,6 +125,16 @@ export default function CardioRow({ ex, day, bump, started }) {
   const hint = started ? undefined : t('Inicie o treino para registrar o cardio');
   const elapsed = elapsedOf(timer, now);
   const hasTimer = running || timer.accumulatedMs > 0;
+  const cue = runWalk && hasTimer ? phaseAt(elapsed, runWalk) : null;
+
+  // Avisa (som + vibração) a cada troca de fase do corre/caminha; a primeira
+  // fase, ao iniciar, não apita.
+  const cuePhase = cue?.phase ?? null;
+  useEffect(() => {
+    if (!running || !cuePhase) { lastPhase.current = null; return; }
+    if (lastPhase.current !== null && lastPhase.current !== cuePhase) playRunCue(cuePhase);
+    lastPhase.current = cuePhase;
+  }, [running, cuePhase]);
 
   return (
     <div className="cardio-row">
@@ -126,6 +151,18 @@ export default function CardioRow({ ex, day, bump, started }) {
         )}
         {hasTimer && <button type="button" className="btn btn--ghost btn--sm" onClick={stopTimer}>{t('⏹ Parar')}</button>}
       </div>
+
+      {cue && (
+        <div className={`cardio-row__cue cardio-row__cue--${cue.phase}`} role="status" aria-live="polite">
+          {cue.phase === 'done'
+            ? t('✅ Tempo do treino completo — pode parar e registrar')
+            : <>
+                {cue.phase === 'run' ? t('🏃 Corra') : t('🚶 Caminhe')}
+                {' · '}<strong>{formatDuration(cue.remainingMs)}</strong>
+                {' '}<span className="cardio-row__cue-round">{t('volta {n}', { n: cue.round })}</span>
+              </>}
+        </div>
+      )}
 
       <div className="cardio-row__fields">
         <label className="cardio-row__field">

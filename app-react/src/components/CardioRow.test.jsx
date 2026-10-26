@@ -2,10 +2,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 
-const h = vi.hoisted(() => ({ user: { id: 'u1' }, saveSetState: vi.fn() }));
+const h = vi.hoisted(() => ({ user: { id: 'u1' }, saveSetState: vi.fn(), toast: vi.fn(), cue: vi.fn(), checkRunPR: vi.fn() }));
 
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
-vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.saveSetState }) }));
+vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.saveSetState, workoutIds: { Segunda: 'w-seg' } }) }));
+vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
+vi.mock('../lib/sound', () => ({ playRunCue: (...a) => h.cue(...a) }));
+vi.mock('../lib/runStats', async importOriginal => ({ ...(await importOriginal()), checkForRunPR: (...a) => h.checkRunPR(...a) }));
 
 import CardioRow from './CardioRow';
 
@@ -27,7 +30,10 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-10-07T12:00:00Z'));
   h.user = { id: 'u1' };
-  h.saveSetState.mockReset();
+  h.saveSetState.mockReset().mockResolvedValue('w-id');
+  h.toast.mockReset();
+  h.cue.mockReset();
+  h.checkRunPR.mockReset().mockResolvedValue(null);
 });
 afterEach(() => {
   cleanup();
@@ -142,3 +148,46 @@ describe('CardioRow', () => {
     expect(localStorage.getItem('set_🏃 Cardio — Esteira_1_duracao')).toBe('10');
   });
 });
+
+describe('CardioRow — corrida', () => {
+  const RUN = { nome: 'Caminhada e Corrida Alternadas', series: '-', reps: '9min · 2min corre / 1min caminha', descanso: '-' };
+  const start = () => fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+  const advance = ms => act(() => { vi.advanceTimersByTime(ms); });
+
+  it('corre/caminha: mostra a fase e apita só nas trocas (não ao iniciar)', () => {
+    setup({ ex: RUN });
+    start();
+    expect(screen.getByRole('status').textContent).toContain('🏃 Corra');
+    expect(h.cue).not.toHaveBeenCalled();
+    advance(121000);
+    expect(screen.getByRole('status').textContent).toContain('🚶 Caminhe');
+    expect(h.cue).toHaveBeenCalledTimes(1);
+    expect(h.cue).toHaveBeenLastCalledWith('walk');
+    advance(60000);
+    expect(screen.getByRole('status').textContent).toContain('🏃 Corra');
+    expect(h.cue).toHaveBeenLastCalledWith('run');
+  });
+
+  it('item sem corre/caminha não mostra fase', () => {
+    setup({ ex: { nome: 'Corrida Leve (Trote)', series: '-', reps: '30min · ritmo leve', descanso: '-' } });
+    start();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('concluir uma corrida com distância confere o recorde e avisa', async () => {
+    h.checkRunPR.mockResolvedValue([{ kind: 'distance', value: 6 }, { kind: 'pace', value: 300 }]);
+    localStorage.setItem('set_Corrida Leve (Trote)_1_duracao', '30');
+    localStorage.setItem('set_Corrida Leve (Trote)_1_distancia', '6');
+    setup({ ex: { nome: 'Corrida Leve (Trote)', series: '-', reps: '30min · ritmo leve', descanso: '-' } });
+    await act(async () => { fireEvent.click(check()); });
+    expect(h.checkRunPR).toHaveBeenCalledWith('u1', { minutes: '30', km: '6' }, { workoutId: 'w-id', setNumber: 1 });
+    expect(h.toast).toHaveBeenCalledWith('🏆 Novo recorde de corrida — maior distância: 6 km · melhor ritmo: 5:00/km!');
+  });
+
+  it('cardio que não é corrida não confere recorde de corrida', async () => {
+    setup();
+    await act(async () => { fireEvent.click(check()); });
+    expect(h.checkRunPR).not.toHaveBeenCalled();
+  });
+});
+

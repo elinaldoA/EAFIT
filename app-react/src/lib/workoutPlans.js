@@ -3,6 +3,7 @@ import { treinoData, todayDate } from '../data/treinoData';
 import { parseLocalDate, toDateStr } from './utils';
 import { evaluateCycleEvolution } from './planEvolution';
 import { generatePlan, NIVEIS } from '../data/workoutTemplates';
+import { buildRunningProgram } from './runningProgram';
 
 import { t } from './i18n';
 // Ciclo positivo antecipa o próximo (mais 1 semana livre pra "subir de nível"
@@ -132,6 +133,29 @@ export async function seedGeneratedPlan(userId, generatedDays) {
   return seedDefaultPlan(userId, generatedDays);
 }
 
+// Programa de corrida: cada semana vira um plano de 1 semana, encadeado ao
+// seguinte (next_plan_id). Ciclo ruim (aderência baixa, desconforto) repete a
+// mesma semana (regression_plan_id = ela mesma); depois da última, o ciclo
+// automático gera uma semana de manutenção (generatePlan com modalidade
+// 'corrida'). Só a semana 1 fica ativa. Falhando no meio, apaga o que criou.
+export async function createRunningProgram(userId, { goal, nivel }) {
+  const program = buildRunningProgram({ goal, nivel });
+  const created = [];
+  try {
+    for (const week of program.weeks) {
+      created.push(await createPlanWithDays(userId, week.name, week.days, { activate: false }));
+    }
+    for (let i = 0; i < created.length; i++) {
+      await updatePlanSuccessors(created[i].id, { nextPlanId: created[i + 1]?.id ?? null, regressionPlanId: created[i].id });
+    }
+    await setActivePlan(userId, created[0].id, 1);
+  } catch (err) {
+    await Promise.allSettled(created.map(p => deletePlan(p.id, userId)));
+    throw err;
+  }
+  return created[0];
+}
+
 // Usado pela Perfil para regenerar o treino a partir dos dados atuais do
 // usuário. A RPC cria inativo e ativa na mesma transação (desativando os
 // outros) — nunca existe mais de um plano ativo ao mesmo tempo.
@@ -240,7 +264,10 @@ async function applyPlanExpiry(userId, plan, days, meta) {
   if (!successor) return autoGenerateNextCycle(userId, plan, evaluation, meta);
 
   const baseWeeks = successor.duration_weeks ?? plan.duration_weeks ?? null;
-  const adjustedWeeks = baseWeeks ? Math.max(1, baseWeeks + DURATION_ADJUST_WEEKS[evaluation.verdict]) : null;
+  // Sucessor = o próprio plano (semana de corrida repetida): repetir já é o
+  // ajuste, então não soma as semanas extras de um ciclo negativo.
+  const repeating = successorId === plan.id;
+  const adjustedWeeks = baseWeeks ? (repeating ? baseWeeks : Math.max(1, baseWeeks + DURATION_ADJUST_WEEKS[evaluation.verdict])) : null;
 
   await setActivePlan(userId, successorId, adjustedWeeks);
   return { switched: true, evaluation, successorName: successor.name };

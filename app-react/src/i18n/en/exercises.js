@@ -1049,6 +1049,9 @@ export const names = {
 };
 
 export const techniques = {
+  'Alterne sem pressa, respiração controlada': 'Alternate without rushing, controlled breathing',
+  'Ritmo em que dá pra conversar': 'A pace where you can hold a conversation',
+  'Dia da prova: comece conservador e acelere no final': 'Race day: start conservative and speed up at the end',
   '10% inclinação, ritmo moderado': '10% incline, moderate pace',
   '1min correndo / 2min caminhando': '1 min running / 2 min walking',
   '1min forte / 2min caminhada': '1 min hard / 2 min walk',
@@ -2127,6 +2130,9 @@ export const focoParts = {
 // Trechos de reps/descanso (ex.: "12 cada lado", "20min · 10% inclinação / 5km/h").
 // Ordem importa: padrões mais longos primeiro.
 export const repsRules = [
+  [/ritmo leve/g, 'easy pace'],
+  [/ritmo forte/g, 'hard pace'],
+  [/ritmo de prova/g, 'race pace'],
   [/até a falha \(máx (\d+)\)/g, 'to failure (max $1)'],
   [/\bcada lado\b/g, 'each side'],
   [/\bcada perna\b/g, 'each leg'],

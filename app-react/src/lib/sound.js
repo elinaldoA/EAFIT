@@ -86,3 +86,18 @@ export function playStepSound() {
   } catch { /* som indisponível */ }
   if (navigator.vibrate) navigator.vibrate([90, 60, 90]);
 }
+
+// Troca de fase no corre/caminha: dois bips agudos para correr, um grave e
+// longo para caminhar (dá para distinguir sem olhar a tela).
+export function playRunCue(phase) {
+  try {
+    const ctx = getAudioCtx();
+    if (phase === 'run') {
+      tone(ctx, 1174.66, ctx.currentTime, 0.14, 0.3);
+      tone(ctx, 1567.98, ctx.currentTime + 0.16, 0.2, 0.3);
+    } else {
+      tone(ctx, 660, ctx.currentTime, 0.35, 0.3);
+    }
+  } catch { /* som indisponível */ }
+  if (navigator.vibrate) navigator.vibrate(phase === 'run' ? [120, 60, 120] : [300]);
+}

@@ -812,3 +812,23 @@
   letter-spacing: 0.02em;
   color: var(--text-2);
 }
+
+/* Corre/caminha: fase atual do cronômetro */
+.cardio-row__cue {
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--bg-2, var(--bg));
+  border: 1px solid var(--border-2);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.cardio-row__cue--run { border-color: var(--primary-h); }
+.cardio-row__cue--walk { color: var(--text-2); }
+.cardio-row__cue--done { border-color: var(--success); color: var(--success); }
+.cardio-row__cue-round { font-size: 0.78rem; color: var(--text-2); }
+
+/* Estatísticas de corrida */
+.run-stats__weeks { display: flex; align-items: flex-end; gap: 8px; height: 72px; margin-top: 12px; }
+.run-stats__week { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
+.run-stats__bar { width: 100%; min-height: 3px; border-radius: 4px 4px 0 0; background: var(--primary-h); }
+.run-stats__week-label { font-size: 0.68rem; color: var(--text-2); }
