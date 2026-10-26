@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
+import { useToast } from '../context/useToast';
+import { announceBodyweightPR } from '../lib/bodyweightPR';
 import { parseRestSeconds } from '../lib/utils';
 import { parsePlannedSeconds, toSeconds, formatSeconds } from '../lib/timedSets';
 import { playRestDoneSound } from '../lib/sound';
@@ -13,7 +15,8 @@ import { t } from '../lib/i18n';
 // nem em recordes). `onSetDone` é só dos bi-sets/circuitos, como em SetRow.
 export default function TimedSetRow({ ex, n, day, bump, onRestStart, onSetDone, started }) {
   const { user } = useAuth();
-  const { saveSetState } = useWorkout();
+  const { saveSetState, workoutIds } = useWorkout();
+  const toast = useToast();
   const key = field => `set_${ex.nome}_${n}_${field}`;
   const [carga, setCarga] = useState(() => localStorage.getItem(key('carga')) || '');
   const [duracao, setDuracao] = useState(() => localStorage.getItem(key('duracao_s')) || '');
@@ -81,7 +84,7 @@ export default function TimedSetRow({ ex, n, day, bump, onRestStart, onSetDone, 
     flush('duracao_s', secs);
   }
 
-  function handleCheck() {
+  async function handleCheck() {
     const next = !done;
     setDone(next);
     localStorage.setItem(key('done'), next);
@@ -91,7 +94,14 @@ export default function TimedSetRow({ ex, n, day, bump, onRestStart, onSetDone, 
       if (onSetDone) onSetDone(n);
       else if (restSeconds > 0) onRestStart(ex.nome, restSeconds);
     }
-    persist({ completed: next });
+    if (!user) return;
+    const wId = await saveSetState(day.dia, ex.nome, n, { completed: next });
+    if (next && toSeconds(duracao) > 0 && !(parseFloat(carga) > 0)) {
+      announceBodyweightPR({
+        userId: user.id, ex, day, duracaoS: toSeconds(duracao),
+        exclude: { workoutId: wId ?? workoutIds?.[day.dia], setNumber: n }, toast,
+      });
+    }
   }
 
   return (
