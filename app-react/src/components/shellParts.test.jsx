@@ -67,13 +67,15 @@ describe('ErrorBoundary', () => {
 });
 
 describe('BottomNav', () => {
-  it('cinco abas, a ativa marcada, e clicar troca', () => {
+  it('seis abas, a ativa marcada, e clicar troca', () => {
     const onChange = vi.fn();
     render(<BottomNav active="dash" onChange={onChange} />);
-    expect(screen.getAllByRole('button')).toHaveLength(5);
+    expect(screen.getAllByRole('button')).toHaveLength(6);
     expect(screen.getByRole('button', { name: /Evolução/ }).getAttribute('aria-current')).toBe('page');
     fireEvent.click(screen.getByRole('button', { name: /Água/ }));
     expect(onChange).toHaveBeenCalledWith('hidratacao');
+    fireEvent.click(screen.getByRole('button', { name: /Nutrição/ }));
+    expect(onChange).toHaveBeenCalledWith('nutricao');
   });
 
   it('mostra a bolinha de não lidos só quando maior que zero', () => {

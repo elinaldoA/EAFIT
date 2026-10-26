@@ -2,6 +2,7 @@ import { db } from './supabase';
 import { trackFeature } from './tracking';
 import { fetchWeightLogs } from './weightLog';
 import { fetchWaterLogsRange } from './waterLog';
+import { fetchProteinLogsRange } from './proteinLog';
 import { fetchAllDiscomfort } from './discomfort';
 import { fetchUnlockedAchievements } from './achievements';
 import { fetchMeasurements } from './bodyMeasurements';
@@ -101,6 +102,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers, leagueResults,
+    proteinLogs,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -117,6 +119,7 @@ export async function gatherUserData(userId) {
     safe('appointments', fetchMyAppointments, []),
     safe('surveyAnswers', fetchMySurveyAnswers, []),
     safe('leagueResults', fetchMyLeagueResults, []),
+    safe('proteinLogs', () => fetchProteinLogsRange(userId, EPOCH), []),
   ]);
 
   return {
@@ -125,7 +128,7 @@ export async function gatherUserData(userId) {
     workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
     weightLogs, bodyMeasurements, dailyCheckins,
-    progressPhotos: photos, waterLogs,
+    progressPhotos: photos, waterLogs, proteinLogs,
     discomfortReports, achievements,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments,
@@ -230,11 +233,12 @@ export async function exportSummaryCSV(userId) {
 
   const byDate = {};
   function ensure(date) {
-    if (!byDate[date]) byDate[date] = { data: date, treino_concluido: '', agua_ml: '', peso_kg: '' };
+    if (!byDate[date]) byDate[date] = { data: date, treino_concluido: '', agua_ml: '', proteina_g: '', peso_kg: '' };
     return byDate[date];
   }
   data.workouts.forEach(w => { ensure(w.workout_date).treino_concluido = w.completed ? 'sim' : 'não'; });
   data.waterLogs.forEach(w => { ensure(w.log_date).agua_ml = w.amount_ml; });
+  data.proteinLogs.forEach(w => { ensure(w.log_date).proteina_g = w.amount_g; });
   data.weightLogs.forEach(w => { ensure(w.log_date).peso_kg = w.peso; });
 
   const rows = Object.values(byDate).sort((a, b) => a.data.localeCompare(b.data));

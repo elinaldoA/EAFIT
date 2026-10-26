@@ -55,6 +55,7 @@ import { t } from './lib/i18n';
 const TreinoPage = lazy(() => import('./pages/TreinoPage'));
 const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
 const HidratacaoPage = lazy(() => import('./pages/HidratacaoPage'));
+const NutricaoPage = lazy(() => import('./pages/NutricaoPage'));
 const DashPage = lazy(() => import('./pages/DashPage'));
 const PerfilPage = lazy(() => import('./pages/PerfilPage'));
 
@@ -68,7 +69,7 @@ function PageFallback() {
   );
 }
 
-const TABS = ['treino', 'historico', 'hidratacao', 'dash', 'perfil'];
+const TABS = ['treino', 'historico', 'hidratacao', 'nutricao', 'dash', 'perfil'];
 
 function Shell() {
   const { user, authLoading, recoveryMode } = useAuth();
@@ -187,6 +188,7 @@ function Shell() {
                   {page === 'treino' && <TreinoPage />}
                   {page === 'historico' && <HistoricoPage />}
                   {page === 'hidratacao' && <HidratacaoPage active={page === 'hidratacao'} />}
+                  {page === 'nutricao' && <NutricaoPage active={page === 'nutricao'} />}
                   {page === 'dash' && <DashPage active={page === 'dash'} />}
                   {page === 'perfil' && <PerfilPage active={page === 'perfil'} />}
                 </Suspense>

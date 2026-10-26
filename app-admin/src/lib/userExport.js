@@ -15,6 +15,7 @@ const BY_USER = [
   ['workoutPlans', 'workout_plans', 'id, name, is_active, start_date, end_date, created_at', 'created_at'],
   ['weightLogs', 'weight_logs', 'log_date, weight, notes', 'log_date'],
   ['waterLogs', 'water_logs', 'log_date, amount_ml', 'log_date'],
+  ['proteinLogs', 'protein_logs', 'log_date, amount_g', 'log_date'],
   ['bodyMeasurements', 'body_measurements', 'measured_on, cintura, quadril, peito, braco, coxa', 'measured_on'],
   ['dailyCheckins', 'daily_checkins', 'checkin_date, energy, sleep, mood', 'checkin_date'],
   ['discomfortReports', 'exercise_discomfort', 'log_date, exercise_name, severity, note', 'log_date'],

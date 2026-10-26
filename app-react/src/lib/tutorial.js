@@ -50,7 +50,11 @@ export const STUDENT_STEPS = [
     text: t('A meta de água é calculada pelo seu peso. Registre copo, caneca, garrafa ou squeeze com um toque (dá pra desfazer) e acompanhe sua sequência de dias na meta.'),
   },
   {
-    tab: 'dash', dashTab: 'treinos', target: nav(4), icon: '📈', title: t('Evolução'),
+    tab: 'nutricao', target: nav(4), icon: '🍎', title: t('Nutrição'),
+    text: t('Veja suas metas diárias de calorias, proteína, carboidratos e gorduras, calculadas pelo seu perfil. Registre a proteína do dia com um toque, acompanhe os últimos 14 dias e consulte fontes de proteína.'),
+  },
+  {
+    tab: 'dash', dashTab: 'treinos', target: nav(5), icon: '📈', title: t('Evolução'),
     text: t('Em Treinos ficam a retrospectiva do mês (com cartão para compartilhar), o avatar dos músculos trabalhados, os gráficos de carga e volume e as conquistas. Em Recordes, suas melhores cargas.'),
   },
   {
@@ -66,7 +70,7 @@ export const STUDENT_STEPS = [
     text: t('Adicione amigos pelo código pessoal, dispute o ranking semanal e acompanhe o feed com os treinos deles — dá pra reagir a cada um.'),
   },
   {
-    tab: 'perfil', target: nav(5), icon: '👤', title: t('Perfil e metas'),
+    tab: 'perfil', target: nav(6), icon: '👤', title: t('Perfil e metas'),
     text: t('Atualize peso e altura e defina as metas semanais de treino e de água. Se o peso novo mudar sua faixa de IMC, o treino é ajustado sozinho.'),
   },
   {

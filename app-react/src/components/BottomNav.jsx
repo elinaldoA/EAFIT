@@ -5,6 +5,7 @@ const ITEMS = [
   { key: 'treino', label: t('Treino') },
   { key: 'historico', label: t('Histórico') },
   { key: 'hidratacao', label: t('Água') },
+  { key: 'nutricao', label: t('Nutrição') },
   { key: 'dash', label: t('Evolução') },
   { key: 'perfil', label: t('Perfil') },
 ];
@@ -27,6 +28,12 @@ const ICONS = {
   hidratacao: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2s7 8.5 7 13a7 7 0 0 1-14 0c0-4.5 7-13 7-13z" />
+    </svg>
+  ),
+  nutricao: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 7c-2-2-7-1.5-7 4 0 5 3 10 7 10s7-5 7-10c0-5.500-5-6-7-4z" />
+      <path d="M12 7c0-2 1-4 3-5" />
     </svg>
   ),
   dash: (

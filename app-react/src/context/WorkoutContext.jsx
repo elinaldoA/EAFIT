@@ -84,6 +84,9 @@ const SYNC_EXECUTORS = {
   water_log: async ({ userId, date, amountMl }) => {
     await upsertWaterLog(userId, date, amountMl);
   },
+  protein_log: async ({ userId, date, amountG }) => {
+    await upsertProteinLog(userId, date, amountG);
+  },
   weight_log: async ({ userId, date, peso }) => {
     await upsertWeightLog(userId, date, peso);
   },

@@ -157,3 +157,28 @@
   .water-hero__inner { width: 86px; height: 86px; }
   .water-hero__value { font-size: 1.4rem; }
 }
+
+/* ============================================================
+   NUTRIÇÃO — reaproveita o visual da água, trocando o azul pela cor primária
+============================================================ */
+#page-nutricao { --water: var(--primary); }
+#page-nutricao .water-hero {
+  border-color: var(--primary);
+  background:
+    radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 60%),
+    var(--surface);
+}
+#page-nutricao .water-hero--done { border-color: rgba(74, 222, 128, .5); }
+
+.protein-sources { list-style: none; margin: 0 0 8px; padding: 0; }
+.protein-sources__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.protein-sources__item:last-child { border-bottom: 0; }
+.protein-sources__icon { font-size: 1.3rem; }
+.protein-sources__name { flex: 1; display: flex; flex-direction: column; }
+.protein-sources__name small { color: var(--text-dim); }
