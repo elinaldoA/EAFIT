@@ -2,10 +2,12 @@ import { db } from './supabase';
 import { WEEKDAYS } from './planAnalytics';
 
 // Padrões de treino (Análises → Análise dos planos): mapa dia × hora e
-// academia × condomínio × casa. SQL em
-// supabase/migrations/20261128040000_admin_training_patterns.sql.
+// academia × condomínio × casa, e musculação × calistenia × corrida. SQL em
+// supabase/migrations/20261128040000_admin_training_patterns.sql e
+// 20261203010000_admin_modality_breakdown.sql.
 
 export const PLACE_LABELS = { academia: 'Academia', condominio: 'Condomínio', casa: 'Em casa' };
+export const MODALITY_LABELS = { musculacao: 'Musculação', calistenia: 'Calistenia', corrida: 'Corrida' };
 
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : null);
 const hh = h => `${String(h).padStart(2, '0')}h`;
@@ -48,30 +50,54 @@ export function buildHeatmap(rows) {
   };
 }
 
+// As taxas de uma linha das RPCs de comparação (prefixo pb_ ou mb_).
+function rates(r, prefix) {
+  const get = k => r[`${prefix}_${k}`];
+  const users = Number(get('users')) || 0;
+  const cohort = Number(get('cohort')) || 0;
+  return {
+    users,
+    withPlan: Number(get('with_plan')) || 0,
+    trained30Pct: pct(Number(get('trained30')) || 0, users),
+    neverPct: pct(Number(get('never')) || 0, users),
+    sessionsWeek: get('sessions_week') == null ? null : Number(get('sessions_week')),
+    cohort,
+    retentionPct: pct(Number(get('cohort_active')) || 0, cohort),
+    painPct: pct(Number(get('pain')) || 0, users),
+  };
+}
+
 export function buildPlaces(rows) {
   return Object.keys(PLACE_LABELS).map(place => {
     const r = (rows || []).find(x => x.pb_place === place) || {};
-    const users = Number(r.pb_users) || 0;
-    const cohort = Number(r.pb_cohort) || 0;
-    return {
-      place,
-      label: PLACE_LABELS[place],
-      users,
-      withPlan: Number(r.pb_with_plan) || 0,
-      trained30Pct: pct(Number(r.pb_trained30) || 0, users),
-      neverPct: pct(Number(r.pb_never) || 0, users),
-      sessionsWeek: r.pb_sessions_week == null ? null : Number(r.pb_sessions_week),
-      cohort,
-      retentionPct: pct(Number(r.pb_cohort_active) || 0, cohort),
-      painPct: pct(Number(r.pb_pain) || 0, users),
-    };
+    return { place, label: PLACE_LABELS[place], ...rates(r, 'pb') };
   });
+}
+
+// Uma linha por modalidade (sempre as três); sharePct = fatia do total de usuários.
+export function buildModalities(rows) {
+  const list = Object.keys(MODALITY_LABELS).map(modality => {
+    const r = (rows || []).find(x => x.mb_modality === modality) || {};
+    return { modality, label: MODALITY_LABELS[modality], ...rates(r, 'mb') };
+  });
+  const total = list.reduce((a, m) => a + m.users, 0);
+  return list.map(m => ({ ...m, sharePct: pct(m.users, total) }));
 }
 
 async function rpcRows(name, args) {
   const { data, error } = await db.rpc(name, args);
   if (error) throw error;
   return data || [];
+}
+
+// Modalidades à parte do restante: sem a migration aplicada devolve null e só
+// esta tabela some (o mapa e a comparação por local continuam).
+export async function fetchModalities() {
+  try {
+    return buildModalities(await rpcRows('admin_modality_breakdown'));
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchTrainingPatterns(days = 90) {
