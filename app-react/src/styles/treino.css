@@ -803,16 +803,6 @@
 }
 .set-row__timer-clock--hit { color: var(--success); }
 
-/* Calistenia: nível na progressão e sugestão de subir */
-.ex-block__progression { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 8px; }
-.ex-block__level {
-  align-self: flex-start;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-2);
-}
-
 /* Corre/caminha: fase atual do cronômetro */
 .cardio-row__cue {
   padding: 10px 12px;

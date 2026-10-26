@@ -10,7 +10,6 @@ const h = vi.hoisted(() => ({
   postActivity: vi.fn(),
   sendPushToSelf: vi.fn(),
   coachSay: vi.fn(),
-  announce: vi.fn(),
 }));
 
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
@@ -18,7 +17,6 @@ vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.s
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../lib/records', () => ({ checkForNewPR: (...a) => h.checkForNewPR(...a) }));
 vi.mock('../lib/coach', () => ({ coachSay: (...a) => h.coachSay(...a), noteRecord: () => {}, speechExercise: n => n, speechLoad: n => String(n) }));
-vi.mock('../lib/bodyweightPR', () => ({ announceBodyweightPR: (...a) => h.announce(...a) }));
 vi.mock('../lib/friends', () => ({ postActivity: (...a) => h.postActivity(...a) }));
 vi.mock('../lib/pushSubscriptions', () => ({ sendPushToSelf: (...a) => h.sendPushToSelf(...a) }));
 
@@ -47,7 +45,6 @@ beforeEach(() => {
   h.toast.mockReset();
   h.coachSay.mockReset();
   h.checkForNewPR.mockReset().mockResolvedValue(false);
-  h.announce.mockReset();
   h.postActivity.mockReset();
   h.sendPushToSelf.mockReset().mockResolvedValue(undefined);
 });
@@ -178,32 +175,6 @@ describe('SetRow — marcar a série', () => {
   });
 });
 
-describe('SetRow — recorde de repetições (sem carga)', () => {
-  it('série sem kg com reps confere o recorde de repetições', async () => {
-    localStorage.setItem('set_Supino Reto_1_reps', '12');
-    setup();
-    await act(async () => { fireEvent.click(check()); });
-    expect(h.announce).toHaveBeenCalledWith(expect.objectContaining({
-      userId: 'u1', reps: '12', exclude: { workoutId: 'w-id', setNumber: 1 },
-    }));
-    expect(h.checkForNewPR).not.toHaveBeenCalled();
-  });
-
-  it('sem reps não confere', async () => {
-    setup();
-    await act(async () => { fireEvent.click(check()); });
-    expect(h.announce).not.toHaveBeenCalled();
-  });
-
-  it('com kg segue só o recorde de carga', async () => {
-    localStorage.setItem('set_Supino Reto_1_carga', '80');
-    localStorage.setItem('set_Supino Reto_1_reps', '8');
-    setup();
-    await act(async () => { fireEvent.click(check()); });
-    expect(h.announce).not.toHaveBeenCalled();
-    expect(h.checkForNewPR).toHaveBeenCalled();
-  });
-});
 
 describe('SetRow — recordes', () => {
   async function markWithCarga(user) {

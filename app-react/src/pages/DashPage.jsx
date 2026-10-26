@@ -24,7 +24,6 @@ import { Heatmap, WeeklyBars, PRList, WeekCompare, LoadHistory } from '../compon
 import { DiscomfortPanel, DiscomfortHistory } from '../components/DiscomfortWidgets';
 import MuscleVolumeCard from '../components/MuscleVolumeCard';
 import StrengthGoals from '../components/StrengthGoals';
-import BodyweightGoals from '../components/BodyweightGoals';
 
 import { t, tEx, tFoco } from '../lib/i18n';
 const TABS = [
@@ -282,7 +281,6 @@ export default function DashPage({ active }) {
 
       {tab === 'recordes' && (<>
       {isFlagOn(config.flags, 'metas_carga') && <StrengthGoals exercises={exercises} allTimeLogs={allTimeLogs} />}
-      <BodyweightGoals />
       <div className="section-group">
         <div className="section-group__label">{t('Recordes pessoais')}</div>
         <div className="dash-card">

@@ -13,7 +13,6 @@ import { isCardioItem } from '../lib/cardio';
 import { coachSuggest } from '../lib/coach';
 import SetRow from './SetRow';
 import TimedSetRow from './TimedSetRow';
-import ProgressionHint from './ProgressionHint';
 import { isTimedItem } from '../lib/timedSets';
 import WarmupSets from './WarmupSets';
 import { warmupCount } from '../lib/warmup';
@@ -149,8 +148,6 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
           {allDone ? t('✓ Todas') : t('Marcar todas')}
         </button>
       </div>
-
-      <ProgressionHint ex={ex} setCount={setCount} open={open} />
 
       {warmups > 0 && <WarmupSets key={`warm-${version}`} ex={ex} day={day} count={warmups} workKg={workKg} started={started} />}
 

@@ -7,13 +7,11 @@ const h = vi.hoisted(() => ({
   saveSetState: vi.fn(),
   beep: vi.fn(),
   toast: vi.fn(),
-  announce: vi.fn(),
 }));
 
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
 vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.saveSetState, workoutIds: { Segunda: 'w-seg' } }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
-vi.mock('../lib/bodyweightPR', () => ({ announceBodyweightPR: (...a) => h.announce(...a) }));
 vi.mock('../lib/sound', () => ({ playRestDoneSound: (...a) => h.beep(...a) }));
 
 import TimedSetRow from './TimedSetRow';
@@ -38,7 +36,6 @@ beforeEach(() => {
   h.saveSetState.mockReset().mockResolvedValue('w-id');
   h.beep.mockReset();
   h.toast.mockReset();
-  h.announce.mockReset();
 });
 afterEach(() => {
   cleanup();
@@ -88,23 +85,6 @@ describe('TimedSetRow', () => {
     expect(localStorage.getItem('set_Prancha Frontal Estática_1_done')).toBe('true');
     expect(h.saveSetState).toHaveBeenCalledWith('Segunda', 'Prancha Frontal Estática', 1, { completed: true });
     expect(onRestStart).toHaveBeenCalledWith('Prancha Frontal Estática', 30);
-  });
-
-  it('ao concluir uma série com tempo, confere o recorde de tempo (sem kg)', async () => {
-    localStorage.setItem('set_Prancha Frontal Estática_1_duracao_s', '50');
-    setup();
-    await act(async () => { fireEvent.click(check()); });
-    expect(h.announce).toHaveBeenCalledWith(expect.objectContaining({
-      userId: 'u1', duracaoS: 50, exclude: { workoutId: 'w-id', setNumber: 1 },
-    }));
-  });
-
-  it('com kg na série não confere recorde de tempo', async () => {
-    localStorage.setItem('set_Prancha Frontal Estática_1_duracao_s', '50');
-    localStorage.setItem('set_Prancha Frontal Estática_1_carga', '10');
-    setup();
-    await act(async () => { fireEvent.click(check()); });
-    expect(h.announce).not.toHaveBeenCalled();
   });
 
   it('sem treino iniciado os campos ficam bloqueados', () => {

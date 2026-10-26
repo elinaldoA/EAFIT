@@ -4,7 +4,6 @@ import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { parseRestSeconds } from '../lib/utils';
 import { checkForNewPR } from '../lib/records';
-import { announceBodyweightPR } from '../lib/bodyweightPR';
 import { coachSay, noteRecord, speechExercise, speechLoad } from '../lib/coach';
 import { isNotifyEnabled } from '../lib/notifications';
 import { postActivity } from '../lib/friends';
@@ -122,9 +121,6 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
       const wId = await saveSetState(day.dia, ex.nome, n, { completed: next });
       if (next) {
         const cargaNum = parseFloat(carga);
-        if (!Number.isFinite(cargaNum) && parseFloat(reps) > 0) {
-          announceBodyweightPR({ userId: user.id, ex, day, reps, exclude: { workoutId: wId ?? workoutIds[day.dia], setNumber: n }, toast });
-        }
         if (Number.isFinite(cargaNum)) {
           try {
             const pr = await checkForNewPR(user.id, ex.nome, cargaNum, reps, {
