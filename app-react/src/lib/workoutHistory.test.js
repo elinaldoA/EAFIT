@@ -46,6 +46,22 @@ describe('buildSessions', () => {
     { workout_id: 'c', exercise_name: 'Rosca', set_number: 1, carga: 12, reps: 12, completed: true },
   ];
 
+  it('série por tempo vira exercício "timed" sem entrar no volume', () => {
+    const [s] = buildSessions(
+      [{ id: 'p', workout_date: '2026-09-04', day_of_week: 'Sexta', completed: true, duration_seconds: 1800 }],
+      [
+        { workout_id: 'p', exercise_name: 'Prancha Frontal Estática', set_number: 1, carga: null, reps: null, duracao_s: 45, completed: true },
+        { workout_id: 'p', exercise_name: 'Prancha Frontal Estática', set_number: 2, carga: null, reps: null, duracao_s: 38, completed: false },
+      ],
+    );
+    const prancha = s.exercises.find(e => e.nome === 'Prancha Frontal Estática');
+    expect(prancha.timed).toBe(true);
+    expect(prancha.cardio).toBe(false);
+    expect(prancha.sets.map(x => x.duracaoS)).toEqual([45, 38]);
+    expect(s.doneSets).toBe(1);
+    expect(s.volume).toBe(0);
+  });
+
   it('descarta workouts sem atividade e ordena do mais recente pro mais antigo', () => {
     const sessions = buildSessions(workouts, sets);
     expect(sessions.map(s => s.id)).toEqual(['c', 'a']);

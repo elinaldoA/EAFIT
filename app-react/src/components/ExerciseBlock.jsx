@@ -12,6 +12,8 @@ import { DiscomfortPanel } from './DiscomfortWidgets';
 import { isCardioItem } from '../lib/cardio';
 import { coachSuggest } from '../lib/coach';
 import SetRow from './SetRow';
+import TimedSetRow from './TimedSetRow';
+import { isTimedItem } from '../lib/timedSets';
 import WarmupSets from './WarmupSets';
 import { warmupCount } from '../lib/warmup';
 import CardioRow from './CardioRow';
@@ -36,9 +38,10 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
   const [discomfort, setDiscomfort] = useState(null);
   const [substituting, setSubstituting] = useState(false);
   const setCount = parseInt(ex.series, 10);
+  const timed = isTimedItem(ex);
 
   useEffect(() => {
-    if (!user || !open || !setCount) return;
+    if (!user || !open || !setCount || timed) return;
     let cancelled = false;
     const suggested = fetchProgressionSuggestion(user.id, ex.nome, ex.reps)
       .then(s => { if (!cancelled) setSuggestion(s); return s; })
@@ -60,7 +63,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
       .catch(err => console.error('fetchRecentDiscomfort:', err));
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, open, setCount, ex.nome, ex.reps, hideName]);
+  }, [user, open, setCount, timed, ex.nome, ex.reps, hideName]);
 
   if (!setCount) {
     return (
@@ -113,7 +116,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
           {!hideName && (
             <>
               <span className="ex-name">{tEx(ex.nome)}</span>
-              <span className="ex-block__meta">{t('{reps} reps · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso })}</span>
+              <span className="ex-block__meta">{timed ? t('{reps} · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso }) : t('{reps} reps · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso })}</span>
               <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
           )}
@@ -149,8 +152,9 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
       {warmups > 0 && <WarmupSets key={`warm-${version}`} ex={ex} day={day} count={warmups} workKg={workKg} started={started} />}
 
       <div className="ex-block__sets">
-        {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (
-          <SetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} onFillOthers={onFillOthers} started={started} />
+        {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (timed
+          ? <TimedSetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} started={started} />
+          : <SetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} onFillOthers={onFillOthers} started={started} />
         ))}
       </div>
 

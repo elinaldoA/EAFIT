@@ -52,7 +52,7 @@ export async function gatherUserExport(userId, detail) {
   const workoutIds = data.workouts.map(w => w.id);
   const planIds = data.workoutPlans.map(p => p.id);
   const exerciseSets = await safe('exerciseSets', () => byParent(
-    'exercise_sets', 'workout_id, exercise_name, set_number, carga, reps, completed, duracao_min, distancia_km', 'workout_id', workoutIds,
+    'exercise_sets', 'workout_id, exercise_name, set_number, carga, reps, completed, duracao_min, distancia_km, duracao_s', 'workout_id', workoutIds,
   ));
   const planDays = await safe('planDays', () => byParent('plan_days', 'id, plan_id, dia, foco, order_index', 'plan_id', planIds));
   const planExercises = await safe('planExercises', () => byParent(

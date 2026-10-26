@@ -788,3 +788,17 @@
 .hr-zones__fill--z4, .hr-chip--z4 { --hr-zone: #fbbf24; }
 .hr-zones__fill--z5, .hr-chip--z5 { --hr-zone: #ef4444; }
 .hr-zones__fill { background: var(--hr-zone); }
+
+/* Série por tempo: cronômetro abaixo da linha da série */
+.set-row__timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0 6px;
+}
+.set-row__timer-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.set-row__timer-clock--hit { color: var(--success); }

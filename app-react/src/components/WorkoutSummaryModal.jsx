@@ -11,6 +11,7 @@ import PushPrompt from './PushPrompt';
 import FriendsPrompt from './FriendsPrompt';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { formatCardioSummary } from '../lib/cardio';
+import { formatSeconds } from '../lib/timedSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 
 import HeartRateSummary from './HeartRateSummary';
@@ -138,7 +139,7 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
                         <div className="summary-table__sets">
                           {ex.sets.map(s => (
                             <span key={s.n} className={`summary-table__chip${s.done ? ' summary-table__chip--done' : ''}`}>
-                              {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : <>{s.reps ?? '–'}× {s.carga ?? '–'}kg</>}
+                              {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : ex.timed ? (formatSeconds(s.duracaoS) || '–') : <>{s.reps ?? '–'}× {s.carga ?? '–'}kg</>}
                             </span>
                           ))}
                         </div>

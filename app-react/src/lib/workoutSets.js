@@ -1,4 +1,5 @@
 import { isCardioItem } from './cardio';
+import { isTimedItem } from './timedSets';
 
 // Itens de cardio não têm séries no plano, mas contam como 1 registro.
 export function setCountOf(ex) {
@@ -24,6 +25,7 @@ export function gatherExerciseDetails(day) {
     .map(ex => {
       const count = setCountOf(ex);
       const cardio = isCardioItem(ex);
+      const timed = isTimedItem(ex);
       const sets = Array.from({ length: count }, (_, i) => {
         const n = i + 1;
         return {
@@ -31,13 +33,14 @@ export function gatherExerciseDetails(day) {
           done: localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true',
           carga: localStorage.getItem(`set_${ex.nome}_${n}_carga`) || null,
           reps: localStorage.getItem(`set_${ex.nome}_${n}_reps`) || null,
+          ...(timed && { duracaoS: localStorage.getItem(`set_${ex.nome}_${n}_duracao_s`) || null }),
           ...(cardio && {
             duracao: localStorage.getItem(`set_${ex.nome}_${n}_duracao`) || null,
             distancia: localStorage.getItem(`set_${ex.nome}_${n}_distancia`) || null,
           }),
         };
       });
-      return { nome: ex.nome, cardio, sets };
+      return { nome: ex.nome, cardio, timed, sets };
     })
     .filter(ex => ex.sets.length > 0);
 }

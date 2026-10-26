@@ -6,6 +6,7 @@ import { fmtDate, formatDuration, parseLocalDate } from '../lib/utils';
 import { RATING_OPTIONS } from '../lib/ratingOptions';
 import { compareExercise, fetchPreviousBests, fmtVolume } from '../lib/workoutHistory';
 import { formatCardioSummary } from '../lib/cardio';
+import { formatSeconds } from '../lib/timedSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 
 import HeartRateSummary from './HeartRateSummary';
@@ -114,7 +115,7 @@ export default function SessionDetailModal({ session, onClose }) {
                     <div className="summary-table__sets">
                       {ex.sets.map(s => (
                         <span key={s.n} className={`summary-table__chip${s.done ? ' summary-table__chip--done' : ''}`}>
-                          {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : <>{s.reps ?? '–'}× {s.carga === null ? '–kg' : fmtKg(s.carga)}</>}
+                          {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : ex.timed ? (formatSeconds(s.duracaoS) || '–') + (s.carga === null ? '' : ` · ${fmtKg(s.carga)}`) : <>{s.reps ?? '–'}× {s.carga === null ? '–kg' : fmtKg(s.carga)}</>}
                         </span>
                       ))}
                     </div>
