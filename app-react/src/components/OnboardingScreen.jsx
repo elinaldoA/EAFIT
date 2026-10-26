@@ -3,7 +3,6 @@ import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
-import { usesLocal } from '../lib/modalidade';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
 import { validateBody } from '../lib/profileValidation';
@@ -19,7 +18,6 @@ export default function OnboardingScreen() {
   const [meta, setMeta] = useState('massa');
   const [nivel, setNivel] = useState('intermediario');
   const [local, setLocal] = useState('academia');
-  const [modalidade, setModalidade] = useState('musculacao');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar
@@ -57,12 +55,12 @@ export default function OnboardingScreen() {
       // pode disparar o fallback de plano padrão antes dele existir,
       // gerando dois planos ativos.
       if (!seeded.current) {
-        const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade });
+        const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
         await seedGeneratedPlan(user.id, generatedDays);
         seeded.current = true;
       }
 
-      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, modalidade });
+      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
       if (error) throw error;
       trackEvent('onboarding', 'done');
     } catch (err) {
@@ -133,23 +131,13 @@ export default function OnboardingScreen() {
             </select>
           </div>
           <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbModalidade">{t('Modalidade de treino')}</label>
-            <select id="onbModalidade" className="input" value={modalidade} onChange={e => setModalidade(e.target.value)}>
-              <option value="musculacao">{t('Musculação')}</option>
-              <option value="calistenia">{t('Calistenia (peso do corpo)')}</option>
+            <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
+            <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
+              <option value="academia">{t('Academia')}</option>
+              <option value="condominio">{t('Academia do condomínio')}</option>
+              <option value="casa">{t('Em casa')}</option>
             </select>
           </div>
-          {/* Só a musculação muda com o local (a calistenia usa sempre o mesmo) */}
-          {usesLocal(modalidade) && (
-            <div className="profile-field">
-              <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
-              <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
-                <option value="academia">{t('Academia')}</option>
-                <option value="condominio">{t('Academia do condomínio')}</option>
-                <option value="casa">{t('Em casa')}</option>
-              </select>
-            </div>
-          )}
           <button className="btn btn--primary btn--full" disabled={busy} onClick={handleSubmit}>
             {busy ? t('Gerando seu plano…') : t('Gerar meu treino')}
           </button>

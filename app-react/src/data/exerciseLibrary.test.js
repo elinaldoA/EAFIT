@@ -96,19 +96,6 @@ describe('allowedNiveis', () => {
   });
 });
 
-describe('allowedEquipamentos - modalidade', () => {
-  it('calistenia só usa peso corporal, fita de suspensão e elástico, em qualquer local', () => {
-    for (const local of ['academia', 'condominio', 'casa', undefined]) {
-      expect(allowedEquipamentos(local, 'calistenia')).toEqual(['peso corporal', 'fita de suspensão', 'elástico']);
-    }
-  });
-
-  it('modalidade ausente ou desconhecida mantém o filtro por local', () => {
-    expect(allowedEquipamentos('casa', undefined)).toEqual(EQUIPAMENTOS_POR_LOCAL.casa);
-    expect(allowedEquipamentos('casa', 'musculacao')).toEqual(EQUIPAMENTOS_POR_LOCAL.casa);
-  });
-});
-
 describe('allowedEquipamentos', () => {
   it('academia não recebe peso corporal nem elástico', () => {
     expect(allowedEquipamentos('academia')).not.toContain('peso corporal');

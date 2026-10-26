@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Loading from './Loading';
-import { fetchTrainingPatterns, fetchModalities } from '../lib/trainingPatterns';
+import { fetchTrainingPatterns } from '../lib/trainingPatterns';
 
 const hh = h => `${String(h).padStart(2, '0')}h`;
 const fmtPct = v => (v == null ? '—' : `${v}%`);
@@ -10,7 +10,6 @@ const fmtPct = v => (v == null ? '—' : `${v}%`);
 // se a migration não estiver aplicada, só este card mostra o erro).
 export default function TrainingPatternsCard() {
   const [state, setState] = useState({ loading: true, data: null, error: '' });
-  const [modalities, setModalities] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -22,7 +21,6 @@ export default function TrainingPatternsCard() {
 
   useEffect(() => {
     let active = true;
-    fetchModalities().then(rows => { if (active) setModalities(rows); });
     return () => { active = false; };
   }, []);
 
@@ -92,46 +90,12 @@ export default function TrainingPatternsCard() {
           </table>
         </div>
         <p className="card-note">
-          Só musculação (a calistenia não depende do local). Local = o que a pessoa escolheu no cadastro ou no Perfil
+          Local = o que a pessoa escolheu no cadastro ou no Perfil
           (sem escolha conta como academia, o padrão). Retenção =
           entre quem criou conta há 4 a 12 semanas, % que treinou nas últimas 2. Dor = desconforto forte ou lesão em 30 dias.
         </p>
       </div>
 
-      {modalities && (
-        <div className="card">
-          <h2 className="section-title">Musculação × calistenia</h2>
-          <div className="table-wrap">
-            <table className="resp-table">
-              <thead>
-                <tr>
-                  <th>Modalidade</th><th>Usuários</th><th>% do total</th><th>Com plano</th><th>Treinaram em 30 dias</th>
-                  <th>Nunca treinaram</th><th>Treinos/semana</th><th>Retenção (4–12 sem.)</th><th>Com dor ou lesão</th>
-                </tr>
-              </thead>
-              <tbody>
-                {modalities.map(m => (
-                  <tr key={m.modality}>
-                    <td data-label="Modalidade">{m.label}</td>
-                    <td data-label="Usuários">{m.users}</td>
-                    <td data-label="% do total">{fmtPct(m.sharePct)}</td>
-                    <td data-label="Com plano">{m.withPlan}</td>
-                    <td data-label="Treinaram em 30 dias">{fmtPct(m.trained30Pct)}</td>
-                    <td data-label="Nunca treinaram">{fmtPct(m.neverPct)}</td>
-                    <td data-label="Treinos/semana">{m.sessionsWeek ?? '—'}</td>
-                    <td data-label="Retenção (4–12 sem.)">{fmtPct(m.retentionPct)}{m.cohort ? ` de ${m.cohort}` : ''}</td>
-                    <td data-label="Com dor ou lesão">{fmtPct(m.painPct)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="card-note">
-            Modalidade = o que a pessoa escolheu no cadastro ou no Perfil (sem escolha conta como musculação, o padrão).
-            As colunas seguem as da tabela por local. Com poucos usuários numa modalidade, as taxas oscilam muito.
-          </p>
-        </div>
-      )}
     </>
   );
 }

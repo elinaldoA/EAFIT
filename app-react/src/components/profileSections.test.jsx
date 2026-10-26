@@ -169,18 +169,6 @@ describe('ProfileBodySection', () => {
     expect(p.setPesoAlvo).toHaveBeenCalledWith('75');
   });
 
-  it('o local de treino só aparece na musculação; o objetivo de corrida só na corrida', () => {
-    const p = { ...base(), local: 'academia', setLocal: vi.fn(), modalidade: 'musculacao', setModalidade: vi.fn() };
-    const { rerender } = render(<ProfileBodySection {...p} />);
-    expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
-
-    rerender(<ProfileBodySection {...p} modalidade="calistenia" />);
-    expect(screen.queryByLabelText('Onde você treina')).toBeNull();
-
-    rerender(<ProfileBodySection {...p} modalidade="musculacao" />);
-    expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
-  });
-
   it('salva e gera novo treino; desabilita enquanto gera', () => {
     const p = base();
     const { rerender } = render(<ProfileBodySection {...p} />);

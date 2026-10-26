@@ -2,12 +2,10 @@ import { db } from './supabase';
 import { WEEKDAYS } from './planAnalytics';
 
 // Padrões de treino (Análises → Análise dos planos): mapa dia × hora e
-// academia × condomínio × casa, e musculação × calistenia. SQL em
-// supabase/migrations/20261128040000_admin_training_patterns.sql e
-// 20261203010000_admin_modality_breakdown.sql.
+// academia × condomínio × casa. SQL em
+// supabase/migrations/20261128040000_admin_training_patterns.sql.
 
 export const PLACE_LABELS = { academia: 'Academia', condominio: 'Condomínio', casa: 'Em casa' };
-export const MODALITY_LABELS = { musculacao: 'Musculação', calistenia: 'Calistenia' };
 
 const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : null);
 const hh = h => `${String(h).padStart(2, '0')}h`;
@@ -74,30 +72,10 @@ export function buildPlaces(rows) {
   });
 }
 
-// Uma linha por modalidade (sempre as três); sharePct = fatia do total de usuários.
-export function buildModalities(rows) {
-  const list = Object.keys(MODALITY_LABELS).map(modality => {
-    const r = (rows || []).find(x => x.mb_modality === modality) || {};
-    return { modality, label: MODALITY_LABELS[modality], ...rates(r, 'mb') };
-  });
-  const total = list.reduce((a, m) => a + m.users, 0);
-  return list.map(m => ({ ...m, sharePct: pct(m.users, total) }));
-}
-
 async function rpcRows(name, args) {
   const { data, error } = await db.rpc(name, args);
   if (error) throw error;
   return data || [];
-}
-
-// Modalidades à parte do restante: sem a migration aplicada devolve null e só
-// esta tabela some (o mapa e a comparação por local continuam).
-export async function fetchModalities() {
-  try {
-    return buildModalities(await rpcRows('admin_modality_breakdown'));
-  } catch {
-    return null;
-  }
 }
 
 export async function fetchTrainingPatterns(days = 90) {

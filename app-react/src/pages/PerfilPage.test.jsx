@@ -200,7 +200,7 @@ describe('PerfilPage', () => {
       fireEvent.click(screen.getByText('salvar corpo'));
       await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente'));
       expect(confirm).not.toHaveBeenCalled();
-      expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 80, altura: 175, meta: 'massa', nivel: 'intermediario', local: 'academia', modalidade: 'musculacao' });
+      expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 80, altura: 175, meta: 'massa', nivel: 'intermediario', local: 'academia' });
       expect(plans.createGeneratedPlan).toHaveBeenCalledWith('u1', expect.any(String), [{ dia: 'Segunda' }]);
       expect(workout.refreshPlan).toHaveBeenCalled();
       expect(weight.upsertWeightLog).toHaveBeenCalledWith('u1', '2026-10-07', 80);
@@ -257,7 +257,7 @@ describe('PerfilPage', () => {
       render(<PerfilPage active />);
       fireEvent.click(screen.getByText('gerar treino'));
       await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!'));
-      expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 70, altura: 175, meta: 'massa', nivel: 'intermediario', local: 'academia', modalidade: 'musculacao' });
+      expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 70, altura: 175, meta: 'massa', nivel: 'intermediario', local: 'academia' });
       expect(plans.createGeneratedPlan).toHaveBeenCalledWith('u1', expect.any(String), [{ dia: 'Segunda' }]);
       expect(workout.refreshPlan).toHaveBeenCalled();
     });

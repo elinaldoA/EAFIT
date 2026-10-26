@@ -391,18 +391,9 @@ describe('OnboardingScreen', () => {
     submit();
     await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalled());
     expect(order).toEqual(['generate', 'seed', 'profile']);
-    expect(h.tpl.generatePlan).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', modalidade: 'musculacao' });
+    expect(h.tpl.generatePlan).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa' });
     expect(h.plans.seedGeneratedPlan).toHaveBeenCalledWith('u1', [{ dia: 'Seg' }]);
-    expect(h.auth.updateProfile).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', modalidade: 'musculacao' });
-  });
-
-  it('o campo "Onde você treina" só aparece na musculação (some na calistenia)', () => {
-    render(<OnboardingScreen />);
-    expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'calistenia' } });
-    expect(screen.queryByLabelText('Onde você treina')).toBeNull();
-    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'musculacao' } });
-    expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
+    expect(h.auth.updateProfile).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa' });
   });
 
   it('erro ao gerar o plano mostra mensagem e toast, e não salva o perfil', async () => {

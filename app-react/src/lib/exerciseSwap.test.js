@@ -46,20 +46,6 @@ describe('pickAlternatives', () => {
     expect(names('academia')).toHaveLength(6);
   });
 
-  it('calistenia só sugere peso corporal, fita e elástico, em qualquer local (a modalidade manda)', () => {
-    const names = local => pickAlternatives({ current: { nome: 'Flexão de Braço' }, library: lib, nivel: 'avancado', local, modalidade: 'calistenia' }).options.map(o => o.nome);
-    const expected = ['Flexão Diamante', 'Flexão na Fita'];
-    expect(names('academia')).toEqual(expected);
-    expect(names('casa')).toEqual(expected);
-    expect(names(undefined)).toEqual(expected);
-  });
-
-  it('musculação e modalidade ausente seguem o local, como antes', () => {
-    const names = modalidade => pickAlternatives({ current, library: lib, nivel: 'avancado', local: 'casa', modalidade }).options.map(o => o.nome);
-    expect(names('musculacao')).toEqual(names(undefined));
-    expect(names('musculacao')).toContain('Supino Reto com Halteres');
-  });
-
   it('respeita o nível do usuário', () => {
     const { options } = pickAlternatives({ current, library: lib, nivel: 'iniciante' });
     expect(options.map(o => o.nome)).toEqual(['Flexão de Braço', 'Flexão na Fita', 'Supino Reto com Halteres']);

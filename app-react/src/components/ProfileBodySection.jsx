@@ -1,8 +1,7 @@
 import { t } from '../lib/i18n';
-import { usesLocal } from '../lib/modalidade';
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
-  meta, setMeta, nivel, setNivel, local, setLocal, modalidade, setModalidade, pesoAlvo, setPesoAlvo,
+  meta, setMeta, nivel, setNivel, local, setLocal, pesoAlvo, setPesoAlvo,
   progress, imc, onSave, regenerating, onRegeneratePlan,
 }) {
   return (
@@ -60,23 +59,13 @@ export default function ProfileBodySection({
         </select>
       </div>
       <div className="profile-field">
-        <label className="profile-field__label" htmlFor="profileModalidade">{t('Modalidade de treino')}</label>
-        <select id="profileModalidade" className="input input--sm" value={modalidade} onChange={e => setModalidade(e.target.value)}>
-          <option value="musculacao">{t('Musculação')}</option>
-          <option value="calistenia">{t('Calistenia (peso do corpo)')}</option>
+        <label className="profile-field__label" htmlFor="profileLocal">{t('Onde você treina')}</label>
+        <select id="profileLocal" className="input input--sm" value={local} onChange={e => setLocal(e.target.value)}>
+          <option value="academia">{t('Academia')}</option>
+          <option value="condominio">{t('Academia do condomínio')}</option>
+          <option value="casa">{t('Em casa')}</option>
         </select>
       </div>
-      {/* Só a musculação muda com o local (a calistenia usa sempre o mesmo) */}
-      {usesLocal(modalidade) && (
-        <div className="profile-field">
-          <label className="profile-field__label" htmlFor="profileLocal">{t('Onde você treina')}</label>
-          <select id="profileLocal" className="input input--sm" value={local} onChange={e => setLocal(e.target.value)}>
-            <option value="academia">{t('Academia')}</option>
-            <option value="condominio">{t('Academia do condomínio')}</option>
-            <option value="casa">{t('Em casa')}</option>
-          </select>
-        </div>
-      )}
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="profilePesoAlvo">{t('Peso alvo (kg)')}</label>
         <input
