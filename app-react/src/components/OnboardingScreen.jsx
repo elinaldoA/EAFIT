@@ -154,14 +154,17 @@ export default function OnboardingScreen() {
               </select>
             </div>
           )}
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
-            <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
-              <option value="academia">{t('Academia')}</option>
-              <option value="condominio">{t('Academia do condomínio')}</option>
-              <option value="casa">{t('Em casa')}</option>
-            </select>
-          </div>
+          {/* Corrida não depende do local de treino (o programa é só de corrida) */}
+          {modalidade !== 'corrida' && (
+            <div className="profile-field">
+              <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
+              <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
+                <option value="academia">{t('Academia')}</option>
+                <option value="condominio">{t('Academia do condomínio')}</option>
+                <option value="casa">{t('Em casa')}</option>
+              </select>
+            </div>
+          )}
           <button className="btn btn--primary btn--full" disabled={busy} onClick={handleSubmit}>
             {busy ? t('Gerando seu plano…') : t('Gerar meu treino')}
           </button>

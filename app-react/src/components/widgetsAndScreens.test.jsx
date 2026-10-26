@@ -414,6 +414,25 @@ describe('OnboardingScreen', () => {
     expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ modalidade: 'corrida', corridaObjetivo: '10k' }));
   });
 
+  it('corrida: o campo "Onde você treina" some, e volta ao trocar de modalidade', () => {
+    render(<OnboardingScreen />);
+    expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
+    expect(screen.queryByLabelText('Onde você treina')).toBeNull();
+    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'calistenia' } });
+    expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
+  });
+
+  it('corrida: o local escolhido antes continua salvo no perfil', async () => {
+    render(<OnboardingScreen />);
+    fill();
+    fireEvent.change(screen.getByLabelText('Onde você treina'), { target: { value: 'casa' } });
+    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
+    submit();
+    await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalled());
+    expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ modalidade: 'corrida', local: 'casa' }));
+  });
+
   it('corrida: meia maratona fica bloqueada para iniciante', () => {
     render(<OnboardingScreen />);
     fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
