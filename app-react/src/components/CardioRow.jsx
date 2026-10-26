@@ -33,7 +33,8 @@ const elapsedOf = (t, now) => t.accumulatedMs + (t.runningSince ? now - t.runnin
 
 // Preferência do GPS (vale para todas as corridas deste aparelho).
 const GPS_KEY = 'cardio_gps_on';
-const readGpsPref = () => { try { return localStorage.getItem(GPS_KEY) === 'true'; } catch { return false; } };
+// Ligado por padrão: só fica desligado se a pessoa desligou.
+const readGpsPref = () => { try { return localStorage.getItem(GPS_KEY) !== 'false'; } catch { return true; } };
 const writeGpsPref = on => { try { localStorage.setItem(GPS_KEY, String(on)); } catch { /* sem storage */ } };
 
 // Registro de um item de cardio (sem séries): cronômetro que preenche a

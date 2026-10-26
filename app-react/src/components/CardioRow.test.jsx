@@ -214,6 +214,7 @@ describe('CardioRow — sessão de corrida e GPS', () => {
   });
 
   it('ligar o GPS guarda a preferência e explica o uso, sem iniciar sessão', () => {
+    localStorage.setItem('cardio_gps_on', 'false');
     setup({ ex: RUN });
     fireEvent.click(gpsBtn('📍 Usar GPS'));
     expect(localStorage.getItem('cardio_gps_on')).toBe('true');
@@ -237,9 +238,16 @@ describe('CardioRow — sessão de corrida e GPS', () => {
   });
 
   it('sem GPS ligado a sessão ainda existe (tela acesa e proteções), mas sem gps', () => {
+    localStorage.setItem('cardio_gps_on', 'false');
     setup({ ex: RUN });
     start();
     expect(readSession()).toMatchObject({ running: true, gps: false });
+  });
+
+  it('o GPS vem ligado por padrão na corrida', () => {
+    setup({ ex: RUN });
+    start();
+    expect(readSession()).toMatchObject({ running: true, gps: true });
   });
 
   it('cardio de esteira não abre sessão de corrida', () => {
@@ -249,6 +257,7 @@ describe('CardioRow — sessão de corrida e GPS', () => {
   });
 
   it('alternar o GPS no meio da corrida atualiza a sessão', () => {
+    localStorage.setItem('cardio_gps_on', 'false');
     setup({ ex: RUN });
     start();
     fireEvent.click(gpsBtn('📍 Usar GPS'));
