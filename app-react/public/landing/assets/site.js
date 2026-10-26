@@ -848,7 +848,9 @@
   // temas, partículas subindo (ou caindo: neve e confete). E a barra do
   // navegador e o favicon do tema.
   var HALLOWEEN_FX = '<span class="season-bat"></span><span class="season-bat"></span><span class="season-bat"></span>'
-    + '<span class="season-spider"></span><span class="season-fog"></span>';
+    + '<span class="season-spider"></span><span class="season-fog"></span>'
+    + '<span class="season-grave"></span><span class="season-pumpkin"></span><span class="season-ghost"></span>'
+    + new Array(6).join('<span class="season-leaf"></span>');
   var SEASON_FALLING = { natal: true, carnaval: true };
   var SEASON_BAR_COLOR = {
     carnaval: ['#f3fafc', '#081416'],

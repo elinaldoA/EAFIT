@@ -1080,6 +1080,79 @@ textarea.input { resize: vertical; min-height: 120px; }
   }
 }
 
+/* Dia das Bruxas, ainda mais: cemitério na base, abóbora acesa, fantasma
+   passeando e folhas secas caindo (SeasonDecor). Tudo discreto, sem toque. */
+.season-grave, .season-pumpkin, .season-ghost, .season-leaf { position: absolute; }
+.season-grave {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56px;
+  opacity: .55;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 56' preserveAspectRatio='none'%3E%3Cg fill='%230a0510'%3E%3Cpath d='M0 56V50Q60 44 120 49T240 48T360 49T420 47V56z'/%3E%3Cpath d='M30 50V30q0-9 9-9t9 9v20zM170 50V36q0-7 7-7t7 7v14zM262 50V28q0-10 10-10t10 10v22zM392 50V38q0-6 6-6t6 6v12z'/%3E%3C/g%3E%3Cpath d='M96 50V24M88 31h16M340 50V30M333 36h14' stroke='%230a0510' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E") bottom / 420px 56px repeat-x;
+}
+[data-theme="light"] .season-grave { opacity: .3; }
+.season-pumpkin {
+  right: 12px;
+  bottom: 8px;
+  width: 34px;
+  height: 34px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 16c1-6 5-9 9-9' stroke='%2316a34a' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='20' cy='38' rx='14' ry='20' fill='%23c2410c'/%3E%3Cellipse cx='44' cy='38' rx='14' ry='20' fill='%23c2410c'/%3E%3Cellipse cx='32' cy='38' rx='14' ry='21' fill='%23f97316'/%3E%3Cpath d='M17 29l9 6-10 2zM47 29l-9 6 10 2z' fill='%23fde047'/%3E%3Cpath d='M18 45q14 9 28 0l-4 5-4-3-4 4-4-4-4 3z' fill='%23fde047'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, .7));
+}
+.season-ghost {
+  display: none;
+  top: 38%;
+  left: -50px;
+  width: 30px;
+  height: 36px;
+  opacity: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'%3E%3Cpath fill='%23ede9fe' d='M4 46V20C4 9 11 3 20 3s16 6 16 17v26l-5-5-5 5-6-5-6 5-5-5z'/%3E%3Cellipse cx='14' cy='19' rx='3' ry='4' fill='%231a0f26'/%3E%3Cellipse cx='26' cy='19' rx='3' ry='4' fill='%231a0f26'/%3E%3Cellipse cx='20' cy='29' rx='3.5' ry='4.5' fill='%231a0f26'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 8px rgba(196, 181, 253, .7));
+}
+.season-leaf {
+  display: none;
+  top: -20px;
+  left: 12%;
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 1C16 6 17 13 10 19 3 13 4 6 10 1z' fill='%23ea580c'/%3E%3Cpath d='M10 4v14' stroke='%237c2d12' stroke-width='1' fill='none'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .season-pumpkin { animation: season-glow 4.2s ease-in-out infinite; }
+  @keyframes season-glow {
+    0%, 100% { filter: drop-shadow(0 0 6px rgba(249, 115, 22, .55)); }
+    30% { filter: drop-shadow(0 0 12px rgba(251, 146, 60, .9)); }
+    38% { filter: drop-shadow(0 0 5px rgba(249, 115, 22, .5)); }
+    70% { filter: drop-shadow(0 0 10px rgba(249, 115, 22, .8)); }
+  }
+  .season-ghost { display: block; animation: season-haunt 34s ease-in-out infinite 8s; }
+  @keyframes season-haunt {
+    0% { left: -50px; opacity: 0; transform: translateY(0); }
+    3% { opacity: .38; }
+    12% { transform: translateY(-18px); }
+    24% { transform: translateY(10px); }
+    36% { transform: translateY(-14px); }
+    48% { left: calc(100% + 50px); opacity: .38; transform: translateY(6px); }
+    50%, 100% { left: calc(100% + 50px); opacity: 0; }
+  }
+  .season-leaf { display: block; animation: season-leaf 17s linear infinite; }
+  .season-leaf:nth-last-child(5) { left: 12%; animation-delay: 1s; }
+  .season-leaf:nth-last-child(4) { left: 31%; animation-delay: 6s; animation-duration: 21s; }
+  .season-leaf:nth-last-child(3) { left: 55%; animation-delay: 3s; animation-duration: 19s; }
+  .season-leaf:nth-last-child(2) { left: 74%; animation-delay: 10s; animation-duration: 23s; }
+  .season-leaf:nth-last-child(1) { left: 90%; animation-delay: 13s; }
+  @keyframes season-leaf {
+    0%   { transform: translate(0, 0) rotate(0); opacity: 0; }
+    6%   { opacity: .75; }
+    30%  { transform: translate(-22px, 28vh) rotate(140deg); }
+    60%  { transform: translate(16px, 60vh) rotate(280deg); }
+    92%  { opacity: .6; }
+    100% { transform: translate(-10px, 96vh) rotate(430deg); opacity: 0; }
+  }
+}
+
 /* ── Decoração suave: todos os temas fora o Dia das Bruxas, igual ao app ──
    (<html data-season-style="soft">, ligado por site.js). Fundo escuro puxado
    pra cor do tema e a cor do tema como principal; arte no topo

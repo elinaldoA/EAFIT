@@ -33,7 +33,8 @@ export function SeasonDecor() {
     );
   }
   // Morcegos voando, aranha descendo do topo, névoa em duas camadas, relâmpago
-  // distante e olhos no escuro (styles/season.css).
+  // distante, olhos no escuro, cemitério, abóbora acesa, fantasma e folhas secas
+// caindo (styles/season.css).
   // Só enfeite: sem toque, escondido do leitor de tela e no modo ao vivo.
   return (
     <div className="season-fx" aria-hidden="true">
@@ -45,6 +46,10 @@ export function SeasonDecor() {
       <span className="season-fog" />
       <span className="season-flash" />
       <span className="season-eyes" />
+      <span className="season-grave" />
+      <span className="season-pumpkin" />
+      <span className="season-ghost" />
+      {Array.from({ length: 5 }, (_, i) => <span key={i} className="season-leaf" />)}
     </div>
   );
 }
