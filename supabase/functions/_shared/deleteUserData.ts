@@ -25,7 +25,7 @@ const USER_COLUMNS: [table: string, column: string][] = [
   ['friendships', 'requester_id'], ['friendships', 'addressee_id'],
   ['feedback', 'user_id'], ['user_notifications', 'user_id'], ['notification_log', 'user_id'],
   ['client_errors', 'user_id'], ['admin_user_notes', 'user_id'], ['account_deactivations', 'user_id'],
-  ['user_events', 'user_id'], ['user_client', 'user_id'], ['app_access_days', 'user_id'], ['app_installs', 'user_id'], ['app_install_baseline', 'user_id'], ['push_stale_log', 'user_id'], ['inactivity_surveys', 'user_id'], ['ambassador_referrals', 'user_id'], ['exercise_swaps', 'user_id'], ['survey_answers', 'user_id'], ['feed_reports', 'reporter'], ['feed_reports', 'reported_user'], ['admin_notify_prefs', 'user_id'], ['league_members', 'user_id'], ['league_results', 'user_id'],
+  ['user_events', 'user_id'], ['user_client', 'user_id'], ['app_access_days', 'user_id'], ['app_access_log', 'user_id'], ['app_installs', 'user_id'], ['app_install_baseline', 'user_id'], ['push_stale_log', 'user_id'], ['inactivity_surveys', 'user_id'], ['ambassador_referrals', 'user_id'], ['exercise_swaps', 'user_id'], ['survey_answers', 'user_id'], ['feed_reports', 'reporter'], ['feed_reports', 'reported_user'], ['admin_notify_prefs', 'user_id'], ['league_members', 'user_id'], ['league_results', 'user_id'],
   ['trainer_requests', 'user_id'], ['admin_access', 'admin_id'], ['admin_report_cards', 'admin_id'],
   ['appointment_reminder_log', 'recipient'],
   ['trainer_appointments', 'client_id'], ['trainer_appointments', 'trainer_id'],

@@ -61,6 +61,9 @@ const DATA = {
     { dimension: 'lost_source', value: 'direto', visitors: 2 },
     { dimension: 'lost_device', value: 'celular', visitors: 8 },
   ],
+  admin_access_timeline: [
+    { bucket_at: '2026-10-26T00:00:00', site_visits: 4, app_accesses: 6, app_users: 3 },
+  ],
   admin_lost_visitors: [
     { lv_visitor: 'abcd1234', lv_first_at: '2026-10-18T22:00:00Z', lv_last_at: '2026-10-20T22:00:00Z', lv_days: 3,
       lv_source: 'instagram', lv_campaign: 'promo', lv_device: 'celular', lv_stage: 'erro_cadastro', lv_error: 'senha_curta' },
@@ -101,6 +104,16 @@ describe('Behavior', () => {
     expect(screen.getByText('Desses, voltaram em 2+ dias (4)').previousSibling.textContent).toBe('50%');
     expect(screen.getByText('Só viram a landing').closest('tr').textContent).toContain('50%');
     expect(mockRpc).toHaveBeenCalledWith('admin_lost_visitors', { days_back: 30, max_rows: 50 });
+  });
+
+  it('acessos no tempo: troca entre dia, hora e minuto', async () => {
+    render(<Behavior />);
+    expect((await screen.findAllByText('26/10/2026')).length).toBe(2);
+    expect(mockRpc).toHaveBeenCalledWith('admin_access_timeline', { p_bucket: 'dia', p_buckets: 30 });
+    fireEvent.click(screen.getByRole('button', { name: 'Por minuto' }));
+    await waitFor(() => expect(mockRpc).toHaveBeenCalledWith('admin_access_timeline', { p_bucket: 'minuto', p_buckets: 120 }));
+    fireEvent.click(screen.getByRole('button', { name: 'Por hora' }));
+    await waitFor(() => expect(mockRpc).toHaveBeenCalledWith('admin_access_timeline', { p_bucket: 'hora', p_buckets: 48 }));
   });
 
   it('trocar o período recarrega as consultas', async () => {

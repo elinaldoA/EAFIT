@@ -822,6 +822,15 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 
 .bar-chart__col:hover .bar-chart__bar { opacity: .75; }
 
+.bar-chart--dense { gap: 1px; }
+.bar-chart--dense .bar-chart__day { font-size: 9px; }
+.bar-chart__stack { width: 100%; max-width: 22px; display: flex; flex-direction: column; min-height: 0; }
+.bar-chart__stack .bar-chart__bar { border-radius: 0; min-height: 0; }
+.bar-chart__stack .bar-chart__bar:first-child { border-radius: 4px 4px 0 0; }
+.bar-chart__bar--app { background: var(--success, #2fb26b); }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--primary); vertical-align: -1px; }
+.legend-dot--app { background: var(--success, #2fb26b); }
+
 .bar-chart__day {
   font-size: 10px;
   color: var(--text-dim);

@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   fetchVisitBreakdown, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
-  fetchWorkoutCompletion, fetchWorkoutDropoff, fetchVisitorStages, fetchLostVisitors,
+  fetchWorkoutCompletion, fetchWorkoutDropoff, fetchVisitorStages, fetchLostVisitors, fetchAccessTimeline,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents, buildInstallRetention, buildCompletion,
-  buildVisitorJourney, stageLabel, authErrorLabel,
+  buildVisitorJourney, stageLabel, authErrorLabel, buildAccessTimeline, timelineBuckets, TIMELINE_BUCKETS, TIMELINE_SPAN,
   OS_LABELS, BROWSER_LABELS, DEVICE_LABELS, LANG_LABELS, MODE_LABELS, PUSH_LABELS,
 } from '../lib/behavior';
 import { sourceLabel } from '../lib/activation';
@@ -40,6 +40,8 @@ const loadAuth = days => fetchAuthEvents(days).then(buildSignup);
 const loadEvents = days => fetchUserEvents(days).then(rows => ({ ...buildUserEvents(rows), tutorial: buildTutorialFunnel(rows) }));
 const loadJourney = days => Promise.all([fetchVisitorStages(days), fetchLostVisitors(days, 50)])
   .then(([stages, lost]) => ({ ...buildVisitorJourney(stages), recent: lost }));
+const loadTimeline = ({ bucket, days }) => fetchAccessTimeline(bucket, timelineBuckets(bucket, days))
+  .then(rows => buildAccessTimeline(rows, bucket));
 const loadInstall = () => fetchInstallRetention().then(buildInstallRetention);
 const loadWorkouts = days => Promise.all([fetchWorkoutCompletion(days), fetchWorkoutDropoff(days, 10)])
   .then(([c, d]) => ({ completion: buildCompletion(c), dropoff: d }));
@@ -81,6 +83,70 @@ function Columns({ series, label }) {
         </div>
       ))}
     </div>
+  );
+}
+
+// Colunas empilhadas (app + site) com rótulo só de tantos em tantos
+// intervalos, pra série por minuto (120 colunas) continuar legível.
+function TimelineChart({ series }) {
+  const max = Math.max(1, ...series.map(s => s.total));
+  const every = Math.ceil(series.length / 12);
+  return (
+    <div className="bar-chart bar-chart--dense" role="img" aria-label="Acessos no tempo">
+      {series.map((s, i) => (
+        <div key={s.key} className="bar-chart__col" title={`${s.full}: ${s.app} no app, ${s.site} no site`}>
+          <div className="bar-chart__stack" style={{ height: `${(s.total / max) * 100}%` }}>
+            <div className="bar-chart__bar" style={{ flex: s.site }} />
+            <div className="bar-chart__bar bar-chart__bar--app" style={{ flex: s.app }} />
+          </div>
+          <span className="bar-chart__day">{i % every === 0 ? s.label : ' '}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AccessTimeline({ days }) {
+  const [bucket, setBucket] = useState('dia');
+  const args = useMemo(() => ({ bucket, days }), [bucket, days]);
+  const state = useLoad(loadTimeline, args);
+  return (
+    <Card
+      title="Acessos no tempo" state={state}
+      note="Horário de Brasília. Site = visitas anônimas à landing e à tela de acesso (1 por navegador por dia). App = aberturas por quem está logado, no máximo 1 a cada 5 minutos por pessoa; antes desta medição só se sabe o dia. Admins não entram."
+    >
+      {data => (
+        <>
+          <div className="card-head" style={{ marginBottom: 10 }}>
+            <div className="seg" role="group" aria-label="Agrupar acessos">
+              {TIMELINE_BUCKETS.map(b => (
+                <button
+                  key={b.key} type="button" aria-pressed={bucket === b.key}
+                  className={`seg__btn${bucket === b.key ? ' seg__btn--active' : ''}`}
+                  onClick={() => setBucket(b.key)}
+                >
+                  {b.label}
+                </button>
+              ))}
+            </div>
+            {TIMELINE_SPAN[bucket] && <span className="card-note" style={{ margin: 0 }}>{TIMELINE_SPAN[bucket].note}</span>}
+          </div>
+          <div className="tile-grid" style={{ marginBottom: 14 }}>
+            <div className="tile"><div className="tile__value">{data.app}</div><div className="tile__label">Aberturas do app</div></div>
+            <div className="tile"><div className="tile__value">{data.site}</div><div className="tile__label">Visitas ao site</div></div>
+            <div className="tile"><div className="tile__value">{data.peak ? data.peak.full : '—'}</div><div className="tile__label">Mais movimentado{data.peak ? ` (${data.peak.total})` : ''}</div></div>
+          </div>
+          <TimelineChart series={data.series} />
+          <p className="card-note" style={{ margin: '6px 0 12px' }}>
+            <span className="legend-dot legend-dot--app" /> App &nbsp; <span className="legend-dot" /> Site
+          </p>
+          <CountTable
+            head={['Quando', 'App', 'Pessoas no app', 'Site']} empty="Nenhum acesso no período."
+            rows={data.active.slice(0, 100).map(s => ({ key: s.key, label: s.full, cells: [s.app, s.users, s.site] }))}
+          />
+        </>
+      )}
+    </Card>
   );
 }
 
@@ -171,6 +237,8 @@ export default function Behavior() {
           </div>
         )}
       </Card>
+
+      <AccessTimeline days={days} />
 
       <Card title="Quando acessam" state={visits} note="Horário de Brasília.">
         {rows => {

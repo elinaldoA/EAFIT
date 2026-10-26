@@ -90,6 +90,24 @@ function pushPermission() {
   }
 }
 
+// Abertura do app com horário (painel: Comportamento → Acessos no tempo).
+// 1 vez por sessão do navegador; o banco ainda ignora aberturas a menos de
+// 5 minutos da anterior.
+export function trackAccess() {
+  if (!enabled || !userId) return false;
+  try {
+    const key = `eafit_access_${userId}`;
+    try {
+      if (sessionStorage.getItem(key)) return false;
+      sessionStorage.setItem(key, '1');
+    } catch { /* sem armazenamento: envia mesmo assim */ }
+    Promise.resolve(db.rpc('track_access')).catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Retrato do acesso (sistema, navegador, instalado ou não, versão…): 1 vez por
 // dia, ou de novo no mesmo dia se algo mudou (ex.: instalou o app, permitiu
 // notificações).

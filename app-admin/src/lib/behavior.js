@@ -14,6 +14,7 @@ export const fetchVisitBreakdown = (days = 30) => rpcRows('admin_visit_breakdown
 export const fetchAuthEvents = (days = 30) => rpcRows('admin_auth_events', { days_back: days });
 export const fetchUserEvents = (days = 30) => rpcRows('admin_user_events', { days_back: days });
 export const fetchClientBreakdown = (days = 30) => rpcRows('admin_client_breakdown', { days_back: days });
+export const fetchAccessTimeline = (bucket = 'dia', buckets = 30) => rpcRows('admin_access_timeline', { p_bucket: bucket, p_buckets: buckets });
 export const fetchInstallRetention = () => rpcRows('admin_install_retention');
 export const fetchWorkoutDropoff = (days = 30, maxRows = 10) => rpcRows('admin_workout_dropoff', { days_back: days, max_rows: maxRows });
 
@@ -68,6 +69,68 @@ export function weekdaySeries(rows) {
 export function peakOf(series) {
   const top = (series || []).reduce((best, s) => (s.total > (best?.total ?? 0) ? s : best), null);
   return top && top.total > 0 ? top : null;
+}
+
+// Linha do tempo de acessos (20261201010000_access_timeline.sql). Cada opção
+// olha um número fixo de intervalos pra trás; "dia" segue o período da tela.
+export const TIMELINE_BUCKETS = [
+  { key: 'dia', label: 'Por dia' },
+  { key: 'hora', label: 'Por hora' },
+  { key: 'minuto', label: 'Por minuto' },
+];
+export const TIMELINE_SPAN = {
+  hora: { buckets: 48, note: 'Últimas 48 horas.' },
+  minuto: { buckets: 120, note: 'Últimos 120 minutos.' },
+};
+
+export function timelineBuckets(bucket, days) {
+  if (bucket === 'dia') return days > 0 ? Math.min(days, 90) : 90;
+  return TIMELINE_SPAN[bucket].buckets;
+}
+
+// "2026-10-26T14:05:00" (já em Brasília, sem fuso) → partes, sem passar por
+// Date pra não deslocar o horário pelo fuso do navegador.
+function bucketParts(value) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(String(value || ''));
+  return m ? { y: m[1], mo: m[2], d: m[3], h: m[4], mi: m[5] } : null;
+}
+
+export function bucketLabel(value, bucket) {
+  const p = bucketParts(value);
+  if (!p) return '—';
+  if (bucket === 'minuto') return `${p.h}:${p.mi}`;
+  if (bucket === 'hora') return `${p.h}h`;
+  return `${p.d}/${p.mo}`;
+}
+
+export function bucketFullLabel(value, bucket) {
+  const p = bucketParts(value);
+  if (!p) return '—';
+  const date = `${p.d}/${p.mo}/${p.y}`;
+  if (bucket === 'minuto') return `${date} ${p.h}:${p.mi}`;
+  if (bucket === 'hora') return `${date} ${p.h}h`;
+  return date;
+}
+
+// Linhas (bucket_at, site_visits, app_accesses, app_users) → série pro gráfico,
+// totais e o intervalo mais movimentado (site + app).
+export function buildAccessTimeline(rows, bucket = 'dia') {
+  const series = (rows || []).map(r => {
+    const site = Number(r.site_visits) || 0;
+    const app = Number(r.app_accesses) || 0;
+    return {
+      key: r.bucket_at, label: bucketLabel(r.bucket_at, bucket), full: bucketFullLabel(r.bucket_at, bucket),
+      site, app, users: Number(r.app_users) || 0, total: site + app,
+    };
+  });
+  return {
+    series,
+    site: series.reduce((t, s) => t + s.site, 0),
+    app: series.reduce((t, s) => t + s.app, 0),
+    peak: peakOf(series),
+    // Só intervalos com acesso, do mais recente pro mais antigo.
+    active: series.filter(s => s.total > 0).reverse(),
+  };
 }
 
 const SIGNUP_STEPS = [

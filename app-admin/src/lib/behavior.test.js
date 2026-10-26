@@ -7,7 +7,7 @@ import {
   fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents,
   buildInstallRetention, buildCompletion, formatDuration, describeClient, authErrorLabel,
-  BROWSER_LABELS, FEATURE_LABELS,
+  BROWSER_LABELS, FEATURE_LABELS, bucketLabel, bucketFullLabel, buildAccessTimeline, timelineBuckets,
 } from './behavior';
 
 beforeEach(() => { mockRpc.mockReset(); });
@@ -178,5 +178,36 @@ describe('describeClient', () => {
     expect(place({ ip: '200.1.2.3', country: 'BR', uf: 'SP', city: 'Campinas' })).toMatchObject({ IP: '200.1.2.3', Local: 'Campinas · SP · Brasil' });
     expect(place({ ip: '200.1.2.3', country: 'PT', region: 'Lisbon' }).Local).toBe('Lisbon · Portugal');
     expect(place({ ip: '200.1.2.3' }).Local).toBe('Aguardando localização');
+  });
+});
+
+describe('linha do tempo de acessos', () => {
+  const rows = [
+    { bucket_at: '2026-10-26T14:04:00', site_visits: 0, app_accesses: 0, app_users: 0 },
+    { bucket_at: '2026-10-26T14:05:00', site_visits: 2, app_accesses: 3, app_users: 2 },
+    { bucket_at: '2026-10-26T14:06:00', site_visits: 1, app_accesses: 0, app_users: 0 },
+  ];
+
+  it('rotula por minuto, hora e dia sem deslocar o fuso', () => {
+    expect(bucketLabel(rows[1].bucket_at, 'minuto')).toBe('14:05');
+    expect(bucketLabel(rows[1].bucket_at, 'hora')).toBe('14h');
+    expect(bucketLabel(rows[1].bucket_at, 'dia')).toBe('26/10');
+    expect(bucketFullLabel(rows[1].bucket_at, 'minuto')).toBe('26/10/2026 14:05');
+    expect(bucketLabel(null, 'dia')).toBe('—');
+  });
+
+  it('soma, acha o pico e lista só intervalos com acesso (mais recente primeiro)', () => {
+    const t = buildAccessTimeline(rows, 'minuto');
+    expect(t).toMatchObject({ site: 3, app: 3 });
+    expect(t.peak).toMatchObject({ label: '14:05', total: 5 });
+    expect(t.active.map(s => s.label)).toEqual(['14:06', '14:05']);
+    expect(buildAccessTimeline([], 'dia').peak).toBeNull();
+  });
+
+  it('quantos intervalos pedir', () => {
+    expect(timelineBuckets('dia', 7)).toBe(7);
+    expect(timelineBuckets('dia', 0)).toBe(90);
+    expect(timelineBuckets('hora', 7)).toBe(48);
+    expect(timelineBuckets('minuto', 30)).toBe(120);
   });
 });
