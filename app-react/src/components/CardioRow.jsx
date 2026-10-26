@@ -212,6 +212,7 @@ export default function CardioRow({ ex, day, bump, started }) {
               {gps.status === 'tracking' && t('GPS ativo · precisão ±{n} m', { n: gps.accuracy })}
               {gps.status === 'weak' && t('⚠️ Sinal de GPS fraco — continue com a tela ligada')}
               {gps.status === 'denied' && t('🚫 Localização negada no navegador — digite a distância')}
+              {gps.status === 'insecure' && t('🔒 O GPS só funciona em site seguro (https) — digite a distância')}
               {gps.status === 'error' && t('⚠️ Não foi possível ler o GPS — digite a distância')}
               {gps.status === 'idle' && t('O GPS mede enquanto o cronômetro corre. Mantenha a tela ligada e o app aberto: o navegador não rastreia em segundo plano. O trajeto não é salvo, só a distância.')}
             </span>

@@ -24,6 +24,8 @@ export function useGeoTracker({ active, baseKm, onDistance }) {
   useEffect(() => {
     if (!active) { setStatus('idle'); setAccuracy(null); return; }
     if (!geoSupported()) { setStatus('unsupported'); return; }
+    // Em http (ex.: IP da rede local no XAMPP) o navegador bloqueia a localização sem nem perguntar.
+    if (typeof window !== 'undefined' && window.isSecureContext === false) { setStatus('insecure'); return; }
 
     const geolocation = navigator.geolocation;
     let track = emptyTrack(Math.max(0, parseFloat(baseRef.current) || 0) * 1000);
