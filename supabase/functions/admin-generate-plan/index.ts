@@ -71,9 +71,6 @@ Deno.serve(async (req) => {
     const nivel = md.nivel || 'intermediario';
     const local = md.local || 'academia';
     const modalidade = md.modalidade === 'calistenia' ? 'calistenia' : 'musculacao';
-    if (md.modalidade === 'corrida') {
-      return json({ error: 'Programa de corrida é gerado pelo próprio app (Perfil → Gerar novo treino).' }, 400);
-    }
 
     if (!(peso > 0) || !(altura > 0)) {
       return json({ error: 'Este usuário ainda não completou o perfil (peso/altura).' }, 400);

@@ -17,7 +17,7 @@ import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
 import { computeImcBracket } from '../data/workoutAdjustments';
-import { createGeneratedPlan, createRunningProgram } from '../lib/workoutPlans';
+import { createGeneratedPlan } from '../lib/workoutPlans';
 import { useReminders } from '../hooks/useReminders';
 import { useProfileData } from '../hooks/useProfileData';
 import CollapsibleCard from '../components/CollapsibleCard';
@@ -61,8 +61,7 @@ export default function PerfilPage({ active }) {
   const [meta, setMeta] = useState(md.meta || localStorage.getItem('profile_meta') || 'massa');
   const [nivel, setNivel] = useState(md.nivel || localStorage.getItem('profile_nivel') || 'intermediario');
   const [local, setLocal] = useState(md.local || localStorage.getItem('profile_local') || 'academia');
-  const [modalidade, setModalidade] = useState(md.modalidade || localStorage.getItem('profile_modalidade') || 'musculacao');
-  const [corridaObjetivo, setCorridaObjetivo] = useState(md.corridaObjetivo || localStorage.getItem('profile_corridaObjetivo') || '5k');
+  const [modalidade, setModalidade] = useState(() => ((md.modalidade || localStorage.getItem('profile_modalidade')) === 'calistenia' ? 'calistenia' : 'musculacao'));
   const [pesoAlvo, setPesoAlvo] = useState(md.pesoAlvo || localStorage.getItem('profile_pesoAlvo') || '');
   const [macroAgua, setMacroAgua] = useState(md.macroAgua || localStorage.getItem('profile_macroAgua') || '');
   const [weeklyGoal, setWeeklyGoal] = useState(md.weeklyGoal || localStorage.getItem('profile_weeklyGoal') || DEFAULT_WEEKLY_GOAL);
@@ -128,11 +127,6 @@ export default function PerfilPage({ active }) {
   }
 
   async function generateAndActivatePlan() {
-    if (modalidade === 'corrida') {
-      await createRunningProgram(user.id, { goal: corridaObjetivo, nivel });
-      await refreshPlan();
-      return;
-    }
     const generatedDays = await generatePlan({ peso: parseFloat(peso), altura: parseFloat(altura), meta, nivel, local, modalidade });
     await createGeneratedPlan(user.id, t('Plano gerado {v1}', { v1: new Date().toLocaleDateString(locale) }), generatedDays);
     await refreshPlan();
@@ -154,10 +148,9 @@ export default function PerfilPage({ active }) {
 
     // Trocar de modalidade (musculação ↔ calistenia) refaz o treino na hora:
     // manter o plano antigo contradiria a escolha.
-    const modalidadeChanged = (md.modalidade || 'musculacao') !== modalidade
-      || (modalidade === 'corrida' && (md.corridaObjetivo || '5k') !== corridaObjetivo);
+    const modalidadeChanged = (md.modalidade === 'calistenia' ? 'calistenia' : 'musculacao') !== modalidade;
 
-    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, local, modalidade, corridaObjetivo, pesoAlvo });
+    const { error } = await updateProfile({ sexo, idade, peso, altura, meta, nivel, local, modalidade, pesoAlvo });
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     localStorage.setItem('profile_sexo', sexo);
     localStorage.setItem('profile_idade', idade);
@@ -167,7 +160,6 @@ export default function PerfilPage({ active }) {
     localStorage.setItem('profile_nivel', nivel);
     localStorage.setItem('profile_local', local);
     localStorage.setItem('profile_modalidade', modalidade);
-    localStorage.setItem('profile_corridaObjetivo', corridaObjetivo);
     localStorage.setItem('profile_pesoAlvo', pesoAlvo);
 
     if (user && peso) {
@@ -181,7 +173,7 @@ export default function PerfilPage({ active }) {
       }
     }
 
-    if (user && ((bracketChanged && modalidade !== 'corrida') || modalidadeChanged) && !planByTrainer && !regenerating) {
+    if (user && (bracketChanged || modalidadeChanged) && !planByTrainer && !regenerating) {
       setRegenerating(true);
       try {
         await generateAndActivatePlan();
@@ -305,7 +297,7 @@ export default function PerfilPage({ active }) {
           <ProfileBodySection
             sexo={sexo} setSexo={setSexo} idade={idade} setIdade={setIdade}
             peso={peso} setPeso={setPeso} altura={altura} setAltura={setAltura}
-            meta={meta} setMeta={setMeta} nivel={nivel} setNivel={setNivel} local={local} setLocal={setLocal} modalidade={modalidade} setModalidade={setModalidade} corridaObjetivo={corridaObjetivo} setCorridaObjetivo={setCorridaObjetivo}
+            meta={meta} setMeta={setMeta} nivel={nivel} setNivel={setNivel} local={local} setLocal={setLocal} modalidade={modalidade} setModalidade={setModalidade}
             pesoAlvo={pesoAlvo} setPesoAlvo={setPesoAlvo}
             progress={progress} imc={imc} onSave={handleSave}
             regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}

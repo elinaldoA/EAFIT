@@ -2,7 +2,7 @@ import { t } from '../lib/i18n';
 import { usesLocal } from '../lib/modalidade';
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
-  meta, setMeta, nivel, setNivel, local, setLocal, modalidade, setModalidade, corridaObjetivo, setCorridaObjetivo, pesoAlvo, setPesoAlvo,
+  meta, setMeta, nivel, setNivel, local, setLocal, modalidade, setModalidade, pesoAlvo, setPesoAlvo,
   progress, imc, onSave, regenerating, onRegeneratePlan,
 }) {
   return (
@@ -64,20 +64,9 @@ export default function ProfileBodySection({
         <select id="profileModalidade" className="input input--sm" value={modalidade} onChange={e => setModalidade(e.target.value)}>
           <option value="musculacao">{t('Musculação')}</option>
           <option value="calistenia">{t('Calistenia (peso do corpo)')}</option>
-          <option value="corrida">{t('Corrida')}</option>
         </select>
       </div>
-      {modalidade === 'corrida' && (
-        <div className="profile-field">
-          <label className="profile-field__label" htmlFor="profileCorridaObjetivo">{t('Objetivo de corrida')}</label>
-          <select id="profileCorridaObjetivo" className="input input--sm" value={corridaObjetivo} onChange={e => setCorridaObjetivo(e.target.value)}>
-            <option value="5k">{t('5 km')}</option>
-            <option value="10k">{t('10 km')}</option>
-            <option value="meia" disabled={nivel === 'iniciante'}>{t('Meia maratona (21 km)')}</option>
-          </select>
-        </div>
-      )}
-      {/* Só a musculação muda com o local (calistenia e corrida usam sempre o mesmo) */}
+      {/* Só a musculação muda com o local (a calistenia usa sempre o mesmo) */}
       {usesLocal(modalidade) && (
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileLocal">{t('Onde você treina')}</label>

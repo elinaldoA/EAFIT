@@ -8,7 +8,7 @@ const h = vi.hoisted(() => ({
   disc: { fetchRecentDiscomfort: vi.fn(), logDiscomfort: vi.fn() },
   checkin: { fetchCheckins: vi.fn(), buildCheckinInsights: vi.fn() },
   swap: { fetchSwapContext: vi.fn(), pickAlternatives: vi.fn() },
-  plans: { substituteExercise: vi.fn(), seedGeneratedPlan: vi.fn(), createRunningProgram: vi.fn() },
+  plans: { substituteExercise: vi.fn(), seedGeneratedPlan: vi.fn() },
   recap: { buildMonthlyRecap: vi.fn(), fetchRecapWorkouts: vi.fn() },
   share: { shareMonthlyRecap: vi.fn() },
   tpl: { generatePlan: vi.fn() },
@@ -57,7 +57,6 @@ beforeEach(() => {
   h.swap.pickAlternatives.mockReturnValue({ known: true, options: [] });
   h.plans.substituteExercise.mockResolvedValue();
   h.plans.seedGeneratedPlan.mockResolvedValue();
-  h.plans.createRunningProgram.mockResolvedValue();
   h.recap.fetchRecapWorkouts.mockResolvedValue([{ id: 1 }]);
   h.share.shareMonthlyRecap.mockResolvedValue('shared');
   h.tpl.generatePlan.mockResolvedValue([{ dia: 'Seg' }]);
@@ -394,54 +393,16 @@ describe('OnboardingScreen', () => {
     expect(order).toEqual(['generate', 'seed', 'profile']);
     expect(h.tpl.generatePlan).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', modalidade: 'musculacao' });
     expect(h.plans.seedGeneratedPlan).toHaveBeenCalledWith('u1', [{ dia: 'Seg' }]);
-    expect(h.auth.updateProfile).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', modalidade: 'musculacao', corridaObjetivo: '5k' });
+    expect(h.auth.updateProfile).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', modalidade: 'musculacao' });
   });
 
-  it('corrida: cria o programa de semanas (e não o plano genérico) ANTES de salvar o perfil', async () => {
-    const order = [];
-    h.plans.createRunningProgram.mockImplementation(async () => { order.push('program'); });
-    h.auth.updateProfile.mockImplementation(async () => { order.push('profile'); return {}; });
-    render(<OnboardingScreen />);
-    fill();
-    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
-    fireEvent.change(screen.getByLabelText('Objetivo de corrida'), { target: { value: '10k' } });
-    submit();
-    await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalled());
-    expect(order).toEqual(['program', 'profile']);
-    expect(h.plans.createRunningProgram).toHaveBeenCalledWith('u1', { goal: '10k', nivel: 'intermediario' });
-    expect(h.tpl.generatePlan).not.toHaveBeenCalled();
-    expect(h.plans.seedGeneratedPlan).not.toHaveBeenCalled();
-    expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ modalidade: 'corrida', corridaObjetivo: '10k' }));
-  });
-
-  it('o campo "Onde você treina" só aparece na musculação (some na corrida e na calistenia)', () => {
+  it('o campo "Onde você treina" só aparece na musculação (some na calistenia)', () => {
     render(<OnboardingScreen />);
     expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
-    expect(screen.queryByLabelText('Onde você treina')).toBeNull();
     fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'calistenia' } });
     expect(screen.queryByLabelText('Onde você treina')).toBeNull();
     fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'musculacao' } });
     expect(screen.getByLabelText('Onde você treina')).toBeTruthy();
-  });
-
-  it('corrida: o local escolhido antes continua salvo no perfil', async () => {
-    render(<OnboardingScreen />);
-    fill();
-    fireEvent.change(screen.getByLabelText('Onde você treina'), { target: { value: 'casa' } });
-    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
-    submit();
-    await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalled());
-    expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ modalidade: 'corrida', local: 'casa' }));
-  });
-
-  it('corrida: meia maratona fica bloqueada para iniciante', () => {
-    render(<OnboardingScreen />);
-    fireEvent.change(screen.getByLabelText('Modalidade de treino'), { target: { value: 'corrida' } });
-    fireEvent.change(screen.getByLabelText('Nível de experiência'), { target: { value: 'iniciante' } });
-    expect(screen.getByRole('option', { name: 'Meia maratona (21 km)' }).disabled).toBe(true);
-    fireEvent.change(screen.getByLabelText('Nível de experiência'), { target: { value: 'intermediario' } });
-    expect(screen.getByRole('option', { name: 'Meia maratona (21 km)' }).disabled).toBe(false);
   });
 
   it('erro ao gerar o plano mostra mensagem e toast, e não salva o perfil', async () => {

@@ -2,16 +2,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 
-const h = vi.hoisted(() => ({ user: { id: 'u1' }, saveSetState: vi.fn(), toast: vi.fn(), cue: vi.fn(), checkRunPR: vi.fn() }));
+const h = vi.hoisted(() => ({ user: { id: 'u1' }, saveSetState: vi.fn(), toast: vi.fn(), cue: vi.fn() }));
 
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
-vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.saveSetState, workoutIds: { Segunda: 'w-seg' } }) }));
-vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
+vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.saveSetState }) }));
 vi.mock('../lib/sound', () => ({ playRunCue: (...a) => h.cue(...a) }));
-vi.mock('../lib/runStats', async importOriginal => ({ ...(await importOriginal()), checkForRunPR: (...a) => h.checkRunPR(...a) }));
 
 import CardioRow from './CardioRow';
-import { readSession, endSession, setGps, notifyDistance } from '../lib/runSession';
 
 const EX = { nome: '🏃 Cardio — Esteira', series: '-', reps: '20min · Moderado', descanso: '-' };
 const DAY = { dia: 'Segunda' };
@@ -34,7 +31,6 @@ beforeEach(() => {
   h.saveSetState.mockReset().mockResolvedValue('w-id');
   h.toast.mockReset();
   h.cue.mockReset();
-  h.checkRunPR.mockReset().mockResolvedValue(null);
 });
 afterEach(() => {
   cleanup();
@@ -173,116 +169,5 @@ describe('CardioRow — corrida', () => {
     setup({ ex: { nome: 'Corrida Leve (Trote)', series: '-', reps: '30min · ritmo leve', descanso: '-' } });
     start();
     expect(screen.queryByRole('status')).toBeNull();
-  });
-
-  it('concluir uma corrida com distância confere o recorde e avisa', async () => {
-    h.checkRunPR.mockResolvedValue([{ kind: 'distance', value: 6 }, { kind: 'pace', value: 300 }]);
-    localStorage.setItem('set_Corrida Leve (Trote)_1_duracao', '30');
-    localStorage.setItem('set_Corrida Leve (Trote)_1_distancia', '6');
-    setup({ ex: { nome: 'Corrida Leve (Trote)', series: '-', reps: '30min · ritmo leve', descanso: '-' } });
-    await act(async () => { fireEvent.click(check()); });
-    expect(h.checkRunPR).toHaveBeenCalledWith('u1', { minutes: '30', km: '6' }, { workoutId: 'w-id', setNumber: 1 });
-    expect(h.toast).toHaveBeenCalledWith('🏆 Novo recorde de corrida — maior distância: 6 km · melhor ritmo: 5:00/km!');
-  });
-
-  it('cardio que não é corrida não confere recorde de corrida', async () => {
-    setup();
-    await act(async () => { fireEvent.click(check()); });
-    expect(h.checkRunPR).not.toHaveBeenCalled();
-  });
-});
-
-describe('CardioRow — sessão de corrida e GPS', () => {
-  const RUN = { nome: 'Corrida Leve (Trote)', series: '-', reps: '30min · ritmo leve', descanso: '-' };
-  const geo = { watchPosition: vi.fn(), clearWatch: vi.fn() };
-  const gpsBtn = name => screen.getByRole('button', { name });
-  const start = () => fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
-
-  beforeEach(() => {
-    Object.defineProperty(navigator, 'geolocation', { value: geo, configurable: true });
-    endSession();
-  });
-  afterEach(() => { cleanup(); delete navigator.geolocation; endSession(); });
-
-  it('só oferece o GPS em corrida (não no cardio de esteira) e com suporte do navegador', () => {
-    setup();
-    expect(screen.queryByRole('button', { name: /GPS/ })).toBeNull();
-    cleanup();
-    delete navigator.geolocation;
-    setup({ ex: RUN });
-    expect(screen.queryByRole('button', { name: /GPS/ })).toBeNull();
-  });
-
-  it('ligar o GPS guarda a preferência e explica o uso, sem iniciar sessão', () => {
-    localStorage.setItem('cardio_gps_on', 'false');
-    setup({ ex: RUN });
-    fireEvent.click(gpsBtn('📍 Usar GPS'));
-    expect(localStorage.getItem('cardio_gps_on')).toBe('true');
-    expect(gpsBtn('📍 GPS ligado').getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByText(/Mantenha a tela ligada e o app aberto/)).toBeTruthy();
-    expect(readSession()).toBeNull();
-  });
-
-  it('iniciar registra a sessão (com a preferência de GPS); pausar mantém e para; parar encerra', () => {
-    localStorage.setItem('cardio_gps_on', 'true');
-    setup({ ex: RUN });
-    start();
-    expect(readSession()).toMatchObject({ nome: 'Corrida Leve (Trote)', dia: 'Segunda', running: true, gps: true });
-    act(() => { vi.advanceTimersByTime(3000); });
-    fireEvent.click(screen.getByRole('button', { name: '⏸ Pausar' }));
-    expect(readSession()).toMatchObject({ running: false });
-    fireEvent.click(screen.getByRole('button', { name: '▶ Continuar' }));
-    expect(readSession().running).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: '⏹ Parar' }));
-    expect(readSession()).toBeNull();
-  });
-
-  it('sem GPS ligado a sessão ainda existe (tela acesa e proteções), mas sem gps', () => {
-    localStorage.setItem('cardio_gps_on', 'false');
-    setup({ ex: RUN });
-    start();
-    expect(readSession()).toMatchObject({ running: true, gps: false });
-  });
-
-  it('o GPS vem ligado por padrão na corrida', () => {
-    setup({ ex: RUN });
-    start();
-    expect(readSession()).toMatchObject({ running: true, gps: true });
-  });
-
-  it('cardio de esteira não abre sessão de corrida', () => {
-    setup();
-    start();
-    expect(readSession()).toBeNull();
-  });
-
-  it('alternar o GPS no meio da corrida atualiza a sessão', () => {
-    localStorage.setItem('cardio_gps_on', 'false');
-    setup({ ex: RUN });
-    start();
-    fireEvent.click(gpsBtn('📍 Usar GPS'));
-    expect(readSession().gps).toBe(true);
-  });
-
-  it('reabrir com o cronômetro correndo (F5) retoma a sessão', () => {
-    localStorage.setItem('cardio_timer_Corrida Leve (Trote)', JSON.stringify({ accumulatedMs: 0, runningSince: Date.now() - 60000 }));
-    localStorage.setItem('cardio_gps_on', 'true');
-    setup({ ex: RUN });
-    expect(readSession()).toMatchObject({ nome: 'Corrida Leve (Trote)', running: true, gps: true });
-  });
-
-  it('mostra o estado do GPS publicado pelo host e relê a distância que ele grava', () => {
-    localStorage.setItem('cardio_gps_on', 'true');
-    setup({ ex: RUN });
-    start();
-    act(() => setGps({ status: 'searching', accuracy: null }));
-    expect(screen.getByText('Buscando sinal de GPS…')).toBeTruthy();
-    act(() => setGps({ status: 'tracking', accuracy: 7 }));
-    expect(screen.getByText('GPS ativo · precisão ±7 m')).toBeTruthy();
-    act(() => { localStorage.setItem('set_Corrida Leve (Trote)_1_distancia', '1.25'); notifyDistance(); });
-    expect(distancia().value).toBe('1.25');
-    act(() => setGps({ status: 'denied', accuracy: null }));
-    expect(screen.getByText(/Localização negada no navegador/)).toBeTruthy();
-    expect(distancia().disabled).toBe(false);
   });
 });

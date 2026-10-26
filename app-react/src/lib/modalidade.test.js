@@ -5,7 +5,6 @@ describe('usesLocal', () => {
   it('só a musculação depende do local de treino', () => {
     expect(usesLocal('musculacao')).toBe(true);
     expect(usesLocal('calistenia')).toBe(false);
-    expect(usesLocal('corrida')).toBe(false);
   });
 
   it('modalidade ausente (perfis antigos) conta como musculação', () => {

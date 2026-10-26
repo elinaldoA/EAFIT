@@ -92,7 +92,7 @@ export default function TrainingPatternsCard() {
           </table>
         </div>
         <p className="card-note">
-          Só musculação (calistenia e corrida não dependem do local). Local = o que a pessoa escolheu no cadastro ou no Perfil
+          Só musculação (a calistenia não depende do local). Local = o que a pessoa escolheu no cadastro ou no Perfil
           (sem escolha conta como academia, o padrão). Retenção =
           entre quem criou conta há 4 a 12 semanas, % que treinou nas últimas 2. Dor = desconforto forte ou lesão em 30 dias.
         </p>
@@ -100,7 +100,7 @@ export default function TrainingPatternsCard() {
 
       {modalities && (
         <div className="card">
-          <h2 className="section-title">Musculação × calistenia × corrida</h2>
+          <h2 className="section-title">Musculação × calistenia</h2>
           <div className="table-wrap">
             <table className="resp-table">
               <thead>

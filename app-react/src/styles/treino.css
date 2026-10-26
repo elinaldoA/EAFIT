@@ -826,13 +826,3 @@
 .cardio-row__cue--walk { color: var(--text-2); }
 .cardio-row__cue--done { border-color: var(--success); color: var(--success); }
 .cardio-row__cue-round { font-size: 0.78rem; color: var(--text-2); }
-
-/* Estatísticas de corrida */
-.run-stats__weeks { display: flex; align-items: flex-end; gap: 8px; height: 72px; margin-top: 12px; }
-.run-stats__week { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%; }
-.run-stats__bar { width: 100%; min-height: 3px; border-radius: 4px 4px 0 0; background: var(--primary-h); }
-.run-stats__week-label { font-size: 0.68rem; color: var(--text-2); }
-
-/* GPS na corrida */
-.cardio-row__gps { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.cardio-row__gps-status { font-size: 0.8rem; color: var(--text-2); flex: 1 1 200px; }

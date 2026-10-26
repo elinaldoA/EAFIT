@@ -50,16 +50,15 @@ describe('trainingPatterns', () => {
 });
 
 describe('modalidades', () => {
-  it('musculação, calistenia e corrida sempre aparecem, com as taxas e a fatia do total', () => {
-    const [gym, cali, run] = buildModalities(MODALITIES);
+  it('musculação e calistenia sempre aparecem, com as taxas e a fatia do total', () => {
+    const [gym, cali] = buildModalities(MODALITIES);
     expect(gym).toMatchObject({ label: 'Musculação', users: 30, sharePct: 79, trained30Pct: 60, retentionPct: 60, painPct: 10 });
     expect(cali).toMatchObject({ label: 'Calistenia', users: 8, sharePct: 21, trained30Pct: 75, neverPct: 13, sessionsWeek: 3.1 });
-    expect(run).toMatchObject({ label: 'Corrida', users: 0, sharePct: 0, retentionPct: null, sessionsWeek: null });
   });
 
   it('sem nenhum usuário não divide por zero', () => {
     const list = buildModalities([]);
-    expect(list.map(m => m.users)).toEqual([0, 0, 0]);
+    expect(list.map(m => m.users)).toEqual([0, 0]);
     expect(list.every(m => m.sharePct === null)).toBe(true);
   });
 
@@ -78,7 +77,6 @@ describe('TrainingPatternsCard', () => {
     const row = (await screen.findByText('Calistenia')).closest('tr');
     expect(row.textContent).toContain('75%');
     expect(row.textContent).toContain('3.1');
-    expect(screen.getByText('Corrida').closest('tr').textContent).toContain('0');
     expect(screen.getByText('Seg 19h')).toBeTruthy();
   });
 
@@ -90,7 +88,7 @@ describe('TrainingPatternsCard', () => {
     ));
     render(<MemoryRouter><TrainingPatternsCard /></MemoryRouter>);
     expect(await screen.findByText('Seg 19h')).toBeTruthy();
-    expect(screen.queryByText('Musculação × calistenia × corrida')).toBeNull();
+    expect(screen.queryByText('Musculação × calistenia')).toBeNull();
     expect(screen.getByText('Academia × em casa')).toBeTruthy();
   });
 

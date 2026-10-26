@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
-import { useToast } from '../context/useToast';
 import { formatDuration } from '../lib/utils';
 import { formatPace, parsePlannedMinutes, readCardio, toPositive, writeCardioField } from '../lib/cardio';
 import { parseRunWalk, phaseAt } from '../lib/runIntervals';
 import { playRunCue } from '../lib/sound';
-import { isRunItem, checkForRunPR, describeRunPR } from '../lib/runStats';
-import { geoSupported } from '../hooks/useGeoTracker';
-import { useRunSession } from '../hooks/useRunSession';
-import { readSession, setSession, endSession, subscribe } from '../lib/runSession';
 
 import { t } from '../lib/i18n';
 // Cronômetro guardado em localStorage (sobrevive ao modo ao vivo remontar o
@@ -31,19 +26,12 @@ function writeTimer(nome, t) {
 
 const elapsedOf = (t, now) => t.accumulatedMs + (t.runningSince ? now - t.runningSince : 0);
 
-// Preferência do GPS (vale para todas as corridas deste aparelho).
-const GPS_KEY = 'cardio_gps_on';
-// Ligado por padrão: só fica desligado se a pessoa desligou.
-const readGpsPref = () => { try { return localStorage.getItem(GPS_KEY) !== 'false'; } catch { return true; } };
-const writeGpsPref = on => { try { localStorage.setItem(GPS_KEY, String(on)); } catch { /* sem storage */ } };
-
 // Registro de um item de cardio (sem séries): cronômetro que preenche a
 // duração ao parar, distância opcional, ritmo e check. Salva como a série 1
 // do item em exercise_sets.
 export default function CardioRow({ ex, day, bump, started }) {
   const { user } = useAuth();
-  const { saveSetState, workoutIds } = useWorkout();
-  const toast = useToast();
+  const { saveSetState } = useWorkout();
   const [vals, setVals] = useState(() => readCardio(ex.nome));
   const [timer, setTimer] = useState(() => readTimer(ex.nome));
   const [now, setNow] = useState(() => Date.now());
@@ -52,16 +40,6 @@ export default function CardioRow({ ex, day, bump, started }) {
   const planned = parsePlannedMinutes(ex.reps);
   const runWalk = parseRunWalk(ex.reps);
   const lastPhase = useRef(null);
-  const isRun = isRunItem(ex.nome);
-  const gpsAvailable = isRun && geoSupported();
-  const [gpsOn, setGpsOn] = useState(readGpsPref);
-  // A corrida em andamento (GPS, tela acesa, proteções) vive no RunSessionHost;
-  // esta linha só registra a sessão e mostra o estado dela.
-  const { session, gps: gpsState } = useRunSession();
-  const mine = session?.nome === ex.nome;
-  const gps = mine ? gpsState : { status: 'idle', accuracy: null };
-  const bumpRef = useRef(bump);
-  bumpRef.current = bump;
 
   useEffect(() => {
     if (!running) return;
@@ -92,37 +70,11 @@ export default function CardioRow({ ex, day, bump, started }) {
     return () => Object.values(timers).forEach(clearTimeout);
   }, []);
 
-  // A distância medida pelo GPS é gravada no localStorage do item pelo host;
-  // aqui só relê quando ele avisa (a pessoa ainda pode corrigir o campo).
-  useEffect(() => subscribe(() => {
-    if (readSession()?.nome !== ex.nome) return;
-    const distancia = readCardio(ex.nome).distancia;
-    setVals(v => (v.distancia === distancia ? v : { ...v, distancia }));
-    bumpRef.current();
-  }), [ex.nome]);
-
-  // Voltou a este exercício (F5, app reaberto) com o cronômetro ainda correndo:
-  // registra a corrida de novo, para o GPS e as proteções retomarem.
-  useEffect(() => {
-    if (isRun && timer.runningSince && !readSession()?.running) {
-      setSession({ nome: ex.nome, dia: day.dia, running: true, gps: gpsAvailable && gpsOn });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function toggleGps() {
-    const next = !gpsOn;
-    setGpsOn(next);
-    writeGpsPref(next);
-    if (mine) setSession({ gps: next });
-  }
-
   function startTimer() {
     const next = { ...timer, runningSince: Date.now() };
     setTimer(next);
     setNow(Date.now());
     writeTimer(ex.nome, next);
-    if (isRun) setSession({ nome: ex.nome, dia: day.dia, running: true, gps: gpsAvailable && gpsOn });
   }
 
   function pauseTimer() {
@@ -130,7 +82,6 @@ export default function CardioRow({ ex, day, bump, started }) {
     const next = { accumulatedMs: elapsedOf(timer, t), runningSince: null };
     setTimer(next);
     writeTimer(ex.nome, next);
-    if (mine) setSession({ running: false });
   }
 
   // Parar passa o tempo para o campo de duração (em minutos, 1 casa) e zera.
@@ -139,9 +90,6 @@ export default function CardioRow({ ex, day, bump, started }) {
     const next = { accumulatedMs: 0, runningSince: null };
     setTimer(next);
     writeTimer(ex.nome, next);
-    // Distância do GPS ainda no debounce do host: grava já, antes de fechar a sessão.
-    if (mine && session.gps) flush('distancia_km', readCardio(ex.nome).distancia);
-    endSession(ex.nome);
     if (ms >= 1000) {
       const minutes = String(Math.round((ms / 60000) * 10) / 10);
       setVals(v => ({ ...v, duracao: minutes }));
@@ -158,15 +106,7 @@ export default function CardioRow({ ex, day, bump, started }) {
     bump();
     // Ao concluir com cronômetro ainda correndo, fecha ele primeiro.
     if (next && (running || timer.accumulatedMs)) stopTimer();
-    if (!user) return;
-    const wId = await saveSetState(day.dia, ex.nome, 1, { completed: next });
-    if (!next || !isRunItem(ex.nome)) return;
-    try {
-      const prs = await checkForRunPR(user.id, { minutes: vals.duracao, km: vals.distancia }, { workoutId: wId ?? workoutIds?.[day.dia], setNumber: 1 });
-      if (prs) toast(t('🏆 Novo recorde de corrida — {itens}!', { itens: prs.map(describeRunPR).join(' · ') }));
-    } catch (err) {
-      console.error('checkForRunPR:', err);
-    }
+    if (user) await saveSetState(day.dia, ex.nome, 1, { completed: next });
   }
 
   const pace = formatPace(vals.duracao, vals.distancia);
@@ -200,26 +140,6 @@ export default function CardioRow({ ex, day, bump, started }) {
         )}
         {hasTimer && <button type="button" className="btn btn--ghost btn--sm" onClick={stopTimer}>{t('⏹ Parar')}</button>}
       </div>
-
-      {gpsAvailable && (
-        <div className="cardio-row__gps">
-          <button
-            type="button" className={`btn btn--sm ${gpsOn ? 'btn--primary' : 'btn--outline'}`}
-            aria-pressed={gpsOn} onClick={toggleGps}
-          >{gpsOn ? t('📍 GPS ligado') : t('📍 Usar GPS')}</button>
-          {gpsOn && (
-            <span className="cardio-row__gps-status" role="status" aria-live="polite">
-              {gps.status === 'searching' && t('Buscando sinal de GPS…')}
-              {gps.status === 'tracking' && t('GPS ativo · precisão ±{n} m', { n: gps.accuracy })}
-              {gps.status === 'weak' && t('⚠️ Sinal de GPS fraco — continue com a tela ligada')}
-              {gps.status === 'denied' && t('🚫 Localização negada no navegador — digite a distância')}
-              {gps.status === 'insecure' && t('🔒 O GPS só funciona em site seguro (https) — digite a distância')}
-              {gps.status === 'error' && t('⚠️ Não foi possível ler o GPS — digite a distância')}
-              {gps.status === 'idle' && t('O GPS mede enquanto o cronômetro corre. Mantenha a tela ligada e o app aberto: o navegador não rastreia em segundo plano. O trajeto não é salvo, só a distância.')}
-            </span>
-          )}
-        </div>
-      )}
 
       {cue && (
         <div className={`cardio-row__cue cardio-row__cue--${cue.phase}`} role="status" aria-live="polite">

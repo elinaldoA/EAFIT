@@ -25,7 +25,6 @@ import { DiscomfortPanel, DiscomfortHistory } from '../components/DiscomfortWidg
 import MuscleVolumeCard from '../components/MuscleVolumeCard';
 import StrengthGoals from '../components/StrengthGoals';
 import BodyweightGoals from '../components/BodyweightGoals';
-import RunStats from '../components/RunStats';
 
 import { t, tEx, tFoco } from '../lib/i18n';
 const TABS = [
@@ -283,7 +282,6 @@ export default function DashPage({ active }) {
 
       {tab === 'recordes' && (<>
       {isFlagOn(config.flags, 'metas_carga') && <StrengthGoals exercises={exercises} allTimeLogs={allTimeLogs} />}
-      <RunStats />
       <BodyweightGoals />
       <div className="section-group">
         <div className="section-group__label">{t('Recordes pessoais')}</div>

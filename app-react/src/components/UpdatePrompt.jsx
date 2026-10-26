@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { useRunInProgress } from '../hooks/useRunSession';
 
 import { t } from '../lib/i18n';
 const CHECK_INTERVAL_MS = 60_000;
@@ -32,7 +31,6 @@ export default function UpdatePrompt({ aboveNav = false }) {
   const [dismissed, setDismissed] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [, setTick] = useState(0);
-  const runInProgress = useRunInProgress();
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_url, registration) {
       if (!registration) return;
@@ -64,8 +62,7 @@ export default function UpdatePrompt({ aboveNav = false }) {
     return () => clearTimeout(id);
   }, [suppressed]);
 
-  // Durante uma corrida o aviso espera: atualizar recarrega a página.
-  if (!needRefresh || dismissed || suppressed || runInProgress) return null;
+  if (!needRefresh || dismissed || suppressed) return null;
 
   // O reload automático do vite-plugin-pwa depende do evento "controlling" do
   // workbox-window vir marcado como isUpdate — o que não acontece quando a

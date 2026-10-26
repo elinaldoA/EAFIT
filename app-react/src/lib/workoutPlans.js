@@ -3,7 +3,6 @@ import { treinoData, todayDate } from '../data/treinoData';
 import { parseLocalDate, toDateStr } from './utils';
 import { evaluateCycleEvolution } from './planEvolution';
 import { generatePlan, NIVEIS } from '../data/workoutTemplates';
-import { buildRunningProgram } from './runningProgram';
 
 import { t } from './i18n';
 // Ciclo positivo antecipa o próximo (mais 1 semana livre pra "subir de nível"
@@ -131,29 +130,6 @@ async function seedDefaultPlan(userId, days = treinoData) {
 // termina, em vez do plano estático padrão.
 export async function seedGeneratedPlan(userId, generatedDays) {
   return seedDefaultPlan(userId, generatedDays);
-}
-
-// Programa de corrida: cada semana vira um plano de 1 semana, encadeado ao
-// seguinte (next_plan_id). Ciclo ruim (aderência baixa, desconforto) repete a
-// mesma semana (regression_plan_id = ela mesma); depois da última, o ciclo
-// automático gera uma semana de manutenção (generatePlan com modalidade
-// 'corrida'). Só a semana 1 fica ativa. Falhando no meio, apaga o que criou.
-export async function createRunningProgram(userId, { goal, nivel }) {
-  const program = buildRunningProgram({ goal, nivel });
-  const created = [];
-  try {
-    for (const week of program.weeks) {
-      created.push(await createPlanWithDays(userId, week.name, week.days, { activate: false }));
-    }
-    for (let i = 0; i < created.length; i++) {
-      await updatePlanSuccessors(created[i].id, { nextPlanId: created[i + 1]?.id ?? null, regressionPlanId: created[i].id });
-    }
-    await setActivePlan(userId, created[0].id, 1);
-  } catch (err) {
-    await Promise.allSettled(created.map(p => deletePlan(p.id, userId)));
-    throw err;
-  }
-  return created[0];
 }
 
 // Usado pela Perfil para regenerar o treino a partir dos dados atuais do
