@@ -359,6 +359,7 @@ export default {
   '⚠️ Sinal de GPS fraco — continue com a tela ligada': '⚠️ Weak GPS signal — keep the screen on',
   '🚫 Localização negada no navegador — digite a distância': '🚫 Location denied in the browser — type the distance',
   '⚠️ Não foi possível ler o GPS — digite a distância': '⚠️ Could not read the GPS — type the distance',
+  '🔒 O GPS só funciona em site seguro (https) — digite a distância': '🔒 GPS only works on a secure (https) site — type the distance',
   'O GPS mede enquanto o cronômetro corre. Mantenha a tela ligada e o app aberto: o navegador não rastreia em segundo plano. O trajeto não é salvo, só a distância.': 'GPS measures while the timer runs. Keep the screen on and the app open: the browser cannot track in the background. The route is not saved, only the distance.',
   '🏆 Novo recorde de corrida — {itens}!': '🏆 New running record — {itens}!',
   'maior distância: {v} km': 'longest run: {v} km',
