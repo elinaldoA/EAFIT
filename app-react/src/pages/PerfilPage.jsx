@@ -26,6 +26,8 @@ import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
 import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
+import ProfileNutritionSection from '../components/ProfileNutritionSection';
+import { computeNutritionGoals } from '../lib/nutritionGoals';
 import { isCoachAvailable } from '../lib/coach';
 import { NotificationsSection, ExportSection, CoachSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
@@ -249,6 +251,7 @@ export default function PerfilPage({ active }) {
     () => metaProgress(parseFloat(peso), parseFloat(pesoAlvo), weightLogs),
     [peso, pesoAlvo, weightLogs]
   );
+  const nutritionGoals = computeNutritionGoals({ sexo, idade, peso, altura, meta, weeklyGoal });
   const suggestedWaterGoal = computedWaterGoalLiters(peso) ?? DEFAULT_WATER_GOAL;
   const waterGoalLabel = String(parseFloat(macroAgua) || suggestedWaterGoal).replace('.', ',');
   const fullName = [nome, sobrenome].filter(Boolean).join(' ');
@@ -304,6 +307,10 @@ export default function PerfilPage({ active }) {
             suggestedGoal={suggestedWaterGoal}
             onSave={handleSaveWaterGoal}
           />
+        </CollapsibleCard>
+
+        <CollapsibleCard icon="🍽️" title={t('Nutrição')} summary={nutritionGoals ? t('{kcal} kcal · {protein} g de proteína por dia', { kcal: nutritionGoals.kcal, protein: nutritionGoals.protein }) : t('Metas diárias de calorias e proteína')}>
+          <ProfileNutritionSection goals={nutritionGoals} />
         </CollapsibleCard>
 
         <button type="button" className="shortcut-card" onClick={openBodyProgress}>

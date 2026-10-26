@@ -355,3 +355,11 @@ button.profile-section__title {
 .amb-bars__bar--signup { background: var(--primary); }
 .amb-bars__legend { display: flex; justify-content: space-between; gap: 8px; font-size: 0.68rem; color: var(--text-dim); margin-top: -6px; }
 .amb-bars__dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--primary); vertical-align: middle; }
+
+.nutrition-goals {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 0 0 8px;
+}
+.nutrition-goals__item dd { margin: 0; font-size: 1.1rem; }
