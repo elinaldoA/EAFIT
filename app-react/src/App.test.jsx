@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
   auth: {},
@@ -50,6 +50,7 @@ vi.mock('./components/Tutorial', () => ({ default: ({ role, userId }) => <div>tu
 vi.mock('./components/InboxBell', () => ({ default: () => <div>inbox-bell</div> }));
 vi.mock('./components/UpdatePrompt', () => ({ default: ({ aboveNav }) => <div>update-prompt:{String(aboveNav)}</div> }));
 vi.mock('./components/ReminderScheduler', () => ({ default: () => <div>reminders</div> }));
+vi.mock('./components/RunSessionHost', () => ({ default: () => <div>run-host</div> }));
 vi.mock('./components/BootSplash', () => ({ default: () => <div>splash</div> }));
 vi.mock('./components/PasswordRecoveryScreen', () => ({ default: () => <div>tela-recuperacao</div> }));
 vi.mock('./components/MaintenanceScreen', () => ({ default: ({ message }) => <div>manutencao:{message}</div> }));
@@ -68,6 +69,7 @@ vi.mock('./pages/DashPage', () => ({ default: () => <div>pg-dash</div> }));
 vi.mock('./pages/PerfilPage', () => ({ default: () => <div>pg-perfil</div> }));
 
 import App from './App';
+import { setSession, endSession } from './lib/runSession';
 
 const loggedIn = (md = { peso: 80 }) => ({ id: 'u1', user_metadata: md });
 
@@ -80,7 +82,7 @@ beforeEach(() => {
   h.program = null;
   h.unread = 0;
 });
-afterEach(cleanup);
+afterEach(() => { cleanup(); endSession(); });
 
 describe('App', () => {
   it('manutenção ligada bloqueia tudo, inclusive o login', () => {
@@ -103,6 +105,34 @@ describe('App', () => {
     render(<App />);
     expect(screen.getByRole('button', { name: 'Atualizar agora' })).toBeTruthy();
     expect(screen.getByText('tela-auth')).toBeTruthy();
+  });
+
+  it('corrida em andamento adia a manutenção e a atualização obrigatória até ela acabar', () => {
+    setSession({ nome: 'Corrida Leve (Trote)', dia: 'Segunda', running: true, gps: false });
+    h.auth = { user: null, authLoading: false, recoveryMode: false };
+
+    h.config = { maintenance: { enabled: true, message: 'Voltamos às 14h' } };
+    const first = render(<App />);
+    expect(screen.queryByText('manutencao:Voltamos às 14h')).toBeNull();
+    expect(screen.getByText('tela-auth')).toBeTruthy();
+    first.unmount();
+
+    h.config = { maintenance: { enabled: false, message: '' }, minVersion: { version: '999.0.0', mode: 'block', message: 'Atualize já' } };
+    render(<App />);
+    // segue no app (só a faixa de aviso, como no modo 'warn'), sem a tela de bloqueio
+    expect(screen.getByText('tela-auth')).toBeTruthy();
+
+    act(() => endSession());
+    expect(screen.queryByText('tela-auth')).toBeNull();
+    expect(screen.getByText('Atualize já')).toBeTruthy();
+  });
+
+  it('corrida pausada não adia a manutenção', () => {
+    setSession({ nome: 'Corrida Leve (Trote)', dia: 'Segunda', running: false });
+    h.config = { maintenance: { enabled: true, message: 'Voltamos às 14h' } };
+    h.auth = { user: null, authLoading: false, recoveryMode: false };
+    render(<App />);
+    expect(screen.getByText('manutencao:Voltamos às 14h')).toBeTruthy();
   });
 
   it('mudança de endereço ligada bloqueia tudo e aponta pro endereço novo', () => {

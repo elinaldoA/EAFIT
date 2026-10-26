@@ -11,6 +11,7 @@ vi.mock('../lib/sound', () => ({ playRunCue: (...a) => h.cue(...a) }));
 vi.mock('../lib/runStats', async importOriginal => ({ ...(await importOriginal()), checkForRunPR: (...a) => h.checkRunPR(...a) }));
 
 import CardioRow from './CardioRow';
+import { readSession, endSession, setGps, notifyDistance } from '../lib/runSession';
 
 const EX = { nome: '🏃 Cardio — Esteira', series: '-', reps: '20min · Moderado', descanso: '-' };
 const DAY = { dia: 'Segunda' };
@@ -191,20 +192,17 @@ describe('CardioRow — corrida', () => {
   });
 });
 
-describe('CardioRow — GPS', () => {
+describe('CardioRow — sessão de corrida e GPS', () => {
   const RUN = { nome: 'Corrida Leve (Trote)', series: '-', reps: '30min · ritmo leve', descanso: '-' };
   const geo = { watchPosition: vi.fn(), clearWatch: vi.fn() };
-  let onOk;
-  let onFail;
-  const fix = (lat, t, accuracy = 5) => ({ coords: { latitude: lat, longitude: 0, accuracy }, timestamp: t });
   const gpsBtn = name => screen.getByRole('button', { name });
+  const start = () => fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
 
   beforeEach(() => {
-    geo.watchPosition.mockReset().mockImplementation((ok, fail) => { onOk = ok; onFail = fail; return 3; });
-    geo.clearWatch.mockReset();
     Object.defineProperty(navigator, 'geolocation', { value: geo, configurable: true });
+    endSession();
   });
-  afterEach(() => { delete navigator.geolocation; });
+  afterEach(() => { cleanup(); delete navigator.geolocation; endSession(); });
 
   it('só oferece o GPS em corrida (não no cardio de esteira) e com suporte do navegador', () => {
     setup();
@@ -215,58 +213,67 @@ describe('CardioRow — GPS', () => {
     expect(screen.queryByRole('button', { name: /GPS/ })).toBeNull();
   });
 
-  it('ligar o GPS guarda a preferência e explica o uso, sem pedir a localização ainda', () => {
+  it('ligar o GPS guarda a preferência e explica o uso, sem iniciar sessão', () => {
     setup({ ex: RUN });
     fireEvent.click(gpsBtn('📍 Usar GPS'));
     expect(localStorage.getItem('cardio_gps_on')).toBe('true');
     expect(gpsBtn('📍 GPS ligado').getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByText(/Mantenha a tela ligada e o app aberto/)).toBeTruthy();
-    expect(geo.watchPosition).not.toHaveBeenCalled();
+    expect(readSession()).toBeNull();
   });
 
-  it('com o cronômetro correndo, preenche a distância ao vivo e salva', () => {
+  it('iniciar registra a sessão (com a preferência de GPS); pausar mantém e para; parar encerra', () => {
     localStorage.setItem('cardio_gps_on', 'true');
     setup({ ex: RUN });
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
-    expect(geo.watchPosition).toHaveBeenCalled();
-    expect(screen.getByText('Buscando sinal de GPS…')).toBeTruthy();
-    act(() => { onOk(fix(0, 0)); onOk(fix(0.0001, 4000)); onOk(fix(0.0002, 8000)); });
-    expect(distancia().value).toBe('0.02');
-    expect(screen.getByText('GPS ativo · precisão ±5 m')).toBeTruthy();
-    act(() => { vi.advanceTimersByTime(900); });
-    expect(h.saveSetState).toHaveBeenCalledWith('Segunda', 'Corrida Leve (Trote)', 1, { distancia_km: 0.02 });
-  });
-
-  it('soma a partir da distância já preenchida', () => {
-    localStorage.setItem('cardio_gps_on', 'true');
-    localStorage.setItem('set_Corrida Leve (Trote)_1_distancia', '2');
-    setup({ ex: RUN });
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
-    act(() => { onOk(fix(0, 0)); onOk(fix(0.0001, 4000)); });
-    expect(distancia().value).toBe('2.01');
-  });
-
-  it('pausar solta o GPS', () => {
-    localStorage.setItem('cardio_gps_on', 'true');
-    setup({ ex: RUN });
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    start();
+    expect(readSession()).toMatchObject({ nome: 'Corrida Leve (Trote)', dia: 'Segunda', running: true, gps: true });
+    act(() => { vi.advanceTimersByTime(3000); });
     fireEvent.click(screen.getByRole('button', { name: '⏸ Pausar' }));
-    expect(geo.clearWatch).toHaveBeenCalledWith(3);
+    expect(readSession()).toMatchObject({ running: false });
+    fireEvent.click(screen.getByRole('button', { name: '▶ Continuar' }));
+    expect(readSession().running).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: '⏹ Parar' }));
+    expect(readSession()).toBeNull();
   });
 
-  it('permissão negada avisa e deixa digitar a distância', () => {
+  it('sem GPS ligado a sessão ainda existe (tela acesa e proteções), mas sem gps', () => {
+    setup({ ex: RUN });
+    start();
+    expect(readSession()).toMatchObject({ running: true, gps: false });
+  });
+
+  it('cardio de esteira não abre sessão de corrida', () => {
+    setup();
+    start();
+    expect(readSession()).toBeNull();
+  });
+
+  it('alternar o GPS no meio da corrida atualiza a sessão', () => {
+    setup({ ex: RUN });
+    start();
+    fireEvent.click(gpsBtn('📍 Usar GPS'));
+    expect(readSession().gps).toBe(true);
+  });
+
+  it('reabrir com o cronômetro correndo (F5) retoma a sessão', () => {
+    localStorage.setItem('cardio_timer_Corrida Leve (Trote)', JSON.stringify({ accumulatedMs: 0, runningSince: Date.now() - 60000 }));
     localStorage.setItem('cardio_gps_on', 'true');
     setup({ ex: RUN });
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
-    act(() => onFail({ code: 1 }));
+    expect(readSession()).toMatchObject({ nome: 'Corrida Leve (Trote)', running: true, gps: true });
+  });
+
+  it('mostra o estado do GPS publicado pelo host e relê a distância que ele grava', () => {
+    localStorage.setItem('cardio_gps_on', 'true');
+    setup({ ex: RUN });
+    start();
+    act(() => setGps({ status: 'searching', accuracy: null }));
+    expect(screen.getByText('Buscando sinal de GPS…')).toBeTruthy();
+    act(() => setGps({ status: 'tracking', accuracy: 7 }));
+    expect(screen.getByText('GPS ativo · precisão ±7 m')).toBeTruthy();
+    act(() => { localStorage.setItem('set_Corrida Leve (Trote)_1_distancia', '1.25'); notifyDistance(); });
+    expect(distancia().value).toBe('1.25');
+    act(() => setGps({ status: 'denied', accuracy: null }));
     expect(screen.getByText(/Localização negada no navegador/)).toBeTruthy();
     expect(distancia().disabled).toBe(false);
   });
-
-  it('GPS desligado não rastreia mesmo com o cronômetro correndo', () => {
-    setup({ ex: RUN });
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
-    expect(geo.watchPosition).not.toHaveBeenCalled();
-  });
 });
-

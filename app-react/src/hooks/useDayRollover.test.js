@@ -6,6 +6,7 @@ const { today } = vi.hoisted(() => ({ today: { value: '2026-10-07' } }));
 vi.mock('../data/treinoData', () => ({ todayDate: () => today.value }));
 
 import { useDayRollover } from './useDayRollover';
+import { setSession, endSession } from '../lib/runSession';
 
 const reload = vi.fn();
 const original = window.location;
@@ -22,6 +23,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  endSession();
   Object.defineProperty(window, 'location', { configurable: true, value: original });
   setVisibility('visible');
 });
@@ -35,6 +37,22 @@ describe('useDayRollover', () => {
 
   it('voltar ao primeiro plano num dia diferente recarrega a página', () => {
     renderHook(() => useDayRollover());
+    today.value = '2026-10-08';
+    setVisibility('visible');
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('com uma corrida em andamento não recarrega, mesmo num dia diferente', () => {
+    renderHook(() => useDayRollover());
+    setSession({ nome: 'Corrida Leve (Trote)', dia: 'Segunda', running: true });
+    today.value = '2026-10-08';
+    setVisibility('visible');
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('corrida pausada não impede o recarregamento da virada de dia', () => {
+    renderHook(() => useDayRollover());
+    setSession({ nome: 'Corrida Leve (Trote)', dia: 'Segunda', running: false });
     today.value = '2026-10-08';
     setVisibility('visible');
     expect(reload).toHaveBeenCalledTimes(1);

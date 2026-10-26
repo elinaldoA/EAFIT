@@ -20,6 +20,8 @@ import InboxBell from './components/InboxBell';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 import { useDayRollover } from './hooks/useDayRollover';
+import { useRunInProgress } from './hooks/useRunSession';
+import RunSessionHost from './components/RunSessionHost';
 import { useHashTab } from './hooks/useHashTab';
 import ErrorBoundary from './components/ErrorBoundary';
 import BootSplash from './components/BootSplash';
@@ -80,6 +82,9 @@ function Shell() {
   useTrainerGoalsSync(user?.id);
   useSyncLang(user);
   useDayRollover();
+  // Corrida em andamento: as telas que bloqueiam o app (manutenção, atualização
+  // obrigatória) esperam o fim dela — trocar a tela mataria o GPS e o cronômetro.
+  const runInProgress = useRunInProgress();
   const [locked, unlock] = useBiometricLock(user?.id);
 
   // Navegação vinda de notificação ou aviso (lib/appNav.js) com aba/cartão a
@@ -129,11 +134,11 @@ function Shell() {
   if (movedUrl) return <MovedScreen url={movedUrl} />;
 
   // Manutenção ligada no painel admin: bloqueia o app inteiro (antes até do login).
-  if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;
+  if (config.maintenance.enabled && !runInProgress) return <MaintenanceScreen message={config.maintenance.message} />;
 
   // Versão mínima do painel: abaixo dela, 'block' para tudo e 'warn' mostra a faixa.
   const outdated = isOutdated(config.minVersion?.version);
-  if (outdated && config.minVersion.mode === 'block') return <ForceUpdateScreen message={config.minVersion.message} />;
+  if (outdated && config.minVersion.mode === 'block' && !runInProgress) return <ForceUpdateScreen message={config.minVersion.message} />;
 
   if (unsubscribeToken) return <EmailUnsubscribeScreen token={unsubscribeToken} onClose={() => setUnsubscribeToken(null)} />;
   if (surveyLink) return <InactivitySurveyScreen token={surveyLink.token} reason={surveyLink.reason} onClose={() => setSurveyLink(null)} />;
@@ -164,6 +169,7 @@ function Shell() {
         <AvatarProvider>
           <WorkoutProvider>
             <ReminderScheduler />
+            <RunSessionHost />
             <TrainerInvitePrompt />
             <div className="app-screen" style={{ display: 'flex' }}>
               <header className="topbar">

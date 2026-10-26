@@ -351,6 +351,7 @@ export default {
   'Academia do condomínio': 'Building gym',
   'Em casa': 'At home',
   'Modalidade de treino': 'Training style',
+  '🏃 Corrida em andamento — pause ou pare o cronômetro para sair': '🏃 Run in progress — pause or stop the timer to leave',
   '📍 GPS ligado': '📍 GPS on',
   '📍 Usar GPS': '📍 Use GPS',
   'Buscando sinal de GPS…': 'Looking for a GPS signal…',

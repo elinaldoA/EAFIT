@@ -7,8 +7,9 @@ import { formatPace, parsePlannedMinutes, readCardio, toPositive, writeCardioFie
 import { parseRunWalk, phaseAt } from '../lib/runIntervals';
 import { playRunCue } from '../lib/sound';
 import { isRunItem, checkForRunPR, describeRunPR } from '../lib/runStats';
-import { useGeoTracker, geoSupported } from '../hooks/useGeoTracker';
-import { useWakeLock } from '../hooks/useWakeLock';
+import { geoSupported } from '../hooks/useGeoTracker';
+import { useRunSession } from '../hooks/useRunSession';
+import { readSession, setSession, endSession, subscribe } from '../lib/runSession';
 
 import { t } from '../lib/i18n';
 // Cronômetro guardado em localStorage (sobrevive ao modo ao vivo remontar o
@@ -50,9 +51,16 @@ export default function CardioRow({ ex, day, bump, started }) {
   const planned = parsePlannedMinutes(ex.reps);
   const runWalk = parseRunWalk(ex.reps);
   const lastPhase = useRef(null);
-  const gpsAvailable = isRunItem(ex.nome) && geoSupported();
+  const isRun = isRunItem(ex.nome);
+  const gpsAvailable = isRun && geoSupported();
   const [gpsOn, setGpsOn] = useState(readGpsPref);
-  const gpsActive = gpsAvailable && gpsOn && !!timer.runningSince;
+  // A corrida em andamento (GPS, tela acesa, proteções) vive no RunSessionHost;
+  // esta linha só registra a sessão e mostra o estado dela.
+  const { session, gps: gpsState } = useRunSession();
+  const mine = session?.nome === ex.nome;
+  const gps = mine ? gpsState : { status: 'idle', accuracy: null };
+  const bumpRef = useRef(bump);
+  bumpRef.current = bump;
 
   useEffect(() => {
     if (!running) return;
@@ -83,20 +91,29 @@ export default function CardioRow({ ex, day, bump, started }) {
     return () => Object.values(timers).forEach(clearTimeout);
   }, []);
 
-  // GPS: com o cronômetro correndo, a distância é somada e preenchida ao vivo
-  // (a pessoa ainda pode corrigir o campo). Mantém a tela acesa, porque o
-  // navegador não rastreia em segundo plano.
-  const gps = useGeoTracker({
-    active: gpsActive,
-    baseKm: vals.distancia,
-    onDistance: km => setField('distancia_km', String(km)),
-  });
-  useWakeLock(gpsActive);
+  // A distância medida pelo GPS é gravada no localStorage do item pelo host;
+  // aqui só relê quando ele avisa (a pessoa ainda pode corrigir o campo).
+  useEffect(() => subscribe(() => {
+    if (readSession()?.nome !== ex.nome) return;
+    const distancia = readCardio(ex.nome).distancia;
+    setVals(v => (v.distancia === distancia ? v : { ...v, distancia }));
+    bumpRef.current();
+  }), [ex.nome]);
+
+  // Voltou a este exercício (F5, app reaberto) com o cronômetro ainda correndo:
+  // registra a corrida de novo, para o GPS e as proteções retomarem.
+  useEffect(() => {
+    if (isRun && timer.runningSince && !readSession()?.running) {
+      setSession({ nome: ex.nome, dia: day.dia, running: true, gps: gpsAvailable && gpsOn });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggleGps() {
     const next = !gpsOn;
     setGpsOn(next);
     writeGpsPref(next);
+    if (mine) setSession({ gps: next });
   }
 
   function startTimer() {
@@ -104,6 +121,7 @@ export default function CardioRow({ ex, day, bump, started }) {
     setTimer(next);
     setNow(Date.now());
     writeTimer(ex.nome, next);
+    if (isRun) setSession({ nome: ex.nome, dia: day.dia, running: true, gps: gpsAvailable && gpsOn });
   }
 
   function pauseTimer() {
@@ -111,6 +129,7 @@ export default function CardioRow({ ex, day, bump, started }) {
     const next = { accumulatedMs: elapsedOf(timer, t), runningSince: null };
     setTimer(next);
     writeTimer(ex.nome, next);
+    if (mine) setSession({ running: false });
   }
 
   // Parar passa o tempo para o campo de duração (em minutos, 1 casa) e zera.
@@ -119,7 +138,9 @@ export default function CardioRow({ ex, day, bump, started }) {
     const next = { accumulatedMs: 0, runningSince: null };
     setTimer(next);
     writeTimer(ex.nome, next);
-    if (gpsActive) flush('distancia_km', vals.distancia);
+    // Distância do GPS ainda no debounce do host: grava já, antes de fechar a sessão.
+    if (mine && session.gps) flush('distancia_km', readCardio(ex.nome).distancia);
+    endSession(ex.nome);
     if (ms >= 1000) {
       const minutes = String(Math.round((ms / 60000) * 10) / 10);
       setVals(v => ({ ...v, duracao: minutes }));
