@@ -16,11 +16,11 @@ describe('normalizeExerciseName', () => {
 
 describe('getExerciseMedia', () => {
   it('sem vídeo, monta os 2 quadros a partir do base do app', () => {
-    expect(getExerciseMedia('Remada Curvada com Barra', '/EAFIT/')).toEqual({
-      id: 'Bent_Over_Barbell_Row',
+    expect(getExerciseMedia('Remada Curvada com Barra (pegada supinada)', '/EAFIT/')).toEqual({
+      id: 'Reverse_Grip_Bent-Over_Rows',
       frames: [
-        '/EAFIT/exercicios/Bent_Over_Barbell_Row/0.webp',
-        '/EAFIT/exercicios/Bent_Over_Barbell_Row/1.webp',
+        '/EAFIT/exercicios/Reverse_Grip_Bent-Over_Rows/0.webp',
+        '/EAFIT/exercicios/Reverse_Grip_Bent-Over_Rows/1.webp',
       ],
     });
   });
@@ -48,7 +48,7 @@ describe('getExerciseMedia', () => {
     // e também vale pra exercício sem demonstração padrão
     expect(getExerciseMedia('🔷 Burpee', '/', { Burpee: { url: 'u', type: 'imagem' } })?.custom).toBe(true);
     expect(getExerciseMedia('Burpee', '/')?.credit).toMatch(/Taco Fleur/);
-    expect(getExerciseMedia('Remada Curvada com Barra', '/', custom)?.id).toBe('Bent_Over_Barbell_Row');
+    expect(getExerciseMedia('Remada Curvada com Barra (pegada supinada)', '/', custom)?.id).toBe('Reverse_Grip_Bent-Over_Rows');
   });
 
   it('todo id mapeado tem os 2 quadros em public/exercicios', () => {
