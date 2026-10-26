@@ -407,22 +407,202 @@ function shareText(url) {
   return season ? season() : t('Treino concluído no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL });
 }
 
-// Temas de temporada (lib/season.js). Dia das Bruxas: brilho roxo, abóbora e morcegos no topo.
-// Só enfeite em volta; os números do treino continuam no mesmo lugar.
+// Temas de temporada (lib/season.js). Dia das Bruxas: cena desenhada (lua cheia
+// com crateras e halo, galhos secos, teia, aranha no fio, morcegos e névoa), em
+// vez de emojis. Só enfeite em volta e por trás; os números ficam onde estão.
+const BAT_PATH = 'M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z';
+
+function drawBat(ctx, x, y, scale, alpha, tilt = 0) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(tilt);
+  ctx.scale(scale, scale);
+  ctx.translate(-32, -16);
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#07040d';
+  ctx.strokeStyle = 'rgba(192,132,252,0.55)';
+  ctx.lineWidth = 1.4;
+  const path = new Path2D(BAT_PATH);
+  ctx.fill(path);
+  ctx.stroke(path);
+  ctx.fillStyle = ORANGE;
+  ctx.beginPath();
+  ctx.arc(30.5, 15, 1, 0, Math.PI * 2);
+  ctx.arc(33.5, 15, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawMoon(ctx, cx, cy, r) {
+  drawGlow(ctx, cx, cy, r * 3.4, '#fde68a', 0.16);
+  drawGlow(ctx, cx, cy, r * 1.9, '#fde68a', 0.22);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+  const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r);
+  g.addColorStop(0, '#fffbe6');
+  g.addColorStop(0.6, '#fde9a8');
+  g.addColorStop(1, '#e7c36b');
+  ctx.fillStyle = g;
+  ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  // Crateras: manchas suaves mais escuras.
+  [[-0.35, -0.2, 0.26], [0.3, 0.1, 0.2], [-0.05, 0.45, 0.17], [0.38, -0.42, 0.12], [-0.5, 0.3, 0.1]].forEach(([dx, dy, k]) => {
+    const rg = ctx.createRadialGradient(cx + dx * r, cy + dy * r, 0, cx + dx * r, cy + dy * r, k * r);
+    rg.addColorStop(0, 'rgba(160,120,40,0.38)');
+    rg.addColorStop(1, 'rgba(160,120,40,0)');
+    ctx.fillStyle = rg;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  });
+  // Sombra no lado de baixo/direita, pra dar volume.
+  const sh = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+  sh.addColorStop(0.55, 'rgba(18,12,26,0)');
+  sh.addColorStop(1, 'rgba(18,12,26,0.45)');
+  ctx.fillStyle = sh;
+  ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  ctx.restore();
+}
+
+// Galhos secos entrando pelo canto de cima, em silhueta.
+function drawBranches(ctx, x, y, len, alpha) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#05030a';
+  ctx.lineCap = 'round';
+  const branch = (bx, by, angle, l, w, depth) => {
+    const ex = bx + Math.cos(angle) * l;
+    const ey = by + Math.sin(angle) * l;
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo((bx + ex) / 2 + Math.sin(angle) * l * 0.12, (by + ey) / 2 - Math.cos(angle) * l * 0.12, ex, ey);
+    ctx.stroke();
+    if (depth > 0) {
+      branch(ex, ey, angle + 0.55, l * 0.66, w * 0.68, depth - 1);
+      branch(ex, ey, angle - 0.45, l * 0.62, w * 0.66, depth - 1);
+    }
+  };
+  branch(0, 0, 0.62, len, 16, 4);
+  branch(0, 40, 0.18, len * 0.7, 11, 3);
+  ctx.restore();
+}
+
+// Teia no canto: raios saindo do canto e arcos caídos entre eles.
+function drawWeb(ctx, cx, cy, size, flipX, alpha) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(flipX ? -1 : 1, 1);
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#d8c7f5';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  const rays = [0, 0.3, 0.62, 0.95, 1.27, 1.57];
+  rays.forEach(a => {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(a) * size, Math.sin(a) * size);
+    ctx.stroke();
+  });
+  [0.26, 0.48, 0.72, 0.95].forEach(k => {
+    ctx.beginPath();
+    rays.forEach((a, i) => {
+      const x = Math.cos(a) * size * k;
+      const y = Math.sin(a) * size * k;
+      if (i === 0) { ctx.moveTo(x, y); return; }
+      const pa = rays[i - 1];
+      const mx = Math.cos((a + pa) / 2) * size * k * 0.9;
+      const my = Math.sin((a + pa) / 2) * size * k * 0.9;
+      ctx.quadraticCurveTo(mx, my, x, y);
+    });
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function drawSpider(ctx, x, y, size) {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(216,199,245,0.6)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, 0);
+  ctx.lineTo(x, y - size * 0.4);
+  ctx.stroke();
+  ctx.strokeStyle = '#05030a';
+  ctx.lineWidth = 3.4;
+  ctx.lineCap = 'round';
+  [-1, 1].forEach(side => {
+    [[-0.9, -0.5], [-1.1, 0], [-1, 0.45], [-0.6, 0.85]].forEach(([lx, ly]) => {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + side * size * 0.7, y + ly * size * 0.9 - size * 0.35, x + side * Math.abs(lx) * size, y + ly * size);
+      ctx.stroke();
+    });
+  });
+  ctx.fillStyle = '#07040d';
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.12, size * 0.34, size * 0.44, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.3, size * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = ORANGE;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.07, y - size * 0.32, size * 0.045, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.07, y - size * 0.32, size * 0.045, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// Névoa baixa: faixas de brilho largas e achatadas.
+function drawMist(ctx, y, h, alpha) {
+  [[0.15, 0.55], [0.55, 0.45], [0.9, 0.5]].forEach(([fx, fw]) => {
+    const cx = CARD_WIDTH * fx;
+    const rad = CARD_WIDTH * fw;
+    const g = ctx.createRadialGradient(cx, 0, 0, cx, 0, rad);
+    g.addColorStop(0, `rgba(196,181,253,${alpha})`);
+    g.addColorStop(1, 'rgba(196,181,253,0)');
+    ctx.save();
+    ctx.translate(0, y);
+    ctx.scale(1, h / rad);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, -rad, CARD_WIDTH, rad * 2);
+    ctx.restore();
+  });
+}
+
+function drawVignette(ctx, strength) {
+  const g = ctx.createRadialGradient(CARD_WIDTH / 2, CARD_HEIGHT / 2, CARD_HEIGHT * 0.3, CARD_WIDTH / 2, CARD_HEIGHT / 2, CARD_HEIGHT * 0.78);
+  g.addColorStop(0, 'rgba(8,3,16,0)');
+  g.addColorStop(1, `rgba(8,3,16,${strength})`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+}
+
 function drawHalloween(ctx) {
   drawGlow(ctx, CARD_WIDTH * 0.08, 300, 640, PURPLE, 0.30);
   drawGlow(ctx, CARD_WIDTH * 0.9, CARD_HEIGHT * 0.72, 560, PURPLE, 0.14);
-  ctx.save();
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `110px ${FONT}`;
-  ctx.fillText('🎃', CARD_WIDTH - PAD_X - 60, 262);
-  ctx.globalAlpha = 0.55;
-  [[640, 205, 44], [760, 168, 34], [520, 176, 28]].forEach(([x, y, size]) => {
-    ctx.font = `${size}px ${FONT}`;
-    ctx.fillText('🦇', x, y);
-  });
-  ctx.restore();
+  drawVignette(ctx, 0.55);
+  drawMoon(ctx, 868, 292, 116);
+  drawBranches(ctx, -20, 20, 360, 0.9);
+  drawWeb(ctx, CARD_WIDTH, 0, 330, true, 0.4);
+  drawSpider(ctx, 690, 214, 38);
+  drawBat(ctx, 760, 400, 1.1, 0.95, -0.15);
+  drawBat(ctx, 560, 168, 0.8, 0.8, 0.2);
+  drawBat(ctx, 985, 470, 0.7, 0.7, -0.3);
+  drawMist(ctx, CARD_HEIGHT - 230, 190, 0.16);
+}
+
+// Cartão com foto da pessoa: só o clima por cima (névoa roxa nas bordas, teia,
+// galhos e morcegos), sem tapar o rosto nem os números.
+function drawHalloweenPhotoOverlay(ctx) {
+  drawVignette(ctx, 0.5);
+  drawGlow(ctx, CARD_WIDTH * 0.85, 240, 520, PURPLE, 0.22);
+  drawBranches(ctx, -20, 10, 330, 0.85);
+  drawWeb(ctx, CARD_WIDTH, 0, 300, true, 0.35);
+  drawBat(ctx, 800, 330, 1, 0.9, -0.15);
+  drawBat(ctx, 960, 440, 0.65, 0.75, -0.3);
+  drawMist(ctx, CARD_HEIGHT - 260, 200, 0.14);
 }
 
 // Campanhas de saúde (Outubro Rosa, Novembro Azul): brilho na cor da campanha
@@ -691,6 +871,7 @@ export async function renderWorkoutPhotoCard(summary, img, show = {}) {
   top.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = top;
   ctx.fillRect(0, 0, CARD_WIDTH, 340);
+  if (currentSeason() === 'halloween') drawHalloweenPhotoOverlay(ctx);
   await drawTopBar(ctx, 70, formatCardDate());
 
   const stats = [

@@ -104,8 +104,9 @@
   pointer-events: none;
   opacity: .5;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='150' cy='50' r='26' fill='%23fde68a' fill-opacity='.22'/%3E%3Ccircle cx='150' cy='50' r='40' fill='%23fde68a' fill-opacity='.06'/%3E%3Cg fill='%23a855f7' fill-opacity='.45'%3E%3Cpath transform='translate(70 30) scale(.7)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3Cpath transform='translate(118 92) scale(.45)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3C/g%3E%3C/svg%3E") top right / 220px no-repeat,
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23a855f7' stroke-opacity='.35' stroke-width='1'%3E%3Cpath d='M0 0L120 0M0 0L110 46M0 0L85 85M0 0L46 110M0 0L0 120'/%3E%3Cpath d='M30 0Q30 8 28 12Q26 20 21 21Q17 26 12 28Q6 29 0 30'/%3E%3Cpath d='M62 0Q60 16 57 24Q52 40 43 43Q35 52 24 57Q14 60 0 62'/%3E%3Cpath d='M95 0Q92 26 88 38Q80 62 67 67Q56 80 38 88Q24 93 0 95'/%3E%3C/svg%3E") top left / 130px no-repeat;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3CradialGradient id='h'%3E%3Cstop offset='.4' stop-color='%23fde68a' stop-opacity='.24'/%3E%3Cstop offset='1' stop-color='%23fde68a' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='m' cx='.38' cy='.35'%3E%3Cstop offset='0' stop-color='%23fffbe6'/%3E%3Cstop offset='.7' stop-color='%23fde9a8'/%3E%3Cstop offset='1' stop-color='%23d9b45a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='150' cy='50' r='62' fill='url(%23h)'/%3E%3Ccircle cx='150' cy='50' r='26' fill='url(%23m)' fill-opacity='.55'/%3E%3Cg fill='%23a07828' fill-opacity='.28'%3E%3Ccircle cx='143' cy='44' r='6'/%3E%3Ccircle cx='158' cy='55' r='4.5'/%3E%3Ccircle cx='148' cy='60' r='3'/%3E%3Ccircle cx='157' cy='40' r='2.6'/%3E%3C/g%3E%3Cg fill='%23a855f7' fill-opacity='.45'%3E%3Cpath transform='translate(70 30) scale(.7)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3Cpath transform='translate(118 92) scale(.45)' d='M32 10c-2 0-3 2-3 4-3-4-9-7-15-6 3 2 4 5 3 8-4-2-9-2-13 0 6 2 10 6 12 11 3-3 8-4 12-2 1-2 3-3 4-3s3 1 4 3c4-2 9-1 12 2 2-5 6-9 12-11-4-2-9-2-13 0-1-3 0-6 3-8-6-1-12 2-15 6 0-2-1-4-3-4z'/%3E%3C/g%3E%3C/svg%3E") top right / 220px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120' fill='none' stroke='%23a855f7' stroke-opacity='.35' stroke-width='1'%3E%3Cpath d='M0 0L120 0M0 0L110 46M0 0L85 85M0 0L46 110M0 0L0 120'/%3E%3Cpath d='M30 0Q30 8 28 12Q26 20 21 21Q17 26 12 28Q6 29 0 30'/%3E%3Cpath d='M62 0Q60 16 57 24Q52 40 43 43Q35 52 24 57Q14 60 0 62'/%3E%3Cpath d='M95 0Q92 26 88 38Q80 62 67 67Q56 80 38 88Q24 93 0 95'/%3E%3C/svg%3E") top left / 130px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 200'%3E%3Cg fill='none' stroke='%2308040f' stroke-linecap='round'%3E%3Cpath stroke-width='11' d='M44 200C46 170 40 150 44 120C47 100 42 80 46 60'/%3E%3Cpath stroke-width='6' d='M44 128C60 118 74 110 92 96M46 96C34 84 24 78 12 62M44 150C28 140 18 138 6 124'/%3E%3Cpath stroke-width='4' d='M92 96C100 90 108 82 118 80M92 96C98 100 108 100 120 108M66 112C72 100 78 92 86 80M12 62C8 54 8 46 10 38M24 78C22 68 26 60 32 54'/%3E%3Cpath stroke-width='2.4' d='M118 80C124 78 130 72 136 72M118 80C122 86 128 86 134 84M120 108C126 106 132 108 138 106'/%3E%3C/g%3E%3Cg fill='none' stroke='%23a855f7' stroke-opacity='.35' stroke-width='1'%3E%3Cpath d='M39 200C41 170 35 150 39 120'/%3E%3C/g%3E%3C/svg%3E") bottom left / 150px no-repeat;
 }
 [data-theme="light"][data-season="halloween"] .pages::before { opacity: .35; }
 
@@ -113,8 +114,8 @@
 @media (prefers-reduced-motion: no-preference) {
   [data-season="halloween"] .pages::before { animation: season-float 7s ease-in-out infinite; }
   @keyframes season-float {
-    0%, 100% { background-position: top right, top left; }
-    50% { background-position: right 0 top 8px, top left; }
+    0%, 100% { background-position: top right, top left, bottom left; }
+    50% { background-position: right 0 top 8px, top left, bottom left; }
   }
 }
 
@@ -664,4 +665,51 @@ body.live-open .season-fx { display: none; }
     90%  { opacity: .6; }
     100% { transform: translate(10px, 96vh) rotate(320deg); opacity: 0; }
   }
+}
+
+/* Dia das Bruxas, mais vivo: teia no canto dos cartões, olhos no escuro,
+   relâmpago distante e uma segunda camada de névoa (SeasonDecor). */
+[data-season="halloween"] :is(.dash-card, .card) { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60' fill='none' stroke='%23c4b5fd' stroke-opacity='.4' stroke-width='.9'%3E%3Cpath d='M60 0L0 0M60 0L5 22M60 0L18 42M60 0L38 58M60 0L60 60'/%3E%3Cpath d='M45 0Q45 5 43 8Q41 13 37 14Q34 17 30 19Q24 20 18 21'/%3E%3Cpath d='M30 0Q30 9 27 14Q23 24 16 27Q11 34 6 38Q4 41 0 42'/%3E%3Cpath d='M15 0Q15 12 12 18Q8 30 0 33'/%3E%3C/svg%3E") top right / 54px no-repeat; }
+
+.season-flash, .season-eyes { display: none; }
+.season-fog--back { bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px) + 24px); height: 90px; opacity: .3; }
+@media (prefers-reduced-motion: no-preference) {
+  .season-flash {
+    display: block;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: radial-gradient(120% 60% at 80% 0%, rgba(221, 214, 254, .55), rgba(168, 85, 247, .12) 55%, transparent 80%);
+    animation: season-lightning 29s linear infinite 6s;
+  }
+  @keyframes season-lightning {
+    0%, 6%, 100% { opacity: 0; }
+    1% { opacity: .5; }
+    2% { opacity: .05; }
+    3% { opacity: .38; }
+    4.5% { opacity: 0; }
+  }
+  .season-eyes {
+    display: block;
+    position: absolute;
+    left: 9%;
+    bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px) + 36px);
+    width: 34px;
+    height: 8px;
+    opacity: 0;
+    background:
+      radial-gradient(ellipse 5px 4px at 6px 4px, #fb923c 40%, rgba(249, 115, 22, .5) 60%, transparent 100%),
+      radial-gradient(ellipse 5px 4px at 28px 4px, #fb923c 40%, rgba(249, 115, 22, .5) 60%, transparent 100%);
+    filter: drop-shadow(0 0 5px rgba(249, 115, 22, .9));
+    animation: season-eyes 23s ease-in-out infinite 11s;
+  }
+  @keyframes season-eyes {
+    0%, 100% { opacity: 0; transform: scaleY(1); }
+    4% { opacity: .9; }
+    6% { transform: scaleY(.1); }
+    7% { transform: scaleY(1); }
+    12% { opacity: .9; }
+    14% { opacity: 0; }
+  }
+  .season-fog--back { animation: season-fog 22s ease-in-out infinite alternate-reverse; }
 }
