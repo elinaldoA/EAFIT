@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  fetchVisitBreakdown, fetchSitePages, fetchUtmBreakdown, fetchEmailStats, buildEmailStats, fetchSessionStats, buildSessionStats, formatSeconds, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
+  fetchVisitBreakdown, fetchSitePages, fetchSiteEngagement, buildSitePages, fetchUtmBreakdown, fetchEmailStats, buildEmailStats, fetchSessionStats, buildSessionStats, formatSeconds, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
   fetchWorkoutCompletion, fetchWorkoutDropoff, fetchVisitorStages, fetchLostVisitors, fetchAccessTimeline,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents, buildInstallRetention, buildCompletion,
   buildVisitorJourney, stageLabel, authErrorLabel, buildAccessTimeline, timelineBuckets, TIMELINE_BUCKETS, TIMELINE_SPAN,
@@ -42,6 +42,9 @@ const loadJourney = days => Promise.all([fetchVisitorStages(days), fetchLostVisi
   .then(([stages, lost]) => ({ ...buildVisitorJourney(stages), recent: lost }));
 const loadTimeline = ({ bucket, days }) => fetchAccessTimeline(bucket, timelineBuckets(bucket, days))
   .then(rows => buildAccessTimeline(rows, bucket));
+// Engajamento é opcional: se a consulta falhar, a tabela segue só com os acessos.
+const loadSitePages = days => Promise.all([fetchSitePages(days), fetchSiteEngagement(days).catch(() => [])])
+  .then(([pages, engagement]) => buildSitePages(pages, engagement));
 const loadSessions = days => fetchSessionStats(days).then(buildSessionStats);
 const loadEmails = days => fetchEmailStats(days).then(buildEmailStats);
 const loadInstall = () => fetchInstallRetention().then(buildInstallRetention);
@@ -190,7 +193,7 @@ export default function Behavior() {
   const [days, setDays] = useState(30);
 
   const visits = useLoad(fetchVisitBreakdown, days);
-  const sitePages = useLoad(fetchSitePages, days);
+  const sitePages = useLoad(loadSitePages, days);
   const utm = useLoad(fetchUtmBreakdown, days);
   const auth = useLoad(loadAuth, days);
   const journey = useLoad(loadJourney, days);
@@ -246,12 +249,21 @@ export default function Behavior() {
 
       <Card
         title="Páginas do site mais vistas" state={sitePages}
-        note="Cada página conta 1 vez por sessão do navegador. “Navegadores” = identificadores distintos. Páginas do app e navegador de admin não entram."
+        note="Cada página conta 1 vez por sessão do navegador. “Navegadores” = identificadores distintos. Tempo = aba visível até a primeira saída; rolagem = quanto da página chegou a aparecer; “Saíram rápido” = menos de 10s e menos de 25% da página. Quem volta à aba depois de sair não soma o tempo seguinte. Páginas do app e navegador de admin não entram."
       >
         {rows => (
           <CountTable
-            head={['Página', 'Acessos', 'Navegadores']} empty="Nenhum acesso às páginas do site no período ainda."
-            rows={rows.map(r => ({ key: r.path, label: r.path === 'home' ? 'Início' : `/${r.path}`, cells: [r.views, r.visitors] }))}
+            head={['Página', 'Acessos', 'Navegadores', 'Tempo mediano', 'Rolagem média', 'Saíram rápido']} empty="Nenhum acesso às páginas do site no período ainda."
+            rows={rows.map(r => ({
+              key: r.path,
+              label: r.path === 'home' ? 'Início' : `/${r.path}`,
+              cells: [
+                r.views, r.visitors,
+                r.medianSeconds == null ? '—' : formatSeconds(r.medianSeconds),
+                r.avgScroll == null ? '—' : `${r.avgScroll}%`,
+                r.quickPct == null ? '—' : `${r.quickPct}%`,
+              ],
+            }))}
           />
         )}
       </Card>

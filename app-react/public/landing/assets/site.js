@@ -787,6 +787,35 @@
     var vid = visitorId();
     if (vid) row.visitor_id = vid;
     postAnon('site_pageviews', row).catch(function () {});
+
+    // Engajamento (public.site_engagement): tempo com a aba visível e até onde
+    // rolou. 1 sinal, na primeira vez que a pessoa sai da página ou troca de aba.
+    var visibleMs = 0;
+    var shownAt = document.visibilityState === 'hidden' ? 0 : Date.now();
+    var maxScroll = 0;
+    var sent = false;
+    function measureScroll() {
+      var doc = document.documentElement;
+      var total = Math.max(doc.scrollHeight, 1);
+      var pct = Math.round(((window.pageYOffset || doc.scrollTop || 0) + window.innerHeight) / total * 100);
+      if (pct > maxScroll) maxScroll = Math.min(pct, 100);
+    }
+    measureScroll();
+    window.addEventListener('scroll', measureScroll, { passive: true });
+    function sendEngagement() {
+      if (sent) return;
+      sent = true;
+      if (shownAt) visibleMs += Date.now() - shownAt;
+      shownAt = 0;
+      measureScroll();
+      var out = { path: path, seconds: Math.min(1800, Math.round(visibleMs / 1000)), scroll: maxScroll };
+      if (vid) out.visitor_id = vid;
+      postAnon('site_engagement', out).catch(function () {});
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') sendEngagement();
+    });
+    window.addEventListener('pagehide', sendEngagement);
   })();
 
   fetch(SUPABASE_URL + '/rest/v1/landing_content?select=content&id=eq.1', {

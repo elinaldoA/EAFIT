@@ -15,6 +15,7 @@ export const fetchAuthEvents = (days = 30) => rpcRows('admin_auth_events', { day
 export const fetchUserEvents = (days = 30) => rpcRows('admin_user_events', { days_back: days });
 export const fetchClientBreakdown = (days = 30) => rpcRows('admin_client_breakdown', { days_back: days });
 export const fetchSitePages = (days = 30) => rpcRows('admin_site_pages', { days_back: days });
+export const fetchSiteEngagement = (days = 30) => rpcRows('admin_site_engagement', { days_back: days });
 export const fetchUtmBreakdown = (days = 30) => rpcRows('admin_utm_breakdown', { days_back: days });
 export const fetchEmailStats = (days = 30) => rpcRows('admin_email_stats', { days_back: days });
 export const fetchSessionStats = (days = 30) => rpcRows('admin_session_stats', { days_back: days });
@@ -435,4 +436,23 @@ export function buildSessionStats(rows) {
     durations: bands('duration', DURATION_BANDS),
     perUserBands: bands('per_user', PER_USER_BANDS),
   };
+}
+
+// Páginas do site com o engajamento ao lado (tempo mediano, rolagem média e
+// saídas rápidas). `engagement` pode vir vazio (migration ainda não aplicada
+// ou nenhuma saída medida): a página aparece só com os acessos.
+export function buildSitePages(pages, engagement) {
+  const byPath = new Map((engagement || []).map(e => [e.path, e]));
+  return (pages || []).map(p => {
+    const e = byPath.get(p.path);
+    const measured = Number(e?.measured) || 0;
+    return {
+      path: p.path,
+      views: Number(p.views) || 0,
+      visitors: Number(p.visitors) || 0,
+      medianSeconds: measured ? Number(e.median_seconds) || 0 : null,
+      avgScroll: measured ? Number(e.avg_scroll) || 0 : null,
+      quickPct: measured ? pct(Number(e.quick_exits) || 0, measured) : null,
+    };
+  });
 }

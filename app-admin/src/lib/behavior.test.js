@@ -4,7 +4,7 @@ const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
-  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient, buildEmailStats, buildSessionStats, formatSeconds,
+  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient, buildEmailStats, buildSessionStats, formatSeconds, buildSitePages,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents,
   buildInstallRetention, buildCompletion, formatDuration, describeClient, authErrorLabel,
   BROWSER_LABELS, FEATURE_LABELS, bucketLabel, bucketFullLabel, buildAccessTimeline, timelineBuckets,
@@ -253,5 +253,20 @@ describe('buildSessionStats', () => {
 
   it('formatSeconds', () => {
     expect([formatSeconds(8), formatSeconds(60), formatSeconds(95)]).toEqual(['8s', '1min', '1min 35s']);
+  });
+});
+
+describe('buildSitePages', () => {
+  it('junta o engajamento por página e deixa em branco o que não foi medido', () => {
+    const out = buildSitePages(
+      [{ path: 'home', views: '50', visitors: '40' }, { path: 'sobre', views: 10, visitors: 9 }],
+      [{ path: 'home', measured: '20', median_seconds: '42', avg_scroll: 63, quick_exits: '5' }],
+    );
+    expect(out[0]).toMatchObject({ path: 'home', views: 50, visitors: 40, medianSeconds: 42, avgScroll: 63, quickPct: 25 });
+    expect(out[1]).toMatchObject({ path: 'sobre', medianSeconds: null, avgScroll: null, quickPct: null });
+  });
+
+  it('sem engajamento (migration não aplicada): só os acessos', () => {
+    expect(buildSitePages([{ path: 'home', views: 3, visitors: 2 }], undefined)[0]).toMatchObject({ views: 3, medianSeconds: null });
   });
 });
