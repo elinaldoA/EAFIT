@@ -96,6 +96,7 @@ describe('backup cobre as tabelas do usuário', () => {
     user_client: 'retrato técnico do aparelho (sistema, navegador, versão do app)',
     app_access_days: 'métrica de uso (dias em que abriu o app, com IP e localização aproximada), mesma natureza de user_client',
     app_access_log: 'métrica de uso (horário em que abriu o app, sem IP nem aparelho), mesma natureza de app_access_days',
+    app_sessions: 'métrica de uso (duração e telas de cada visita ao app, com o identificador do navegador), mesma natureza de app_access_log',
     app_installs: 'métrica de instalação do app no aparelho (datas de instalação e de abertura pelo ícone)',
     app_install_baseline: 'marca interna de quem já tinha o app instalado antes da medição',
     push_stale_log: 'registro técnico de inscrição de notificação que deixou de funcionar',
