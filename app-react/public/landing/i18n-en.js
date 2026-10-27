@@ -247,6 +247,8 @@ window.LANDING_EN = {
     'Evolução de carga por exercício, volume por treino, heatmap de 35 dias e seus recordes pessoais.': 'Weight progression per exercise, volume per workout, a 35-day heatmap and your personal records.',
     'Hidratação': 'Hydration',
     'Meta diária pelo seu peso, adições rápidas com desfazer, sequência de dias na meta e lembretes.': 'Daily goal based on your weight, quick adds with undo, a streak of days on goal and reminders.',
+    'Nutrição': 'Nutrition',
+    'Proteína, calorias e macros com atalhos de um toque, metas pelo seu perfil e resumo da semana.': 'Protein, calories and macros with one-tap shortcuts, goals from your profile and a weekly summary.',
     'Conquistas e sequência': 'Achievements and streaks',
     'Medalhas por constância, sequência de 7 e 14 dias e marcos de 10, 25, 50, 100 e 200 treinos.': 'Medals for consistency, 7- and 14-day streaks and milestones at 10, 25, 50, 100 and 200 workouts.',
     'Fotos, peso e medidas': 'Photos, weight and measurements',
@@ -682,6 +684,7 @@ window.LANDING_EN = {
     'Um código e um link pra cada canal, como Instagram, WhatsApp, TikTok e YouTube, pra saber de onde vem cada cadastro.': 'A code and a link for each channel, such as Instagram, WhatsApp, TikTok and YouTube, so you know where each sign-up comes from.',
     'Privacidade em primeiro lugar': 'Privacy first',
     'O painel mostra só números. Quem se cadastra pelo seu link continua anônimo pra você.': 'The dashboard only shows numbers. People who sign up through your link stay anonymous to you.',
+    'Nutrição: registre proteína, calorias e macros com atalhos de um toque, crie e edite os seus, corrija dias anteriores e acompanhe o resumo da semana, tudo funcionando offline': 'Nutrition: log protein, calories and macros with one-tap shortcuts, create and edit your own, fix previous days and follow the weekly summary, all working offline',
     // Outubro/2026: liga do mês, academia ou casa, modo Personal novo, embaixadores e influenciadores
     'Painel': 'Dashboard',
     'Modelos': 'Templates',

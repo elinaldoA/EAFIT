@@ -5,6 +5,7 @@ import { getDateForWeekday } from '../lib/utils';
 import { enqueue, flushQueue, queueSize } from '../lib/syncQueue';
 import { upsertWaterLog } from '../lib/waterLog';
 import { upsertProteinLog, upsertNutritionLog } from '../lib/proteinLog';
+import { saveCustomFoodRow, deleteCustomFoodRow } from '../lib/nutritionFoods';
 import { upsertWeightLog } from '../lib/weightLog';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
@@ -90,6 +91,12 @@ const SYNC_EXECUTORS = {
   },
   nutrition_log: async ({ userId, date, totals }) => {
     await upsertNutritionLog(userId, date, totals);
+  },
+  food_save: async ({ row }) => {
+    await saveCustomFoodRow(row);
+  },
+  food_delete: async ({ userId, id }) => {
+    await deleteCustomFoodRow(userId, id);
   },
   weight_log: async ({ userId, date, peso }) => {
     await upsertWeightLog(userId, date, peso);

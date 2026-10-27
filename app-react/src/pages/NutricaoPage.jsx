@@ -7,12 +7,12 @@ import { useWorkout } from '../context/useWorkout';
 import { fetchNutritionLog, upsertNutritionLog, fetchProteinLogsRange, readLocalTotals, writeLocalTotals } from '../lib/proteinLog';
 import { applyFood, EMPTY_TOTALS } from '../lib/nutritionTotals';
 import { enqueue } from '../lib/syncQueue';
-import { parseLocalDate, toDateStr } from '../lib/utils';
+import { parseLocalDate, toDateStr, fmtDate } from '../lib/utils';
 import { buildProteinSeries, proteinStats } from '../lib/proteinStats';
 import { fetchWeightLogs } from '../lib/weightLog';
 import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading } from '../lib/nutritionInsights';
 import { computeNutritionGoals } from '../lib/nutritionGoals';
-import { fetchCustomFoods, createCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
+import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS, VISIBLE_FOODS } from '../lib/foodShortcuts';
 import ProteinBars from '../components/ProteinBars';
 import MacroBars from '../components/MacroBars';
@@ -35,6 +35,16 @@ const READING_TEXT = {
   above: () => t('Você está acima da meta de calorias da semana.'),
 };
 const EMPTY_CUSTOM = { name: '', g: '', kcal: '', carbs: '', fat: '' };
+const EMPTY_FIX = { g: '', kcal: '', carbs: '', fat: '' };
+
+// O "Desfazer" sobrevive a fechar o app: a pilha do dia fica no aparelho.
+const undoKey = () => `nutricaoUndo_${todayDate()}`;
+function readUndo() {
+  try { return JSON.parse(localStorage.getItem(undoKey())) || []; } catch { return []; }
+}
+function writeUndo(stack) {
+  try { localStorage.setItem(undoKey(), JSON.stringify(stack)); } catch { /* sem cota: só perde o desfazer */ }
+}
 
 export default function NutricaoPage({ active }) {
   const { user } = useAuth();
@@ -48,9 +58,13 @@ export default function NutricaoPage({ active }) {
   const [logs, setLogs] = useState([]);
   const [weightLogs, setWeightLogs] = useState([]);
   const [loading, setLoading] = useState(false);
-  // Últimas adições desta visita, pra "Desfazer" tirar exatamente o que entrou
-  // por engano. Vazia (app reaberto), o botão vira um -10 g de proteína.
-  const [undoStack, setUndoStack] = useState([]);
+  // Últimas adições do dia, pra "Desfazer" tirar exatamente o que entrou por
+  // engano. Vazia (dia sem adições guardadas), o botão vira um -10 g de proteína.
+  const [undoStack, setUndoStack] = useState(readUndo);
+  const [editingId, setEditingId] = useState(null);
+  const [fixOpen, setFixOpen] = useState(false);
+  const [fixDate, setFixDate] = useState('');
+  const [fix, setFix] = useState(EMPTY_FIX);
   const [customOpen, setCustomOpen] = useState(false);
   const [custom, setCustom] = useState(EMPTY_CUSTOM);
   const [saveShortcut, setSaveShortcut] = useState(false);
@@ -61,6 +75,11 @@ export default function NutricaoPage({ active }) {
 
   const totals = readLocalTotals();
   const protein = totals.protein;
+
+  // Refaz a ordem dos atalhos só ao abrir a aba.
+  useEffect(() => {
+    if (active) setUseCounts(readUseCounts());
+  }, [active]);
 
   useEffect(() => {
     if (!active || !user) return;
@@ -124,16 +143,18 @@ export default function NutricaoPage({ active }) {
   }
 
   function handleAdd(food) {
-    if (food.id) setUseCounts(bumpUseCount(food.id));
+    // Só grava a contagem: a ordem dos botões é refeita ao abrir a aba, para
+    // o alimento não sair de debaixo do dedo a cada toque.
+    if (food.id) bumpUseCount(food.id);
     const next = applyFood(totals, food);
-    setUndoStack(s => [...s, food].slice(-10));
+    setUndoStack(s => { const n = [...s, food].slice(-10); writeUndo(n); return n; });
     if (goalG && next.protein >= goalG && protein < goalG) toast(t('🎉 Meta de proteína do dia atingida!'));
     saveTotals(next);
   }
 
   function handleUndo() {
     const last = undoStack[undoStack.length - 1];
-    setUndoStack(s => s.slice(0, -1));
+    setUndoStack(s => { const n = s.slice(0, -1); writeUndo(n); return n; });
     saveTotals(last ? applyFood(totals, last, -1) : applyFood(totals, { g: 10 }, -1));
   }
 
@@ -148,6 +169,13 @@ export default function NutricaoPage({ active }) {
     const name = custom.name.trim();
     if (!food.g && !food.kcal && !food.carbs && !food.fat) return;
     if (saveShortcut && !name) { toast(t('Dê um nome ao atalho')); return; }
+    if (editingId) {
+      if (!name) { toast(t('Dê um nome ao atalho')); return; }
+      setMyFoods(await updateCustomFood(user.id, editingId, { ...food, name }));
+      toast(t('Atalho atualizado'));
+      closeForm();
+      return;
+    }
     let saved = null;
     if (saveShortcut && user) {
       try {
@@ -162,9 +190,62 @@ export default function NutricaoPage({ active }) {
       }
     }
     handleAdd(saved || { ...food, label: name || undefined });
+    closeForm();
+  }
+
+  function closeForm() {
     setCustom(EMPTY_CUSTOM);
     setSaveShortcut(false);
+    setEditingId(null);
     setCustomOpen(false);
+  }
+
+  function handleEditFood(food) {
+    setCustom({ name: food.label, g: String(food.g), kcal: String(food.kcal), carbs: String(food.carbs), fat: String(food.fat) });
+    setEditingId(food.id);
+    setSaveShortcut(true);
+    setCustomOpen(true);
+  }
+
+  // Dias anteriores (menos hoje): corrige o que foi registrado errado ou esquecido.
+  const pastDays = useMemo(() => {
+    const out = [];
+    const d = parseLocalDate(todayDate());
+    for (let i = 1; i < HISTORY_DAYS; i++) {
+      d.setDate(d.getDate() - 1);
+      out.push(toDateStr(d));
+    }
+    return out;
+  }, []);
+
+  function pickFixDate(date) {
+    setFixDate(date);
+    const row = logs.find(l => l.log_date === date);
+    setFix(row
+      ? { g: String(row.amount_g ?? ''), kcal: String(row.kcal ?? ''), carbs: String(row.carbs_g ?? ''), fat: String(row.fat_g ?? '') }
+      : EMPTY_FIX);
+  }
+
+  function handleFixSubmit(e) {
+    e.preventDefault();
+    if (!fixDate || !user) return;
+    const totals = {
+      protein: parseInt(fix.g, 10) || 0,
+      kcal: parseInt(fix.kcal, 10) || 0,
+      carbs: parseInt(fix.carbs, 10) || 0,
+      fat: parseInt(fix.fat, 10) || 0,
+    };
+    upsertNutritionLog(user.id, fixDate, totals).catch(err => {
+      console.error('upsertNutritionLog:', err);
+      enqueue('nutrition_log', { userId: user.id, date: fixDate, totals });
+      markPending();
+    });
+    const row = { log_date: fixDate, amount_g: totals.protein, kcal: totals.kcal, carbs_g: totals.carbs, fat_g: totals.fat };
+    setLogs(ls => [...ls.filter(l => l.log_date !== fixDate), row].sort((a, b) => a.log_date.localeCompare(b.log_date)));
+    toast(t('Dia corrigido'));
+    setFixOpen(false);
+    setFixDate('');
+    setFix(EMPTY_FIX);
   }
 
   async function handleDeleteFood(food) {
@@ -180,6 +261,7 @@ export default function NutricaoPage({ active }) {
   function handleReset() {
     if (!window.confirm(t('Zerar o que foi registrado hoje?'))) return;
     setUndoStack([]);
+    writeUndo([]);
     saveTotals(EMPTY_TOTALS);
   }
 
@@ -223,6 +305,9 @@ export default function NutricaoPage({ active }) {
               <span className="quick-foods__kcal">{f.kcal} kcal</span>
             </button>
             {manage && f.custom && (
+              <button type="button" className="quick-foods__edit" aria-label={t('Editar o atalho "{name}"', { name: f.label })} onClick={() => handleEditFood(f)}>✎</button>
+            )}
+            {manage && f.custom && (
               <button type="button" className="quick-foods__del" aria-label={t('Apagar o atalho "{name}"', { name: f.label })} onClick={() => handleDeleteFood(f)}>×</button>
             )}
           </div>
@@ -244,7 +329,7 @@ export default function NutricaoPage({ active }) {
       )}
 
       <div className="water-actions">
-        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setCustomOpen(o => !o)} aria-expanded={customOpen}>
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => (customOpen ? closeForm() : setCustomOpen(true))} aria-expanded={customOpen}>
           {customOpen ? t('Fechar') : t('+ Outro alimento')}
         </button>
         <button type="button" className="btn btn--ghost btn--sm" disabled={!hasLog} onClick={handleUndo}>
@@ -266,11 +351,39 @@ export default function NutricaoPage({ active }) {
             {t('Nome (para salvar como atalho)')}
             <input type="text" maxLength={30} value={custom.name} onChange={e => setCustom(c => ({ ...c, name: e.target.value }))} />
           </label>
-          <label className="custom-food__save">
-            <input type="checkbox" checked={saveShortcut} disabled={myFoods.length >= MAX_CUSTOM_FOODS} onChange={e => setSaveShortcut(e.target.checked)} />
-            {myFoods.length >= MAX_CUSTOM_FOODS ? t('Limite de {n} atalhos atingido', { n: MAX_CUSTOM_FOODS }) : t('Salvar como atalho')}
+          {editingId ? (
+            <p className="custom-food__save">{t('Editando o atalho. O dia de hoje não muda.')}</p>
+          ) : (
+            <label className="custom-food__save">
+              <input type="checkbox" checked={saveShortcut} disabled={myFoods.length >= MAX_CUSTOM_FOODS} onChange={e => setSaveShortcut(e.target.checked)} />
+              {myFoods.length >= MAX_CUSTOM_FOODS ? t('Limite de {n} atalhos atingido', { n: MAX_CUSTOM_FOODS }) : t('Salvar como atalho')}
+            </label>
+          )}
+          <button type="submit" className="btn btn--sm custom-food__submit">{editingId ? t('Salvar atalho') : t('Adicionar')}</button>
+        </form>
+      )}
+
+      <div className="water-actions">
+        <button type="button" className="link-btn" onClick={() => setFixOpen(o => !o)} aria-expanded={fixOpen}>
+          {fixOpen ? t('Fechar') : t('Corrigir um dia anterior')}
+        </button>
+      </div>
+      {fixOpen && (
+        <form className="custom-food" onSubmit={handleFixSubmit}>
+          <label className="custom-food__name">
+            {t('Dia')}
+            <select value={fixDate} onChange={e => pickFixDate(e.target.value)}>
+              <option value="">{t('Escolha o dia')}</option>
+              {pastDays.map(d => <option key={d} value={d}>{fmtDate(d)}</option>)}
+            </select>
           </label>
-          <button type="submit" className="btn btn--sm custom-food__submit">{t('Adicionar')}</button>
+          {[['kcal', t('Calorias')], ['g', t('Proteína (g)')], ['carbs', t('Carbo (g)')], ['fat', t('Gordura (g)')]].map(([k, label]) => (
+            <label key={k}>
+              {label}
+              <input type="number" inputMode="numeric" min="0" max="5000" value={fix[k]} onChange={e => setFix(c => ({ ...c, [k]: e.target.value }))} />
+            </label>
+          ))}
+          <button type="submit" className="btn btn--sm custom-food__submit" disabled={!fixDate}>{t('Salvar o dia')}</button>
         </form>
       )}
 
