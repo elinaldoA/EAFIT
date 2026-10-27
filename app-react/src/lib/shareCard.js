@@ -1070,6 +1070,113 @@ export async function shareMonthlyRecap(recap) {
   return shareImageBlob(blob, 'meu-mes-eafit.png', t('Meu mês no EAFIT'), t('Meu mês no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL: cardUrl(refCode) }));
 }
 
+const signedNum = v => `${v > 0 ? '+' : ''}${String(v).replace('.', ',')}`;
+const plainNum = v => String(v).replace('.', ',');
+const deltaColor = diff => (diff < 0 ? EMERALD : diff > 0 ? ORANGE_LIGHT : MUTED);
+
+// Cartão 9:16 do antes e depois: as duas fotos lado a lado, o tempo entre elas
+// e a variação de peso e medidas. `comparison` vem de buildComparison;
+// `before`/`after` são { img, dateLabel } com a imagem já carregada.
+export async function renderBeforeAfterCard(comparison, before, after, refCode = myRefCode()) {
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+
+  drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
+  await drawTopBar(ctx, 70, '');
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `800 30px ${FONT}`;
+  setTracking(ctx, 4);
+  ctx.fillText(t('ANTES E DEPOIS'), PAD_X, 250);
+  setTracking(ctx, 0);
+
+  const gap = 24;
+  const photoW = (CONTENT_W - gap) / 2;
+  const photoH = Math.round(photoW * 4 / 3);
+  const photoY = 290;
+  [[before, PAD_X, t('Antes')], [after, PAD_X + photoW + gap, t('Depois')]].forEach(([side, x, label]) => {
+    ctx.save();
+    roundedRectPath(ctx, x, photoY, photoW, photoH, 28);
+    ctx.clip();
+    const r = coverRect(side.img.naturalWidth || side.img.width, side.img.naturalHeight || side.img.height, photoW, photoH);
+    ctx.drawImage(side.img, x + r.x, photoY + r.y, r.w, r.h);
+    ctx.restore();
+    roundedRectPath(ctx, x, photoY, photoW, photoH, 28);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `800 34px ${FONT}`;
+    setTracking(ctx, 3);
+    ctx.fillText(label.toUpperCase(), x + photoW / 2, photoY + photoH + 52);
+    setTracking(ctx, 0);
+    ctx.fillStyle = MUTED;
+    ctx.font = `600 26px ${FONT}`;
+    ctx.fillText(side.dateLabel, x + photoW / 2, photoY + photoH + 90);
+  });
+
+  const rows = [];
+  if (comparison.weight) {
+    const w = comparison.weight;
+    rows.push([t('Peso'), `${plainNum(w.before)} → ${plainNum(w.after)} kg`, signedNum(w.diff), w.diff]);
+  }
+  comparison.measures.forEach(m => rows.push([m.label, `${plainNum(m.before)} → ${plainNum(m.after)} cm`, signedNum(m.diff), m.diff]));
+
+  const rowH = 62;
+  const panelY = photoY + photoH + 130;
+  const headH = 120;
+  const panelH = headH + rows.length * rowH + 24;
+  drawPanel(ctx, PAD_X, panelY, CONTENT_W, panelH);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `900 60px ${FONT}`;
+  const headline = comparison.days === 0
+    ? t('Mesmo dia')
+    : t('{n} dias de evolução', { n: comparison.days });
+  fitFont(ctx, headline, CONTENT_W - 80, 60, 900, 34);
+  ctx.fillText(headline, CARD_WIDTH / 2, panelY + 78);
+
+  rows.forEach(([label, range, diffText, diff], i) => {
+    const ry = panelY + headH + i * rowH;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = MUTED;
+    ctx.font = `700 28px ${FONT}`;
+    ctx.fillText(label, PAD_X + 40, ry + 30);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = deltaColor(diff);
+    ctx.font = `800 30px ${FONT}`;
+    ctx.fillText(diffText, CARD_WIDTH - PAD_X - 40, ry + 30);
+    const diffW = ctx.measureText(diffText).width;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `700 28px ${FONT}`;
+    ctx.fillText(range, CARD_WIDTH - PAD_X - 40 - diffW - 20, ry + 30);
+  });
+
+  await drawFooter(ctx, CARD_HEIGHT - 214, t('Monte o seu treino grátis'), refCode ? cardUrl(refCode) : '');
+
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+// `before`/`after`: { src, dateLabel } — src é o data URL da foto.
+export async function shareBeforeAfter(comparison, before, after) {
+  trackFeature('share_before_after');
+  const refCode = myRefCode();
+  const [imgBefore, imgAfter] = await Promise.all([loadImage(before.src), loadImage(after.src)]);
+  const blob = await renderBeforeAfterCard(
+    comparison,
+    { img: imgBefore, dateLabel: before.dateLabel },
+    { img: imgAfter, dateLabel: after.dateLabel },
+    refCode,
+  );
+  return shareImageBlob(blob, 'antes-e-depois-eafit.png', t('Antes e depois'), t('Meu antes e depois no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}', { SHARE_CARD_URL: cardUrl(refCode) }));
+}
+
 // Imagem 4:5 (post do Instagram) com o QR do link de divulgação, para levar
 // à academia, a eventos ou mostrar num vídeo. `code` é o código de quem divulga.
 const QR_CARD_HEIGHT = 1350;

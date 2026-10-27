@@ -5,6 +5,7 @@ import { fetchWeightLogs } from '../lib/weightLog';
 import { fetchMeasurements } from '../lib/bodyMeasurements';
 import { buildComparison } from '../lib/photoCompare';
 import { useBackToClose } from '../hooks/useBackToClose';
+import { useToast } from '../context/useToast';
 
 import { t, locale } from '../lib/i18n';
 const fullDate = iso => new Date(`${iso}T12:00:00`).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -29,6 +30,7 @@ function PhotoPick({ label, photos, value, onChange }) {
 // a variação de peso e de medidas nas mesmas datas. photos: ordem crescente por data.
 export default function PhotoCompare({ photos, userId, onClose }) {
   useBackToClose(onClose);
+  const toast = useToast();
   useEffect(() => {
     document.body.classList.add('modal-open');
     return () => document.body.classList.remove('modal-open');
@@ -36,6 +38,7 @@ export default function PhotoCompare({ photos, userId, onClose }) {
 
   const [beforeIdx, setBeforeIdx] = useState(0);
   const [afterIdx, setAfterIdx] = useState(photos.length - 1);
+  const [sharing, setSharing] = useState(false);
   const [extra, setExtra] = useState({ weightLogs: [], measurements: [] });
 
   useEffect(() => {
@@ -53,6 +56,27 @@ export default function PhotoCompare({ photos, userId, onClose }) {
     [before, after, extra],
   );
   const inOrder = result && result.days >= 0;
+
+  const share = async () => {
+    if (sharing || !inOrder) return;
+    setSharing(true);
+    try {
+      const { shareBeforeAfter } = await import('../lib/shareCard');
+      const outcome = await shareBeforeAfter(
+        result,
+        { src: before.image_data, dateLabel: fullDate(before.photo_date) },
+        { src: after.image_data, dateLabel: fullDate(after.photo_date) },
+      );
+      if (outcome === 'downloaded') toast(t('🖼️ Imagem baixada'));
+    } catch (err) {
+      if (err?.name !== 'AbortError') {
+        console.error('shareBeforeAfter:', err);
+        toast(t('⚠️ Erro ao gerar imagem de compartilhamento'));
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
 
   return createPortal(
     <div className="photo-modal" role="dialog" aria-modal="true" aria-label={t('Antes e depois')}>
@@ -92,6 +116,10 @@ export default function PhotoCompare({ photos, userId, onClose }) {
             )}
           </div>
         )}
+
+        <button type="button" className="btn btn--primary btn--sm" disabled={!inOrder || sharing} onClick={share}>
+          {sharing ? t('Gerando imagem…') : t('📤 Compartilhar imagem')}
+        </button>
       </div>
     </div>,
     getModalRoot()

@@ -7,11 +7,14 @@ const h = vi.hoisted(() => ({
   weight: { fetchWeightLogs: vi.fn() },
   measures: { fetchMeasurements: vi.fn() },
   photos: { fetchPhotos: vi.fn(), addPhoto: vi.fn(), deletePhoto: vi.fn() },
+  share: { shareBeforeAfter: vi.fn() },
+  toast: vi.fn(),
 }));
+vi.mock('../lib/shareCard', () => h.share);
 
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
-vi.mock('../context/useToast', () => ({ useToast: () => vi.fn() }));
+vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../lib/progressPhotos', () => h.photos);
 vi.mock('../lib/weightLog', () => h.weight);
 vi.mock('../lib/bodyMeasurements', async orig => ({ ...(await orig()), ...h.measures }));
@@ -75,6 +78,34 @@ describe('PhotoCompare', () => {
     render(<PhotoCompare photos={photos} userId="u1" onClose={() => {}} />);
     expect(screen.getByText('90 dias entre as fotos')).toBeTruthy();
     await waitFor(() => expect(screen.getByText(/Registre peso e medidas em datas diferentes/)).toBeTruthy());
+  });
+
+  it('compartilha a imagem com a comparação e as fotos escolhidas', async () => {
+    h.share.shareBeforeAfter.mockResolvedValue('downloaded');
+    render(<PhotoCompare photos={photos} userId="u1" onClose={() => {}} />);
+    await screen.findByText(/90 → 84,5 kg/);
+    fireEvent.click(screen.getByText('📤 Compartilhar imagem'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('🖼️ Imagem baixada'));
+    const [comparison, before, after] = h.share.shareBeforeAfter.mock.calls[0];
+    expect(comparison.days).toBe(90);
+    expect(before.src).toBe('data:a');
+    expect(after.src).toBe('data:c');
+  });
+
+  it('não compartilha com Antes mais recente que Depois', async () => {
+    render(<PhotoCompare photos={photos} userId="u1" onClose={() => {}} />);
+    await screen.findByText(/90 → 84,5 kg/);
+    fireEvent.change(screen.getByLabelText('Antes'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Depois'), { target: { value: '0' } });
+    expect(screen.getByText('📤 Compartilhar imagem').disabled).toBe(true);
+  });
+
+  it('avisa quando a imagem não pôde ser gerada', async () => {
+    h.share.shareBeforeAfter.mockRejectedValue(new Error('x'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(<PhotoCompare photos={photos} userId="u1" onClose={() => {}} />);
+    fireEvent.click(screen.getByText('📤 Compartilhar imagem'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Erro ao gerar imagem de compartilhamento'));
   });
 
   it('fecha pelo botão', () => {

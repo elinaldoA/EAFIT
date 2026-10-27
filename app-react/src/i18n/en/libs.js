@@ -144,6 +144,9 @@ export default {
   'MEU MÊS NO EAFIT': 'MY MONTH ON EAFIT',
   'volume total': 'total volume',
   'em relação ao mês anterior': 'compared with last month',
+  'ANTES E DEPOIS': 'BEFORE AND AFTER',
+  '{n} dias de evolução': '{n} days of progress',
+  'Meu antes e depois no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}': 'My before and after on EAFIT 💪 Build yours for free: {SHARE_CARD_URL}',
   'Meu mês no EAFIT': 'My month on EAFIT',
   'Meu mês no EAFIT 💪 Monte o seu grátis: {SHARE_CARD_URL}': 'My month on EAFIT 💪 Build yours for free: {SHARE_CARD_URL}',
 
