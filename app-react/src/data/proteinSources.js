@@ -18,13 +18,18 @@ export const PROTEIN_SOURCES = [
 // Adições rápidas do registro do dia: cada toque soma proteína (g), calorias e
 // macros de uma porção comum. Valores aproximados e arredondados.
 export const QUICK_FOODS = [
+  // Café da manhã primeiro, na ordem em que costuma ser comido.
+  { id: 'cafe', icon: '☕', label: t('Café c/ leite'), g: 3, kcal: 80, carbs: 9, fat: 3 },
+  { id: 'pao', icon: '🥖', label: t('Pão'), g: 4, kcal: 150, carbs: 29, fat: 2 },
   { id: 'ovo', icon: '🥚', label: t('Ovo'), g: 6, kcal: 70, carbs: 1, fat: 5 },
+  { id: 'queijo', icon: '🧀', label: t('Queijo'), g: 10, kcal: 130, carbs: 1, fat: 10 },
   { id: 'iogurte', icon: '🥛', label: t('Iogurte'), g: 17, kcal: 120, carbs: 7, fat: 4 },
+  { id: 'aveia', icon: '🥣', label: t('Aveia'), g: 4, kcal: 115, carbs: 20, fat: 2 },
+  { id: 'banana', icon: '🍌', label: t('Banana'), g: 1, kcal: 90, carbs: 23, fat: 0 },
+  { id: 'cuscuz', icon: '🌽', label: t('Cuscuz'), g: 2, kcal: 115, carbs: 25, fat: 1 },
+  // Refeições e suplemento.
   { id: 'whey', icon: '🥤', label: t('Whey'), g: 24, kcal: 120, carbs: 3, fat: 2 },
   { id: 'frango', icon: '🍗', label: t('Frango'), g: 31, kcal: 165, carbs: 0, fat: 4 },
   { id: 'arroz', icon: '🍚', label: t('Arroz'), g: 3, kcal: 130, carbs: 28, fat: 0 },
   { id: 'feijao', icon: '🫘', label: t('Feijão'), g: 5, kcal: 80, carbs: 14, fat: 1 },
-  { id: 'pao', icon: '🥖', label: t('Pão'), g: 4, kcal: 150, carbs: 29, fat: 2 },
-  { id: 'banana', icon: '🍌', label: t('Banana'), g: 1, kcal: 90, carbs: 23, fat: 0 },
-  { id: 'cafe', icon: '☕', label: t('Café c/ leite'), g: 3, kcal: 80, carbs: 9, fat: 3 },
 ];
