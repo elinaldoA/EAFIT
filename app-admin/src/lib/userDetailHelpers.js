@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { computeNutritionGoals } from './nutritionGoals';
 
 export const METAS = ['massa', 'forca', 'emagrecer', 'definicao', 'saude', 'resistencia'];
 export const NIVEIS = ['iniciante', 'intermediario', 'avancado'];
@@ -98,6 +99,11 @@ export function describeAppData(md = {}, detail = {}) {
   rows.push(['Meta de água', md.macroAgua
     ? `${String(md.macroAgua).replace('.', ',')} L por dia (definida pelo usuário)`
     : auto ? `${String(auto).replace('.', ',')} L por dia (calculada pelo peso)` : '—']);
+
+  const nutrition = computeNutritionGoals(md);
+  rows.push(['Meta de nutrição', nutrition
+    ? `${nutrition.kcal} kcal · ${nutrition.protein} g de proteína · ${nutrition.carbs} g de carboidratos · ${nutrition.fat} g de gorduras (estimada pelo perfil)`
+    : '—']);
 
   rows.push(['Horário de treino', md.trainingHour === undefined || md.trainingHour === null || md.trainingHour === ''
     ? 'não informado' : `por volta das ${String(md.trainingHour).padStart(2, '0')}h`]);

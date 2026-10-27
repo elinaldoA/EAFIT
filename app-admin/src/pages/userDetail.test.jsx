@@ -205,7 +205,7 @@ describe('UserProfileTab', () => {
     render(<UserProfileTab {...props} />);
     expect(screen.getByText('Nenhuma conquista desbloqueada ainda.')).toBeTruthy();
     expect(screen.getByText('Sem fotos de progresso.')).toBeTruthy();
-    expect(screen.getAllByText('Sem registros.')).toHaveLength(2);
+    expect(screen.getAllByText('Sem registros.')).toHaveLength(3);
   });
 
   it('mostra conquistas (com rótulo ou id), fotos e registros', () => {
@@ -214,6 +214,7 @@ describe('UserProfileTab', () => {
       progressPhotos={[{ id: 'p1', photo_date: '2026-03-01', image_data: 'data:x', note: 'costas' }]}
       weightLogs={[{ id: 'w1', log_date: '2026-03-01', weight: 80.5 }]}
       waterLogs={[{ id: 'a1', log_date: '2026-03-01', amount_ml: 2000 }]}
+      proteinLogs={[{ id: 'p9', log_date: '2026-03-01', amount_g: 123 }]}
     />);
     expect(screen.getByText(/Sequência de 7 dias/)).toBeTruthy();
     expect(screen.getByText('desconhecida')).toBeTruthy();
@@ -221,6 +222,7 @@ describe('UserProfileTab', () => {
     expect(screen.getByText('costas')).toBeTruthy();
     expect(screen.getByText('80.5')).toBeTruthy();
     expect(screen.getByText('2000')).toBeTruthy();
+    expect(screen.getByText('123')).toBeTruthy();
   });
 });
 
@@ -326,7 +328,7 @@ describe('UserDetail', () => {
     tables = {
       workout_plans: { data: null },
       workouts: { data: [{ id: 'w1', workout_date: '2026-03-01', day_of_week: 'Seg', completed: true, duration_seconds: 1800 }] },
-      water_logs: { data: [] }, weight_logs: { data: [] }, exercise_discomfort: { data: [] },
+      water_logs: { data: [] }, protein_logs: { data: [] }, weight_logs: { data: [] }, exercise_discomfort: { data: [] },
       achievements: { data: [] }, progress_photos: { data: [] },
       push_subscriptions: { count: 2 },
       account_deactivations: { data: null },

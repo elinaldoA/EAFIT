@@ -242,7 +242,7 @@ const ONBOARDING_ERRORS = {
   erro_plano: 'Falha ao gerar o plano',
 };
 
-export const PAGE_LABELS = { treino: 'Treino', historico: 'Histórico', hidratacao: 'Hidratação', dash: 'Evolução', perfil: 'Perfil', personal: 'Modo Personal' };
+export const PAGE_LABELS = { treino: 'Treino', historico: 'Histórico', hidratacao: 'Hidratação', nutricao: 'Nutrição', dash: 'Evolução', perfil: 'Perfil', personal: 'Modo Personal' };
 export const FEATURE_LABELS = {
   live_mode: 'Modo treino ao vivo',
   voice_coach: 'Treinador por voz',
@@ -250,6 +250,7 @@ export const FEATURE_LABELS = {
   exercise_demo: 'Demonstração de exercício',
   plan_editor: 'Editor de treino',
   water: 'Registro de água',
+  protein: 'Registro de proteína',
   checkin: 'Check-in diário',
   measurements: 'Medidas corporais',
   photos: 'Fotos de progresso',

@@ -7,7 +7,7 @@ import UserTrainerInviteCard from '../components/UserTrainerInviteCard';
 import UserAppDataCard from '../components/UserAppDataCard';
 import { METAS, NIVEIS, badgeLabel, formatDate } from '../lib/userDetailHelpers';
 
-export default function UserProfileTab({ userId, detail, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs }) {
+export default function UserProfileTab({ userId, detail, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs, proteinLogs = [] }) {
   return (
     <div className="stack">
       <form className="card form-grid" onSubmit={onSaveProfile}>
@@ -146,6 +146,19 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
               <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="ml">{w.amount_ml}</td></tr>
             ))}
             {waterLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="💧" label="Sem registros." /></td></tr>}
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 className="section-title">Proteína</h2>
+        <table className="resp-table">
+          <thead><tr><th>Data</th><th>g</th></tr></thead>
+          <tbody>
+            {proteinLogs.map(w => (
+              <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="g">{w.amount_g}</td></tr>
+            ))}
+            {proteinLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="🍎" label="Sem registros." /></td></tr>}
           </tbody>
         </table>
       </section>

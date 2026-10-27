@@ -54,6 +54,12 @@ describe('dados do app', () => {
     expect(row(rows, 'Pausas')).toBe('01/04/2026 a 03/04/2026 · 01/03/2026 a 03/03/2026 · 01/02/2026 a 03/02/2026 (+1 anteriores)');
   });
 
+  it('meta de nutrição estimada pelo perfil, ou traço sem dados', () => {
+    expect(row(describeAppData({}), 'Meta de nutrição')).toBe('—');
+    expect(row(describeAppData({ sexo: 'M', idade: '30', peso: '80', altura: '180', meta: 'saude', weeklyGoal: 4 }), 'Meta de nutrição'))
+      .toMatch(/^2760 kcal · 112 g de proteína/);
+  });
+
   it('meta de água calculada pelo peso quando o usuário não definiu', () => {
     expect(row(describeAppData({ peso: 80 }), 'Meta de água')).toBe('2,8 L por dia (calculada pelo peso)');
   });

@@ -24,6 +24,7 @@ export default function UserDetail() {
   const [activePlan, setActivePlan] = useState(null);
   const [workouts, setWorkouts] = useState([]);
   const [waterLogs, setWaterLogs] = useState([]);
+  const [proteinLogs, setProteinLogs] = useState([]);
   const [weightLogs, setWeightLogs] = useState([]);
   const [personalRecords, setPersonalRecords] = useState([]);
   const [discomfortLogs, setDiscomfortLogs] = useState([]);
@@ -47,7 +48,7 @@ export default function UserDetail() {
     setLoading(true);
     setError('');
     try {
-      const [{ data: userRows, error: userErr }, plan, w, wa, we, allWorkoutIds, disc, ach, photos, push, deact] = await Promise.all([
+      const [{ data: userRows, error: userErr }, plan, w, wa, we, allWorkoutIds, disc, ach, photos, push, deact, pr] = await Promise.all([
         db.rpc('admin_get_user', { target: id }),
         db.from('workout_plans')
           .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, is_post_workout, order_index))')
@@ -61,6 +62,7 @@ export default function UserDetail() {
         db.from('progress_photos').select('id, photo_date, image_data, storage_path, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
         db.from('push_subscriptions').select('id', { count: 'exact', head: true }).eq('user_id', id),
         db.from('account_deactivations').select('reason, deactivated_by_email, deactivated_at').eq('user_id', id).maybeSingle(),
+        db.from('protein_logs').select('id, log_date, amount_g').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
       ]);
       if (userErr) throw userErr;
 
@@ -87,6 +89,7 @@ export default function UserDetail() {
       } : null);
       setWorkouts(w.data || []);
       setWaterLogs(wa.data || []);
+      setProteinLogs(pr.data || []);
       setWeightLogs(we.data || []);
       setPersonalRecords(personalRecordsComputed);
       setDiscomfortLogs(disc.data || []);
@@ -329,7 +332,7 @@ export default function UserDetail() {
           userId={id} detail={detail}
           form={form} setForm={setForm} busy={busy} onSaveProfile={handleSaveProfile}
           achievements={achievements} progressPhotos={progressPhotos}
-          weightLogs={weightLogs} waterLogs={waterLogs}
+          weightLogs={weightLogs} waterLogs={waterLogs} proteinLogs={proteinLogs}
         />
       )}
 
