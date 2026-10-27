@@ -8,7 +8,6 @@ import { MONTH_NAMES, buildMonthGrid, fetchMonthSessions, summarizeMonth, fmtVol
 import { getHolidays } from '../lib/holidays';
 import Skeleton from '../components/Skeleton';
 import SessionDetailModal from '../components/SessionDetailModal';
-import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
 
 import { t, locale } from '../lib/i18n';
 const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
@@ -30,8 +29,6 @@ export default function HistoricoPage() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [detail, setDetail] = useState(null);
-  const [importing, setImporting] = useState(false);
-  const [reload, setReload] = useState(0);
   // Meses já carregados nesta visita à aba: voltar/avançar entre meses não
   // repete a consulta. O mês atual nunca vai pro cache (ainda está mudando).
   const cacheRef = useRef(new Map());
@@ -65,21 +62,13 @@ export default function HistoricoPage() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, cacheKey, reload]);
+  }, [user, cacheKey]);
 
   const byDate = useMemo(() => new Map(sessions.map(s => [s.date, s])), [sessions]);
   const weeks = useMemo(() => buildMonthGrid(cursor.year, cursor.month), [cursor]);
   const holidays = useMemo(() => getHolidays(cursor.year), [cursor.year]);
   const stats = useMemo(() => summarizeMonth(sessions), [sessions]);
   const visible = selectedDate ? sessions.filter(s => s.date === selectedDate) : sessions;
-
-  // Depois de importar, descarta os meses em cache e recarrega o atual.
-  function handleImported() {
-    cacheRef.current.clear();
-    setCursor(currentMonth());
-    setSelectedDate(null);
-    setReload(n => n + 1);
-  }
 
   function shiftMonth(delta) {
     setSelectedDate(null);
@@ -199,11 +188,6 @@ export default function HistoricoPage() {
         )}
       </div>
 
-      <button type="button" className="btn btn--ghost btn--full" onClick={() => setImporting(true)}>
-        {t('📥 Importar treinos de outro app')}
-      </button>
-
-      {importing && <ImportWorkoutsModal onImported={handleImported} onClose={() => setImporting(false)} />}
       {detail && <SessionDetailModal session={detail} onClose={() => setDetail(null)} />}
     </section>
   );

@@ -22,6 +22,7 @@ import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
 import { syncCoachPrefs } from '../lib/coach';
 import QuickWorkoutModal from '../components/QuickWorkoutModal';
+import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
 import MobilityButton from '../components/MobilityButton';
 import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
@@ -30,7 +31,7 @@ import { t, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
   const { user } = useAuth();
   const { config } = useAppConfig();
-  const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating } = useWorkout();
+  const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating, refreshPlan } = useWorkout();
   const toast = useToast();
   const loading = syncStatus === 'loading';
   const [_tick, setTick] = useState(0);
@@ -43,6 +44,7 @@ export default function TreinoPage() {
   const [askAppRating, setAskAppRating] = useState(false);
   const [survey, setSurvey] = useState(null);
   const [showQuick, setShowQuick] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   // Fechou o resumo do treino: bom momento pra pedir a avaliação do app.
   function handleSummaryClose() {
@@ -186,6 +188,9 @@ export default function TreinoPage() {
           ))}
         </div>
       </div>
+      <button type="button" className="btn btn--ghost btn--full" onClick={() => setShowImport(true)}>
+        {t('📥 Importar treinos de outro app')}
+      </button>
       <footer className="footer">
         <strong>{t('Progressão:')}</strong> {t('aumente cargas toda semana ·')}; <strong>{t('Deload')}</strong> {t('na semana 6')}
       </footer>
@@ -198,6 +203,7 @@ export default function TreinoPage() {
           onChoose={handleQuickChoice} onClose={() => setShowQuick(false)}
         />
       )}
+      {showImport && <ImportWorkoutsModal onImported={refreshPlan} onClose={() => setShowImport(false)} />}
       {showPlanEditor && (
         <PlanEditorModal onClose={() => setShowPlanEditor(false)} />
       )}
