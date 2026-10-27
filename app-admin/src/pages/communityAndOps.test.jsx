@@ -11,6 +11,7 @@ const { cm, ins, ops } = vi.hoisted(() => ({
   },
   ins: {
     fetchWellbeingOverview: vi.fn(), fetchWellbeingByDay: vi.fn(), fetchLowCheckinUsers: vi.fn(),
+    fetchProteinOverview: vi.fn(), fetchProteinByDay: vi.fn(),
     fetchAchievements: vi.fn(), fetchRecordStats: vi.fn(),
   },
   ops: {
@@ -213,6 +214,25 @@ describe('Wellbeing', () => {
     ins.fetchLowCheckinUsers.mockResolvedValue([
       { userId: 'u1', email: 'a@x.com', name: 'Ana', checkins: 5, energy: 1.8, sleep: 2.5, mood: 3, last: '2026-10-07' },
     ]);
+    ins.fetchProteinOverview.mockResolvedValue({ users: 20, proteinUsers: 8, proteinDays: 30, proteinAvgG: 95, goalDays: 24, hitDays: 12 });
+    ins.fetchProteinByDay.mockResolvedValue([
+      { day: '2026-10-07', users: 4, avgG: 100, hits: 2 },
+      { day: '2026-10-08', users: 0, avgG: null, hits: 0 },
+    ]);
+  });
+
+  it('mostra a proteína: usuários, média e dias na meta', async () => {
+    wrap(<Wellbeing />);
+    expect(await screen.findByText('usuários registraram proteína (40%)')).toBeTruthy();
+    expect(screen.getByText('95 g')).toBeTruthy();
+    expect(screen.getByText('50%')).toBeTruthy(); // 12 de 24 dias com meta
+  });
+
+  it('sem as RPCs de proteína (migration pendente) o resto da tela segue', async () => {
+    ins.fetchProteinOverview.mockRejectedValue(new Error('function admin_protein_overview does not exist'));
+    wrap(<Wellbeing />);
+    expect(await screen.findByText('energia média')).toBeTruthy();
+    expect(screen.queryByText('Proteína')).toBeNull();
   });
 
   it('mostra check-in, quem está com energia baixa, água e medidas', async () => {

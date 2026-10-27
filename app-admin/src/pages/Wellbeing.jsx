@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   pct, formatMl, scoreLevel, SCORE_BADGE,
-  fetchWellbeingOverview, fetchWellbeingByDay, fetchLowCheckinUsers,
+  fetchWellbeingOverview, fetchWellbeingByDay, fetchLowCheckinUsers, fetchProteinOverview, fetchProteinByDay,
 } from '../lib/insights';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
@@ -46,8 +46,13 @@ export default function Wellbeing() {
     let active = true;
     setLoading(true);
     setError('');
-    Promise.all([fetchWellbeingOverview(days), fetchWellbeingByDay(days), fetchLowCheckinUsers(days)])
-      .then(([overview, byDay, low]) => { if (active) setData({ overview, byDay, low }); })
+    // Proteína é buscada à parte: antes de a migration admin_protein_insights
+    // rodar no banco as RPCs não existem, e isso não pode derrubar a tela.
+    const protein = Promise.all([fetchProteinOverview(days), fetchProteinByDay(days)])
+      .then(([overview, byDay]) => (overview ? { overview, byDay } : null))
+      .catch(() => null);
+    Promise.all([fetchWellbeingOverview(days), fetchWellbeingByDay(days), fetchLowCheckinUsers(days), protein])
+      .then(([overview, byDay, low, prot]) => { if (active) setData({ overview, byDay, low, protein: prot }); })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -55,6 +60,8 @@ export default function Wellbeing() {
 
   const o = data?.overview;
   const hitPct = o ? pct(o.waterHitDays, o.waterDays) : null;
+  const po = data?.protein?.overview;
+  const proteinHitPct = po ? pct(po.hitDays, po.goalDays) : null;
 
   return (
     <div className="stack">
@@ -63,7 +70,7 @@ export default function Wellbeing() {
           <h1 className="page-title">Bem-estar</h1>
           <p className="page-subtitle">
             O que os usuários registram além do treino: check-in diário (energia, sono e humor, de 1 a 5),
-            medidas corporais e água. Contas de admin ficam de fora.
+            medidas corporais, água e proteína. Contas de admin ficam de fora.
           </p>
         </div>
         <div className="seg" role="group" aria-label="Período">
@@ -176,6 +183,30 @@ export default function Wellbeing() {
               </p>
             </div>
           </div>
+
+          {po && (
+            <div className="card">
+              <h2 className="section-title">Proteína</h2>
+              <div className="tile-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
+                <div className="tile">
+                  <div className="tile__value">{po.proteinUsers}</div>
+                  <div className="tile__label">usuários registraram proteína ({fmt(pct(po.proteinUsers, po.users), '%')})</div>
+                </div>
+                <div className="tile"><div className="tile__value">{po.proteinAvgG === null ? '—' : `${po.proteinAvgG} g`}</div><div className="tile__label">média por dia registrado</div></div>
+                <div className="tile"><div className="tile__value">{fmt(proteinHitPct, '%')}</div><div className="tile__label">dos dias registrados bateram a meta</div></div>
+              </div>
+              {po.proteinDays > 0 && (
+                <DayBars
+                  days={data.protein.byDay} value={d => d.users} ariaLabel={`Usuários que registraram proteína por dia, últimos ${days} dias`}
+                  title={d => `Dia ${dayLabel(d.day)}: ${d.users} usuário(s) · média ${d.avgG === null ? '—' : `${d.avgG} g`} · ${d.hits} na meta`}
+                />
+              )}
+              <p className="card-note">
+                Usuários que registraram proteína por dia. A meta é a estimada pelo perfil de cada um (peso e meta
+                principal); quem não preencheu sexo, idade, peso e altura fica fora do "bateram a meta".
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>

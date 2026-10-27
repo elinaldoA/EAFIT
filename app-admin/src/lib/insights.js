@@ -53,6 +53,25 @@ export async function fetchWellbeingByDay(days = 30) {
   }));
 }
 
+// Proteína (protein_logs). Quem chama trata a falha à parte: antes de a
+// migration admin_protein_insights rodar no banco, estas RPCs não existem.
+export async function fetchProteinOverview(days = 30) {
+  const r = (await rpcRows('admin_protein_overview', { days_back: days }))[0];
+  if (!r) return null;
+  return {
+    users: Number(r.po_users),
+    proteinUsers: Number(r.po_protein_users), proteinDays: Number(r.po_protein_days),
+    proteinAvgG: num(r.po_protein_avg_g),
+    goalDays: Number(r.po_goal_days), hitDays: Number(r.po_hit_days),
+  };
+}
+
+export async function fetchProteinByDay(days = 30) {
+  return (await rpcRows('admin_protein_by_day', { days_back: days })).map(r => ({
+    day: r.pd_day, users: Number(r.pd_users), avgG: num(r.pd_avg_g), hits: Number(r.pd_hits),
+  }));
+}
+
 export async function fetchLowCheckinUsers(days = 30) {
   return (await rpcRows('admin_low_checkin_users', { days_back: days, max_rows: 50 })).map(r => ({
     userId: r.lc_user, email: r.lc_email, name: r.lc_name, checkins: Number(r.lc_checkins),

@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc, from: mockFrom } }));
 
 import {
   pct, formatMl, scoreLevel, splitCardio, buildAchievements,
-  fetchWellbeingOverview, fetchWellbeingByDay, fetchLowCheckinUsers, fetchCardio, fetchRecordStats, fetchUserWellbeing,
+  fetchWellbeingOverview, fetchWellbeingByDay, fetchProteinOverview, fetchProteinByDay, fetchLowCheckinUsers, fetchCardio, fetchRecordStats, fetchUserWellbeing,
 } from './insights';
 
 beforeEach(() => vi.clearAllMocks());
@@ -106,6 +106,19 @@ describe('chamadas', () => {
     mockRpc.mockResolvedValueOnce({ data: [{ rs_exercise: 'Supino', rs_users: '4', rs_top: '120', rs_avg_best: '82.5', rs_sets: '90' }], error: null });
     expect(await fetchRecordStats(90)).toEqual([{ exercise: 'Supino', users: 4, top: 120, avgBest: 82.5, sets: 90 }]);
     expect(mockRpc).toHaveBeenLastCalledWith('admin_record_stats', { days_back: 90, max_rows: 15 });
+  });
+
+  it('fetchProteinOverview e fetchProteinByDay convertem as colunas', async () => {
+    mockRpc.mockResolvedValueOnce({ data: [{ po_users: '20', po_protein_users: '6', po_protein_days: '30', po_protein_avg_g: '95', po_goal_days: '24', po_hit_days: '9' }], error: null });
+    expect(await fetchProteinOverview(14)).toEqual({ users: 20, proteinUsers: 6, proteinDays: 30, proteinAvgG: 95, goalDays: 24, hitDays: 9 });
+    expect(mockRpc).toHaveBeenLastCalledWith('admin_protein_overview', { days_back: 14 });
+
+    mockRpc.mockResolvedValueOnce({ data: [], error: null });
+    expect(await fetchProteinOverview()).toBeNull();
+
+    mockRpc.mockResolvedValueOnce({ data: [{ pd_day: '2026-10-07', pd_users: '3', pd_avg_g: null, pd_hits: '1' }], error: null });
+    expect(await fetchProteinByDay(7)).toEqual([{ day: '2026-10-07', users: 3, avgG: null, hits: 1 }]);
+    expect(mockRpc).toHaveBeenLastCalledWith('admin_protein_by_day', { days_back: 7 });
   });
 
   it('propaga erro da RPC', async () => {
