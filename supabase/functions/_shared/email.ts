@@ -11,7 +11,9 @@
 // O Gmail limita a ~500 destinatários por dia e sempre envia com o próprio
 // endereço da conta como remetente.
 import nodemailer from 'npm:nodemailer@6.9.16';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 import type { RenderedEmail } from './emailLayout.ts';
+import { tagAppLinks } from './emailTracking.ts';
 
 const FROM_NAME = 'EAFIT';
 
@@ -30,31 +32,53 @@ function getTransport(user: string, pass: string): Transport {
 }
 
 export type SendOptions = {
+  // Tipo do e-mail (ex.: 'boas-vindas', 'resumo'): vai pro registro de envios
+  // (public.email_log) e nos links do app (?origem=email&utm_campaign=<kind>).
+  kind?: string;
   // Endereço de descadastro em um clique (cabeçalho List-Unsubscribe): o Gmail
   // mostra um botão "Cancelar inscrição" ao lado do remetente.
   listUnsubscribe?: string;
 };
+
+// Registro do envio em public.email_log (melhor esforço: nunca atrapalha o envio).
+async function logEmail(kind: string | undefined, status: 'sent' | 'error' | 'skipped') {
+  const url = Deno.env.get('SUPABASE_URL');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!kind || !url || !key) return;
+  try {
+    const { error } = await createClient(url, key).from('email_log').insert({ kind, status });
+    if (error) console.error('email_log error:', error.message);
+  } catch (err) {
+    console.error('email_log error:', err);
+  }
+}
 
 // Retorna 'sent', 'skipped' (secrets não configurados — o chamador segue sem
 // e-mail) ou 'error' (falha no envio, só loga).
 export async function sendEmail(to: string, email: RenderedEmail, options: SendOptions = {}): Promise<'sent' | 'skipped' | 'error'> {
   const user = Deno.env.get('GMAIL_USER');
   const pass = Deno.env.get('GMAIL_APP_PASSWORD');
-  if (!user || !pass) return 'skipped';
+  if (!user || !pass) {
+    await logEmail(options.kind, 'skipped');
+    return 'skipped';
+  }
+  const kind = options.kind;
   try {
     await getTransport(user, pass).sendMail({
       from: { name: FROM_NAME, address: user },
       to,
       subject: email.subject,
-      html: email.html,
-      text: email.text,
+      html: kind ? tagAppLinks(email.html, kind, 'html') : email.html,
+      text: kind ? tagAppLinks(email.text, kind, 'text') : email.text,
       headers: options.listUnsubscribe
         ? { 'List-Unsubscribe': `<${options.listUnsubscribe}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
         : undefined,
     });
+    await logEmail(kind, 'sent');
     return 'sent';
   } catch (err) {
     console.error('sendEmail error:', err);
+    await logEmail(kind, 'error');
     return 'error';
   }
 }

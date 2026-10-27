@@ -55,7 +55,7 @@ async function runAlerts() {
 
   const to = await recipients('alerts');
   const email = renderEmail('pt', alertEmail(due));
-  const sent = await sendEmailBatch(to.map((r) => ({ to: r.email, email })));
+  const sent = await sendEmailBatch(to.map((r) => ({ to: r.email, email, options: { kind: 'alerta' } })));
 
   // Push nos aparelhos dos admins que querem alertas.
   if (to.length) {
@@ -80,9 +80,9 @@ async function runDigest(only?: { email: string }) {
   const m = await loadMetrics();
   if (!m) return { sent: 0 };
   const email = renderEmail('pt', digestEmail(m));
-  if (only) return { sent: (await sendEmail(only.email, email)) === 'sent' ? 1 : 0 };
+  if (only) return { sent: (await sendEmail(only.email, email, { kind: 'relatorio' })) === 'sent' ? 1 : 0 };
   const to = await recipients('digest');
-  const sent = await sendEmailBatch(to.map((r) => ({ to: r.email, email })));
+  const sent = await sendEmailBatch(to.map((r) => ({ to: r.email, email, options: { kind: 'relatorio' } })));
   await admin.from('admin_alert_log').insert({ key: 'relatorio', detail: 'relatório semanal', notified: sent });
   return { sent };
 }

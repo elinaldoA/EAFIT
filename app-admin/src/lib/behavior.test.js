@@ -4,7 +4,7 @@ const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
-  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient,
+  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient, buildEmailStats,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents,
   buildInstallRetention, buildCompletion, formatDuration, describeClient, authErrorLabel,
   BROWSER_LABELS, FEATURE_LABELS, bucketLabel, bucketFullLabel, buildAccessTimeline, timelineBuckets,
@@ -209,5 +209,22 @@ describe('linha do tempo de acessos', () => {
     expect(timelineBuckets('dia', 0)).toBe(90);
     expect(timelineBuckets('hora', 7)).toBe(48);
     expect(timelineBuckets('minuto', 30)).toBe(120);
+  });
+});
+
+describe('buildEmailStats', () => {
+  it('agrupa por tipo, separa descadastros e soma os de hoje', () => {
+    const out = buildEmailStats([
+      { kind: 'resumo', status: 'sent', total: '90', today: '30' },
+      { kind: 'resumo', status: 'error', total: '10', today: '0' },
+      { kind: 'boas-vindas', status: 'sent', total: 5, today: 2 },
+      { kind: 'descadastro', status: 'unsubscribed', total: 4, today: 1 },
+    ]);
+    expect(out.kinds.map(k => [k.label, k.sent, k.error])).toEqual([['Resumo semanal', 90, 10], ['Boas-vindas', 5, 0]]);
+    expect(out).toMatchObject({ sent: 95, error: 10, sentToday: 32, unsubscribed: 4, errorPct: 10 });
+  });
+
+  it('sem registros: zeros e sem porcentagem', () => {
+    expect(buildEmailStats([])).toMatchObject({ kinds: [], sent: 0, errorPct: null });
   });
 });

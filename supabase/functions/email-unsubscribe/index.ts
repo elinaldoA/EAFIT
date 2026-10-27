@@ -44,5 +44,6 @@ Deno.serve(async (req) => {
     console.error('email-unsubscribe error:', error.message);
     return json({ error: 'Não foi possível concluir agora.' }, 500);
   }
+  await admin.from('email_log').insert({ kind: 'descadastro', status: 'unsubscribed' });
   return json({ ok: true });
 });

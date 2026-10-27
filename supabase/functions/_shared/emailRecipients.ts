@@ -54,12 +54,13 @@ export async function bulkEmailItem(
   user: EmailUser,
   build: (lang: Lang) => EmailContent,
   env: { supabaseUrl: string; secret: string },
+  kind?: string,
 ): Promise<BulkEmailItem> {
   const lang = langOf(user.meta);
   const links = unsubscribeLinks(await unsubscribeToken(user.id, env.secret), env.supabaseUrl);
   return {
     to: user.email!,
     email: renderEmail(lang, { ...build(lang), unsubscribeUrl: links.page }),
-    options: { listUnsubscribe: links.oneClick },
+    options: { listUnsubscribe: links.oneClick, kind },
   };
 }

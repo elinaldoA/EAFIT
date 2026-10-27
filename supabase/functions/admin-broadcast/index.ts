@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     if (email === 'resposta') {
       items = users.filter((u) => u.email).map((u) => {
         const lang = langOf(u.meta);
-        return { to: u.email!, email: renderEmail(lang, feedbackReplyEmail(lang, textFor(u.id).body)), options: {} };
+        return { to: u.email!, email: renderEmail(lang, feedbackReplyEmail(lang, textFor(u.id).body)), options: { kind: 'resposta' } };
       });
     } else {
       let recipients = users.filter((u) => canReceiveBulkEmail(u));
@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
       const env = { supabaseUrl: SUPABASE_URL, secret: SERVICE_ROLE_KEY };
       items = await Promise.all(recipients.map((u) => {
         const text = textFor(u.id);
-        return bulkEmailItem(u, (lang) => broadcastEmail(lang, text.title, text.body), env);
+        return bulkEmailItem(u, (lang) => broadcastEmail(lang, text.title, text.body), env, 'aviso');
       }));
     }
     // Teto diário do Gmail: o que passar disso não é enviado (o admin vê a diferença nos números).

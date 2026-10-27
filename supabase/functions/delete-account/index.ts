@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     // pediu, lido antes da exclusão; falha aqui não desfaz nada.
     if (userRes.user.email) {
       const lang = langOf(userRes.user.user_metadata);
-      await sendEmail(userRes.user.email, renderEmail(lang, accountDeletedEmail(lang)));
+      await sendEmail(userRes.user.email, renderEmail(lang, accountDeletedEmail(lang)), { kind: 'exclusao' });
     }
     return json({ ok: true });
   } catch (err) {

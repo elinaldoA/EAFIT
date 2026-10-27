@@ -16,6 +16,7 @@ export const fetchUserEvents = (days = 30) => rpcRows('admin_user_events', { day
 export const fetchClientBreakdown = (days = 30) => rpcRows('admin_client_breakdown', { days_back: days });
 export const fetchSitePages = (days = 30) => rpcRows('admin_site_pages', { days_back: days });
 export const fetchUtmBreakdown = (days = 30) => rpcRows('admin_utm_breakdown', { days_back: days });
+export const fetchEmailStats = (days = 30) => rpcRows('admin_email_stats', { days_back: days });
 export const fetchAccessTimeline = (bucket = 'dia', buckets = 30) => rpcRows('admin_access_timeline', { p_bucket: bucket, p_buckets: buckets });
 export const fetchInstallRetention = () => rpcRows('admin_install_retention');
 export const fetchWorkoutDropoff = (days = 30, maxRows = 10) => rpcRows('admin_workout_dropoff', { days_back: days, max_rows: maxRows });
@@ -365,4 +366,37 @@ export function describeClient(c) {
     ['IP', c.ip || '—'],
     ['Local', describePlace(c)],
   ];
+}
+
+export const EMAIL_KIND_LABELS = {
+  'boas-vindas': 'Boas-vindas',
+  resumo: 'Resumo semanal',
+  volta: 'Convite para voltar',
+  pesquisa: 'Por que pararam (pesquisa)',
+  aviso: 'Comunicado do admin',
+  resposta: 'Resposta a feedback',
+  relatorio: 'Relatório do admin',
+  alerta: 'Alertas do admin',
+  exclusao: 'Conta excluída',
+  descadastro: 'Descadastros',
+};
+
+// Uma linha por tipo de e-mail (enviados, falhas, pulados) mais o total de
+// descadastros e quantos saíram hoje (o Gmail corta em ~500 por dia).
+export function buildEmailStats(rows) {
+  const byKind = new Map();
+  let sentToday = 0;
+  let unsubscribed = 0;
+  for (const r of rows || []) {
+    const total = Number(r.total) || 0;
+    if (r.status === 'unsubscribed') { unsubscribed += total; continue; }
+    const row = byKind.get(r.kind) || { kind: r.kind, label: EMAIL_KIND_LABELS[r.kind] || r.kind, sent: 0, error: 0, skipped: 0 };
+    row[r.status] = (row[r.status] || 0) + total;
+    byKind.set(r.kind, row);
+    if (r.status === 'sent') sentToday += Number(r.today) || 0;
+  }
+  const kinds = [...byKind.values()].sort((a, b) => b.sent - a.sent || a.label.localeCompare(b.label));
+  const sent = kinds.reduce((t, k) => t + k.sent, 0);
+  const error = kinds.reduce((t, k) => t + k.error, 0);
+  return { kinds, sent, error, sentToday, unsubscribed, errorPct: sent + error ? Math.round((error / (sent + error)) * 100) : null };
 }

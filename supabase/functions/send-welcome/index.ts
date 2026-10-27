@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
   const lang = langOf(user.user_metadata);
   const content = welcomeEmail(lang);
-  const result = await sendEmail(user.email, renderEmail(lang, content));
+  const result = await sendEmail(user.email, renderEmail(lang, content), { kind: 'boas-vindas' });
   // Só marca quando saiu de verdade: sem os secrets do Gmail ('skipped') ou
   // com falha no envio, a próxima chamada tenta de novo.
   if (result !== 'sent') return json({ sent: false });
