@@ -757,12 +757,36 @@
     var full = { page: 'landing', source: source, os: os, browser: detectBrowser(), device: detectDevice(), lang: visitLang, campaign: campaign };
     var withRef = ref ? Object.assign({ ref: ref }, full) : full;
     var vid = visitorId();
-    (vid ? send(Object.assign({ visitor_id: vid }, withRef)) : send(withRef))
+    var qs = new URLSearchParams(window.location.search);
+    var utmClean = function (v) { return String(v || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40); };
+    var withUtm = Object.assign({ medium: utmClean(qs.get('utm_medium')), content: utmClean(qs.get('utm_content')) }, withRef);
+    (vid ? send(Object.assign({ visitor_id: vid }, withUtm)) : send(withUtm))
+      .then(function (r) { if (!r.ok) return vid ? send(Object.assign({ visitor_id: vid }, withRef)) : send(withRef); return r; })
       .then(function (r) { if (!r.ok && vid) return send(withRef); return r; })
       .then(function (r) { if (!r.ok && ref) return send(full); return r; })
       .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source, os: os }); return r; })
       .then(function (r) { if (!r.ok) return send({ page: 'landing', source: source }); })
       .catch(function () {});
+  })();
+
+  // Pageview de cada página do site (public.site_pageviews): 1 por página por
+  // sessão do navegador, sem identificar ninguém além do eafit_device_id.
+  (function recordPageview() {
+    try { if (localStorage.getItem('eafit_staff_device') === '1') return; } catch { /* sem armazenamento */ }
+    var path = window.location.pathname.toLowerCase().replace(/index\.html$/, '').replace(/^\/+|\/+$/g, '') || 'home';
+    if (!/^[a-z0-9_\/-]{1,60}$/.test(path)) return;
+    try {
+      var key = 'eafit_pv_' + path;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch { /* sem armazenamento: conta mesmo assim */ }
+    var row = {
+      path: path, source: detectSource(), device: detectDevice(),
+      campaign: (new URLSearchParams(window.location.search).get('utm_campaign') || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40),
+    };
+    var vid = visitorId();
+    if (vid) row.visitor_id = vid;
+    postAnon('site_pageviews', row).catch(function () {});
   })();
 
   fetch(SUPABASE_URL + '/rest/v1/landing_content?select=content&id=eq.1', {

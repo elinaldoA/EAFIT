@@ -46,6 +46,12 @@ export function detectCampaign(search) {
   return raw.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 }
 
+// ?utm_medium= / ?utm_content= no formato aceito pelo banco (vazio = ausente).
+export function detectUtmField(search, name) {
+  const raw = new URLSearchParams(search || '').get(name) || '';
+  return raw.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+}
+
 // ?ref= de link de embaixador no formato aceito pelo banco (vazio = sem código).
 export function detectRef(search) {
   const code = String(new URLSearchParams(search || '').get('ref') ?? '').trim().toLowerCase();
@@ -77,9 +83,12 @@ export async function recordVisit(page) {
   const source = detectSource(window.location.search, document.referrer, window.location.hostname);
   const { os, browser, device } = readClientInfo();
   const campaign = detectCampaign(window.location.search);
+  const medium = detectUtmField(window.location.search, 'utm_medium');
+  const content = detectUtmField(window.location.search, 'utm_content');
   // Do mais completo pro mais simples: banco sem as colunas novas (migration
   // ainda não aplicada) recusa a linha, e a visita é gravada sem elas.
   const full = [
+    { page, source, os, browser, device, lang, campaign, medium, content, ...(ref ? { ref } : {}), ...(personal ? { personal } : {}) },
     ...(personal ? [{ page, source, os, browser, device, lang, campaign, ...(ref ? { ref } : {}), personal }] : []),
     ...(ref ? [{ page, source, os, browser, device, lang, campaign, ref }] : []),
     { page, source, os, browser, device, lang, campaign },

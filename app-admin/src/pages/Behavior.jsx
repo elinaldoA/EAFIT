@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  fetchVisitBreakdown, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
+  fetchVisitBreakdown, fetchSitePages, fetchUtmBreakdown, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
   fetchWorkoutCompletion, fetchWorkoutDropoff, fetchVisitorStages, fetchLostVisitors, fetchAccessTimeline,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents, buildInstallRetention, buildCompletion,
   buildVisitorJourney, stageLabel, authErrorLabel, buildAccessTimeline, timelineBuckets, TIMELINE_BUCKETS, TIMELINE_SPAN,
@@ -188,6 +188,8 @@ export default function Behavior() {
   const [days, setDays] = useState(30);
 
   const visits = useLoad(fetchVisitBreakdown, days);
+  const sitePages = useLoad(fetchSitePages, days);
+  const utm = useLoad(fetchUtmBreakdown, days);
   const auth = useLoad(loadAuth, days);
   const journey = useLoad(loadJourney, days);
   const events = useLoad(loadEvents, days);
@@ -235,6 +237,30 @@ export default function Behavior() {
               <Bars rows={groupDimension(rows, 'campaign')} empty="Nenhuma visita veio com utm_campaign no link." />
             </div>
           </div>
+        )}
+      </Card>
+
+      <Card
+        title="Páginas do site mais vistas" state={sitePages}
+        note="Cada página conta 1 vez por sessão do navegador. “Navegadores” = identificadores distintos. Páginas do app e navegador de admin não entram."
+      >
+        {rows => (
+          <CountTable
+            head={['Página', 'Acessos', 'Navegadores']} empty="Nenhum acesso às páginas do site no período ainda."
+            rows={rows.map(r => ({ key: r.path, label: r.path === 'home' ? 'Início' : `/${r.path}`, cells: [r.views, r.visitors] }))}
+          />
+        )}
+      </Card>
+
+      <Card
+        title="Campanha × criativo" state={utm}
+        note="utm_campaign, utm_medium e utm_content das visitas à landing e à tela de acesso. Só aparecem visitas com link marcado, a partir desta medição."
+      >
+        {rows => (
+          <CountTable
+            head={['Campanha', 'Meio (medium)', 'Criativo (content)', 'Visitas']} empty="Nenhuma visita com utm_campaign, utm_medium ou utm_content ainda."
+            rows={rows.map(r => ({ key: `${r.campaign}|${r.medium}|${r.content}`, label: r.campaign || '—', cells: [r.medium || '—', r.content || '—', r.visits] }))}
+          />
         )}
       </Card>
 

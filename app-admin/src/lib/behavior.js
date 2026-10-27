@@ -14,6 +14,8 @@ export const fetchVisitBreakdown = (days = 30) => rpcRows('admin_visit_breakdown
 export const fetchAuthEvents = (days = 30) => rpcRows('admin_auth_events', { days_back: days });
 export const fetchUserEvents = (days = 30) => rpcRows('admin_user_events', { days_back: days });
 export const fetchClientBreakdown = (days = 30) => rpcRows('admin_client_breakdown', { days_back: days });
+export const fetchSitePages = (days = 30) => rpcRows('admin_site_pages', { days_back: days });
+export const fetchUtmBreakdown = (days = 30) => rpcRows('admin_utm_breakdown', { days_back: days });
 export const fetchAccessTimeline = (bucket = 'dia', buckets = 30) => rpcRows('admin_access_timeline', { p_bucket: bucket, p_buckets: buckets });
 export const fetchInstallRetention = () => rpcRows('admin_install_retention');
 export const fetchWorkoutDropoff = (days = 30, maxRows = 10) => rpcRows('admin_workout_dropoff', { days_back: days, max_rows: maxRows });

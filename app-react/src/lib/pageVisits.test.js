@@ -83,14 +83,28 @@ describe('recordVisit', () => {
     expect(await recordVisit('acesso')).toBe(false);
     expect(mockInsert).toHaveBeenCalledTimes(1);
     expect(mockInsert).toHaveBeenCalledWith({
-      page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro',
+      page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro', medium: '', content: '',
       visitor_id: localStorage.getItem('eafit_device_id'),
     });
     expect(localStorage.getItem('eafit_device_id')).toMatch(/^[0-9a-f-]{36}$/);
   });
 
+  it('grava utm_medium e utm_content quando o link traz', async () => {
+    globalThis.window.location.search = '?utm_source=instagram&utm_campaign=outubro&utm_medium=Stories&utm_content=Video-1';
+    expect(await recordVisit('acesso')).toBe(true);
+    expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ campaign: 'outubro', medium: 'stories', content: 'video-1' }));
+  });
+
   it('banco sem a coluna visitor_id: grava a visita sem ele', async () => {
     mockInsert.mockResolvedValueOnce({ error: { message: 'column "visitor_id" does not exist' } });
+    expect(await recordVisit('acesso')).toBe(true);
+    expect(mockInsert).toHaveBeenLastCalledWith({ page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro', medium: '', content: '' });
+  });
+
+  it('banco sem medium/content: grava a visita sem eles', async () => {
+    mockInsert
+      .mockResolvedValueOnce({ error: { message: 'column "medium" does not exist' } })
+      .mockResolvedValueOnce({ error: { message: 'column "medium" does not exist' } });
     expect(await recordVisit('acesso')).toBe(true);
     expect(mockInsert).toHaveBeenLastCalledWith({ page: 'acesso', source: 'convite', os: 'android', browser: 'chrome', device: 'tablet', lang: 'pt', campaign: 'outubro' });
   });
@@ -104,12 +118,14 @@ describe('recordVisit', () => {
   it('banco sem as colunas novas: cai pra linha mais simples que ele aceita', async () => {
     mockInsert
       .mockResolvedValueOnce({ error: { message: 'column "visitor_id" does not exist' } })
+      .mockResolvedValueOnce({ error: { message: 'column "medium" does not exist' } })
       .mockResolvedValueOnce({ error: { message: 'column "browser" does not exist' } });
     expect(await recordVisit('acesso')).toBe(true);
     expect(mockInsert).toHaveBeenLastCalledWith({ page: 'acesso', source: 'convite', os: 'android' });
 
     localStorage.clear();
     mockInsert.mockReset()
+      .mockResolvedValueOnce({ error: { message: 'x' } })
       .mockResolvedValueOnce({ error: { message: 'x' } })
       .mockResolvedValueOnce({ error: { message: 'x' } })
       .mockResolvedValueOnce({ error: { message: 'x' } })
