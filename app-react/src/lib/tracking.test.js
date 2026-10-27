@@ -91,6 +91,29 @@ describe('tracking', () => {
     expect(t.trackFeature('water')).toBe(true);
   });
 
+  it('sessão: abre uma vez, conta telas e limita os sinais a 1 a cada 15s', async () => {
+    vi.useFakeTimers();
+    try {
+      const t = await freshTracking();
+      expect(t.startSession()).toBe(false);
+      t.enableTracking();
+      t.setTrackingUser('u1');
+      expect(t.startSession()).toBe(true);
+      expect(t.startSession()).toBe(false);
+      const first = mockRpc.mock.calls[0];
+      expect(first[0]).toBe('track_session');
+      expect(first[1]).toMatchObject({ p_screens: 0 });
+      expect(first[1].p_session).toMatch(/^[0-9a-f-]{36}$/);
+
+      expect(t.trackScreen()).toBe(false); // logo depois do sinal de abertura
+      vi.advanceTimersByTime(16000);
+      expect(t.trackScreen()).toBe(true);
+      expect(mockRpc).toHaveBeenLastCalledWith('track_session', expect.objectContaining({ p_session: first[1].p_session, p_screens: 2 }));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('troca de exercício vai para log_exercise_swap, sem repetir o mesmo nome', async () => {
     const t = await freshTracking();
     expect(t.logExerciseSwap('A', 'B')).toBe(false);

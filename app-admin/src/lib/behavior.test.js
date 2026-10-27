@@ -4,7 +4,7 @@ const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
-  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient, buildEmailStats,
+  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient, buildEmailStats, buildSessionStats, formatSeconds,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents,
   buildInstallRetention, buildCompletion, formatDuration, describeClient, authErrorLabel,
   BROWSER_LABELS, FEATURE_LABELS, bucketLabel, bucketFullLabel, buildAccessTimeline, timelineBuckets,
@@ -226,5 +226,32 @@ describe('buildEmailStats', () => {
 
   it('sem registros: zeros e sem porcentagem', () => {
     expect(buildEmailStats([])).toMatchObject({ kinds: [], sent: 0, errorPct: null });
+  });
+});
+
+describe('buildSessionStats', () => {
+  it('resume sessões, mediana, telas, aparelhos e preenche todas as faixas', () => {
+    const out = buildSessionStats([
+      { dimension: 'total', value: 'sessions', n: '30' },
+      { dimension: 'total', value: 'users', n: '10' },
+      { dimension: 'total', value: 'multi_device_users', n: '2' },
+      { dimension: 'median_s', value: '', n: '95' },
+      { dimension: 'avg_screens', value: '', n: '27' },
+      { dimension: 'duration', value: '1-5min', n: '12' },
+      { dimension: 'duration', value: '<10s', n: '3' },
+      { dimension: 'per_user', value: '2-3', n: '10' },
+    ]);
+    expect(out).toMatchObject({ sessions: 30, users: 10, perUser: 3, medianSeconds: 95, avgScreens: 2.7, multiDeviceUsers: 2, multiDevicePct: 20 });
+    expect(out.durations.map(d => d.value)).toEqual(['<10s', '10-60s', '1-5min', '5-15min', '15min+']);
+    expect(out.durations.find(d => d.value === '1-5min')).toMatchObject({ total: 12, pct: 80 });
+    expect(out.perUserBands.find(b => b.value === '8+').total).toBe(0);
+  });
+
+  it('sem sessões: sem médias', () => {
+    expect(buildSessionStats([])).toMatchObject({ sessions: 0, perUser: null, medianSeconds: null, avgScreens: null });
+  });
+
+  it('formatSeconds', () => {
+    expect([formatSeconds(8), formatSeconds(60), formatSeconds(95)]).toEqual(['8s', '1min', '1min 35s']);
   });
 });

@@ -17,6 +17,7 @@ export const fetchClientBreakdown = (days = 30) => rpcRows('admin_client_breakdo
 export const fetchSitePages = (days = 30) => rpcRows('admin_site_pages', { days_back: days });
 export const fetchUtmBreakdown = (days = 30) => rpcRows('admin_utm_breakdown', { days_back: days });
 export const fetchEmailStats = (days = 30) => rpcRows('admin_email_stats', { days_back: days });
+export const fetchSessionStats = (days = 30) => rpcRows('admin_session_stats', { days_back: days });
 export const fetchAccessTimeline = (bucket = 'dia', buckets = 30) => rpcRows('admin_access_timeline', { p_bucket: bucket, p_buckets: buckets });
 export const fetchInstallRetention = () => rpcRows('admin_install_retention');
 export const fetchWorkoutDropoff = (days = 30, maxRows = 10) => rpcRows('admin_workout_dropoff', { days_back: days, max_rows: maxRows });
@@ -399,4 +400,39 @@ export function buildEmailStats(rows) {
   const sent = kinds.reduce((t, k) => t + k.sent, 0);
   const error = kinds.reduce((t, k) => t + k.error, 0);
   return { kinds, sent, error, sentToday, unsubscribed, errorPct: sent + error ? Math.round((error / (sent + error)) * 100) : null };
+}
+
+const DURATION_BANDS = ['<10s', '10-60s', '1-5min', '5-15min', '15min+'];
+const PER_USER_BANDS = ['1', '2-3', '4-7', '8+'];
+
+export function formatSeconds(secs) {
+  const s = Math.max(0, Math.round(Number(secs) || 0));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  return s % 60 ? `${m}min ${s % 60}s` : `${m}min`;
+}
+
+// Resumo das sessões do app: contas, sessões por conta, mediana de duração,
+// telas por sessão, quem usa 2+ aparelhos e as faixas de duração / de
+// sessões por conta (todas as faixas, mesmo com zero).
+export function buildSessionStats(rows) {
+  const list = rows || [];
+  const num = (dimension, value = '') => Number(list.find(r => r.dimension === dimension && r.value === value)?.n) || 0;
+  const sessions = num('total', 'sessions');
+  const users = num('total', 'users');
+  const bands = (dimension, order) => {
+    const items = order.map(value => ({ value, label: value, total: num(dimension, value) }));
+    const sum = items.reduce((t, i) => t + i.total, 0);
+    return items.map(i => ({ ...i, pct: pct(i.total, sum) }));
+  };
+  return {
+    sessions, users,
+    perUser: users ? Math.round((sessions / users) * 10) / 10 : null,
+    medianSeconds: sessions ? num('median_s') : null,
+    avgScreens: sessions ? num('avg_screens') / 10 : null,
+    multiDeviceUsers: num('total', 'multi_device_users'),
+    multiDevicePct: pct(num('total', 'multi_device_users'), users),
+    durations: bands('duration', DURATION_BANDS),
+    perUserBands: bands('per_user', PER_USER_BANDS),
+  };
 }

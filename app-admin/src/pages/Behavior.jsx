@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  fetchVisitBreakdown, fetchSitePages, fetchUtmBreakdown, fetchEmailStats, buildEmailStats, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
+  fetchVisitBreakdown, fetchSitePages, fetchUtmBreakdown, fetchEmailStats, buildEmailStats, fetchSessionStats, buildSessionStats, formatSeconds, fetchAuthEvents, fetchUserEvents, fetchClientBreakdown, fetchInstallRetention,
   fetchWorkoutCompletion, fetchWorkoutDropoff, fetchVisitorStages, fetchLostVisitors, fetchAccessTimeline,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents, buildInstallRetention, buildCompletion,
   buildVisitorJourney, stageLabel, authErrorLabel, buildAccessTimeline, timelineBuckets, TIMELINE_BUCKETS, TIMELINE_SPAN,
@@ -42,6 +42,7 @@ const loadJourney = days => Promise.all([fetchVisitorStages(days), fetchLostVisi
   .then(([stages, lost]) => ({ ...buildVisitorJourney(stages), recent: lost }));
 const loadTimeline = ({ bucket, days }) => fetchAccessTimeline(bucket, timelineBuckets(bucket, days))
   .then(rows => buildAccessTimeline(rows, bucket));
+const loadSessions = days => fetchSessionStats(days).then(buildSessionStats);
 const loadEmails = days => fetchEmailStats(days).then(buildEmailStats);
 const loadInstall = () => fetchInstallRetention().then(buildInstallRetention);
 const loadWorkouts = days => Promise.all([fetchWorkoutCompletion(days), fetchWorkoutDropoff(days, 10)])
@@ -195,6 +196,7 @@ export default function Behavior() {
   const journey = useLoad(loadJourney, days);
   const events = useLoad(loadEvents, days);
   const clients = useLoad(fetchClientBreakdown, days);
+  const sessions = useLoad(loadSessions, days);
   const emails = useLoad(loadEmails, days);
   const install = useLoad(loadInstall, 0);
   const workouts = useLoad(loadWorkouts, days);
@@ -397,6 +399,29 @@ export default function Behavior() {
       </Card>
 
       <div className="section-label">Usuários registrados</div>
+
+      <Card
+        title="Sessões de uso" state={sessions}
+        note="Uma sessão = uma visita ao app (do abrir ao sair da aba). A duração vai do primeiro ao último sinal e tem teto de 2 horas. Aparelho = o identificador do navegador; quem limpa os dados do navegador conta como outro. Sem admins; vale a partir desta medição."
+      >
+        {data => (data.sessions === 0
+          ? <p className="card-note" style={{ marginTop: 0 }}>Nenhuma sessão registrada no período ainda.</p>
+          : (
+            <>
+              <div className="tile-grid" style={{ marginBottom: 14 }}>
+                <div className="tile"><div className="tile__value">{data.sessions}</div><div className="tile__label">Sessões de {data.users} contas</div></div>
+                <div className="tile"><div className="tile__value">{data.perUser}</div><div className="tile__label">Sessões por conta</div></div>
+                <div className="tile"><div className="tile__value">{formatSeconds(data.medianSeconds)}</div><div className="tile__label">Duração mediana</div></div>
+                <div className="tile"><div className="tile__value">{data.avgScreens}</div><div className="tile__label">Telas por sessão</div></div>
+                <div className="tile"><div className="tile__value">{data.multiDevicePct == null ? '—' : `${data.multiDevicePct}%`}</div><div className="tile__label">Usam 2+ aparelhos ({data.multiDeviceUsers})</div></div>
+              </div>
+              <div className="two-col">
+                <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Duração da sessão</h3><Bars rows={data.durations} /></div>
+                <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Sessões por conta</h3><Bars rows={data.perUserBands} /></div>
+              </div>
+            </>
+          ))}
+      </Card>
 
       <Card title="Onde o onboarding trava" state={events} note="Usuários que passaram por cada etapa do formulário de perfil no período. Sem admins.">
         {data => (

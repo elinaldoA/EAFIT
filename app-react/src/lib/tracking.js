@@ -108,6 +108,64 @@ export function trackAccess() {
   }
 }
 
+// Sessão de uso (painel: Comportamento → Sessões de uso): o id nasce ao abrir
+// o app e vale até fechar a aba. Manda um sinal ao abrir, ao trocar de tela
+// (no máximo 1 a cada 15s), a cada minuto com a aba visível e ao sair; a
+// duração é o intervalo entre o primeiro e o último sinal
+// (supabase/migrations/20261214030000_app_sessions.sql).
+const SESSION_PING_MIN_MS = 15000;
+const SESSION_PING_EVERY_MS = 60000;
+let session = null;
+let sessionListening = false;
+
+function sessionId(uid) {
+  const key = `eafit_session_${uid}`;
+  try {
+    let id = sessionStorage.getItem(key);
+    if (!id || !UUID_RE.test(id)) {
+      id = randomUuid();
+      sessionStorage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return randomUuid(); // sem armazenamento: vale só enquanto o app não recarrega
+  }
+}
+
+function pingSession(force = false) {
+  if (!enabled || !userId || !session) return false;
+  const now = Date.now();
+  if (!force && now - session.lastPing < SESSION_PING_MIN_MS) return false;
+  session.lastPing = now;
+  try {
+    Promise.resolve(db.rpc('track_session', { p_session: session.id, p_device: deviceId(), p_screens: session.screens })).catch(() => {});
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function startSession() {
+  if (!enabled || !userId) return false;
+  if (session?.uid === userId) return false;
+  session = { uid: userId, id: sessionId(userId), screens: 0, lastPing: 0 };
+  if (typeof document !== 'undefined' && !sessionListening) {
+    sessionListening = true;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') pingSession(true);
+    });
+    setInterval(() => { if (document.visibilityState === 'visible') pingSession(); }, SESSION_PING_EVERY_MS);
+  }
+  return pingSession(true);
+}
+
+// Cada troca de tela do usuário logado (a aba do app, Personal ou programa).
+export function trackScreen() {
+  if (!session || session.uid !== userId) return false;
+  session.screens = Math.min(session.screens + 1, 500);
+  return pingSession();
+}
+
 // Retrato do acesso (sistema, navegador, instalado ou não, versão…): 1 vez por
 // dia, ou de novo no mesmo dia se algo mudou (ex.: instalou o app, permitiu
 // notificações).

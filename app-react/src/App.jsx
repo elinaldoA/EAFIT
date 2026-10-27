@@ -9,7 +9,7 @@ import { useAppConfig } from './context/useAppConfig';
 import { AvatarProvider } from './context/AvatarContext';
 import AuthScreen from './components/AuthScreen';
 import { markKnownUser } from './lib/knownUser';
-import { setTrackingUser, trackClient, trackAccess, trackEvent, trackInstall, flushPushOpen, markVisitor } from './lib/tracking';
+import { setTrackingUser, trackClient, trackAccess, startSession, trackScreen, trackEvent, trackInstall, flushPushOpen, markVisitor } from './lib/tracking';
 import { detectDisplayMode } from './lib/clientInfo';
 import OnboardingScreen from './components/OnboardingScreen';
 import ThemeToggle from './components/ThemeToggle';
@@ -105,6 +105,7 @@ function Shell() {
     markKnownUser();
     trackClient();
     trackAccess();
+    startSession();
     markVisitor();
     if (detectDisplayMode(window) === 'standalone') trackInstall('open');
     flushPushOpen();
@@ -122,7 +123,10 @@ function Shell() {
       : programView ? programKind
         : user.user_metadata?.peso ? page : null;
   useEffect(() => {
-    if (trackedPage) trackEvent('page', trackedPage);
+    if (trackedPage) {
+      trackEvent('page', trackedPage);
+      trackScreen();
+    }
   }, [trackedPage, user]);
 
   // Mudança de endereço ligada no painel admin: quem está no endereço antigo
