@@ -9,6 +9,8 @@ import { applyFood, EMPTY_TOTALS } from '../lib/nutritionTotals';
 import { enqueue } from '../lib/syncQueue';
 import { parseLocalDate, toDateStr } from '../lib/utils';
 import { buildProteinSeries, proteinStats } from '../lib/proteinStats';
+import { fetchWeightLogs } from '../lib/weightLog';
+import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading } from '../lib/nutritionInsights';
 import { computeNutritionGoals } from '../lib/nutritionGoals';
 import { fetchCustomFoods, createCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS, VISIBLE_FOODS } from '../lib/foodShortcuts';
@@ -21,6 +23,17 @@ import { t, locale } from '../lib/i18n';
 const HISTORY_DAYS = 14;
 
 const fmt = n => n.toLocaleString(locale);
+const READING_TEXT = {
+  few_days: () => t('Registre as calorias por pelo menos 3 dias para ver a leitura da semana.'),
+  on_track: () => t('Você está dentro da meta de calorias. Continue assim.'),
+  plateau: () => t('Calorias na meta, mas o peso não está indo na direção do seu objetivo. Se continuar assim por 2 a 3 semanas, ajuste as calorias em 5 a 10%.'),
+  below_gain: () => t('Você está abaixo da meta de calorias. Para ganhar massa, coma um pouco mais.'),
+  below_loss: () => t('Você está bem abaixo da meta de calorias. Um déficit grande demais pode custar músculo e energia nos treinos.'),
+  below: () => t('Você está abaixo da meta de calorias da semana.'),
+  above_loss: () => t('Você está acima da meta de calorias, o que atrasa a perda de peso.'),
+  above_gain: () => t('Você está acima da meta de calorias. Um excesso grande vira mais gordura do que massa.'),
+  above: () => t('Você está acima da meta de calorias da semana.'),
+};
 const EMPTY_CUSTOM = { name: '', g: '', kcal: '', carbs: '', fat: '' };
 
 export default function NutricaoPage({ active }) {
@@ -33,6 +46,7 @@ export default function NutricaoPage({ active }) {
   const [_tick, setTick] = useState(0);
   const bump = () => setTick(n => n + 1);
   const [logs, setLogs] = useState([]);
+  const [weightLogs, setWeightLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   // Últimas adições desta visita, pra "Desfazer" tirar exatamente o que entrou
   // por engano. Vazia (app reaberto), o botão vira um -10 g de proteína.
@@ -71,6 +85,7 @@ export default function NutricaoPage({ active }) {
       }
     }
     load();
+    fetchWeightLogs(user.id).then(setWeightLogs).catch(err => console.error('fetchWeightLogs:', err));
     fetchCustomFoods(user.id).then(setMyFoods).catch(err => console.error('fetchCustomFoods:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, user]);
@@ -83,6 +98,18 @@ export default function NutricaoPage({ active }) {
     return s;
   }, [logs, protein]);
   const stats = useMemo(() => proteinStats(series, goalG), [series, goalG]);
+
+  const nSeries = useMemo(() => {
+    const s = buildNutritionSeries(logs, todayDate(), HISTORY_DAYS);
+    s[s.length - 1] = { ...s[s.length - 1], ...totals };
+    return s;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logs, totals.protein, totals.kcal, totals.carbs, totals.fat]);
+  const kcalGoal = goals?.kcal ?? 0;
+  const week = useMemo(() => kcalWeekSummary(nSeries, kcalGoal), [nSeries, kcalGoal]);
+  const weightRate = useMemo(() => weightRatePerWeek(weightLogs, todayDate()), [weightLogs]);
+  const reading = nutritionReading(week, user?.user_metadata?.meta, weightRate);
+  const kcalSeries = useMemo(() => nSeries.map(d => ({ date: d.date, g: d.kcal })), [nSeries]);
 
   function saveTotals(next) {
     writeLocalTotals(next);
@@ -267,9 +294,44 @@ export default function NutricaoPage({ active }) {
         </div>
       </div>
 
+      {kcalGoal > 0 && (
+        <div className="section-group">
+          <div className="section-group__label">{t('Resumo da semana')}</div>
+          <div className="dash-card">
+            <div className="history-stats water-stats">
+              <div className="stat-card">
+                <span className="stat-card__value">{week.avgKcal ? fmt(week.avgKcal) : '–'}</span>
+                <span className="stat-card__label">{t('Média kcal/dia')}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-card__value">{week.daysOnTarget}/{week.loggedDays}</span>
+                <span className="stat-card__label">{t('Dias na faixa')}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-card__value">{weightRate === null ? '–' : `${weightRate > 0 ? '+' : ''}${weightRate.toLocaleString(locale)}`}</span>
+                <span className="stat-card__label">{t('kg por semana')}</span>
+              </div>
+            </div>
+            {reading && <p className="dash-card__subtitle">{READING_TEXT[reading]()}</p>}
+            <p className="dash-card__subtitle">{t('Faixa: 90% a 110% da meta de calorias. Considera só os dias com calorias registradas.')}</p>
+          </div>
+        </div>
+      )}
+
+      {kcalGoal > 0 && (
+        <div className="section-group">
+          <div className="section-group__label">{t('Calorias nos últimos {HISTORY_DAYS} dias', { HISTORY_DAYS })}</div>
+          <div className="dash-card">
+            {loading ? <Skeleton height={150} /> : (
+              <ProteinBars series={kcalSeries} goalG={kcalGoal} unit="kcal" ariaLabel={t('Calorias nos últimos {HISTORY_DAYS} dias', { HISTORY_DAYS })} />
+            )}
+          </div>
+        </div>
+      )}
+
       {goalG > 0 && (
         <div className="section-group">
-          <div className="section-group__label">{t('Últimos {HISTORY_DAYS} dias', { HISTORY_DAYS })}</div>
+          <div className="section-group__label">{t('Proteína nos últimos {HISTORY_DAYS} dias', { HISTORY_DAYS })}</div>
           <div className="dash-card">
             {loading ? <Skeleton height={150} /> : <ProteinBars series={series} goalG={goalG} />}
             <p className="dash-card__subtitle">
