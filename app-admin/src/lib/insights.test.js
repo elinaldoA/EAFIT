@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc, from: mockFrom } }));
 
 import {
   pct, formatMl, scoreLevel, splitCardio, buildAchievements,
-  fetchWellbeingOverview, fetchWellbeingByDay, fetchProteinOverview, fetchProteinByDay, fetchLowCheckinUsers, fetchCardio, fetchRecordStats, fetchUserWellbeing,
+  fetchWellbeingOverview, fetchWellbeingByDay, fetchProteinOverview, fetchProteinByDay, fetchKcalOverview, fetchLowCheckinUsers, fetchCardio, fetchRecordStats, fetchUserWellbeing,
 } from './insights';
 
 beforeEach(() => vi.clearAllMocks());
@@ -119,6 +119,14 @@ describe('chamadas', () => {
     mockRpc.mockResolvedValueOnce({ data: [{ pd_day: '2026-10-07', pd_users: '3', pd_avg_g: null, pd_hits: '1' }], error: null });
     expect(await fetchProteinByDay(7)).toEqual([{ day: '2026-10-07', users: 3, avgG: null, hits: 1 }]);
     expect(mockRpc).toHaveBeenLastCalledWith('admin_protein_by_day', { days_back: 7 });
+  });
+
+  it('fetchKcalOverview converte as colunas', async () => {
+    mockRpc.mockResolvedValueOnce({ data: [{ ko_users: '5', ko_days: '21', ko_avg_kcal: '2040' }], error: null });
+    expect(await fetchKcalOverview(14)).toEqual({ users: 5, days: 21, avgKcal: 2040 });
+    expect(mockRpc).toHaveBeenLastCalledWith('admin_kcal_overview', { days_back: 14 });
+    mockRpc.mockResolvedValueOnce({ data: [], error: null });
+    expect(await fetchKcalOverview()).toBeNull();
   });
 
   it('propaga erro da RPC', async () => {

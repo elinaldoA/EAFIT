@@ -68,6 +68,8 @@ export function accountDeletedEmail(lang: Lang): EmailContent {
 export type WeeklyExtras = {
   proteinDays?: number; // dias da semana com proteína registrada
   proteinAvg?: number; // média (g) nesses dias
+  kcalDays?: number; // dias da semana com calorias registradas
+  kcalAvg?: number; // média (kcal) nesses dias
   weightDelta?: number | null; // kg: último peso da semana menos o último anterior
 };
 
@@ -80,6 +82,12 @@ export function weeklyExtrasLine(lang: Lang, extras: WeeklyExtras = {}): string 
     parts.push(en
       ? `you logged protein on ${extras.proteinDays} ${extras.proteinDays === 1 ? 'day' : 'days'}, averaging ${avg} g`
       : `você registrou proteína em ${extras.proteinDays} ${extras.proteinDays === 1 ? 'dia' : 'dias'}, com média de ${avg} g`);
+  }
+  if (extras.kcalDays && extras.kcalDays > 0 && extras.kcalAvg) {
+    const kcal = Math.round(extras.kcalAvg);
+    parts.push(en
+      ? `your calories averaged ${kcal} kcal a day over ${extras.kcalDays} ${extras.kcalDays === 1 ? 'day' : 'days'}`
+      : `suas calorias ficaram em média ${kcal} kcal por dia em ${extras.kcalDays} ${extras.kcalDays === 1 ? 'dia' : 'dias'}`);
   }
   if (typeof extras.weightDelta === 'number' && Number.isFinite(extras.weightDelta)) {
     const d = Math.round(extras.weightDelta * 10) / 10;

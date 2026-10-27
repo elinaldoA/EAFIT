@@ -137,22 +137,22 @@ Deno.serve(async (req) => {
   }
 
   // Nutrição e peso da semana (opcional: se falhar, o resumo sai sem essa linha).
-  const protein = new Map<string, { days: number; total: number }>();
+  const protein = new Map<string, { days: number; total: number; kcalDays: number; kcalTotal: number }>();
   const weightRows = new Map<string, { date: string; weight: number }[]>();
   const userIds = new Set(users.map((u) => u.id));
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from('protein_logs')
-      .select('user_id, amount_g')
+      .select('user_id, amount_g, kcal')
       .gte('log_date', weekStart).lte('log_date', weekEnd)
-      .gt('amount_g', 0)
+      .or('amount_g.gt.0,kcal.gt.0')
       .order('id')
       .range(from, from + PAGE - 1);
     if (error) { console.error('protein_logs error:', error.message); break; }
-    for (const r of (data || []) as { user_id: string; amount_g: number }[]) {
-      const cur = protein.get(r.user_id) || { days: 0, total: 0 };
-      cur.days += 1;
-      cur.total += r.amount_g;
+    for (const r of (data || []) as { user_id: string; amount_g: number; kcal: number | null }[]) {
+      const cur = protein.get(r.user_id) || { days: 0, total: 0, kcalDays: 0, kcalTotal: 0 };
+      if (r.amount_g > 0) { cur.days += 1; cur.total += r.amount_g; }
+      if ((r.kcal ?? 0) > 0) { cur.kcalDays += 1; cur.kcalTotal += r.kcal!; }
       protein.set(r.user_id, cur);
     }
     if (!data || data.length < PAGE) break;
@@ -204,7 +204,13 @@ Deno.serve(async (req) => {
       const goal = Number(u.meta.weeklyGoal) > 0 ? Number(u.meta.weeklyGoal) : DEFAULT_WEEKLY_GOAL;
       const volume = Math.round(weekVolume.get(u.id) || 0);
       const p = protein.get(u.id);
-      const extras = { proteinDays: p?.days, proteinAvg: p ? p.total / p.days : 0, weightDelta: weightDelta(u.id) };
+      const extras = {
+        proteinDays: p?.days,
+        proteinAvg: p?.days ? p.total / p.days : 0,
+        kcalDays: p?.kcalDays,
+        kcalAvg: p?.kcalDays ? p.kcalTotal / p.kcalDays : 0,
+        weightDelta: weightDelta(u.id),
+      };
       summaries.push(await bulkEmailItem(u, (lang) => weeklySummaryEmail(lang, count, goal, volume, extras), env));
     } else if (pick.kind === 'comeback') {
       comebacks.push(await bulkEmailItem(u, (lang) => comebackEmail(lang, pick.days, pick.neverTrained), env));

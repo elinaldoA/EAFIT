@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   pct, formatMl, scoreLevel, SCORE_BADGE,
-  fetchWellbeingOverview, fetchWellbeingByDay, fetchLowCheckinUsers, fetchProteinOverview, fetchProteinByDay,
+  fetchWellbeingOverview, fetchWellbeingByDay, fetchLowCheckinUsers, fetchProteinOverview, fetchProteinByDay, fetchKcalOverview,
 } from '../lib/insights';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
@@ -48,8 +48,9 @@ export default function Wellbeing() {
     setError('');
     // Proteína é buscada à parte: antes de a migration admin_protein_insights
     // rodar no banco as RPCs não existem, e isso não pode derrubar a tela.
-    const protein = Promise.all([fetchProteinOverview(days), fetchProteinByDay(days)])
-      .then(([overview, byDay]) => (overview ? { overview, byDay } : null))
+    const kcal = fetchKcalOverview(days).catch(() => null);
+    const protein = Promise.all([fetchProteinOverview(days), fetchProteinByDay(days), kcal])
+      .then(([overview, byDay, kcalOv]) => (overview ? { overview, byDay, kcal: kcalOv } : null))
       .catch(() => null);
     Promise.all([fetchWellbeingOverview(days), fetchWellbeingByDay(days), fetchLowCheckinUsers(days), protein])
       .then(([overview, byDay, low, prot]) => { if (active) setData({ overview, byDay, low, protein: prot }); })
@@ -194,6 +195,15 @@ export default function Wellbeing() {
                 </div>
                 <div className="tile"><div className="tile__value">{po.proteinAvgG === null ? '—' : `${po.proteinAvgG} g`}</div><div className="tile__label">média por dia registrado</div></div>
                 <div className="tile"><div className="tile__value">{fmt(proteinHitPct, '%')}</div><div className="tile__label">dos dias registrados bateram a meta</div></div>
+                {data.protein.kcal && data.protein.kcal.days > 0 && (
+                  <>
+                    <div className="tile">
+                      <div className="tile__value">{data.protein.kcal.users}</div>
+                      <div className="tile__label">usuários registraram calorias ({fmt(pct(data.protein.kcal.users, po.users), '%')})</div>
+                    </div>
+                    <div className="tile"><div className="tile__value">{data.protein.kcal.avgKcal === null ? '—' : `${data.protein.kcal.avgKcal} kcal`}</div><div className="tile__label">média por dia registrado</div></div>
+                  </>
+                )}
               </div>
               {po.proteinDays > 0 && (
                 <DayBars

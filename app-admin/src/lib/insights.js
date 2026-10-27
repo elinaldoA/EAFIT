@@ -66,6 +66,14 @@ export async function fetchProteinOverview(days = 30) {
   };
 }
 
+// Calorias (protein_logs.kcal). Função própria: antes de a migration
+// admin_kcal_overview rodar no banco ela não existe; quem chama trata a falha.
+export async function fetchKcalOverview(days = 30) {
+  const r = (await rpcRows('admin_kcal_overview', { days_back: days }))[0];
+  if (!r) return null;
+  return { users: Number(r.ko_users), days: Number(r.ko_days), avgKcal: num(r.ko_avg_kcal) };
+}
+
 export async function fetchProteinByDay(days = 30) {
   return (await rpcRows('admin_protein_by_day', { days_back: days })).map(r => ({
     day: r.pd_day, users: Number(r.pd_users), avgG: num(r.pd_avg_g), hits: Number(r.pd_hits),

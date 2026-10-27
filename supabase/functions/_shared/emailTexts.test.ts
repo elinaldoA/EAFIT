@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { renderEmail } from './emailLayout.ts';
 import {
-  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, inactivityEmail, shouldSendWelcome, weeklySummaryEmail,
+  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, inactivityEmail, shouldSendWelcome, weeklyExtrasLine, weeklySummaryEmail,
   welcomeEmail,
 } from './emailTexts.ts';
 
@@ -82,6 +82,18 @@ Deno.test('shouldSendWelcome: só conta nova e ainda não avisada', () => {
   assert(!shouldSendWelcome({ created_at: '2026-10-01T12:00:00Z', email_confirmed_at: '2026-10-01T12:05:00Z' }, now));
   assert(!shouldSendWelcome({ created_at: null }, now));
   assert(!shouldSendWelcome({ created_at: 'data inválida' }, now));
+});
+
+Deno.test('weeklyExtrasLine: calorias entram só com dias registrados', () => {
+  assertEquals(
+    weeklyExtrasLine('pt', { kcalDays: 4, kcalAvg: 2049.6 }),
+    'Além disso: suas calorias ficaram em média 2050 kcal por dia em 4 dias.',
+  );
+  assertEquals(
+    weeklyExtrasLine('en', { kcalDays: 1, kcalAvg: 1800, weightDelta: 0 }),
+    'Also: your calories averaged 1800 kcal a day over 1 day and your weight held steady.',
+  );
+  assertEquals(weeklyExtrasLine('pt', { kcalDays: 0, kcalAvg: 0 }), null);
 });
 
 Deno.test('weeklySummaryEmail: linha extra de proteína e peso só quando há dados', () => {
