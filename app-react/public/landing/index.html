@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>EAFIT — App de treino grátis com plano, registro e evolução</title>
+  <title>EAFIT — Treino com plano, registro e evolução</title>
   <meta name="description" content="Plano de treino montado pro seu objetivo, modo ao vivo com treinador por voz, 1000 exercícios, desafios com amigos e gráficos de evolução. Grátis, sem anúncios e funciona offline." />
   <link rel="canonical" href="https://eafit.com.br/" />
-  <meta property="og:title" content="EAFIT — App de treino grátis com plano, registro e evolução" />
+  <meta property="og:title" content="EAFIT — Treino com plano, registro e evolução" />
   <meta property="og:description" content="Plano de treino pro seu objetivo, modo ao vivo, demonstração dos exercícios e gráficos de evolução. Grátis e funciona offline." />
   <meta property="og:url" content="https://eafit.com.br/" />
-  <meta name="twitter:title" content="EAFIT — App de treino grátis com plano, registro e evolução" />
+  <meta name="twitter:title" content="EAFIT — Treino com plano, registro e evolução" />
   <meta name="twitter:description" content="Plano de treino pro seu objetivo, modo ao vivo, demonstração dos exercícios e gráficos de evolução. Grátis e funciona offline." />
 
   <!-- site-head: igual em todas as páginas (conferido por scripts/build-site.test.js) -->
@@ -109,7 +109,7 @@
         </div>
       </nav>
       <div class="nav-actions">
-        <a class="btn btn-primary btn-sm" href="/app/">Começar grátis</a>
+        <a class="btn btn-primary btn-sm" href="/app/">Abrir app</a>
         <button type="button" class="nav-toggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
           <svg class="bars" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
           <svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
@@ -160,23 +160,213 @@
 
           <div class="phone" role="img" aria-label="Prévia das telas do app EAFIT">
             <div class="phone__screen" aria-hidden="true">
-              <div class="scr is-active" id="scr-0"><img src="/img/hero-ao-vivo.webp" width="600" height="1298" alt="" fetchpriority="high" decoding="async" /></div>
-              <div class="scr" id="scr-1"><img src="/img/hero-treino.webp" width="600" height="1298" alt="" loading="lazy" decoding="async" /></div>
-              <div class="scr" id="scr-2"><img src="/img/hero-agua.webp" width="600" height="1298" alt="" loading="lazy" decoding="async" /></div>
-              <div class="scr" id="scr-3"><img src="/img/hero-evolucao.webp" width="600" height="1298" alt="" loading="lazy" decoding="async" /></div>
-              <div class="scr" id="scr-4"><img src="/img/hero-historico.webp" width="600" height="1298" alt="" loading="lazy" decoding="async" /></div>
-              <div class="scr" id="scr-5"><img src="/img/hero-recordes.webp" width="600" height="1298" alt="" loading="lazy" decoding="async" /></div>
+
+              <!-- Tela 1: modo treino ao vivo -->
+              <div class="scr is-active" id="scr-0">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-live">
+                  <div class="m-live__top">
+                    <span class="m-icon-btn">✕</span>
+                    <div class="m-live__head"><b>Segunda</b><small>Peito · Ombro · Tríceps</small></div>
+                    <span class="m-clock" data-clock>32:14</span>
+                  </div>
+                  <div class="m-bar"><i></i></div>
+                  <div class="m-steps"><i class="done"></i><i class="cur"></i><i></i><i></i><i></i><i></i></div>
+                  <div class="m-kicker">Exercício 2 de 6</div>
+                  <div class="m-title">Supino Inclinado com Halteres</div>
+                  <div class="m-chips"><span>4 séries</span><span>8–10 reps</span><span>🔄 Trocar</span><span>▶ Ver execução</span></div>
+                  <div class="m-tip">💡 Controle na descida</div>
+                  <div class="m-sets">
+                    <div class="m-set m-set--head"><span>#</span><span>Carga</span><span>Reps</span><span></span></div>
+                    <div class="m-set done"><span class="n">1</span><span class="f">26 kg</span><span class="f">10</span><span class="ck">✓</span></div>
+                    <div class="m-set done"><span class="n">2</span><span class="f">26 kg</span><span class="f">9</span><span class="ck">✓</span></div>
+                    <div class="m-set cur"><span class="n">3</span><span class="f">26 kg</span><span class="f empty">—</span><span class="ck"></span></div>
+                    <div class="m-set"><span class="n">4</span><span class="f">26 kg</span><span class="f">—</span><span class="ck"></span></div>
+                  </div>
+                  <div class="m-last">Última vez: <b>24 kg × 10</b></div>
+                  <div class="m-rest">
+                    <span class="m-rest__bar" data-rest-bar></span>
+                    <div><small>Descanso</small><b data-rest>1:30</b></div>
+                    <span class="m-pill">+15s</span><span class="m-pill">Pular</span>
+                  </div>
+                  <div class="m-foot"><span class="prev">‹</span><span class="next">Próximo exercício →</span></div>
+                </div>
+              </div>
+
+              <!-- Tela 2: água -->
+              <div class="scr" id="scr-1">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Olá, Ana</b><span class="online"></span><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card m-water">
+                    <div class="m-ring"><div><b>2,2<small>L</small></b><span>de 3,5L</span></div></div>
+                    <div class="m-water__info">
+                      <span class="m-label">Hidratação hoje</span>
+                      <strong>Faltam 1,3L</strong>
+                      <span>≈ 6 copos de 250ml</span>
+                    </div>
+                  </div>
+                  <div class="m-quick">
+                    <span><em>🥛</em>+200ml<small>Copo</small></span>
+                    <span><em>☕</em>+300ml<small>Caneca</small></span>
+                    <span><em>🥤</em>+500ml<small>Garrafa</small></span>
+                    <span><em>🍶</em>+750ml<small>Squeeze</small></span>
+                  </div>
+                  <div class="m-stats">
+                    <div><b>3,3</b><span>Média 7 dias (L)</span></div>
+                    <div><b>5</b><span>Dias seguidos na meta</span></div>
+                    <div><b>9/14</b><span>Dias na meta</span></div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">Últimos 14 dias</span>
+                    <div class="m-wbars">
+                      <i style="height:62%"></i><i class="hit" style="height:80%"></i><i style="height:55%"></i><i class="hit" style="height:84%"></i><i class="hit" style="height:76%"></i><i style="height:48%"></i><i class="hit" style="height:90%"></i><i class="hit" style="height:78%"></i><i style="height:66%"></i><i class="hit" style="height:80%"></i><i class="hit" style="height:86%"></i><i class="hit" style="height:77%"></i><i class="hit" style="height:94%"></i><i style="height:50%"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="hidratacao"></div>
+              </div>
+
+              <!-- Tela 3: evolução -->
+              <div class="scr" id="scr-2">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Evolução</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-kpis">
+                    <div><b>14</b><span>treinos em 30 dias</span></div>
+                    <div><b>🔥 5</b><span>dias de sequência</span></div>
+                    <div><b>8</b><span>recordes pessoais</span></div>
+                    <div><b>6</b><span>conquistas</span></div>
+                  </div>
+                  <div class="m-seg"><span class="on">Treinos</span><span>Recordes</span><span>Corpo</span></div>
+                  <div class="m-card">
+                    <span class="m-label">Últimos 35 dias</span>
+                    <div class="m-heat">
+                      <i class="l2"></i><i></i><i class="l1"></i><i class="l3"></i><i></i><i class="l2"></i><i></i>
+                      <i class="l3"></i><i class="l1"></i><i></i><i class="l2"></i><i class="l3"></i><i></i><i></i>
+                      <i class="l2"></i><i class="l3"></i><i class="l2"></i><i></i><i class="l3"></i><i class="l1"></i><i></i>
+                      <i class="l3"></i><i class="l2"></i><i class="l3"></i><i class="l1"></i><i class="l3"></i><i></i><i></i>
+                      <i class="l3"></i><i class="l3"></i><i class="l2"></i><i class="l3"></i><i class="l3"></i><i></i><i></i>
+                    </div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">Volume por treino</span>
+                    <svg class="m-chart" viewBox="0 0 260 70" preserveAspectRatio="none">
+                      <defs><linearGradient id="mg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f97316" stop-opacity=".35"/><stop offset="1" stop-color="#f97316" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0 58 L30 52 L60 55 L90 44 L120 46 L150 34 L180 36 L210 24 L240 20 L260 12 L260 70 L0 70 Z" fill="url(#mg)"/>
+                      <path d="M0 58 L30 52 L60 55 L90 44 L120 46 L150 34 L180 36 L210 24 L240 20 L260 12" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="dash"></div>
+              </div>
+
+              <!-- Tela 4: histórico -->
+              <div class="scr" id="scr-3">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Histórico</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card">
+                    <div class="m-month"><span>‹</span>Setembro 2026<span>›</span></div>
+                    <div class="m-cal">
+                      <span class="wd">D</span><span class="wd">S</span><span class="wd">T</span><span class="wd">Q</span><span class="wd">Q</span><span class="wd">S</span><span class="wd">S</span>
+                      <i></i><i class="d">1</i><i class="d">2</i><i>3</i><i class="d">4</i><i class="d">5</i><i>6</i>
+                      <i>7</i><i class="d">8</i><i class="p">9</i><i class="d">10</i><i class="d">11</i><i>12</i><i>13</i>
+                      <i>14</i><i class="d">15</i><i class="d">16</i><i class="d">17</i><i>18</i><i class="d">19</i><i>20</i>
+                      <i>21</i><i class="d">22</i><i class="d">23</i><i class="d">24</i><i class="t">25</i><i>26</i><i>27</i>
+                      <i>28</i><i>29</i><i>30</i><i></i><i></i><i></i><i></i>
+                    </div>
+                  </div>
+                  <div class="m-card m-sum">
+                    <div><b>15</b><span>Treinos</span></div>
+                    <div><b>14h</b><span>Tempo</span></div>
+                    <div><b>312</b><span>Séries</span></div>
+                    <div><b>48t</b><span>Volume</span></div>
+                  </div>
+                  <div class="m-card m-session">
+                    <div class="dt">24<small>qua</small></div>
+                    <div><b>Pernas · Quadríceps</b><span>58 min · 22 séries · <span class="m-up">↑ 3 evoluíram</span></span></div>
+                  </div>
+                  <div class="m-card m-session">
+                    <div class="dt">23<small>ter</small></div>
+                    <div><b>Costas · Bíceps</b><span>52 min · 20 séries · <span class="m-up">↑ 2 evoluíram</span></span></div>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="historico"></div>
+              </div>
+
+              <!-- Tela 5: check-in e troca de exercício -->
+              <div class="scr" id="scr-4">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Olá, Ana</b><span class="online"></span><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card">
+                    <span class="m-label">Como você está hoje?</span>
+                    <div class="m-ck">
+                      <div><span>Energia</span><i>😴</i><i>🥱</i><i>🙂</i><i class="on">😃</i><i>⚡</i></div>
+                      <div><span>Sono</span><i>😵</i><i>😪</i><i>🙂</i><i class="on">😌</i><i>😴</i></div>
+                      <div><span>Humor</span><i>😞</i><i>😕</i><i>😐</i><i>🙂</i><i class="on">😄</i></div>
+                    </div>
+                  </div>
+                  <div class="m-tip">✅ Energia alta: ótimo dia para buscar um recorde!</div>
+                  <div class="m-card">
+                    <span class="m-label">Treino de hoje · Peito, Ombro e Tríceps</span>
+                    <div class="m-ex">
+                      <div><b>Supino Reto</b><span>4 × 8–10</span><em>🔄</em></div>
+                      <div><b>Supino Inclinado com Halteres</b><span>4 × 8–10</span><em>🔄</em></div>
+                      <div><b>Elevação Lateral</b><span>3 × 12</span><em>🔄</em></div>
+                    </div>
+                  </div>
+                  <div class="m-foot"><span class="next">▶ Iniciar treino</span></div>
+                </div>
+                <div class="m-tabbar" data-tabbar="treino"></div>
+              </div>
+
+              <!-- Tela 6: retrospectiva e desafios -->
+              <div class="scr" id="scr-5">
+                <div class="m-status"><span>9:41</span><i></i></div>
+                <div class="m-topbar"><span class="m-avatar">EA</span><b>Evolução</b><span class="sp"></span><span class="m-icon-btn">☾</span></div>
+                <div class="m-body">
+                  <div class="m-card">
+                    <span class="m-label">📅 Retrospectiva · setembro</span>
+                    <div class="m-sum m-sum--3">
+                      <div><b>16</b><span>Treinos</span></div>
+                      <div><b>12h40</b><span>Tempo</span></div>
+                      <div><b>9</b><span>Recordes</span></div>
+                    </div>
+                    <div class="m-delta m-up">▲ 18% vs. mês anterior</div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">🏆 Desafios com amigos</span>
+                    <div class="m-chal">
+                      <b>Turma da firma</b>
+                      <small>5 dias restantes · 4 pessoas · você em 2º</small>
+                      <div class="m-board">
+                        <div><span>1º Carol</span><b>9</b></div>
+                        <div class="me"><span>2º Você</span><b>8</b></div>
+                        <div><span>3º Rafa</span><b>6</b></div>
+                      </div>
+                    </div>
+                    <div class="m-pill m-pill--wide">📤 Convidar · K7M2QX</div>
+                  </div>
+                  <div class="m-card">
+                    <span class="m-label">📏 Medidas · cintura</span>
+                    <div class="m-delta">90 → 86,5 cm <span class="m-up">(-3,5)</span></div>
+                  </div>
+                </div>
+                <div class="m-tabbar" data-tabbar="dash"></div>
+              </div>
 
             </div>
           </div>
 
           <div class="screen-tabs" role="tablist" aria-label="Telas do app">
             <button class="screen-tab" role="tab" aria-selected="true" aria-controls="scr-0" data-tab="0">Ao vivo<span class="prog"></span></button>
-            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-1" data-tab="1">Treino<span class="prog"></span></button>
-            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-2" data-tab="2">Água<span class="prog"></span></button>
-            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-3" data-tab="3">Evolução<span class="prog"></span></button>
-            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-4" data-tab="4">Histórico<span class="prog"></span></button>
-            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-5" data-tab="5">Recordes<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-1" data-tab="1">Água<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-2" data-tab="2">Evolução<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-3" data-tab="3">Histórico<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-4" data-tab="4">Check-in<span class="prog"></span></button>
+            <button class="screen-tab" role="tab" aria-selected="false" aria-controls="scr-5" data-tab="5">Desafios<span class="prog"></span></button>
           </div>
         </div>
       </div>
@@ -189,22 +379,6 @@
       <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l22 22"></path><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>Funciona offline</div>
       <div class="highlight"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>Grátis e sem anúncios</div>
     </div>
-
-    <!-- ========== VÍDEO: CRIAR CONTA ========== -->
-    <section class="demo-video" id="video" data-section="demo-video">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <h2>Veja como é criar sua conta</h2>
-          <p>Do cadastro ao treino pronto, em cerca de 1 minuto.</p>
-        </div>
-        <div class="demo-video__frame reveal">
-          <video controls playsinline preload="none" poster="/img/video-criar-conta.webp" width="720" height="1280" aria-label="Como criar sua conta no EAFIT e gerar o primeiro treino">
-            <source src="/video/criar-conta.mp4" type="video/mp4" />
-          </video>
-        </div>
-        <div class="section-more reveal"><a class="btn btn-primary" href="/app/">Começar grátis</a></div>
-      </div>
-    </section>
 
     <!-- ========== NÚMEROS (public.landing_stats; some se os totais ainda forem baixos) ========== -->
     <section class="stats-band" data-section="stats" id="landing-stats" hidden>
@@ -319,50 +493,6 @@
           <li><a class="chip" href="/exercicios/#mobilidade">Mobilidade e alongamento</a></li>
         </ul>
         <div class="section-more reveal"><a class="btn btn-ghost" href="/exercicios/">Ver a biblioteca em números <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a></div>
-      </div>
-    </section>
-
-    <section id="depoimentos" data-section="testimonials">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <h2>Quem usa, recomenda</h2>
-          <p>Veja o que o pessoal da academia está dizendo sobre o EAFIT.</p>
-        </div>
-        <div class="quotes">
-          <figure class="quote reveal">
-            <div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>
-            <blockquote>“Finalmente parei de anotar treino no bloco de notas. O app já monta tudo e eu só vou marcando as séries. Funciona até no subsolo da academia, sem sinal.”</blockquote>
-            <figcaption><span class="avatar" aria-hidden="true">R</span><span class="who"><strong>Rafael</strong><span>Intermediário · 8 meses de treino</span></span></figcaption>
-          </figure>
-          <figure class="quote reveal">
-            <div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>
-            <blockquote>“Comecei do zero e tinha vergonha de perguntar como fazer os exercícios. A demonstração e as dicas de técnica me deram segurança pra treinar sozinha.”</blockquote>
-            <figcaption><span class="avatar" aria-hidden="true">M</span><span class="who"><strong>Mariana</strong><span>Iniciante · 2 meses de treino</span></span></figcaption>
-          </figure>
-          <figure class="quote reveal">
-            <div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>
-            <blockquote>“Uso com meus alunos: monto o treino, acompanho peso e medidas e marco as aulas pelo app. Eles respondem rápido e ninguém mais esquece o horário.”</blockquote>
-            <figcaption><span class="avatar" aria-hidden="true">C</span><span class="who"><strong>Carlos</strong><span>Personal trainer</span></span></figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== FAQ ========== -->
-    <section id="faq" class="faq" data-section="faq">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <h2>Perguntas frequentes</h2>
-          <p>Ainda em dúvida? As respostas mais comuns estão aqui.</p>
-        </div>
-        <div class="faq-list" data-limit="5">
-          <details><summary>É grátis mesmo?</summary><p>Sim. Não tem plano pago, não tem anúncio e não pede cartão de crédito.</p></details>
-          <details><summary>Preciso baixar na loja de apps?</summary><p>Não. O EAFIT é um app web instalável: abra no navegador e, no Android, toque em “Instalar app” ou “Adicionar à tela inicial”; no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”. Ele passa a abrir em tela cheia, como qualquer app.</p></details>
-          <details><summary>Funciona sem internet na academia?</summary><p>Funciona. Você registra séries e água offline e, quando a conexão volta, tudo é sincronizado sozinho com a sua conta.</p></details>
-          <details><summary>Posso mudar o treino que o app montou?</summary><p>Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso. E na hora de treinar, o botão “Trocar exercício” sugere alternativas do mesmo músculo e do seu nível.</p></details>
-          <details><summary>Como funcionam os desafios com amigos?</summary><p>Você cria um desafio (7, 14 ou 30 dias), recebe um código e manda para quem quiser. Quem entra pelo código participa, e vence quem treinar mais dias no período. Os outros só veem seu apelido e sua pontuação.</p></details>
-        </div>
-        <div class="section-more reveal"><a class="btn btn-ghost" href="/ajuda/#faq">Ver todas as perguntas <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a></div>
       </div>
     </section>
 
@@ -506,6 +636,50 @@
           <div class="card reveal reveal-d3"><div class="icon-badge">🏆</div><h3>Metas, selos e ranking</h3><p>Metas de 1 a 1000 cadastros, um selo a cada meta batida e ranking do mês. Seu nome só aparece se você quiser.</p></div>
         </div>
         <div class="section-more reveal"><a class="btn btn-primary" href="/sobre/?assunto=embaixador#contato">Quero participar</a></div>
+      </div>
+    </section>
+
+    <section id="depoimentos" data-section="testimonials">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Quem usa, recomenda</h2>
+          <p>Veja o que o pessoal da academia está dizendo sobre o EAFIT.</p>
+        </div>
+        <div class="quotes">
+          <figure class="quote reveal">
+            <div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>
+            <blockquote>“Finalmente parei de anotar treino no bloco de notas. O app já monta tudo e eu só vou marcando as séries. Funciona até no subsolo da academia, sem sinal.”</blockquote>
+            <figcaption><span class="avatar" aria-hidden="true">R</span><span class="who"><strong>Rafael</strong><span>Intermediário · 8 meses de treino</span></span></figcaption>
+          </figure>
+          <figure class="quote reveal">
+            <div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>
+            <blockquote>“Comecei do zero e tinha vergonha de perguntar como fazer os exercícios. A demonstração e as dicas de técnica me deram segurança pra treinar sozinha.”</blockquote>
+            <figcaption><span class="avatar" aria-hidden="true">M</span><span class="who"><strong>Mariana</strong><span>Iniciante · 2 meses de treino</span></span></figcaption>
+          </figure>
+          <figure class="quote reveal">
+            <div class="stars" aria-label="5 de 5 estrelas">★★★★★</div>
+            <blockquote>“Uso com meus alunos: monto o treino, acompanho peso e medidas e marco as aulas pelo app. Eles respondem rápido e ninguém mais esquece o horário.”</blockquote>
+            <figcaption><span class="avatar" aria-hidden="true">C</span><span class="who"><strong>Carlos</strong><span>Personal trainer</span></span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== FAQ ========== -->
+    <section id="faq" class="faq" data-section="faq">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Perguntas frequentes</h2>
+          <p>Ainda em dúvida? As respostas mais comuns estão aqui.</p>
+        </div>
+        <div class="faq-list" data-limit="5">
+          <details><summary>É grátis mesmo?</summary><p>Sim. Não tem plano pago, não tem anúncio e não pede cartão de crédito.</p></details>
+          <details><summary>Preciso baixar na loja de apps?</summary><p>Não. O EAFIT é um app web instalável: abra no navegador e, no Android, toque em “Instalar app” ou “Adicionar à tela inicial”; no iPhone, toque em Compartilhar → “Adicionar à Tela de Início”. Ele passa a abrir em tela cheia, como qualquer app.</p></details>
+          <details><summary>Funciona sem internet na academia?</summary><p>Funciona. Você registra séries e água offline e, quando a conexão volta, tudo é sincronizado sozinho com a sua conta.</p></details>
+          <details><summary>Posso mudar o treino que o app montou?</summary><p>Pode. No editor de treino você troca, adiciona ou remove exercícios e ajusta séries, repetições e descanso. E na hora de treinar, o botão “Trocar exercício” sugere alternativas do mesmo músculo e do seu nível.</p></details>
+          <details><summary>Como funcionam os desafios com amigos?</summary><p>Você cria um desafio (7, 14 ou 30 dias), recebe um código e manda para quem quiser. Quem entra pelo código participa, e vence quem treinar mais dias no período. Os outros só veem seu apelido e sua pontuação.</p></details>
+        </div>
+        <div class="section-more reveal"><a class="btn btn-ghost" href="/ajuda/#faq">Ver todas as perguntas <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></a></div>
       </div>
     </section>
 

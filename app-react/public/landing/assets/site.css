@@ -214,7 +214,6 @@ h1 {
   transition: opacity .45s ease, transform .45s ease; pointer-events: none;
 }
 .scr.is-active { opacity: 1; transform: none; }
-.scr > img { display: block; width: 100%; height: calc(100% - 30px); margin-top: 30px; object-fit: cover; object-position: top; }
 
 .screen-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; border-radius: 22px; max-width: 360px; background: var(--surface); border: 1px solid var(--border); }
 .screen-tab {
@@ -499,13 +498,6 @@ section { padding: clamp(64px, 9vw, 112px) 0; }
 }
 .step h3 { margin: 0 0 6px; font-size: 18px; }
 .step p { margin: 0; color: var(--text-muted); font-size: 15px; }
-
-/* ---------- vídeo de cadastro ---------- */
-.demo-video__frame { display: flex; justify-content: center; }
-.demo-video video {
-  display: block; width: min(100%, 300px); height: auto; aspect-ratio: 9 / 16; border-radius: 28px;
-  border: 6px solid var(--phone-frame); box-shadow: var(--shadow-lg); background: var(--surface); object-fit: cover;
-}
 
 /* ---------- telas reais ---------- */
 .shots { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(20px, 4vw, 44px); }
