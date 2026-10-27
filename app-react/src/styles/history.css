@@ -175,3 +175,5 @@ button.history-cal__cell:not(:disabled) { cursor: pointer; }
 @media (max-width: 380px) {
   .history-stats { grid-template-columns: repeat(2, 1fr); }
 }
+
+.import__error { color: var(--error); }
