@@ -18,6 +18,7 @@ import { fetchPendingSurvey } from '../lib/surveys';
 import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
+import FirstSteps from '../components/FirstSteps';
 import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
 import { syncCoachPrefs } from '../lib/coach';
@@ -120,6 +121,7 @@ export default function TreinoPage() {
       <PauseBanner />
       <PersonalMessages />
       <MyAppointments onlyPending />
+      <FirstSteps />
       {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (

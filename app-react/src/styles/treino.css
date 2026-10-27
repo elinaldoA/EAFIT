@@ -634,6 +634,33 @@
   line-height: 1.35;
 }
 
+/* ── Primeiros passos ── */
+.first-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface, transparent);
+  border: 1px solid var(--primary);
+  border-radius: var(--r-lg);
+}
+.first-steps__head { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+.first-steps__count { margin-left: auto; font-size: 0.8rem; color: var(--text-muted); }
+.first-steps__close { border: 0; background: transparent; color: var(--text-muted); font: inherit; padding: 4px 6px; cursor: pointer; }
+.first-steps__bar { height: 6px; border-radius: 3px; background: rgba(128, 128, 128, .25); overflow: hidden; }
+.first-steps__bar span { display: block; height: 100%; background: var(--primary); transition: width .3s; }
+.first-steps__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.first-steps__item > button,
+.first-steps__item > div {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 4px;
+  border: 0; background: transparent; color: inherit; font: inherit; font-size: 0.9rem; text-align: left;
+}
+.first-steps__item > button { cursor: pointer; }
+.first-steps__label { display: flex; flex-direction: column; }
+.first-steps__label small { color: var(--text-muted); font-size: 0.75rem; }
+.first-steps__item--done .first-steps__label { text-decoration: line-through; color: var(--text-muted); }
+.first-steps__close:focus-visible, .first-steps__item > button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
 /* ── Check-in diário ── */
 .checkin {
   display: flex;
