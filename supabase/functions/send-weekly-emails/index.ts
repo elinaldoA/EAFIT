@@ -136,6 +136,52 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Nutrição e peso da semana (opcional: se falhar, o resumo sai sem essa linha).
+  const protein = new Map<string, { days: number; total: number }>();
+  const weightRows = new Map<string, { date: string; weight: number }[]>();
+  const userIds = new Set(users.map((u) => u.id));
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('protein_logs')
+      .select('user_id, amount_g')
+      .gte('log_date', weekStart).lte('log_date', weekEnd)
+      .gt('amount_g', 0)
+      .order('id')
+      .range(from, from + PAGE - 1);
+    if (error) { console.error('protein_logs error:', error.message); break; }
+    for (const r of (data || []) as { user_id: string; amount_g: number }[]) {
+      const cur = protein.get(r.user_id) || { days: 0, total: 0 };
+      cur.days += 1;
+      cur.total += r.amount_g;
+      protein.set(r.user_id, cur);
+    }
+    if (!data || data.length < PAGE) break;
+  }
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('weight_logs')
+      .select('user_id, weight, log_date')
+      .gte('log_date', addDays(today, -35)).lte('log_date', weekEnd)
+      .order('id')
+      .range(from, from + PAGE - 1);
+    if (error) { console.error('weight_logs error:', error.message); break; }
+    for (const r of (data || []) as { user_id: string; weight: number | string; log_date: string }[]) {
+      const w = Number(r.weight);
+      if (!userIds.has(r.user_id) || !Number.isFinite(w)) continue;
+      if (!weightRows.has(r.user_id)) weightRows.set(r.user_id, []);
+      weightRows.get(r.user_id)!.push({ date: r.log_date, weight: w });
+    }
+    if (!data || data.length < PAGE) break;
+  }
+  // Último peso da semana menos o último peso anterior a ela (precisa dos dois).
+  function weightDelta(uid: string): number | null {
+    const rows = (weightRows.get(uid) || []).sort((a, b) => a.date.localeCompare(b.date));
+    const inWeek = rows.filter((r) => r.date >= weekStart);
+    const before = rows.filter((r) => r.date < weekStart);
+    if (!inWeek.length || !before.length) return null;
+    return inWeek[inWeek.length - 1].weight - before[before.length - 1].weight;
+  }
+
   const state = await loadInactivityState();
 
   const env = { supabaseUrl: SUPABASE_URL, secret: SERVICE_ROLE_KEY };
@@ -157,7 +203,9 @@ Deno.serve(async (req) => {
     if (pick.kind === 'summary') {
       const goal = Number(u.meta.weeklyGoal) > 0 ? Number(u.meta.weeklyGoal) : DEFAULT_WEEKLY_GOAL;
       const volume = Math.round(weekVolume.get(u.id) || 0);
-      summaries.push(await bulkEmailItem(u, (lang) => weeklySummaryEmail(lang, count, goal, volume), env));
+      const p = protein.get(u.id);
+      const extras = { proteinDays: p?.days, proteinAvg: p ? p.total / p.days : 0, weightDelta: weightDelta(u.id) };
+      summaries.push(await bulkEmailItem(u, (lang) => weeklySummaryEmail(lang, count, goal, volume, extras), env));
     } else if (pick.kind === 'comeback') {
       comebacks.push(await bulkEmailItem(u, (lang) => comebackEmail(lang, pick.days, pick.neverTrained), env));
     } else {

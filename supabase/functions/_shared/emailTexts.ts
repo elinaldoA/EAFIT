@@ -65,8 +65,43 @@ export function accountDeletedEmail(lang: Lang): EmailContent {
 
 // Resumo da semana passada (mesmos números do push de segunda de manhã:
 // treinos concluídos, meta semanal e soma das cargas).
-export function weeklySummaryEmail(lang: Lang, count: number, goal: number, volume: number): EmailContent {
+export type WeeklyExtras = {
+  proteinDays?: number; // dias da semana com proteína registrada
+  proteinAvg?: number; // média (g) nesses dias
+  weightDelta?: number | null; // kg: último peso da semana menos o último anterior
+};
+
+// Linha extra do resumo (nutrição e peso); null quando não há nada a dizer.
+export function weeklyExtrasLine(lang: Lang, extras: WeeklyExtras = {}): string | null {
+  const en = lang === 'en';
+  const parts: string[] = [];
+  if (extras.proteinDays && extras.proteinDays > 0) {
+    const avg = Math.round(extras.proteinAvg || 0);
+    parts.push(en
+      ? `you logged protein on ${extras.proteinDays} ${extras.proteinDays === 1 ? 'day' : 'days'}, averaging ${avg} g`
+      : `você registrou proteína em ${extras.proteinDays} ${extras.proteinDays === 1 ? 'dia' : 'dias'}, com média de ${avg} g`);
+  }
+  if (typeof extras.weightDelta === 'number' && Number.isFinite(extras.weightDelta)) {
+    const d = Math.round(extras.weightDelta * 10) / 10;
+    const abs = Math.abs(d).toFixed(1).replace('.', en ? '.' : ',');
+    parts.push(d === 0
+      ? (en ? 'your weight held steady' : 'seu peso ficou estável')
+      : en ? `your weight ${d < 0 ? 'dropped' : 'rose'} ${abs} kg` : `seu peso ${d < 0 ? 'caiu' : 'subiu'} ${abs} kg`);
+  }
+  if (!parts.length) return null;
+  const text = parts.join(en ? ' and ' : ' e ');
+  return en ? `Also: ${text}.` : `Além disso: ${text}.`;
+}
+
+export function weeklySummaryEmail(lang: Lang, count: number, goal: number, volume: number, extras: WeeklyExtras = {}): EmailContent {
   const hit = count >= goal;
+  const content = weeklySummaryBase(lang, count, goal, volume, hit);
+  const extra = weeklyExtrasLine(lang, extras);
+  if (extra) content.paragraphs.splice(1, 0, extra);
+  return content;
+}
+
+function weeklySummaryBase(lang: Lang, count: number, goal: number, volume: number, hit: boolean): EmailContent {
   return lang === 'en'
     ? {
       subject: hit ? 'Weekly goal hit! Your week on EAFIT' : 'Your week on EAFIT',

@@ -83,3 +83,11 @@ Deno.test('shouldSendWelcome: só conta nova e ainda não avisada', () => {
   assert(!shouldSendWelcome({ created_at: null }, now));
   assert(!shouldSendWelcome({ created_at: 'data inválida' }, now));
 });
+
+Deno.test('weeklySummaryEmail: linha extra de proteína e peso só quando há dados', () => {
+  assertEquals(weeklySummaryEmail('pt', 3, 4, 100).paragraphs.length, 2);
+  const pt = weeklySummaryEmail('pt', 3, 4, 100, { proteinDays: 5, proteinAvg: 118.6, weightDelta: -0.84 });
+  assertEquals(pt.paragraphs[1], 'Além disso: você registrou proteína em 5 dias, com média de 119 g e seu peso caiu 0,8 kg.');
+  const en = weeklySummaryEmail('en', 3, 4, 100, { proteinDays: 1, proteinAvg: 90, weightDelta: 0 });
+  assertEquals(en.paragraphs[1], 'Also: you logged protein on 1 day, averaging 90 g and your weight held steady.');
+});
