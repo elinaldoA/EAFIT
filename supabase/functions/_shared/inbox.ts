@@ -9,6 +9,13 @@ export type InboxItem = { kind: string; title: string; body: string; campaign?: 
 
 const CHUNK = 500;
 
+// Cópia no app de um e-mail: o título é o assunto e o texto, os parágrafos
+// (o resumo do e-mail, sem botão nem rodapé). `kind` define pra que tela o
+// aviso leva (app-react/src/lib/pushTarget.js).
+export function inboxFromEmail(kind: string, content: { subject: string; paragraphs: string[] }): InboxItem {
+  return { kind, title: content.subject, body: content.paragraphs.join(' ').slice(0, 400) };
+}
+
 // Todos os usuários (para envio "para todos"), paginando o GoTrue.
 export async function listAllUserIds(admin: SupabaseClient): Promise<string[]> {
   const ids: string[] = [];

@@ -55,3 +55,11 @@ describe('kindTargetKey', () => {
     expect(kindTargetKey('aviso')).toBeNull();
   });
 });
+
+describe('kindTargetKey (copias no app dos e-mails)', () => {
+  it('resumo semanal, boas-vindas e convite pra voltar levam a uma tela', () => {
+    expect(kindTargetKey('weekly_summary')).toBe('semana');
+    expect(kindTargetKey('welcome')).toBe('treino');
+    expect(kindTargetKey('comeback')).toBe('treino');
+  });
+});

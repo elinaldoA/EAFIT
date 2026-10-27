@@ -18,6 +18,8 @@ import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { sendEmailBatch } from '../_shared/email.ts';
 import { type BulkEmailItem, bulkEmailItem, loadEmailUsers } from '../_shared/emailRecipients.ts';
 import { comebackEmail, inactivityEmail, weeklySummaryEmail } from '../_shared/emailTexts.ts';
+import { inboxFromEmail, type InboxItem, saveInbox } from '../_shared/inbox.ts';
+import { langOf } from '../_shared/lang.ts';
 import { nowInSaoPaulo } from '../_shared/engagement.ts';
 import { surveyLink, surveyToken } from '../_shared/inactivity.ts';
 import {
@@ -187,6 +189,11 @@ Deno.serve(async (req) => {
   const env = { supabaseUrl: SUPABASE_URL, secret: SERVICE_ROLE_KEY };
   const summaries: BulkEmailItem[] = [];
   const comebacks: BulkEmailItem[] = [];
+  // Cópia no app (sino de avisos) do resumo e do convite pra voltar, por
+  // posição em `summaries`/`comebacks`. A pesquisa de inatividade fica só no
+  // e-mail: as respostas vão por link com token.
+  const summaryInbox: { userId: string; item: InboxItem }[] = [];
+  const comebackInbox: { userId: string; item: InboxItem }[] = [];
   const whys: { userId: string; pick: WhyEmail; item: BulkEmailItem }[] = [];
   for (const u of users) {
     const count = weekCount.get(u.id) || 0;
@@ -212,8 +219,10 @@ Deno.serve(async (req) => {
         weightDelta: weightDelta(u.id),
       };
       summaries.push(await bulkEmailItem(u, (lang) => weeklySummaryEmail(lang, count, goal, volume, extras), env));
+      summaryInbox.push({ userId: u.id, item: inboxFromEmail('weekly_summary', weeklySummaryEmail(langOf(u.meta), count, goal, volume, extras)) });
     } else if (pick.kind === 'comeback') {
       comebacks.push(await bulkEmailItem(u, (lang) => comebackEmail(lang, pick.days, pick.neverTrained), env));
+      comebackInbox.push({ userId: u.id, item: inboxFromEmail('comeback', comebackEmail(langOf(u.meta), pick.days, pick.neverTrained)) });
     } else {
       const token = await surveyToken(u.id, SERVICE_ROLE_KEY);
       const item = await bulkEmailItem(u, (lang) => inactivityEmail(lang, pick, (reason) => surveyLink(token, reason)), env);
@@ -238,11 +247,18 @@ Deno.serve(async (req) => {
   }
   const firstWhy = summaries.length + comebacks.length;
   const asked: { user_id: string; segment: string; days_inactive: number; never_trained: boolean }[] = [];
+  const inboxRows: { userId: string; item: InboxItem }[] = [];
   const sent = await sendEmailBatch(queue.slice(0, MAX_BULK_EMAILS), undefined, (index) => {
+    if (index < summaries.length) inboxRows.push(summaryInbox[index]);
+    else if (index < firstWhy) inboxRows.push(comebackInbox[index - summaries.length]);
     if (index < firstWhy) return;
     const { userId, pick } = whys[index - firstWhy];
     asked.push({ user_id: userId, segment: pick.segment, days_inactive: pick.days, never_trained: pick.neverTrained });
   });
+
+  // Quem recebeu o e-mail vê o mesmo aviso no app (melhor esforço).
+  const byUser = new Map(inboxRows.map((r) => [r.userId, r.item]));
+  if (byUser.size) await saveInbox(supabase, [...byUser.keys()], (userId) => byUser.get(userId)!);
 
   // É este registro que impede a pesquisa de sair de novo na semana seguinte.
   if (asked.length) {

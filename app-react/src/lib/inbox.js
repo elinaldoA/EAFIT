@@ -63,6 +63,7 @@ const TARGET_LABELS = {
   peso: t('Abrir peso e fotos'),
   recordes: t('Ver histórico de dores'),
   treino: t('Ir para o treino'),
+  semana: t('Ver minha semana'),
 };
 
 // Pra onde o aviso leva (destino de lib/pushTarget.js + o texto do link) ou

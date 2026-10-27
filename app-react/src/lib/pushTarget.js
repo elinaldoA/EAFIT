@@ -14,7 +14,7 @@ export const FEEDBACK_REPLY_TITLE = '💬 Resposta ao seu feedback';
 // Lembretes automáticos (engagement_rules) que falam do treino.
 const WORKOUT_KINDS = [
   'plan_expiring', 'first_workout', 'first_workout_late', 'no_plan', 'second_workout',
-  'weekly_goal', 'workout_today', 'comeback',
+  'weekly_goal', 'workout_today', 'comeback', 'welcome',
 ];
 
 // Destinos: aba (hash), modo do app (quem é personal usa os dois) e o que a
@@ -44,6 +44,7 @@ export const NAV_TARGETS = {
 // Tipo de lembrete automático -> chave de destino (ou null).
 export function kindTargetKey(kind) {
   if (kind === 'invite_friends') return 'amigos';
+  if (kind === 'weekly_summary') return 'semana'; // cópia no app do e-mail semanal
   if (kind === 'protein_today') return 'nutricao';
   if (kind === 'progress_photo') return 'peso'; // fotos moram em Perfil → Peso e fotos
   if (kind === 'seguranca') return 'recordes'; // resposta automática a relato de dor: histórico em Dashboard → Recordes

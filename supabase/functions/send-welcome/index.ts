@@ -9,6 +9,7 @@ import { sendEmail } from '../_shared/email.ts';
 import { renderEmail } from '../_shared/emailLayout.ts';
 import { shouldSendWelcome, welcomeEmail } from '../_shared/emailTexts.ts';
 import { langOf } from '../_shared/lang.ts';
+import { inboxFromEmail, saveInbox } from '../_shared/inbox.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -32,7 +33,8 @@ Deno.serve(async (req) => {
   if (!user.email || !shouldSendWelcome(user)) return json({ sent: false });
 
   const lang = langOf(user.user_metadata);
-  const result = await sendEmail(user.email, renderEmail(lang, welcomeEmail(lang)));
+  const content = welcomeEmail(lang);
+  const result = await sendEmail(user.email, renderEmail(lang, content));
   // Só marca quando saiu de verdade: sem os secrets do Gmail ('skipped') ou
   // com falha no envio, a próxima chamada tenta de novo.
   if (result !== 'sent') return json({ sent: false });
@@ -42,5 +44,7 @@ Deno.serve(async (req) => {
     app_metadata: { welcome_email_at: new Date().toISOString() },
   });
   if (markErr) console.error('send-welcome mark error:', markErr.message);
+  // Mesma mensagem no sino de avisos do app (a marca acima impede repetir).
+  if (!markErr) await saveInbox(admin, [user.id], inboxFromEmail('welcome', content));
   return json({ sent: true });
 });

@@ -47,6 +47,16 @@ export default {
   'e a': 'and the',
   'Política de Privacidade': 'Privacy Policy',
   'Reenviar link de confirmação': 'Resend confirmation link',
+
+  // FirstSteps
+  'Primeiros passos': 'First steps',
+  'Dispensar': 'Dismiss',
+  'Fazer o primeiro treino': 'Do your first workout',
+  'Toque em "Treino de hoje" aqui embaixo.': 'Tap the Today workout card below.',
+  'Registrar um copo de água': 'Log a glass of water',
+  'Registrar uma refeição': 'Log a meal',
+  'Ligar os lembretes': 'Turn on reminders',
+
   '← Voltar para o login': '← Back to sign in',
 
   // BodyAvatar / BodyMeasurements
@@ -264,6 +274,7 @@ export default {
   'Abrir peso e fotos': 'Open weight and photos',
   'Ver histórico de dores': 'See pain history',
   'Ir para o treino': 'Go to workout',
+  'Ver minha semana': 'See my week',
   'Ver avisos mais antigos': 'See older notices',
   '⚠️ Não foi possível marcar como lido. Tente de novo.': '⚠️ Could not mark as read. Try again.',
   'Avisos ({unread} novo(s))': 'Notices ({unread} new)',

@@ -1,6 +1,6 @@
 import { assertEquals } from 'jsr:@std/assert@1';
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
-import { listAllUserIds, saveInbox } from './inbox.ts';
+import { inboxFromEmail, listAllUserIds, saveInbox } from './inbox.ts';
 
 // Silencia console.error durante o teste e devolve o que foi logado.
 async function capturingErrors(fn: () => Promise<void>): Promise<string[]> {
@@ -103,4 +103,13 @@ Deno.test('saveInbox continua nos lotes seguintes se um falhar e só loga', asyn
   const logged = await capturingErrors(() => saveInbox(admin, ids, { kind: 'k', title: 't', body: 'b' }));
   assertEquals(batches.length, 2);
   assertEquals(logged, ['inbox insert error: rls']);
+});
+
+Deno.test('inboxFromEmail usa o assunto como título e junta os parágrafos', () => {
+  const item = inboxFromEmail('weekly_summary', { subject: 'Sua semana no EAFIT', paragraphs: ['Primeiro.', 'Segundo.'] });
+  assertEquals(item, { kind: 'weekly_summary', title: 'Sua semana no EAFIT', body: 'Primeiro. Segundo.' });
+});
+
+Deno.test('inboxFromEmail limita o texto a 400 caracteres', () => {
+  assertEquals(inboxFromEmail('welcome', { subject: 'x', paragraphs: ['a'.repeat(500)] }).body.length, 400);
 });
