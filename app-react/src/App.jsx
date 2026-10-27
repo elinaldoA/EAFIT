@@ -52,12 +52,13 @@ import { useSyncLang } from './hooks/useSyncLang';
 import { NAV_EVENT } from './lib/appNav';
 
 import { t } from './lib/i18n';
-const TreinoPage = lazy(() => import('./pages/TreinoPage'));
-const HistoricoPage = lazy(() => import('./pages/HistoricoPage'));
-const HidratacaoPage = lazy(() => import('./pages/HidratacaoPage'));
-const NutricaoPage = lazy(() => import('./pages/NutricaoPage'));
-const DashPage = lazy(() => import('./pages/DashPage'));
-const PerfilPage = lazy(() => import('./pages/PerfilPage'));
+import { importPage } from './lib/chunkReload';
+const TreinoPage = lazy(() => importPage(() => import('./pages/TreinoPage')));
+const HistoricoPage = lazy(() => importPage(() => import('./pages/HistoricoPage')));
+const HidratacaoPage = lazy(() => importPage(() => import('./pages/HidratacaoPage')));
+const NutricaoPage = lazy(() => importPage(() => import('./pages/NutricaoPage')));
+const DashPage = lazy(() => importPage(() => import('./pages/DashPage')));
+const PerfilPage = lazy(() => importPage(() => import('./pages/PerfilPage')));
 
 function PageFallback() {
   return (
