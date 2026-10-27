@@ -22,6 +22,12 @@
   color: var(--text-muted);
 }
 
+.progress-card__projection {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
 .progress-card__count {
   font-size: 0.82rem;
   font-weight: 700;

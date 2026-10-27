@@ -1,4 +1,4 @@
-import { t } from '../lib/i18n';
+import { t, locale } from '../lib/i18n';
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
   meta, setMeta, nivel, setNivel, local, setLocal, pesoAlvo, setPesoAlvo,
@@ -82,6 +82,14 @@ export default function ProfileBodySection({
             <div className="progress-card__bar">
               <div className="progress-card__fill" style={{ width: `${progress.pct}%` }} />
             </div>
+          )}
+          {progress.projection && (
+            <p className="progress-card__projection">
+              {t('Mantendo o ritmo ({kgPerWeek} kg/semana), você chega lá por volta de {date}', {
+                kgPerWeek: String(progress.projection.kgPerWeek).replace('.', ','),
+                date: progress.projection.date.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }),
+              })}
+            </p>
           )}
         </div>
       )}

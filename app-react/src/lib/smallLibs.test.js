@@ -51,7 +51,7 @@ import { isPushSupported, sendPushToSelf, subscribeToPush, unsubscribeFromPush }
 import { fetchPhotos, addPhoto, countPhotos, deletePhoto } from './progressPhotos';
 import { fetchWeightLogs, upsertWeightLog } from './weightLog';
 import { fetchWaterLog, upsertWaterLog, fetchWaterLogsRange } from './waterLog';
-import { imcInfo, metaProgress } from './profileCalc';
+import { imcInfo, metaProgress, weightProjection } from './profileCalc';
 import { readMode, writeMode, readCachedIsTrainer, writeCachedIsTrainer, readCachedProgramKind, writeCachedProgramKind } from './appMode';
 import { isChunkLoadError, reloadOnceForChunkError, clearChunkReloadFlag } from './chunkReload';
 import { isKnownUser, markKnownUser } from './knownUser';
@@ -332,6 +332,45 @@ describe('profileCalc', () => {
     expect(p.msg).toBe('Faltam 5.0kg para a meta de 80kg');
     expect(metaProgress(null, 80, [])).toBeNull();
     expect(metaProgress(85, null, [])).toBeNull();
+  });
+
+  describe('weightProjection', () => {
+    const today = new Date('2026-10-28T12:00:00');
+    const logs = [
+      { log_date: '2026-10-07', peso: 90 },
+      { log_date: '2026-10-14', peso: 89 },
+      { log_date: '2026-10-21', peso: 88 },
+      { log_date: '2026-10-28', peso: 87 },
+    ];
+
+    it('projeta a data pela tendência (1 kg/semana)', () => {
+      const p = weightProjection(logs, 87, 80, today);
+      expect(p.kgPerWeek).toBe(1);
+      expect(p.days).toBe(49);
+    });
+
+    it('sem histórico suficiente não projeta', () => {
+      expect(weightProjection([logs[3]], 87, 80, today)).toBeNull();
+      expect(weightProjection([logs[2], { log_date: '2026-10-24', peso: 87.5 }], 87, 80, today)).toBeNull();
+      expect(weightProjection([], 87, 80, today)).toBeNull();
+    });
+
+    it('tendência contrária à meta não projeta', () => {
+      expect(weightProjection(logs, 87, 95, today)).toBeNull();
+    });
+
+    it('ignora registros antigos e projeções acima de 2 anos', () => {
+      const old = [{ log_date: '2026-01-01', peso: 100 }, { log_date: '2026-01-15', peso: 99 }];
+      expect(weightProjection(old, 99, 80, today)).toBeNull();
+      expect(weightProjection(logs, 187, 40, today)).toBeNull();
+    });
+
+    it('metaProgress inclui a projeção', () => {
+      const iso = back => new Date(Date.now() - back * 86400000).toISOString().slice(0, 10);
+      const recent = [{ log_date: iso(14), peso: 89 }, { log_date: iso(7), peso: 88 }, { log_date: iso(0), peso: 87 }];
+      expect(metaProgress(87, 80, recent).projection).toHaveProperty('days');
+      expect(metaProgress(87, 80, []).projection).toBeNull();
+    });
   });
 
   it('o progresso fica entre 0 e 100', () => {
