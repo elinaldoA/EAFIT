@@ -796,32 +796,6 @@
 .warmup__pct { font-size: 0.64rem; color: var(--text-dim); }
 .warmup__check { width: 30px; height: 30px; }
 
-/* ============================================================
-   FREQUÊNCIA CARDÍACA (HeartRateSummary)
-============================================================ */
-.hr-summary { display: flex; flex-direction: column; gap: 10px; }
-.hr-summary__stats { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 0.8rem; color: var(--text-muted); }
-.hr-summary__stats strong { font-size: 1.1rem; color: var(--text); font-variant-numeric: tabular-nums; }
-.hr-zones { display: flex; flex-direction: column; gap: 6px; }
-.hr-zones__row {
-  display: grid;
-  grid-template-columns: minmax(0, 9.5em) 1fr auto;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-.hr-zones__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hr-zones__bar { height: 8px; border-radius: var(--r-full); background: var(--surface-3); overflow: hidden; }
-.hr-zones__fill { display: block; height: 100%; border-radius: inherit; }
-.hr-zones__time { font-variant-numeric: tabular-nums; color: var(--text-dim); }
-.hr-zones__fill--z1, .hr-chip--z1 { --hr-zone: #94a3b8; }
-.hr-zones__fill--z2, .hr-chip--z2 { --hr-zone: #38bdf8; }
-.hr-zones__fill--z3, .hr-chip--z3 { --hr-zone: #4ade80; }
-.hr-zones__fill--z4, .hr-chip--z4 { --hr-zone: #fbbf24; }
-.hr-zones__fill--z5, .hr-chip--z5 { --hr-zone: #ef4444; }
-.hr-zones__fill { background: var(--hr-zone); }
-
 /* Série por tempo: cronômetro abaixo da linha da série */
 .set-row__timer {
   display: flex;

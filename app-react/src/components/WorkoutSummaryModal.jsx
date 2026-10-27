@@ -15,11 +15,10 @@ import { formatCardioSummary } from '../lib/cardio';
 import { formatSeconds } from '../lib/timedSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 
-import HeartRateSummary from './HeartRateSummary';
 import { t, locale, tEx, tFoco } from '../lib/i18n';
 export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
   useBackToClose(onClose);
-  const { day, durationMs, totalCarga, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets, heartRate } = summary;
+  const { day, durationMs, totalCarga, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets } = summary;
   const activeGroups = getMuscleGroupsForDay(day);
   const weekPct = weekTotal ? Math.min(100, (weekDone / weekTotal) * 100) : 0;
   const toast = useToast();
@@ -108,8 +107,6 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
                   <span className="stat-card__label">{t('Exercícios')}</span>
                 </div>
               </div>
-
-              <HeartRateSummary hr={heartRate} />
 
               <div className="summary-section">
                 <div className="summary-section__title">{t('Meta da semana')}</div>

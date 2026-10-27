@@ -103,7 +103,6 @@ export function buildSessions(workouts, sets) {
         durationSeconds: w.duration_seconds ?? null,
         rating: w.rating ?? null,
         notes: w.notes || '',
-        heartRate: w.hr_avg ? { avg: w.hr_avg, max: w.hr_max, zones: w.hr_zones || [] } : null,
         exercises,
         doneSets,
         totalCarga,
@@ -164,9 +163,7 @@ export async function fetchMonthSessions(userId, year, month) {
     .gte('workout_date', from)
     .lte('workout_date', to);
   const base = 'id, workout_date, day_of_week, completed, duration_seconds, rating, notes';
-  let { data: workouts, error } = await query(`${base}, hr_avg, hr_max, hr_zones`);
-  // 42703: banco ainda sem as colunas da cinta (migration 20261115010000).
-  if (error?.code === '42703') ({ data: workouts, error } = await query(base));
+  const { data: workouts, error } = await query(base);
   if (error) throw error;
 
   const ids = (workouts || []).map(w => w.id);

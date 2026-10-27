@@ -24,19 +24,19 @@ const EPOCH = '1970-01-01';
 
 // Junta os dados do usuário em várias tabelas num único objeto — usado tanto
 // pelo backup completo (JSON) quanto pelo resumo (CSV) e pelo relatório impresso.
-// Consulta com colunas da migration 20261115010000 (cinta cardíaca, bi-set e
-// aquecimento); banco sem ela (42703) refaz só com as colunas antigas.
+// Consulta com colunas da migration 20261115010000 (bi-set e aquecimento);
+// banco sem ela (42703) refaz só com as colunas antigas.
 async function selectWithExtra(run, base, extra) {
   const res = await run(`${base}, ${extra}`);
   return res.error?.code === '42703' ? run(base) : res;
 }
 
 export async function gatherUserData(userId) {
-  const { data: workouts, error: wErr } = await selectWithExtra(
-    cols => db.from('workouts').select(cols).eq('user_id', userId).order('workout_date', { ascending: true }),
-    'id, workout_date, day_of_week, completed, notes, rating, started_at, finished_at, duration_seconds',
-    'hr_avg, hr_max, hr_zones',
-  );
+  const { data: workouts, error: wErr } = await db
+    .from('workouts')
+    .select('id, workout_date, day_of_week, completed, notes, rating, started_at, finished_at, duration_seconds')
+    .eq('user_id', userId)
+    .order('workout_date', { ascending: true });
   if (wErr) throw wErr;
 
   const workoutIds = (workouts || []).map(w => w.id);

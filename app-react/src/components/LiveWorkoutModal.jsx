@@ -14,7 +14,6 @@ import {
 } from '../lib/coach';
 import { findGroup, groupKindLabel } from '../lib/supersets';
 import ExerciseDemo from './ExerciseDemo';
-import HeartRateChip from './HeartRateChip';
 import CoachPrompt from './CoachPrompt';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
@@ -229,7 +228,6 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
           <span className="live__focus">{tFoco(day.foco)}</span>
         </div>
         <div className="live__top-right">
-          <HeartRateChip />
           <div className={`live__clock${timer.status === 'paused' ? ' live__clock--paused' : ''}`} aria-label={t('Tempo de treino')}>
             {formatDuration(timer.elapsedMs)}
           </div>

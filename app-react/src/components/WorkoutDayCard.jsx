@@ -9,8 +9,6 @@ import { postActivity } from '../lib/friends';
 import { coachSay, coachRecords, takeRecords, speechTime } from '../lib/coach';
 import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import { findGroup, nextInGroup, segmentExercises, groupKindLabel } from '../lib/supersets';
-import { maxHeartRate, readSession, summarizeSession, clearSession } from '../lib/heartRate';
-import { useHeartRateRecorder } from '../hooks/useHeartRate';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
 import MobilityButton from './MobilityButton';
@@ -24,7 +22,7 @@ import { t, locale, tFoco } from '../lib/i18n';
 // que é quem tem o cronômetro e as ações de série do dia.
 export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
-  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, saveWorkoutHeartRate, activePlanDays } = useWorkout();
+  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays } = useWorkout();
   const toast = useToast();
   const { config } = useAppConfig();
   const [open, setOpen] = useState(isToday);
@@ -37,9 +35,6 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   // localStorage só na montagem e ficariam com os valores de antes.
   const [liveEpoch, setLiveEpoch] = useState(0);
   const timer = useWorkoutTimer(day.dia);
-  // Cinta cardíaca conectada: soma as leituras enquanto o cronômetro corre.
-  useHeartRateRecorder(day.dia, timer.status === 'running', maxHeartRate(user?.user_metadata?.idade || localStorage.getItem('profile_idade')));
-
   async function markDone(next) {
     setChecked(next);
     localStorage.setItem(`treino_${day.dia}`, next);
@@ -87,7 +82,6 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
 
   function handleResetTimer() {
     timer.reset();
-    clearSession(day.dia);
     if (user) saveWorkoutTimer(day.dia, { startedAt: null, finishedAt: null, durationSeconds: null });
   }
 
@@ -109,7 +103,6 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     return {
       day, durationMs, totalCarga: calcDayTotalCarga(day),
       exercises, totalSetsDone, totalPlannedSets, weekDone, weekTotal,
-      heartRate: summarizeSession(readSession(day.dia)),
     };
   }
 
@@ -123,7 +116,6 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) });
     bump();
     const summary = buildSummary(accumulatedMs);
-    if (user && summary.heartRate) saveWorkoutHeartRate(day.dia, summary.heartRate);
     coachSay('finish', { feitos: summary.weekDone, meta: summary.weekTotal }, { delayMs: 900 });
     // Depois do fecho, o treinador comenta os números do treino, os recordes e a semana.
     const minutes = Math.round(accumulatedMs / 60000);
