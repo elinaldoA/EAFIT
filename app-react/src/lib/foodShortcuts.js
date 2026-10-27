@@ -1,5 +1,5 @@
 export const MAX_CUSTOM_FOODS = 20;
-export const VISIBLE_FOODS = 8;
+export const VISIBLE_FOODS = 12;
 
 const USE_KEY = 'foodUseCount';
 

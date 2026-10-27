@@ -547,6 +547,7 @@ export default {
   'Feijão': 'Beans',
   'Pão': 'Bread',
   'Banana': 'Banana',
+  'Café c/ leite': 'Coffee w/ milk',
   'Valores aproximados por porção. Não substituem orientação de nutricionista.': 'Approximate values per serving. They do not replace advice from a dietitian.',
   '🎉 Meta de proteína do dia atingida!': '🎉 Daily protein goal reached!',
   'Zerar a proteína registrada hoje?': 'Reset the protein logged today?',

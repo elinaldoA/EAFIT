@@ -26,4 +26,5 @@ export const QUICK_FOODS = [
   { id: 'feijao', icon: '🫘', label: t('Feijão'), g: 5, kcal: 80, carbs: 14, fat: 1 },
   { id: 'pao', icon: '🥖', label: t('Pão'), g: 4, kcal: 150, carbs: 29, fat: 2 },
   { id: 'banana', icon: '🍌', label: t('Banana'), g: 1, kcal: 90, carbs: 23, fat: 0 },
+  { id: 'cafe', icon: '☕', label: t('Café c/ leite'), g: 3, kcal: 80, carbs: 9, fat: 3 },
 ];
