@@ -50,6 +50,8 @@ describe('kindTargetKey', () => {
   it('separa o convite de amigos dos lembretes de treino', () => {
     expect(kindTargetKey('invite_friends')).toBe('amigos');
     expect(kindTargetKey('plan_expiring')).toBe('treino');
+    expect(kindTargetKey('protein_today')).toBe('nutricao');
+    expect(kindTargetKey('progress_photo')).toBe('peso');
     expect(kindTargetKey('aviso')).toBeNull();
   });
 });

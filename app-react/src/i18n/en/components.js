@@ -260,6 +260,8 @@ export default {
   'Marcar como lido': 'Mark as read',
   'Ver resposta': 'See reply',
   'Abrir Amigos': 'Open Friends',
+  'Abrir Nutrição': 'Open Nutrition',
+  'Abrir peso e fotos': 'Open weight and photos',
   'Ver histórico de dores': 'See pain history',
   'Ir para o treino': 'Go to workout',
   'Ver avisos mais antigos': 'See older notices',

@@ -59,6 +59,8 @@ export async function markInboxItemRead(id) {
 const TARGET_LABELS = {
   feedback: t('Ver resposta'),
   amigos: t('Abrir Amigos'),
+  nutricao: t('Abrir Nutrição'),
+  peso: t('Abrir peso e fotos'),
   recordes: t('Ver histórico de dores'),
   treino: t('Ir para o treino'),
 };
