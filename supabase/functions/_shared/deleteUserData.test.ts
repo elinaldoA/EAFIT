@@ -68,7 +68,7 @@ function makeFakeAdmin(opts: FakeAdminOpts = {}) {
 }
 
 const DIRECT_TABLES = [
-  'progress_photos', 'water_logs', 'protein_logs', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort',
+  'progress_photos', 'water_logs', 'protein_logs', 'nutrition_foods', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort',
   'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles',
   'friendships', 'feedback', 'user_notifications', 'notification_log', 'client_errors', 'admin_user_notes',
   'appointment_reminder_log', 'trainer_appointments', 'trainer_alert_log', 'trainer_messages', 'trainer_notes',

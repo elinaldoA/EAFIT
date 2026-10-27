@@ -3,6 +3,7 @@ import { trackFeature } from './tracking';
 import { fetchWeightLogs } from './weightLog';
 import { fetchWaterLogsRange } from './waterLog';
 import { fetchProteinLogsRange } from './proteinLog';
+import { fetchCustomFoods } from './nutritionFoods';
 import { fetchAllDiscomfort } from './discomfort';
 import { fetchUnlockedAchievements } from './achievements';
 import { fetchMeasurements } from './bodyMeasurements';
@@ -102,7 +103,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers, leagueResults,
-    proteinLogs,
+    proteinLogs, customFoods,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -120,6 +121,7 @@ export async function gatherUserData(userId) {
     safe('surveyAnswers', fetchMySurveyAnswers, []),
     safe('leagueResults', fetchMyLeagueResults, []),
     safe('proteinLogs', () => fetchProteinLogsRange(userId, EPOCH), []),
+    safe('customFoods', () => fetchCustomFoods(userId), []),
   ]);
 
   return {
@@ -128,7 +130,7 @@ export async function gatherUserData(userId) {
     workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
     weightLogs, bodyMeasurements, dailyCheckins,
-    progressPhotos: photos, waterLogs, proteinLogs,
+    progressPhotos: photos, waterLogs, proteinLogs, customFoods,
     discomfortReports, achievements,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments,

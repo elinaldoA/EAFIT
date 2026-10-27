@@ -207,3 +207,14 @@
   border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.9rem;
 }
 .custom-food__submit { grid-column: 1 / -1; }
+
+.quick-foods__cell { position: relative; display: flex; }
+.quick-foods__cell .water-quick__btn { flex: 1; }
+.quick-foods__del {
+  position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  font-size: 1rem; line-height: 1; cursor: pointer;
+}
+.custom-food__name { grid-column: 1 / -1; }
+.custom-food__save { grid-column: 1 / -1; flex-direction: row !important; align-items: center; gap: 8px !important; font-size: 0.8rem !important; }
+.custom-food__save input { width: auto; }

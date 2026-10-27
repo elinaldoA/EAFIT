@@ -10,6 +10,8 @@ import { enqueue } from '../lib/syncQueue';
 import { parseLocalDate, toDateStr } from '../lib/utils';
 import { buildProteinSeries, proteinStats } from '../lib/proteinStats';
 import { computeNutritionGoals } from '../lib/nutritionGoals';
+import { fetchCustomFoods, createCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
+import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS, VISIBLE_FOODS } from '../lib/foodShortcuts';
 import ProteinBars from '../components/ProteinBars';
 import MacroBars from '../components/MacroBars';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
@@ -19,6 +21,7 @@ import { t, locale } from '../lib/i18n';
 const HISTORY_DAYS = 14;
 
 const fmt = n => n.toLocaleString(locale);
+const EMPTY_CUSTOM = { name: '', g: '', kcal: '', carbs: '', fat: '' };
 
 export default function NutricaoPage({ active }) {
   const { user } = useAuth();
@@ -35,7 +38,12 @@ export default function NutricaoPage({ active }) {
   // por engano. Vazia (app reaberto), o botão vira um -10 g de proteína.
   const [undoStack, setUndoStack] = useState([]);
   const [customOpen, setCustomOpen] = useState(false);
-  const [custom, setCustom] = useState({ g: '', kcal: '', carbs: '', fat: '' });
+  const [custom, setCustom] = useState(EMPTY_CUSTOM);
+  const [saveShortcut, setSaveShortcut] = useState(false);
+  const [myFoods, setMyFoods] = useState(() => (user ? readCachedFoods(user.id) : []));
+  const [useCounts, setUseCounts] = useState(readUseCounts);
+  const [showAllFoods, setShowAllFoods] = useState(false);
+  const [manage, setManage] = useState(false);
 
   const totals = readLocalTotals();
   const protein = totals.protein;
@@ -63,6 +71,7 @@ export default function NutricaoPage({ active }) {
       }
     }
     load();
+    fetchCustomFoods(user.id).then(setMyFoods).catch(err => console.error('fetchCustomFoods:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, user]);
 
@@ -88,6 +97,7 @@ export default function NutricaoPage({ active }) {
   }
 
   function handleAdd(food) {
+    if (food.id) setUseCounts(bumpUseCount(food.id));
     const next = applyFood(totals, food);
     setUndoStack(s => [...s, food].slice(-10));
     if (goalG && next.protein >= goalG && protein < goalG) toast(t('🎉 Meta de proteína do dia atingida!'));
@@ -100,7 +110,7 @@ export default function NutricaoPage({ active }) {
     saveTotals(last ? applyFood(totals, last, -1) : applyFood(totals, { g: 10 }, -1));
   }
 
-  function handleCustomSubmit(e) {
+  async function handleCustomSubmit(e) {
     e.preventDefault();
     const food = {
       g: parseInt(custom.g, 10) || 0,
@@ -108,10 +118,32 @@ export default function NutricaoPage({ active }) {
       carbs: parseInt(custom.carbs, 10) || 0,
       fat: parseInt(custom.fat, 10) || 0,
     };
+    const name = custom.name.trim();
     if (!food.g && !food.kcal && !food.carbs && !food.fat) return;
-    handleAdd(food);
-    setCustom({ g: '', kcal: '', carbs: '', fat: '' });
+    if (saveShortcut && !name) { toast(t('Dê um nome ao atalho')); return; }
+    if (saveShortcut && user) {
+      try {
+        setMyFoods(await createCustomFood(user.id, { ...food, name }));
+        toast(t('Atalho salvo'));
+      } catch (err) {
+        console.error('createCustomFood:', err);
+        toast(t('⚠️ Não foi possível salvar o atalho'));
+      }
+    }
+    handleAdd({ ...food, label: name || undefined });
+    setCustom(EMPTY_CUSTOM);
+    setSaveShortcut(false);
     setCustomOpen(false);
+  }
+
+  async function handleDeleteFood(food) {
+    if (!window.confirm(t('Apagar o atalho "{name}"?', { name: food.label }))) return;
+    try {
+      setMyFoods(await deleteCustomFood(user.id, food.id));
+    } catch (err) {
+      console.error('deleteCustomFood:', err);
+      toast(t('⚠️ Não foi possível apagar o atalho'));
+    }
   }
 
   function handleReset() {
@@ -123,6 +155,8 @@ export default function NutricaoPage({ active }) {
   const pct = goalG ? Math.min(100, (protein / goalG) * 100) : 0;
   const remaining = Math.max(0, goalG - protein);
   const done = !!goalG && protein >= goalG;
+  const allFoods = useMemo(() => sortByUse([...QUICK_FOODS, ...myFoods], useCounts), [myFoods, useCounts]);
+  const shownFoods = showAllFoods || manage ? allFoods : allFoods.slice(0, VISIBLE_FOODS);
   const undoFood = undoStack[undoStack.length - 1];
   const hasLog = totals.protein + totals.kcal + totals.carbs + totals.fat > 0;
 
@@ -149,16 +183,34 @@ export default function NutricaoPage({ active }) {
       </div>
 
       <div className="water-quick quick-foods">
-        {QUICK_FOODS.map(f => (
-          <button key={f.id} type="button" className="water-quick__btn" onClick={() => handleAdd(f)}>
-            <span className="water-quick__icon" aria-hidden="true">{f.icon}</span>
-            <span className="water-quick__ml">+{f.g}g</span>
-            <span className="water-quick__label">{f.label}</span>
-            <span className="quick-foods__kcal">{f.kcal} kcal</span>
-          </button>
+        {shownFoods.map(f => (
+          <div key={f.id} className="quick-foods__cell">
+            <button type="button" className="water-quick__btn" onClick={() => handleAdd(f)}>
+              <span className="water-quick__icon" aria-hidden="true">{f.icon}</span>
+              <span className="water-quick__ml">+{f.g}g</span>
+              <span className="water-quick__label">{f.label}</span>
+              <span className="quick-foods__kcal">{f.kcal} kcal</span>
+            </button>
+            {manage && f.custom && (
+              <button type="button" className="quick-foods__del" aria-label={t('Apagar o atalho "{name}"', { name: f.label })} onClick={() => handleDeleteFood(f)}>×</button>
+            )}
+          </div>
         ))}
       </div>
-
+      {(allFoods.length > VISIBLE_FOODS || myFoods.length > 0) && (
+        <div className="water-actions">
+          {allFoods.length > VISIBLE_FOODS && !manage ? (
+            <button type="button" className="link-btn" onClick={() => setShowAllFoods(v => !v)}>
+              {showAllFoods ? t('Ver menos') : t('Ver todos ({n})', { n: allFoods.length })}
+            </button>
+          ) : <span />}
+          {myFoods.length > 0 && (
+            <button type="button" className="link-btn" onClick={() => setManage(v => !v)}>
+              {manage ? t('Concluir') : t('Gerenciar meus atalhos')}
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="water-actions">
         <button type="button" className="btn btn--ghost btn--sm" onClick={() => setCustomOpen(o => !o)} aria-expanded={customOpen}>
@@ -179,6 +231,14 @@ export default function NutricaoPage({ active }) {
               <input type="number" inputMode="numeric" min="0" max="5000" value={custom[k]} onChange={e => setCustom(c => ({ ...c, [k]: e.target.value }))} />
             </label>
           ))}
+          <label className="custom-food__name">
+            {t('Nome (para salvar como atalho)')}
+            <input type="text" maxLength={30} value={custom.name} onChange={e => setCustom(c => ({ ...c, name: e.target.value }))} />
+          </label>
+          <label className="custom-food__save">
+            <input type="checkbox" checked={saveShortcut} disabled={myFoods.length >= MAX_CUSTOM_FOODS} onChange={e => setSaveShortcut(e.target.checked)} />
+            {myFoods.length >= MAX_CUSTOM_FOODS ? t('Limite de {n} atalhos atingido', { n: MAX_CUSTOM_FOODS }) : t('Salvar como atalho')}
+          </label>
           <button type="submit" className="btn btn--sm custom-food__submit">{t('Adicionar')}</button>
         </form>
       )}

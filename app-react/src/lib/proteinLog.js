@@ -74,7 +74,7 @@ export async function upsertNutritionLog(userId, date, totals) {
 export async function fetchProteinLogsRange(userId, sinceDate) {
   const { data, error } = await db
     .from('protein_logs')
-    .select('log_date, amount_g')
+    .select('log_date, amount_g, kcal, carbs_g, fat_g')
     .eq('user_id', userId)
     .gte('log_date', sinceDate)
     .order('log_date', { ascending: true });
