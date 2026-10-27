@@ -8,5 +8,6 @@ import dates from './dates';
 import extra from './extra';
 import trainer from './trainer';
 import tools from './tools';
+import nutrition from './nutrition';
 
-export default { ...components, ...libs, ...pages, ...dates, ...extra, ...trainer, ...tools };
+export default { ...components, ...libs, ...pages, ...dates, ...extra, ...trainer, ...tools, ...nutrition };

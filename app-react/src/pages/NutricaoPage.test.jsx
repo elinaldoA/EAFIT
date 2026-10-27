@@ -26,6 +26,15 @@ vi.mock('../lib/proteinLog', async importOriginal => {
   return { ...real, ...proteinLog, readLocalTotals: real.readLocalTotals, writeLocalTotals: real.writeLocalTotals };
 });
 vi.mock('../lib/nutritionFoods', () => foods);
+vi.mock('../lib/supabase', () => ({
+  db: {
+    from: () => ({
+      select: () => ({ eq: () => ({ eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }) }) }),
+      upsert: () => Promise.resolve({ error: null }),
+      delete: () => ({ eq: () => ({ eq: () => Promise.resolve({ error: null }) }) }),
+    }),
+  },
+}));
 vi.mock('../lib/weightLog', () => weight);
 
 import NutricaoPage from './NutricaoPage';
@@ -71,8 +80,8 @@ describe('NutricaoPage', () => {
     await screen.findByText('Ovo');
     const labels = () => [...document.querySelectorAll('.water-quick__label')].map(e => e.textContent);
     const before = labels();
-    fireEvent.click(screen.getByText('Banana'));
-    fireEvent.click(screen.getByText('Banana'));
+    fireEvent.click(screen.getAllByText('Banana')[0]);
+    fireEvent.click(screen.getAllByText('Banana')[0]);
     expect(labels()).toEqual(before);
   });
 
@@ -119,16 +128,61 @@ describe('NutricaoPage', () => {
     const kcal = screen.getAllByRole('spinbutton')[0];
     expect(kcal.value).toBe('140');
     fireEvent.change(kcal, { target: { value: '200' } });
-    fireEvent.click(screen.getByText('Salvar atalho'));
+    fireEvent.click(screen.getByText('Salvar'));
     await waitFor(() => expect(foods.updateCustomFood).toHaveBeenCalledWith('u1', 'f1', expect.objectContaining({ name: 'Tapioca', kcal: 200 })));
     expect(readLocalTotals().kcal).toBe(0);
   });
 
+  it('registrar um alimento cria o item no diário da refeição escolhida e remover tira dos totais', async () => {
+    window.confirm = vi.fn(() => true);
+    render(<NutricaoPage active />);
+    await screen.findByText('Ovo');
+    fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'jantar' } });
+    fireEvent.click(screen.getByText('Ovo'));
+    const log = document.querySelector('.meal-log');
+    expect(log.textContent).toContain('Jantar');
+    expect(log.textContent).toContain('Ovo');
+    fireEvent.click(screen.getByLabelText('Remover "Ovo"'));
+    expect(readLocalTotals().kcal).toBe(0);
+    expect(screen.getByText(/Nada registrado hoje/)).toBeTruthy();
+  });
+
+  it('editar um registro do diário acerta os totais do dia', async () => {
+    render(<NutricaoPage active />);
+    fireEvent.click(await screen.findByText('Ovo'));
+    fireEvent.click(screen.getByLabelText('Editar "Ovo"'));
+    const kcal = screen.getAllByRole('spinbutton')[0];
+    expect(kcal.value).toBe('70');
+    fireEvent.change(kcal, { target: { value: '140' } });
+    fireEvent.click(screen.getByText('Salvar'));
+    expect(readLocalTotals().kcal).toBe(140);
+  });
+
+  it('buscar um alimento e informar os gramas soma o valor proporcional', async () => {
+    render(<NutricaoPage active />);
+    fireEvent.click(await screen.findByText('🔎 Buscar alimento'));
+    fireEvent.change(screen.getByLabelText('Buscar alimento'), { target: { value: 'arroz branco' } });
+    fireEvent.click(await screen.findByText(/Arroz branco cozido/));
+    fireEvent.change(screen.getByLabelText('Quantidade (g)'), { target: { value: '200' } });
+    fireEvent.click(screen.getByText('Adicionar'));
+    expect(readLocalTotals().kcal).toBe(260);
+    expect(document.querySelector('.meal-log').textContent).toContain('Arroz branco cozido 200g');
+  });
+
+  it('ajustar o total de hoje direto troca os totais do dia', async () => {
+    render(<NutricaoPage active />);
+    fireEvent.click(await screen.findByText('Corrigir os totais de um dia'));
+    fireEvent.change(screen.getByLabelText('Dia'), { target: { value: todayDate() } });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '1800' } });
+    fireEvent.click(screen.getByText('Salvar o dia'));
+    expect(readLocalTotals().kcal).toBe(1800);
+  });
+
   it('corrigir um dia anterior grava os totais daquele dia', async () => {
     render(<NutricaoPage active />);
-    fireEvent.click(await screen.findByText('Corrigir um dia anterior'));
+    fireEvent.click(await screen.findByText('Corrigir os totais de um dia'));
     const select = screen.getByLabelText('Dia');
-    const date = select.querySelectorAll('option')[1].value;
+    const date = select.querySelectorAll('option')[2].value;
     fireEvent.change(select, { target: { value: date } });
     fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '2100' } });
     fireEvent.click(screen.getByText('Salvar o dia'));

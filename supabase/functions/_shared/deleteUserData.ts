@@ -17,7 +17,7 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 // migrations: tabela nova com FK para o usuário precisa entrar aqui (ou na
 // lista de exceções do teste, com o motivo).
 const USER_COLUMNS: [table: string, column: string][] = [
-  ['progress_photos', 'user_id'], ['water_logs', 'user_id'], ['protein_logs', 'user_id'], ['nutrition_foods', 'user_id'],
+  ['progress_photos', 'user_id'], ['water_logs', 'user_id'], ['protein_logs', 'user_id'], ['nutrition_foods', 'user_id'], ['nutrition_entries', 'user_id'],
   ['weight_logs', 'user_id'], ['achievements', 'user_id'], ['push_subscriptions', 'user_id'],
   ['exercise_discomfort', 'user_id'], ['body_measurements', 'user_id'], ['daily_checkins', 'user_id'],
   ['challenge_members', 'user_id'],

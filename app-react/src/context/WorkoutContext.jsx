@@ -6,6 +6,7 @@ import { enqueue, flushQueue, queueSize } from '../lib/syncQueue';
 import { upsertWaterLog } from '../lib/waterLog';
 import { upsertProteinLog, upsertNutritionLog } from '../lib/proteinLog';
 import { saveCustomFoodRow, deleteCustomFoodRow } from '../lib/nutritionFoods';
+import { saveEntryRow, deleteEntryRow } from '../lib/nutritionEntries';
 import { upsertWeightLog } from '../lib/weightLog';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
@@ -94,6 +95,12 @@ const SYNC_EXECUTORS = {
   },
   food_save: async ({ row }) => {
     await saveCustomFoodRow(row);
+  },
+  entry_save: async ({ row }) => {
+    await saveEntryRow(row);
+  },
+  entry_delete: async ({ userId, id }) => {
+    await deleteEntryRow(userId, id);
   },
   food_delete: async ({ userId, id }) => {
     await deleteCustomFoodRow(userId, id);

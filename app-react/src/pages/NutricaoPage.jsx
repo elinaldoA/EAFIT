@@ -14,6 +14,9 @@ import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionRead
 import { computeNutritionGoals } from '../lib/nutritionGoals';
 import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS, VISIBLE_FOODS } from '../lib/foodShortcuts';
+import { MEALS, mealForHour, readCachedEntries, fetchEntries, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
+import FoodSearch from '../components/FoodSearch';
+import MealLog from '../components/MealLog';
 import ProteinBars from '../components/ProteinBars';
 import MacroBars from '../components/MacroBars';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
@@ -35,6 +38,13 @@ const READING_TEXT = {
   above: () => t('Você está acima da meta de calorias da semana.'),
 };
 const EMPTY_CUSTOM = { name: '', g: '', kcal: '', carbs: '', fat: '' };
+const MEAL_NAME = {
+  cafe: () => t('Café da manhã'),
+  almoco: () => t('Almoço'),
+  lanche: () => t('Lanche'),
+  jantar: () => t('Jantar'),
+  outro: () => t('Outros'),
+};
 const EMPTY_FIX = { g: '', kcal: '', carbs: '', fat: '' };
 
 // O "Desfazer" sobrevive a fechar o app: a pilha do dia fica no aparelho.
@@ -62,6 +72,10 @@ export default function NutricaoPage({ active }) {
   // engano. Vazia (dia sem adições guardadas), o botão vira um -10 g de proteína.
   const [undoStack, setUndoStack] = useState(readUndo);
   const [editingId, setEditingId] = useState(null);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [entries, setEntries] = useState(() => readCachedEntries(todayDate()));
+  const [meal, setMeal] = useState(() => mealForHour(new Date().getHours()));
+  const [searchOpen, setSearchOpen] = useState(false);
   const [fixOpen, setFixOpen] = useState(false);
   const [fixDate, setFixDate] = useState('');
   const [fix, setFix] = useState(EMPTY_FIX);
@@ -105,6 +119,7 @@ export default function NutricaoPage({ active }) {
     }
     load();
     fetchWeightLogs(user.id).then(setWeightLogs).catch(err => console.error('fetchWeightLogs:', err));
+    fetchEntries(user.id, todayDate()).then(setEntries).catch(err => console.error('fetchEntries:', err));
     fetchCustomFoods(user.id).then(setMyFoods).catch(err => console.error('fetchCustomFoods:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, user]);
@@ -147,13 +162,22 @@ export default function NutricaoPage({ active }) {
     // o alimento não sair de debaixo do dedo a cada toque.
     if (food.id) bumpUseCount(food.id);
     const next = applyFood(totals, food);
-    setUndoStack(s => { const n = [...s, food].slice(-10); writeUndo(n); return n; });
+    const entryId = crypto.randomUUID();
+    if (user) {
+      addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat }, meal, entryId);
+      setEntries(readCachedEntries(todayDate()));
+    }
+    setUndoStack(s => { const n = [...s, { ...food, entryId }].slice(-10); writeUndo(n); return n; });
     if (goalG && next.protein >= goalG && protein < goalG) toast(t('🎉 Meta de proteína do dia atingida!'));
     saveTotals(next);
   }
 
   function handleUndo() {
     const last = undoStack[undoStack.length - 1];
+    if (last?.entryId && user) {
+      removeEntry(user.id, todayDate(), last.entryId);
+      setEntries(readCachedEntries(todayDate()));
+    }
     setUndoStack(s => { const n = s.slice(0, -1); writeUndo(n); return n; });
     saveTotals(last ? applyFood(totals, last, -1) : applyFood(totals, { g: 10 }, -1));
   }
@@ -169,6 +193,19 @@ export default function NutricaoPage({ active }) {
     const name = custom.name.trim();
     if (!food.g && !food.kcal && !food.carbs && !food.fat) return;
     if (saveShortcut && !name) { toast(t('Dê um nome ao atalho')); return; }
+    if (editingEntry) {
+      const old = entries.find(x => x.id === editingEntry);
+      if (old && user) {
+        const patch = { label: name || old.label, ...food };
+        updateEntry(user.id, todayDate(), old.id, patch);
+        setEntries(readCachedEntries(todayDate()));
+        saveTotals(applyFood(applyFood(totals, old, -1), patch, 1));
+        setUndoStack(s => { const n = s.filter(x => x.entryId !== old.id); writeUndo(n); return n; });
+        toast(t('Registro atualizado'));
+      }
+      closeForm();
+      return;
+    }
     if (editingId) {
       if (!name) { toast(t('Dê um nome ao atalho')); return; }
       setMyFoods(await updateCustomFood(user.id, editingId, { ...food, name }));
@@ -197,7 +234,24 @@ export default function NutricaoPage({ active }) {
     setCustom(EMPTY_CUSTOM);
     setSaveShortcut(false);
     setEditingId(null);
+    setEditingEntry(null);
     setCustomOpen(false);
+  }
+
+  function handleEditEntry(e) {
+    setCustom({ name: e.label, g: String(e.g), kcal: String(e.kcal), carbs: String(e.carbs), fat: String(e.fat) });
+    setEditingEntry(e.id);
+    setEditingId(null);
+    setSaveShortcut(false);
+    setCustomOpen(true);
+  }
+
+  function handleDeleteEntry(e) {
+    if (!window.confirm(t('Remover "{name}" do dia?', { name: e.label }))) return;
+    if (user) removeEntry(user.id, todayDate(), e.id);
+    setEntries(readCachedEntries(todayDate()));
+    saveTotals(applyFood(totals, e, -1));
+    setUndoStack(s => { const n = s.filter(x => x.entryId !== e.id); writeUndo(n); return n; });
   }
 
   function handleEditFood(food) {
@@ -209,7 +263,7 @@ export default function NutricaoPage({ active }) {
 
   // Dias anteriores (menos hoje): corrige o que foi registrado errado ou esquecido.
   const pastDays = useMemo(() => {
-    const out = [];
+    const out = [todayDate()];
     const d = parseLocalDate(todayDate());
     for (let i = 1; i < HISTORY_DAYS; i++) {
       d.setDate(d.getDate() - 1);
@@ -220,7 +274,9 @@ export default function NutricaoPage({ active }) {
 
   function pickFixDate(date) {
     setFixDate(date);
-    const row = logs.find(l => l.log_date === date);
+    const row = date === todayDate()
+      ? { amount_g: totals.protein, kcal: totals.kcal, carbs_g: totals.carbs, fat_g: totals.fat }
+      : logs.find(l => l.log_date === date);
     setFix(row
       ? { g: String(row.amount_g ?? ''), kcal: String(row.kcal ?? ''), carbs: String(row.carbs_g ?? ''), fat: String(row.fat_g ?? '') }
       : EMPTY_FIX);
@@ -235,6 +291,16 @@ export default function NutricaoPage({ active }) {
       carbs: parseInt(fix.carbs, 10) || 0,
       fat: parseInt(fix.fat, 10) || 0,
     };
+    if (fixDate === todayDate()) {
+      saveTotals(totals);
+      setUndoStack([]);
+      writeUndo([]);
+      toast(t('Dia corrigido'));
+      setFixOpen(false);
+      setFixDate('');
+      setFix(EMPTY_FIX);
+      return;
+    }
     upsertNutritionLog(user.id, fixDate, totals).catch(err => {
       console.error('upsertNutritionLog:', err);
       enqueue('nutrition_log', { userId: user.id, date: fixDate, totals });
@@ -262,6 +328,8 @@ export default function NutricaoPage({ active }) {
     if (!window.confirm(t('Zerar o que foi registrado hoje?'))) return;
     setUndoStack([]);
     writeUndo([]);
+    if (user) entries.forEach(e => removeEntry(user.id, todayDate(), e.id));
+    setEntries([]);
     saveTotals(EMPTY_TOTALS);
   }
 
@@ -271,6 +339,13 @@ export default function NutricaoPage({ active }) {
   const allFoods = useMemo(() => sortByUse([...QUICK_FOODS, ...myFoods], useCounts), [myFoods, useCounts]);
   const shownFoods = showAllFoods || manage ? allFoods : allFoods.slice(0, VISIBLE_FOODS);
   const undoFood = undoStack[undoStack.length - 1];
+  // O que está nos totais mas sem detalhe (registros de antes do diário ou ajuste manual).
+  const rest = (() => {
+    const sum = k => entries.reduce((s, e) => s + (e[k] || 0), 0);
+    const kcal = Math.max(0, totals.kcal - sum('kcal'));
+    const prot = Math.max(0, totals.protein - sum('g'));
+    return kcal || prot ? { kcal, protein: prot } : null;
+  })();
   const hasLog = totals.protein + totals.kcal + totals.carbs + totals.fat > 0;
 
   return (
@@ -294,6 +369,19 @@ export default function NutricaoPage({ active }) {
           </span>
         </div>
       </div>
+
+      <div className="water-actions meal-pick">
+        <label>
+          {t('Refeição')}
+          <select value={meal} onChange={e => setMeal(e.target.value)}>
+            {MEALS.map(m => <option key={m} value={m}>{MEAL_NAME[m]()}</option>)}
+          </select>
+        </label>
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSearchOpen(o => !o)} aria-expanded={searchOpen}>
+          {searchOpen ? t('Fechar busca') : t('🔎 Buscar alimento')}
+        </button>
+      </div>
+      {searchOpen && <FoodSearch onAdd={handleAdd} />}
 
       <div className="water-quick quick-foods">
         {shownFoods.map(f => (
@@ -351,7 +439,9 @@ export default function NutricaoPage({ active }) {
             {t('Nome (para salvar como atalho)')}
             <input type="text" maxLength={30} value={custom.name} onChange={e => setCustom(c => ({ ...c, name: e.target.value }))} />
           </label>
-          {editingId ? (
+          {editingEntry ? (
+            <p className="custom-food__save">{t('Editando o registro. Os totais do dia acompanham.')}</p>
+          ) : editingId ? (
             <p className="custom-food__save">{t('Editando o atalho. O dia de hoje não muda.')}</p>
           ) : (
             <label className="custom-food__save">
@@ -359,13 +449,13 @@ export default function NutricaoPage({ active }) {
               {myFoods.length >= MAX_CUSTOM_FOODS ? t('Limite de {n} atalhos atingido', { n: MAX_CUSTOM_FOODS }) : t('Salvar como atalho')}
             </label>
           )}
-          <button type="submit" className="btn btn--sm custom-food__submit">{editingId ? t('Salvar atalho') : t('Adicionar')}</button>
+          <button type="submit" className="btn btn--sm custom-food__submit">{editingEntry || editingId ? t('Salvar') : t('Adicionar')}</button>
         </form>
       )}
 
       <div className="water-actions">
         <button type="button" className="link-btn" onClick={() => setFixOpen(o => !o)} aria-expanded={fixOpen}>
-          {fixOpen ? t('Fechar') : t('Corrigir um dia anterior')}
+          {fixOpen ? t('Fechar') : t('Corrigir os totais de um dia')}
         </button>
       </div>
       {fixOpen && (
@@ -374,7 +464,7 @@ export default function NutricaoPage({ active }) {
             {t('Dia')}
             <select value={fixDate} onChange={e => pickFixDate(e.target.value)}>
               <option value="">{t('Escolha o dia')}</option>
-              {pastDays.map(d => <option key={d} value={d}>{fmtDate(d)}</option>)}
+              {pastDays.map(d => <option key={d} value={d}>{d === todayDate() ? t('Hoje') : fmtDate(d)}</option>)}
             </select>
           </label>
           {[['kcal', t('Calorias')], ['g', t('Proteína (g)')], ['carbs', t('Carbo (g)')], ['fat', t('Gordura (g)')]].map(([k, label]) => (
@@ -403,6 +493,13 @@ export default function NutricaoPage({ active }) {
           </div>
         </div>
       )}
+
+      <div className="section-group">
+        <div className="section-group__label">{t('Hoje, refeição por refeição')}</div>
+        <div className="dash-card">
+          <MealLog entries={entries} rest={rest} onEdit={handleEditEntry} onDelete={handleDeleteEntry} />
+        </div>
+      </div>
 
       <div className="section-group">
         <div className="section-group__label">{t('Calorias e macros de hoje')}</div>

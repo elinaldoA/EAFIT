@@ -83,7 +83,7 @@ describe('backup cobre as tabelas do usuário', () => {
   const exportSrc = fs.existsSync(path.resolve(process.cwd(), 'src/lib/exportData.js'))
     ? fs.readFileSync(path.resolve(process.cwd(), 'src/lib/exportData.js'), 'utf8')
     : '';
-  const libSrc = ['bodyMeasurements', 'checkin', 'challenges', 'friends', 'inbox', 'trainer', 'trainerInsights', 'trainerMessages', 'trainerAppointments', 'weightLog', 'waterLog', 'proteinLog', 'nutritionFoods', 'discomfort', 'achievements', 'league']
+  const libSrc = ['bodyMeasurements', 'checkin', 'challenges', 'friends', 'inbox', 'trainer', 'trainerInsights', 'trainerMessages', 'trainerAppointments', 'weightLog', 'waterLog', 'proteinLog', 'nutritionFoods', 'nutritionEntries', 'discomfort', 'achievements', 'league']
     .map(f => fs.readFileSync(path.resolve(process.cwd(), `src/lib/${f}.js`), 'utf8')).join('\n');
 
   // tabela -> motivo de não estar no backup
