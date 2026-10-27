@@ -4,6 +4,7 @@ import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
 import { enqueue, flushQueue, queueSize } from '../lib/syncQueue';
 import { upsertWaterLog } from '../lib/waterLog';
+import { upsertProteinLog, upsertNutritionLog } from '../lib/proteinLog';
 import { upsertWeightLog } from '../lib/weightLog';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
@@ -86,6 +87,9 @@ const SYNC_EXECUTORS = {
   },
   protein_log: async ({ userId, date, amountG }) => {
     await upsertProteinLog(userId, date, amountG);
+  },
+  nutrition_log: async ({ userId, date, totals }) => {
+    await upsertNutritionLog(userId, date, totals);
   },
   weight_log: async ({ userId, date, peso }) => {
     await upsertWeightLog(userId, date, peso);

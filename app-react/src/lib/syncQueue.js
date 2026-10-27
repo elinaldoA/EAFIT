@@ -49,6 +49,7 @@ function coalesceKey(type, p) {
       return `${type}:${p.userId}:${p.day?.dia}:${p.exercise_name}:${p.set_number}`;
     case 'water_log':
     case 'protein_log':
+    case 'nutrition_log':
     case 'weight_log':
       return `${type}:${p.userId}:${p.date}`;
     default:

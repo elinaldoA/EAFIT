@@ -182,3 +182,28 @@
 .protein-sources__icon { font-size: 1.3rem; }
 .protein-sources__name { flex: 1; display: flex; flex-direction: column; }
 .protein-sources__name small { color: var(--text-dim); }
+
+/* Calorias e macros do dia (aba Nutrição) */
+.quick-foods { grid-template-columns: repeat(4, 1fr); }
+.quick-foods .water-quick__ml { color: var(--success); }
+.quick-foods .water-quick__label { font-size: 0.66rem; }
+.quick-foods .quick-foods__kcal { font-size: 0.6rem; color: var(--text-dim); }
+
+.macro-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.macro-bars__head { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
+.macro-bars__head small { color: var(--text-dim); font-weight: 400; }
+.macro-bars__track { height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.macro-bars__fill { height: 100%; border-radius: 99px; transition: width .3s ease; background: var(--text-muted); }
+.macro-bars__fill--kcal { background: #f59e0b; }
+.macro-bars__fill--protein { background: var(--water); }
+.macro-bars__fill--carbs { background: #a78bfa; }
+.macro-bars__fill--fat { background: #fb7185; }
+.macro-bars__track--done .macro-bars__fill { background: var(--success); }
+
+.custom-food { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.custom-food label { display: flex; flex-direction: column; gap: 3px; font-size: 0.66rem; color: var(--text-dim); }
+.custom-food input {
+  width: 100%; min-width: 0; padding: 8px 6px; border-radius: var(--r-lg);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.9rem;
+}
+.custom-food__submit { grid-column: 1 / -1; }

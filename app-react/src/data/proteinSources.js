@@ -15,10 +15,15 @@ export const PROTEIN_SOURCES = [
   { icon: '🌱', name: t('Tofu'), portion: t('100 g'), g: 8 },
 ];
 
-// Adições rápidas do registro do dia.
-export const PROTEIN_QUICK_ADD = [
-  { g: 6, icon: '🥚', label: t('Ovo') },
-  { g: 17, icon: '🥛', label: t('Iogurte') },
-  { g: 24, icon: '🥤', label: t('Whey') },
-  { g: 31, icon: '🍗', label: t('Frango') },
+// Adições rápidas do registro do dia: cada toque soma proteína (g), calorias e
+// macros de uma porção comum. Valores aproximados e arredondados.
+export const QUICK_FOODS = [
+  { id: 'ovo', icon: '🥚', label: t('Ovo'), g: 6, kcal: 70, carbs: 1, fat: 5 },
+  { id: 'iogurte', icon: '🥛', label: t('Iogurte'), g: 17, kcal: 120, carbs: 7, fat: 4 },
+  { id: 'whey', icon: '🥤', label: t('Whey'), g: 24, kcal: 120, carbs: 3, fat: 2 },
+  { id: 'frango', icon: '🍗', label: t('Frango'), g: 31, kcal: 165, carbs: 0, fat: 4 },
+  { id: 'arroz', icon: '🍚', label: t('Arroz'), g: 3, kcal: 130, carbs: 28, fat: 0 },
+  { id: 'feijao', icon: '🫘', label: t('Feijão'), g: 5, kcal: 80, carbs: 14, fat: 1 },
+  { id: 'pao', icon: '🥖', label: t('Pão'), g: 4, kcal: 150, carbs: 29, fat: 2 },
+  { id: 'banana', icon: '🍌', label: t('Banana'), g: 1, kcal: 90, carbs: 23, fat: 0 },
 ];

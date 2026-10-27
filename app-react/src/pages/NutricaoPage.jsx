@@ -1,24 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { todayDate } from '../data/treinoData';
-import { PROTEIN_SOURCES, PROTEIN_QUICK_ADD } from '../data/proteinSources';
+import { PROTEIN_SOURCES, QUICK_FOODS } from '../data/proteinSources';
 import { useToast } from '../context/useToast';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
-import { fetchProteinLog, upsertProteinLog, fetchProteinLogsRange, proteinStorageKey } from '../lib/proteinLog';
+import { fetchNutritionLog, upsertNutritionLog, fetchProteinLogsRange, readLocalTotals, writeLocalTotals } from '../lib/proteinLog';
+import { applyFood, EMPTY_TOTALS } from '../lib/nutritionTotals';
 import { enqueue } from '../lib/syncQueue';
 import { parseLocalDate, toDateStr } from '../lib/utils';
 import { buildProteinSeries, proteinStats } from '../lib/proteinStats';
 import { computeNutritionGoals } from '../lib/nutritionGoals';
 import ProteinBars from '../components/ProteinBars';
+import MacroBars from '../components/MacroBars';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import Skeleton from '../components/Skeleton';
 
 import { t, locale } from '../lib/i18n';
 const HISTORY_DAYS = 14;
-
-function getProteinG() {
-  return parseInt(localStorage.getItem(proteinStorageKey()), 10) || 0;
-}
 
 const fmt = n => n.toLocaleString(locale);
 
@@ -34,10 +32,13 @@ export default function NutricaoPage({ active }) {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   // Últimas adições desta visita, pra "Desfazer" tirar exatamente o que entrou
-  // por engano. Vazia (app reaberto), o botão vira um -10 g de correção.
+  // por engano. Vazia (app reaberto), o botão vira um -10 g de proteína.
   const [undoStack, setUndoStack] = useState([]);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [custom, setCustom] = useState({ g: '', kcal: '', carbs: '', fat: '' });
 
-  const protein = getProteinG();
+  const totals = readLocalTotals();
+  const protein = totals.protein;
 
   useEffect(() => {
     if (!active || !user) return;
@@ -47,11 +48,11 @@ export default function NutricaoPage({ active }) {
       try {
         const since = parseLocalDate(todayDate());
         since.setDate(since.getDate() - (HISTORY_DAYS - 1));
-        const [todayG, history] = await Promise.all([
-          fetchProteinLog(user.id, todayDate()),
+        const [today, history] = await Promise.all([
+          fetchNutritionLog(user.id, todayDate()),
           fetchProteinLogsRange(user.id, toDateStr(since)),
         ]);
-        if (todayG !== null) localStorage.setItem(proteinStorageKey(), todayG);
+        if (today) writeLocalTotals(today);
         setLogs(history);
         bump();
       } catch (err) {
@@ -74,43 +75,56 @@ export default function NutricaoPage({ active }) {
   }, [logs, protein]);
   const stats = useMemo(() => proteinStats(series, goalG), [series, goalG]);
 
-  function saveProtein(next) {
-    localStorage.setItem(proteinStorageKey(), next);
+  function saveTotals(next) {
+    writeLocalTotals(next);
     bump();
     if (user) {
-      upsertProteinLog(user.id, todayDate(), next).catch(err => {
-        console.error('upsertProteinLog:', err);
-        enqueue('protein_log', { userId: user.id, date: todayDate(), amountG: next });
+      upsertNutritionLog(user.id, todayDate(), next).catch(err => {
+        console.error('upsertNutritionLog:', err);
+        enqueue('nutrition_log', { userId: user.id, date: todayDate(), totals: next });
         markPending();
       });
     }
   }
 
-  function handleAdd(deltaG) {
-    const next = Math.max(0, protein + deltaG);
-    if (deltaG > 0) {
-      setUndoStack(s => [...s, deltaG].slice(-10));
-      if (goalG && next >= goalG && protein < goalG) toast(t('🎉 Meta de proteína do dia atingida!'));
-    }
-    saveProtein(next);
+  function handleAdd(food) {
+    const next = applyFood(totals, food);
+    setUndoStack(s => [...s, food].slice(-10));
+    if (goalG && next.protein >= goalG && protein < goalG) toast(t('🎉 Meta de proteína do dia atingida!'));
+    saveTotals(next);
   }
 
   function handleUndo() {
-    const last = undoStack[undoStack.length - 1] ?? 10;
+    const last = undoStack[undoStack.length - 1];
     setUndoStack(s => s.slice(0, -1));
-    saveProtein(Math.max(0, protein - last));
+    saveTotals(last ? applyFood(totals, last, -1) : applyFood(totals, { g: 10 }, -1));
+  }
+
+  function handleCustomSubmit(e) {
+    e.preventDefault();
+    const food = {
+      g: parseInt(custom.g, 10) || 0,
+      kcal: parseInt(custom.kcal, 10) || 0,
+      carbs: parseInt(custom.carbs, 10) || 0,
+      fat: parseInt(custom.fat, 10) || 0,
+    };
+    if (!food.g && !food.kcal && !food.carbs && !food.fat) return;
+    handleAdd(food);
+    setCustom({ g: '', kcal: '', carbs: '', fat: '' });
+    setCustomOpen(false);
   }
 
   function handleReset() {
-    if (!window.confirm(t('Zerar a proteína registrada hoje?'))) return;
+    if (!window.confirm(t('Zerar o que foi registrado hoje?'))) return;
     setUndoStack([]);
-    saveProtein(0);
+    saveTotals(EMPTY_TOTALS);
   }
 
   const pct = goalG ? Math.min(100, (protein / goalG) * 100) : 0;
   const remaining = Math.max(0, goalG - protein);
   const done = !!goalG && protein >= goalG;
-  const undoAmount = undoStack[undoStack.length - 1];
+  const undoFood = undoStack[undoStack.length - 1];
+  const hasLog = totals.protein + totals.kcal + totals.carbs + totals.fat > 0;
 
   return (
     <section id="page-nutricao" className="page active">
@@ -134,24 +148,40 @@ export default function NutricaoPage({ active }) {
         </div>
       </div>
 
-      <div className="water-quick">
-        {PROTEIN_QUICK_ADD.map(q => (
-          <button key={q.g} type="button" className="water-quick__btn" onClick={() => handleAdd(q.g)}>
-            <span className="water-quick__icon" aria-hidden="true">{q.icon}</span>
-            <span className="water-quick__ml">+{q.g}g</span>
-            <span className="water-quick__label">{q.label}</span>
+      <div className="water-quick quick-foods">
+        {QUICK_FOODS.map(f => (
+          <button key={f.id} type="button" className="water-quick__btn" onClick={() => handleAdd(f)}>
+            <span className="water-quick__icon" aria-hidden="true">{f.icon}</span>
+            <span className="water-quick__ml">+{f.g}g</span>
+            <span className="water-quick__label">{f.label}</span>
+            <span className="quick-foods__kcal">{f.kcal} kcal</span>
           </button>
         ))}
       </div>
 
+
       <div className="water-actions">
-        <button type="button" className="btn btn--ghost btn--sm" disabled={protein === 0} onClick={handleUndo}>
-          ↶ {undoAmount ? t('Desfazer +{undoAmount}g', { undoAmount }) : '−10g'}
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => setCustomOpen(o => !o)} aria-expanded={customOpen}>
+          {customOpen ? t('Fechar') : t('+ Outro alimento')}
         </button>
-        <button type="button" className="link-btn water-actions__reset" disabled={protein === 0} onClick={handleReset}>
+        <button type="button" className="btn btn--ghost btn--sm" disabled={!hasLog} onClick={handleUndo}>
+          ↶ {undoFood ? t('Desfazer {label}', { label: undoFood.label || `+${undoFood.g}g` }) : '−10g'}
+        </button>
+        <button type="button" className="link-btn water-actions__reset" disabled={!hasLog} onClick={handleReset}>
           {t('Zerar o dia')}
         </button>
       </div>
+      {customOpen && (
+        <form className="custom-food" onSubmit={handleCustomSubmit}>
+          {[['kcal', t('Calorias')], ['g', t('Proteína (g)')], ['carbs', t('Carbo (g)')], ['fat', t('Gordura (g)')]].map(([k, label]) => (
+            <label key={k}>
+              {label}
+              <input type="number" inputMode="numeric" min="0" max="5000" value={custom[k]} onChange={e => setCustom(c => ({ ...c, [k]: e.target.value }))} />
+            </label>
+          ))}
+          <button type="submit" className="btn btn--sm custom-food__submit">{t('Adicionar')}</button>
+        </form>
+      )}
 
       {goalG > 0 && (
         <div className="history-stats water-stats">
@@ -171,9 +201,9 @@ export default function NutricaoPage({ active }) {
       )}
 
       <div className="section-group">
-        <div className="section-group__label">{t('Suas metas diárias')}</div>
+        <div className="section-group__label">{t('Calorias e macros de hoje')}</div>
         <div className="dash-card">
-          <ProfileNutritionSection goals={goals} />
+          {goals ? <MacroBars totals={totals} goals={goals} /> : <ProfileNutritionSection goals={goals} />}
         </div>
       </div>
 
