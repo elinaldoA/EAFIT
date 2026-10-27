@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { STUDENT_STEPS, TRAINER_STEPS, INFLUENCER_STEPS, AMBASSADOR_STEPS, stepsFor, visibleSteps, hasSeenTutorial, markTutorialSeen } from './tutorial';
 
-const STUDENT_TABS = ['treino', 'historico', 'hidratacao', 'dash', 'perfil'];
+const STUDENT_TABS = ['treino', 'historico', 'hidratacao', 'nutricao', 'dash', 'perfil'];
 const TRAINER_TABS = ['painel', 'alunos', 'modelos', 'turma', 'conta'];
 const INFLUENCER_TABS = ['resultados', 'divulgar', 'recados', 'conta'];
 const DASH_TABS = ['treinos', 'recordes', 'corpo', 'amigos'];
