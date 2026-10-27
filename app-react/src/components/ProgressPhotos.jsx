@@ -8,6 +8,7 @@ import { fmtDate } from '../lib/utils';
 import { todayDate } from '../data/treinoData';
 import { useBackToClose } from '../hooks/useBackToClose';
 import Loading from './Loading';
+import PhotoCompare from './PhotoCompare';
 
 import { t } from '../lib/i18n';
 function PhotoViewer({ photos, index, onClose, onNavigate, onDelete }) {
@@ -47,6 +48,7 @@ export default function ProgressPhotos() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewerIndex, setViewerIndex] = useState(null);
+  const [comparing, setComparing] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [date, setDate] = useState(todayDate());
   const [note, setNote] = useState('');
@@ -123,6 +125,12 @@ export default function ProgressPhotos() {
         )}
       </div>
 
+      {photos.length >= 2 && (
+        <button type="button" className="btn btn--outline btn--sm" onClick={() => setComparing(true)}>
+          {t('↔ Comparar antes e depois')}
+        </button>
+      )}
+
       {showForm && (
         <div className="photo-add-form">
           <input className="input input--sm" type="date" value={date} max={todayDate()} onChange={e => setDate(e.target.value)} />
@@ -134,6 +142,10 @@ export default function ProgressPhotos() {
           >{saving ? t('Salvando…') : t('📷 Escolher foto')}</button>
           <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleFileChange} />
         </div>
+      )}
+
+      {comparing && (
+        <PhotoCompare photos={photos} userId={user.id} onClose={() => setComparing(false)} />
       )}
 
       {viewerIndex !== null && (

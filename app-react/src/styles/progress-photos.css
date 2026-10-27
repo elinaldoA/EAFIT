@@ -132,3 +132,14 @@
 }
 
 .photo-modal__nav .btn { flex: 1; }
+
+/* Antes e depois: duas fotos lado a lado + variação de peso e medidas */
+.photo-compare { max-width: 560px; align-items: stretch; }
+.photo-compare__title { margin: 0; font-size: 1.05rem; text-align: center; }
+.photo-compare__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.photo-compare__side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.photo-compare__label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim); }
+.photo-compare__img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--border-2); }
+.photo-compare__summary { display: flex; flex-direction: column; gap: 6px; text-align: center; }
+.photo-compare__row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; text-align: left; }
+.photo-compare__hint { margin: 0; font-size: 0.8rem; color: var(--text-dim); }
