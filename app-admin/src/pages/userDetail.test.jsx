@@ -224,6 +224,18 @@ describe('UserProfileTab', () => {
     expect(screen.getByText('2000')).toBeTruthy();
     expect(screen.getByText('123')).toBeTruthy();
   });
+
+  it('mostra calorias, diário por refeição e atalhos próprios', () => {
+    render(<UserProfileTab {...props}
+      proteinLogs={[{ id: 'p9', log_date: '2026-03-01', amount_g: 123, kcal: 2100, carbs_g: 250, fat_g: 70 }]}
+      nutritionEntries={[{ id: 'n1', log_date: '2026-03-01', meal: 'almoco', name: 'Frango 150g', protein_g: 46, kcal: 250 }]}
+      nutritionFoods={[{ id: 'f1', name: 'Whey', protein_g: 24, kcal: 120, carbs_g: 3, fat_g: 2 }]}
+    />);
+    expect(screen.getByText('2100')).toBeTruthy();
+    expect(screen.getByText('Almoço')).toBeTruthy();
+    expect(screen.getByText('Frango 150g')).toBeTruthy();
+    expect(screen.getByText('Whey')).toBeTruthy();
+  });
 });
 
 describe('UserProfileTab — dados do app', () => {

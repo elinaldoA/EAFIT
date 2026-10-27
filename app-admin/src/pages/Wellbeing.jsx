@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   pct, formatMl, scoreLevel, SCORE_BADGE,
-  fetchWellbeingOverview, fetchWellbeingByDay, fetchLowCheckinUsers, fetchProteinOverview, fetchProteinByDay, fetchKcalOverview,
+  fetchWellbeingOverview, fetchWellbeingByDay, fetchLowCheckinUsers, fetchProteinOverview, fetchProteinByDay, fetchKcalOverview, fetchNutritionDiary,
 } from '../lib/insights';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
@@ -52,8 +52,10 @@ export default function Wellbeing() {
     const protein = Promise.all([fetchProteinOverview(days), fetchProteinByDay(days), kcal])
       .then(([overview, byDay, kcalOv]) => (overview ? { overview, byDay, kcal: kcalOv } : null))
       .catch(() => null);
-    Promise.all([fetchWellbeingOverview(days), fetchWellbeingByDay(days), fetchLowCheckinUsers(days), protein])
-      .then(([overview, byDay, low, prot]) => { if (active) setData({ overview, byDay, low, protein: prot }); })
+    // Diário por refeição: migration admin_nutrition_diary, também opcional.
+    const diary = fetchNutritionDiary(days).catch(() => null);
+    Promise.all([fetchWellbeingOverview(days), fetchWellbeingByDay(days), fetchLowCheckinUsers(days), protein, diary])
+      .then(([overview, byDay, low, prot, dia]) => { if (active) setData({ overview, byDay, low, protein: prot, diary: dia }); })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -214,6 +216,72 @@ export default function Wellbeing() {
               <p className="card-note">
                 Usuários que registraram proteína por dia. A meta é a estimada pelo perfil de cada um (peso e meta
                 principal); quem não preencheu sexo, idade, peso e altura fica fora do "bateram a meta".
+              </p>
+            </div>
+          )}
+
+          {data.diary && data.diary.entries > 0 && (
+            <div className="card">
+              <h2 className="section-title">Diário de alimentos</h2>
+              <div className="tile-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
+                <div className="tile">
+                  <div className="tile__value">{data.diary.entryUsers}</div>
+                  <div className="tile__label">usuários usaram o diário por refeição{po ? ` (${fmt(pct(data.diary.entryUsers, po.users), '%')})` : ''}</div>
+                </div>
+                <div className="tile"><div className="tile__value">{data.diary.entries}</div><div className="tile__label">alimentos registrados</div></div>
+                <div className="tile">
+                  <div className="tile__value">{data.diary.barcodeUsers}</div>
+                  <div className="tile__label">usuários leram código de barras ({data.diary.barcodeEntries} registros)</div>
+                </div>
+                <div className="tile">
+                  <div className="tile__value">{data.diary.foodUsers}</div>
+                  <div className="tile__label">usuários com atalhos próprios ({data.diary.foods} no total)</div>
+                </div>
+              </div>
+
+              <h3 className="subsection-title">Por refeição</h3>
+              <table className="resp-table">
+                <thead><tr><th>Refeição</th><th>Registros</th><th>Usuários</th><th>kcal médias</th></tr></thead>
+                <tbody>
+                  {data.diary.meals.map(m => (
+                    <tr key={m.meal}>
+                      <td data-label="Refeição">{m.label}</td><td data-label="Registros">{m.entries}</td>
+                      <td data-label="Usuários">{m.users}</td><td data-label="kcal médias">{fmt(m.avgKcal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {data.diary.topFoods.length > 0 && (
+                <>
+                  <h3 className="subsection-title">Alimentos mais registrados</h3>
+                  <table className="resp-table">
+                    <thead><tr><th>Alimento</th><th>Registros</th><th>Usuários</th></tr></thead>
+                    <tbody>
+                      {data.diary.topFoods.map(f => (
+                        <tr key={f.name}><td data-label="Alimento">{f.name}</td><td data-label="Registros">{f.entries}</td><td data-label="Usuários">{f.users}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
+
+              {data.diary.barcodeMisses.length > 0 && (
+                <>
+                  <h3 className="subsection-title">Códigos de barras não encontrados</h3>
+                  <table className="resp-table">
+                    <thead><tr><th>Código</th><th>Usuários</th><th>Última vez</th></tr></thead>
+                    <tbody>
+                      {data.diary.barcodeMisses.map(b => (
+                        <tr key={b.code}><td data-label="Código">{b.code}</td><td data-label="Usuários">{b.users}</td><td data-label="Última vez">{b.last}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
+              <p className="card-note">
+                Os códigos não encontrados são produtos que o Open Food Facts não conhece: bons candidatos a entrar na base
+                local. Registros "sem detalhe" (só os totais do dia) não entram aqui.
               </p>
             </div>
           )}

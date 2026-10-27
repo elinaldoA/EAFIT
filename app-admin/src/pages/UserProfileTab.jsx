@@ -5,9 +5,10 @@ import UserFriendsCard from '../components/UserFriendsCard';
 import UserAmbassadorCard from '../components/UserAmbassadorCard';
 import UserTrainerInviteCard from '../components/UserTrainerInviteCard';
 import UserAppDataCard from '../components/UserAppDataCard';
+import { MEAL_LABELS } from '../lib/insights';
 import { METAS, NIVEIS, badgeLabel, formatDate } from '../lib/userDetailHelpers';
 
-export default function UserProfileTab({ userId, detail, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs, proteinLogs = [] }) {
+export default function UserProfileTab({ userId, detail, form, setForm, busy, onSaveProfile, achievements, progressPhotos, weightLogs, waterLogs, proteinLogs = [], nutritionEntries = [], nutritionFoods = [] }) {
   return (
     <div className="stack">
       <form className="card form-grid" onSubmit={onSaveProfile}>
@@ -151,14 +152,49 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
       </section>
 
       <section>
-        <h2 className="section-title">Proteína</h2>
+        <h2 className="section-title">Nutrição</h2>
         <table className="resp-table">
-          <thead><tr><th>Data</th><th>g</th></tr></thead>
+          <thead><tr><th>Data</th><th>Proteína (g)</th><th>kcal</th><th>Carbo (g)</th><th>Gordura (g)</th></tr></thead>
           <tbody>
             {proteinLogs.map(w => (
-              <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="g">{w.amount_g}</td></tr>
+              <tr key={w.id}>
+                <td data-label="Data">{w.log_date}</td><td data-label="Proteína (g)">{w.amount_g}</td>
+                <td data-label="kcal">{w.kcal || '—'}</td><td data-label="Carbo (g)">{w.carbs_g || '—'}</td><td data-label="Gordura (g)">{w.fat_g || '—'}</td>
+              </tr>
             ))}
-            {proteinLogs.length === 0 && <tr><td colSpan={2}><EmptyState icon="🍎" label="Sem registros." /></td></tr>}
+            {proteinLogs.length === 0 && <tr><td colSpan={5}><EmptyState icon="🍎" label="Sem registros." /></td></tr>}
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 className="section-title">Diário por refeição</h2>
+        <table className="resp-table">
+          <thead><tr><th>Data</th><th>Refeição</th><th>Alimento</th><th>Proteína (g)</th><th>kcal</th></tr></thead>
+          <tbody>
+            {nutritionEntries.map(e => (
+              <tr key={e.id}>
+                <td data-label="Data">{e.log_date}</td><td data-label="Refeição">{MEAL_LABELS[e.meal] || e.meal}</td>
+                <td data-label="Alimento">{e.name}</td><td data-label="Proteína (g)">{e.protein_g}</td><td data-label="kcal">{e.kcal}</td>
+              </tr>
+            ))}
+            {nutritionEntries.length === 0 && <tr><td colSpan={5}><EmptyState icon="🍽️" label="Sem registros por refeição." /></td></tr>}
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2 className="section-title">Atalhos de alimentos próprios</h2>
+        <table className="resp-table">
+          <thead><tr><th>Alimento</th><th>Proteína (g)</th><th>kcal</th><th>Carbo (g)</th><th>Gordura (g)</th></tr></thead>
+          <tbody>
+            {nutritionFoods.map(f => (
+              <tr key={f.id}>
+                <td data-label="Alimento">{f.name}</td><td data-label="Proteína (g)">{f.protein_g}</td>
+                <td data-label="kcal">{f.kcal}</td><td data-label="Carbo (g)">{f.carbs_g}</td><td data-label="Gordura (g)">{f.fat_g}</td>
+              </tr>
+            ))}
+            {nutritionFoods.length === 0 && <tr><td colSpan={5}><EmptyState icon="🏷️" label="Nenhum atalho próprio." /></td></tr>}
           </tbody>
         </table>
       </section>

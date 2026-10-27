@@ -269,6 +269,8 @@ export const FEATURE_LABELS = {
   mobility: 'Mobilidade guiada',
   plate_calc: 'Calculadora de anilhas',
   strength_goals: 'Metas de carga',
+  food_search: 'Busca de alimentos',
+  barcode: 'Código de barras (alimentos)',
 };
 
 // Linhas (event, detail, users, days) → o que a página de Comportamento

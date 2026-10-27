@@ -74,6 +74,32 @@ export async function fetchKcalOverview(days = 30) {
   return { users: Number(r.ko_users), days: Number(r.ko_days), avgKcal: num(r.ko_avg_kcal) };
 }
 
+// Diário por refeição, busca de alimentos e código de barras. Funções da
+// migration admin_nutrition_diary; quem chama trata a falha enquanto ela não rodou.
+export const MEAL_LABELS = { cafe: 'Café da manhã', almoco: 'Almoço', lanche: 'Lanche', jantar: 'Jantar', outro: 'Outros' };
+
+export async function fetchNutritionDiary(days = 30) {
+  const [adoption, meals, foods, misses] = await Promise.all([
+    rpcRows('admin_nutrition_adoption', { days_back: days }),
+    rpcRows('admin_nutrition_meals', { days_back: days }),
+    rpcRows('admin_nutrition_top_foods', { days_back: days, max_rows: 15 }),
+    rpcRows('admin_barcode_misses', { days_back: days, max_rows: 30 }),
+  ]);
+  const a = adoption[0];
+  if (!a) return null;
+  return {
+    entryUsers: Number(a.na_entry_users), entries: Number(a.na_entries),
+    barcodeUsers: Number(a.na_barcode_users), barcodeEntries: Number(a.na_barcode_entries),
+    foodUsers: Number(a.na_food_users), foods: Number(a.na_foods),
+    meals: meals.map(r => ({
+      meal: r.nm_meal, label: MEAL_LABELS[r.nm_meal] || r.nm_meal,
+      entries: Number(r.nm_entries), users: Number(r.nm_users), avgKcal: num(r.nm_avg_kcal),
+    })),
+    topFoods: foods.map(r => ({ name: r.nf_name, entries: Number(r.nf_entries), users: Number(r.nf_users) })),
+    barcodeMisses: misses.map(r => ({ code: r.bm_code, users: Number(r.bm_users), last: r.bm_last })),
+  };
+}
+
 export async function fetchProteinByDay(days = 30) {
   return (await rpcRows('admin_protein_by_day', { days_back: days })).map(r => ({
     day: r.pd_day, users: Number(r.pd_users), avgG: num(r.pd_avg_g), hits: Number(r.pd_hits),

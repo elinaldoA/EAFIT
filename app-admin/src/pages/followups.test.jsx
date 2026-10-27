@@ -190,6 +190,8 @@ describe('exportação dos dados do usuário', () => {
     expect(out.exerciseSets).toEqual([{ from: 'exercise_sets' }]);
     expect(out.dailyCheckins).toEqual([{ from: 'daily_checkins' }]);
     expect(out.feedback).toEqual([]);
+    expect(out.nutritionEntries).toEqual([{ from: 'nutrition_entries' }]);
+    expect(out.nutritionFoods).toEqual([{ from: 'nutrition_foods' }]);
     expect(out.incomplete).toEqual(['feedback']);
   });
 });

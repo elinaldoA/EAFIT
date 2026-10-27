@@ -11,7 +11,7 @@ const { cm, ins, ops } = vi.hoisted(() => ({
   },
   ins: {
     fetchWellbeingOverview: vi.fn(), fetchWellbeingByDay: vi.fn(), fetchLowCheckinUsers: vi.fn(),
-    fetchProteinOverview: vi.fn(), fetchProteinByDay: vi.fn(),
+    fetchProteinOverview: vi.fn(), fetchProteinByDay: vi.fn(), fetchNutritionDiary: vi.fn(),
     fetchAchievements: vi.fn(), fetchRecordStats: vi.fn(),
   },
   ops: {
@@ -215,6 +215,7 @@ describe('Wellbeing', () => {
       { userId: 'u1', email: 'a@x.com', name: 'Ana', checkins: 5, energy: 1.8, sleep: 2.5, mood: 3, last: '2026-10-07' },
     ]);
     ins.fetchProteinOverview.mockResolvedValue({ users: 20, proteinUsers: 8, proteinDays: 30, proteinAvgG: 95, goalDays: 24, hitDays: 12 });
+    ins.fetchNutritionDiary.mockResolvedValue(null);
     ins.fetchProteinByDay.mockResolvedValue([
       { day: '2026-10-07', users: 4, avgG: 100, hits: 2 },
       { day: '2026-10-08', users: 0, avgG: null, hits: 0 },
@@ -226,6 +227,20 @@ describe('Wellbeing', () => {
     expect(await screen.findByText('usuários registraram proteína (40%)')).toBeTruthy();
     expect(screen.getByText('95 g')).toBeTruthy();
     expect(screen.getByText('50%')).toBeTruthy(); // 12 de 24 dias com meta
+  });
+
+  it('mostra o diário por refeição, os alimentos mais registrados e os códigos não encontrados', async () => {
+    ins.fetchNutritionDiary.mockResolvedValue({
+      entryUsers: 6, entries: 90, barcodeUsers: 2, barcodeEntries: 5, foodUsers: 3, foods: 7,
+      meals: [{ meal: 'almoco', label: 'Almoço', entries: 40, users: 5, avgKcal: 320 }],
+      topFoods: [{ name: 'arroz', entries: 30, users: 5 }],
+      barcodeMisses: [{ code: '7891000100103', users: 2, last: '2026-10-07' }],
+    });
+    wrap(<Wellbeing />);
+    expect(await screen.findByText('Diário de alimentos')).toBeTruthy();
+    expect(screen.getByText('Almoço')).toBeTruthy();
+    expect(screen.getByText('arroz')).toBeTruthy();
+    expect(screen.getByText('7891000100103')).toBeTruthy();
   });
 
   it('sem as RPCs de proteína (migration pendente) o resto da tela segue', async () => {

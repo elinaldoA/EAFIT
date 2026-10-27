@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchFoods, portionOf } from '../data/foodDatabase';
 import { lookupBarcode, isBarcode } from '../lib/openFoodFacts';
 import { t } from '../lib/i18n';
+import { trackFeature, trackEvent } from '../lib/tracking';
 
 const canScan = () => typeof window !== 'undefined' && 'BarcodeDetector' in window && !!navigator.mediaDevices?.getUserMedia;
 
@@ -73,7 +74,10 @@ export default function FoodSearch({ onAdd }) {
     try {
       const food = await lookupBarcode(c);
       if (food) pick(food);
-      else setMsg(t('Produto não encontrado. Procure pelo nome ou use "+ Outro alimento".'));
+      else {
+        trackEvent('barcode_miss', c);
+        setMsg(t('Produto não encontrado. Procure pelo nome ou use "+ Outro alimento".'));
+      }
     } catch (err) {
       console.error('lookupBarcode:', err);
       setMsg(t('Não foi possível consultar o código agora. Tente de novo.'));
@@ -85,6 +89,7 @@ export default function FoodSearch({ onAdd }) {
   function submit(e) {
     e.preventDefault();
     if (!picked || !(Number(grams) > 0)) return;
+    trackFeature(String(picked.id).startsWith('off') ? 'barcode' : 'food_search');
     onAdd({ icon: picked.icon, label: `${picked.name} ${Number(grams)}g`, ...macros });
     setPicked(null);
     setQuery('');
