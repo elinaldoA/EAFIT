@@ -148,16 +148,20 @@ export default function NutricaoPage({ active }) {
     const name = custom.name.trim();
     if (!food.g && !food.kcal && !food.carbs && !food.fat) return;
     if (saveShortcut && !name) { toast(t('Dê um nome ao atalho')); return; }
+    let saved = null;
     if (saveShortcut && user) {
       try {
-        setMyFoods(await createCustomFood(user.id, { ...food, name }));
+        const before = new Set(myFoods.map(f => f.id));
+        const list = await createCustomFood(user.id, { ...food, name });
+        setMyFoods(list);
+        saved = list.find(f => !before.has(f.id)) || null;
         toast(t('Atalho salvo'));
       } catch (err) {
         console.error('createCustomFood:', err);
         toast(t('⚠️ Não foi possível salvar o atalho'));
       }
     }
-    handleAdd({ ...food, label: name || undefined });
+    handleAdd(saved || { ...food, label: name || undefined });
     setCustom(EMPTY_CUSTOM);
     setSaveShortcut(false);
     setCustomOpen(false);
