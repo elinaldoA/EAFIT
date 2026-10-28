@@ -120,6 +120,8 @@ jobs:
           deploy email-unsubscribe --no-verify-jwt
           # inactivity-reason: idem, pelo código assinado dos links da pesquisa de inatividade.
           deploy inactivity-reason --no-verify-jwt
+          # push-event: aberto de propósito (o service worker não tem sessão); quem autoriza é o endpoint da inscrição push.
+          deploy push-event --no-verify-jwt
           for fn in send-push send-welcome delete-account admin-users admin-broadcast admin-generate-plan trainer-push reply-push; do
             deploy "$fn"
           done

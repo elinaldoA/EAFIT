@@ -50,9 +50,11 @@ Deno.serve(async (req) => {
       ? { title: personalize(broadcast.title, vars.get(userId)), body: personalize(broadcast.body, vars.get(userId)) }
       : { title: broadcast.title, body: broadcast.body };
 
+    // O id vai no push (o app avisa recebimento e clique: push_events) e na caixa do app.
+    const campaign = crypto.randomUUID();
     let sent = 0;
     for (const sub of subs || []) {
-      const result = await sendWebPush(sub, textFor(sub.user_id as string));
+      const result = await sendWebPush(sub, { ...textFor(sub.user_id as string), campaign });
       if (result === 'sent') sent++;
       else if (result === 'stale') await supabase.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
     }
@@ -65,7 +67,6 @@ Deno.serve(async (req) => {
       .eq('id', broadcast.id);
 
     const inboxIds = targeted ? broadcast.target_user_ids : await listAllUserIds(supabase);
-    const campaign = crypto.randomUUID();
     await saveInbox(supabase, inboxIds, (userId) => ({ kind: 'aviso', ...textFor(userId), campaign }));
 
     await supabase.from('admin_audit_log').insert({

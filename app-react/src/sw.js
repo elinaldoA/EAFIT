@@ -4,6 +4,7 @@ import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { pushTargetKey } from './lib/pushTarget';
+import { reportPushEvent } from './lib/pushEvents';
 
 clientsClaim();
 
@@ -54,7 +55,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body || '',
     tag: data.tag,
-    data: { url: data.url || APP_URL },
+    data: { url: data.url || APP_URL, campaign: data.campaign },
   };
   // No Android o app instalado já aparece no cabeçalho da notificação; mandar
   // também `icon` desenha o logo de novo, grande, do outro lado. O `badge` do
@@ -65,7 +66,10 @@ self.addEventListener('push', (event) => {
     options.badge = `${APP_URL}icon-192.png`;
   }
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(Promise.all([
+    self.registration.showNotification(title, options),
+    reportPushEvent(self.registration, data.campaign, 'received'),
+  ]));
 });
 
 self.addEventListener('notificationclick', (event) => {
@@ -78,7 +82,8 @@ self.addEventListener('notificationclick', (event) => {
   // App já aberto recebe uma mensagem; janela nova recebe ?push= na URL (antes
   // do #aba), com o destino ou 1. O app navega (lib/appNav.js) e conta a
   // métrica "abriu por uma notificação" (lib/tracking.js).
-  event.waitUntil(
+  event.waitUntil(Promise.all([
+    reportPushEvent(self.registration, event.notification.data?.campaign, 'clicked'),
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsArr) => {
       const existing = clientsArr.find((c) => c.url.includes(APP_URL));
       if (existing) {
@@ -88,6 +93,6 @@ self.addEventListener('notificationclick', (event) => {
       const [base, hash] = url.split('#');
       const marked = `${base}${base.includes('?') ? '&' : '?'}push=${target || 1}${hash === undefined ? '' : `#${hash}`}`;
       return self.clients.openWindow(marked);
-    })
-  );
+    }),
+  ]));
 });

@@ -23,6 +23,10 @@ export function mapCampaign(r) {
     firstAt: r.ce_first_at,
     lastAt: r.ce_last_at,
     sent,
+    received: null,
+    clicked: null,
+    receivedPct: null,
+    clickedPct: null,
     read: Number(r.ce_read) || 0,
     app1: Number(r.ce_app1) || 0,
     trained1: Number(r.ce_trained1) || 0,
@@ -55,8 +59,26 @@ export function summarizeCampaigns(items) {
   };
 }
 
+// Chegou/tocou (push_events, medido pelo service worker do app): só existe para
+// envios manuais/agendados, que levam o id da campanha no push. Quem ainda usa
+// o app antigo não é contado, então as taxas são um piso, não o total.
+export function withPushEvents(items, events) {
+  const byCampaign = new Map(events.map(e => [e.pe_campaign, e]));
+  return items.map(c => {
+    const e = byCampaign.get(c.key);
+    if (!e) return c;
+    const received = Number(e.pe_received) || 0;
+    const clicked = Number(e.pe_clicked) || 0;
+    return { ...c, received, clicked, receivedPct: pct(received, c.sent), clickedPct: pct(clicked, c.sent) };
+  });
+}
+
 export async function fetchCampaignEffect(days = 30) {
-  const { data, error } = await db.rpc('admin_campaign_effect', { days_back: days });
-  if (error) throw error;
-  return (data || []).map(mapCampaign);
+  const [effect, events] = await Promise.all([
+    db.rpc('admin_campaign_effect', { days_back: days }),
+    // Se a medição ainda não existe no banco, o painel segue sem as colunas novas.
+    db.rpc('admin_push_events', { days_back: days }),
+  ]);
+  if (effect.error) throw effect.error;
+  return withPushEvents((effect.data || []).map(mapCampaign), events.error ? [] : events.data || []);
 }

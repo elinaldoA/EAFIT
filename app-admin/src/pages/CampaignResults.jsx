@@ -29,7 +29,7 @@ function when(c) {
 const CSV_COLUMNS = [
   { key: 'firstAt', label: 'Primeiro envio' }, { key: 'lastAt', label: 'Último envio' },
   { key: 'origin', label: 'Origem' }, { key: 'kind', label: 'Tipo' }, { key: 'title', label: 'Título' },
-  { key: 'sent', label: 'Envios' }, { key: 'read', label: 'Leram no sino' }, { key: 'app1', label: 'Abriram o app até o dia seguinte' },
+  { key: 'sent', label: 'Envios' }, { key: 'received', label: 'Chegaram ao aparelho' }, { key: 'clicked', label: 'Tocaram na notificação' }, { key: 'read', label: 'Leram no sino' }, { key: 'app1', label: 'Abriram o app até o dia seguinte' },
   { key: 'trained1', label: 'Treinaram até o dia seguinte' }, { key: 'trained3', label: 'Treinaram em até 3 dias' },
   { key: 'before3', label: 'Treinaram nos 3 dias antes' }, { key: 'lift', label: 'Diferença (p.p.)' },
 ];
@@ -111,7 +111,7 @@ export default function CampaignResults() {
             <table className="resp-table">
               <thead>
                 <tr>
-                  <th>Quando</th><th>Envio</th><th>Envios</th><th>Leram</th><th>Abriram o app</th>
+                  <th>Quando</th><th>Envio</th><th>Envios</th><th>Chegaram</th><th>Tocaram</th><th>Leram</th><th>Abriram o app</th>
                   <th>Treinaram (1 dia)</th><th>Treinaram (3 dias)</th><th>Antes (3 dias)</th><th>Diferença</th>
                 </tr>
               </thead>
@@ -126,6 +126,8 @@ export default function CampaignResults() {
                       </div>
                     </td>
                     <td data-label="Envios">{c.sent}</td>
+                    <td data-label="Chegaram">{fmtPct(c.receivedPct)}</td>
+                    <td data-label="Tocaram">{fmtPct(c.clickedPct)}</td>
                     <td data-label="Leram">{fmtPct(c.readPct)}</td>
                     <td data-label="Abriram o app">{fmtPct(c.appPct)}</td>
                     <td data-label="Treinaram (1 dia)">{fmtPct(c.trained1Pct)}</td>
@@ -141,7 +143,7 @@ export default function CampaignResults() {
       )}
       <p className="user-detail__meta">
         Os dias seguem o calendário de Brasília: "1 dia" é o dia do envio e o seguinte. Envios recentes ainda não tiveram
-        3 dias para mostrar resultado. "Leram" depende de a pessoa abrir o sino no app.
+        3 dias para mostrar resultado. "Leram" depende de a pessoa abrir o sino no app. "Chegaram" e "Tocaram" vêm do próprio aparelho (só envios manuais e agendados, e só de quem já atualizou o app), então são um mínimo, não o total.
       </p>
     </div>
   );

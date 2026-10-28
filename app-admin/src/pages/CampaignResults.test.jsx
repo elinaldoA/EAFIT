@@ -7,7 +7,7 @@ vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../lib/campaignEffect', async orig => ({ ...(await orig()), ...lib }));
 
 import CampaignResults from './CampaignResults';
-import { mapCampaign, summarizeCampaigns } from '../lib/campaignEffect';
+import { mapCampaign, summarizeCampaigns, withPushEvents } from '../lib/campaignEffect';
 
 const manual = {
   ce_key: 'c1', ce_origin: 'manual', ce_kind: 'aviso', ce_title: 'Volta!', ce_body: 'Treino novo',
@@ -30,6 +30,14 @@ describe('campaignEffect', () => {
     expect(mapCampaign({ ...manual, ce_sent: 0 }).lift).toBeNull();
     const t = summarizeCampaigns([c, mapCampaign(auto)]);
     expect(t).toMatchObject({ sent: 14, campaigns: 2, trained3: 7, before3: 6, trained3Pct: 50, lift: 7 });
+  });
+});
+
+describe('withPushEvents', () => {
+  it('junta chegou/tocou pelo id da campanha e deixa as demais sem taxa', () => {
+    const [m, a] = withPushEvents([mapCampaign(manual), mapCampaign(auto)], [{ pe_campaign: 'c1', pe_received: 3, pe_clicked: 1 }]);
+    expect(m).toMatchObject({ received: 3, clicked: 1, receivedPct: 75, clickedPct: 25 });
+    expect(a).toMatchObject({ received: null, receivedPct: null, clickedPct: null });
   });
 });
 

@@ -18,7 +18,7 @@ export type PushSubscriptionRow = { endpoint: string; p256dh: string; auth: stri
 // deve apagar a linha) ou 'error' (outra falha, só loga).
 export async function sendWebPush(
   sub: PushSubscriptionRow,
-  payload: { title: string; body: string; tag?: string; url?: string }
+  payload: { title: string; body: string; tag?: string; url?: string; campaign?: string }
 ): Promise<'sent' | 'stale' | 'error'> {
   try {
     // Sem `url` no payload, o service worker abre o endereço do próprio app

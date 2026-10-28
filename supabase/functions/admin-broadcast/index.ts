@@ -105,16 +105,17 @@ Deno.serve(async (req) => {
     ? { title: personalize(title, vars.get(userId)), body: personalize(message, vars.get(userId)) }
     : { title, body: message };
 
+  // O id vai no push (o app avisa recebimento e clique: push_events) e na caixa do app.
+  const campaign = crypto.randomUUID();
   let sent = 0;
   for (const sub of subs || []) {
-    const text = textFor(sub.user_id as string);
+    const text = { ...textFor(sub.user_id as string), campaign };
     const result = await sendWebPush(sub, toProgram ? { ...text, tag: 'program-message' } : text);
     if (result === 'sent') sent++;
     else if (result === 'stale') await admin.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
   }
 
   const inboxIds = targeted ? targetUserIds : await listAllUserIds(admin);
-  const campaign = crypto.randomUUID();
   await saveInbox(admin, inboxIds!, (userId) => ({ kind: programKind ?? 'aviso', ...textFor(userId), campaign }));
 
   let emailTargetCount: number | undefined;
