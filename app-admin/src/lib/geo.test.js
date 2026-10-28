@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
-  legendSteps, compareGeo, conversionByUf, groupByRegion, regionTrends, dailySeries, trend, trendLabel, countryName, flag, UF_NAMES,
+  legendSteps, compareGeo, conversionByUf, groupByRegion, regionTrends, dailySeries, audience, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -250,6 +250,22 @@ describe('comparação com o período anterior', () => {
     expect(dailySeries(rows, 2, 'site', { uf: 'SP' }, '2026-10-28').map(d => d.total)).toEqual([3, 0]);
     expect(dailySeries(rows, 2, 'app', { country: 'BR' }, '2026-10-28').map(d => d.total)).toEqual([2, 0]);
     expect(dailySeries(null, 1, 'tudo', {}, '2026-10-28')).toEqual([{ day: '2026-10-28', total: 0 }]);
+  });
+
+  it('audience soma origem e aparelho das visitas por lugar e modo', () => {
+    const rows = [
+      { page: 'landing', country: 'BR', uf: 'SP', source: 'instagram', device: 'celular', total: 6 },
+      { page: 'landing', country: 'BR', uf: 'SP', source: 'direto', device: 'desktop', total: 2 },
+      { page: 'acesso', country: 'BR', uf: 'SP', source: 'direto', device: 'celular', total: 2 },
+      { page: 'landing', country: 'BR', uf: 'RJ', source: 'google', device: 'celular', total: 5 },
+    ];
+    const sp = audience(rows, 'site', { uf: 'SP' });
+    expect(sp.total).toBe(8);
+    expect(sp.source.map(r => [r.label, r.total, r.pct])).toEqual([['instagram', 6, 75], ['Direto', 2, 25]]);
+    expect(sp.device.map(r => [r.label, r.total])).toEqual([['Celular', 6], ['Computador', 2]]);
+    expect(audience(rows, 'tudo').total).toBe(15);
+    expect(audience(rows, 'app', { uf: 'SP' }).total).toBe(2);
+    expect(audience(null).total).toBe(0);
   });
 
   it('trend e trendLabel', () => {

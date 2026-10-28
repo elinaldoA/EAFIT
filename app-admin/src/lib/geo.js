@@ -20,6 +20,9 @@ export const fetchGeoCompare = (days = 30) => rpcRows('admin_geo_period_compare'
 // Acessos localizados por dia (20261215020000_geo_daily.sql).
 export const fetchGeoDaily = (days = 30) => rpcRows('admin_geo_daily', { days_back: days });
 
+// Origem e aparelho das visitas por lugar (20261215030000_geo_audience.sql).
+export const fetchGeoAudience = (days = 30) => rpcRows('admin_geo_audience', { days_back: days });
+
 // Qual página conta em cada modo do mapa. 'acesso' é a tela de login do app
 // (quem chega sem sessão); 'app' são os dias de uso de quem está logado
 // (admin_app_geo, de 20261106010000_app_access_geo.sql).
@@ -243,6 +246,30 @@ export function compareGeo(rows, mode = 'tudo') {
     if (r.city) add(byCity, cityKey(r), cur, prev);
   }
   return { total, byUf, byCountry, byCity };
+}
+
+export const DEVICE_LABELS = { celular: 'Celular', tablet: 'Tablet', desktop: 'Computador', desconhecido: 'Desconhecido' };
+const SOURCE_LABELS = { direto: 'Direto' };
+
+// Linhas de admin_geo_audience → origem e aparelho das visitas do modo, de um
+// estado ou país (ou de todos).
+export function audience(rows, mode = 'tudo', place = {}) {
+  const pages = ACCESS_PAGES[mode] || ACCESS_PAGES.tudo;
+  const source = new Map();
+  const device = new Map();
+  let sum = 0;
+  for (const r of rows || []) {
+    if (!pages.includes(r.page) || !inPlace(r, place)) continue;
+    const n = Number(r.total) || 0;
+    sum += n;
+    source.set(r.source, (source.get(r.source) || 0) + n);
+    device.set(r.device, (device.get(r.device) || 0) + n);
+  }
+  return {
+    total: sum,
+    source: rank(source, ([v, n]) => ({ value: v, label: SOURCE_LABELS[v] || v, total: n, pct: pct(n, sum) })),
+    device: rank(device, ([v, n]) => ({ value: v, label: DEVICE_LABELS[v] || v, total: n, pct: pct(n, sum) })),
+  };
 }
 
 // Hoje (fuso de São Paulo, o mesmo do banco) como 'AAAA-MM-DD'.

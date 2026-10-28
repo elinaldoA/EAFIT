@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchGeoDaily, dailySeries, selectAccessRows, splitSiteApp, summarizeGeo,
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, selectAccessRows, splitSiteApp, summarizeGeo,
   compareGeo, conversionByUf, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
@@ -38,6 +38,7 @@ const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
 const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' ? mode : 'acessos'}:${days}`;
 const compareKey = (round, days) => `${round}:comparar:${days}`;
 const dailyKey = (round, days) => `${round}:diario:${days}`;
+const audienceKey = (round, days) => `${round}:origem:${days}`;
 
 async function loadAccess(days) {
   const [visits, app] = await Promise.all([fetchVisitGeo(days), fetchAppGeo(days)]);
@@ -137,6 +138,7 @@ export default function GeoPanel() {
   const wantKey = dataKey(round, mode, days);
   const wantCompare = mode === 'contas' || mode === 'conversao' ? null : compareKey(round, days);
   const wantDaily = mode === 'contas' || mode === 'conversao' ? null : dailyKey(round, days);
+  const wantAudience = mode === 'contas' || mode === 'conversao' ? null : audienceKey(round, days);
 
   useEffect(() => {
     const load = (key, fn) => {
@@ -151,7 +153,8 @@ export default function GeoPanel() {
     if (wantCompare) load(wantCompare, () => fetchGeoCompare(days).catch(() => null));
     // O gráfico diário também é um extra.
     if (wantDaily) load(wantDaily, () => fetchGeoDaily(days).catch(() => null));
-  }, [wantKey, wantCompare, wantDaily, mode, days]);
+    if (wantAudience) load(wantAudience, () => fetchGeoAudience(days).catch(() => null));
+  }, [wantKey, wantCompare, wantDaily, wantAudience, mode, days]);
 
   // Enquanto o período novo carrega, continua mostrando o anterior.
   // Só o erro da consulta atual aparece (trocar de período tenta de novo).
@@ -168,6 +171,8 @@ export default function GeoPanel() {
 
   const rawDaily = shown && shownMode !== 'contas' && !isConversion ? store[dailyKey(shown.round, shownDays)] : null;
 
+  const rawAudience = shown && shownMode !== 'contas' && !isConversion ? store[audienceKey(shown.round, shownDays)] : null;
+
   const rows = useMemo(() => {
     if (!raw || isConversion) return [];
     return shownMode === 'contas' ? raw : selectAccessRows(raw.visits, raw.app, shownMode);
@@ -183,6 +188,7 @@ export default function GeoPanel() {
   const demo = useMemo(() => (shownMode === 'contas' ? demographics(rows, place) : null), [rows, shownMode, place]);
   const cmp = useMemo(() => (rawCompare ? compareGeo(rawCompare, shownMode) : null), [rawCompare, shownMode]);
   const daily = useMemo(() => (rawDaily ? dailySeries(rawDaily, shownDays, shownMode, place) : null), [rawDaily, shownDays, shownMode, place]);
+  const aud = useMemo(() => (rawAudience ? audience(rawAudience, shownMode, place) : null), [rawAudience, shownMode, place]);
   const regions = useMemo(() => groupByRegion(summary.byUf, summary.brTotal), [summary.byUf, summary.brTotal]);
   const regionCmp = useMemo(() => (cmp ? regionTrends(cmp.byUf) : null), [cmp]);
   const ufTotal = uf ? summary.byUf.get(uf) || 0 : 0;
@@ -386,6 +392,15 @@ export default function GeoPanel() {
                   <Bars rows={demo.sexo} />
                   <h3 className="subsection-title">Faixa etária{placeName ? ` em ${placeName}` : ''}</h3>
                   <Bars rows={demo.faixa} />
+                </>
+              )}
+
+              {aud?.total > 0 && (
+                <>
+                  <h3 className="subsection-title">Origem das visitas{placeName ? ` em ${placeName}` : ''}</h3>
+                  <Bars rows={aud.source} />
+                  <h3 className="subsection-title">Aparelho{placeName ? ` em ${placeName}` : ''}</h3>
+                  <Bars rows={aud.device} />
                 </>
               )}
 
