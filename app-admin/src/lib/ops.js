@@ -141,8 +141,12 @@ export async function fetchTermsAcceptance(since = null) {
 export const PURGE_DAYS = 180;
 export const PURGE_KINDS = {
   page_visits: 'Visitas à landing e à tela de acesso',
+  landing_events: 'Cliques e seções alcançadas na landing',
+  site_pageviews: 'Acessos às páginas do site',
+  site_engagement: 'Tempo e rolagem nas páginas do site',
   auth_events: 'Eventos da tela de acesso',
   user_events: 'Telas e funcionalidades abertas',
+  email_log: 'Registro dos e-mails enviados',
   notification_log: 'Controle de notificações automáticas',
   client_errors: 'Erros do app',
 };
