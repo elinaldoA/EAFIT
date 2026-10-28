@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { sectionForPath, tabForPath } from './nav';
 import Sidebar from './Sidebar';
@@ -7,6 +7,7 @@ import AdminAccessProvider from '../../context/AdminAccessProvider';
 import { useAdminAccess } from '../../context/useAdminAccess';
 import { isHidden } from '../../lib/adminAccess';
 import EmptyState from '../EmptyState';
+import Loading from '../Loading';
 
 const COLLAPSED_KEY = 'sidebarCollapsed';
 
@@ -58,7 +59,7 @@ function Shell() {
 
   const content = blocked
     ? <EmptyState icon="🔒" label="Você não tem acesso a esta tela. Fale com um superadmin se precisar dela." />
-    : <Outlet />;
+    : <Suspense fallback={<Loading />}><Outlet /></Suspense>;
 
   return (
     <div className="shell">

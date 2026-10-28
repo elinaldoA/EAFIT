@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
+import { useAdminAccess } from '../context/useAdminAccess';
 import { fetchSegments, createSegment, hasFilters } from '../lib/segments';
 import { fetchUsersPage, fetchDeactivatedIds, PAGE_SIZE } from '../lib/users';
 import { toCsv, downloadCsv } from '../lib/csv';
@@ -90,6 +91,7 @@ export default function UsersList() {
   const [bulkMsg, setBulkMsg] = useState('');
   const seenRows = useRef(new Map());
   const { adminUser } = useAdminAuth();
+  const canWrite = useAdminAccess().can('users');
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Debounce simples: só dispara a busca 300ms depois do usuário parar de
@@ -245,14 +247,14 @@ export default function UsersList() {
       {selected.size > 0 && (
         <div className="card actions-row" role="region" aria-label="Ações em massa">
           <strong>{selected.size} selecionado(s)</strong>
-          <button className="btn btn--small" disabled={bulkBusy} onClick={handleBulkNotify}>Notificar</button>
+          <button className="btn btn--small" disabled={bulkBusy || !canWrite} onClick={handleBulkNotify}>Notificar</button>
           <button className="btn btn--small" disabled={bulkBusy} onClick={handleExportSelected}>Exportar seleção</button>
           <button
-            className="btn btn--small" disabled={bulkBusy || bannable.length === 0}
+            className="btn btn--small" disabled={bulkBusy || !canWrite || bannable.length === 0}
             onClick={() => handleBulkBan('unban', 'Desbanidos', `Desbanir ${bannable.length} usuário(s)?`)}
           >Desbanir</button>
           <button
-            className="btn btn--small btn--danger" disabled={bulkBusy || bannable.length === 0}
+            className="btn btn--small btn--danger" disabled={bulkBusy || !canWrite || bannable.length === 0}
             title="Admins e a sua própria conta são ignorados"
             onClick={() => handleBulkBan('ban', 'Banidos', `Banir ${bannable.length} usuário(s)? Admins e a sua conta são ignorados.`)}
           >Banir</button>

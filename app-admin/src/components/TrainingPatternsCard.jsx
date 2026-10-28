@@ -19,11 +19,6 @@ export default function TrainingPatternsCard() {
     return () => { active = false; };
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    return () => { active = false; };
-  }, []);
-
   if (state.loading) return <div className="card"><Loading /></div>;
   if (state.error) return <div className="card"><p className="form-msg form-msg--error">{state.error}</p></div>;
   const { heatmap, places } = state.data;

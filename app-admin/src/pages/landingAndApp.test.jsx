@@ -148,9 +148,9 @@ describe('App', () => {
     expect(screen.getByText('pg-reset')).toBeTruthy();
   });
 
-  it('admin logado vê o Dashboard dentro do Layout', () => {
+  it('admin logado vê o Dashboard dentro do Layout', async () => {
     render(<App />);
-    expect(screen.getByText('pg-dashboard')).toBeTruthy();
+    expect(await screen.findByText('pg-dashboard')).toBeTruthy();
     expect(screen.getByText('layout')).toBeTruthy();
   });
 
@@ -160,15 +160,15 @@ describe('App', () => {
     expect(screen.getByText('pg-login')).toBeTruthy();
   });
 
-  it('navega por hash para outras rotas', () => {
+  it('navega por hash para outras rotas', async () => {
     window.location.hash = '#/personais';
     render(<App />);
-    expect(screen.getByText('pg-personais')).toBeTruthy();
+    expect(await screen.findByText('pg-personais')).toBeTruthy();
   });
 
-  it('rota desconhecida volta para o Dashboard', () => {
+  it('rota desconhecida volta para o Dashboard', async () => {
     window.location.hash = '#/nao-existe';
     render(<App />);
-    expect(screen.getByText('pg-dashboard')).toBeTruthy();
+    expect(await screen.findByText('pg-dashboard')).toBeTruthy();
   });
 });

@@ -4,7 +4,7 @@ import { AdminAuthContext } from './useAdminAuth';
 import { takeEmailLink } from '../lib/emailLink';
 import { markStaffDevice } from '../lib/staffDevice';
 
-// Só existe um papel aqui: super admin. O login usa o mesmo Supabase Auth do
+// O login usa o mesmo Supabase Auth do
 // app do aluno — a diferença é que, depois de autenticar, checamos
 // profiles.is_admin (liberado pela própria policy "vê seu próprio perfil")
 // e derrubamos a sessão na hora se não for admin. Isso é só UX: a proteção

@@ -12,6 +12,7 @@ import { downloadUserExport } from '../lib/userExport';
 import UserProfileTab from './UserProfileTab';
 import UserWorkoutsTab from './UserWorkoutsTab';
 import UserActionsTab from './UserActionsTab';
+import RequireArea from '../components/RequireArea';
 import UserNotesTab from './UserNotesTab';
 import UserAppViewTab from './UserAppViewTab';
 
@@ -357,14 +358,14 @@ export default function UserDetail() {
       {tab === 'notas' && <UserNotesTab userId={id} adminUser={adminUser} />}
 
       {tab === 'acoes' && (
-        <UserActionsTab
+        <RequireArea area="users"><UserActionsTab
           detail={detail} adminUser={adminUser} busy={busy} recoveryLink={recoveryLink}
           isBanned={isBanned} hasProfile={hasProfile}
           onRunAction={runAction} onToggleAdmin={handleToggleAdmin} onGeneratePlan={handleGeneratePlan}
           trainerCode={trainerCode} onToggleTrainer={handleToggleTrainer}
           onExportData={handleExportData}
           deactivation={deactivation} onDeactivate={handleDeactivate}
-        />
+        /></RequireArea>
       )}
     </div>
   );
