@@ -33,10 +33,17 @@ describe('evaluateJobs', () => {
     expect(result[2]).toMatchObject({ name: 'send-engagement-hourly', state: 'bad', reason: 'não está agendado' });
   });
 
-  it('falha recente é problema', () => {
+  it('última execução com falha é problema', () => {
     const jobs = jobsAllOk();
     jobs[0].failures_24h = 3;
+    jobs[0].last_status = 'failed';
     expect(evaluateJobs(jobs, now)[0]).toMatchObject({ state: 'bad' });
+  });
+
+  it('falha antiga com a última execução ok é só aviso', () => {
+    const jobs = jobsAllOk();
+    jobs[0].failures_24h = 3;
+    expect(evaluateJobs(jobs, now)[0]).toMatchObject({ state: 'warn' });
   });
 
   it('job parado além do limite é problema', () => {

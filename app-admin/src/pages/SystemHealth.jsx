@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { evaluateJobs, summarizeHttp, fetchHealth, formatBytes } from '../lib/health';
 import { mapStorage, PURGE_DAYS, fetchPurgeStats, purgeOld } from '../lib/ops';
 import { formatDate } from '../lib/userDetailHelpers';
@@ -79,11 +79,21 @@ export default function SystemHealth() {
   const [updatedAt, setUpdatedAt] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const alive = useRef(true);
+  useEffect(() => () => { alive.current = false; }, []);
+
   const load = useCallback(async () => {
     setRefreshing(true);
-    setHealth(await fetchHealth());
-    setUpdatedAt(new Date());
-    setRefreshing(false);
+    try {
+      const next = await fetchHealth();
+      if (!alive.current) return;
+      setHealth(next);
+      setUpdatedAt(new Date());
+    } catch (err) {
+      console.error('fetchHealth:', err);
+    } finally {
+      if (alive.current) setRefreshing(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -112,7 +122,16 @@ export default function SystemHealth() {
     ...(http?.state === 'bad' ? [`${http.recentFailed} chamada(s) das funções com erro na última hora`] : []),
     ...(overdue > 0 ? [`${overdue} notificação(ões) agendada(s) atrasada(s)`] : []),
   ];
+  // Bloco que não carregou não pode virar "Tudo funcionando": sem dado, não há como saber.
+  const unavailable = [
+    ['Jobs agendados', health.cron],
+    ['Respostas das funções', health.http],
+    ['Notificações automáticas', health.notifications],
+  ].filter(([, block]) => block.error).map(([label]) => `${label}: não foi possível verificar`);
   const warnings = [
+    ...unavailable,
+    ...(health.overdue.error ? ['Notificações agendadas: não foi possível verificar atrasos'] : []),
+    ...(http?.total === 0 ? ['Nenhuma resposta das funções registrada nas últimas 24h'] : []),
     ...jobs.filter(j => j.state === 'warn').map(j => `${j.label}: ${j.reason}`),
     ...(httpHistory ? [`${http.failed} chamada(s) das funções com erro antigo (mais de 1h) — só histórico`] : []),
   ];
@@ -181,7 +200,7 @@ export default function SystemHealth() {
       <div className="two-col">
         <div className="card">
           <h2 className="section-title">Respostas das funções (cron → Edge Functions)</h2>
-          {health.http.error ? <BlockError message={health.http.error} /> : !health.http.data.length ? (
+          {health.http.error ? <BlockError message={health.http.error} /> : !http.total ? (
             <p className="card-note">Sem respostas registradas nas últimas horas.</p>
           ) : (
             <>
@@ -215,7 +234,9 @@ export default function SystemHealth() {
 
         <div className="card">
           <h2 className="section-title">Alcance do push</h2>
-          {health.push.error ? <BlockError message={health.push.error} /> : push && (
+          {health.push.error ? <BlockError message={health.push.error} /> : !push ? (
+            <p className="card-note">Sem dados de push.</p>
+          ) : (
             <>
               <div className="tile-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))' }}>
                 <div className="tile"><div className="tile__value">{push.users_with_push}</div><div className="tile__label">usuários com push ativo</div></div>
@@ -226,7 +247,7 @@ export default function SystemHealth() {
                 {Object.entries(push.hosts || {}).sort((a, b) => b[1] - a[1]).map(([host, n]) => (
                   <li key={host} className="dist__row">
                     <span className="dist__label" title={host}>{host.replace(/^(fcm\.googleapis\.com)$/, 'Chrome / Android')}</span>
-                    <span className="dist__track"><span className="dist__fill" style={{ width: `${Math.max(2, (n / push.subs_total) * 100)}%` }} /></span>
+                    <span className="dist__track"><span className="dist__fill" style={{ width: `${Math.max(2, (n / Math.max(1, Number(push.subs_total))) * 100)}%` }} /></span>
                     <span className="dist__value">{n}</span>
                   </li>
                 ))}

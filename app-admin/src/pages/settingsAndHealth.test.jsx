@@ -277,6 +277,16 @@ describe('SystemHealth', () => {
     expect(screen.getByText('Tudo funcionando.')).toBeTruthy();
   });
 
+  it('bloco de jobs que falhou não vira "Tudo funcionando"', async () => {
+    const h = healthy();
+    h.cron = { error: 'cron indisponível' };
+    hl.fetchHealth.mockResolvedValue(h);
+    render(<SystemHealth />);
+    expect(await screen.findByText('Nenhum problema, mas há avisos')).toBeTruthy();
+    expect(screen.getByText('Jobs agendados: não foi possível verificar')).toBeTruthy();
+    expect(screen.queryByText('Tudo funcionando.')).toBeNull();
+  });
+
   it('Atualizar recarrega os dados', async () => {
     hl.fetchHealth.mockResolvedValue(healthy());
     render(<SystemHealth />);

@@ -24,8 +24,13 @@ export function evaluateJobs(jobs, now = new Date()) {
     const job = byName.get(expected.name);
     if (!job) return { ...expected, job: null, state: 'bad', reason: 'não está agendado' };
     if (!job.active) return { ...expected, job, state: 'warn', reason: 'pausado' };
-    if (job.last_status === 'failed' || Number(job.failures_24h) > 0) {
-      return { ...expected, job, state: 'bad', reason: `${job.failures_24h} falha(s) nas últimas 24h` };
+    // Falha na última execução é problema atual; falha antiga com a última
+    // execução ok já se recuperou, então vira aviso (histórico das 24h).
+    if (job.last_status === 'failed') {
+      return { ...expected, job, state: 'bad', reason: `última execução falhou (${job.failures_24h} falha(s) nas últimas 24h)` };
+    }
+    if (Number(job.failures_24h) > 0) {
+      return { ...expected, job, state: 'warn', reason: `${job.failures_24h} falha(s) nas últimas 24h, já recuperado` };
     }
     if (!job.last_run_at) return { ...expected, job, state: 'warn', reason: 'ainda não executou' };
     const limit = maxAgeMinutes(job.schedule);
