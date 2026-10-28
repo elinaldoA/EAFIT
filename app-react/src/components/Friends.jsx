@@ -156,7 +156,7 @@ export default function Friends({ myWeek }) {
           {busy ? t('Enviando…') : t('Adicionar amigo')}
         </button>
       </div>
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
 
       {incoming.length > 0 && (
         <div className="friends__block">

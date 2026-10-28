@@ -64,7 +64,7 @@ export default function ClientGoals({ clientId, onSaved }) {
         <label className="profile-field__label" htmlFor="goalNote">{t('Recado sobre a meta (opcional)')}</label>
         <input id="goalNote" className="input input--sm" maxLength={300} placeholder={t('Ex: foco em constância neste ciclo')} value={note} onChange={e => setNote(e.target.value)} />
       </div>
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleSave}>{busy ? t('Enviando…') : t('Salvar e enviar ao aluno')}</button>
     </div>
   );

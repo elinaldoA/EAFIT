@@ -121,7 +121,7 @@ export default function FriendsPrompt({ myWeek = 0 }) {
           </button>
         </div>
       ) : null}
-      {error && <p className="friends-invite__text" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="friends-invite__text text-error" role="alert">{error}</p>}
 
       <div className="friends-invite__links">
         {!adding && <button type="button" className="link-btn" onClick={() => setAdding(true)}>{t('Já tenho o código de um amigo')}</button>}

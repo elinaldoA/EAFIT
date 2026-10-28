@@ -34,11 +34,11 @@ export default function PromoMaterialsCard({ toast }) {
   return (
     <div className="dash-card">
       <div className="dash-card__title">{t('📦 Material de divulgação')}</div>
-      <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Logos, imagens e vídeos que a equipe EAFIT preparou para você postar.')}</p>
+      <p className="profile-field__hint mt-0">{t('Logos, imagens e vídeos que a equipe EAFIT preparou para você postar.')}</p>
       {error && <p className="profile-field__hint">{t('Não foi possível carregar o material agora.')}</p>}
       {!items && !error && <div className="skeleton" style={{ height: 60 }} />}
       {items && items.length === 0 && (
-        <p className="profile-field__hint" style={{ margin: 0 }}>{t('Ainda não há material. Quando a equipe publicar, ele aparece aqui.')}</p>
+        <p className="profile-field__hint m-0">{t('Ainda não há material. Quando a equipe publicar, ele aparece aqui.')}</p>
       )}
       {items && items.length > 0 && (
         <ul className="promo-list">

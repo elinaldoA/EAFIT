@@ -100,7 +100,7 @@ export default function AppRatingModal({ userId, onClose }) {
                 value={comment} onChange={e => setComment(e.target.value)}
               />
             )}
-            {error && <p className="app-rating__text" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+            {error && <p className="app-rating__text text-error" role="alert">{error}</p>}
             <button type="button" className="btn btn--primary btn--full" disabled={!stars || sending} onClick={handleSend}>
               {sending ? t('Enviando…') : t('Enviar avaliação')}
             </button>

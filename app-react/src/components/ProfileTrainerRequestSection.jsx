@@ -67,7 +67,7 @@ export default function ProfileTrainerRequestSection({ toast }) {
         <label className="profile-field__label" htmlFor="trainerReqNote">{t('Onde você atende (opcional)')}</label>
         <input id="trainerReqNote" className="input input--sm" maxLength={500} value={note} onChange={e => setNote(e.target.value)} />
       </div>
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--primary btn--full" disabled={busy || !name.trim() || !cref.trim()} onClick={submit}>
         {t('Pedir acesso de personal')}
       </button>

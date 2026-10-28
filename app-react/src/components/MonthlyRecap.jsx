@@ -59,7 +59,7 @@ export default function MonthlyRecap({ userId, allTimeLogs, loadingLogs }) {
   return (
     <div className="dash-card recap">
       <div className="dash-card__title-row recap__head">
-        <div className="dash-card__title" style={{ marginBottom: 0 }}>{t('📅 Retrospectiva · {label}', { label: recap.label })}</div>
+        <div className="dash-card__title mb-0">{t('📅 Retrospectiva · {label}', { label: recap.label })}</div>
         <div className="recap__toggle" role="group" aria-label={t('Período da retrospectiva')}>
           <button type="button" aria-pressed={offset === 0} className={offset === 0 ? 'recap__btn recap__btn--active' : 'recap__btn'} onClick={() => setOffset(0)}>{t('Este mês')}</button>
           <button type="button" aria-pressed={offset === -1} className={offset === -1 ? 'recap__btn recap__btn--active' : 'recap__btn'} onClick={() => setOffset(-1)}>{t('Mês passado')}</button>

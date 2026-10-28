@@ -185,7 +185,7 @@ export default function DashPage({ active }) {
       {isFlagOn(config.flags, 'desafios') && <LeagueCard />}
       <div className="dash-card">
         <div className="dash-card__title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-          <div className="dash-card__title" style={{ marginBottom: 0 }}>{t('Visualização Anatômica')}</div>
+          <div className="dash-card__title mb-0">{t('Visualização Anatômica')}</div>
           <select
             className="input input--sm"
             style={{ width: 'auto', minWidth: '180px', maxWidth: '100%', padding: '4px 8px' }}

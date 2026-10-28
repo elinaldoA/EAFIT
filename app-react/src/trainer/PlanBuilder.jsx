@@ -204,11 +204,11 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
               </li>
             ))}
           </ul>
-          <p className="profile-field__hint" style={{ margin: 0 }}>{t('Soma das séries de trabalho de cada dia, pelo grupo do exercício na biblioteca.')}</p>
+          <p className="profile-field__hint m-0">{t('Soma das séries de trabalho de cada dia, pelo grupo do exercício na biblioteca.')}</p>
         </div>
       )}
 
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       {client && (
         <button type="button" className="btn btn--primary btn--full" disabled={sending} onClick={handleSend}>
           {sending ? t('Enviando…') : t('📤 Enviar treino para o aluno')}

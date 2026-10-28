@@ -11,7 +11,7 @@
   border: 1px solid var(--border-2);
   border-radius: var(--r-full);
   padding: 9px 22px;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   pointer-events: none;
   z-index: 999;
@@ -63,7 +63,7 @@ body.modal-open { overflow: hidden; }
   border: 1px solid var(--rest-accent);
   border-radius: var(--r-lg, 20px);
   box-shadow: var(--shadow-lg), 0 0 36px var(--rest-accent-glow);
-  padding: 28px 24px;
+  padding: 28px var(--sp-5);
   width: 100%;
   max-width: 320px;
   max-height: 100%;
@@ -71,7 +71,7 @@ body.modal-open { overflow: hidden; }
 }
 
 .rest-modal__label {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--text-muted);
   text-align: center;
 }
@@ -89,7 +89,7 @@ body.modal-open { overflow: hidden; }
   background: var(--surface-3);
   color: var(--text-dim);
   border-radius: var(--r-full);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   cursor: pointer;
 }
 
@@ -149,7 +149,7 @@ body.modal-open { overflow: hidden; }
   color: var(--text);
   border-radius: var(--r-full);
   padding: 7px 14px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
 }
@@ -158,8 +158,8 @@ body.modal-open { overflow: hidden; }
   width: 100%;
   border: none;
   border-radius: var(--r-full);
-  padding: 12px;
-  font-size: 0.9rem;
+  padding: var(--sp-3);
+  font-size: var(--fs-md);
   font-weight: 700;
   cursor: pointer;
   background: var(--surface-3);
@@ -168,7 +168,7 @@ body.modal-open { overflow: hidden; }
 
 .rest-modal__release:not(:disabled) {
   background: var(--rest-accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: pointer;
 }
 
@@ -186,7 +186,7 @@ body.modal-open { overflow: hidden; }
   z-index: 1000;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 10px 12px;
+  gap: 10px var(--sp-3);
   align-items: center;
   padding: 14px;
   background: var(--surface);
@@ -210,22 +210,22 @@ body.modal-open { overflow: hidden; }
 }
 .update-card__icon svg { width: 20px; height: 20px; }
 .update-card__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.update-card__title { font-size: 0.92rem; }
-.update-card__desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+.update-card__title { font-size: var(--fs-base); }
+.update-card__desc { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.35; }
 .update-card__actions {
   grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 .update-card__later {
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   border: 0;
   border-radius: var(--r-md);
   background: transparent;
   color: var(--text-muted);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
 }
@@ -245,7 +245,7 @@ body.modal-open { overflow: hidden; }
   align-items: center;
   gap: 10px;
   padding: 9px 14px;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.35;
   background: var(--primary-glow);
   color: var(--text);
@@ -263,39 +263,39 @@ body.modal-open { overflow: hidden; }
   border-radius: var(--r-full);
   background: transparent;
   color: var(--text-muted);
-  font-size: 1.2rem;
+  font-size: var(--fs-xl);
   line-height: 1;
   cursor: pointer;
 }
 .announce__close:hover { color: var(--text); }
 
-.maintenance { z-index: 2000; padding: 24px; text-align: center; }
-.maintenance__title { margin: 4px 0 0; font-size: 1.15rem; }
-.maintenance__text { margin: 0; max-width: 32ch; font-size: 0.9rem; line-height: 1.45; opacity: .8; }
+.maintenance { z-index: 2000; padding: var(--sp-5); text-align: center; }
+.maintenance__title { margin: var(--sp-1) 0 0; font-size: var(--fs-xl); }
+.maintenance__text { margin: 0; max-width: 32ch; font-size: var(--fs-md); line-height: 1.45; opacity: .8; }
 
 /* Trava de biometria (BiometricLockScreen): por cima de tudo, até dos modais. */
-.bio-lock { z-index: 10001; gap: 14px; padding: 24px; text-align: center; overflow-y: auto; background: var(--bg); color: var(--text); }
-.bio-lock__text { margin: 0; max-width: 30ch; font-size: 0.95rem; line-height: 1.45; opacity: .85; }
+.bio-lock { z-index: 10001; gap: 14px; padding: var(--sp-5); text-align: center; overflow-y: auto; background: var(--bg); color: var(--text); }
+.bio-lock__text { margin: 0; max-width: 30ch; font-size: var(--fs-base); line-height: 1.45; opacity: .85; }
 .bio-lock__form { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 320px; text-align: left; }
 .bio-lock__form .field { width: 100%; }
-.bio-lock__email { margin: 0; font-size: 0.85rem; opacity: .7; }
-.bio-lock__error { margin: 0; max-width: 32ch; font-size: 0.85rem; color: var(--error); }
+.bio-lock__email { margin: 0; font-size: var(--fs-md); opacity: .7; }
+.bio-lock__error { margin: 0; max-width: 32ch; font-size: var(--fs-md); color: var(--error); }
 
 /* Pesquisa de inatividade aberta pelo e-mail (InactivitySurveyScreen) */
 /* Mais alta que a tela em celular pequeno: rola, e centraliza quando sobra espaço. */
-.survey { justify-content: flex-start; gap: 12px; overflow-y: auto; background: var(--bg); color: var(--text); }
+.survey { justify-content: flex-start; gap: var(--sp-3); overflow-y: auto; background: var(--bg); color: var(--text); }
 .survey > :first-child { margin-top: auto; }
 .survey > :last-child { margin-bottom: auto; }
-.survey img { width: 56px; height: 56px; border-radius: 14px; }
+.survey img { width: 56px; height: 56px; border-radius: var(--r-lg); }
 .survey__options,
 .survey__actions {
   width: 100%;
   max-width: 340px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
-.survey__comment { max-width: 340px; font-size: 0.9rem; }
+.survey__comment { max-width: 340px; font-size: var(--fs-md); }
 
 /* Passo a passo da tela de instalação (InstallScreen) */
 .install__steps {
@@ -304,8 +304,8 @@ body.modal-open { overflow: hidden; }
   max-width: 32ch;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   text-align: left;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   line-height: 1.45;
 }

@@ -35,10 +35,10 @@ export default function ClientNotes({ clientId }) {
   return (
     <div className="dash-card">
       <div className="dash-card__title">{t('📝 Anotações privadas')}</div>
-      <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Só você vê. Use para lesões, combinados e observações.')}</p>
+      <p className="profile-field__hint mt-0">{t('Só você vê. Use para lesões, combinados e observações.')}</p>
       <textarea className="input input--sm" rows={2} maxLength={1000} aria-label={t('Nova anotação')}
         placeholder={t('Ex.: dor no ombro direito, evitar desenvolvimento por 2 semanas')} value={text} onChange={e => setText(e.target.value)} />
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--outline btn--sm" style={{ marginTop: 8 }} disabled={busy || !text.trim()} onClick={handleAdd}>
         {busy ? t('Salvando…') : t('Salvar anotação')}
       </button>

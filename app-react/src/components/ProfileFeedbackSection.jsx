@@ -42,7 +42,7 @@ export default function ProfileFeedbackSection({ userId, toast }) {
           <span className="profile-field__label">{t('Respostas da equipe')}</span>
           {replies.map(r => (
             <div key={r.id} className="feedback-reply">
-              <p className="profile-field__hint" style={{ margin: 0 }}>{t('Você: {message}', { message: r.message })}</p>
+              <p className="profile-field__hint m-0">{t('Você: {message}', { message: r.message })}</p>
               <p className="feedback-reply__text">💬 {r.admin_reply}</p>
             </div>
           ))}
@@ -63,7 +63,7 @@ export default function ProfileFeedbackSection({ userId, toast }) {
         />
         <span className="profile-field__hint">{text.length}/{MAX_LENGTH}</span>
       </div>
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button className="btn btn--primary btn--full" disabled={sending || !text.trim()} onClick={handleSend}>
         {sending ? t('Enviando…') : t('Enviar feedback')}
       </button>

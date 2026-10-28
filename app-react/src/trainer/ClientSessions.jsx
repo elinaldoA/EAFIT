@@ -28,7 +28,7 @@ export default function ClientSessions({ clientId }) {
     {suggestions.length > 0 && (
       <div className="dash-card">
         <div className="dash-card__title">{t('📈 Sugestões de carga')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Baseadas nos últimos treinos. Você decide se faz sentido para o aluno.')}</p>
+        <p className="profile-field__hint mt-0">{t('Baseadas nos últimos treinos. Você decide se faz sentido para o aluno.')}</p>
         <ul className="measure-deltas">
           {suggestions.map(s => (
             <li key={s.name} className="session-ex">

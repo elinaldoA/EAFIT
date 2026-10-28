@@ -4,8 +4,8 @@
 .export-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
 }
 
 .export-actions .btn { flex: 1; min-width: 140px; }

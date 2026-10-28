@@ -29,3 +29,4 @@
 @import './styles/inbox.css'; /* Central de avisos (sino) */
 @import './styles/tools.css'; /* Treino curto, mobilidade, anilhas, volume por músculo e metas de carga */
 @import './styles/season.css'; /* Tema de temporada (ex.: Dia das Bruxas) */
+@import './styles/polish.css'; /* Foco, área de toque e estados (vazio/erro/carregando) */

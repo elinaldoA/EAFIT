@@ -174,7 +174,7 @@ export default function Challenges() {
           <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleJoin}>{busy ? t('Entrando…') : t('Entrar')}</button>
         </div>
       )}
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
 
       <div className="challenge__actions">
         <button type="button" className="btn btn--outline btn--sm" onClick={() => { setMode(mode === 'create' ? null : 'create'); setError(''); }}>{t('+ Criar desafio')}</button>

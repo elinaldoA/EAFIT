@@ -38,8 +38,8 @@
   align-items: center;
   gap: 10px;
   min-width: 190px;
-  padding: 26px 32px;
-  border-radius: 16px;
+  padding: 26px var(--sp-6);
+  border-radius: var(--r-lg);
   background: var(--surface, #17171b);
   border: 1px solid var(--border, #26262b);
   color: var(--text, #ececef);
@@ -47,6 +47,6 @@
 }
 
 .loading-overlay__pct { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.loading-overlay__bar { width: 100%; height: 4px; border-radius: 4px; background: var(--surface-3, #27272a); overflow: hidden; }
-.loading-overlay__bar > span { display: block; height: 100%; background: var(--primary, #f97316); border-radius: 4px; transition: width .12s linear; }
-.loading-overlay__label { font-size: .8rem; color: var(--text-muted, #a1a1aa); }
+.loading-overlay__bar { width: 100%; height: 4px; border-radius: var(--r-xs); background: var(--surface-3, #27272a); overflow: hidden; }
+.loading-overlay__bar > span { display: block; height: 100%; background: var(--primary, #f97316); border-radius: var(--r-xs); transition: width .12s linear; }
+.loading-overlay__label { font-size: var(--fs-sm); color: var(--text-muted, #a1a1aa); }

@@ -56,7 +56,7 @@ export default function ChatThread({ me, onError, load, send, onLoaded, sendLabe
         className="input input--sm" rows={2} maxLength={MAX_MESSAGE} aria-label={t('Resposta')}
         placeholder={placeholder} value={text} onChange={e => setText(e.target.value)}
       />
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--primary btn--full" disabled={sending || !text.trim()} onClick={handleSend}>
         {sending ? t('Enviando…') : sendLabel}
       </button>

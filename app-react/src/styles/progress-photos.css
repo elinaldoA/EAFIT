@@ -7,7 +7,7 @@
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: var(--sp-1);
 }
 
 .photo-thumb {
@@ -31,7 +31,7 @@
   border: 1px solid var(--border-2);
 }
 
-.photo-thumb__date { font-size: 0.65rem; color: var(--text-dim); }
+.photo-thumb__date { font-size: var(--fs-xs); color: var(--text-dim); }
 
 .photo-thumb--add {
   width: 84px;
@@ -47,7 +47,7 @@
 .photo-add-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 10px;
   border: 1px dashed var(--border-2);
   border-radius: var(--r-md);
@@ -78,7 +78,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   background: var(--surface-2);
   border: 1px solid var(--border-2);
   border-radius: var(--r-lg, 20px);
@@ -103,7 +103,7 @@
   background: var(--surface-3);
   color: var(--text-dim);
   border-radius: var(--r-full);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   cursor: pointer;
 }
 
@@ -118,16 +118,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   text-align: center;
 }
 
-.photo-modal__date { font-weight: 700; font-size: 0.9rem; }
-.photo-modal__note { font-size: 0.8rem; color: var(--text-muted); }
+.photo-modal__date { font-weight: 700; font-size: var(--fs-md); }
+.photo-modal__note { font-size: var(--fs-sm); color: var(--text-muted); }
 
 .photo-modal__nav {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   width: 100%;
 }
 
@@ -135,11 +135,11 @@
 
 /* Antes e depois: duas fotos lado a lado + variação de peso e medidas */
 .photo-compare { max-width: 560px; align-items: stretch; }
-.photo-compare__title { margin: 0; font-size: 1.05rem; text-align: center; }
-.photo-compare__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.photo-compare__title { margin: 0; font-size: var(--fs-lg); text-align: center; }
+.photo-compare__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 .photo-compare__side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.photo-compare__label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim); }
+.photo-compare__label { font-size: var(--fs-xs); font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim); }
 .photo-compare__img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--border-2); }
 .photo-compare__summary { display: flex; flex-direction: column; gap: 6px; text-align: center; }
-.photo-compare__row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; text-align: left; }
-.photo-compare__hint { margin: 0; font-size: 0.8rem; color: var(--text-dim); }
+.photo-compare__row { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-md); text-align: left; }
+.photo-compare__hint { margin: 0; font-size: var(--fs-sm); color: var(--text-dim); }

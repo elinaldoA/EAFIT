@@ -106,17 +106,17 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
             <span className={`client-badge client-badge--${att.level}`}>{att.label}</span>
           </div>
         </div>
-        <p className="profile-field__hint" style={{ margin: 0 }}>
+        <p className="profile-field__hint m-0">
           {client.email}
           {profile.meta && ` · ${GOALS[profile.meta] || profile.meta}`}
           {profile.nivel && ` · ${LEVELS[profile.nivel] || profile.nivel}`}
         </p>
         {(profile.peso || profile.altura || profile.idade) && (
-          <p className="profile-field__hint" style={{ margin: 0 }}>
+          <p className="profile-field__hint m-0">
             {[profile.idade && t('{n} anos', { n: profile.idade }), profile.peso && `${fmt(profile.peso)} kg`, profile.altura && `${profile.altura} cm`, profile.pesoAlvo && t('meta {kg} kg', { kg: fmt(profile.pesoAlvo) })].filter(Boolean).join(' · ')}
           </p>
         )}
-        {client.since && <p className="profile-field__hint" style={{ margin: 0 }}>{t('Seu aluno desde {d}', { d: fmtDate(String(client.since).slice(0, 10)) })}</p>}
+        {client.since && <p className="profile-field__hint m-0">{t('Seu aluno desde {d}', { d: fmtDate(String(client.since).slice(0, 10)) })}</p>}
         {profile.pausedUntil && profile.pausedUntil >= today && (
           <p className="pause-status">{t('⏸ Em pausa até {v1}', { v1: profile.pausedUntil.split('-').reverse().slice(0, 2).join('/') })}</p>
         )}
@@ -247,16 +247,16 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
             {detail.plan ? (
               <div className="plan-current">
                 <strong>{detail.plan.name}</strong>
-                <span className="profile-field__hint" style={{ margin: 0 }}>
+                <span className="profile-field__hint m-0">
                   {t('{n} dia(s) por semana', { n: detail.plan.days })}
                   {client.planName && !client.legacy && version === 0 && <> · <span className={`plan-chip plan-chip--${plan.level}`}>{plan.label}</span></>}
                 </span>
                 {client.planName && !client.planByMe && !client.legacy && version === 0 && (
-                  <span className="profile-field__hint" style={{ margin: 0 }}>{t('Montado pelo aluno ou pelo app, não por você.')}</span>
+                  <span className="profile-field__hint m-0">{t('Montado pelo aluno ou pelo app, não por você.')}</span>
                 )}
               </div>
             ) : (
-              <p className="profile-field__hint" style={{ margin: 0 }}>{t('O aluno ainda não tem plano ativo.')}</p>
+              <p className="profile-field__hint m-0">{t('O aluno ainda não tem plano ativo.')}</p>
             )}
             <button type="button" className="btn btn--primary btn--sm" style={{ alignSelf: 'flex-start' }} onClick={() => setBuilding(true)}>
               📋 {detail.plan ? t('Editar / enviar novo treino') : t('Montar treino')}

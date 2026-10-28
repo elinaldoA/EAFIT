@@ -110,7 +110,7 @@ function ProgramContent({ page, amb, labels, failed, onSwitchToStudent }) {
     return (
       <section className="page active trainer-page">
         <div className="dash-card">
-          <p className="profile-field__hint" style={{ margin: 0 }}>{t('Não foi possível carregar seu painel agora. Confira a conexão e abra de novo.')}</p>
+          <p className="profile-field__hint m-0">{t('Não foi possível carregar seu painel agora. Confira a conexão e abra de novo.')}</p>
         </div>
       </section>
     );
@@ -128,7 +128,7 @@ function ProgramContent({ page, amb, labels, failed, onSwitchToStudent }) {
       <section className="page active trainer-page">
         <div className="dash-card">
           <div className="dash-card__title">{labels.mode}</div>
-          <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Sua conta não está mais no programa de divulgação do EAFIT. Fale com a equipe EAFIT se isso for um engano.')}</p>
+          <p className="profile-field__hint mt-0">{t('Sua conta não está mais no programa de divulgação do EAFIT. Fale com a equipe EAFIT se isso for um engano.')}</p>
           <button type="button" className="btn btn--primary btn--full" onClick={onSwitchToStudent}>{t('Usar como aluno')}</button>
         </div>
       </section>

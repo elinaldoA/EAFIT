@@ -21,7 +21,38 @@
   --warning:      #fbbf24;
   --error:        #ef4444;
   --water:        #38bdf8;
+  --water-h:      #7dd3fc;
+  --error-h:      #dc2626;
+  --success-strong: #16a34a;
+  --macro-kcal:   #f59e0b;
+  --macro-carbs:  #a78bfa;
+  --macro-fat:    #fb7185;
+  /* Texto sobre fundo laranja (primary) e sobre fundos de acento/erro */
+  --on-primary:   #09090b;
+  --on-accent:    #ffffff;
+  --desktop-bg:   #070709;
+  --desktop-frame:#111113;
+  --focus-ring:   0 0 0 2px var(--bg), 0 0 0 4px var(--primary-h);
 
+  /* Escala tipográfica (piso de 12px para leitura com o celular longe) */
+  --fs-xs:   .75rem;
+  --fs-sm:   .8125rem;
+  --fs-md:   .875rem;
+  --fs-base: .9375rem;
+  --fs-lg:   1.0625rem;
+  --fs-xl:   1.25rem;
+
+  /* Escala de espaçamento */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  --tap-min: 44px;
+
+  --r-xs:   4px;
   --r-sm:   6px;
   --r-md:   10px;
   --r-lg:   14px;
@@ -50,6 +81,15 @@
   --text-muted:   #52525b;
   --text-dim:     #71717a;
   --primary-glow: rgba(249,115,22,.12);
+  --success:      #16a34a;
+  --warning:      #d97706;
+  --error:        #dc2626;
+  --water:        #0284c7;
+  --water-h:      #38bdf8;
+  --error-h:      #b91c1c;
+  --success-strong: #15803d;
+  --desktop-bg:   #e4e4e7;
+  --desktop-frame:#ffffff;
   --shadow-sm: 0 1px 4px rgba(0,0,0,.10);
   --shadow-md: 0 4px 16px rgba(0,0,0,.12);
   --shadow-lg: 0 12px 40px rgba(0,0,0,.18);

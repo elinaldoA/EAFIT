@@ -34,12 +34,12 @@ export default function SharePage({ amb }) {
 
       <div className="dash-card">
         <div className="dash-card__title">{t('🏋️ Card de treino')}</div>
-        <p className="profile-field__hint" style={{ margin: 0 }}>{t('Ao terminar um treino no modo aluno, toque em compartilhar: o card sai com o seu link e o seu QR. Cadastros por ele aparecem como "Card de treino" em Resultados.')}</p>
+        <p className="profile-field__hint m-0">{t('Ao terminar um treino no modo aluno, toque em compartilhar: o card sai com o seu link e o seu QR. Cadastros por ele aparecem como "Card de treino" em Resultados.')}</p>
       </div>
 
       <div className="dash-card influencer-captions">
         <div className="dash-card__title">{t('✍️ Textos prontos')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Copie, ajuste do seu jeito e poste. O link já vai junto.')}</p>
+        <p className="profile-field__hint mt-0">{t('Copie, ajuste do seu jeito e poste. O link já vai junto.')}</p>
         {INFLUENCER_CAPTIONS.map(c => (
           <div className="influencer-caption" key={c.key}>
             <div className="amb__label">{c.label()}</div>

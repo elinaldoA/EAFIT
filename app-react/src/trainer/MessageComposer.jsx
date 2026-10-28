@@ -35,7 +35,7 @@ export default function MessageComposer({ clientIds, label, onSent }) {
         value={text} onChange={e => setText(e.target.value)}
       />
       <span className="profile-field__hint">{t('{length}/{MAX_MESSAGE} · o aluno recebe uma notificação', { length: text.length, MAX_MESSAGE })}</span>
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--primary btn--full" disabled={sending || !text.trim()} onClick={handleSend}>
         {sending ? t('Enviando…') : label}
       </button>

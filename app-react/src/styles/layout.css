@@ -14,18 +14,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 var(--sp-4);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  gap: 12px;
+  gap: var(--sp-3);
   z-index: 10;
 }
 
 .topbar__profile {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   min-width: 0;
 }
 
@@ -38,9 +38,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 900;
-  color: #09090b;
+  color: var(--on-primary);
   overflow: hidden;
 }
 
@@ -52,7 +52,7 @@
 }
 
 .topbar__name {
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
   font-weight: 800;
   letter-spacing: -0.3px;
   color: var(--text);
@@ -76,10 +76,10 @@
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 14px 24px;
+  padding: 14px 14px var(--sp-5);
   display: none;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 /* Cards nunca encolhem pra caber: a página rola. Sem isso, um card com
@@ -117,7 +117,7 @@
   border: none;
   background: transparent;
   color: var(--text-dim);
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.3px;
   cursor: pointer;

@@ -39,7 +39,7 @@ export default function TrainerAccount({ onSwitchToStudent }) {
     <section className="page active trainer-page">
       <div className="dash-card">
         <div className="dash-card__title">{t('🧑‍🏫 Modo Personal')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>{getDisplayName(user)}<br />{user?.email}</p>
+        <p className="profile-field__hint mt-0">{getDisplayName(user)}<br />{user?.email}</p>
         <p className="profile-field__hint">
           {t('Quer treinar também? Troque para o modo aluno para usar o app de treino normal. Você volta ao modo Personal quando quiser.')}
         </p>
@@ -48,7 +48,7 @@ export default function TrainerAccount({ onSwitchToStudent }) {
 
       <div className="dash-card">
         <div className="dash-card__title">{t('🔔 Alertas sobre seus alunos')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>
+        <p className="profile-field__hint mt-0">
           {t('Receba uma notificação quando um aluno precisar de você. Os avisos chegam entre 8h e 20h.')}
         </p>
         <button type="button" className={notifyOn ? 'btn btn--outline btn--full' : 'btn btn--primary btn--full'}
@@ -76,7 +76,7 @@ export default function TrainerAccount({ onSwitchToStudent }) {
 
       <div className="dash-card">
         <div className="dash-card__title">{t('🎓 Ajuda')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Reveja o passo a passo de todas as funções do painel.')}</p>
+        <p className="profile-field__hint mt-0">{t('Reveja o passo a passo de todas as funções do painel.')}</p>
         <button type="button" className="btn btn--outline btn--full" onClick={startTutorial}>{t('Ver tutorial')}</button>
       </div>
 

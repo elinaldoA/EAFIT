@@ -37,7 +37,7 @@
 .auth-logo__icon {
   width: 96px;
   height: 96px;
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
   border-radius: 26px;
   /* Ícone de fundo contínuo (assets/app-icon.png) + cantos arredondados: o
      logo-mark.png antigo trazia um quadrado preto em volta que aparecia com
@@ -57,38 +57,38 @@
 }
 
 .auth-logo__tagline {
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: var(--sp-1);
 }
 
 .auth-logo__pitch {
   margin: 10px 0 0;
   max-width: 300px;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   line-height: 1.45;
   color: var(--text-muted);
 }
 
 .auth-logo__more {
   margin-top: 6px;
-  padding: 6px 4px;
+  padding: 6px var(--sp-1);
   color: var(--primary);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   text-decoration: none;
 }
 .auth-logo__more:hover { text-decoration: underline; }
-.auth-logo__more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
+.auth-logo__more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: var(--r-xs); }
 
 .auth-invite {
   margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 10px var(--sp-3);
+  border-radius: var(--r-md);
   background: var(--primary-glow);
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   line-height: 1.4;
 }
 
@@ -99,7 +99,7 @@
 }
 
 .auth-form__msg {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   text-align: center;
   min-height: 18px;
   padding-top: 2px;
@@ -110,8 +110,8 @@
 .auth-form__terms {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 0.8rem;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.4;
 }
@@ -120,9 +120,9 @@
 
 .app-version {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: var(--sp-1);
 }
 
 h1.auth-logo__name { margin: 0; }
@@ -130,25 +130,25 @@ h1.auth-logo__name { margin: 0; }
 /* Telas baixas (iPhone SE/8, Android compacto): compacta o topo pra o botão
    de enviar aparecer sem precisar rolar. */
 @media (max-height: 720px) {
-  .auth-screen { padding-top: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .auth-screen { padding-top: var(--sp-4); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
   .auth-inner { gap: 20px; }
-  .auth-logo { gap: 4px; }
-  .auth-logo__icon { width: 64px; height: 64px; margin-bottom: 4px; border-radius: 18px; }
+  .auth-logo { gap: var(--sp-1); }
+  .auth-logo__icon { width: 64px; height: 64px; margin-bottom: var(--sp-1); border-radius: 18px; }
   .auth-logo__name { font-size: 2rem; }
   .auth-logo__pitch { margin-top: 6px; }
-  .auth-logo__more { margin-top: 2px; padding: 4px; }
+  .auth-logo__more { margin-top: 2px; padding: var(--sp-1); }
 }
 
-.auth-form__intro { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
-.auth-form__title { margin: 0; font-size: 1.15rem; font-weight: 700; }
-.auth-form__subtitle { margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; }
+.auth-form__intro { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--sp-1); }
+.auth-form__title { margin: 0; font-size: var(--fs-xl); font-weight: 700; }
+.auth-form__subtitle { margin: 0; font-size: var(--fs-md); color: var(--text-muted); line-height: 1.45; }
 
 /* Abas Entrar / Criar conta */
 .auth-tabs {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 4px;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
   margin-bottom: 6px;
   background: var(--surface-2);
   border: 1.5px solid var(--border);
@@ -161,42 +161,42 @@ h1.auth-logo__name { margin: 0; }
   background: transparent;
   color: var(--text-muted);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
   transition: background var(--t), color var(--t);
 }
-.auth-tabs__tab--active { background: var(--primary); color: #fff; }
+.auth-tabs__tab--active { background: var(--primary); color: var(--on-accent); }
 
 /* Campo com rótulo visível (antes só placeholder, que some ao digitar) */
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field__label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
-.field__hint { margin: 0; font-size: 0.75rem; color: var(--text-dim); }
+.field__label { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); }
+.field__hint { margin: 0; font-size: var(--fs-xs); color: var(--text-dim); }
 
 .password-input { position: relative; display: flex; align-items: center; }
 .password-input .input { padding-right: 84px; }
 .password-input__toggle {
   position: absolute;
   right: 6px;
-  padding: 8px 10px;
+  padding: var(--sp-2) 10px;
   border: 0;
   border-radius: var(--r-md, 8px);
   background: transparent;
   color: var(--primary);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
 }
 
 .auth-form__link {
   align-self: center;
-  padding: 6px 4px;
+  padding: 6px var(--sp-1);
   border: 0;
   background: transparent;
   color: var(--primary);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
 }

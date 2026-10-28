@@ -1,0 +1,61 @@
+/* ============================================================
+   ACABAMENTO — foco de teclado, área de toque e estados
+   Vem por último: só complementa o que as telas já definem.
+============================================================ */
+
+/* Foco visível para teclado em qualquer controle (mouse/toque não mostram anel). */
+:where(button, a[href], [role="button"], [role="tab"], summary, select, input, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--primary-h);
+  outline-offset: 2px;
+}
+:where(input, textarea, select):focus-visible { outline-offset: 0; }
+
+/* Área de toque mínima de 44px nos controles pequenos, sem mudar o visual. */
+.icon-btn,
+.live__icon-btn,
+.btn--sm,
+.set-row__check,
+.demo-modal__badge { position: relative; }
+.icon-btn::after,
+.live__icon-btn::after,
+.btn--sm::after,
+.set-row__check::after,
+.demo-modal__badge::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, var(--tap-min));
+  height: max(100%, var(--tap-min));
+  transform: translate(-50%, -50%);
+}
+
+/* Botões de largura cheia e campos de formulário nunca ficam abaixo do mínimo. */
+.btn:not(.btn--sm) { min-height: var(--tap-min); }
+.input { min-height: var(--tap-min); }
+
+/* ---------- estados: vazio, erro e carregando ---------- */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-4);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+}
+.state__title { color: var(--text); font-weight: 800; font-size: var(--fs-base); }
+.state--error .state__title { color: var(--error); }
+.state__icon { font-size: 1.8rem; line-height: 1; }
+
+.skeleton--line { height: 12px; margin-bottom: var(--sp-2); }
+.skeleton--line:last-child { width: 60%; }
+.skeleton--block { height: 88px; }
+
+/* ---------- utilitários que substituem estilos inline repetidos ---------- */
+.text-error { color: var(--error); }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+.m-0 { margin: 0; }
+.gap-2 { gap: var(--sp-2); }

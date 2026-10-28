@@ -113,7 +113,7 @@ export default function ClassPage({ header }) {
                   onClick={() => toggle(c.id)}>{c.name}</button>
               ))}
             </div>
-            {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+            {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
             <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleCreate}>
               {busy ? t('Criando…') : t('Criar e avisar alunos')}
             </button>

@@ -61,7 +61,7 @@ export default function PartnerCampaignsCard({ toast }) {
   return (
     <div className="dash-card partner-campaigns">
       <div className="dash-card__title">{t('📣 Campanhas')}</div>
-      <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Campanhas da equipe EAFIT. Use o link de cada uma: assim os cadastros contam para você nela.')}</p>
+      <p className="profile-field__hint mt-0">{t('Campanhas da equipe EAFIT. Use o link de cada uma: assim os cadastros contam para você nela.')}</p>
       {campaigns.map(c => {
         const ended = isEnded(c, today);
         const caption = campaignCaption(c);

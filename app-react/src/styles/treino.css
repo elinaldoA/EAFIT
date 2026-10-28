@@ -5,7 +5,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  padding: 14px 16px;
+  padding: 14px var(--sp-4);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -18,18 +18,18 @@
 }
 
 .progress-card__label {
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
 .progress-card__projection {
-  margin: 8px 0 0;
-  font-size: 0.78rem;
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-sm);
   color: var(--text-dim);
 }
 
 .progress-card__count {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--primary);
 }
@@ -50,17 +50,17 @@
 }
 
 .progress-card__fill--water {
-  background: linear-gradient(90deg, var(--water), #7dd3fc);
+  background: linear-gradient(90deg, var(--water), var(--water-h));
 }
 
 .progress-card__cycle {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
 .water-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -71,17 +71,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
-.toolbar__hint { font-size: 0.73rem; color: var(--text-dim); }
+.toolbar__hint { font-size: var(--fs-xs); color: var(--text-dim); }
 
-.toolbar__actions { display: flex; align-items: center; gap: 4px; }
+.toolbar__actions { display: flex; align-items: center; gap: var(--sp-1); }
 
 /* ============================================================
    ACCORDION — DIAS DE TREINO
 ============================================================ */
-.accordion { display: flex; flex-direction: column; gap: 8px; }
+.accordion { display: flex; flex-direction: column; gap: var(--sp-2); }
 
 .accordion--loading {
   opacity: 0.55;
@@ -137,11 +137,11 @@
   flex-shrink: 0;
 }
 
-.day-card__indicator { font-size: 0.95rem; flex-shrink: 0; }
+.day-card__indicator { font-size: var(--fs-base); flex-shrink: 0; }
 
 .day-card__info { min-width: 0; }
-.day-card__name  { font-weight: 700; font-size: 0.93rem; }
-.day-card__focus { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.day-card__name  { font-weight: 700; font-size: var(--fs-base); }
+.day-card__focus { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .day-card__right {
   display: flex;
@@ -152,8 +152,8 @@
 
 .today-badge {
   background: var(--primary);
-  color: #09090b;
-  font-size: 0.56rem;
+  color: var(--on-primary);
+  font-size: var(--fs-xs);
   font-weight: 800;
   padding: 2px 7px;
   border-radius: var(--r-full);
@@ -161,11 +161,11 @@
   letter-spacing: 0.5px;
 }
 
-.day-card__count { font-size: 0.68rem; color: var(--text-dim); }
+.day-card__count { font-size: var(--fs-xs); color: var(--text-dim); }
 
 .chevron {
   color: var(--text-dim);
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   transition: transform var(--t);
 }
 
@@ -186,10 +186,10 @@
   align-items: center;
   gap: 3px;
   background: var(--primary);
-  color: #09090b;
-  font-size: 0.62rem;
+  color: var(--on-primary);
+  font-size: var(--fs-xs);
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 2px var(--sp-2);
   border-radius: var(--r-full);
   font-variant-numeric: tabular-nums;
 }
@@ -204,19 +204,19 @@
   background: var(--surface-2);
   border: 1px solid var(--border-2);
   border-radius: var(--r-lg);
-  padding: 10px 12px;
+  padding: 10px var(--sp-3);
   margin-top: 10px;
 }
 
 .session-timer__clock {
-  font-size: 1.15rem;
+  font-size: var(--fs-xl);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
 .session-timer__done {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--primary);
 }
@@ -230,7 +230,7 @@
 
 .session-timer__hint {
   flex-basis: 100%;
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   color: var(--text-dim);
 }
 
@@ -238,10 +238,10 @@
    TOTAL DE CARGA DO DIA
 ============================================================ */
 .day-card__total {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--primary);
-  padding: 10px 0 4px;
+  padding: 10px 0 var(--sp-1);
 }
 
 /* ============================================================
@@ -257,7 +257,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-bottom: 6px;
 }
 
@@ -271,17 +271,17 @@
 .ex-name {
   font-weight: 600;
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   line-height: 1.3;
 }
 
 .ex-block__meta {
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   color: var(--text-dim);
 }
 
 .ex-block__suggestion {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   color: var(--primary-h);
   margin: 2px 0 0;
 }
@@ -301,7 +301,7 @@
   color: var(--text-dim);
   border-radius: var(--r-full);
   padding: 5px 10px;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -309,7 +309,7 @@
 
 .ex-block__mark-all--done {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--primary);
 }
 
@@ -333,7 +333,7 @@
 }
 
 .set-row__label {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -344,9 +344,9 @@
   border-radius: var(--r-sm);
   color: var(--text);
   height: 36px;
-  padding: 5px 4px;
+  padding: 5px var(--sp-1);
   text-align: center;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   transition: border-color var(--t), box-shadow var(--t);
   outline: none;
@@ -373,7 +373,7 @@
   background: var(--bg);
   color: var(--text-dim);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   line-height: 1;
   transition: background var(--t), border-color var(--t), color var(--t);
 }
@@ -381,7 +381,7 @@
 .set-row__check--done {
   background: var(--success);
   border-color: var(--success);
-  color: #09090b;
+  color: var(--on-primary);
   animation: checkPop 0.22s ease;
 }
 
@@ -392,7 +392,7 @@
 .set-row-wrap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .ex-block__apply-btn {
@@ -400,34 +400,34 @@
   background: none;
   padding: 0;
   color: var(--primary-h);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-decoration: underline;
   cursor: pointer;
 }
 
 .ex-block__swap-btn {
-  margin-top: 8px;
+  margin-top: var(--sp-2);
   align-self: flex-start;
   border: 1px solid var(--warning);
   background: none;
   color: var(--warning);
   border-radius: var(--r-full);
   padding: 5px 10px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   cursor: pointer;
 }
 
 .workout-notes {
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
 }
 
 .workout-notes__toggle {
   border: none;
   background: none;
   padding: 0;
-  font-size: 0.76rem;
+  font-size: var(--fs-xs);
   color: var(--text-dim);
   cursor: pointer;
 }
@@ -439,8 +439,8 @@
   border: 1px solid var(--border-2);
   border-radius: var(--r-md);
   color: var(--text);
-  padding: 8px;
-  font-size: 0.79rem;
+  padding: var(--sp-2);
+  font-size: var(--fs-sm);
   font-family: inherit;
   min-height: 60px;
   resize: vertical;
@@ -454,13 +454,13 @@
 
 /* Pós-treino */
 .post-section {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
   border-top: 1px dashed var(--border-2);
 }
 
 .post-title {
-  font-size: 0.6rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--warning);
   text-transform: uppercase;
@@ -474,11 +474,11 @@
 ============================================================ */
 .footer {
   text-align: center;
-  font-size: 0.67rem;
+  font-size: var(--fs-xs);
   color: var(--text-dim);
   padding: 10px 0 2px;
   border-top: 1px solid var(--border);
-  margin-top: 4px;
+  margin-top: var(--sp-1);
 }
 .footer strong { color: var(--primary); }
 
@@ -491,7 +491,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 16px;
+  padding: var(--sp-4);
   border-radius: var(--r-xl);
   border: 1px solid rgba(249, 115, 22, .45);
   background:
@@ -500,10 +500,10 @@
 }
 .today-card--done { border-color: rgba(74, 222, 128, .45); }
 
-.today-card__top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.today-card__top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); }
 
 .today-card__kicker {
-  font-size: 0.64rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.7px;
@@ -512,14 +512,14 @@
 .today-card--done .today-card__kicker { color: var(--success); }
 
 .today-card__title {
-  font-size: 1.2rem;
+  font-size: var(--fs-xl);
   font-weight: 900;
   line-height: 1.2;
   letter-spacing: -0.3px;
-  margin: 2px 0 4px;
+  margin: 2px 0 var(--sp-1);
 }
 
-.today-card__meta { font-size: 0.74rem; color: var(--text-muted); }
+.today-card__meta { font-size: var(--fs-xs); color: var(--text-muted); }
 
 /* Anel de progresso só com CSS (conic-gradient) — --pct vem inline, 0–100 */
 .today-card__ring {
@@ -540,12 +540,12 @@
   display: grid;
   place-items: center;
   background: var(--surface);
-  font-size: 0.76rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
-.today-card__rest { font-size: 0.8rem; color: var(--text-muted); }
+.today-card__rest { font-size: var(--fs-sm); color: var(--text-muted); }
 
 /* ============================================================
    FAIXA DA SEMANA (dentro do progress-card)
@@ -557,7 +557,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
 }
 
 .week-strip__dot {
@@ -568,25 +568,25 @@
   place-items: center;
   background: var(--surface-3);
   border: 1.5px solid var(--border-2);
-  color: #09090b;
-  font-size: 0.8rem;
+  color: var(--on-primary);
+  font-size: var(--fs-sm);
   font-weight: 900;
   transition: background var(--t), border-color var(--t);
 }
 .week-strip__day--done .week-strip__dot { background: var(--primary); border-color: var(--primary); }
 .week-strip__day--today .week-strip__dot { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
 
-.week-strip__label { font-size: 0.62rem; font-weight: 700; color: var(--text-dim); }
+.week-strip__label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-dim); }
 .week-strip__day--today .week-strip__label { color: var(--primary); }
 
 /* ── Troca geral de exercício (ExerciseSwap) ── */
-.ex-swap { margin-top: 8px; }
+.ex-swap { margin-top: var(--sp-2); }
 .ex-swap__toggle {
   background: none;
   border: 0;
-  padding: 4px 0;
+  padding: var(--sp-1) 0;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
 }
@@ -605,20 +605,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 9px 12px;
+  gap: var(--sp-2);
+  padding: 9px var(--sp-3);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   text-align: left;
   cursor: pointer;
 }
 .ex-swap__option:hover:not(:disabled) { border-color: var(--primary); }
 .ex-swap__option:disabled { opacity: .6; cursor: default; }
-.ex-swap__meta { color: var(--text-dim); font-size: 0.72rem; text-transform: capitalize; white-space: nowrap; }
-.ex-swap__hint { margin: 0; font-size: 0.74rem; color: var(--text-dim); line-height: 1.35; }
+.ex-swap__meta { color: var(--text-dim); font-size: var(--fs-xs); text-transform: capitalize; white-space: nowrap; }
+.ex-swap__hint { margin: 0; font-size: var(--fs-xs); color: var(--text-dim); line-height: 1.35; }
 
 /* ── Faixa do modo pausa (PauseBanner) ── */
 .pause-banner {
@@ -626,11 +626,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 10px var(--sp-3);
   background: rgba(251, 191, 36, .12);
   border: 1px solid var(--warning);
   border-radius: var(--r-lg);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.35;
 }
 
@@ -639,25 +639,25 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px;
+  padding: var(--sp-3);
   background: var(--surface, transparent);
   border: 1px solid var(--primary);
   border-radius: var(--r-lg);
 }
-.first-steps__head { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; }
-.first-steps__count { margin-left: auto; font-size: 0.8rem; color: var(--text-muted); }
-.first-steps__close { border: 0; background: transparent; color: var(--text-muted); font: inherit; padding: 4px 6px; cursor: pointer; }
+.first-steps__head { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-base); }
+.first-steps__count { margin-left: auto; font-size: var(--fs-sm); color: var(--text-muted); }
+.first-steps__close { border: 0; background: transparent; color: var(--text-muted); font: inherit; padding: var(--sp-1) 6px; cursor: pointer; }
 .first-steps__bar { height: 6px; border-radius: 3px; background: rgba(128, 128, 128, .25); overflow: hidden; }
 .first-steps__bar span { display: block; height: 100%; background: var(--primary); transition: width .3s; }
-.first-steps__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.first-steps__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
 .first-steps__item > button,
 .first-steps__item > div {
-  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 4px;
-  border: 0; background: transparent; color: inherit; font: inherit; font-size: 0.9rem; text-align: left;
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px var(--sp-1);
+  border: 0; background: transparent; color: inherit; font: inherit; font-size: var(--fs-md); text-align: left;
 }
 .first-steps__item > button { cursor: pointer; }
 .first-steps__label { display: flex; flex-direction: column; }
-.first-steps__label small { color: var(--text-muted); font-size: 0.75rem; }
+.first-steps__label small { color: var(--text-muted); font-size: var(--fs-xs); }
 .first-steps__item--done .first-steps__label { text-decoration: line-through; color: var(--text-muted); }
 .first-steps__close:focus-visible, .first-steps__item > button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
@@ -665,19 +665,19 @@
 .checkin {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
 }
-.checkin--done { flex-direction: row; align-items: center; justify-content: space-between; font-size: 0.82rem; }
-.checkin__title { font-weight: 600; font-size: 0.9rem; }
-.checkin__row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.checkin__label { font-size: 0.82rem; color: var(--text-muted); min-width: 52px; }
-.checkin__scale { display: flex; gap: 4px; }
+.checkin--done { flex-direction: row; align-items: center; justify-content: space-between; font-size: var(--fs-sm); }
+.checkin__title { font-weight: 600; font-size: var(--fs-md); }
+.checkin__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.checkin__label { font-size: var(--fs-sm); color: var(--text-muted); min-width: 52px; }
+.checkin__scale { display: flex; gap: var(--sp-1); }
 .checkin__opt {
-  font-size: 1.25rem;
+  font-size: var(--fs-xl);
   line-height: 1;
   padding: 6px;
   background: transparent;
@@ -688,20 +688,20 @@
 }
 .checkin__opt--on { opacity: 1; border-color: var(--accent, currentColor); background: var(--surface-2, rgba(255,255,255,.06)); }
 
-.trainer-plan-note { margin: 0; font-size: 0.8rem; color: var(--primary-ink, var(--primary)); font-weight: 700; }
+.trainer-plan-note { margin: 0; font-size: var(--fs-sm); color: var(--primary-ink, var(--primary)); font-weight: 700; }
 
 /* Registro de cardio (itens do plano sem séries) */
 .cardio-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-top: 6px;
 }
 
 .cardio-row__timer {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   flex-wrap: wrap;
 }
 
@@ -726,12 +726,12 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
 .cardio-row__pace {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -748,17 +748,17 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px 8px;
+  gap: var(--sp-1) var(--sp-2);
   padding-top: 6px;
 }
 .superset__badge {
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   font-weight: 800;
   color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.superset__hint { font-size: 0.64rem; color: var(--text-dim); }
+.superset__hint { font-size: var(--fs-xs); color: var(--text-dim); }
 
 /* ============================================================
    SÉRIES DE AQUECIMENTO (WarmupSets)
@@ -766,9 +766,9 @@
 .warmup {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   margin-bottom: 6px;
-  padding: 6px 8px;
+  padding: 6px var(--sp-2);
   border: 1px dashed var(--border-2);
   border-radius: var(--r-md);
 }
@@ -776,8 +776,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 2px 8px;
-  font-size: 0.68rem;
+  gap: 2px var(--sp-2);
+  font-size: var(--fs-xs);
   font-weight: 700;
   color: var(--text-muted);
 }
@@ -786,14 +786,14 @@
   display: grid;
   grid-template-columns: 3.2em 1fr auto auto;
   align-items: center;
-  gap: 8px;
-  font-size: 0.74rem;
+  gap: var(--sp-2);
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 .warmup__row--done { opacity: 0.6; }
 .warmup__label { font-weight: 600; color: var(--text-dim); }
 .warmup__load { font-variant-numeric: tabular-nums; }
-.warmup__pct { font-size: 0.64rem; color: var(--text-dim); }
+.warmup__pct { font-size: var(--fs-xs); color: var(--text-dim); }
 .warmup__check { width: 30px; height: 30px; }
 
 /* Série por tempo: cronômetro abaixo da linha da série */
@@ -812,7 +812,7 @@
 
 /* Corre/caminha: fase atual do cronômetro */
 .cardio-row__cue {
-  padding: 10px 12px;
+  padding: 10px var(--sp-3);
   border-radius: var(--r-md);
   background: var(--bg-2, var(--bg));
   border: 1px solid var(--border-2);
@@ -822,4 +822,4 @@
 .cardio-row__cue--run { border-color: var(--primary-h); }
 .cardio-row__cue--walk { color: var(--text-2); }
 .cardio-row__cue--done { border-color: var(--success); color: var(--success); }
-.cardio-row__cue-round { font-size: 0.78rem; color: var(--text-2); }
+.cardio-row__cue-round { font-size: var(--fs-sm); color: var(--text-2); }

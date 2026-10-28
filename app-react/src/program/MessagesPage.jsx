@@ -31,7 +31,7 @@ export default function MessagesPage({ onRead }) {
     <section className="page active trainer-page">
       <div className="dash-card">
         <div className="dash-card__title">{t('💬 Recados da equipe EAFIT')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>
+        <p className="profile-field__hint mt-0">
           {t('Campanhas, novidades e datas importantes para quem divulga o EAFIT. Ative as notificações em Conta para saber na hora.')}
         </p>
       </div>
@@ -40,7 +40,7 @@ export default function MessagesPage({ onRead }) {
       {!items && !error && <div className="skeleton" style={{ height: 110 }} />}
       {items && items.length === 0 && (
         <div className="dash-card">
-          <p className="profile-field__hint" style={{ margin: 0 }}>{t('Nenhum recado ainda. Quando a equipe mandar, ele aparece aqui.')}</p>
+          <p className="profile-field__hint m-0">{t('Nenhum recado ainda. Quando a equipe mandar, ele aparece aqui.')}</p>
         </div>
       )}
       {items && items.length > 0 && (

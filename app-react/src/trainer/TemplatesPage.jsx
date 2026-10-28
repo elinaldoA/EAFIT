@@ -82,7 +82,7 @@ export default function TemplatesPage() {
     <section className="page active trainer-page">
       <div className="dash-card">
         <div className="dash-card__title">{t('🧩 Modelos de treino')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Salve treinos prontos e envie para um ou vários alunos, ajustando só o que muda.')}</p>
+        <p className="profile-field__hint mt-0">{t('Salve treinos prontos e envie para um ou vários alunos, ajustando só o que muda.')}</p>
         <button type="button" className="btn btn--primary btn--sm" onClick={() => setBuilder({ initialPlan: null })}>{t('+ Novo modelo')}</button>
       </div>
 
@@ -129,7 +129,7 @@ export default function TemplatesPage() {
                     onClick={() => toggle(c.id)}>{c.name}</button>
                 ))}
               </div>
-              {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+              {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
               <button type="button" className="btn btn--primary btn--sm" disabled={busy || selected.length === 0} onClick={() => handleSend(tpl)}>
                 {busy ? t('Enviando…') : t('Enviar para {length} aluno(s)', { length: selected.length })}
               </button>

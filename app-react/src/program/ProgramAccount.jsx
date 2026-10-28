@@ -44,7 +44,7 @@ export default function ProgramAccount({ amb, labels, onSwitchToStudent }) {
     <section className="page active trainer-page">
       <div className="dash-card">
         <div className="dash-card__title">{labels.mode}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>
+        <p className="profile-field__hint mt-0">
           {getDisplayName(user)}<br />{user?.email}
           {amb?.code && <><br />{t('Seu código')}: <strong>{amb.code}</strong></>}
         </p>
@@ -56,7 +56,7 @@ export default function ProgramAccount({ amb, labels, onSwitchToStudent }) {
 
       <div className="dash-card">
         <div className="dash-card__title">{t('🔔 Notificações')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>
+        <p className="profile-field__hint mt-0">
           {t('Receba uma notificação quando alguém criar conta pelo seu link (só o número, nunca quem foi) e quando a equipe EAFIT mandar um recado.')}
         </p>
         <button type="button" className={notifyOn ? 'btn btn--outline btn--full' : 'btn btn--primary btn--full'}
@@ -77,7 +77,7 @@ export default function ProgramAccount({ amb, labels, onSwitchToStudent }) {
 
       <div className="dash-card">
         <div className="dash-card__title">{t('🎓 Ajuda')}</div>
-        <p className="profile-field__hint" style={{ marginTop: 0 }}>{t('Reveja o passo a passo de todas as funções do painel.')}</p>
+        <p className="profile-field__hint mt-0">{t('Reveja o passo a passo de todas as funções do painel.')}</p>
         <button type="button" className="btn btn--outline btn--full" onClick={startTutorial}>{t('Ver tutorial')}</button>
       </div>
 

@@ -120,7 +120,7 @@ export default function ProfileTrainerSection({ toast, onChange }) {
         <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
         <span>{t('Autorizo meu personal a ver meus treinos, peso, medidas, check-ins e desconfortos. Posso encerrar quando quiser.')}</span>
       </label>
-      {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+      {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--primary btn--full" disabled={busy || !agree || !code.trim()} onClick={handleLink}>
         {busy ? t('Vinculando…') : t('Vincular ao personal')}
       </button>

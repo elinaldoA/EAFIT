@@ -68,7 +68,7 @@ export default function TrainerInvitePrompt() {
         <p className="app-rating__text">
           {t('Você chegou pelo convite do seu personal. Autorizando, ele passa a ver seus treinos, peso, medidas, check-ins e desconfortos, e pode enviar treinos e recados. Você pode encerrar o vínculo quando quiser em Perfil → Meu personal.')}
         </p>
-        {error && <p className="profile-field__hint" role="alert" style={{ color: 'var(--error)' }}>{error}</p>}
+        {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
         <button type="button" className="btn btn--primary btn--full" disabled={busy} onClick={handleAccept}>
           {busy ? t('Vinculando…') : t('Autorizar')}
         </button>
