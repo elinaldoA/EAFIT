@@ -29,6 +29,7 @@ const MODES = [
 ];
 
 const CITIES_PREVIEW = 10;
+const STATES_PREVIEW = 8;
 
 // Busca sem diferenciar maiúsculas nem acentos ("sao paulo" acha "São Paulo").
 const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -137,6 +138,8 @@ export default function GeoPanel() {
   const [allCities, setAllCities] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
   const [customDays, setCustomDays] = useState('');
+  const [allStates, setAllStates] = useState(false);
+  const [detail, setDetail] = useState('cidades');
   const requested = useRef(new Set());
 
   const wantKey = dataKey(round, mode, days);
@@ -212,6 +215,19 @@ export default function GeoPanel() {
     ? summary.cities.filter(c => fold(`${c.city} ${c.place} ${c.country !== 'BR' ? countryName(c.country) : ''}`).includes(query))
     : summary.cities), [summary.cities, query]);
   const cities = allCities || query ? matches : matches.slice(0, CITIES_PREVIEW);
+  const states = allStates ? summary.states : summary.states.slice(0, STATES_PREVIEW);
+  const freshCount = fresh ? fresh.states.length + fresh.countries.length + fresh.cities.length : 0;
+  const hasDaily = !!daily?.some(d => d.total);
+  const hasHours = !!hours?.some(h => h.total);
+  const tabs = [
+    { key: 'cidades', label: 'Cidades' },
+    ...(hasDaily ? [{ key: 'dia', label: 'Por dia' }] : []),
+    ...(hasHours ? [{ key: 'hora', label: 'Por horário' }] : []),
+    ...(aud?.total > 0 ? [{ key: 'origem', label: 'Origem e aparelho' }] : []),
+    ...(demo ? [{ key: 'perfil', label: 'Sexo e idade' }] : []),
+    ...(view === 'brasil' && summary.countries.length ? [{ key: 'paises', label: 'Países' }] : []),
+  ];
+  const activeTab = tabs.some(t => t.key === detail) ? detail : 'cidades';
   const cityPct = n => (cityBase > 0 ? Math.round((n / cityBase) * 100) : 0);
 
   const pickView = v => { setView(v); setUf(null); setCountry(null); setAllCities(false); };
@@ -345,30 +361,21 @@ export default function GeoPanel() {
             {updating && <> · <em>atualizando…</em></>}
           </p>
 
-          {fresh && fresh.states.length + fresh.countries.length + fresh.cities.length > 0 && (
-            <p className="card-note geo-new">
-              <strong>Novos neste período</strong> (sem acesso nos {shownDays} dias anteriores):
+          {freshCount > 0 && (
+            <details className="geo-new">
+              <summary>Novos neste período ({freshCount})</summary>
+              <p className="card-note" style={{ marginTop: 6 }}>
+                Sem acesso nos {shownDays} dias anteriores:
               {fresh.states.length > 0 && <> estados: {fresh.states.map(u => UF_NAMES[u] || u).join(', ')}.</>}
               {fresh.countries.length > 0 && <> países: {fresh.countries.map(c => `${flag(c)} ${countryName(c)}`.trim()).join(', ')}.</>}
               {fresh.cities.length > 0 && (
                 <> cidades: {fresh.cities.slice(0, 8).map(c => `${c.city}${c.place ? ` · ${c.place}` : ''}`).join(', ')}
                   {fresh.cities.length > 8 && ` e mais ${fresh.cities.length - 8}`}.</>
               )}
-            </p>
+              </p>
+            </details>
           )}
 
-          {daily && (
-            <BarChart
-              title="Por dia" series={daily.map(d => ({ key: d.day, label: fmtDay(d.day), total: d.total }))}
-              unit={current.unit} where={placeName} from={fmtDay(daily[0].day)} to={fmtDay(daily[daily.length - 1].day)}
-            />
-          )}
-          {hours && (
-            <BarChart
-              title="Por horário (Brasília)" series={hours.map(h => ({ key: h.hour, label: `${h.hour}h`, total: h.total }))}
-              unit={current.unit} where={placeName} from="0h" to="23h"
-            />
-          )}
 
           <div className="geo-grid">
             <div>
@@ -430,31 +437,35 @@ export default function GeoPanel() {
                     </>
                   )}
                   <h3 className="subsection-title" style={regions.length > 1 ? undefined : { marginTop: 0 }}>Estados</h3>
-                  <Bars rows={summary.states} onPick={pickUf} selected={uf} trends={cmp?.byUf} days={shownDays} />
+                  <Bars rows={states} onPick={pickUf} selected={uf} trends={cmp?.byUf} days={shownDays} />
+                  {summary.states.length > STATES_PREVIEW && (
+                    <button type="button" className="btn btn--ghost btn--small geo-more" onClick={() => setAllStates(v => !v)}>
+                      {allStates ? 'Mostrar menos' : `Ver todos os ${summary.states.length} estados`}
+                    </button>
+                  )}
                 </>
               )}
               {placeSplit && (
                 <p className="card-note geo-place-split">Site: <strong>{placeSplit.site}</strong> · App: <strong>{placeSplit.app}</strong></p>
               )}
 
-              {demo && (
-                <>
-                  <h3 className="subsection-title">Sexo{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={demo.sexo} />
-                  <h3 className="subsection-title">Faixa etária{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={demo.faixa} />
-                </>
-              )}
+            </div>
+          </div>
 
-              {aud?.total > 0 && (
-                <>
-                  <h3 className="subsection-title">Origem das visitas{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={aud.source} />
-                  <h3 className="subsection-title">Aparelho{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={aud.device} />
-                </>
-              )}
+          <div className="seg geo-tabs" role="group" aria-label="Detalhes">
+            {tabs.map(t => (
+              <button
+                key={t.key} type="button" aria-pressed={activeTab === t.key}
+                className={`seg__btn${activeTab === t.key ? ' seg__btn--active' : ''}`}
+                onClick={() => setDetail(t.key)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
 
+          {activeTab === 'cidades' && (
+            <div className="geo-detail">
               <h3 className="subsection-title">Cidades{placeName ? ` em ${placeName}` : ''}</h3>
               {summary.cities.length ? (
                 <>
@@ -494,10 +505,52 @@ export default function GeoPanel() {
                 </>
               ) : <p className="card-note" style={{ marginTop: 0 }}>Sem cidade identificada no período.</p>}
             </div>
-          </div>
+          )}
+          {activeTab === 'dia' && daily && (
+            <div className="geo-detail">
+              <BarChart
+                title="Por dia" series={daily.map(d => ({ key: d.day, label: fmtDay(d.day), total: d.total }))}
+                unit={current.unit} where={placeName} from={fmtDay(daily[0].day)} to={fmtDay(daily[daily.length - 1].day)}
+              />
+            </div>
+          )}
+          {activeTab === 'hora' && hours && (
+            <div className="geo-detail">
+              <BarChart
+                title="Por horário (Brasília)" series={hours.map(h => ({ key: h.hour, label: `${h.hour}h`, total: h.total }))}
+                unit={current.unit} where={placeName} from="0h" to="23h"
+              />
+            </div>
+          )}
+          {activeTab === 'origem' && aud?.total > 0 && (
+            <div className="geo-detail">
+              {aud?.total > 0 && (
+                <>
+                  <h3 className="subsection-title">Origem das visitas{placeName ? ` em ${placeName}` : ''}</h3>
+                  <Bars rows={aud.source} />
+                  <h3 className="subsection-title">Aparelho{placeName ? ` em ${placeName}` : ''}</h3>
+                  <Bars rows={aud.device} />
+                </>
+              )}
 
-          {view === 'brasil' && <h3 className="subsection-title">Países</h3>}
-          {view === 'mundo' ? null : summary.countries.length ? (
+            </div>
+          )}
+          {activeTab === 'perfil' && demo && (
+            <div className="geo-detail">
+              {demo && (
+                <>
+                  <h3 className="subsection-title">Sexo{placeName ? ` em ${placeName}` : ''}</h3>
+                  <Bars rows={demo.sexo} />
+                  <h3 className="subsection-title">Faixa etária{placeName ? ` em ${placeName}` : ''}</h3>
+                  <Bars rows={demo.faixa} />
+                </>
+              )}
+
+            </div>
+          )}
+          {activeTab === 'paises' && (
+            <div className="geo-detail">
+          {summary.countries.length ? (
             <div className="table-wrap">
               <table className="source-table">
                 <thead><tr><th scope="col">País</th><th scope="col">Total</th><th scope="col">%</th>{cmp && <th scope="col">Variação</th>}</tr></thead>
@@ -514,6 +567,9 @@ export default function GeoPanel() {
               </table>
             </div>
           ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no período ainda.</p>}
+            </div>
+          )}
+
         </div>
       )}
     </div>

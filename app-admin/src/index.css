@@ -1382,6 +1382,9 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 .geo-daily__chart { display: block; width: 100%; height: 72px; color: var(--primary); }
 .geo-daily__note { margin: 4px 0 0; }
 
-.geo-new { margin: 0 0 12px; }
+.geo-new { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
+.geo-new summary { cursor: pointer; font-weight: 500; color: var(--text); }
+.geo-tabs { margin-top: 16px; flex-wrap: wrap; }
+.geo-detail { margin-top: 12px; }
 .geo-custom { display: inline-flex; align-items: center; font-size: 13px; color: var(--text-muted); }
 .geo-custom__input { width: 64px; padding: 4px 8px; display: inline-block; }
