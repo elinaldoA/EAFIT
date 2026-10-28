@@ -74,7 +74,10 @@ export default function KpiPanel() {
   return (
     <div className="stack">
       <div className="card-head" style={{ marginBottom: 0 }}>
-        <h2 className="section-title" style={{ margin: 0 }}>Visão gerencial</h2>
+        <div>
+          <h2 className="section-title" style={{ margin: 0 }}>Visão gerencial</h2>
+          <p className="section-hint">Desempenho do período comparado ao período anterior de mesmo tamanho.</p>
+        </div>
         <div className="seg" role="group" aria-label="Período dos indicadores">
           {PERIODS.map(p => (
             <button
@@ -90,17 +93,18 @@ export default function KpiPanel() {
 
       {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : kpis && (
         <>
-          <div className="tile-grid">
+          <div className="tile-grid tile-grid--kpi">
             {cards.map(c => (
-              <div className="tile" key={c.label}>
-                <div className="tile__value">{c.value ?? '—'}</div>
+              <div className="tile tile--kpi" key={c.label}>
                 <div className="tile__label">{c.label} · {c.hint}</div>
+                <div className="tile__value">{c.value ?? '—'}</div>
                 <Delta cur={c.cur} prev={c.prev} />
               </div>
             ))}
           </div>
 
-          <div className="tile-grid">
+          <h3 className="section-label">Frequência de uso</h3>
+          <div className="tile-grid tile-grid--usage">
             <div className="tile">
               <div className="tile__value">{kpis.dau} · {kpis.wau} · {kpis.mau}</div>
               <div className="tile__label">Ativos hoje · 7 dias · 30 dias (DAU · WAU · MAU)</div>

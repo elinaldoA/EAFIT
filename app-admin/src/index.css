@@ -838,6 +838,43 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
   white-space: nowrap;
 }
 
+/* ---------- Dashboard: pendências, KPIs e base de usuários ---------- */
+
+.page-subtitle { margin: 4px 0 0; font-size: 13.5px; color: var(--text-muted); }
+.section-hint { margin: 3px 0 0; font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+
+.dash-alerts { display: flex; flex-direction: column; gap: 8px; }
+.dash-alert {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px;
+  padding: 11px 16px; border-radius: var(--radius); border: 1px solid var(--border);
+  border-left-width: 4px; background: var(--surface); color: var(--text); font-size: 13.5px; font-weight: 500;
+  text-decoration: none; transition: background-color .15s ease;
+}
+a.dash-alert:hover { background: var(--surface-2); }
+.dash-alert--danger { border-left-color: var(--danger); }
+.dash-alert--warning { border-left-color: var(--warning); }
+.dash-alert--ok { border-left-color: var(--ok); color: var(--text-muted); }
+.dash-alert__cta { font-size: 12.5px; font-weight: 600; color: var(--primary); white-space: nowrap; }
+
+.tile-grid--kpi { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.tile--kpi { display: flex; flex-direction: column; gap: 6px; }
+.tile--kpi .tile__label { margin: 0; order: -1; }
+.tile--kpi .tile__value { font-size: 30px; }
+.tile--kpi .delta { margin-top: auto; padding-top: 2px; }
+.tile-grid--usage { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.tile-grid--usage .tile__value { font-size: 22px; }
+
+.dash-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 14px; align-items: start; }
+.dash-group { padding: 16px 18px; }
+.dash-group__title { margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--text-dim); }
+.dash-group__list { margin: 0; }
+.dash-stat { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--border); }
+.dash-stat:first-child { border-top: 0; }
+.dash-stat dt { font-size: 13px; color: var(--text-muted); }
+.dash-stat dd { margin: 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.dash-stat dd small { display: block; font-size: 11px; font-weight: 500; color: var(--text-dim); }
+.dash-stat__num--danger { color: var(--danger); }
+
 /* ---------- funil de ativação e retenção (Dashboard) ---------- */
 
 .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
