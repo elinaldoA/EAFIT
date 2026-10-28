@@ -166,7 +166,7 @@ export default function InstallPanel() {
   return (
     <div className="stack">
       <div className="card">
-        <div className="panel-head">
+        <div className="panel-head panel-head--flush">
           <div>
             <h2 className="section-title" style={{ margin: 0 }}>Instalações do app</h2>
             <p className="section-hint">Quantas pessoas instalam o EAFIT, como chegam até a instalação e quantas ficam.</p>
@@ -205,33 +205,37 @@ export default function InstallPanel() {
             <button type="button" className="btn btn--ghost btn--small" onClick={exportCsv} disabled={!s}>Exportar CSV</button>
           </div>
         </div>
+      </div>
 
-        {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : !s ? (
-          <p className="card-note">Sem dados.</p>
-        ) : (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : !s ? (
+        <div className="card"><p className="card-note" style={{ margin: 0 }}>Sem dados.</p></div>
+      ) : (
           <>
             <div className="tile-grid tile-grid--kpi">
               {tiles.map(t => (
                 <div className="tile tile--kpi" key={t.label}>
                   <div className="tile__value">
                     {t.value}
-                    {t.prev != null && <> <Trend cur={t.value} prev={t.prev} days={days} bad={t.bad} /></>}
+                    {t.prev != null && <Trend cur={t.value} prev={t.prev} days={days} bad={t.bad} />}
                   </div>
                   <div className="tile__label">{t.label}</div>
                 </div>
               ))}
             </div>
-            <p className="card-note">
+            <details className="geo-new">
+              <summary>Como ler estes números</summary>
+              <p className="card-note" style={{ marginTop: 6 }}>
               O EAFIT é instalado pelo navegador, então baixar e instalar são a mesma coisa. Nenhum navegador avisa a
               desinstalação: o indício é a inscrição de notificações que deixa de funcionar (o envio seguinte é
               recusado), o que também acontece quando a pessoa bloqueia as notificações — por isso é um indício, não
               uma contagem exata. Quem já tinha o app instalado antes desta medição não conta como instalação nova.
               {cmp && <> As setas comparam com os {days} dias anteriores.</>}
-            </p>
+              </p>
+            </details>
 
-            <div className="two-col" style={{ marginTop: 20 }}>
-              <div>
-                <h3 className="subsection-title" style={{ marginTop: 0 }}>Do convite ao uso</h3>
+            <div className="two-col">
+              <div className="card">
+                <h3 className="dash-group__title">Do convite ao uso</h3>
                 <Bars rows={data.funnel.map(f => ({ key: f.key, label: f.label, total: f.total, pct: f.pct }))} />
                 <p className="card-note">
                   Cada % é sobre a etapa de cima (as duas últimas, sobre quem já tem 7 ou 30 dias de instalado). As
@@ -239,8 +243,8 @@ export default function InstallPanel() {
                   Samsung; no iPhone a tela mostra o passo a passo.
                 </p>
               </div>
-              <div>
-                <h3 className="subsection-title" style={{ marginTop: 0 }}>Tela "Instale o app"</h3>
+              <div className="card">
+                <h3 className="dash-group__title">Tela "Instale o app"</h3>
                 <div className="table-wrap">
                   <table className="source-table">
                     <tbody>
@@ -264,7 +268,8 @@ export default function InstallPanel() {
               </div>
             </div>
 
-            <div className="seg geo-tabs" role="group" aria-label="Detalhes">
+            <div className="card">
+            <div className="seg geo-tabs geo-tabs--first" role="group" aria-label="Detalhes">
               {tabs.map(t => (
                 <button
                   key={t.key} type="button" aria-pressed={activeTab === t.key}
@@ -397,9 +402,9 @@ export default function InstallPanel() {
                 <p className="card-note">Instalados sem abrir pelo ícone há 30+ dias, do acesso mais recente pro mais antigo. Bons candidatos para uma campanha de volta.</p>
               </div>
             )}
+            </div>
           </>
-        )}
-      </div>
+      )}
 
       {!loading && !error && data && (
         <div className="card">

@@ -240,8 +240,9 @@ export default function GeoPanel() {
   };
 
   return (
+    <div className="stack">
     <div className="card">
-      <div className="panel-head">
+      <div className="panel-head panel-head--flush">
         <div>
           <h2 className="section-title" style={{ margin: 0 }}>Onde estão</h2>
           <p className="section-hint">Distribuição geográfica por visitas, contas e uso do app. Escolha o que mostrar e o período.</p>
@@ -291,10 +292,11 @@ export default function GeoPanel() {
           <button type="button" className="btn btn--ghost btn--small" onClick={exportCsv} disabled={!shown}>Exportar CSV</button>
         </div>
       </div>
+    </div>
 
       {error && <p className="form-msg form-msg--error">{error}</p>}
       {!shown ? (!error && <Loading />) : isConversion ? (
-        <div className={updating ? 'geo-body geo-body--updating' : 'geo-body'} aria-busy={updating}>
+        <div className={updating ? 'card geo-body geo-body--updating' : 'card geo-body'} aria-busy={updating}>
           <p className="card-note" style={{ marginTop: 0 }}>
             {current.note}{updating && <> · <em>atualizando…</em></>}
           </p>
@@ -322,8 +324,27 @@ export default function GeoPanel() {
           ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no Brasil no período ainda.</p>}
         </div>
       ) : (
-        <div className={updating ? 'geo-body geo-body--updating' : 'geo-body'} aria-busy={updating}>
-          <p className="card-note" style={{ marginTop: 0 }}>
+        <div className={updating ? 'geo-body geo-body--updating stack' : 'geo-body stack'} aria-busy={updating}>
+          <div className="tile-grid tile-grid--kpi">
+            <div className="tile tile--kpi">
+              <div className="tile__label">Localizados · de {summary.total} {current.unit}</div>
+              <div className="tile__value">{summary.located}</div>
+            </div>
+            <div className="tile tile--kpi">
+              <div className="tile__label">Estados com registros</div>
+              <div className="tile__value">{summary.states.length}</div>
+            </div>
+            <div className="tile tile--kpi">
+              <div className="tile__label">Cidades identificadas</div>
+              <div className="tile__value">{summary.cities.length}</div>
+            </div>
+            <div className="tile tile--kpi">
+              <div className="tile__label">Registros fora do Brasil</div>
+              <div className="tile__value">{summary.abroad}</div>
+            </div>
+          </div>
+
+          <p className="card-note geo-summary">
             {current.note}
             {split && <> Site: <strong>{split.site}</strong> · App: <strong>{split.app}</strong>.</>}
             {' '}<strong>{summary.located}</strong> localizados de {summary.total}
@@ -336,7 +357,7 @@ export default function GeoPanel() {
           </p>
 
           {freshCount > 0 && (
-            <details className="geo-new">
+            <details className="geo-new geo-summary">
               <summary>Novos neste período ({freshCount})</summary>
               <p className="card-note" style={{ marginTop: 6 }}>
                 Sem acesso nos {shownDays} dias anteriores:
@@ -351,7 +372,7 @@ export default function GeoPanel() {
           )}
 
 
-          <div className="geo-grid">
+          <div className="card geo-grid">
             <div>
               <div className="seg geo-view" role="group" aria-label="Mapa">
                 {VIEWS.map(v => (
@@ -426,7 +447,8 @@ export default function GeoPanel() {
             </div>
           </div>
 
-          <div className="seg geo-tabs" role="group" aria-label="Detalhes">
+          <div className="card">
+          <div className="seg geo-tabs geo-tabs--first" role="group" aria-label="Detalhes">
             {tabs.map(t => (
               <button
                 key={t.key} type="button" aria-pressed={activeTab === t.key}
@@ -543,7 +565,7 @@ export default function GeoPanel() {
           ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no período ainda.</p>}
             </div>
           )}
-
+          </div>
         </div>
       )}
     </div>
