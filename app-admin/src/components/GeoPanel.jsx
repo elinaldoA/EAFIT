@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo,
-  compareGeo, conversionByUf, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchGeoDaily, dailySeries, selectAccessRows, splitSiteApp, summarizeGeo,
+  compareGeo, conversionByUf, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
 import BrazilMap from './BrazilMap';
@@ -37,6 +37,7 @@ const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
 // então trocar entre eles não consulta de novo. `round` muda no "Atualizar".
 const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' ? mode : 'acessos'}:${days}`;
 const compareKey = (round, days) => `${round}:comparar:${days}`;
+const dailyKey = (round, days) => `${round}:diario:${days}`;
 
 async function loadAccess(days) {
   const [visits, app] = await Promise.all([fetchVisitGeo(days), fetchAppGeo(days)]);
@@ -64,7 +65,7 @@ function Bars({ rows, onPick, selected, trends, days }) {
   return (
     <ul className="dist">
       {rows.map(r => {
-        const key = r.uf || r.value || r.code;
+        const key = r.uf || r.region || r.value || r.code;
         const label = (
           <>
             <span className="dist__label">{r.label}</span>
@@ -89,6 +90,36 @@ function Bars({ rows, onPick, selected, trends, days }) {
   );
 }
 
+function DailyChart({ series, unit, where }) {
+  const total = series.reduce((sum, d) => sum + d.total, 0);
+  if (!total) return null;
+  const max = Math.max(...series.map(d => d.total));
+  const peak = series.find(d => d.total === max);
+  const step = 100 / series.length;
+  const fmt = day => day.split('-').reverse().slice(0, 2).join('/');
+  return (
+    <div className="geo-daily">
+      <h3 className="subsection-title" style={{ marginTop: 0 }}>Por dia{where ? ` em ${where}` : ''}</h3>
+      <svg
+        className="geo-daily__chart" viewBox="0 0 100 30" preserveAspectRatio="none" role="img"
+        aria-label={`${total} ${unit} em ${series.length} dias; pico de ${max} em ${fmt(peak.day)}`}
+      >
+        {series.map((d, i) => {
+          const h = d.total ? Math.max(1, (d.total / max) * 28) : 0;
+          return (
+            <rect key={d.day} x={i * step + step * 0.1} y={30 - h} width={step * 0.8} height={h} fill="currentColor">
+              <title>{`${fmt(d.day)}: ${d.total}`}</title>
+            </rect>
+          );
+        })}
+      </svg>
+      <p className="card-note geo-daily__note">
+        {fmt(series[0].day)} a {fmt(series[series.length - 1].day)} · pico de <strong>{max}</strong> em {fmt(peak.day)}
+      </p>
+    </div>
+  );
+}
+
 // Dashboard → Localização: de onde vêm as visitas e onde estão as contas.
 export default function GeoPanel() {
   const [days, setDays] = useState(30);
@@ -105,6 +136,7 @@ export default function GeoPanel() {
 
   const wantKey = dataKey(round, mode, days);
   const wantCompare = mode === 'contas' || mode === 'conversao' ? null : compareKey(round, days);
+  const wantDaily = mode === 'contas' || mode === 'conversao' ? null : dailyKey(round, days);
 
   useEffect(() => {
     const load = (key, fn) => {
@@ -117,7 +149,9 @@ export default function GeoPanel() {
     load(wantKey, () => loadFor(mode, days));
     // A comparação é um extra: se falhar, o painel segue sem as setas.
     if (wantCompare) load(wantCompare, () => fetchGeoCompare(days).catch(() => null));
-  }, [wantKey, wantCompare, mode, days]);
+    // O gráfico diário também é um extra.
+    if (wantDaily) load(wantDaily, () => fetchGeoDaily(days).catch(() => null));
+  }, [wantKey, wantCompare, wantDaily, mode, days]);
 
   // Enquanto o período novo carrega, continua mostrando o anterior.
   // Só o erro da consulta atual aparece (trocar de período tenta de novo).
@@ -131,6 +165,8 @@ export default function GeoPanel() {
   const raw = shown ? store[shown.key] : null;
   const isConversion = shownMode === 'conversao';
   const rawCompare = shown && shownMode !== 'contas' && !isConversion ? store[compareKey(shown.round, shownDays)] : null;
+
+  const rawDaily = shown && shownMode !== 'contas' && !isConversion ? store[dailyKey(shown.round, shownDays)] : null;
 
   const rows = useMemo(() => {
     if (!raw || isConversion) return [];
@@ -146,6 +182,9 @@ export default function GeoPanel() {
   const summary = useMemo(() => summarizeGeo(rows, countKey, place), [rows, countKey, place]);
   const demo = useMemo(() => (shownMode === 'contas' ? demographics(rows, place) : null), [rows, shownMode, place]);
   const cmp = useMemo(() => (rawCompare ? compareGeo(rawCompare, shownMode) : null), [rawCompare, shownMode]);
+  const daily = useMemo(() => (rawDaily ? dailySeries(rawDaily, shownDays, shownMode, place) : null), [rawDaily, shownDays, shownMode, place]);
+  const regions = useMemo(() => groupByRegion(summary.byUf, summary.brTotal), [summary.byUf, summary.brTotal]);
+  const regionCmp = useMemo(() => (cmp ? regionTrends(cmp.byUf) : null), [cmp]);
   const ufTotal = uf ? summary.byUf.get(uf) || 0 : 0;
   const countryTotal = country ? summary.byCountry.get(country) || 0 : 0;
   const split = shownMode === 'tudo' ? splitSiteApp(rows) : null;
@@ -177,6 +216,7 @@ export default function GeoPanel() {
       return { anterior: v ? v.prev : '', variacao: trendLabel(trend(v)) };
     };
     const out = [
+      ...(view === 'brasil' && !uf ? regions.map(r => ({ tipo: 'Região', nome: r.label, total: r.total, pct: r.pct, ...withTrend(regionCmp, r.region) })) : []),
       ...summary.states.map(s => ({ tipo: 'Estado', nome: s.label, total: s.total, pct: s.pct, ...withTrend(cmp?.byUf, s.uf) })),
       ...summary.countries.map(c => ({ tipo: 'País', nome: c.label, total: c.total, pct: c.pct, ...withTrend(cmp?.byCountry, c.code) })),
       ...summary.cities.map(c => ({
@@ -271,6 +311,8 @@ export default function GeoPanel() {
             {updating && <> · <em>atualizando…</em></>}
           </p>
 
+          {daily && <DailyChart series={daily} unit={current.unit} where={placeName} />}
+
           <div className="geo-grid">
             <div>
               <div className="seg geo-view" role="group" aria-label="Mapa">
@@ -324,7 +366,13 @@ export default function GeoPanel() {
                 </div>
               ) : (
                 <>
-                  <h3 className="subsection-title" style={{ marginTop: 0 }}>Estados</h3>
+                  {regions.length > 1 && (
+                    <>
+                      <h3 className="subsection-title" style={{ marginTop: 0 }}>Regiões</h3>
+                      <Bars rows={regions} trends={regionCmp} days={shownDays} />
+                    </>
+                  )}
+                  <h3 className="subsection-title" style={regions.length > 1 ? undefined : { marginTop: 0 }}>Estados</h3>
                   <Bars rows={summary.states} onPick={pickUf} selected={uf} trends={cmp?.byUf} days={shownDays} />
                 </>
               )}

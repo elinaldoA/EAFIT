@@ -17,6 +17,9 @@ export const fetchUserGeo = (days = 30) => rpcRows('admin_user_geo', { days_back
 // Período atual × anterior (20261125010000_geo_panel_compare.sql).
 export const fetchGeoCompare = (days = 30) => rpcRows('admin_geo_period_compare', { days_back: days });
 
+// Acessos localizados por dia (20261215020000_geo_daily.sql).
+export const fetchGeoDaily = (days = 30) => rpcRows('admin_geo_daily', { days_back: days });
+
 // Qual página conta em cada modo do mapa. 'acesso' é a tela de login do app
 // (quem chega sem sessão); 'app' são os dias de uso de quem está logado
 // (admin_app_geo, de 20261106010000_app_access_geo.sql).
@@ -44,7 +47,42 @@ export function splitSiteApp(rows, place = {}) {
   return { site, app };
 }
 
-export const UF_NAMES = Object.fromEntries(BR_STATES.map(s => [s.uf, s.name]));
+// Regiões do IBGE.
+export const REGIONS = {
+  Norte: ['AC', 'AP', 'AM', 'PA', 'RO', 'RR', 'TO'],
+  Nordeste: ['AL', 'BA', 'CE', 'MA', 'PB', 'PE', 'PI', 'RN', 'SE'],
+  'Centro-Oeste': ['DF', 'GO', 'MT', 'MS'],
+  Sudeste: ['ES', 'MG', 'RJ', 'SP'],
+  Sul: ['PR', 'RS', 'SC'],
+};
+const UF_REGION = Object.fromEntries(Object.entries(REGIONS).flatMap(([name, ufs]) => ufs.map(u => [u, name])));
+
+// Totais por estado ({ uf → n } ou { uf → { cur, prev } }) somados por região.
+// Sem `trends`, devolve { region, total, pct, ufs } ordenado; pct sobre `whole`.
+export function groupByRegion(byUf, whole) {
+  const sums = new Map();
+  for (const [uf, n] of byUf) {
+    const region = UF_REGION[uf];
+    if (!region || !n) continue;
+    sums.set(region, (sums.get(region) || 0) + n);
+  }
+  return rank(sums, ([region, n]) => ({ region, label: region, total: n, pct: pct(n, whole) }));
+}
+
+// Mesma soma pra comparação com o período anterior: { região → { cur, prev } }.
+export function regionTrends(byUfCompare) {
+  const out = new Map();
+  for (const [uf, v] of byUfCompare || []) {
+    const region = UF_REGION[uf];
+    if (!region) continue;
+    const t = out.get(region) || { cur: 0, prev: 0 };
+    t.cur += v.cur; t.prev += v.prev;
+    out.set(region, t);
+  }
+  return out;
+}
+
+export const UF_NAMES =Object.fromEntries(BR_STATES.map(s => [s.uf, s.name]));
 
 export const SEXO_LABELS = { M: 'Masculino', F: 'Feminino', 'não informado': 'Não informado' };
 export const AGE_BANDS = ['14–17', '18–24', '25–34', '35–44', '45–54', '55+', 'não informado'];
@@ -205,6 +243,29 @@ export function compareGeo(rows, mode = 'tudo') {
     if (r.city) add(byCity, cityKey(r), cur, prev);
   }
   return { total, byUf, byCountry, byCity };
+}
+
+// Hoje (fuso de São Paulo, o mesmo do banco) como 'AAAA-MM-DD'.
+function todaySp() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+}
+
+// Linhas de admin_geo_daily → um ponto por dia dos últimos `days` (zero onde não
+// houve acesso), só com as páginas do modo e, se houver, de um estado ou país.
+export function dailySeries(rows, days, mode = 'tudo', place = {}, today = todaySp()) {
+  const pages = ACCESS_PAGES[mode] || ACCESS_PAGES.tudo;
+  const byDay = new Map();
+  for (const r of rows || []) {
+    if (!pages.includes(r.page) || !inPlace(r, place)) continue;
+    byDay.set(r.day, (byDay.get(r.day) || 0) + (Number(r.total) || 0));
+  }
+  const end = new Date(`${today}T12:00:00Z`);
+  const out = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const day = new Date(end.getTime() - i * 86400000).toISOString().slice(0, 10);
+    out.push({ day, total: byDay.get(day) || 0 });
+  }
+  return out;
 }
 
 // Variação do período anterior pro atual: { dir: 'up' | 'down' | 'flat' | 'new', pct }.

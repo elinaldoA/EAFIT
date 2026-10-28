@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
-  legendSteps, compareGeo, conversionByUf, trend, trendLabel, countryName, flag, UF_NAMES,
+  legendSteps, compareGeo, conversionByUf, groupByRegion, regionTrends, dailySeries, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -225,6 +225,31 @@ describe('comparação com o período anterior', () => {
       ['SP', 40, 4, 10], ['RJ', 10, 0, 0], ['MG', 0, 2, null],
     ]);
     expect(conversionByUf(null, null)).toEqual([]);
+  });
+
+  it('groupByRegion e regionTrends somam os estados por região', () => {
+    const out = groupByRegion(new Map([['SP', 6], ['RJ', 2], ['BA', 2], ['XX', 9]]), 10);
+    expect(out.map(r => [r.region, r.total, r.pct])).toEqual([['Sudeste', 8, 80], ['Nordeste', 2, 20]]);
+    const t = regionTrends(new Map([['SP', { cur: 3, prev: 1 }], ['MG', { cur: 1, prev: 1 }], ['BA', { cur: 0, prev: 2 }]]));
+    expect(t.get('Sudeste')).toEqual({ cur: 4, prev: 2 });
+    expect(t.get('Nordeste')).toEqual({ cur: 0, prev: 2 });
+    expect(regionTrends(null).size).toBe(0);
+  });
+
+  it('dailySeries preenche os dias sem acesso e filtra modo e lugar', () => {
+    const rows = [
+      { day: '2026-10-27', page: 'landing', country: 'BR', uf: 'SP', total: 3 },
+      { day: '2026-10-27', page: 'app', country: 'BR', uf: 'SP', total: 2 },
+      { day: '2026-10-28', page: 'landing', country: 'BR', uf: 'RJ', total: 4 },
+      { day: '2026-10-25', page: 'landing', country: 'PT', uf: null, total: 1 },
+    ];
+    expect(dailySeries(rows, 4, 'tudo', {}, '2026-10-28')).toEqual([
+      { day: '2026-10-25', total: 1 }, { day: '2026-10-26', total: 0 },
+      { day: '2026-10-27', total: 5 }, { day: '2026-10-28', total: 4 },
+    ]);
+    expect(dailySeries(rows, 2, 'site', { uf: 'SP' }, '2026-10-28').map(d => d.total)).toEqual([3, 0]);
+    expect(dailySeries(rows, 2, 'app', { country: 'BR' }, '2026-10-28').map(d => d.total)).toEqual([2, 0]);
+    expect(dailySeries(null, 1, 'tudo', {}, '2026-10-28')).toEqual([{ day: '2026-10-28', total: 0 }]);
   });
 
   it('trend e trendLabel', () => {

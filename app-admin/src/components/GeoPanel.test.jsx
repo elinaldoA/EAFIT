@@ -49,7 +49,7 @@ describe('GeoPanel', () => {
     expect(mockRpc).toHaveBeenCalledWith('admin_visit_geo', { days_back: 30 });
     expect(mockRpc).toHaveBeenCalledWith('admin_app_geo', { days_back: 30 });
     expect(screen.getByText(/1 aguardando localização/)).toBeTruthy();
-    expect(screen.getAllByText('6 · 50%')).toHaveLength(2); // SP e BA: 6 de 12 cada no Brasil
+    expect(screen.getAllByText('6 · 50%')).toHaveLength(4); // SP e BA: 6 de 12 cada no Brasil, e as regiões Sudeste e Nordeste iguais
     expect(document.querySelector('.card-note').textContent).toMatch(/Site: 9 · App: 6\./);
     expect(screen.getByText('Campinas · SP')).toBeTruthy();
     expect(screen.getByText('Lisboa · Lisbon · PT')).toBeTruthy();
@@ -82,8 +82,8 @@ describe('GeoPanel', () => {
     render(<GeoPanel />);
     await screen.findByText('Estados');
     expect(await screen.findByText('↑ 27%')).toBeTruthy(); // total: 14 contra 11
-    expect(screen.getByText('↑ 100%')).toBeTruthy(); // SP: 6 contra 3
-    expect(screen.getByText('↑ 50%')).toBeTruthy(); // BA: 6 contra 4
+    expect(screen.getAllByText('↑ 100%')).toHaveLength(2); // SP: 6 contra 3 (e a região Sudeste)
+    expect(screen.getAllByText('↑ 50%')).toHaveLength(2); // BA: 6 contra 4 (e a região Nordeste)
     expect(screen.getByText('↓ 50%')).toBeTruthy(); // PT: 2 contra 4
     expect(mockRpc).toHaveBeenCalledWith('admin_geo_period_compare', { days_back: 30 });
   });
