@@ -57,23 +57,29 @@ export default function AudienceInsights() {
   if (loading) return <Loading />;
   if (error) return <p className="form-msg form-msg--error">{error}</p>;
 
+  const maxSets = Math.max(1, ...exercises.map(e => Number(e.sets_done) || 0));
+
   return (
-    <div className="two-col">
-      <div className="card">
-        <h2 className="section-title">Perfil do público</h2>
-        <div className="stack" style={{ gap: 14 }}>
-          {DIMENSIONS.map(d => (
-            <div key={d.key}>
-              <div className="field__label">{d.title}</div>
-              <DistributionBars rows={prepare(dist[d.key], d)} />
-            </div>
-          ))}
-        </div>
+    <div className="stack">
+      <div>
+        <h2 className="section-title" style={{ margin: 0 }}>Perfil do público</h2>
+        <p className="section-hint">Quem são os usuários cadastrados, segundo o que preencheram no perfil.</p>
+      </div>
+      <div className="dash-groups">
+        {DIMENSIONS.map(d => (
+          <div className="card dash-group" key={d.key}>
+            <h3 className="dash-group__title">{d.title}</h3>
+            <DistributionBars rows={prepare(dist[d.key], d)} />
+          </div>
+        ))}
       </div>
 
       <div className="card">
         <div className="card-head">
-          <h2 className="section-title" style={{ margin: 0 }}>Exercícios mais feitos</h2>
+          <div>
+            <h2 className="section-title" style={{ margin: 0 }}>Exercícios mais feitos</h2>
+            <p className="section-hint">Os 10 exercícios com mais séries concluídas no período.</p>
+          </div>
           <div className="seg" role="group" aria-label="Período dos exercícios">
             {PERIODS.map(p => (
               <button
@@ -90,13 +96,19 @@ export default function AudienceInsights() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Exercício</th><th>Séries</th><th>Usuários</th><th>Carga média</th></tr>
+                <tr><th>#</th><th>Exercício</th><th>Séries</th><th>Usuários</th><th>Carga média</th></tr>
               </thead>
               <tbody>
-                {exercises.map(e => (
+                {exercises.map((e, i) => (
                   <tr key={e.exercise_name}>
+                    <td data-label="#" className="rank-cell">{i + 1}</td>
                     <td data-label="Exercício">{e.exercise_name}</td>
-                    <td data-label="Séries">{e.sets_done}</td>
+                    <td data-label="Séries">
+                      <span className="inline-bar">
+                        <span className="inline-bar__fill" style={{ width: `${Math.max(3, ((Number(e.sets_done) || 0) / maxSets) * 100)}%` }} />
+                        <span>{e.sets_done}</span>
+                      </span>
+                    </td>
                     <td data-label="Usuários">{e.users_count}</td>
                     <td data-label="Carga média">{e.avg_carga ? `${e.avg_carga} kg` : '—'}</td>
                   </tr>

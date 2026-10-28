@@ -241,8 +241,11 @@ export default function GeoPanel() {
 
   return (
     <div className="card">
-      <div className="card-head">
-        <h2 className="section-title" style={{ margin: 0 }}>Onde estão</h2>
+      <div className="panel-head">
+        <div>
+          <h2 className="section-title" style={{ margin: 0 }}>Onde estão</h2>
+          <p className="section-hint">Distribuição geográfica por visitas, contas e uso do app. Escolha o que mostrar e o período.</p>
+        </div>
         <div className="geo-controls">
           <div className="seg" role="group" aria-label="O que mostrar">
             {MODES.map(m => (

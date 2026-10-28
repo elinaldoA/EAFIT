@@ -166,8 +166,11 @@ export default function InstallPanel() {
   return (
     <div className="stack">
       <div className="card">
-        <div className="card-head">
-          <h2 className="section-title" style={{ margin: 0 }}>Instalações do app</h2>
+        <div className="panel-head">
+          <div>
+            <h2 className="section-title" style={{ margin: 0 }}>Instalações do app</h2>
+            <p className="section-hint">Quantas pessoas instalam o EAFIT, como chegam até a instalação e quantas ficam.</p>
+          </div>
           <div className="geo-controls">
             <div className="seg" role="group" aria-label="Período">
               {PERIODS.map(p => (
@@ -207,9 +210,9 @@ export default function InstallPanel() {
           <p className="card-note">Sem dados.</p>
         ) : (
           <>
-            <div className="tile-grid">
+            <div className="tile-grid tile-grid--kpi">
               {tiles.map(t => (
-                <div className="tile" key={t.label}>
+                <div className="tile tile--kpi" key={t.label}>
                   <div className="tile__value">
                     {t.value}
                     {t.prev != null && <> <Trend cur={t.value} prev={t.prev} days={days} bad={t.bad} /></>}
