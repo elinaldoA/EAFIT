@@ -4,6 +4,7 @@
 import type { SupabaseClient, User } from 'npm:@supabase/supabase-js@2';
 import type { SendOptions } from './email.ts';
 import { type EmailContent, type RenderedEmail, renderEmail } from './emailLayout.ts';
+import { firstNameOf } from './emailTexts.ts';
 import { unsubscribeLinks, unsubscribeToken } from './emailPrefs.ts';
 import { type Lang, langOf } from './lang.ts';
 import type { EmailUser } from './weeklyEmails.ts';
@@ -52,7 +53,7 @@ export type BulkEmailItem = { to: string; email: RenderedEmail; options: SendOpt
 // Mensagem no idioma da conta, com descadastro no rodapé e no cabeçalho.
 export async function bulkEmailItem(
   user: EmailUser,
-  build: (lang: Lang) => EmailContent,
+  build: (lang: Lang, name: string) => EmailContent,
   env: { supabaseUrl: string; secret: string },
   kind?: string,
 ): Promise<BulkEmailItem> {
@@ -60,7 +61,7 @@ export async function bulkEmailItem(
   const links = unsubscribeLinks(await unsubscribeToken(user.id, env.secret), env.supabaseUrl);
   return {
     to: user.email!,
-    email: renderEmail(lang, { ...build(lang), unsubscribeUrl: links.page }),
+    email: renderEmail(lang, { ...build(lang, firstNameOf(user.meta)), unsubscribeUrl: links.page }),
     options: { listUnsubscribe: links.oneClick, kind },
   };
 }

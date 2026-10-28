@@ -218,14 +218,14 @@ Deno.serve(async (req) => {
         kcalAvg: p?.kcalDays ? p.kcalTotal / p.kcalDays : 0,
         weightDelta: weightDelta(u.id),
       };
-      summaries.push(await bulkEmailItem(u, (lang) => weeklySummaryEmail(lang, count, goal, volume, extras), env, 'resumo'));
+      summaries.push(await bulkEmailItem(u, (lang, name) => weeklySummaryEmail(lang, count, goal, volume, extras, name), env, 'resumo'));
       summaryInbox.push({ userId: u.id, item: inboxFromEmail('weekly_summary', weeklySummaryEmail(langOf(u.meta), count, goal, volume, extras)) });
     } else if (pick.kind === 'comeback') {
-      comebacks.push(await bulkEmailItem(u, (lang) => comebackEmail(lang, pick.days, pick.neverTrained), env, 'volta'));
+      comebacks.push(await bulkEmailItem(u, (lang, name) => comebackEmail(lang, pick.days, pick.neverTrained, name), env, 'volta'));
       comebackInbox.push({ userId: u.id, item: inboxFromEmail('comeback', comebackEmail(langOf(u.meta), pick.days, pick.neverTrained)) });
     } else {
       const token = await surveyToken(u.id, SERVICE_ROLE_KEY);
-      const item = await bulkEmailItem(u, (lang) => inactivityEmail(lang, pick, (reason) => surveyLink(token, reason)), env, 'pesquisa');
+      const item = await bulkEmailItem(u, (lang, name) => inactivityEmail(lang, pick, (reason) => surveyLink(token, reason), name), env, 'pesquisa');
       whys.push({ userId: u.id, pick, item });
     }
   }

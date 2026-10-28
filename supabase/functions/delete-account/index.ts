@@ -9,7 +9,7 @@ import { deleteUserData } from '../_shared/deleteUserData.ts';
 import { countWorkouts, logAccountDeletion } from '../_shared/accountDeletion.ts';
 import { sendEmail } from '../_shared/email.ts';
 import { renderEmail } from '../_shared/emailLayout.ts';
-import { accountDeletedEmail } from '../_shared/emailTexts.ts';
+import { accountDeletedEmail, firstNameOf } from '../_shared/emailTexts.ts';
 import { langOf } from '../_shared/lang.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     // pediu, lido antes da exclusão; falha aqui não desfaz nada.
     if (userRes.user.email) {
       const lang = langOf(userRes.user.user_metadata);
-      await sendEmail(userRes.user.email, renderEmail(lang, accountDeletedEmail(lang)), { kind: 'exclusao' });
+      await sendEmail(userRes.user.email, renderEmail(lang, accountDeletedEmail(lang, firstNameOf(userRes.user.user_metadata))), { kind: 'exclusao' });
     }
     return json({ ok: true });
   } catch (err) {

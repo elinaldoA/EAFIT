@@ -25,7 +25,7 @@ import { listAllUserIds, saveInbox } from '../_shared/inbox.ts';
 import { sendEmailBatch } from '../_shared/email.ts';
 import { renderEmail } from '../_shared/emailLayout.ts';
 import { type BulkEmailItem, bulkEmailItem, loadEmailUsers } from '../_shared/emailRecipients.ts';
-import { broadcastEmail, feedbackReplyEmail } from '../_shared/emailTexts.ts';
+import { broadcastEmail, feedbackReplyEmail, firstNameOf } from '../_shared/emailTexts.ts';
 import { langOf } from '../_shared/lang.ts';
 import { canReceiveBulkEmail, MAX_BULK_EMAILS } from '../_shared/weeklyEmails.ts';
 import { type BroadcastVars, loadBroadcastVars, personalize, usesVars } from '../_shared/broadcastVars.ts';
@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     if (email === 'resposta') {
       items = users.filter((u) => u.email).map((u) => {
         const lang = langOf(u.meta);
-        return { to: u.email!, email: renderEmail(lang, feedbackReplyEmail(lang, textFor(u.id).body)), options: { kind: 'resposta' } };
+        return { to: u.email!, email: renderEmail(lang, feedbackReplyEmail(lang, textFor(u.id).body, firstNameOf(u.meta))), options: { kind: 'resposta' } };
       });
     } else {
       let recipients = users.filter((u) => canReceiveBulkEmail(u));
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
       const env = { supabaseUrl: SUPABASE_URL, secret: SERVICE_ROLE_KEY };
       items = await Promise.all(recipients.map((u) => {
         const text = textFor(u.id);
-        return bulkEmailItem(u, (lang) => broadcastEmail(lang, text.title, text.body), env, 'aviso');
+        return bulkEmailItem(u, (lang, name) => broadcastEmail(lang, text.title, text.body, name), env, 'aviso');
       }));
     }
     // Teto diário do Gmail: o que passar disso não é enviado (o admin vê a diferença nos números).

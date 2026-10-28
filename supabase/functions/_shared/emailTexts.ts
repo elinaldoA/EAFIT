@@ -7,46 +7,67 @@ import { INACTIVITY_REASONS, type InactivityReason, reasonLabel } from './inacti
 import type { Lang } from './lang.ts';
 import type { WhyEmail } from './weeklyEmails.ts';
 
-export function welcomeEmail(lang: Lang): EmailContent {
-  return lang === 'en'
+// Primeiro nome da pessoa (user_metadata.nome, com o apelido como alternativa),
+// pra chamá-la pelo nome nos e-mails. Vazio quando a conta não tem nome.
+export function firstNameOf(meta: unknown): string {
+  const m = (meta ?? {}) as { nome?: unknown; apelido?: unknown };
+  for (const v of [m.nome, m.apelido]) {
+    if (typeof v !== 'string') continue;
+    const first = v.trim().split(/\s+/)[0];
+    if (first) return (first.charAt(0).toLocaleUpperCase() + first.slice(1)).slice(0, 30);
+  }
+  return '';
+}
+
+// Abre o texto com uma saudação pelo nome; sem nome, devolve o conteúdo como está.
+function greet(lang: Lang, name: string | undefined, content: EmailContent): EmailContent {
+  if (!name) return content;
+  const hello = lang === 'en' ? `Hi ${name}!` : `Oi, ${name}!`;
+  return { ...content, paragraphs: [hello, ...content.paragraphs] };
+}
+
+export function welcomeEmail(lang: Lang, name?: string): EmailContent {
+  return greet(lang, name, lang === 'en'
     ? {
-      subject: 'Welcome to EAFIT',
+      subject: name ? `Welcome to EAFIT, ${name}!` : 'Welcome to EAFIT',
       preheader: 'Your account is ready. Here is how to get started.',
       eyebrow: 'Welcome',
       heading: 'Your account is ready',
       paragraphs: [
-        'Great to have you here. With EAFIT you get a personalized training plan, log your loads and records, track your hydration and follow your progress.',
-        'To keep the app at hand, open eafit.com.br/app on your phone and choose Install (or Add to Home Screen). Once installed, it works even without internet.',
+        'So glad you are here! With EAFIT you get a training plan made for you, you can log your loads and records, keep track of your water and watch your progress grow.',
+        'Tip: to keep the app one tap away, open eafit.com.br/app on your phone and choose Install (or Add to Home Screen). Once installed, it even works without internet.',
+        'Any question along the way? Just reply to this email, a real person reads it.',
       ],
       cta: { label: 'Open the app', url: APP_URL },
-      footnote: 'Tip: turn on notifications in the app to get your workout and water reminders.',
+      footnote: 'Turn on notifications in the app and we will remind you of your workouts and your water.',
     }
     : {
-      subject: 'Boas-vindas ao EAFIT',
+      subject: name ? `Boas-vindas ao EAFIT, ${name}!` : 'Boas-vindas ao EAFIT',
       preheader: 'Sua conta está pronta. Veja como começar.',
       eyebrow: 'Boas-vindas',
       heading: 'Sua conta está pronta',
       paragraphs: [
-        'Que bom ter você por aqui. No EAFIT você recebe um plano de treino personalizado, registra cargas e recordes, acompanha a hidratação e vê a sua evolução.',
-        'Para ter o app sempre à mão, abra eafit.com.br/app no celular e escolha Instalar (ou Adicionar à tela de início). Depois de instalado, ele funciona mesmo sem internet.',
+        'Que bom ter você por aqui! No EAFIT você recebe um plano de treino feito pra você, registra suas cargas e recordes, acompanha a água do dia e vê a sua evolução crescer.',
+        'Uma dica: pra deixar o app a um toque de distância, abra eafit.com.br/app no celular e escolha Instalar (ou Adicionar à tela de início). Depois de instalado, ele funciona até sem internet.',
+        'Ficou com alguma dúvida? É só responder a este e-mail, tem uma pessoa de verdade lendo.',
       ],
       cta: { label: 'Abrir o app', url: APP_URL },
-      footnote: 'Dica: ative as notificações no app para receber os lembretes de treino e de água.',
-    };
+      footnote: 'Ative as notificações no app e a gente te lembra dos treinos e da água.',
+    });
 }
 
-export function accountDeletedEmail(lang: Lang): EmailContent {
-  return lang === 'en'
+export function accountDeletedEmail(lang: Lang, name?: string): EmailContent {
+  return greet(lang, name, lang === 'en'
     ? {
       subject: 'Your EAFIT account was deleted',
       preheader: 'We confirm your account and data were deleted.',
       eyebrow: 'Account',
       heading: 'Your account was deleted',
       paragraphs: [
-        'We confirm that your EAFIT account was deleted, as you requested. Your workouts, measurements and other data were erased and cannot be recovered.',
-        'If you want to come back, just create a new account whenever you like.',
+        'We are sorry to see you go. As you asked, your EAFIT account was deleted, and your workouts, measurements and other data were erased for good.',
+        'Thank you for the time you spent with us. If you ever want to come back, the door is open: just create a new account.',
       ],
-      footnote: 'Was this not you? Reply to this email as soon as possible.',
+      footnote: 'Was this not you? Reply to this email as soon as possible and we will help.',
       reason: 'You are receiving this email because you had an EAFIT account.',
     }
     : {
@@ -55,12 +76,12 @@ export function accountDeletedEmail(lang: Lang): EmailContent {
       eyebrow: 'Conta',
       heading: 'Sua conta foi excluída',
       paragraphs: [
-        'Confirmamos a exclusão da sua conta no EAFIT, feita a seu pedido. Seus treinos, medidas e demais dados foram apagados e não podem ser recuperados.',
-        'Se quiser voltar, é só criar uma conta nova quando quiser.',
+        'Poxa, vamos sentir sua falta. Como você pediu, sua conta no EAFIT foi excluída, e seus treinos, medidas e demais dados foram apagados de vez.',
+        'Obrigado pelo tempo que você passou com a gente. Se um dia quiser voltar, a porta está aberta: é só criar uma conta nova.',
       ],
-      footnote: 'Não foi você? Responda a este e-mail o quanto antes.',
+      footnote: 'Não foi você? Responda a este e-mail o quanto antes que a gente te ajuda.',
       reason: 'Você está recebendo este e-mail porque tinha uma conta no EAFIT.',
-    };
+    });
 }
 
 // Resumo da semana passada (mesmos números do push de segunda de manhã:
@@ -101,12 +122,12 @@ export function weeklyExtrasLine(lang: Lang, extras: WeeklyExtras = {}): string 
   return en ? `Also: ${text}.` : `Além disso: ${text}.`;
 }
 
-export function weeklySummaryEmail(lang: Lang, count: number, goal: number, volume: number, extras: WeeklyExtras = {}): EmailContent {
+export function weeklySummaryEmail(lang: Lang, count: number, goal: number, volume: number, extras: WeeklyExtras = {}, name?: string): EmailContent {
   const hit = count >= goal;
   const content = weeklySummaryBase(lang, count, goal, volume, hit);
   const extra = weeklyExtrasLine(lang, extras);
   if (extra) content.paragraphs.splice(1, 0, extra);
-  return content;
+  return greet(lang, name, content);
 }
 
 function weeklySummaryBase(lang: Lang, count: number, goal: number, volume: number, hit: boolean): EmailContent {
@@ -118,7 +139,7 @@ function weeklySummaryBase(lang: Lang, count: number, goal: number, volume: numb
       heading: hit ? 'Weekly goal hit!' : 'Your week in numbers',
       paragraphs: [
         `Last week you completed ${count} of the ${goal} workouts in your weekly goal, with ${volume} kg of total volume.`,
-        hit ? 'Great work. Keep the pace this week.' : 'A new week is starting: how about one more workout than last week?',
+        hit ? 'Congrats, that is real consistency! Let us keep this pace going this week.' : 'No stress, every week is a fresh start. How about one more workout than last week?',
       ],
       cta: { label: 'See my progress', url: `${APP_URL}#dash` },
     }
@@ -129,7 +150,7 @@ function weeklySummaryBase(lang: Lang, count: number, goal: number, volume: numb
       heading: hit ? 'Meta semanal batida!' : 'Sua semana em números',
       paragraphs: [
         `Na semana passada você concluiu ${count} dos ${goal} treinos da sua meta semanal, com ${volume} kg de volume total.`,
-        hit ? 'Ótimo trabalho. Mantenha o ritmo nesta semana.' : 'Uma semana nova está começando: que tal um treino a mais que na anterior?',
+        hit ? 'Parabéns, isso é constância de verdade! Vamos manter esse ritmo nesta semana.' : 'Sem pressão, toda semana é um recomeço. Que tal um treino a mais que na anterior?',
       ],
       cta: { label: 'Ver minha evolução', url: `${APP_URL}#dash` },
     };
@@ -137,16 +158,16 @@ function weeklySummaryBase(lang: Lang, count: number, goal: number, volume: numb
 
 // Convite pra voltar: quem parou há 1 a 4 semanas, ou criou a conta e ainda
 // não fez o primeiro treino.
-export function comebackEmail(lang: Lang, days: number, neverTrained: boolean): EmailContent {
+export function comebackEmail(lang: Lang, days: number, neverTrained: boolean, name?: string): EmailContent {
   if (neverTrained) {
-    return lang === 'en'
+    return greet(lang, name, lang === 'en'
       ? {
         subject: 'Your first workout is waiting',
         preheader: 'It only takes a few minutes to start.',
         eyebrow: 'Getting started',
         heading: 'Your first workout is waiting',
         paragraphs: [
-          'You created your EAFIT account, but have not logged a workout yet. In a few minutes the app builds your plan and you can do the first one.',
+          'You created your EAFIT account, but have not logged a workout yet. No rush: in a few minutes the app builds your plan and you can do the first one. We are rooting for you!',
         ],
         cta: { label: 'Start my first workout', url: `${APP_URL}#treino` },
       }
@@ -156,34 +177,34 @@ export function comebackEmail(lang: Lang, days: number, neverTrained: boolean): 
         eyebrow: 'Primeiros passos',
         heading: 'Seu primeiro treino está esperando',
         paragraphs: [
-          'Você criou sua conta no EAFIT, mas ainda não registrou nenhum treino. Em poucos minutos o app monta o seu plano e você já faz o primeiro.',
+          'Você criou sua conta no EAFIT, mas ainda não registrou nenhum treino. Sem pressa: em poucos minutos o app monta o seu plano e você já faz o primeiro. A gente torce por você!',
         ],
         cta: { label: 'Começar meu primeiro treino', url: `${APP_URL}#treino` },
-      };
+      });
   }
-  return lang === 'en'
+  return greet(lang, name, lang === 'en'
     ? {
-      subject: 'We miss you at EAFIT',
+      subject: name ? `${name}, we miss you at EAFIT` : 'We miss you at EAFIT',
       preheader: `It has been ${days} days since your last workout.`,
       eyebrow: 'Come back',
       heading: 'How about getting back to it today?',
       paragraphs: [
         `It has been ${days} days since your last workout. Your plan, your loads and your history are right where you left them.`,
-        'One short workout is enough to get back into the rhythm.',
+        'Life gets busy, it happens to everyone. One short workout is enough to get back into the rhythm, and we will be here with you.',
       ],
       cta: { label: 'Open the workout of the day', url: `${APP_URL}#treino` },
     }
     : {
-      subject: 'Sentimos sua falta no EAFIT',
+      subject: name ? `${name}, sentimos sua falta no EAFIT` : 'Sentimos sua falta no EAFIT',
       preheader: `Já são ${days} dias desde o seu último treino.`,
       eyebrow: 'Hora de voltar',
       heading: 'Que tal voltar hoje?',
       paragraphs: [
         `Já são ${days} dias desde o seu último treino. Seu plano, suas cargas e seu histórico estão do jeito que você deixou.`,
-        'Um treino curto já basta pra retomar o ritmo.',
+        'A vida corre, acontece com todo mundo. Um treino curto já basta pra retomar o ritmo, e a gente está aqui com você.',
       ],
       cta: { label: 'Abrir o treino de hoje', url: `${APP_URL}#treino` },
-    };
+    });
 }
 
 // Pesquisa de inatividade: passou das 4 semanas do convite pra voltar, então
@@ -194,12 +215,21 @@ export function inactivityEmail(
   lang: Lang,
   pick: Pick<WhyEmail, 'segment' | 'days' | 'neverTrained'>,
   linkFor: (reason: InactivityReason) => string,
+  name?: string,
+): EmailContent {
+  return greet(lang, name, inactivityBase(lang, pick, linkFor));
+}
+
+function inactivityBase(
+  lang: Lang,
+  pick: Pick<WhyEmail, 'segment' | 'days' | 'neverTrained'>,
+  linkFor: (reason: InactivityReason) => string,
 ): EmailContent {
   const choices = INACTIVITY_REASONS.map((reason) => ({ label: reasonLabel(lang, reason), url: linkFor(reason) }));
   const en = lang === 'en';
   const ask = en
-    ? 'We want to make the app better, and your answer helps a lot. What got in the way? One tap is enough:'
-    : 'Queremos melhorar o app, e a sua resposta ajuda muito. O que atrapalhou? Um toque já basta:';
+    ? 'We really want to make the app better for you, and your answer helps a lot. What got in the way? One tap is enough, no judgment:'
+    : 'A gente quer deixar o app cada vez melhor pra você, e a sua resposta ajuda muito. O que atrapalhou? Um toque já basta, sem julgamentos:';
   const cta = { label: en ? 'Open the app' : 'Abrir o app', url: `${APP_URL}#treino` };
   const footnote = en
     ? 'Your plan and your history are still saved, whenever you want to come back.'
@@ -247,28 +277,28 @@ export function inactivityEmail(
 
 // Comunicado escrito pelo admin: título e mensagem saem como foram digitados
 // (cada linha vira um parágrafo); só a moldura acompanha o idioma da conta.
-export function broadcastEmail(lang: Lang, title: string, message: string): EmailContent {
+export function broadcastEmail(lang: Lang, title: string, message: string, name?: string): EmailContent {
   const paragraphs = message.split(/\n+/).map((p) => p.trim()).filter(Boolean);
-  return {
+  return greet(lang, name, {
     subject: title,
     preheader: paragraphs[0],
     eyebrow: lang === 'en' ? 'News from EAFIT' : 'Novidades do EAFIT',
     heading: title,
     paragraphs,
     cta: { label: lang === 'en' ? 'Open the app' : 'Abrir o app', url: APP_URL },
-  };
+  });
 }
 
 // Resposta da equipe a um feedback que a própria pessoa mandou pelo app.
-export function feedbackReplyEmail(lang: Lang, reply: string): EmailContent {
+export function feedbackReplyEmail(lang: Lang, reply: string, name?: string): EmailContent {
   const paragraphs = reply.split(/\n+/).map((p) => p.trim()).filter(Boolean);
-  return lang === 'en'
+  return greet(lang, name, lang === 'en'
     ? {
       subject: 'We replied to your feedback',
       preheader: paragraphs[0],
       eyebrow: 'Feedback',
       heading: 'We replied to your feedback',
-      paragraphs: ['Thank you for writing to us. Here is our reply:', ...paragraphs],
+      paragraphs: ['Thank you for taking the time to write to us, it really matters. Here is our reply:', ...paragraphs],
       cta: { label: 'Open the app', url: `${APP_URL}#perfil` },
       footnote: 'To continue the conversation, just reply to this email.',
     }
@@ -277,10 +307,10 @@ export function feedbackReplyEmail(lang: Lang, reply: string): EmailContent {
       preheader: paragraphs[0],
       eyebrow: 'Feedback',
       heading: 'Respondemos o seu feedback',
-      paragraphs: ['Obrigado por escrever pra gente. Segue a nossa resposta:', ...paragraphs],
+      paragraphs: ['Obrigado por tirar um tempo pra escrever pra gente, isso faz diferença. Segue a nossa resposta:', ...paragraphs],
       cta: { label: 'Abrir o app', url: `${APP_URL}#perfil` },
       footnote: 'Para continuar a conversa, é só responder a este e-mail.',
-    };
+    });
 }
 
 // Boas-vindas só pra conta recém-criada e uma vez só: a função é chamada pelo

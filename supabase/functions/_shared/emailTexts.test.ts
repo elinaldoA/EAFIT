@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { renderEmail } from './emailLayout.ts';
 import {
-  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, inactivityEmail, shouldSendWelcome, weeklyExtrasLine, weeklySummaryEmail,
+  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, firstNameOf, inactivityEmail, shouldSendWelcome, weeklyExtrasLine, weeklySummaryEmail,
   welcomeEmail,
 } from './emailTexts.ts';
 
@@ -102,4 +102,21 @@ Deno.test('weeklySummaryEmail: linha extra de proteína e peso só quando há da
   assertEquals(pt.paragraphs[1], 'Além disso: você registrou proteína em 5 dias, com média de 119 g e seu peso caiu 0,8 kg.');
   const en = weeklySummaryEmail('en', 3, 4, 100, { proteinDays: 1, proteinAvg: 90, weightDelta: 0 });
   assertEquals(en.paragraphs[1], 'Also: you logged protein on 1 day, averaging 90 g and your weight held steady.');
+});
+
+Deno.test('firstNameOf pega o primeiro nome com inicial maiúscula', () => {
+  assertEquals(firstNameOf({ nome: '  maria da silva ' }), 'Maria');
+  assertEquals(firstNameOf({ apelido: 'Zé' }), 'Zé');
+  assertEquals(firstNameOf({}), '');
+  assertEquals(firstNameOf(null), '');
+});
+
+Deno.test('e-mails chamam a pessoa pelo nome quando ele é conhecido', () => {
+  const w = welcomeEmail('pt', 'Maria');
+  assertEquals(w.subject, 'Boas-vindas ao EAFIT, Maria!');
+  assertEquals(w.paragraphs[0], 'Oi, Maria!');
+  assertEquals(welcomeEmail('en', 'Maria').paragraphs[0], 'Hi Maria!');
+  assertEquals(comebackEmail('pt', 9, false, 'Maria').subject, 'Maria, sentimos sua falta no EAFIT');
+  assertEquals(weeklySummaryEmail('pt', 3, 4, 100, {}, 'Maria').paragraphs[0], 'Oi, Maria!');
+  assertEquals(feedbackReplyEmail('pt', 'ok', 'Maria').paragraphs[0], 'Oi, Maria!');
 });
