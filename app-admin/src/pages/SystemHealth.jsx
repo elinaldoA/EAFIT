@@ -106,7 +106,8 @@ export default function SystemHealth() {
 
   const jobs = health.cron.data ? evaluateJobs(health.cron.data) : [];
   const http = health.http.data ? summarizeHttp(health.http.data) : null;
-  const httpHistory = http && http.state === 'warn' && http.failed > 0;
+  const httpHistory = http && http.state === 'warn' && http.failed > 0 && http.recentFailed === 0;
+  const httpIntermittent = http && http.state === 'warn' && http.recentFailed > 0;
   const push = health.push.data?.[0];
   const overdue = health.overdue.data || 0;
   const usage = health.usage.data || [];
@@ -133,6 +134,7 @@ export default function SystemHealth() {
     ...(health.overdue.error ? ['Notificações agendadas: não foi possível verificar atrasos'] : []),
     ...(http?.total === 0 ? ['Nenhuma resposta das funções registrada nas últimas 24h'] : []),
     ...jobs.filter(j => j.state === 'warn').map(j => `${j.label}: ${j.reason}`),
+    ...(httpIntermittent ? [`${http.recentTransient} chamada(s) das funções sem resposta (timeout) na última hora — intermitente, as demais funcionaram`] : []),
     ...(httpHistory ? [`${http.failed} chamada(s) das funções com erro antigo (mais de 1h) — só histórico`] : []),
   ];
   const pushRate = push && Number(push.total_users) > 0
@@ -207,6 +209,7 @@ export default function SystemHealth() {
               <p style={{ margin: '0 0 10px' }}>
                 <StateBadge state={http.state} /> {http.ok} de {http.total} chamada(s) com sucesso
                 {httpHistory && <span className="user-detail__meta"> · erros só de mais de 1h atrás</span>}
+                {httpIntermittent && <span className="user-detail__meta"> · {http.recentTransient} sem resposta (timeout) na última hora, sem erro nas funções</span>}
               </p>
               <div className="table-wrap">
                 <table className="resp-table">
@@ -228,7 +231,7 @@ export default function SystemHealth() {
             </>
           )}
           <p className="card-note">
-            O banco guarda essas respostas por poucas horas. 401 indica segredo do cron divergente; 5xx, erro dentro da função.
+            O banco guarda essas respostas por poucas horas. 401 indica segredo do cron divergente; 5xx, erro dentro da função; timeout é a chamada que não chegou à função (rede/DNS) e só vira problema se for mais de 10% das chamadas.
           </p>
         </div>
 

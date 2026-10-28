@@ -46,6 +46,8 @@ export function evaluateJobs(jobs, now = new Date()) {
 // antigo vira histórico (aviso), pra um erro de horas atrás — ex.: de antes de
 // um deploy — não ficar acusando "problema" até o banco descartá-lo.
 export const RECENT_MINUTES = 60;
+export const TRANSIENT_GROUPS = ['timeout', 'sem resposta'];
+export const TRANSIENT_BAD_RATIO = 0.1;
 
 // Resume as respostas HTTP das Edge Functions. Um grupo não-2xx é "recente"
 // quando a última ocorrência dele está dentro da janela.
@@ -55,14 +57,19 @@ export function summarizeHttp(rows, now = new Date()) {
   const ok = list.filter(r => r.status_group === '2xx').reduce((a, r) => a + Number(r.total), 0);
   const failed = total - ok;
   const limit = now.getTime() - RECENT_MINUTES * 60000;
-  const recentFailed = list
-    .filter(r => r.status_group !== '2xx' && r.last_at && new Date(r.last_at).getTime() >= limit)
-    .reduce((a, r) => a + Number(r.total), 0);
+  const recent = list.filter(r => r.status_group !== '2xx' && r.last_at && new Date(r.last_at).getTime() >= limit);
+  const sum = rows => rows.reduce((a, r) => a + Number(r.total), 0);
+  const recentFailed = sum(recent);
+  // Timeout e "sem resposta" são a chamada que nem chegou à função (DNS/rede do
+  // pg_net): pontuais, não indicam função quebrada. Só viram problema se forem
+  // uma fatia grande das chamadas; 401/4xx/5xx recentes são sempre problema.
+  const recentTransient = sum(recent.filter(r => TRANSIENT_GROUPS.includes(r.status_group)));
+  const recentHard = recentFailed - recentTransient;
   let state = 'ok';
   if (total === 0) state = 'warn';
-  else if (recentFailed > 0) state = 'bad';
+  else if (recentHard > 0 || recentTransient / total >= TRANSIENT_BAD_RATIO) state = 'bad';
   else if (failed > 0) state = 'warn';
-  return { total, ok, failed, recentFailed, state };
+  return { total, ok, failed, recentFailed, recentTransient, state };
 }
 
 export function formatBytes(bytes) {

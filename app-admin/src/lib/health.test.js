@@ -69,7 +69,7 @@ describe('evaluateJobs', () => {
 describe('summarizeHttp', () => {
   it('ok quando tudo é 2xx', () => {
     expect(summarizeHttp([{ status_group: '2xx', total: '10', last_at: minutesAgo(1) }], now))
-      .toEqual({ total: 10, ok: 10, failed: 0, recentFailed: 0, state: 'ok' });
+      .toEqual({ total: 10, ok: 10, failed: 0, recentFailed: 0, recentTransient: 0, state: 'ok' });
   });
 
   it('bad quando há erro na última hora', () => {
@@ -86,6 +86,19 @@ describe('summarizeHttp', () => {
       { status_group: '4xx', total: 1, last_at: minutesAgo(300) },
     ], now);
     expect(r).toMatchObject({ failed: 1, recentFailed: 0, state: 'warn' });
+  });
+
+  it('timeouts pontuais são só aviso; muitos viram problema', () => {
+    const few = summarizeHttp([
+      { status_group: '2xx', total: 777, last_at: minutesAgo(1) },
+      { status_group: 'timeout', total: 15, last_at: minutesAgo(5) },
+    ], now);
+    expect(few).toMatchObject({ recentFailed: 15, recentTransient: 15, state: 'warn' });
+    const many = summarizeHttp([
+      { status_group: '2xx', total: 80, last_at: minutesAgo(1) },
+      { status_group: 'timeout', total: 20, last_at: minutesAgo(5) },
+    ], now);
+    expect(many.state).toBe('bad');
   });
 
   it('warn sem nenhuma resposta registrada', () => {
