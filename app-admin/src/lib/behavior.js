@@ -385,7 +385,7 @@ export const EMAIL_KIND_LABELS = {
 
 // Uma linha por tipo de e-mail (enviados, falhas, pulados) mais o total de
 // descadastros e quantos saíram hoje (o Gmail corta em ~500 por dia).
-export function buildEmailStats(rows) {
+export function buildEmailStats(rows, bigRows) {
   const byKind = new Map();
   let sentToday = 0;
   let unsubscribed = 0;
@@ -400,7 +400,8 @@ export function buildEmailStats(rows) {
   const kinds = [...byKind.values()].sort((a, b) => b.sent - a.sent || a.label.localeCompare(b.label));
   const sent = kinds.reduce((t, k) => t + k.sent, 0);
   const error = kinds.reduce((t, k) => t + k.error, 0);
-  return { kinds, sent, error, sentToday, unsubscribed, errorPct: sent + error ? Math.round((error / (sent + error)) * 100) : null };
+  const prevSent = bigRows ? Math.max(sentIn(bigRows) - sent, 0) : null;
+  return { kinds, sent, prevSent, error, sentToday, unsubscribed, errorPct: sent + error ? Math.round((error / (sent + error)) * 100) : null };
 }
 
 const DURATION_BANDS = ['<10s', '10-60s', '1-5min', '5-15min', '15min+'];
@@ -416,7 +417,7 @@ export function formatSeconds(secs) {
 // Resumo das sessões do app: contas, sessões por conta, mediana de duração,
 // telas por sessão, quem usa 2+ aparelhos e as faixas de duração / de
 // sessões por conta (todas as faixas, mesmo com zero).
-export function buildSessionStats(rows) {
+export function buildSessionStats(rows, bigRows) {
   const list = rows || [];
   const num = (dimension, value = '') => Number(list.find(r => r.dimension === dimension && r.value === value)?.n) || 0;
   const sessions = num('total', 'sessions');
@@ -426,8 +427,9 @@ export function buildSessionStats(rows) {
     const sum = items.reduce((t, i) => t + i.total, 0);
     return items.map(i => ({ ...i, pct: pct(i.total, sum) }));
   };
+  const prevSessions = bigRows ? Math.max((Number(bigRows.find(r => r.dimension === 'total' && r.value === 'sessions')?.n) || 0) - sessions, 0) : null;
   return {
-    sessions, users,
+    sessions, prevSessions, users,
     perUser: users ? Math.round((sessions / users) * 10) / 10 : null,
     medianSeconds: sessions ? num('median_s') : null,
     avgScreens: sessions ? num('avg_screens') / 10 : null,
@@ -441,8 +443,9 @@ export function buildSessionStats(rows) {
 // Páginas do site com o engajamento ao lado (tempo mediano, rolagem média e
 // saídas rápidas). `engagement` pode vir vazio (migration ainda não aplicada
 // ou nenhuma saída medida): a página aparece só com os acessos.
-export function buildSitePages(pages, engagement) {
+export function buildSitePages(pages, engagement, bigPages) {
   const byPath = new Map((engagement || []).map(e => [e.path, e]));
+  const prev = previousCounts(bigPages, pages, r => r.path, r => r.views);
   return (pages || []).map(p => {
     const e = byPath.get(p.path);
     const measured = Number(e?.measured) || 0;
@@ -450,9 +453,31 @@ export function buildSitePages(pages, engagement) {
       path: p.path,
       views: Number(p.views) || 0,
       visitors: Number(p.visitors) || 0,
+      prevViews: prev ? prev.get(p.path) || 0 : null,
       medianSeconds: measured ? Number(e.median_seconds) || 0 : null,
       avgScroll: measured ? Number(e.avg_scroll) || 0 : null,
       quickPct: measured ? pct(Number(e.quick_exits) || 0, measured) : null,
     };
   });
+}
+
+// Contagem do período anterior sem nova consulta: o painel busca o dobro do
+// período (`big`) e tira o período atual. Só serve para números que somam
+// (acessos, envios, sessões), não para mediana nem para contas distintas.
+// null quando não há o período dobrado (ex.: “Todos”).
+export function previousCounts(bigRows, curRows, keyOf, valOf) {
+  if (!bigRows) return null;
+  const cur = new Map();
+  for (const r of curRows || []) cur.set(keyOf(r), (cur.get(keyOf(r)) || 0) + (Number(valOf(r)) || 0));
+  const prev = new Map();
+  for (const r of bigRows) {
+    const k = keyOf(r);
+    prev.set(k, (prev.get(k) || 0) + (Number(valOf(r)) || 0));
+  }
+  for (const [k, v] of prev) prev.set(k, Math.max(v - (cur.get(k) || 0), 0));
+  return prev;
+}
+
+function sentIn(rows) {
+  return rows.filter(r => r.status === 'sent').reduce((t, r) => t + (Number(r.total) || 0), 0);
 }

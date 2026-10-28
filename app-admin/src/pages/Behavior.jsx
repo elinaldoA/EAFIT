@@ -7,6 +7,8 @@ import {
   OS_LABELS, BROWSER_LABELS, DEVICE_LABELS, LANG_LABELS, MODE_LABELS, PUSH_LABELS,
 } from '../lib/behavior';
 import { sourceLabel } from '../lib/activation';
+import { downloadCsv, toCsv } from '../lib/csv';
+import { trend, trendLabel } from '../lib/geo';
 import { formatDateTime } from '../lib/installs';
 import { Link } from 'react-router-dom';
 import { buildTutorialFunnel, fetchAdoption } from '../lib/adoption';
@@ -43,10 +45,15 @@ const loadJourney = days => Promise.all([fetchVisitorStages(days), fetchLostVisi
 const loadTimeline = ({ bucket, days }) => fetchAccessTimeline(bucket, timelineBuckets(bucket, days))
   .then(rows => buildAccessTimeline(rows, bucket));
 // Engajamento é opcional: se a consulta falhar, a tabela segue só com os acessos.
-const loadSitePages = days => Promise.all([fetchSitePages(days), fetchSiteEngagement(days).catch(() => [])])
-  .then(([pages, engagement]) => buildSitePages(pages, engagement));
-const loadSessions = days => fetchSessionStats(days).then(buildSessionStats);
-const loadEmails = days => fetchEmailStats(days).then(buildEmailStats);
+// Comparação com o período anterior: busca o dobro do período e tira o atual
+// (só para números que somam). Em “Todos” (0) não há comparação.
+const doubled = (fetch, days) => (days > 0 ? fetch(days * 2).catch(() => null) : Promise.resolve(null));
+const loadSitePages = days => Promise.all([fetchSitePages(days), fetchSiteEngagement(days).catch(() => []), doubled(fetchSitePages, days)])
+  .then(([pages, engagement, big]) => buildSitePages(pages, engagement, big));
+const loadSessions = days => Promise.all([fetchSessionStats(days), doubled(fetchSessionStats, days)])
+  .then(([rows, big]) => buildSessionStats(rows, big));
+const loadEmails = days => Promise.all([fetchEmailStats(days), doubled(fetchEmailStats, days)])
+  .then(([rows, big]) => buildEmailStats(rows, big));
 const loadInstall = () => fetchInstallRetention().then(buildInstallRetention);
 const loadWorkouts = days => Promise.all([fetchWorkoutCompletion(days), fetchWorkoutDropoff(days, 10)])
   .then(([c, d]) => ({ completion: buildCompletion(c), dropoff: d }));
@@ -171,10 +178,28 @@ function Steps({ steps }) {
   );
 }
 
-function CountTable({ head, rows, empty }) {
+// Variação em relação ao período anterior (▲ verde, ▼ vermelho). Nada quando
+// não há base de comparação.
+function DeltaBadge({ cur, prev }) {
+  if (prev == null) return null;
+  const t = trend({ cur, prev });
+  if (!t) return null;
+  const cls = t.dir === 'up' ? 'delta--up' : t.dir === 'down' ? 'delta--down' : 'delta--flat';
+  return <span className={`delta ${cls}`}>{trendLabel(t)} vs. período anterior</span>;
+}
+
+// `csv` = nome do arquivo: mostra o botão que baixa a tabela como está na tela.
+function CountTable({ head, rows, empty, csv }) {
   if (!rows.length) return <p className="card-note" style={{ marginTop: 0 }}>{empty}</p>;
+  function exportCsv() {
+    const columns = head.map((label, i) => ({ label, key: String(i) }));
+    // `csvCells` = valores puros quando a célula da tela tem marcação (ex.: variação).
+    const data = rows.map(r => Object.fromEntries([['0', r.label], ...(r.csvCells ?? r.cells).map((c, i) => [String(i + 1), c])]));
+    downloadCsv(`${csv}.csv`, toCsv(data, columns));
+  }
   return (
     <div className="table-wrap">
+      {csv && <div className="actions-row" style={{ marginBottom: 6 }}><button type="button" className="btn btn--ghost btn--small" onClick={exportCsv}>Exportar CSV</button></div>}
       <table className="source-table">
         <thead><tr>{head.map(h => <th key={h} scope="col">{h}</th>)}</tr></thead>
         <tbody>
@@ -253,15 +278,22 @@ export default function Behavior() {
       >
         {rows => (
           <CountTable
+            csv="paginas-do-site"
             head={['Página', 'Acessos', 'Navegadores', 'Tempo mediano', 'Rolagem média', 'Saíram rápido']} empty="Nenhum acesso às páginas do site no período ainda."
             rows={rows.map(r => ({
               key: r.path,
               label: r.path === 'home' ? 'Início' : `/${r.path}`,
               cells: [
-                r.views, r.visitors,
+                <>{r.views}<DeltaBadge cur={r.views} prev={r.prevViews} /></>, r.visitors,
                 r.medianSeconds == null ? '—' : formatSeconds(r.medianSeconds),
                 r.avgScroll == null ? '—' : `${r.avgScroll}%`,
                 r.quickPct == null ? '—' : `${r.quickPct}%`,
+              ],
+              csvCells: [
+                r.views, r.visitors,
+                r.medianSeconds == null ? '' : r.medianSeconds,
+                r.avgScroll == null ? '' : r.avgScroll,
+                r.quickPct == null ? '' : r.quickPct,
               ],
             }))}
           />
@@ -274,6 +306,7 @@ export default function Behavior() {
       >
         {rows => (
           <CountTable
+            csv="campanha-criativo"
             head={['Campanha', 'Meio (medium)', 'Criativo (content)', 'Visitas']} empty="Nenhuma visita com utm_campaign, utm_medium ou utm_content ainda."
             rows={rows.map(r => ({ key: `${r.campaign}|${r.medium}|${r.content}`, label: r.campaign || '—', cells: [r.medium || '—', r.content || '—', r.visits] }))}
           />
@@ -313,11 +346,13 @@ export default function Behavior() {
             <Steps steps={data.steps} />
             <h3 className="subsection-title">Erros ao criar conta</h3>
             <CountTable
+              csv="erros-de-cadastro"
               head={['Motivo', 'Sessões']} empty="Nenhum erro de cadastro no período."
               rows={data.signupErrors.map(e => ({ key: e.detail, label: e.label, cells: [e.total] }))}
             />
             <h3 className="subsection-title">Erros ao entrar</h3>
             <CountTable
+              csv="erros-de-login"
               head={['Motivo', 'Sessões']} empty="Nenhum erro de login no período."
               rows={data.loginErrors.map(e => ({ key: e.detail, label: e.label, cells: [e.total] }))}
             />
@@ -397,12 +432,13 @@ export default function Behavior() {
         {data => (
           <>
             <div className="tile-grid" style={{ marginBottom: 14 }}>
-              <div className="tile"><div className="tile__value">{data.sent}</div><div className="tile__label">Enviados no período</div></div>
+              <div className="tile"><div className="tile__value">{data.sent}</div><div className="tile__label">Enviados no período</div><DeltaBadge cur={data.sent} prev={data.prevSent} /></div>
               <div className="tile"><div className="tile__value">{data.sentToday}<small> / ~500</small></div><div className="tile__label">Hoje (limite do Gmail)</div></div>
               <div className="tile"><div className="tile__value">{data.errorPct == null ? '—' : `${data.errorPct}%`}</div><div className="tile__label">Falharam ({data.error})</div></div>
               <div className="tile"><div className="tile__value">{data.unsubscribed}</div><div className="tile__label">Descadastros</div></div>
             </div>
             <CountTable
+              csv="emails-enviados"
               head={['Tipo', 'Enviados', 'Falharam', 'Pulados']} empty="Nenhum e-mail registrado no período ainda."
               rows={data.kinds.map(k => ({ key: k.kind, label: k.label, cells: [k.sent, k.error, k.skipped] }))}
             />
@@ -421,7 +457,7 @@ export default function Behavior() {
           : (
             <>
               <div className="tile-grid" style={{ marginBottom: 14 }}>
-                <div className="tile"><div className="tile__value">{data.sessions}</div><div className="tile__label">Sessões de {data.users} contas</div></div>
+                <div className="tile"><div className="tile__value">{data.sessions}</div><div className="tile__label">Sessões de {data.users} contas</div><DeltaBadge cur={data.sessions} prev={data.prevSessions} /></div>
                 <div className="tile"><div className="tile__value">{data.perUser}</div><div className="tile__label">Sessões por conta</div></div>
                 <div className="tile"><div className="tile__value">{formatSeconds(data.medianSeconds)}</div><div className="tile__label">Duração mediana</div></div>
                 <div className="tile"><div className="tile__value">{data.avgScreens}</div><div className="tile__label">Telas por sessão</div></div>

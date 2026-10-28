@@ -4,7 +4,7 @@ const { mockRpc } = vi.hoisted(() => ({ mockRpc: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
-  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient, buildEmailStats, buildSessionStats, formatSeconds, buildSitePages,
+  fetchVisitBreakdown, fetchWorkoutCompletion, fetchUserClient, buildEmailStats, buildSessionStats, formatSeconds, buildSitePages, previousCounts,
   groupDimension, hourSeries, weekdaySeries, peakOf, buildSignup, buildUserEvents,
   buildInstallRetention, buildCompletion, formatDuration, describeClient, authErrorLabel,
   BROWSER_LABELS, FEATURE_LABELS, bucketLabel, bucketFullLabel, buildAccessTimeline, timelineBuckets,
@@ -268,5 +268,29 @@ describe('buildSitePages', () => {
 
   it('sem engajamento (migration não aplicada): só os acessos', () => {
     expect(buildSitePages([{ path: 'home', views: 3, visitors: 2 }], undefined)[0]).toMatchObject({ views: 3, medianSeconds: null });
+  });
+});
+
+describe('comparação com o período anterior', () => {
+  it('previousCounts: o dobro do período menos o atual, por chave', () => {
+    const big = [{ path: 'home', views: 100 }, { path: 'sobre', views: 10 }, { path: 'ajuda', views: 4 }];
+    const cur = [{ path: 'home', views: 70 }, { path: 'sobre', views: 10 }];
+    const prev = previousCounts(big, cur, r => r.path, r => r.views);
+    expect([prev.get('home'), prev.get('sobre'), prev.get('ajuda')]).toEqual([30, 0, 4]);
+    expect(previousCounts(null, cur, r => r.path, r => r.views)).toBeNull();
+  });
+
+  it('páginas, e-mails e sessões trazem o anterior; sem o dobro vem null', () => {
+    const pages = buildSitePages([{ path: 'home', views: 70, visitors: 5 }], [], [{ path: 'home', views: 100, visitors: 9 }]);
+    expect(pages[0].prevViews).toBe(30);
+    expect(buildSitePages([{ path: 'home', views: 1, visitors: 1 }], [])[0].prevViews).toBeNull();
+
+    const mail = [{ kind: 'resumo', status: 'sent', total: 40, today: 0 }];
+    expect(buildEmailStats(mail, [{ kind: 'resumo', status: 'sent', total: 100, today: 0 }]).prevSent).toBe(60);
+    expect(buildEmailStats(mail).prevSent).toBeNull();
+
+    const sess = [{ dimension: 'total', value: 'sessions', n: 30 }];
+    expect(buildSessionStats(sess, [{ dimension: 'total', value: 'sessions', n: 50 }]).prevSessions).toBe(20);
+    expect(buildSessionStats(sess).prevSessions).toBeNull();
   });
 });
