@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, selectAccessRows, splitSiteApp, summarizeGeo,
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
   compareGeo, conversionByUf, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
@@ -39,6 +39,7 @@ const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode ===
 const compareKey = (round, days) => `${round}:comparar:${days}`;
 const dailyKey = (round, days) => `${round}:diario:${days}`;
 const audienceKey = (round, days) => `${round}:origem:${days}`;
+const hoursKey = (round, days) => `${round}:horas:${days}`;
 
 async function loadAccess(days) {
   const [visits, app] = await Promise.all([fetchVisitGeo(days), fetchAppGeo(days)]);
@@ -91,35 +92,37 @@ function Bars({ rows, onPick, selected, trends, days }) {
   );
 }
 
-function DailyChart({ series, unit, where }) {
+// Barras simples (por dia ou por hora). `series`: [{ key, label, total }].
+function BarChart({ title, series, unit, where, from, to }) {
   const total = series.reduce((sum, d) => sum + d.total, 0);
   if (!total) return null;
   const max = Math.max(...series.map(d => d.total));
   const peak = series.find(d => d.total === max);
   const step = 100 / series.length;
-  const fmt = day => day.split('-').reverse().slice(0, 2).join('/');
   return (
     <div className="geo-daily">
-      <h3 className="subsection-title" style={{ marginTop: 0 }}>Por dia{where ? ` em ${where}` : ''}</h3>
+      <h3 className="subsection-title" style={{ marginTop: 0 }}>{title}{where ? ` em ${where}` : ''}</h3>
       <svg
         className="geo-daily__chart" viewBox="0 0 100 30" preserveAspectRatio="none" role="img"
-        aria-label={`${total} ${unit} em ${series.length} dias; pico de ${max} em ${fmt(peak.day)}`}
+        aria-label={`${total} ${unit}; pico de ${max} em ${peak.label}`}
       >
         {series.map((d, i) => {
           const h = d.total ? Math.max(1, (d.total / max) * 28) : 0;
           return (
-            <rect key={d.day} x={i * step + step * 0.1} y={30 - h} width={step * 0.8} height={h} fill="currentColor">
-              <title>{`${fmt(d.day)}: ${d.total}`}</title>
+            <rect key={d.key} x={i * step + step * 0.1} y={30 - h} width={step * 0.8} height={h} fill="currentColor">
+              <title>{`${d.label}: ${d.total}`}</title>
             </rect>
           );
         })}
       </svg>
       <p className="card-note geo-daily__note">
-        {fmt(series[0].day)} a {fmt(series[series.length - 1].day)} · pico de <strong>{max}</strong> em {fmt(peak.day)}
+        {from} a {to} · pico de <strong>{max}</strong> em {peak.label}
       </p>
     </div>
   );
 }
+
+const fmtDay = day => day.split('-').reverse().slice(0, 2).join('/');
 
 // Dashboard → Localização: de onde vêm as visitas e onde estão as contas.
 export default function GeoPanel() {
@@ -133,12 +136,14 @@ export default function GeoPanel() {
   const [failure, setFailure] = useState(null);
   const [allCities, setAllCities] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
+  const [customDays, setCustomDays] = useState('');
   const requested = useRef(new Set());
 
   const wantKey = dataKey(round, mode, days);
   const wantCompare = mode === 'contas' || mode === 'conversao' ? null : compareKey(round, days);
   const wantDaily = mode === 'contas' || mode === 'conversao' ? null : dailyKey(round, days);
   const wantAudience = mode === 'contas' || mode === 'conversao' ? null : audienceKey(round, days);
+  const wantHours = mode === 'contas' || mode === 'conversao' ? null : hoursKey(round, days);
 
   useEffect(() => {
     const load = (key, fn) => {
@@ -154,7 +159,8 @@ export default function GeoPanel() {
     // O gráfico diário também é um extra.
     if (wantDaily) load(wantDaily, () => fetchGeoDaily(days).catch(() => null));
     if (wantAudience) load(wantAudience, () => fetchGeoAudience(days).catch(() => null));
-  }, [wantKey, wantCompare, wantDaily, wantAudience, mode, days]);
+    if (wantHours) load(wantHours, () => fetchGeoHours(days).catch(() => null));
+  }, [wantKey, wantCompare, wantDaily, wantAudience, wantHours, mode, days]);
 
   // Enquanto o período novo carrega, continua mostrando o anterior.
   // Só o erro da consulta atual aparece (trocar de período tenta de novo).
@@ -173,6 +179,8 @@ export default function GeoPanel() {
 
   const rawAudience = shown && shownMode !== 'contas' && !isConversion ? store[audienceKey(shown.round, shownDays)] : null;
 
+  const rawHours = shown && shownMode !== 'contas' && !isConversion ? store[hoursKey(shown.round, shownDays)] : null;
+
   const rows = useMemo(() => {
     if (!raw || isConversion) return [];
     return shownMode === 'contas' ? raw : selectAccessRows(raw.visits, raw.app, shownMode);
@@ -189,6 +197,8 @@ export default function GeoPanel() {
   const cmp = useMemo(() => (rawCompare ? compareGeo(rawCompare, shownMode) : null), [rawCompare, shownMode]);
   const daily = useMemo(() => (rawDaily ? dailySeries(rawDaily, shownDays, shownMode, place) : null), [rawDaily, shownDays, shownMode, place]);
   const aud = useMemo(() => (rawAudience ? audience(rawAudience, shownMode, place) : null), [rawAudience, shownMode, place]);
+  const hours = useMemo(() => (rawHours ? hourSeries(rawHours, shownMode, place) : null), [rawHours, shownMode, place]);
+  const fresh = useMemo(() => (cmp ? newPlaces(cmp) : null), [cmp]);
   const regions = useMemo(() => groupByRegion(summary.byUf, summary.brTotal), [summary.byUf, summary.brTotal]);
   const regionCmp = useMemo(() => (cmp ? regionTrends(cmp.byUf) : null), [cmp]);
   const ufTotal = uf ? summary.byUf.get(uf) || 0 : 0;
@@ -263,12 +273,30 @@ export default function GeoPanel() {
               <button
                 key={p.days} type="button" aria-pressed={days === p.days}
                 className={`seg__btn${days === p.days ? ' seg__btn--active' : ''}`}
-                onClick={() => setDays(p.days)}
+                onClick={() => { setDays(p.days); setCustomDays(''); }}
               >
                 {p.label}
               </button>
             ))}
           </div>
+          <form
+            className="geo-custom"
+            onSubmit={e => {
+              e.preventDefault();
+              const n = Math.floor(Number(customDays));
+              if (n >= 1 && n <= 366) setDays(n);
+            }}
+          >
+            <label>
+              Últimos{' '}
+              <input
+                type="number" min="1" max="366" inputMode="numeric" className="input geo-custom__input"
+                value={customDays} placeholder={PERIODS.some(p => p.days === days) ? '…' : String(days)}
+                onChange={e => setCustomDays(e.target.value)} onBlur={e => e.currentTarget.form.requestSubmit()}
+              />{' '}
+              dias
+            </label>
+          </form>
           <button type="button" className="btn btn--ghost btn--small" onClick={refresh} disabled={updating}>Atualizar</button>
           <button type="button" className="btn btn--ghost btn--small" onClick={exportCsv} disabled={!shown}>Exportar CSV</button>
         </div>
@@ -317,7 +345,30 @@ export default function GeoPanel() {
             {updating && <> · <em>atualizando…</em></>}
           </p>
 
-          {daily && <DailyChart series={daily} unit={current.unit} where={placeName} />}
+          {fresh && fresh.states.length + fresh.countries.length + fresh.cities.length > 0 && (
+            <p className="card-note geo-new">
+              <strong>Novos neste período</strong> (sem acesso nos {shownDays} dias anteriores):
+              {fresh.states.length > 0 && <> estados: {fresh.states.map(u => UF_NAMES[u] || u).join(', ')}.</>}
+              {fresh.countries.length > 0 && <> países: {fresh.countries.map(c => `${flag(c)} ${countryName(c)}`.trim()).join(', ')}.</>}
+              {fresh.cities.length > 0 && (
+                <> cidades: {fresh.cities.slice(0, 8).map(c => `${c.city}${c.place ? ` · ${c.place}` : ''}`).join(', ')}
+                  {fresh.cities.length > 8 && ` e mais ${fresh.cities.length - 8}`}.</>
+              )}
+            </p>
+          )}
+
+          {daily && (
+            <BarChart
+              title="Por dia" series={daily.map(d => ({ key: d.day, label: fmtDay(d.day), total: d.total }))}
+              unit={current.unit} where={placeName} from={fmtDay(daily[0].day)} to={fmtDay(daily[daily.length - 1].day)}
+            />
+          )}
+          {hours && (
+            <BarChart
+              title="Por horário (Brasília)" series={hours.map(h => ({ key: h.hour, label: `${h.hour}h`, total: h.total }))}
+              unit={current.unit} where={placeName} from="0h" to="23h"
+            />
+          )}
 
           <div className="geo-grid">
             <div>

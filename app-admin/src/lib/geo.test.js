@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
-  legendSteps, compareGeo, conversionByUf, groupByRegion, regionTrends, dailySeries, audience, trend, trendLabel, countryName, flag, UF_NAMES,
+  legendSteps, compareGeo, conversionByUf, groupByRegion, regionTrends, dailySeries, audience, hourSeries, newPlaces, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -266,6 +266,33 @@ describe('comparação com o período anterior', () => {
     expect(audience(rows, 'tudo').total).toBe(15);
     expect(audience(rows, 'app', { uf: 'SP' }).total).toBe(2);
     expect(audience(null).total).toBe(0);
+  });
+
+  it('hourSeries devolve 24 horas e filtra modo e lugar', () => {
+    const rows = [
+      { hour: 9, page: 'landing', country: 'BR', uf: 'SP', total: 3 },
+      { hour: 9, page: 'app', country: 'BR', uf: 'SP', total: 1 },
+      { hour: 22, page: 'landing', country: 'BR', uf: 'RJ', total: 4 },
+      { hour: 30, page: 'landing', country: 'BR', uf: 'SP', total: 9 },
+    ];
+    const all = hourSeries(rows);
+    expect(all).toHaveLength(24);
+    expect([all[9].total, all[22].total]).toEqual([4, 4]);
+    expect(hourSeries(rows, 'site', { uf: 'SP' })[9].total).toBe(3);
+    expect(hourSeries(null).every(h => h.total === 0)).toBe(true);
+  });
+
+  it('newPlaces lista o que não existia no período anterior', () => {
+    const cmp = compareGeo([
+      { page: 'landing', country: 'BR', uf: 'SP', region: null, city: 'Santos', cur: 3, prev: 0 },
+      { page: 'landing', country: 'BR', uf: 'RJ', region: null, city: 'Niterói', cur: 2, prev: 2 },
+      { page: 'landing', country: 'PT', uf: null, region: 'Lisboa', city: 'Lisboa', cur: 1, prev: 0 },
+    ]);
+    expect(newPlaces(cmp)).toEqual({
+      states: ['SP'], countries: ['PT'],
+      cities: [{ city: 'Santos', place: 'SP', country: 'BR' }, { city: 'Lisboa', place: 'Lisboa', country: 'PT' }],
+    });
+    expect(newPlaces(null)).toEqual({ states: [], countries: [], cities: [] });
   });
 
   it('trend e trendLabel', () => {

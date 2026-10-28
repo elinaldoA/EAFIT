@@ -23,6 +23,9 @@ export const fetchGeoDaily = (days = 30) => rpcRows('admin_geo_daily', { days_ba
 // Origem e aparelho das visitas por lugar (20261215030000_geo_audience.sql).
 export const fetchGeoAudience = (days = 30) => rpcRows('admin_geo_audience', { days_back: days });
 
+// Acessos localizados por hora do dia, em Brasília (20261215040000_geo_hours.sql).
+export const fetchGeoHours = (days = 30) => rpcRows('admin_geo_hours', { days_back: days });
+
 // Qual página conta em cada modo do mapa. 'acesso' é a tela de login do app
 // (quem chega sem sessão); 'app' são os dias de uso de quem está logado
 // (admin_app_geo, de 20261106010000_app_access_geo.sql).
@@ -269,6 +272,32 @@ export function audience(rows, mode = 'tudo', place = {}) {
     total: sum,
     source: rank(source, ([v, n]) => ({ value: v, label: SOURCE_LABELS[v] || v, total: n, pct: pct(n, sum) })),
     device: rank(device, ([v, n]) => ({ value: v, label: DEVICE_LABELS[v] || v, total: n, pct: pct(n, sum) })),
+  };
+}
+
+// Linhas de admin_geo_hours → 24 pontos (0h a 23h) do modo e do lugar.
+export function hourSeries(rows, mode = 'tudo', place = {}) {
+  const pages = ACCESS_PAGES[mode] || ACCESS_PAGES.tudo;
+  const out = Array.from({ length: 24 }, (_, h) => ({ hour: h, total: 0 }));
+  for (const r of rows || []) {
+    const h = Number(r.hour);
+    if (!pages.includes(r.page) || !inPlace(r, place) || !(h >= 0 && h < 24)) continue;
+    out[h].total += Number(r.total) || 0;
+  }
+  return out;
+}
+
+// Locais que só apareceram neste período (nada no anterior), pra destacar
+// estado, país ou cidade novos.
+export function newPlaces(cmp) {
+  const fresh = map => [...(map || [])].filter(([, v]) => v.cur > 0 && !v.prev).map(([k]) => k);
+  return {
+    states: fresh(cmp?.byUf),
+    countries: fresh(cmp?.byCountry),
+    cities: fresh(cmp?.byCity).map(k => {
+      const [city, place, country] = k.split('|');
+      return { city, place, country };
+    }),
   };
 }
 
