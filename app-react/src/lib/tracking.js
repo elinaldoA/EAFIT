@@ -1,7 +1,7 @@
 import { db } from './supabase';
 import { todayDate } from '../data/treinoData';
 import { lang } from './i18n';
-import { readClientInfo, detectDisplayMode } from './clientInfo';
+import { readClientInfo, detectDisplayMode, isBotClient } from './clientInfo';
 import { isStaffDevice } from './staffDevice';
 import { version as APP_VERSION } from '../../package.json';
 
@@ -264,7 +264,7 @@ const AUTH_EVENTS = ['signup_start', 'signup_submit', 'signup_error', 'signup_ok
 // supabase/migrations/20261130010000_visitor_journey.sql); banco sem a coluna
 // recusa a linha e o evento é gravado sem ele.
 export function trackAuthEvent(event, detail = '') {
-  if (!enabled || !AUTH_EVENTS.includes(event) || isStaffDevice()) return false;
+  if (!enabled || !AUTH_EVENTS.includes(event) || isStaffDevice() || isBotClient()) return false;
   const d = cleanDetail(detail);
   try {
     const key = `eafit_auth_${event}_${d}`;

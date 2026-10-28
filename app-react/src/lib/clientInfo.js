@@ -61,3 +61,20 @@ export function readClientInfo() {
     device: detectDevice(nav.userAgent, nav.platform, nav.maxTouchPoints),
   };
 }
+
+// Robôs e pré-visualizadores de link (Google, Bing, WhatsApp, Instagram…) e
+// navegadores automatizados: não entram nas métricas anônimas. É filtro de
+// melhor esforço — robô que se disfarça de navegador comum passa. A MESMA regra
+// está copiada no script do site (public/landing/assets/site.js): mudou aqui,
+// mude lá.
+const BOT_RE = /googlebot|bingbot|yandexbot|baiduspider|duckduckbot|applebot|ahrefsbot|semrushbot|mj12bot|petalbot|bytespider|gptbot|claudebot|ccbot|amazonbot|dotbot|crawl|spider|slurp|scrape|facebookexternalhit|facebot|whatsapp\/|telegrambot|slackbot|twitterbot|linkedinbot|discordbot|pinterestbot|embedly|skypeuripreview|headlesschrome|phantomjs|lighthouse|pagespeed|gtmetrix|python-requests|curl\/|wget\/|go-http-client|java\//i;
+
+export function isBot(userAgent, webdriver) {
+  if (webdriver === true) return true;
+  return BOT_RE.test(String(userAgent || ''));
+}
+
+export function isBotClient() {
+  const nav = typeof navigator === 'undefined' ? {} : navigator;
+  return isBot(nav.userAgent, nav.webdriver);
+}

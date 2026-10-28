@@ -1,7 +1,7 @@
 import { db } from './supabase';
 import { todayDate } from '../data/treinoData';
 import { lang } from './i18n';
-import { readClientInfo } from './clientInfo';
+import { readClientInfo, isBotClient } from './clientInfo';
 import { isStaffDevice } from './staffDevice';
 import { deviceId } from './tracking';
 
@@ -69,7 +69,7 @@ export function detectPersonal(search) {
 // personal conta à parte, pra não sumir o clique de quem já tinha visitado no dia. Falha
 // silenciosa: métrica nunca pode atrapalhar o app. Navegador de admin não conta.
 export async function recordVisit(page) {
-  if (isStaffDevice()) return false;
+  if (isStaffDevice() || isBotClient()) return false;
   const ref = detectRef(window.location.search);
   const personal = detectPersonal(window.location.search);
   const tag = [ref, personal].filter(Boolean).join('_');

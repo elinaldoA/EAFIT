@@ -573,7 +573,14 @@
       return id;
     } catch { return ''; }
   }
+  // Robôs e pré-visualizadores de link não entram nas métricas anônimas (cópia
+  // de isBot em app-react/src/lib/clientInfo.js: mudou lá, mude aqui). Melhor
+  // esforço: robô que se disfarça de navegador comum passa.
+  var BOT_RE = /googlebot|bingbot|yandexbot|baiduspider|duckduckbot|applebot|ahrefsbot|semrushbot|mj12bot|petalbot|bytespider|gptbot|claudebot|ccbot|amazonbot|dotbot|crawl|spider|slurp|scrape|facebookexternalhit|facebot|whatsapp\/|telegrambot|slackbot|twitterbot|linkedinbot|discordbot|pinterestbot|embedly|skypeuripreview|headlesschrome|phantomjs|lighthouse|pagespeed|gtmetrix|python-requests|curl\/|wget\/|go-http-client|java\//i;
+  var IS_BOT = navigator.webdriver === true || BOT_RE.test(String(navigator.userAgent || ''));
+
   function postAnon(table, row) {
+    if (IS_BOT) return Promise.resolve({ ok: true });
     return fetch(SUPABASE_URL + '/rest/v1/' + table, {
       method: 'POST',
       headers: {
@@ -810,7 +817,8 @@
       measureScroll();
       var out = { path: path, seconds: Math.min(1800, Math.round(visibleMs / 1000)), scroll: maxScroll };
       if (vid) out.visitor_id = vid;
-      postAnon('site_engagement', out).catch(function () {});
+      // Sem nenhum segundo com a aba visível não houve leitura (pré-carregamento, robô).
+      if (out.seconds > 0) postAnon('site_engagement', out).catch(function () {});
     }
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'hidden') sendEngagement();

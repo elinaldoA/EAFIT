@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const { mockRpc, mockInsert } = vi.hoisted(() => ({ mockRpc: vi.fn(), mockInsert: vi.fn() }));
 vi.mock('./supabase', () => ({ db: { rpc: mockRpc, from: () => ({ insert: mockInsert }) } }));
 
-import { detectBrowser, detectDevice, detectDisplayMode } from './clientInfo';
+import { detectBrowser, detectDevice, detectDisplayMode, isBot } from './clientInfo';
 
 const UA = {
   chromeAndroid: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36',
@@ -37,6 +37,22 @@ describe('clientInfo', () => {
     expect(detectDevice(UA.macSafari, 'MacIntel', 5)).toBe('tablet');
     expect(detectDevice(UA.macSafari, 'MacIntel', 0)).toBe('desktop');
     expect(detectDevice(UA.edge, 'Win32', 0)).toBe('desktop');
+  });
+
+  it('robôs e pré-visualizadores de link são reconhecidos; navegadores comuns, não', () => {
+    for (const ua of [
+      'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+      'WhatsApp/2.23.20.0 A',
+      'Mozilla/5.0 (X11; Linux x86_64) HeadlessChrome/126.0 Safari/537.36',
+      'python-requests/2.31.0',
+      'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+    ]) expect(isBot(ua, false)).toBe(true);
+    expect(isBot(UA.chromeAndroid, true)).toBe(true); // navegador automatizado (webdriver)
+    for (const ua of Object.values(UA)) expect(isBot(ua, false)).toBe(false);
+    // Celular de marca "Cubot" não é robô.
+    expect(isBot('Mozilla/5.0 (Linux; Android 12; Cubot X70) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36', false)).toBe(false);
+    expect(isBot('', undefined)).toBe(false);
   });
 
   it('modo: instalado ou navegador', () => {
