@@ -1025,6 +1025,7 @@ td > .badge:first-child, .badge:first-child { margin-left: 0; }
 .geo-body { transition: opacity .15s ease; }
 .geo-body--updating { opacity: .6; }
 .geo-more { margin-top: 8px; }
+.geo-search { margin-bottom: 8px; }
 .geo-place-split { margin: 4px 0 0; }
 .world-map svg { max-width: none; }
 .world-map .br-map__state { stroke-width: 0.5; }

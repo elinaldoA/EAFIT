@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
-  legendSteps, compareGeo, trend, trendLabel, countryName, flag, UF_NAMES,
+  legendSteps, compareGeo, conversionByUf, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -194,6 +194,37 @@ describe('comparação com o período anterior', () => {
     expect(compareGeo(rows, 'site').total).toEqual({ cur: 8, prev: 7 });
     expect(compareGeo(rows, 'app').byUf.get('SP')).toEqual({ cur: 2, prev: 1 });
     expect(compareGeo(null).total).toEqual({ cur: 0, prev: 0 });
+  });
+
+  it('compareGeo soma por cidade usando a mesma chave da lista', () => {
+    const t = compareGeo([
+      { page: 'landing', country: 'BR', uf: 'SP', region: null, city: 'Santos', cur: 3, prev: 1 },
+      { page: 'app', country: 'BR', uf: 'SP', region: null, city: 'Santos', cur: 2, prev: 1 },
+      { page: 'landing', country: 'PT', uf: null, region: 'Lisboa', city: 'Lisboa', cur: 1, prev: 0 },
+    ]);
+    expect(t.byCity.get('Santos|SP|BR')).toEqual({ cur: 5, prev: 2 });
+    expect(t.byCity.get('Lisboa|Lisboa|PT')).toEqual({ cur: 1, prev: 0 });
+  });
+
+  it('conversionByUf cruza visitas do site e contas por estado', () => {
+    const out = conversionByUf(
+      [
+        visit('ok', 'BR', 'SP', 'Santos', 40),
+        visit('ok', 'BR', 'RJ', 'Niterói', 10),
+        { ...visit('ok', 'BR', 'SP', 'Santos', 99), page: 'app' },
+        visit('ok', 'PT', null, 'Lisboa', 5),
+        visit('pendente', null, null, null, 7),
+      ],
+      [
+        { status: 'ok', country: 'BR', uf: 'SP', users: 4 },
+        { status: 'ok', country: 'BR', uf: 'MG', users: 2 },
+        { status: 'ok', country: 'PT', uf: null, users: 3 },
+      ],
+    );
+    expect(out.map(r => [r.uf, r.visits, r.users, r.rate])).toEqual([
+      ['SP', 40, 4, 10], ['RJ', 10, 0, 0], ['MG', 0, 2, null],
+    ]);
+    expect(conversionByUf(null, null)).toEqual([]);
   });
 
   it('trend e trendLabel', () => {

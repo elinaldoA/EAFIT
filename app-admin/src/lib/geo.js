@@ -79,6 +79,9 @@ export function inPlace(r, { uf = null, country = null } = {}) {
   return true;
 }
 
+// Chave de uma cidade nas listas e na comparação com o período anterior.
+export const cityKey = r => `${r.city}|${r.uf || r.region || ''}|${r.country}`;
+
 // Linhas das RPCs (status, country, uf, region, city, <countKey>) → totais dos
 // mapas e das listas. `place` ({ uf } ou { country }) filtra as cidades.
 export function summarizeGeo(rows, countKey = 'visits', place = {}) {
@@ -100,7 +103,7 @@ export function summarizeGeo(rows, countKey = 'visits', place = {}) {
       else brNoUf += n;
     }
     if (r.city && inPlace(r, place)) {
-      const key = `${r.city}|${r.uf || r.region || ''}|${r.country}`;
+      const key = cityKey(r);
       const cur = byCity.get(key) || { city: r.city, place: r.uf || r.region || '', country: r.country, total: 0 };
       cur.total += n;
       byCity.set(key, cur);
@@ -140,6 +143,25 @@ export function demographics(rows, place = {}) {
   };
 }
 
+// Visitas ao site × contas que abriram o app, por estado (só localizados no
+// Brasil). `rate` = contas a cada 100 visitas; null quando o estado não tem
+// visita (não dá pra dividir). Ordena por visitas.
+export function conversionByUf(visitRows, userRows) {
+  const byUf = new Map();
+  const get = uf => {
+    if (!byUf.has(uf)) byUf.set(uf, { uf, label: UF_NAMES[uf] || uf, visits: 0, users: 0 });
+    return byUf.get(uf);
+  };
+  for (const r of visitRows || []) {
+    if (r.page === 'landing' && r.status === 'ok' && r.country === 'BR' && r.uf) get(r.uf).visits += Number(r.visits) || 0;
+  }
+  for (const r of userRows || []) {
+    if (r.status === 'ok' && r.country === 'BR' && r.uf) get(r.uf).users += Number(r.users) || 0;
+  }
+  const rows = [...byUf.values()].map(v => ({ ...v, rate: v.visits > 0 ? Math.round((v.users / v.visits) * 1000) / 10 : null }));
+  return rows.sort((a, b) => b.visits - a.visits || b.users - a.users || a.label.localeCompare(b.label));
+}
+
 // Degrau de cor (0 = sem dado, 1–5) proporcional ao estado (ou país) com mais
 // registros.
 export const COLOR_STEPS = 5;
@@ -167,6 +189,7 @@ export function compareGeo(rows, mode = 'tudo') {
   const total = { cur: 0, prev: 0 };
   const byUf = new Map();
   const byCountry = new Map();
+  const byCity = new Map();
   const add = (map, key, cur, prev) => {
     const v = map.get(key) || { cur: 0, prev: 0 };
     v.cur += cur; v.prev += prev;
@@ -179,8 +202,9 @@ export function compareGeo(rows, mode = 'tudo') {
     total.cur += cur; total.prev += prev;
     add(byCountry, r.country, cur, prev);
     if (r.country === 'BR' && r.uf) add(byUf, r.uf, cur, prev);
+    if (r.city) add(byCity, cityKey(r), cur, prev);
   }
-  return { total, byUf, byCountry };
+  return { total, byUf, byCountry, byCity };
 }
 
 // Variação do período anterior pro atual: { dir: 'up' | 'down' | 'flat' | 'new', pct }.

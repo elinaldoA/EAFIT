@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo,
-  compareGeo, trend, trendLabel, demographics, countryName, flag, UF_NAMES,
+  compareGeo, conversionByUf, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
 import BrazilMap from './BrazilMap';
@@ -25,19 +25,30 @@ const MODES = [
   { key: 'site', label: 'Site', unit: 'visitas', note: 'Visitas à página de apresentação (1 por navegador por dia).' },
   { key: 'app', label: 'App', unit: 'acessos', note: 'Tela de login de quem chega sem sessão e dias de uso de quem está logado (1 por navegador ou conta por dia).' },
   { key: 'contas', label: 'Contas', unit: 'contas', note: 'Contas que abriram o app no período, pelo último acesso.' },
+  { key: 'conversao', label: 'Conversão', unit: 'estados', note: 'Por estado: visitas ao site (1 por navegador por dia) × contas que abriram o app no período. Não é taxa de cadastro: mede contas ativas a cada 100 visitas, e as duas contagens não são da mesma coorte.' },
 ];
 
 const CITIES_PREVIEW = 10;
 
+// Busca sem diferenciar maiúsculas nem acentos ("sao paulo" acha "São Paulo").
+const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
 // Chaves do cache: Tudo, Site e App saem das mesmas consultas (visitas + app),
 // então trocar entre eles não consulta de novo. `round` muda no "Atualizar".
-const dataKey = (round, mode, days) => `${round}:${mode === 'contas' ? 'contas' : 'acessos'}:${days}`;
+const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' ? mode : 'acessos'}:${days}`;
 const compareKey = (round, days) => `${round}:comparar:${days}`;
 
 async function loadAccess(days) {
   const [visits, app] = await Promise.all([fetchVisitGeo(days), fetchAppGeo(days)]);
   return { visits, app };
 }
+
+async function loadConversion(days) {
+  const [visits, users] = await Promise.all([fetchVisitGeo(days), fetchUserGeo(days)]);
+  return { visits, users };
+}
+
+const loadFor = (mode, days) => (mode === 'contas' ? fetchUserGeo(days) : mode === 'conversao' ? loadConversion(days) : loadAccess(days));
 
 function Trend({ t, days }) {
   if (!t) return null;
@@ -89,10 +100,11 @@ export default function GeoPanel() {
   const [store, setStore] = useState({});
   const [failure, setFailure] = useState(null);
   const [allCities, setAllCities] = useState(false);
+  const [cityQuery, setCityQuery] = useState('');
   const requested = useRef(new Set());
 
   const wantKey = dataKey(round, mode, days);
-  const wantCompare = mode === 'contas' ? null : compareKey(round, days);
+  const wantCompare = mode === 'contas' || mode === 'conversao' ? null : compareKey(round, days);
 
   useEffect(() => {
     const load = (key, fn) => {
@@ -102,7 +114,7 @@ export default function GeoPanel() {
         .then(value => setStore(s => ({ ...s, [key]: value })))
         .catch(err => { requested.current.delete(key); setFailure({ key, message: err.message }); });
     };
-    load(wantKey, () => (mode === 'contas' ? fetchUserGeo(days) : loadAccess(days)));
+    load(wantKey, () => loadFor(mode, days));
     // A comparação é um extra: se falhar, o painel segue sem as setas.
     if (wantCompare) load(wantCompare, () => fetchGeoCompare(days).catch(() => null));
   }, [wantKey, wantCompare, mode, days]);
@@ -117,12 +129,14 @@ export default function GeoPanel() {
   const shownMode = shown?.mode ?? mode;
   const shownDays = shown?.days ?? days;
   const raw = shown ? store[shown.key] : null;
-  const rawCompare = shown && shownMode !== 'contas' ? store[compareKey(shown.round, shownDays)] : null;
+  const isConversion = shownMode === 'conversao';
+  const rawCompare = shown && shownMode !== 'contas' && !isConversion ? store[compareKey(shown.round, shownDays)] : null;
 
   const rows = useMemo(() => {
-    if (!raw) return [];
+    if (!raw || isConversion) return [];
     return shownMode === 'contas' ? raw : selectAccessRows(raw.visits, raw.app, shownMode);
-  }, [raw, shownMode]);
+  }, [raw, shownMode, isConversion]);
+  const conversion = useMemo(() => (isConversion && raw ? conversionByUf(raw.visits, raw.users) : []), [raw, isConversion]);
 
   const countKey = shownMode === 'contas' ? 'users' : 'visits';
   const current = MODES.find(m => m.key === shownMode);
@@ -136,7 +150,14 @@ export default function GeoPanel() {
   const countryTotal = country ? summary.byCountry.get(country) || 0 : 0;
   const split = shownMode === 'tudo' ? splitSiteApp(rows) : null;
   const placeSplit = shownMode === 'tudo' && placeName ? splitSiteApp(rows, place) : null;
-  const cities = allCities ? summary.cities : summary.cities.slice(0, CITIES_PREVIEW);
+  // % das cidades sobre os localizados do estado/país escolhido (ou de todos).
+  const cityBase = uf && view === 'brasil' ? ufTotal : country && view === 'mundo' ? countryTotal : summary.located;
+  const query = fold(cityQuery.trim());
+  const matches = useMemo(() => (query
+    ? summary.cities.filter(c => fold(`${c.city} ${c.place} ${c.country !== 'BR' ? countryName(c.country) : ''}`).includes(query))
+    : summary.cities), [summary.cities, query]);
+  const cities = allCities || query ? matches : matches.slice(0, CITIES_PREVIEW);
+  const cityPct = n => (cityBase > 0 ? Math.round((n / cityBase) * 100) : 0);
 
   const pickView = v => { setView(v); setUf(null); setCountry(null); setAllCities(false); };
   const pickUf = v => { setUf(v); setAllCities(false); };
@@ -144,6 +165,13 @@ export default function GeoPanel() {
   const refresh = () => setRound(r => r + 1);
 
   const exportCsv = () => {
+    if (isConversion) {
+      downloadCsv(`localizacao_conversao_${shownDays}d.csv`, toCsv(conversion.map(c => ({ ...c, rate: c.rate ?? '' })), [
+        { key: 'label', label: 'Estado' }, { key: 'visits', label: 'Visitas ao site' },
+        { key: 'users', label: 'Contas' }, { key: 'rate', label: 'Contas por 100 visitas' },
+      ]));
+      return;
+    }
     const withTrend = (map, key) => {
       const v = map?.get(key);
       return { anterior: v ? v.prev : '', variacao: trendLabel(trend(v)) };
@@ -151,7 +179,10 @@ export default function GeoPanel() {
     const out = [
       ...summary.states.map(s => ({ tipo: 'Estado', nome: s.label, total: s.total, pct: s.pct, ...withTrend(cmp?.byUf, s.uf) })),
       ...summary.countries.map(c => ({ tipo: 'País', nome: c.label, total: c.total, pct: c.pct, ...withTrend(cmp?.byCountry, c.code) })),
-      ...summary.cities.map(c => ({ tipo: 'Cidade', nome: [c.city, c.place, c.country].filter(Boolean).join(' · '), total: c.total })),
+      ...summary.cities.map(c => ({
+        tipo: 'Cidade', nome: [c.city, c.place, c.country].filter(Boolean).join(' · '), total: c.total, pct: cityPct(c.total),
+        ...withTrend(cmp?.byCity, cityKey(c)),
+      })),
       ...(demo ? [
         ...demo.sexo.map(x => ({ tipo: 'Sexo', nome: x.label, total: x.total, pct: x.pct })),
         ...demo.faixa.map(x => ({ tipo: 'Faixa etária', nome: x.label, total: x.total, pct: x.pct })),
@@ -198,7 +229,35 @@ export default function GeoPanel() {
       </div>
 
       {error && <p className="form-msg form-msg--error">{error}</p>}
-      {!shown ? (!error && <Loading />) : (
+      {!shown ? (!error && <Loading />) : isConversion ? (
+        <div className={updating ? 'geo-body geo-body--updating' : 'geo-body'} aria-busy={updating}>
+          <p className="card-note" style={{ marginTop: 0 }}>
+            {current.note}{updating && <> · <em>atualizando…</em></>}
+          </p>
+          {conversion.length ? (
+            <div className="table-wrap">
+              <table className="source-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Estado</th><th scope="col">Visitas ao site</th>
+                    <th scope="col">Contas</th><th scope="col">Contas por 100 visitas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {conversion.map(c => (
+                    <tr key={c.uf}>
+                      <th scope="row">{c.label}</th>
+                      <td>{c.visits}</td>
+                      <td>{c.users}</td>
+                      <td>{c.rate === null ? '—' : c.rate.toLocaleString('pt-BR')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no Brasil no período ainda.</p>}
+        </div>
+      ) : (
         <div className={updating ? 'geo-body geo-body--updating' : 'geo-body'} aria-busy={updating}>
           <p className="card-note" style={{ marginTop: 0 }}>
             {current.note}
@@ -285,20 +344,35 @@ export default function GeoPanel() {
               <h3 className="subsection-title">Cidades{placeName ? ` em ${placeName}` : ''}</h3>
               {summary.cities.length ? (
                 <>
-                  <div className="table-wrap">
-                    <table className="source-table">
-                      <thead><tr><th scope="col">Cidade</th><th scope="col">Total</th></tr></thead>
-                      <tbody>
-                        {cities.map(c => (
-                          <tr key={`${c.city}|${c.place}|${c.country}`}>
-                            <th scope="row">{c.city}{c.place ? ` · ${c.place}` : ''}{c.country !== 'BR' ? ` · ${c.country}` : ''}</th>
-                            <td>{c.total}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
                   {summary.cities.length > CITIES_PREVIEW && (
+                    <input
+                      type="search" className="input geo-search" value={cityQuery} placeholder="Buscar cidade"
+                      aria-label="Buscar cidade" onChange={e => setCityQuery(e.target.value)}
+                    />
+                  )}
+                  {cities.length ? (
+                    <div className="table-wrap">
+                      <table className="source-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Cidade</th><th scope="col">Total</th><th scope="col">%</th>
+                            {cmp && <th scope="col">Variação</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cities.map(c => (
+                            <tr key={cityKey(c)}>
+                              <th scope="row">{c.city}{c.place ? ` · ${c.place}` : ''}{c.country !== 'BR' ? ` · ${c.country}` : ''}</th>
+                              <td>{c.total}</td>
+                              <td>{cityPct(c.total)}%</td>
+                              {cmp && <td><Trend t={trend(cmp.byCity.get(cityKey(c)))} days={shownDays} /></td>}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : <p className="card-note" style={{ marginTop: 0 }}>Nenhuma cidade encontrada para “{cityQuery.trim()}”.</p>}
+                  {!query && summary.cities.length > CITIES_PREVIEW && (
                     <button type="button" className="btn btn--ghost btn--small geo-more" onClick={() => setAllCities(v => !v)}>
                       {allCities ? 'Mostrar menos' : `Ver todas as ${summary.cities.length} cidades`}
                     </button>
