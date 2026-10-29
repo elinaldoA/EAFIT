@@ -192,26 +192,37 @@ describe('NutricaoPage', () => {
     expect(mockToast).toHaveBeenCalledWith('Dia corrigido');
   });
 
-  it('assistente: a refeição de sempre entra inteira com um toque', async () => {
+  it('próximo passo: a refeição de sempre entra inteira com um toque', async () => {
     const day = n => { const d = new Date(`${todayDate()}T12:00:00`); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
     const r = (date, name, kcal) => ({ log_date: date, meal: 'jantar', name, icon: '🍽️', protein_g: 10, kcal, carbs_g: 0, fat_g: 0 });
     pastRows = [r(day(1), 'Tapioca', 200), r(day(1), 'Suco', 100), r(day(2), 'Tapioca', 200), r(day(2), 'Suco', 100)];
     render(<NutricaoPage active />);
     await screen.findByText('Ovo');
     fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'jantar' } });
-    fireEvent.click(await screen.findByText('Adicionar os 2'));
+    expect(await screen.findByText(/Tapioca \+ Suco/)).toBeTruthy();
+    fireEvent.click(screen.getByText('Registrar agora'));
     expect(readLocalTotals()).toMatchObject({ kcal: 300, protein: 20 });
     expect(document.querySelector('.meal-log').textContent).toContain('Tapioca');
-    // Lançada a refeição, o assistente não oferece de novo.
-    expect(screen.queryByText('Adicionar os 2')).toBeNull();
+    // Lançada a refeição, o próximo passo vira uma sugestão de proteína.
+    expect(screen.queryByText(/Tapioca \+ Suco/)).toBeNull();
   });
 
-  it('assistente: sugestão para fechar a proteína soma as porções num registro', async () => {
+  it('próximo passo: uma sugestão por vez, "Outra opção" troca, registrar soma as porções', async () => {
     render(<NutricaoPage active />);
-    const chip = (await screen.findAllByRole('button')).find(b => b.classList.contains('coach__chip'));
-    const before = readLocalTotals().protein;
-    fireEvent.click(chip);
-    expect(readLocalTotals().protein).toBeGreaterThan(before);
+    await screen.findByText('Ovo');
+    const label = () => document.querySelector('.coach__what strong').textContent;
+    const first = label();
+    fireEvent.click(screen.getByText('Outra opção'));
+    expect(label()).not.toBe(first);
+    fireEvent.click(screen.getByText('Registrar agora'));
+    expect(readLocalTotals().protein).toBeGreaterThan(0);
     expect(document.querySelectorAll('.meal-log__item')).toHaveLength(1);
+  });
+
+  it('sem nada para desfazer, não mostra o botão de desfazer nem o de zerar', async () => {
+    render(<NutricaoPage active />);
+    await screen.findByText('Ovo');
+    expect(screen.queryByText(/Desfazer/)).toBeNull();
+    expect(screen.queryByText('Zerar o dia')).toBeNull();
   });
 });

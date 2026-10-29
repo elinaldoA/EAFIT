@@ -246,21 +246,33 @@
 .meal-log__macros { font-size: var(--fs-xs); opacity: 0.7; white-space: nowrap; }
 .meal-log__btn { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--text); cursor: pointer; }
 
-/* Assistente do dia (aba Nutrição) */
-.coach__pace { margin: 0; font-size: var(--fs-md); padding-left: var(--sp-3); border-left: 3px solid var(--primary); }
+/* Topo da Nutrição: anel de proteína + calorias, carbo e gordura em linha */
+.nutri-top { display: flex; flex-direction: column; gap: var(--sp-3); }
+.macro-bars--compact { flex-direction: row; gap: var(--sp-3); padding: 0 var(--sp-1); }
+.macro-bars--compact .macro-bars__row { flex: 1; min-width: 0; }
+.macro-bars--compact .macro-bars__head { flex-direction: column; gap: 1px; font-size: var(--fs-xs); color: var(--text-muted); }
+.macro-bars--compact .macro-bars__head strong { font-size: var(--fs-sm); color: var(--text); font-variant-numeric: tabular-nums; }
+.macro-bars--compact .macro-bars__track { height: 6px; }
+
+/* Próximo passo (aba Nutrição) */
+.coach__title { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.coach__pace { margin: 0; font-size: var(--fs-md); font-weight: 600; padding-left: var(--sp-3); border-left: 3px solid var(--primary); }
 .coach__pace--warn { border-left-color: var(--warning); }
 .coach__pace--ok { border-left-color: var(--success); }
-.coach__block { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
-.coach__title { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.coach__block > .coach__chips { align-self: stretch; }
-.coach__chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--sp-2); }
-.coach__chip {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 44px; min-width: 0;
-  padding: var(--sp-2); border: 1px solid var(--border); border-radius: var(--r-lg);
-  background: var(--surface-2); color: var(--text); font-size: var(--fs-sm); cursor: pointer; text-align: left;
+.coach__action {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3); border-radius: var(--r-lg); background: var(--surface-2);
 }
-.coach__chip-name { overflow-wrap: anywhere; }
-.coach__chip small { font-size: var(--fs-xs); color: var(--success); white-space: nowrap; }
-.coach__habit { margin: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); overflow-wrap: anywhere; }
-.coach__habit small { font-size: var(--fs-xs); color: var(--text-dim); }
+.coach__what { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.coach__what strong { font-size: var(--fs-md); overflow-wrap: anywhere; }
+.coach__what small { font-size: var(--fs-xs); color: var(--text-dim); }
+.coach__action .btn { flex-shrink: 0; }
+.coach__next { align-self: flex-start; margin-top: calc(var(--sp-2) * -1); }
 .coach__tip { margin-top: 0; }
+
+.nutri-day-tools { display: flex; justify-content: space-between; gap: var(--sp-2); padding-top: var(--sp-2); border-top: 1px solid var(--border); }
+.nutri-reading { margin: 0; font-size: var(--fs-md); font-weight: 600; line-height: 1.4; }
+
+.nutri-ref { border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); padding: var(--sp-3) var(--sp-4); }
+.nutri-ref summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); min-height: 32px; display: flex; align-items: center; }
+.nutri-ref[open] summary { margin-bottom: var(--sp-2); }
