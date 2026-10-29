@@ -24,9 +24,11 @@
   --water-h:      #7dd3fc;
   --error-h:      #dc2626;
   --success-strong: #16a34a;
-  --macro-kcal:   #f59e0b;
-  --macro-carbs:  #a78bfa;
-  --macro-fat:    #fb7185;
+  /* Pizza de macros: trio validado para daltonismo (ΔE ≥ 13) no escuro e no claro */
+  --macro-kcal:   #a1a1aa;
+  --macro-protein:#0596d6;
+  --macro-carbs:  #c98000;
+  --macro-fat:    #db2777;
   /* Texto sobre fundo laranja (primary) e sobre fundos de acento/erro */
   --on-primary:   #09090b;
   --on-accent:    #ffffff;
@@ -86,6 +88,10 @@
   --error:        #dc2626;
   --water:        #0284c7;
   --water-h:      #38bdf8;
+  --macro-kcal:   #71717a;
+  --macro-protein:#0284c7;
+  --macro-carbs:  #d97706;
+  --macro-fat:    #db2777;
   --error-h:      #b91c1c;
   --success-strong: #15803d;
   --desktop-bg:   #e4e4e7;

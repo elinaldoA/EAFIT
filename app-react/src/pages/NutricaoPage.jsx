@@ -19,7 +19,7 @@ import { dayPace, suggestFoods, portionFood, mealHabit, proteinSpread, suggested
 import FoodSearch from '../components/FoodSearch';
 import MealLog from '../components/MealLog';
 import ProteinBars from '../components/ProteinBars';
-import MacroBars from '../components/MacroBars';
+import NutritionDayCard from '../components/NutritionDayCard';
 import NutritionCoach from '../components/NutritionCoach';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import Skeleton from '../components/Skeleton';
@@ -31,7 +31,6 @@ const SPREAD_FROM_HOUR = 19;
 const VISIBLE_FOODS = 8;
 
 const fmt = n => n.toLocaleString(locale);
-const fmtDec = n => n.toLocaleString(locale, { maximumFractionDigits: 1 });
 const READING_TEXT = {
   few_days: () => t('Registre as calorias por pelo menos 3 dias para ver a leitura da semana.'),
   on_track: () => t('Você está dentro da meta de calorias. Continue assim.'),
@@ -352,7 +351,6 @@ export default function NutricaoPage({ active }) {
     saveTotals(EMPTY_TOTALS);
   }
 
-  const pct = goalG ? Math.min(100, (protein / goalG) * 100) : 0;
   const remaining = Math.max(0, goalG - protein);
   const done = !!goalG && protein >= goalG;
   const allFoods = useMemo(() => sortByUse([...QUICK_FOODS, ...myFoods], useCounts), [myFoods, useCounts]);
@@ -400,30 +398,13 @@ export default function NutricaoPage({ active }) {
 
   return (
     <section id="page-nutricao" className="page active">
-      <div className="nutri-top">
-        <div className={`water-hero water-hero--protein${done ? ' water-hero--done' : ''}`}>
-          <div className="water-hero__ring" style={{ '--pct': pct }} role="img" aria-label={t('{v1}% da meta de proteína', { v1: Math.round(pct) })}>
-            <div className="water-hero__inner">
-              <span className="water-hero__value">{fmt(protein)}<small>g</small></span>
-              <span className="water-hero__goal">{goalG ? t('de {g} g', { g: fmt(goalG) }) : t('sem meta')}</span>
-            </div>
-          </div>
-          <div className="water-hero__info">
-            <span className="water-hero__kicker">{t('Proteína hoje')}</span>
-            <strong className="water-hero__status">
-              {!goalG ? t('Defina sua meta') : done ? t('Meta batida! 🎉') : t('Faltam {g} g', { g: fmt(remaining) })}
-            </strong>
-            <span className="water-hero__hint">
-              {!goalG
-                ? t('Preencha seus dados em Perfil › Meu corpo')
-                : stats.streak >= 2
-                  ? t('🔥 {n} dias seguidos na meta', { n: stats.streak })
-                  : t('{v1}% da meta do dia', { v1: Math.round(pct) })}
-            </span>
-          </div>
-        </div>
-        {goals ? <MacroBars totals={totals} goals={goals} compact /> : <ProfileNutritionSection goals={goals} />}
-      </div>
+      {goals ? (
+        <NutritionDayCard
+          totals={totals} goals={goals} micros={micros}
+          status={done ? t('Proteína batida! 🎉') : t('Faltam {g} g de proteína', { g: fmt(remaining) })}
+          hint={stats.streak >= 2 ? t('🔥 {n} dias seguidos na meta', { n: stats.streak }) : null}
+        />
+      ) : <ProfileNutritionSection goals={goals} />}
 
       <NutritionCoach
         pace={pace} action={action} meal={meal} spread={spread}
@@ -518,21 +499,6 @@ export default function NutricaoPage({ active }) {
       <div className="section-group">
         <div className="section-group__label">{t('Diário de hoje')}</div>
         <div className="dash-card">
-          {micros && (
-            <p className="nutri-micros">
-              <span className={goals && micros.fiber >= goals.fiber ? 'nutri-micros__ok' : undefined}>
-                {goals
-                  ? t('Fibras: {g} de {goal} g', { g: fmtDec(micros.fiber), goal: fmt(goals.fiber) })
-                  : t('Fibras: {g} g', { g: fmtDec(micros.fiber) })}
-              </span>
-              <span className={goals && micros.sodium > goals.sodium ? 'nutri-micros__over' : undefined}>
-                {goals
-                  ? t('Sódio: {mg} de até {limit} mg', { mg: fmt(micros.sodium), limit: fmt(goals.sodium) })
-                  : t('Sódio: {mg} mg', { mg: fmt(micros.sodium) })}
-              </span>
-              {micros.partial && <small>{t('Só conta os alimentos da busca e da TACO; atalhos e valores digitados não trazem esse dado.')}</small>}
-            </p>
-          )}
           <MealLog entries={entries} rest={rest} onEdit={handleEditEntry} onDelete={handleDeleteEntry} />
           <div className="nutri-day-tools">
             <button type="button" className="link-btn" onClick={() => setFixOpen(o => !o)} aria-expanded={fixOpen}>

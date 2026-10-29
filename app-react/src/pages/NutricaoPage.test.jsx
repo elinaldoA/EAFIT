@@ -169,8 +169,12 @@ describe('NutricaoPage', () => {
     fireEvent.click(screen.getByText('Adicionar'));
     expect(readLocalTotals().kcal).toBe(256);
     expect(document.querySelector('.meal-log').textContent).toContain('Arroz branco cozido 200g');
-    // Arroz da TACO traz fibra e sódio: o resumo do dia aparece.
-    expect(document.querySelector('.nutri-micros').textContent).toContain('3,2');
+    // Arroz da TACO traz fibra e sódio: entram no card do dia, junto dos macros.
+    const card = document.querySelector('.nutri-day');
+    expect(card.textContent).toContain('Fibras3,2');
+    expect(screen.getByRole('progressbar', { name: 'Sódio' })).toBeTruthy();
+    // A pizza só tem fatia para macro com calorias (o arroz não tem gordura).
+    expect(card.querySelectorAll('.nutri-pie__slice')).toHaveLength(2);
   });
 
   it('medida caseira converte para gramas', async () => {
