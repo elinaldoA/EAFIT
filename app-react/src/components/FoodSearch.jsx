@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchFoods, portionOf } from '../data/foodDatabase';
 import { lookupBarcode, isBarcode } from '../lib/openFoodFacts';
+import { canUseCamera, createBarcodeDetector } from '../lib/barcodeScan';
 import { t } from '../lib/i18n';
 import { trackFeature, trackEvent } from '../lib/tracking';
 
-const canScan = () => typeof window !== 'undefined' && 'BarcodeDetector' in window && !!navigator.mediaDevices?.getUserMedia;
-
-// Lê códigos de barras pela câmera (BarcodeDetector: Chrome/Edge no Android e
-// Mac). Sem suporte, o botão não aparece e fica o campo para digitar o código.
+// Lê códigos de barras pela câmera (lib/barcodeScan: leitor do navegador ou
+// zxing no Safari/iPhone). Sem câmera, o botão não aparece e fica o campo para
+// digitar o código.
 function Scanner({ onCode, onClose }) {
   const video = useRef(null);
   useEffect(() => {
@@ -18,12 +18,12 @@ function Scanner({ onCode, onClose }) {
         if (stop) { stream.getTracks().forEach(tr => tr.stop()); return; }
         video.current.srcObject = stream;
         await video.current.play();
-        const detector = new window.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a'] });
+        const detector = await createBarcodeDetector();
         const tick = async () => {
           if (stop) return;
           try {
-            const found = await detector.detect(video.current);
-            if (found[0]?.rawValue) { onCode(found[0].rawValue); return; }
+            const code = await detector.detect(video.current);
+            if (code) { onCode(code); return; }
           } catch { /* quadro sem código: tenta de novo */ }
           timer = setTimeout(tick, 250);
         };
@@ -129,7 +129,7 @@ export default function FoodSearch({ onAdd }) {
         <button type="button" className="btn btn--ghost btn--sm" disabled={busy || !code} onClick={() => findCode(code)}>
           {busy ? t('Buscando…') : t('Buscar código')}
         </button>
-        {canScan() && (
+        {canUseCamera() && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => setScanning(s => !s)}>📷 {t('Ler')}</button>
         )}
       </div>

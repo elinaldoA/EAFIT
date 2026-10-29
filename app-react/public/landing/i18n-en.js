@@ -628,6 +628,7 @@ window.LANDING_EN = {
     'Um código e um link pra cada canal, como Instagram, WhatsApp, TikTok e YouTube, pra saber de onde vem cada cadastro.': 'A code and a link for each channel, such as Instagram, WhatsApp, TikTok and YouTube, so you know where each sign-up comes from.',
     'Privacidade em primeiro lugar': 'Privacy first',
     'O painel mostra só números. Quem se cadastra pelo seu link continua anônimo pra você.': 'The dashboard only shows numbers. People who sign up through your link stay anonymous to you.',
+    'Leitura do código de barras pela câmera também no iPhone e no Safari': 'Barcode scanning with the camera now also works on iPhone and Safari',
     'Busca de alimentos com a Tabela TACO completa: quase 600 alimentos brasileiros, como cuscuz, tapioca, açaí e baião de dois': 'Food search with the full TACO table: almost 600 Brazilian foods, like cuscuz, tapioca, açaí and baião de dois',
     'Nutrição: registre proteína, calorias e macros com atalhos de um toque, crie e edite os seus, busque alimentos por nome ou código de barras, veja o diário por refeição, corrija qualquer dia e acompanhe o resumo da semana, tudo funcionando offline': 'Nutrition: log protein, calories and macros with one-tap shortcuts, create and edit your own, search foods by name or barcode, see a meal-by-meal diary, fix any day and follow the weekly summary, all working offline',
     // Outubro/2026: liga do mês, academia ou casa, modo Personal novo, embaixadores e influenciadores
