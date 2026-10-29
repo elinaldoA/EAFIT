@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchFoods, portionOf } from '../data/foodDatabase';
+import { measuresFor } from '../data/householdMeasures';
 import { lookupBarcode, isBarcode } from '../lib/openFoodFacts';
 import { canUseCamera, createBarcodeDetector } from '../lib/barcodeScan';
-import { t } from '../lib/i18n';
+import { t, locale } from '../lib/i18n';
 import { trackFeature, trackEvent } from '../lib/tracking';
 
 // Lê códigos de barras pela câmera (lib/barcodeScan: leitor do navegador ou
@@ -51,18 +52,31 @@ export default function FoodSearch({ onAdd }) {
   const [query, setQuery] = useState('');
   const [code, setCode] = useState('');
   const [picked, setPicked] = useState(null);
-  const [grams, setGrams] = useState('');
+  // Quantidade na medida escolhida: gramas (measure = -1) ou uma medida caseira.
+  const [amount, setAmount] = useState('');
+  const [measure, setMeasure] = useState(-1);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [scanning, setScanning] = useState(false);
 
   const results = useMemo(() => searchFoods(query), [query]);
+  const measures = useMemo(() => (picked ? measuresFor(picked.ptName || picked.name) : []), [picked]);
+  const unit = measures[measure];
+  const grams = Math.round((Number(amount) || 0) * (unit ? unit.grams : 1));
   const macros = picked ? portionOf(picked, grams) : null;
 
   function pick(food) {
     setPicked(food);
-    setGrams(String(food.portion));
+    setMeasure(-1);
+    setAmount(String(food.portion));
     setMsg('');
+  }
+
+  // Trocar a medida mantém o peso perto do que já estava (arredonda em meia medida).
+  function changeMeasure(i) {
+    const next = measures[i];
+    setMeasure(i);
+    setAmount(String(next ? Math.max(0.5, Math.round((grams / next.grams) * 2) / 2) : grams || picked.portion));
   }
 
   async function findCode(value) {
@@ -88,13 +102,13 @@ export default function FoodSearch({ onAdd }) {
 
   function submit(e) {
     e.preventDefault();
-    if (!picked || !(Number(grams) > 0)) return;
+    if (!picked || !(grams > 0)) return;
     trackFeature(String(picked.id).startsWith('off') ? 'barcode' : 'food_search');
-    onAdd({ icon: picked.icon, label: `${picked.name} ${Number(grams)}g`, ...macros });
+    onAdd({ icon: picked.icon, label: `${picked.name} ${grams}g`, ...macros });
     setPicked(null);
     setQuery('');
     setCode('');
-    setGrams('');
+    setAmount('');
   }
 
   return (
@@ -139,14 +153,32 @@ export default function FoodSearch({ onAdd }) {
       {picked && (
         <form className="custom-food food-search__pick" onSubmit={submit}>
           <p className="custom-food__name"><strong>{picked.icon} {picked.name}</strong></p>
+          {measures.length > 0 && (
+            <label className="food-search__measure">
+              {t('Medida')}
+              <select value={measure} onChange={e => changeMeasure(Number(e.target.value))}>
+                <option value={-1}>{t('gramas')}</option>
+                {measures.map((m, i) => <option key={m.label} value={i}>{t('{label} ({g} g)', { label: m.label, g: m.grams })}</option>)}
+              </select>
+            </label>
+          )}
           <label>
-            {t('Quantidade (g)')}
-            <input type="number" inputMode="numeric" min="1" max="2000" value={grams} onChange={e => setGrams(e.target.value)} />
+            {unit ? t('Quantidade') : t('Quantidade (g)')}
+            <input
+              type="number" inputMode="decimal" min={unit ? 0.5 : 1} step={unit ? 0.5 : 1} max={unit ? 50 : 2000}
+              value={amount} onChange={e => setAmount(e.target.value)}
+            />
           </label>
           <p className="food-search__macros">
+            {unit && <>{t('{g} g', { g: grams })} · </>}
             {t('{kcal} kcal · {g} g prot · {carbs} g carbo · {fat} g gord', { kcal: macros.kcal, g: macros.g, carbs: macros.carbs, fat: macros.fat })}
+            {macros.fiber !== undefined && (
+              <small className="food-search__micros">
+                {t('{fiber} g de fibra · {sodium} mg de sódio', { fiber: macros.fiber.toLocaleString(locale), sodium: macros.sodium.toLocaleString(locale) })}
+              </small>
+            )}
           </p>
-          <button type="submit" className="btn btn--sm custom-food__submit" disabled={!(Number(grams) > 0)}>{t('Adicionar')}</button>
+          <button type="submit" className="btn btn--sm custom-food__submit" disabled={!(grams > 0)}>{t('Adicionar')}</button>
           <button type="button" className="link-btn" onClick={() => setPicked(null)}>{t('Cancelar')}</button>
         </form>
       )}

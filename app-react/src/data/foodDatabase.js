@@ -1,81 +1,135 @@
 import { t } from '../lib/i18n';
 import { TACO_FOODS } from './tacoFoods';
 
-// Base de alimentos para a busca da aba Nutrição. Valores aproximados por 100 g
-// (preparo comum no Brasil, na linha da Tabela TACO), arredondados; `portion`
-// é a quantidade em gramas que a busca sugere. Não substitui orientação de
+// Base de alimentos para a busca da aba Nutrição, por 100 g; `portion` é a
+// quantidade em gramas que a busca sugere. Não substitui orientação de
 // nutricionista.
-// p = proteína (g), k = kcal, c = carboidratos (g), f = gorduras (g).
+//
+// Cada linha: [ícone, nome, porção, origem]. A origem diz de onde saem os valores:
+// - nome da TACO: os valores vêm da tabela, sem número copiado à mão;
+// - [[nome da TACO, gramas], ...]: prato montado, calculado pelos ingredientes;
+// - [kcal, proteína, carbo, gordura, fibra, sódio]: item que a TACO não tem
+//   (valores do USDA FoodData Central ou do rótulo comum do produto).
 const RAW = [
-  ['🍚', 'Arroz branco cozido', 130, 2.5, 28, 0.2, 150],
-  ['🍚', 'Arroz integral cozido', 124, 2.6, 26, 1, 150],
-  ['🫘', 'Feijão carioca cozido', 76, 4.8, 14, 0.5, 100],
-  ['🫘', 'Feijão preto cozido', 77, 4.5, 14, 0.5, 100],
-  ['🫘', 'Lentilha cozida', 93, 6.3, 16, 0.5, 100],
-  ['🫛', 'Grão-de-bico cozido', 130, 7, 21, 2, 100],
-  ['🍝', 'Macarrão cozido', 135, 4.5, 28, 0.7, 150],
-  ['🥔', 'Batata inglesa cozida', 52, 1.2, 12, 0, 150],
-  ['🍠', 'Batata-doce cozida', 77, 0.6, 18, 0.1, 150],
-  ['🍠', 'Mandioca cozida', 125, 0.6, 30, 0.3, 100],
-  ['🌽', 'Cuscuz de milho', 115, 2.2, 25, 0.7, 120],
-  ['🫓', 'Tapioca (goma hidratada)', 240, 0, 59, 0, 50],
-  ['🥖', 'Pão francês', 300, 8, 58, 3, 50],
-  ['🍞', 'Pão de forma integral', 253, 9, 49, 3.5, 50],
-  ['🥣', 'Aveia em flocos', 394, 14, 67, 8.5, 30],
-  ['🥣', 'Granola', 420, 9, 66, 14, 30],
-  ['🌽', 'Milho cozido', 98, 3.2, 21, 1.2, 100],
-  ['🍗', 'Peito de frango grelhado', 165, 31, 0, 3.6, 120],
-  ['🍗', 'Coxa de frango assada', 215, 26, 0, 12, 100],
-  ['🥩', 'Carne bovina (patinho) grelhada', 219, 35, 0, 8, 120],
-  ['🥩', 'Carne moída refogada', 212, 26, 0, 12, 100],
-  ['🥩', 'Alcatra grelhada', 241, 31, 0, 12, 120],
-  ['🥓', 'Carne de porco (lombo) assada', 210, 29, 0, 10, 100],
-  ['🐟', 'Tilápia grelhada', 128, 26, 0, 2.7, 120],
-  ['🐟', 'Salmão grelhado', 208, 22, 0, 13, 120],
-  ['🐟', 'Atum em lata (natural)', 116, 26, 0, 1, 120],
-  ['🥚', 'Ovo cozido', 146, 13, 1, 10, 50],
-  ['🍳', 'Ovo mexido', 170, 11, 1.6, 13, 100],
-  ['🥛', 'Leite integral', 61, 3.2, 4.7, 3.3, 200],
-  ['🥛', 'Leite desnatado', 35, 3.4, 5, 0.1, 200],
-  ['🥛', 'Iogurte natural', 51, 4.1, 5.2, 1.6, 170],
-  ['🥛', 'Iogurte grego natural', 97, 9, 4, 5, 170],
-  ['🧀', 'Queijo minas frescal', 264, 17, 3, 20, 40],
-  ['🧀', 'Queijo muçarela', 330, 22, 3, 25, 30],
-  ['🧀', 'Queijo cottage', 98, 11, 3.4, 4.3, 100],
-  ['🧈', 'Requeijão cremoso', 230, 9, 3, 21, 30],
-  ['🥤', 'Whey protein (pó)', 400, 80, 8, 6, 30],
-  ['🥬', 'Alface', 15, 1.4, 2.9, 0.2, 50],
-  ['🥒', 'Tomate', 18, 0.9, 3.9, 0.2, 100],
-  ['🥕', 'Cenoura cozida', 35, 0.8, 8, 0.2, 80],
-  ['🥦', 'Brócolis cozido', 35, 2.4, 7, 0.4, 100],
-  ['🥒', 'Abobrinha cozida', 20, 1.1, 4, 0.2, 100],
-  ['🥬', 'Couve refogada', 90, 2.7, 8, 6, 80],
-  ['🍌', 'Banana prata', 98, 1.3, 26, 0.1, 100],
-  ['🍎', 'Maçã', 56, 0.3, 15, 0.1, 130],
-  ['🍊', 'Laranja', 46, 1, 11, 0.1, 150],
-  ['🥭', 'Manga', 64, 0.4, 17, 0.3, 150],
-  ['🍉', 'Melancia', 33, 0.9, 8, 0, 200],
-  ['🍇', 'Uva', 53, 0.7, 14, 0.2, 100],
-  ['🍓', 'Morango', 30, 0.9, 7, 0.3, 100],
-  ['🍍', 'Abacaxi', 48, 0.9, 12, 0.1, 100],
-  ['🍈', 'Mamão', 40, 0.5, 10, 0.1, 150],
-  ['🥑', 'Abacate', 160, 2, 8.5, 14.7, 80],
-  ['🥜', 'Amendoim', 567, 26, 16, 49, 30],
-  ['🥜', 'Pasta de amendoim', 590, 25, 20, 50, 15],
-  ['🌰', 'Castanha-do-pará', 656, 14, 12, 66, 15],
-  ['🫒', 'Azeite de oliva', 884, 0, 0, 100, 10],
-  ['🍫', 'Chocolate ao leite', 540, 7, 59, 30, 25],
-  ['🍪', 'Biscoito cream cracker', 432, 10, 69, 14, 30],
-  ['☕', 'Café com açúcar', 25, 0.1, 6, 0, 100],
-  ['🧃', 'Suco de laranja', 45, 0.7, 10, 0.2, 200],
-  ['🥤', 'Refrigerante', 40, 0, 10, 0, 350],
-  ['🍕', 'Pizza (muçarela)', 270, 11, 33, 10, 120],
-  ['🍔', 'Hambúrguer com pão', 250, 13, 25, 11, 150],
-  ['🥟', 'Pastel de carne frito', 340, 10, 30, 20, 80],
+  ['🍚', 'Arroz branco cozido', 150, 'Arroz, tipo 1, cozido'],
+  ['🍚', 'Arroz integral cozido', 150, 'Arroz, integral, cozido'],
+  ['🫘', 'Feijão carioca cozido', 140, 'Feijão, carioca, cozido'],
+  ['🫘', 'Feijão preto cozido', 140, 'Feijão, preto, cozido'],
+  ['🫘', 'Lentilha cozida', 100, 'Lentilha, cozida'],
+  ['🫛', 'Grão-de-bico cozido', 100, [164, 8.9, 27.4, 2.6, 7.6, 7]],
+  ['🍝', 'Macarrão cozido', 150, [158, 5.8, 30.9, 0.9, 1.8, 1]],
+  ['🥔', 'Batata inglesa cozida', 150, 'Batata, inglesa, cozida'],
+  ['🍠', 'Batata-doce cozida', 150, 'Batata, doce, cozida'],
+  ['🍠', 'Mandioca cozida', 100, 'Mandioca, cozida'],
+  ['🌽', 'Cuscuz de milho', 120, 'Cuscuz, de milho, cozido com sal'],
+  ['🫓', 'Tapioca (goma hidratada)', 50, [240, 0, 59, 0, 0, 0]],
+  ['🥞', 'Crepioca', 70, [['Ovo, de galinha, inteiro, cru', 50], ['Fécula, de mandioca', 20]]],
+  ['🥖', 'Pão francês', 50, 'Pão, trigo, francês'],
+  ['🍞', 'Pão de forma integral', 50, 'Pão, trigo, forma, integral'],
+  ['🧀', 'Pão de queijo', 40, 'Pão, de queijo, assado'],
+  ['🥣', 'Aveia em flocos', 30, 'Aveia, flocos, crua'],
+  ['🥣', 'Granola', 30, [420, 9, 66, 14, 7, 30]],
+  ['🌽', 'Milho cozido', 100, [96, 3.4, 21, 1.5, 2.4, 1]],
+  ['🍗', 'Peito de frango grelhado', 120, 'Frango, peito, sem pele, grelhado'],
+  ['🍗', 'Frango desfiado (peito cozido)', 100, 'Frango, peito, sem pele, cozido'],
+  ['🍗', 'Coxa de frango assada', 100, 'Frango, coxa, com pele, assada'],
+  ['🥩', 'Carne bovina (patinho) grelhada', 120, 'Carne, bovina, patinho, sem gordura, grelhado'],
+  ['🥩', 'Carne moída refogada', 100, 'Carne, bovina, acém, moído, cozido'],
+  ['🥩', 'Alcatra grelhada', 120, [241, 31, 0, 12, 0, 60]],
+  ['🥓', 'Carne de porco (lombo) assada', 100, 'Porco, lombo, assado'],
+  ['🐟', 'Tilápia grelhada', 120, [128, 26.2, 0, 2.7, 0, 56]],
+  ['🐟', 'Salmão grelhado', 120, 'Salmão, sem pele, fresco, grelhado'],
+  ['🐟', 'Atum em lata (natural)', 120, [116, 25.5, 0, 0.8, 0, 247]],
+  ['🐟', 'Sardinha em lata (óleo)', 84, 'Sardinha, conserva em óleo'],
+  ['🥚', 'Ovo cozido', 50, 'Ovo, de galinha, inteiro, cozido/10minutos'],
+  ['🍳', 'Ovo frito', 50, 'Ovo, de galinha, inteiro, frito'],
+  ['🍳', 'Ovo mexido', 100, [149, 10, 1.6, 11, 0, 145]],
+  ['🥛', 'Leite integral', 200, [61, 3.2, 4.8, 3.3, 0, 43]],
+  ['🥛', 'Leite desnatado', 200, [34, 3.4, 5, 0.1, 0, 42]],
+  ['🥛', 'Iogurte natural', 170, 'Iogurte, natural'],
+  ['🥛', 'Iogurte grego natural', 170, [97, 9, 4, 5, 0, 35]],
+  ['🧀', 'Queijo minas frescal', 30, 'Queijo, minas, frescal'],
+  ['🧀', 'Queijo muçarela', 30, 'Queijo, mozarela'],
+  ['🧀', 'Queijo cottage', 100, [98, 11.1, 3.4, 4.3, 0, 364]],
+  ['🧈', 'Requeijão cremoso', 30, 'Queijo, requeijão, cremoso'],
+  ['🧈', 'Manteiga', 10, 'Manteiga, com sal'],
+  ['🥤', 'Whey protein (pó)', 30, [400, 80, 8, 6, 0, 250]],
+  ['🌱', 'Tofu', 100, [76, 8.1, 1.9, 4.8, 0.3, 7]],
+  ['🥬', 'Alface', 30, 'Alface, crespa, crua'],
+  ['🍅', 'Tomate', 100, 'Tomate, com semente, cru'],
+  ['🥕', 'Cenoura cozida', 80, 'Cenoura, cozida'],
+  ['🥦', 'Brócolis cozido', 100, 'Brócolis, cozido'],
+  ['🥒', 'Abobrinha cozida', 100, 'Abobrinha, italiana, cozida'],
+  ['🥬', 'Couve refogada', 80, 'Couve, manteiga, refogada'],
+  ['🍌', 'Banana prata', 70, 'Banana, prata, crua'],
+  ['🍎', 'Maçã', 130, 'Maçã, Fuji, com casca, crua'],
+  ['🍊', 'Laranja', 140, 'Laranja, pêra, crua'],
+  ['🥭', 'Manga', 150, 'Manga, Tommy Atkins, crua'],
+  ['🍉', 'Melancia', 200, 'Melancia, crua'],
+  ['🍇', 'Uva', 100, 'Uva, Itália, crua'],
+  ['🍓', 'Morango', 100, 'Morango, cru'],
+  ['🍍', 'Abacaxi', 100, 'Abacaxi, cru'],
+  ['🍈', 'Mamão', 150, 'Mamão, Papaia, cru'],
+  ['🥑', 'Abacate', 80, 'Abacate, cru'],
+  ['🍇', 'Açaí na tigela (com xarope de guaraná)', 300, 'Açaí, polpa, com xarope de guaraná e glucose'],
+  ['🍇', 'Açaí (polpa pura)', 100, 'Açaí, polpa, congelada'],
+  ['🥜', 'Amendoim', 30, 'Amendoim, torrado, salgado'],
+  ['🥜', 'Pasta de amendoim', 15, [588, 25, 20, 50, 6, 17]],
+  ['🌰', 'Castanha-do-pará', 15, 'Castanha-do-Brasil, crua'],
+  ['🫒', 'Azeite de oliva', 8, 'Azeite, de oliva, extra virgem'],
+  ['🍯', 'Mel', 20, 'Mel, de abelha'],
+  ['🍫', 'Chocolate ao leite', 25, 'Chocolate, ao leite'],
+  ['🍪', 'Biscoito cream cracker', 30, 'Biscoito, salgado, cream cracker'],
+  ['☕', 'Café com açúcar', 100, [['Café, infusão 10%', 100], ['Açúcar, refinado', 5]]],
+  ['🧃', 'Suco de laranja', 200, 'Laranja, pêra, suco'],
+  ['🥤', 'Refrigerante', 350, 'Refrigerante, tipo cola'],
+  ['🍛', 'Prato feito (arroz, feijão, carne e salada)', 410, [
+    ['Arroz, tipo 1, cozido', 150], ['Feijão, carioca, cozido', 100], ['Carne, bovina, acém, moído, cozido', 100],
+    ['Alface, crespa, crua', 30], ['Tomate, com semente, cru', 30],
+  ]],
+  ['🍲', 'Feijoada', 200, 'Feijoada'],
+  ['🍲', 'Estrogonofe de frango', 150, 'Estrogonofe de frango'],
+  ['🍲', 'Estrogonofe de carne', 150, 'Estrogonofe de carne'],
+  ['🍛', 'Baião de dois', 150, 'Baião de dois, arroz e feijão-de-corda'],
+  ['🥄', 'Farofa', 30, 'Mandioca, farofa, temperada'],
+  ['🍟', 'Batata frita', 100, 'Batata, inglesa, frita'],
+  ['🍕', 'Pizza (muçarela)', 120, [266, 11.4, 33.3, 9.7, 2.3, 598]],
+  ['🍔', 'Hambúrguer com pão', 150, [['Hambúrguer, bovino, grelhado', 90], ['Pão, trigo, francês', 60]]],
+  ['🥟', 'Pastel de carne frito', 80, 'Pastel, de carne, frito'],
 ];
 
-export const FOOD_DATABASE = RAW.map(([icon, name, kcal, g, carbs, fat, portion], i) => ({
-  id: `db${i}`, icon, name: t(name), kcal, g, carbs, fat, portion,
+const NUTRIENTS = ['kcal', 'g', 'carbs', 'fat', 'fiber', 'sodium'];
+const TACO_BY_NAME = new Map(TACO_FOODS.map(f => [f.name, f]));
+const r1 = n => Math.round(n * 10) / 10;
+
+// Valores por 100 g de um alimento da TACO, pelo nome exato da tabela.
+export function fromTaco(name) {
+  const f = TACO_BY_NAME.get(name);
+  if (!f) throw new Error(`TACO sem "${name}"`);
+  return Object.fromEntries(NUTRIENTS.map(k => [k, f[k]]));
+}
+
+// Prato montado: soma os ingredientes e devolve por 100 g do prato pronto.
+function mix(parts) {
+  const total = parts.reduce((s, [, grams]) => s + grams, 0);
+  const sum = Object.fromEntries(NUTRIENTS.map(k => [k, 0]));
+  for (const [name, grams] of parts) {
+    const f = fromTaco(name);
+    for (const k of NUTRIENTS) sum[k] += (f[k] * grams) / 100;
+  }
+  const out = Object.fromEntries(NUTRIENTS.map(k => [k, r1((sum[k] / total) * 100)]));
+  return { ...out, kcal: Math.round(out.kcal), sodium: Math.round(out.sodium) };
+}
+
+function valuesOf(source) {
+  if (typeof source === 'string') return fromTaco(source);
+  if (Array.isArray(source[0])) return mix(source);
+  return Object.fromEntries(NUTRIENTS.map((k, i) => [k, source[i]]));
+}
+
+// `ptName`: o nome original, que as medidas caseiras usam com o app em inglês.
+export const FOOD_DATABASE = RAW.map(([icon, name, portion, source], i) => ({
+  id: `db${i}`, icon, name: t(name), ptName: name, ...valuesOf(source), portion,
 }));
 
 const plain = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -101,7 +155,8 @@ export function searchFoods(query, list = ALL_FOODS, limit = 10) {
     .map(([, , f]) => f);
 }
 
-// Macros de `grams` gramas de um alimento por 100 g, no formato do registro do dia.
+// Macros de `grams` gramas de um alimento por 100 g, no formato do registro do
+// dia. Fibra e sódio só vêm quando o alimento traz esse dado.
 export function portionOf(food, grams) {
   const k = (Number(grams) || 0) / 100;
   return {
@@ -109,5 +164,7 @@ export function portionOf(food, grams) {
     kcal: Math.round(food.kcal * k),
     carbs: Math.round(food.carbs * k),
     fat: Math.round(food.fat * k),
+    ...(Number.isFinite(food.fiber) && { fiber: r1(food.fiber * k) }),
+    ...(Number.isFinite(food.sodium) && { sodium: Math.round(food.sodium * k) }),
   };
 }

@@ -237,6 +237,12 @@
 .food-search__code input { flex: 1; min-width: 0; }
 .food-search__scan video { width: 100%; max-height: 220px; border-radius: var(--r-md); background: #000; }
 .food-search__macros { grid-column: 1 / -1; margin: 0; font-size: var(--fs-md); }
+.food-search__measure { grid-column: span 2; }
+.food-search__micros { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--text-dim); }
+.nutri-micros { display: flex; flex-wrap: wrap; gap: 4px var(--sp-3); margin: 0 0 var(--sp-2); font-size: var(--fs-sm); color: var(--text-dim); }
+.nutri-micros small { flex-basis: 100%; font-size: var(--fs-xs); }
+.nutri-micros__ok { color: var(--success); }
+.nutri-micros__over { color: var(--warning); }
 .meal-log__group + .meal-log__group { margin-top: var(--sp-3); }
 .meal-log__title { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: var(--sp-1); }
 .meal-log__title small { font-weight: 400; opacity: 0.7; }

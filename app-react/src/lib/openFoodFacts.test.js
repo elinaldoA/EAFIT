@@ -17,6 +17,14 @@ describe('openFoodFacts', () => {
     expect(fetchFn.mock.calls[0][0]).toContain('/7891000100103.json');
   });
 
+  it('traz fibra e sódio (em mg) só quando o produto informa os dois', async () => {
+    const full = await lookupBarcode('7891000100103', reply({ status: 1, product: { nutriments: { 'energy-kcal_100g': 400, fiber_100g: 6.04, sodium_100g: 0.32 } } }));
+    expect(full).toMatchObject({ fiber: 6, sodium: 320 });
+    const half = await lookupBarcode('7891000100103', reply({ status: 1, product: { nutriments: { 'energy-kcal_100g': 400, fiber_100g: 6 } } }));
+    expect(half.fiber).toBeUndefined();
+    expect(half.sodium).toBeUndefined();
+  });
+
   it('usa kJ quando não há kcal', async () => {
     const food = await lookupBarcode('7891000100103', reply({ status: 1, product: { nutriments: { energy_100g: 418.4, proteins_100g: 1 } } }));
     expect(food.kcal).toBe(100);

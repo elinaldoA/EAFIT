@@ -37,6 +37,13 @@ describe('nutritionEntries', () => {
     expect(queueSize()).toBe(0);
   });
 
+  it('grava fibra e sódio quando vierem e null quando não', async () => {
+    await addEntry('u1', D, { ...ovo, fiber: 0.04, sodium: 72.6 }, 'cafe', 'e1');
+    await addEntry('u1', D, ovo, 'cafe', 'e2');
+    expect(calls.upsert[0]).toMatchObject({ fiber_g: 0, sodium_mg: 73 });
+    expect(calls.upsert[1]).toMatchObject({ fiber_g: null, sodium_mg: null });
+  });
+
   it('sem rede, enfileira o registro; editar o mesmo registro mantém uma operação', async () => {
     calls.error = new Error('offline');
     await addEntry('u1', D, ovo, 'cafe', 'e1');

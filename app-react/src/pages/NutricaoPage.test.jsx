@@ -73,8 +73,8 @@ describe('NutricaoPage', () => {
   it('tocar num atalho soma ao dia e grava no servidor', async () => {
     render(<NutricaoPage active />);
     fireEvent.click(await screen.findByText('Ovo'));
-    expect(readLocalTotals()).toMatchObject({ protein: 6, kcal: 70 });
-    expect(proteinLog.upsertNutritionLog).toHaveBeenCalledWith('u1', todayDate(), expect.objectContaining({ protein: 6, kcal: 70 }));
+    expect(readLocalTotals()).toMatchObject({ protein: 7, kcal: 73 });
+    expect(proteinLog.upsertNutritionLog).toHaveBeenCalledWith('u1', todayDate(), expect.objectContaining({ protein: 7, kcal: 73 }));
   });
 
   it('tocar num alimento não muda os botões de lugar na mesma visita', async () => {
@@ -154,7 +154,7 @@ describe('NutricaoPage', () => {
     fireEvent.click(await screen.findByText('Ovo'));
     fireEvent.click(screen.getByLabelText('Editar "Ovo"'));
     const kcal = screen.getAllByRole('spinbutton')[0];
-    expect(kcal.value).toBe('70');
+    expect(kcal.value).toBe('73');
     fireEvent.change(kcal, { target: { value: '140' } });
     fireEvent.click(screen.getByText('Salvar'));
     expect(readLocalTotals().kcal).toBe(140);
@@ -167,8 +167,23 @@ describe('NutricaoPage', () => {
     fireEvent.click(await screen.findByText(/Arroz branco cozido/));
     fireEvent.change(screen.getByLabelText('Quantidade (g)'), { target: { value: '200' } });
     fireEvent.click(screen.getByText('Adicionar'));
-    expect(readLocalTotals().kcal).toBe(260);
+    expect(readLocalTotals().kcal).toBe(256);
     expect(document.querySelector('.meal-log').textContent).toContain('Arroz branco cozido 200g');
+    // Arroz da TACO traz fibra e sódio: o resumo do dia aparece.
+    expect(document.querySelector('.nutri-micros').textContent).toContain('3,2');
+  });
+
+  it('medida caseira converte para gramas', async () => {
+    render(<NutricaoPage active />);
+    fireEvent.click(await screen.findByText('🔎 Buscar alimento'));
+    fireEvent.change(screen.getByLabelText('Buscar alimento'), { target: { value: 'arroz branco' } });
+    fireEvent.click(await screen.findByText(/Arroz branco cozido/));
+    fireEvent.change(screen.getByLabelText('Medida'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Quantidade'), { target: { value: '2' } });
+    fireEvent.click(screen.getByText('Adicionar'));
+    // 2 escumadeiras de 90 g = 180 g de arroz a 128 kcal/100 g.
+    expect(readLocalTotals().kcal).toBe(230);
+    expect(document.querySelector('.meal-log').textContent).toContain('Arroz branco cozido 180g');
   });
 
   it('ajustar o total de hoje direto troca os totais do dia', async () => {

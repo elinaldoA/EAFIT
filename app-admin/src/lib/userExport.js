@@ -16,7 +16,7 @@ const BY_USER = [
   ['weightLogs', 'weight_logs', 'log_date, weight, notes', 'log_date'],
   ['waterLogs', 'water_logs', 'log_date, amount_ml', 'log_date'],
   ['proteinLogs', 'protein_logs', 'log_date, amount_g, kcal, carbs_g, fat_g', 'log_date'],
-  ['nutritionEntries', 'nutrition_entries', 'log_date, meal, name, protein_g, kcal, carbs_g, fat_g, created_at', 'created_at'],
+  ['nutritionEntries', 'nutrition_entries', 'log_date, meal, name, protein_g, kcal, carbs_g, fat_g, fiber_g, sodium_mg, created_at', 'created_at'],
   ['nutritionFoods', 'nutrition_foods', 'name, protein_g, kcal, carbs_g, fat_g, created_at', 'created_at'],
   ['bodyMeasurements', 'body_measurements', 'measured_on, cintura, quadril, peito, braco, coxa', 'measured_on'],
   ['dailyCheckins', 'daily_checkins', 'checkin_date, energy, sleep, mood', 'checkin_date'],

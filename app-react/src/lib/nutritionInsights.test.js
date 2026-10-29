@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading } from './nutritionInsights';
+import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading, estimateTdee } from './nutritionInsights';
 
 const day = (date, kcal) => ({ date, protein: 0, kcal, carbs: 0, fat: 0 });
 
@@ -75,5 +75,24 @@ describe('nutritionReading', () => {
     expect(nutritionReading(ok, 'massa', 0.05)).toBe('plateau');
     expect(nutritionReading(ok, 'emagrecer', null)).toBe('on_track');
     expect(nutritionReading(ok, 'saude', 0.5)).toBe('on_track');
+  });
+});
+
+describe('estimateTdee', () => {
+  // 13 dias fechados com 2200 kcal e hoje em andamento.
+  const series = [...Array.from({ length: 13 }, (_, i) => day(`2026-12-${String(i + 1).padStart(2, '0')}`, 2200)), day('2026-12-14', 500)];
+
+  it('média comida menos a variação de peso a 7700 kcal/kg', () => {
+    expect(estimateTdee(series, 0)).toBe(2200);
+    // Perdendo 0,5 kg por semana: gasta 550 kcal por dia a mais do que come.
+    expect(estimateTdee(series, -0.5)).toBe(2750);
+    expect(estimateTdee(series, 0.5)).toBe(1650);
+  });
+
+  it('null sem peso, com poucos dias registrados ou resultado absurdo', () => {
+    expect(estimateTdee(series, null)).toBeNull();
+    const few = series.map((d, i) => (i < 5 ? { ...d, kcal: 0 } : d));
+    expect(estimateTdee(few, 0)).toBeNull();
+    expect(estimateTdee(series, 3)).toBeNull();
   });
 });

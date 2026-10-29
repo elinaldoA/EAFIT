@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeNutritionGoals } from './nutritionGoals';
+import { computeNutritionGoals, goalKcalFactor } from './nutritionGoals';
 
 const base = { sexo: 'M', idade: '30', peso: '80', altura: '180', meta: 'saude', weeklyGoal: 4 };
 
@@ -37,5 +37,19 @@ describe('computeNutritionGoals', () => {
   it('respeita o piso de calorias', () => {
     const g = computeNutritionGoals({ sexo: 'F', idade: '60', peso: '40', altura: '150', meta: 'emagrecer', weeklyGoal: 1 });
     expect(g.kcal).toBe(1200);
+  });
+});
+
+describe('fibra, sódio e fator da meta', () => {
+  it('fibra a 14 g por 1000 kcal e teto de sódio de 2000 mg', () => {
+    const g = computeNutritionGoals(base);
+    expect(g.fiber).toBe(Math.round((g.kcal / 1000) * 14));
+    expect(g.sodium).toBe(2000);
+  });
+
+  it('fator de calorias por meta, saúde sem meta conhecida', () => {
+    expect(goalKcalFactor('emagrecer')).toBe(0.8);
+    expect(goalKcalFactor('massa')).toBe(1.1);
+    expect(goalKcalFactor(undefined)).toBe(1);
   });
 });

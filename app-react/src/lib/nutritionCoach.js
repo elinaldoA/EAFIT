@@ -68,11 +68,17 @@ export function portionFood({ food, n }) {
     ...food,
     label: n > 1 ? `${n}× ${food.label}` : food.label,
     g: food.g * n, kcal: food.kcal * n, carbs: (food.carbs || 0) * n, fat: (food.fat || 0) * n,
+    ...(food.fiber != null && { fiber: Math.round(food.fiber * n * 10) / 10 }),
+    ...(food.sodium != null && { sodium: food.sodium * n }),
   };
 }
 
 const norm = s => (s || '').trim().toLowerCase();
-const rowFood = r => ({ icon: r.icon || '🍽️', label: r.name, g: r.protein_g || 0, kcal: r.kcal || 0, carbs: r.carbs_g || 0, fat: r.fat_g || 0 });
+const rowFood = r => ({
+  icon: r.icon || '🍽️', label: r.name, g: r.protein_g || 0, kcal: r.kcal || 0, carbs: r.carbs_g || 0, fat: r.fat_g || 0,
+  ...(r.fiber_g != null && { fiber: Number(r.fiber_g) }),
+  ...(r.sodium_mg != null && { sodium: Number(r.sodium_mg) }),
+});
 
 // O que a pessoa costuma comer nesta refeição, pelo diário dos últimos 14 dias
 // (linhas de nutrition_entries, sem o dia de hoje). "usual": itens que

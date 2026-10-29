@@ -10,7 +10,7 @@ const num = v => {
 // Código de barras de produto: EAN-8, UPC-A (12), EAN-13 ou GTIN-14.
 export const isBarcode = code => /^(\d{8}|\d{12}|\d{13}|\d{14})$/.test(code);
 
-// Devolve { name, icon, kcal, g, carbs, fat, portion } por 100 g, ou null se o
+// Devolve { name, icon, kcal, g, carbs, fat, portion, fiber?, sodium? } por 100 g, ou null se o
 // produto não existe ou não traz informação nutricional.
 export async function lookupBarcode(code, fetchFn = fetch) {
   if (!isBarcode(code)) return null;
@@ -25,8 +25,11 @@ export async function lookupBarcode(code, fetchFn = fetch) {
   const carbs = num(n.carbohydrates_100g);
   const fat = num(n.fat_100g);
   if (!kcal && !g && !carbs && !fat) return null;
+  // Fibra e sódio só entram quando o produto informa os dois (sódio vem em g).
+  const hasMicros = n.fiber_100g != null && n.sodium_100g != null;
   return {
     id: `off${code}`, icon: '🏷️', name: (p.product_name || '').trim() || code,
     kcal, g, carbs, fat, portion: Math.round(num(p.serving_quantity)) || 100,
+    ...(hasMicros && { fiber: Math.round(num(n.fiber_100g) * 10) / 10, sodium: Math.round(num(n.sodium_100g) * 1000) }),
   };
 }

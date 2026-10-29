@@ -10,8 +10,8 @@ import { enqueue } from '../lib/syncQueue';
 import { parseLocalDate, toDateStr, fmtDate } from '../lib/utils';
 import { buildProteinSeries, proteinStats } from '../lib/proteinStats';
 import { fetchWeightLogs } from '../lib/weightLog';
-import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading } from '../lib/nutritionInsights';
-import { computeNutritionGoals } from '../lib/nutritionGoals';
+import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading, estimateTdee } from '../lib/nutritionInsights';
+import { computeNutritionGoals, goalKcalFactor, MIN_KCAL } from '../lib/nutritionGoals';
 import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS } from '../lib/foodShortcuts';
 import { MEALS, mealForHour, readCachedEntries, fetchEntries, fetchEntriesRange, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
@@ -31,6 +31,7 @@ const SPREAD_FROM_HOUR = 19;
 const VISIBLE_FOODS = 8;
 
 const fmt = n => n.toLocaleString(locale);
+const fmtDec = n => n.toLocaleString(locale, { maximumFractionDigits: 1 });
 const READING_TEXT = {
   few_days: () => t('Registre as calorias por pelo menos 3 dias para ver a leitura da semana.'),
   on_track: () => t('Você está dentro da meta de calorias. Continue assim.'),
@@ -180,7 +181,7 @@ export default function NutricaoPage({ active }) {
       if (food.id) bumpUseCount(food.id);
       next = applyFood(next, food);
       const entryId = crypto.randomUUID();
-      if (user) addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat }, meal, entryId);
+      if (user) addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat, fiber: food.fiber, sodium: food.sodium }, meal, entryId);
       added.push({ ...food, entryId });
     }
     if (user) setEntries(readCachedEntries(todayDate()));
@@ -372,6 +373,23 @@ export default function NutricaoPage({ active }) {
   // Só no fim do dia: antes disso as outras refeições ainda nem chegaram.
   const spread = now.getHours() >= SPREAD_FROM_HOUR ? proteinSpread(entries) : null;
   const newKcal = suggestedKcal(kcalGoal, reading, user?.user_metadata?.meta);
+  // Gasto real pelo histórico (comida registrada + balança). A meta sugerida só
+  // aparece quando foge 5% ou mais da meta da fórmula.
+  const tdee = useMemo(() => estimateTdee(nSeries, weightRate), [nSeries, weightRate]);
+  const tdeeKcal = tdee && goals
+    ? Math.max(MIN_KCAL[user?.user_metadata?.sexo] || 1200, Math.round((tdee * goalKcalFactor(user?.user_metadata?.meta)) / 10) * 10)
+    : null;
+  const tdeeDiffers = !!tdeeKcal && Math.abs(tdeeKcal - kcalGoal) / kcalGoal >= 0.05;
+  // Fibra e sódio do dia: só dos registros que trazem o dado.
+  const micros = (() => {
+    const known = entries.filter(e => e.fiber != null || e.sodium != null);
+    if (!known.length) return null;
+    return {
+      fiber: Math.round(known.reduce((sum, e) => sum + (Number(e.fiber) || 0), 0) * 10) / 10,
+      sodium: Math.round(known.reduce((sum, e) => sum + (Number(e.sodium) || 0), 0)),
+      partial: known.length < entries.length,
+    };
+  })();
   // Uma ação só: a refeição de sempre vem antes (é o que a pessoa ia comer);
   // "Outra opção" passa pelas sugestões que fecham a proteína.
   const actions = [
@@ -500,6 +518,21 @@ export default function NutricaoPage({ active }) {
       <div className="section-group">
         <div className="section-group__label">{t('Diário de hoje')}</div>
         <div className="dash-card">
+          {micros && (
+            <p className="nutri-micros">
+              <span className={goals && micros.fiber >= goals.fiber ? 'nutri-micros__ok' : undefined}>
+                {goals
+                  ? t('Fibras: {g} de {goal} g', { g: fmtDec(micros.fiber), goal: fmt(goals.fiber) })
+                  : t('Fibras: {g} g', { g: fmtDec(micros.fiber) })}
+              </span>
+              <span className={goals && micros.sodium > goals.sodium ? 'nutri-micros__over' : undefined}>
+                {goals
+                  ? t('Sódio: {mg} de até {limit} mg', { mg: fmt(micros.sodium), limit: fmt(goals.sodium) })
+                  : t('Sódio: {mg} mg', { mg: fmt(micros.sodium) })}
+              </span>
+              {micros.partial && <small>{t('Só conta os alimentos da busca e da TACO; atalhos e valores digitados não trazem esse dado.')}</small>}
+            </p>
+          )}
           <MealLog entries={entries} rest={rest} onEdit={handleEditEntry} onDelete={handleDeleteEntry} />
           <div className="nutri-day-tools">
             <button type="button" className="link-btn" onClick={() => setFixOpen(o => !o)} aria-expanded={fixOpen}>
@@ -534,8 +567,16 @@ export default function NutricaoPage({ active }) {
         <div className="section-group">
           <div className="section-group__label">{t('Sua semana')}</div>
           <div className="dash-card">
-            {/* Com ajuste calculado, a leitura do platô vira a própria ação. */}
-            {newKcal ? (
+            {/* Com o gasto real medido, ele manda; senão, com ajuste calculado, a leitura do platô vira a própria ação. */}
+            {tdee ? (
+              <p className="nutri-reading">
+                {t('Pelo que você registrou e pela balança, seu gasto real é de cerca de {tdee} kcal por dia.', { tdee: fmt(tdee) })}
+                {' '}
+                {tdeeDiffers
+                  ? t('Para o seu objetivo, mire em {kcal} kcal por dia (meta atual: {goal}). Vale se você registrou tudo o que comeu.', { kcal: fmt(tdeeKcal), goal: fmt(kcalGoal) })
+                  : t('Sua meta de {goal} kcal está de acordo com isso.', { goal: fmt(kcalGoal) })}
+              </p>
+            ) : newKcal ? (
               <p className="nutri-reading">
                 {t('O peso não está indo na direção do seu objetivo. Passe para cerca de {kcal} kcal por dia nas próximas 2 semanas (hoje: {goal}).', { kcal: fmt(newKcal), goal: fmt(kcalGoal) })}
               </p>

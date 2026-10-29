@@ -12,7 +12,7 @@ export function mealForHour(hour) {
   return 'jantar';
 }
 
-const COLS = 'id, log_date, meal, name, icon, protein_g, kcal, carbs_g, fat_g';
+const COLS = 'id, log_date, meal, name, icon, protein_g, kcal, carbs_g, fat_g, fiber_g, sodium_mg';
 const cacheKey = date => `nutricaoEntries_${date}`;
 
 export function entryFromRow(r) {
@@ -25,13 +25,24 @@ export function entryFromRow(r) {
     kcal: r.kcal || 0,
     carbs: r.carbs_g || 0,
     fat: r.fat_g || 0,
+    // null: o alimento não trazia o dado (atalho, valor digitado à mão).
+    fiber: r.fiber_g == null ? null : Number(r.fiber_g),
+    sodium: r.sodium_mg == null ? null : Number(r.sodium_mg),
   };
+}
+
+// Fibra (1 casa) e sódio (inteiro) são opcionais: sem número, vai null.
+function optional(v, digits = 0) {
+  if (v == null || v === '' || !Number.isFinite(Number(v))) return null;
+  const p = 10 ** digits;
+  return Math.max(0, Math.round(Number(v) * p) / p);
 }
 
 function rowFromEntry(userId, date, e) {
   return {
     id: e.id, user_id: userId, log_date: date, meal: e.meal, name: ((e.label || '').trim() || 'Alimento').slice(0, 60), icon: e.icon || '🍽️',
     protein_g: e.g || 0, kcal: e.kcal || 0, carbs_g: e.carbs || 0, fat_g: e.fat || 0,
+    fiber_g: optional(e.fiber, 1), sodium_mg: optional(e.sodium),
   };
 }
 

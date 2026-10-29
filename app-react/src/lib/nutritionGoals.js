@@ -10,7 +10,14 @@ const GOAL_PLAN = {
   resistencia: { kcalFactor: 1.00, proteinPerKg: 1.5 },
 };
 const FAT_KCAL_SHARE = 0.25;
-const MIN_KCAL = { M: 1500, F: 1200 };
+export const MIN_KCAL = { M: 1500, F: 1200 };
+// Fibra: 14 g a cada 1000 kcal (Dietary Reference Intakes). Sódio: teto de
+// 2000 mg por dia (OMS).
+const FIBER_PER_1000_KCAL = 14;
+export const SODIUM_LIMIT_MG = 2000;
+
+// Fator de calorias da meta principal sobre o gasto do dia.
+export const goalKcalFactor = meta => (GOAL_PLAN[meta] || GOAL_PLAN.saude).kcalFactor;
 
 // Fator de atividade pela frequência semanal de treino.
 // Sem meta salva vale o padrão do app (5 treinos), o mesmo do Perfil.
@@ -25,7 +32,7 @@ function activityFactor(weeklyGoal) {
 const inRange = (v, [min, max]) => Number.isFinite(v) && v >= min && v <= max;
 
 // Estimativa (Mifflin-St Jeor) de calorias, proteína, carboidrato e gordura
-// por dia. Devolve null enquanto faltar sexo, idade, peso ou altura válidos.
+// por dia, mais a meta de fibra e o teto de sódio. Devolve null enquanto faltar sexo, idade, peso ou altura válidos.
 export function computeNutritionGoals({ sexo, idade, peso, altura, meta, weeklyGoal } = {}) {
   const age = parseFloat(idade);
   const kg = parseFloat(peso);
@@ -40,5 +47,6 @@ export function computeNutritionGoals({ sexo, idade, peso, altura, meta, weeklyG
   const protein = Math.round(kg * plan.proteinPerKg);
   const fat = Math.round((kcal * FAT_KCAL_SHARE) / 9);
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-  return { kcal, protein, carbs, fat };
+  const fiber = Math.round((kcal / 1000) * FIBER_PER_1000_KCAL);
+  return { kcal, protein, carbs, fat, fiber, sodium: SODIUM_LIMIT_MG };
 }

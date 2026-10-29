@@ -7,6 +7,11 @@ const ON_TARGET = [0.9, 1.1];
 const WEIGHT_WINDOW_DAYS = 28;
 const WEIGHT_MIN_SPAN_DAYS = 7;
 const WEIGHT_FLAT_KG_WEEK = 0.1;
+// Gasto real: pede quase duas semanas de registro e descarta valor absurdo
+// (dias registrados pela metade puxam a média para baixo).
+export const TDEE_MIN_LOGGED_DAYS = 10;
+const KCAL_PER_KG = 7700;
+const TDEE_RANGE = [1000, 6000];
 
 // Série diária contínua dos últimos `days` dias até `endDate` (inclusive), com
 // zeros nos dias sem registro. logs: linhas de protein_logs.
@@ -57,6 +62,18 @@ export function weightRatePerWeek(weightLogs, today) {
   const span = rows[rows.length - 1].x - rows[0].x;
   if (span < WEIGHT_MIN_SPAN_DAYS) return null;
   return Math.round(((rows[rows.length - 1].y - rows[0].y) / span) * 7 * 10) / 10;
+}
+
+// Gasto calórico real estimado pelo histórico: média do que a pessoa comeu nos
+// dias fechados menos (ou mais) o que o peso mudou, a 7700 kcal por kg. null
+// sem dias suficientes, sem tendência de peso ou com resultado fora do plausível.
+export function estimateTdee(series, weightRate) {
+  if (weightRate === null || weightRate === undefined) return null;
+  const days = series.slice(0, -1).filter(d => d.kcal > 0);
+  if (days.length < TDEE_MIN_LOGGED_DAYS) return null;
+  const avg = days.reduce((s, d) => s + d.kcal, 0) / days.length;
+  const tdee = Math.round((avg - (weightRate * KCAL_PER_KG) / 7) / 10) * 10;
+  return tdee >= TDEE_RANGE[0] && tdee <= TDEE_RANGE[1] ? tdee : null;
 }
 
 // Direção esperada do peso pela meta principal do Perfil.
