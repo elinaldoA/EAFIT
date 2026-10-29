@@ -29,13 +29,14 @@ vi.mock('../lib/nutritionFoods', () => foods);
 vi.mock('../lib/supabase', () => ({
   db: {
     from: () => ({
-      select: () => ({ eq: () => ({ eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }) }) }),
+      select: () => ({ eq: () => ({ eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }), gte: () => ({ order: () => Promise.resolve({ data: pastRows, error: null }) }) }) }),
       upsert: () => Promise.resolve({ error: null }),
       delete: () => ({ eq: () => ({ eq: () => Promise.resolve({ error: null }) }) }),
     }),
   },
 }));
 vi.mock('../lib/weightLog', () => weight);
+let pastRows = [];
 
 import NutricaoPage from './NutricaoPage';
 import { readLocalTotals } from '../lib/proteinLog';
@@ -52,6 +53,7 @@ beforeEach(() => {
   foods.fetchCustomFoods.mockResolvedValue([]);
   foods.readCachedFoods.mockReturnValue([]);
   weight.fetchWeightLogs.mockResolvedValue([]);
+  pastRows = [];
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
@@ -188,5 +190,28 @@ describe('NutricaoPage', () => {
     fireEvent.click(screen.getByText('Salvar o dia'));
     expect(proteinLog.upsertNutritionLog).toHaveBeenCalledWith('u1', date, expect.objectContaining({ kcal: 2100 }));
     expect(mockToast).toHaveBeenCalledWith('Dia corrigido');
+  });
+
+  it('assistente: a refeição de sempre entra inteira com um toque', async () => {
+    const day = n => { const d = new Date(`${todayDate()}T12:00:00`); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+    const r = (date, name, kcal) => ({ log_date: date, meal: 'jantar', name, icon: '🍽️', protein_g: 10, kcal, carbs_g: 0, fat_g: 0 });
+    pastRows = [r(day(1), 'Tapioca', 200), r(day(1), 'Suco', 100), r(day(2), 'Tapioca', 200), r(day(2), 'Suco', 100)];
+    render(<NutricaoPage active />);
+    await screen.findByText('Ovo');
+    fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'jantar' } });
+    fireEvent.click(await screen.findByText('Adicionar os 2'));
+    expect(readLocalTotals()).toMatchObject({ kcal: 300, protein: 20 });
+    expect(document.querySelector('.meal-log').textContent).toContain('Tapioca');
+    // Lançada a refeição, o assistente não oferece de novo.
+    expect(screen.queryByText('Adicionar os 2')).toBeNull();
+  });
+
+  it('assistente: sugestão para fechar a proteína soma as porções num registro', async () => {
+    render(<NutricaoPage active />);
+    const chip = (await screen.findAllByRole('button')).find(b => b.classList.contains('coach__chip'));
+    const before = readLocalTotals().protein;
+    fireEvent.click(chip);
+    expect(readLocalTotals().protein).toBeGreaterThan(before);
+    expect(document.querySelectorAll('.meal-log__item')).toHaveLength(1);
   });
 });

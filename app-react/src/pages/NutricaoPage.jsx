@@ -14,16 +14,19 @@ import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionRead
 import { computeNutritionGoals } from '../lib/nutritionGoals';
 import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS, VISIBLE_FOODS } from '../lib/foodShortcuts';
-import { MEALS, mealForHour, readCachedEntries, fetchEntries, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
+import { MEALS, mealForHour, readCachedEntries, fetchEntries, fetchEntriesRange, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
+import { dayPace, suggestFoods, mealHabit, proteinSpread, suggestedKcal } from '../lib/nutritionCoach';
 import FoodSearch from '../components/FoodSearch';
 import MealLog from '../components/MealLog';
 import ProteinBars from '../components/ProteinBars';
 import MacroBars from '../components/MacroBars';
+import NutritionCoach from '../components/NutritionCoach';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import Skeleton from '../components/Skeleton';
 
 import { t, locale } from '../lib/i18n';
 const HISTORY_DAYS = 14;
+const SPREAD_FROM_HOUR = 19;
 
 const fmt = n => n.toLocaleString(locale);
 const READING_TEXT = {
@@ -74,6 +77,8 @@ export default function NutricaoPage({ active }) {
   const [editingId, setEditingId] = useState(null);
   const [editingEntry, setEditingEntry] = useState(null);
   const [entries, setEntries] = useState(() => readCachedEntries(todayDate()));
+  // Diário dos últimos dias, para o assistente achar a refeição de sempre.
+  const [pastEntries, setPastEntries] = useState([]);
   const [meal, setMeal] = useState(() => mealForHour(new Date().getHours()));
   const [searchOpen, setSearchOpen] = useState(false);
   const [fixOpen, setFixOpen] = useState(false);
@@ -120,6 +125,9 @@ export default function NutricaoPage({ active }) {
     load();
     fetchWeightLogs(user.id).then(setWeightLogs).catch(err => console.error('fetchWeightLogs:', err));
     fetchEntries(user.id, todayDate()).then(setEntries).catch(err => console.error('fetchEntries:', err));
+    const habitSince = parseLocalDate(todayDate());
+    habitSince.setDate(habitSince.getDate() - HISTORY_DAYS);
+    fetchEntriesRange(user.id, toDateStr(habitSince)).then(setPastEntries).catch(err => console.error('fetchEntriesRange:', err));
     fetchCustomFoods(user.id).then(setMyFoods).catch(err => console.error('fetchCustomFoods:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, user]);
@@ -157,20 +165,26 @@ export default function NutricaoPage({ active }) {
     }
   }
 
-  function handleAdd(food) {
-    // Só grava a contagem: a ordem dos botões é refeita ao abrir a aba, para
-    // o alimento não sair de debaixo do dedo a cada toque.
-    if (food.id) bumpUseCount(food.id);
-    const next = applyFood(totals, food);
-    const entryId = crypto.randomUUID();
-    if (user) {
-      addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat }, meal, entryId);
-      setEntries(readCachedEntries(todayDate()));
+  // Vários de uma vez (a refeição de sempre) somam sobre o mesmo total, num
+  // só salvamento; cada um vira um registro e um passo do "Desfazer".
+  function handleAddMany(foods) {
+    let next = totals;
+    const added = [];
+    for (const food of foods) {
+      // Só grava a contagem: a ordem dos botões é refeita ao abrir a aba, para
+      // o alimento não sair de debaixo do dedo a cada toque.
+      if (food.id) bumpUseCount(food.id);
+      next = applyFood(next, food);
+      const entryId = crypto.randomUUID();
+      if (user) addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat }, meal, entryId);
+      added.push({ ...food, entryId });
     }
-    setUndoStack(s => { const n = [...s, { ...food, entryId }].slice(-10); writeUndo(n); return n; });
+    if (user) setEntries(readCachedEntries(todayDate()));
+    setUndoStack(s => { const n = [...s, ...added].slice(-10); writeUndo(n); return n; });
     if (goalG && next.protein >= goalG && protein < goalG) toast(t('🎉 Meta de proteína do dia atingida!'));
     saveTotals(next);
   }
+  const handleAdd = food => handleAddMany([food]);
 
   function handleUndo() {
     const last = undoStack[undoStack.length - 1];
@@ -347,6 +361,13 @@ export default function NutricaoPage({ active }) {
     return kcal || prot ? { kcal, protein: prot } : null;
   })();
   const hasLog = totals.protein + totals.kcal + totals.carbs + totals.fat > 0;
+  const now = new Date();
+  const pace = dayPace(totals, goals, now.getHours() + now.getMinutes() / 60);
+  const suggestions = pace && pace.status !== 'done' ? suggestFoods(allFoods, pace.left) : [];
+  const habit = useMemo(() => mealHabit(pastEntries, meal, todayDate(), entries), [pastEntries, meal, entries]);
+  // Só no fim do dia: antes disso as outras refeições ainda nem chegaram.
+  const spread = now.getHours() >= SPREAD_FROM_HOUR ? proteinSpread(entries) : null;
+  const newKcal = suggestedKcal(kcalGoal, reading, user?.user_metadata?.meta);
 
   return (
     <section id="page-nutricao" className="page active">
@@ -369,6 +390,8 @@ export default function NutricaoPage({ active }) {
           </span>
         </div>
       </div>
+
+      <NutritionCoach pace={pace} suggestions={suggestions} habit={habit} meal={meal} spread={spread} onAdd={handleAddMany} />
 
       <div className="water-actions meal-pick">
         <label>
@@ -527,6 +550,11 @@ export default function NutricaoPage({ active }) {
               </div>
             </div>
             {reading && <p className="dash-card__subtitle">{READING_TEXT[reading]()}</p>}
+            {newKcal && (
+              <p className="dash-card__subtitle">
+                {t('Sugestão para as próximas 2 semanas: cerca de {kcal} kcal por dia (hoje a meta é {goal}).', { kcal: fmt(newKcal), goal: fmt(kcalGoal) })}
+              </p>
+            )}
             <p className="dash-card__subtitle">{t('Faixa: 90% a 110% da meta de calorias. Considera só os dias com calorias registradas.')}</p>
           </div>
         </div>
