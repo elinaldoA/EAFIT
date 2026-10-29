@@ -13,6 +13,9 @@ import { formatDateTime } from '../lib/installs';
 import { Link } from 'react-router-dom';
 import { buildTutorialFunnel, fetchAdoption } from '../lib/adoption';
 import Loading from '../components/Loading';
+import LineChart from '../components/charts/LineChart';
+import HeatStrip from '../components/charts/HeatStrip';
+import Donut from '../components/charts/Donut';
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -83,38 +86,15 @@ function Bars({ rows, unit = '', empty = 'Sem dados no período.' }) {
   );
 }
 
-function Columns({ series, label }) {
-  const max = Math.max(1, ...series.map(s => s.total));
-  return (
-    <div className="bar-chart" role="img" aria-label={label}>
-      {series.map(s => (
-        <div key={s.label} className="bar-chart__col" title={`${s.label}: ${s.total}`}>
-          <span className="bar-chart__count">{s.total || ''}</span>
-          <div className="bar-chart__bar" style={{ height: `${(s.total / max) * 100}%` }} />
-          <span className="bar-chart__day">{s.label.replace('h', '')}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
+const TIMELINE_SERIES = [{ key: 'app', label: 'App' }, { key: 'site', label: 'Site' }];
 
-// Colunas empilhadas (app + site) com rótulo só de tantos em tantos
-// intervalos, pra série por minuto (120 colunas) continuar legível.
+// App e site como duas linhas no mesmo eixo (mesma unidade: acessos).
 function TimelineChart({ series }) {
-  const max = Math.max(1, ...series.map(s => s.total));
-  const every = Math.ceil(series.length / 12);
   return (
-    <div className="bar-chart bar-chart--dense" role="img" aria-label="Acessos no tempo">
-      {series.map((s, i) => (
-        <div key={s.key} className="bar-chart__col" title={`${s.full}: ${s.app} no app, ${s.site} no site`}>
-          <div className="bar-chart__stack" style={{ height: `${(s.total / max) * 100}%` }}>
-            <div className="bar-chart__bar" style={{ flex: s.site }} />
-            <div className="bar-chart__bar bar-chart__bar--app" style={{ flex: s.app }} />
-          </div>
-          <span className="bar-chart__day">{i % every === 0 ? s.label : ' '}</span>
-        </div>
-      ))}
-    </div>
+    <LineChart
+      points={series} series={TIMELINE_SERIES} ariaLabel="Acessos no tempo, app e site" height={170}
+      title={s => s.full} extra={s => `${s.total} no total`}
+    />
   );
 }
 
@@ -149,9 +129,6 @@ function AccessTimeline({ days }) {
             <div className="tile"><div className="tile__value">{data.peak ? data.peak.full : '—'}</div><div className="tile__label">Mais movimentado{data.peak ? ` (${data.peak.total})` : ''}</div></div>
           </div>
           <TimelineChart series={data.series} />
-          <p className="card-note" style={{ margin: '6px 0 12px' }}>
-            <span className="legend-dot legend-dot--app" /> App &nbsp; <span className="legend-dot" /> Site
-          </p>
           <CountTable
             head={['Quando', 'App', 'Pessoas no app', 'Site']} empty="Nenhum acesso no período."
             rows={data.active.slice(0, 100).map(s => ({ key: s.key, label: s.full, cells: [s.app, s.users, s.site] }))}
@@ -261,12 +238,12 @@ export default function Behavior() {
       >
         {rows => (
           <div className="two-col">
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Aparelho</h3><Bars rows={groupDimension(rows, 'device', DEVICE_LABELS)} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Navegador</h3><Bars rows={groupDimension(rows, 'browser', BROWSER_LABELS)} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Idioma</h3><Bars rows={groupDimension(rows, 'lang', LANG_LABELS)} /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Aparelho</h3><Donut rows={groupDimension(rows, 'device', DEVICE_LABELS)} label="Visitas" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Navegador</h3><Donut rows={groupDimension(rows, 'browser', BROWSER_LABELS)} label="Visitas" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Idioma</h3><Donut rows={groupDimension(rows, 'lang', LANG_LABELS)} label="Visitas" /></div>
             <div>
               <h3 className="subsection-title" style={{ marginTop: 0 }}>Campanha (utm_campaign)</h3>
-              <Bars rows={groupDimension(rows, 'campaign')} empty="Nenhuma visita veio com utm_campaign no link." />
+              <Donut rows={groupDimension(rows, 'campaign')} empty="Nenhuma visita veio com utm_campaign no link." label="Visitas" />
             </div>
           </div>
         )}
@@ -329,9 +306,9 @@ export default function Behavior() {
                 </p>
               )}
               <h3 className="subsection-title" style={{ marginTop: 0 }}>Por hora do dia</h3>
-              <Columns series={hours} label="Visitas por hora do dia" />
+              <HeatStrip cells={hours.map(h => ({ key: h.hour, label: h.label, total: h.total }))} unit="visitas" every={3} ariaLabel="Visitas por hora do dia" />
               <h3 className="subsection-title">Por dia da semana</h3>
-              <Bars rows={week.map(w => ({ value: w.day, label: w.label, total: w.total, pct: null }))} />
+              <HeatStrip cells={week.map(w => ({ key: w.day, label: w.label, total: w.total }))} unit="visitas" ariaLabel="Visitas por dia da semana" />
             </>
           );
         }}
@@ -382,15 +359,15 @@ export default function Behavior() {
               <div className="two-col">
                 <div>
                   <h3 className="subsection-title">Quantos dias vieram</h3>
-                  <Bars rows={data.days} />
+                  <Donut rows={data.days} ordered label="Navegadores" />
                 </div>
                 <div>
                   <h3 className="subsection-title">De onde vieram</h3>
-                  <Bars rows={data.sources.map(s => ({ ...s, label: sourceLabel(s.value) }))} />
+                  <Donut rows={data.sources.map(s => ({ ...s, label: sourceLabel(s.value) }))} label="Navegadores" />
                 </div>
                 <div>
                   <h3 className="subsection-title">Aparelho</h3>
-                  <Bars rows={data.devices} />
+                  <Donut rows={data.devices} label="Navegadores" />
                 </div>
               </div>
               <h3 className="subsection-title">Mais recentes</h3>
@@ -464,8 +441,8 @@ export default function Behavior() {
                 <div className="tile"><div className="tile__value">{data.multiDevicePct == null ? '—' : `${data.multiDevicePct}%`}</div><div className="tile__label">Usam 2+ aparelhos ({data.multiDeviceUsers})</div></div>
               </div>
               <div className="two-col">
-                <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Duração da sessão</h3><Bars rows={data.durations} /></div>
-                <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Sessões por conta</h3><Bars rows={data.perUserBands} /></div>
+                <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Duração da sessão</h3><Donut rows={data.durations} ordered label="Sessões" /></div>
+                <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Sessões por conta</h3><Donut rows={data.perUserBands} ordered label="Contas" /></div>
               </div>
             </>
           ))}
@@ -589,13 +566,13 @@ export default function Behavior() {
       >
         {rows => (
           <div className="two-col">
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Sistema</h3><Bars rows={groupDimension(rows, 'os', OS_LABELS, 'users')} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Navegador</h3><Bars rows={groupDimension(rows, 'browser', BROWSER_LABELS, 'users')} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Aparelho</h3><Bars rows={groupDimension(rows, 'device', DEVICE_LABELS, 'users')} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Instalado ou navegador</h3><Bars rows={groupDimension(rows, 'display_mode', MODE_LABELS, 'users')} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Notificações</h3><Bars rows={groupDimension(rows, 'push_permission', PUSH_LABELS, 'users')} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Versão do app</h3><Bars rows={groupDimension(rows, 'app_version', {}, 'users')} /></div>
-            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Idioma</h3><Bars rows={groupDimension(rows, 'lang', LANG_LABELS, 'users')} /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Sistema</h3><Donut rows={groupDimension(rows, 'os', OS_LABELS, 'users')} label="Usuários" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Navegador</h3><Donut rows={groupDimension(rows, 'browser', BROWSER_LABELS, 'users')} label="Usuários" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Aparelho</h3><Donut rows={groupDimension(rows, 'device', DEVICE_LABELS, 'users')} label="Usuários" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Instalado ou navegador</h3><Donut rows={groupDimension(rows, 'display_mode', MODE_LABELS, 'users')} label="Usuários" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Notificações</h3><Donut rows={groupDimension(rows, 'push_permission', PUSH_LABELS, 'users')} label="Usuários" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Versão do app</h3><Donut rows={groupDimension(rows, 'app_version', {}, 'users')} label="Usuários" /></div>
+            <div><h3 className="subsection-title" style={{ marginTop: 0 }}>Idioma</h3><Donut rows={groupDimension(rows, 'lang', LANG_LABELS, 'users')} label="Usuários" /></div>
           </div>
         )}
       </Card>

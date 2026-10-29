@@ -87,7 +87,7 @@ describe('Behavior', () => {
     expect(screen.getByText(/Aluno: 8 começaram · 2 concluíram \(25%\)/)).toBeTruthy();
     expect(screen.getByText('Passo 2 · 3 pularam aqui')).toBeTruthy();
     expect(screen.getAllByText('75%').length).toBeGreaterThan(0);
-    expect(screen.getByText('19h')).toBeTruthy();
+    expect(screen.getAllByText((_, el) => el?.tagName === 'SPAN' && el.textContent.startsWith('Pico: 19h')).length).toBeGreaterThan(0);
     expect(screen.getByText(/abriram o app por uma notificação/).textContent).toContain('20%');
     expect(screen.getAllByText('App instalado').length).toBeGreaterThan(0);
     expect(mockRpc).toHaveBeenCalledWith('admin_user_events', { days_back: 30 });
@@ -108,7 +108,8 @@ describe('Behavior', () => {
 
   it('acessos no tempo: troca entre dia, hora e minuto', async () => {
     render(<Behavior />);
-    expect((await screen.findAllByText('26/10/2026')).length).toBe(2);
+    // tile do pico, tabela de acessos e tabela acessível do gráfico
+    expect((await screen.findAllByText('26/10/2026')).length).toBe(3);
     expect(mockRpc).toHaveBeenCalledWith('admin_access_timeline', { p_bucket: 'dia', p_buckets: 30 });
     fireEvent.click(screen.getByRole('button', { name: 'Por minuto' }));
     await waitFor(() => expect(mockRpc).toHaveBeenCalledWith('admin_access_timeline', { p_bucket: 'minuto', p_buckets: 120 }));

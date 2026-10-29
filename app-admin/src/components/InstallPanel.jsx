@@ -8,7 +8,8 @@ import {
 } from '../lib/installs';
 import { trend, trendLabel } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
-import BarChart from './BarChart';
+import PeriodChart from './PeriodChart';
+import Donut from './charts/Donut';
 import Loading from './Loading';
 
 const PERIODS = [
@@ -285,8 +286,8 @@ export default function InstallPanel() {
               <div className="geo-detail">
                 {range && (
                   <>
-                    <BarChart title="Instalações por dia" series={dailyChart.installs} unit="instalações" from={range.from} to={range.to} />
-                    <BarChart title="Indícios de desinstalação por dia" series={dailyChart.stale} unit="indícios" from={range.from} to={range.to} />
+                    <PeriodChart title="Instalações por dia" series={dailyChart.installs} unit="instalações" from={range.from} to={range.to} />
+                    <PeriodChart title="Indícios de desinstalação por dia" series={dailyChart.stale} unit="indícios" from={range.from} to={range.to} />
                   </>
                 )}
                 {data.activeDaily.length ? (
@@ -366,7 +367,7 @@ export default function InstallPanel() {
                 </div>
                 <p className="card-note">Das instalações novas do período, conta quem abriu o app pelo ícone pelo menos tantos dias depois de instalar. Só entram as que já têm essa idade.</p>
                 <h3 className="subsection-title">Dias em que abriram pelo ícone</h3>
-                <Bars rows={data.retention.distribution.map(d => ({ key: d.key, label: d.label, total: d.total, pct: d.pct }))} />
+                <Donut rows={data.retention.distribution} ordered />
                 <p className="card-note">Todos os instalados, desde o início da medição.</p>
               </div>
             )}

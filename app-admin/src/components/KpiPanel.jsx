@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchKpis, fetchActivityByDay, pctChange, stickiness } from '../lib/management';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from './Loading';
+import LineChart from './charts/LineChart';
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -68,8 +69,6 @@ export default function KpiPanel() {
     { label: 'Duração média', value: fmt(kpis.duration_min_cur, ' min'), cur: kpis.duration_min_cur, prev: kpis.duration_min_prev, hint: 'por treino' },
   ] : [];
 
-  const max = Math.max(1, ...activity.map(a => Number(a[series])));
-  const labelEvery = Math.ceil(activity.length / 12);
 
   return (
     <div className="stack">
@@ -141,15 +140,11 @@ export default function KpiPanel() {
                 <button className="btn btn--small" onClick={exportActivity} disabled={!activity.length}>Exportar CSV</button>
               </div>
             </div>
-            <div className="bar-chart" role="img" aria-label={`${SERIES.find(s => s.key === series).label} por dia, últimos ${days} dias`}>
-              {activity.map((a, i) => (
-                <div className="bar-chart__col" key={a.day} title={`${formatDay(a.day)}: ${a[series]}`}>
-                  <span className="bar-chart__count">{days <= 14 && Number(a[series]) > 0 ? a[series] : ''}</span>
-                  <div className="bar-chart__bar" style={{ height: `${Math.max(3, (Number(a[series]) / max) * 100)}%` }} />
-                  <span className="bar-chart__day">{i % labelEvery === 0 ? formatDay(a.day) : ''}</span>
-                </div>
-              ))}
-            </div>
+            <LineChart
+              points={activity} series={[SERIES.find(s => s.key === series)]} height={180}
+              label={a => formatDay(a.day)}
+              ariaLabel={`${SERIES.find(s => s.key === series).label} por dia, últimos ${days} dias`}
+            />
             <p className="card-note">
               "Ativo" e "treino" seguem a mesma regra do funil: concluiu o treino ou marcou ao menos uma série.
               Contas de admin ficam fora de todos os números.

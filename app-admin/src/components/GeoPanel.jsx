@@ -4,7 +4,8 @@ import {
   compareGeo, conversionByUf, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
-import BarChart from './BarChart';
+import PeriodChart from './PeriodChart';
+import Donut from './charts/Donut';
 import BrazilMap from './BrazilMap';
 import Loading from './Loading';
 
@@ -504,7 +505,7 @@ export default function GeoPanel() {
           )}
           {activeTab === 'dia' && daily && (
             <div className="geo-detail">
-              <BarChart
+              <PeriodChart
                 title="Por dia" series={daily.map(d => ({ key: d.day, label: fmtDay(d.day), total: d.total }))}
                 unit={current.unit} where={placeName} from={fmtDay(daily[0].day)} to={fmtDay(daily[daily.length - 1].day)}
               />
@@ -512,9 +513,9 @@ export default function GeoPanel() {
           )}
           {activeTab === 'hora' && hours && (
             <div className="geo-detail">
-              <BarChart
+              <PeriodChart
                 title="Por horário (Brasília)" series={hours.map(h => ({ key: h.hour, label: `${h.hour}h`, total: h.total }))}
-                unit={current.unit} where={placeName} from="0h" to="23h"
+                unit={current.unit} where={placeName} from="0h" to="23h" cyclic
               />
             </div>
           )}
@@ -523,9 +524,9 @@ export default function GeoPanel() {
               {aud?.total > 0 && (
                 <>
                   <h3 className="subsection-title">Origem das visitas{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={aud.source} />
+                  <Donut rows={aud.source} />
                   <h3 className="subsection-title">Aparelho{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={aud.device} />
+                  <Donut rows={aud.device} />
                 </>
               )}
 
@@ -536,9 +537,9 @@ export default function GeoPanel() {
               {demo && (
                 <>
                   <h3 className="subsection-title">Sexo{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={demo.sexo} />
+                  <Donut rows={demo.sexo} />
                   <h3 className="subsection-title">Faixa etária{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Bars rows={demo.faixa} />
+                  <Donut rows={demo.faixa} ordered />
                 </>
               )}
 

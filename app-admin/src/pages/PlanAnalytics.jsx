@@ -6,6 +6,7 @@ import {
 } from '../lib/planAnalytics';
 import { fetchCardio } from '../lib/insights';
 import Loading from '../components/Loading';
+import HeatStrip from '../components/charts/HeatStrip';
 import TrainingPatternsCard from '../components/TrainingPatternsCard';
 
 const DIMENSIONS = [
@@ -53,19 +54,11 @@ function BreakdownTable({ title, rows }) {
   );
 }
 
-function Bars({ buckets, label, ariaLabel }) {
-  const max = Math.max(1, ...buckets.map(b => b.sessions));
-  return (
-    <div className="bar-chart" role="img" aria-label={ariaLabel}>
-      {buckets.map(b => (
-        <div className="bar-chart__col" key={b.bucket} title={`${label(b.bucket)}: ${b.sessions} treino(s)`}>
-          <span className="bar-chart__count">{b.sessions > 0 ? b.sessions : ''}</span>
-          <div className="bar-chart__bar" style={{ height: `${Math.max(3, (b.sessions / max) * 100)}%` }} />
-          <span className="bar-chart__day">{label(b.bucket)}</span>
-        </div>
-      ))}
-    </div>
-  );
+// Faixa de calor do ciclo (dias da semana ou horas): mais escuro = mais treinos.
+function Cycle({ buckets, label, ariaLabel, every = 1 }) {
+  const cells = buckets.map(b => ({ key: b.bucket, label: label(b.bucket), total: b.sessions }));
+  if (!cells.some(c => c.total > 0)) return <p className="card-note" style={{ marginTop: 0 }}>Sem treinos no período.</p>;
+  return <HeatStrip cells={cells} unit="treino(s)" every={every} ariaLabel={ariaLabel} />;
 }
 
 // Cardio é registrado à parte das séries de força (duração e distância), então
@@ -191,14 +184,14 @@ export default function PlanAnalytics() {
       <div className="two-col">
         <div className="card">
           <h2 className="section-title">Treinos por dia da semana</h2>
-          <Bars buckets={weekdays} label={b => WEEKDAYS[b]} ariaLabel="Treinos por dia da semana, últimos 90 dias" />
+          <Cycle buckets={weekdays} label={b => WEEKDAYS[b]} ariaLabel="Treinos por dia da semana, últimos 90 dias" />
           <p className="card-note">
             Últimos 90 dias.{bestDays.length > 0 && <> Dias mais fortes: <strong>{bestDays.join(' e ')}</strong>.</>}
           </p>
         </div>
         <div className="card">
           <h2 className="section-title">Treinos por horário</h2>
-          <Bars buckets={hours} label={b => String(b).padStart(2, '0')} ariaLabel="Treinos por horário do dia, últimos 90 dias" />
+          <Cycle buckets={hours} every={3} label={b => `${String(b).padStart(2, '0')}h`} ariaLabel="Treinos por horário do dia, últimos 90 dias" />
           <p className="card-note">
             Só treinos iniciados no modo ao vivo.{bestHours.length > 0 && <> Horários mais fortes: <strong>{bestHours.join(' e ')}</strong>.</>}
             {' '}Use isso para ajustar o horário das <Link to="/automacoes">notificações automáticas</Link>.

@@ -6,33 +6,27 @@ import {
 } from '../lib/insights';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import LineChart from '../components/charts/LineChart';
 
 const PERIODS = [7, 14, 30];
 
 const fmt = (v, suffix = '') => (v === null || v === undefined ? '—' : `${String(v).replace('.', ',')}${suffix}`);
 const dayLabel = iso => iso.slice(8, 10);
+const dayMonth = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 
 function Score({ value }) {
   if (value === null || value === undefined) return '—';
   return <span className={`badge ${SCORE_BADGE[scoreLevel(value)]}`}>{fmt(value)}</span>;
 }
 
-// Barras por dia. `value` devolve o número do dia; `title` o texto do tooltip.
-function DayBars({ days, value, title, ariaLabel }) {
-  const max = Math.max(1, ...days.map(d => value(d) || 0));
+// Linha por dia. `value` devolve o número do dia; `extra` o detalhe da dica.
+function DayLine({ days, value, label, extra, ariaLabel }) {
+  const points = days.map(d => ({ ...d, v: value(d) || 0 }));
   return (
-    <div className="bar-chart" role="img" aria-label={ariaLabel}>
-      {days.map(d => {
-        const v = value(d) || 0;
-        return (
-          <div className="bar-chart__col" key={d.day} title={title(d)}>
-            <span className="bar-chart__count">{v > 0 && days.length <= 14 ? v : ''}</span>
-            <div className="bar-chart__bar" style={{ height: `${Math.max(3, (v / max) * 100)}%` }} />
-            <span className="bar-chart__day">{dayLabel(d.day)}</span>
-          </div>
-        );
-      })}
-    </div>
+    <LineChart
+      points={points} series={[{ key: 'v', label }]} ariaLabel={ariaLabel}
+      label={d => dayLabel(d.day)} title={d => `Dia ${dayMonth(d.day)}`} extra={extra}
+    />
   );
 }
 
@@ -107,11 +101,11 @@ export default function Wellbeing() {
             </div>
             {o.checkins === 0 ? <p className="card-note">Nenhum check-in no período.</p> : (
               <>
-                <DayBars
-                  days={data.byDay} value={d => d.checkins} ariaLabel={`Check-ins por dia, últimos ${days} dias`}
-                  title={d => `Dia ${dayLabel(d.day)}: ${d.checkins} check-in(s) · energia ${fmt(d.energy)} · sono ${fmt(d.sleep)} · humor ${fmt(d.mood)}`}
+                <DayLine
+                  days={data.byDay} value={d => d.checkins} label="Check-ins" ariaLabel={`Check-ins por dia, últimos ${days} dias`}
+                  extra={d => `energia ${fmt(d.energy)} · sono ${fmt(d.sleep)} · humor ${fmt(d.mood)}`}
                 />
-                <p className="card-note">Check-ins por dia. Passe o mouse numa barra para ver as médias do dia.</p>
+                <p className="card-note">Check-ins por dia. Passe o mouse no gráfico para ver as médias do dia.</p>
               </>
             )}
           </div>
@@ -161,9 +155,9 @@ export default function Wellbeing() {
                 <div className="tile"><div className="tile__value">{fmt(hitPct, '%')}</div><div className="tile__label">dos dias registrados bateram a meta</div></div>
               </div>
               {o.waterDays > 0 && (
-                <DayBars
-                  days={data.byDay} value={d => d.waterUsers} ariaLabel={`Usuários que registraram água por dia, últimos ${days} dias`}
-                  title={d => `Dia ${dayLabel(d.day)}: ${d.waterUsers} usuário(s) · média ${formatMl(d.waterAvgMl)} · ${d.waterHits} na meta`}
+                <DayLine
+                  days={data.byDay} value={d => d.waterUsers} label="Usuários" ariaLabel={`Usuários que registraram água por dia, últimos ${days} dias`}
+                  extra={d => `média ${formatMl(d.waterAvgMl)} · ${d.waterHits} na meta`}
                 />
               )}
               <p className="card-note">
@@ -208,9 +202,9 @@ export default function Wellbeing() {
                 )}
               </div>
               {po.proteinDays > 0 && (
-                <DayBars
-                  days={data.protein.byDay} value={d => d.users} ariaLabel={`Usuários que registraram proteína por dia, últimos ${days} dias`}
-                  title={d => `Dia ${dayLabel(d.day)}: ${d.users} usuário(s) · média ${d.avgG === null ? '—' : `${d.avgG} g`} · ${d.hits} na meta`}
+                <DayLine
+                  days={data.protein.byDay} value={d => d.users} label="Usuários" ariaLabel={`Usuários que registraram proteína por dia, últimos ${days} dias`}
+                  extra={d => `média ${d.avgG === null ? '—' : `${d.avgG} g`} · ${d.hits} na meta`}
                 />
               )}
               <p className="card-note">
