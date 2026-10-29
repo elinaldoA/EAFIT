@@ -53,6 +53,10 @@
   background: linear-gradient(90deg, var(--water), var(--water-h));
 }
 
+.progress-card__volume { font-size: var(--fs-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.progress-card__delta--up { color: var(--success); }
+.progress-card__delta--down { color: var(--text-dim); }
+
 .progress-card__cycle {
   font-size: var(--fs-xs);
   color: var(--text-muted);
@@ -547,6 +551,20 @@
 
 .today-card__rest { font-size: var(--fs-sm); color: var(--text-muted); }
 
+/* Assistente do dia (TrainingCoach) — a frase reaproveita .coach__pace da Nutrição */
+.train-coach { display: flex; flex-direction: column; gap: 10px; }
+.train-coach .coach__pace { font-size: var(--fs-sm); }
+.train-coach__notes {
+  margin: 0;
+  padding-left: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
 /* ============================================================
    FAIXA DA SEMANA (dentro do progress-card)
 ============================================================ */
@@ -574,6 +592,7 @@
   transition: background var(--t), border-color var(--t);
 }
 .week-strip__day--done .week-strip__dot { background: var(--primary); border-color: var(--primary); }
+.week-strip__day--missed .week-strip__dot { border-style: dashed; border-color: var(--warning); }
 .week-strip__day--today .week-strip__dot { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
 
 .week-strip__label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-dim); }

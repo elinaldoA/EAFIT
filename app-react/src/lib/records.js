@@ -120,10 +120,16 @@ export async function fetchExerciseSetsWithDates(userId, exerciseName) {
 // só então sobe carga). Retorna null se o exercício não tem histórico ou a faixa
 // de reps não é numérica (ex.: "até a falha", isometria em segundos, cardio).
 export async function fetchProgressionSuggestion(userId, exerciseName, repsStr) {
+  if (parseRepCeiling(repsStr) === null) return null;
+  return progressionFromSets(await fetchExerciseSetsWithDates(userId, exerciseName), repsStr);
+}
+
+// Mesma conta de fetchProgressionSuggestion sobre séries já buscadas
+// ({ carga, reps, workout_date }) — o assistente do Treino busca tudo de uma vez.
+export function progressionFromSets(sets, repsStr) {
   const ceiling = parseRepCeiling(repsStr);
   if (ceiling === null) return null;
-
-  const sets = await fetchExerciseSetsWithDates(userId, exerciseName);
+  sets = (sets || []).filter(s => Number.isFinite(parseFloat(s.carga)));
   if (!sets.length) return null;
 
   const lastDate = sets.reduce((max, s) => (s.workout_date > max ? s.workout_date : max), sets[0].workout_date);
@@ -151,11 +157,13 @@ const PLATEAU_SESSIONS = 3;
 // deload de 10%. Retorna null se faltar histórico, a faixa de reps não for
 // numérica, ou a carga/reps ainda estiverem progredindo normalmente.
 export async function fetchPlateauStatus(userId, exerciseName, repsStr) {
-  const ceiling = parseRepCeiling(repsStr);
-  if (ceiling === null) return null;
+  if (parseRepCeiling(repsStr) === null) return null;
+  return plateauFromSets(await fetchExerciseSetsWithDates(userId, exerciseName), repsStr);
+}
 
-  const sets = await fetchExerciseSetsWithDates(userId, exerciseName);
-  if (!sets.length) return null;
+export function plateauFromSets(sets, repsStr) {
+  const ceiling = parseRepCeiling(repsStr);
+  if (ceiling === null || !sets?.length) return null;
 
   const bestByDate = new Map();
   sets.forEach(s => {

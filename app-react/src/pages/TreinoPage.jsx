@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { todayName } from '../data/treinoData';
+import { todayName, todayDate } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
@@ -27,6 +27,14 @@ import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
 import MobilityButton from '../components/MobilityButton';
 import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
+import { activePause } from '../lib/pause';
+import { fetchLibraryMap } from '../lib/muscleVolume';
+import { fmtVolume } from '../lib/workoutHistory';
+import {
+  fetchRecentSets, buildTrainingCoach, sorePlannedMuscles, exerciseReadings, missedDays, weekBehind,
+  weekVolume, hardWeekStreak, isDeloadWeek, weeksToDeload,
+} from '../lib/trainingCoach';
+import TrainingCoach from '../components/TrainingCoach';
 
 import { t, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
@@ -46,6 +54,8 @@ export default function TreinoPage() {
   const [survey, setSurvey] = useState(null);
   const [showQuick, setShowQuick] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [checkin, setCheckin] = useState(null);
+  const [history, setHistory] = useState(null); // { sets, libMap } das últimas semanas
 
   // Fechou o resumo do treino: bom momento pra pedir a avaliação do app.
   function handleSummaryClose() {
@@ -55,6 +65,16 @@ export default function TreinoPage() {
 
   // Traz as preferências do treinador por voz da conta para este aparelho.
   useEffect(() => { syncCoachPrefs(user); }, [user]);
+
+  // Histórico recente para o assistente do dia; recarrega quando o treino sincroniza.
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    let active = true;
+    Promise.all([fetchRecentSets(user.id), fetchLibraryMap()])
+      .then(([sets, libMap]) => { if (active) setHistory({ sets, libMap }); })
+      .catch(err => console.error('fetchRecentSets:', err));
+    return () => { active = false; };
+  }, [user?.id, dataVersion]);
 
   // Pesquisa do painel (NPS etc.): uma de cada vez, um pouco depois de abrir.
   useEffect(() => {
@@ -95,6 +115,32 @@ export default function TreinoPage() {
   const planDays = activePlanDays.map(d => (d === fullToday ? today : d));
   const todaySets = today ? countSets(gatherExerciseDetails(today)) : { done: 0, total: 0 };
   const todayDone = today && localStorage.getItem(`treino_${today.dia}`) === 'true';
+  const isDayDone = dia => localStorage.getItem(`treino_${dia}`) === 'true';
+
+  const todayStr = todayDate();
+  const missed = missedDays(activePlanDays, todayStr, isDayDone);
+  const missedSet = new Set(missed.map(d => d.dia));
+  const hardWeeks = history ? hardWeekStreak(history.sets, todayStr) : null;
+  const volume = history ? weekVolume(history.sets, todayStr) : null;
+  const todayHasSets = todaySets.total > 0;
+  const coach = history && !planExpired && !activePause(user?.user_metadata || {}, todayStr)
+    ? buildTrainingCoach({
+        today: today && { hasSets: todayHasSets, done: todayDone, started: todaySets.done > 0, quick: !!quickMinutes },
+        checkin,
+        sore: today && todayHasSets ? sorePlannedMuscles(today, history.sets, todayStr, history.libMap) : [],
+        readings: today && todayHasSets ? exerciseReadings(today, history.sets, todayStr) : null,
+        missed,
+        behind: weekBehind(activePlanDays, history.sets, todayStr, history.libMap),
+        hardWeeks,
+      })
+    : null;
+  const coachEl = (
+    <TrainingCoach
+      coach={coach}
+      onQuick={quickOn && fullToday ? () => handleQuickChoice(30) : null}
+      onCatchup={dia => { trackFeature('treino_recuperado'); setLiveDay(dia); }}
+    />
+  );
 
   async function handleReset() {
     if (!window.confirm(t('Limpar todos os checks e cargas salvas?'))) return;
@@ -122,7 +168,7 @@ export default function TreinoPage() {
       <PersonalMessages />
       <MyAppointments onlyPending />
       <FirstSteps />
-      {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin />}
+      {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
         <div className="plan-expired-banner">
@@ -139,8 +185,10 @@ export default function TreinoPage() {
           quickMinutes={quickMinutes}
           onQuick={quickOn ? () => setShowQuick(true) : null}
           mobility={isFlagOn(config.flags, 'mobilidade')}
+          coach={coachEl}
         />
       )}
+      {!today && !loading && coach && <div className="today-card">{coachEl}</div>}
       <div className="progress-card">
         <div className="progress-card__row">
           <span className="progress-card__label">{t('Semana atual')}</span>
@@ -148,13 +196,17 @@ export default function TreinoPage() {
         </div>
         <div className="week-strip">
           {workDays.map(d => {
-            const isDone = localStorage.getItem(`treino_${d.dia}`) === 'true';
+            const isDone = isDayDone(d.dia);
             const isToday = d.dia === todayName();
+            const isMissed = missedSet.has(d.dia);
+            let status = '';
+            if (isDone) status = t('(concluído)');
+            else if (isMissed) status = t('(ficou para trás)');
             return (
               <div
                 key={d.dia}
-                className={`week-strip__day${isDone ? ' week-strip__day--done' : ''}${isToday ? ' week-strip__day--today' : ''}`}
-                title={`${t(d.dia)} — ${tFoco(d.foco)}${isDone ? t('(concluído)') : ''}`}
+                className={`week-strip__day${isDone ? ' week-strip__day--done' : ''}${isToday ? ' week-strip__day--today' : ''}${isMissed ? ' week-strip__day--missed' : ''}`}
+                title={`${t(d.dia)} — ${tFoco(d.foco)}${status}`}
               >
                 <span className="week-strip__dot" aria-hidden="true">{isDone ? '✓' : ''}</span>
                 <span className="week-strip__label">{t(d.dia).slice(0, 3)}</span>
@@ -162,6 +214,16 @@ export default function TreinoPage() {
             );
           })}
         </div>
+        {volume?.now > 0 && (
+          <p className="progress-card__volume">
+            {t('Volume da semana: {v}', { v: fmtVolume(volume.now) })}
+            {volume.deltaPct != null && (
+              <span className={volume.deltaPct >= 0 ? 'progress-card__delta--up' : 'progress-card__delta--down'}>
+                {' · '}{t('{sinal}{pct}% vs. o mesmo ponto da semana passada', { sinal: volume.deltaPct > 0 ? '+' : '', pct: volume.deltaPct })}
+              </span>
+            )}
+          </p>
+        )}
         {planEndDate && !planExpired && (
           <p className="progress-card__cycle">
             {t('📅 Treino válido de {v1} até {v2} ({v3}d restantes){v4}', { v1: planStartDate ? fmtDate(planStartDate) : '—', v2: fmtDate(planEndDate), v3: Math.max(0, daysUntil(planEndDate)), v4: planByTrainer ? '' : ` · ${t('atualizado automaticamente ao vencer')}` })}
@@ -194,7 +256,10 @@ export default function TreinoPage() {
         {t('📥 Importar treinos de outro app')}
       </button>
       <footer className="footer">
-        <strong>{t('Progressão:')}</strong> {t('aumente cargas toda semana ·')}; <strong>{t('Deload')}</strong> {t('na semana 6')}
+        <strong>{t('Progressão:')}</strong> {t('suba a carga quando bater o topo das reps')}
+        {hardWeeks != null && (isDeloadWeek(hardWeeks)
+          ? <> · <strong>{t('Deload')}</strong> {t('esta semana')}</>
+          : <> · <strong>{t('Deload')}</strong> {t('em {n} semana(s)', { n: weeksToDeload(hardWeeks) })}</>)}
       </footer>
       {restSession && (
         <RestTimer session={restSession} onClose={() => setRestSession(null)} />
@@ -226,7 +291,7 @@ export default function TreinoPage() {
   );
 }
 
-function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility }) {
+function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility, coach }) {
   const hasSets = sets.total > 0;
   const pct = hasSets ? (sets.done / sets.total) * 100 : 0;
   let cta = t('⚡ Começar treino');
@@ -251,11 +316,9 @@ function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility }
           </div>
         )}
       </div>
-      {hasSets ? (
-        <button type="button" className="btn btn--primary btn--full" onClick={onStart}>{cta}</button>
-      ) : (
-        <p className="today-card__rest">{t('Dia de recuperação — descanse bem ou faça um cardio leve. 🧘')}</p>
-      )}
+      {!hasSets && <p className="today-card__rest">{t('Dia de recuperação — descanse bem ou faça um cardio leve. 🧘')}</p>}
+      {coach}
+      {hasSets && <button type="button" className="btn btn--primary btn--full" onClick={onStart}>{cta}</button>}
       {hasSets && !done && onQuick && (
         <button type="button" className="today-card__link" onClick={onQuick}>
           {quickMinutes ? t('Mudar o tempo ou voltar ao treino completo') : t('⏱ Pouco tempo hoje? Enxugar o treino')}

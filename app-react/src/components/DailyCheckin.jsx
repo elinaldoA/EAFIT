@@ -7,7 +7,8 @@ import { CHECKIN_FIELDS, fetchCheckins, saveCheckin, checkinTip } from '../lib/c
 import { t } from '../lib/i18n';
 // Check-in de 3 toques no topo do Treino: energia, sono e humor de 1 a 5.
 // Depois de respondido vira uma linha com a dica do dia (dá pra refazer).
-export default function DailyCheckin() {
+// onChange recebe a resposta do dia (ou null) ao carregar e a cada envio.
+export default function DailyCheckin({ onChange }) {
   const { user } = useAuth();
   const toast = useToast();
   const [loaded, setLoaded] = useState(false);
@@ -22,10 +23,17 @@ export default function DailyCheckin() {
     let active = true;
     const today = todayDate();
     fetchCheckins(userId, today)
-      .then(rows => { if (active) setSaved(rows.find(r => r.checkin_date === today) || null); })
+      .then(rows => {
+        if (!active) return;
+        const row = rows.find(r => r.checkin_date === today) || null;
+        setSaved(row);
+        onChange?.(row);
+      })
       .catch(err => console.error('fetchCheckins:', err))
       .finally(() => { if (active) setLoaded(true); });
     return () => { active = false; };
+    // onChange é o setState da página (estável); a busca só depende de quem está logado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   if (!userId || !loaded) return null;
@@ -37,6 +45,7 @@ export default function DailyCheckin() {
     try {
       await saveCheckin(userId, todayDate(), draft);
       setSaved({ ...draft });
+      onChange?.({ ...draft });
       setEditing(false);
       toast(t('✅ Check-in registrado'));
     } catch (err) {

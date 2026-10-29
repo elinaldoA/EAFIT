@@ -2,8 +2,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 
-const { workout, mockToast, deleteChain, surveys } = vi.hoisted(() => ({
+const { workout, mockToast, deleteChain, surveys, clock, history } = vi.hoisted(() => ({
   surveys: { fetchPendingSurvey: vi.fn() },
+  clock: { name: 'Segunda', date: '2026-10-26' },
+  history: { fetchRecentSets: vi.fn() },
   workout: {},
   mockToast: vi.fn(),
   deleteChain: { result: { error: null }, in: vi.fn(), eq: vi.fn() },
@@ -16,7 +18,11 @@ vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }
 vi.mock('../context/useWorkout', () => ({ useWorkout: () => workout }));
 vi.mock('../context/useToast', () => ({ useToast: () => mockToast }));
 // Dia fixo: o teste não pode depender do dia da semana em que roda.
-vi.mock('../data/treinoData', async (importOriginal) => ({ ...(await importOriginal()), todayName: () => 'Segunda' }));
+vi.mock('../data/treinoData', async (importOriginal) => ({
+  ...(await importOriginal()), todayName: () => clock.name, todayDate: () => clock.date,
+}));
+vi.mock('../lib/trainingCoach', async orig => ({ ...(await orig()), fetchRecentSets: (...a) => history.fetchRecentSets(...a) }));
+vi.mock('../lib/muscleVolume', async orig => ({ ...(await orig()), fetchLibraryMap: () => Promise.resolve(new Map()) }));
 
 // Filhos pesados viram stubs: aqui só importa o que a página decide mostrar.
 vi.mock('../components/PauseBanner', () => ({ default: () => null }));
@@ -41,6 +47,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   surveys.fetchPendingSurvey.mockResolvedValue(null);
+  history.fetchRecentSets.mockResolvedValue([]);
+  Object.assign(clock, { name: 'Segunda', date: '2026-10-26' });
   deleteChain.result = { error: null };
   deleteChain.eq = vi.fn(() => deleteChain);
   deleteChain.in = vi.fn(() => Promise.resolve(deleteChain.result));
@@ -143,6 +151,37 @@ describe('TreinoPage', () => {
 
       await waitFor(() => expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('falhou ao sincronizar')));
       expect(workout.syncNow).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('assistente do dia', () => {
+    it('dia livre com treino perdido na semana oferece recuperar', async () => {
+      Object.assign(clock, { name: 'Quarta', date: '2026-10-28' });
+      localStorage.setItem('treino_Segunda', 'true');
+      const { container } = render(<TreinoPage />);
+      expect(await screen.findByText('Hoje está livre e o treino de Terça (Costas) ficou para trás.')).toBeTruthy();
+      expect(screen.getByText('⚡ Recuperar treino de Terça')).toBeTruthy();
+      expect(container.querySelectorAll('.week-strip__day--missed')).toHaveLength(1);
+    });
+
+    it('aponta o exercício pronto para subir carga e mostra o volume contra a semana passada', async () => {
+      history.fetchRecentSets.mockResolvedValue([
+        { exercise_name: 'Supino', carga: 50, reps: 10, workout_date: '2026-10-19' },
+        { exercise_name: 'Supino', carga: 60, reps: 10, workout_date: '2026-10-26' },
+      ]);
+      render(<TreinoPage />);
+      expect(await screen.findByText('1 exercício(s) prontos para subir carga hoje.')).toBeTruthy();
+      expect(screen.getByText('Supino: suba para 52,5 kg (fez 10 reps com 50 kg).')).toBeTruthy();
+      expect(screen.getByText(/Volume da semana: 600kg/)).toBeTruthy();
+      expect(screen.getByText(/\+20% vs\. o mesmo ponto/)).toBeTruthy();
+    });
+
+    it('depois de 5 semanas puxadas seguidas, avisa que esta é a semana leve', async () => {
+      history.fetchRecentSets.mockResolvedValue(['2026-10-19', '2026-10-12', '2026-10-05', '2026-09-28', '2026-09-21']
+        .map(d => ({ exercise_name: 'Remada', carga: 50, reps: 10, workout_date: d })));
+      const { container } = render(<TreinoPage />);
+      expect(await screen.findByText(/5 semanas seguidas de treino puxado/)).toBeTruthy();
+      expect(container.querySelector('.footer').textContent).toContain('Deload esta semana');
     });
   });
 });
