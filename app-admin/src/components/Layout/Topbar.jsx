@@ -1,4 +1,5 @@
 import { useLocation } from 'react-router-dom';
+import QuickSearch from './QuickSearch';
 import UserMenu from './UserMenu';
 import { titleForPath } from './nav';
 
@@ -14,6 +15,7 @@ export default function Topbar({ menuOpen, onMenuClick }) {
         {title && <><span aria-hidden="true">/</span><strong>{title}</strong></>}
       </div>
       <div className="topbar__spacer" />
+      <QuickSearch />
       <UserMenu />
     </header>
   );

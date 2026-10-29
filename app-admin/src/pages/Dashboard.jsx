@@ -5,7 +5,7 @@ import Loading from '../components/Loading';
 import ActivationFunnel from '../components/ActivationFunnel';
 import RetentionCohorts from '../components/RetentionCohorts';
 import KpiPanel from '../components/KpiPanel';
-import { fetchNewFeedbackCount } from '../lib/feedback';
+import { fetchRadar } from '../lib/radar';
 import AudienceInsights from '../components/AudienceInsights';
 import GeoPanel from '../components/GeoPanel';
 import InstallPanel from '../components/InstallPanel';
@@ -46,6 +46,44 @@ const BASE_GROUPS = [
   },
 ];
 
+const RADAR_PREVIEW = 5;
+const TONE_ICON = { danger: '⚠', warning: '●', info: '→', good: '▲' };
+
+// Radar: o que mudou e o que fazer, em ordem de prioridade (lib/radar.js).
+function Radar({ radar, severe30 }) {
+  const [all, setAll] = useState(false);
+  if (!radar) return <div className="dash-alert dash-alert--ok">Analisando os números da semana…</div>;
+  const items = [...radar.items];
+  // A faixa usa 7 dias; relatos mais antigos ainda merecem um lembrete.
+  if (severe30 > 0 && !items.some(i => i.key === 'dor')) {
+    items.push({ key: 'dor-30d', tone: 'info', text: `${severe30} relato(s) de dor forte/lesão nos últimos 30 dias`, to: '/seguranca', cta: 'Ver segurança' });
+  }
+  const shown = all ? items : items.slice(0, RADAR_PREVIEW);
+  return (
+    <>
+      {items.length === 0 && (
+        <div className="dash-alert dash-alert--ok">
+          {radar.partial ? '✓ Nada fora do normal no que deu para verificar.' : '✓ Tudo em dia — nada fora do normal esta semana.'}
+        </div>
+      )}
+      {shown.map(a => (
+        <Link key={a.key} to={a.to} className={`dash-alert dash-alert--${a.tone}`}>
+          <span><span className="dash-alert__icon" aria-hidden="true">{TONE_ICON[a.tone]}</span>{a.text}</span>
+          <span className="dash-alert__cta">{a.cta} →</span>
+        </Link>
+      ))}
+      {items.length > RADAR_PREVIEW && (
+        <button type="button" className="btn btn--ghost btn--small dash-alerts__more" onClick={() => setAll(v => !v)}>
+          {all ? 'Mostrar menos' : `Ver mais ${items.length - RADAR_PREVIEW}`}
+        </button>
+      )}
+      {radar.partial && items.length > 0 && (
+        <p className="section-hint">Algumas fontes não responderam; o radar pode estar incompleto.</p>
+      )}
+    </>
+  );
+}
+
 const DASH_TABS = [
   { key: 'resumo', label: 'Resumo' },
   { key: 'publico', label: 'Público' },
@@ -57,7 +95,7 @@ const DASH_TABS = [
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
-  const [newFeedback, setNewFeedback] = useState(0);
+  const [radar, setRadar] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tab, setTab] = useState('resumo');
@@ -68,14 +106,11 @@ export default function Dashboard() {
       .then(s => { if (active) setStats(s); })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
-    fetchNewFeedbackCount().then(n => { if (active) setNewFeedback(n); });
+    fetchRadar().then(r => { if (active) setRadar(r); });
     return () => { active = false; };
   }, []);
 
   const severe = Number(stats?.severe_discomfort_30d) || 0;
-  const alerts = [];
-  if (severe > 0) alerts.push({ to: '/seguranca', tone: 'danger', text: `🩹 ${severe} relato(s) de dor forte/lesão nos últimos 30 dias`, cta: 'Ver Segurança' });
-  if (newFeedback > 0) alerts.push({ to: '/feedback', tone: 'warning', text: `💬 ${newFeedback} feedback(s) novo(s) de usuários`, cta: 'Ver Feedback' });
 
   if (loading) return <Loading />;
   if (error) return <p className="form-msg form-msg--error">{error}</p>;
@@ -89,16 +124,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="dash-alerts" aria-label="Pendências">
-        {alerts.length === 0 ? (
-          <div className="dash-alert dash-alert--ok">✓ Tudo em dia — nenhuma pendência no momento.</div>
-        ) : alerts.map(a => (
-          <Link key={a.to} to={a.to} className={`dash-alert dash-alert--${a.tone}`}>
-            <span>{a.text}</span>
-            <span className="dash-alert__cta">{a.cta} →</span>
-          </Link>
-        ))}
-      </div>
+      <section className="dash-alerts" aria-label="Radar da semana">
+        <Radar radar={radar} severe30={severe} />
+      </section>
 
       <div className="tabs">
         {DASH_TABS.map(t => (
