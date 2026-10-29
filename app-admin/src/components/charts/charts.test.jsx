@@ -68,7 +68,7 @@ describe('LineChart', () => {
 
   it('tem tabela acessível com os valores', () => {
     const { container } = render(<LineChart points={points} series={[{ key: 'v', label: 'Treinos' }]} label={p => p.day} ariaLabel="x" />);
-    expect(container.querySelectorAll('table.sr-only tbody tr')).toHaveLength(3);
+    expect(container.querySelectorAll('.sr-only table tbody tr')).toHaveLength(3);
   });
 });
 

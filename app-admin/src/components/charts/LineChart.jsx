@@ -104,10 +104,14 @@ export default function LineChart({
           </div>
         </div>
       </div>
-      <table className="sr-only">
-        <thead><tr><th>Ponto</th>{series.map(s => <th key={s.key}>{s.label}</th>)}</tr></thead>
-        <tbody>{points.map((p, i) => <tr key={i}><td>{title(p)}</td>{series.map(s => <td key={s.key}>{format(Number(p[s.key]) || 0)}</td>)}</tr>)}</tbody>
-      </table>
+      {/* sr-only num div, não na tabela: em <table> height vira mínimo e o
+          overflow não corta, aí as linhas esticavam a página abaixo do rodapé. */}
+      <div className="sr-only">
+        <table>
+          <thead><tr><th>Ponto</th>{series.map(s => <th key={s.key}>{s.label}</th>)}</tr></thead>
+          <tbody>{points.map((p, i) => <tr key={i}><td>{title(p)}</td>{series.map(s => <td key={s.key}>{format(Number(p[s.key]) || 0)}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
     </div>
   );
 }
