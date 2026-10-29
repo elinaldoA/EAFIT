@@ -1061,10 +1061,19 @@ document.addEventListener('DOMContentLoaded', function () {
     set('meta[property="og:image:alt"]', dict.attrs['Logo do EAFIT com o slogan Seu treino, sempre com você']);
   }
 
+  // Prints do app: cada imagem traz a versão em inglês em data-src-en.
+  function translateImages(root) {
+    root.querySelectorAll('img[data-src-en]').forEach(function (img) {
+      img.src = img.getAttribute('data-src-en');
+      img.removeAttribute('data-src-en');
+    });
+  }
+
   function run() {
     pending = false;
     translateTextNodes(document.body);
     translateAttrs(document.body);
+    translateImages(document.body);
   }
   translateHead();
   run();

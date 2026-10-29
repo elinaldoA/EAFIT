@@ -254,7 +254,7 @@ h1 {
 .m-body { flex: 1; overflow: hidden; padding: 0 12px; display: flex; flex-direction: column; gap: 8px; }
 .m-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px; }
 .m-label { font-size: 8.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); }
-.m-tabbar { display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px 16px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+.m-tabbar { display: grid; grid-template-columns: repeat(6, 1fr); padding: 6px 4px 16px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
 .m-tabbar span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 8px; font-weight: 600; color: var(--text-dim); }
 .m-tabbar span.on { color: var(--primary); }
 .m-tabbar svg { width: 17px; height: 17px; }
@@ -1740,3 +1740,83 @@ textarea.input { resize: vertical; min-height: 120px; }
     100% { transform: translate(10px, 96vh) rotate(320deg); opacity: 0; }
   }
 }
+
+/* ============================================================
+   CONVERSÃO — novidade no topo, Nutrição, "E tem mais", preço
+   (seções fixas no HTML da home, fora do editor do admin)
+============================================================ */
+.btn-lg { min-height: 56px; padding: 14px 30px; font-size: 17px; border-radius: 14px; }
+.hero-new {
+  display: inline-flex; align-items: center; gap: 10px; max-width: 100%;
+  margin: 0 0 14px; padding: 5px 14px 5px 5px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-size: 13.5px; font-weight: 600; text-decoration: none;
+  transition: border-color .2s ease, transform .2s ease;
+}
+.hero-new:hover { border-color: var(--primary); transform: translateY(-1px); }
+.hero-new__tag { flex-shrink: 0; padding: 3px 10px; border-radius: 999px; background: var(--primary); color: var(--on-primary); font-size: 12px; font-weight: 800; }
+.hero-new svg { flex-shrink: 0; color: var(--primary-ink); }
+@media (max-width: 560px) { .hero-new { font-size: 12.5px; text-align: left; } }
+/* o selo verde segue logo abaixo, em linha própria */
+.hero-new + .badge { display: flex; width: fit-content; }
+
+/* cards: brilho suave da cor principal ao passar o mouse */
+.card, .bento-tile { position: relative; }
+.card:hover, .bento-tile:hover { box-shadow: 0 24px 48px -28px var(--primary); }
+
+/* ---- Nutrição ---- */
+.show-cta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* ---- E tem mais (bento) ---- */
+.bento { display: grid; grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: auto auto; gap: 16px; }
+.bento-tile {
+  padding: clamp(22px, 3vw, 30px); border-radius: var(--r-xl);
+  background: var(--surface); border: 1px solid var(--border);
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.bento-tile:hover { transform: translateY(-3px); border-color: rgba(249, 115, 22, .45); }
+.bento-tile h3 { margin: 0 0 8px; font-size: 18px; letter-spacing: -.015em; }
+.bento-tile p { margin: 0; color: var(--text-muted); font-size: 15px; }
+.bento-tile--big { grid-row: span 2; background: linear-gradient(165deg, var(--primary-glow), var(--surface) 60%); border-color: rgba(249, 115, 22, .35); }
+.bento-tile--big h3 { font-size: clamp(21px, 2.2vw, 26px); line-height: 1.15; }
+.bento-tile:nth-child(4) { grid-column: 2 / span 2; }
+.bento-steps { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bento-steps li { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 15px; }
+.bento-steps b { flex-shrink: 0; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--primary); color: var(--on-primary); font-size: 14px; }
+@media (max-width: 900px) {
+  .bento { grid-template-columns: 1fr 1fr; }
+  .bento-tile--big { grid-row: auto; grid-column: 1 / -1; }
+  .bento-tile:nth-child(4) { grid-column: auto; }
+}
+@media (max-width: 560px) { .bento { grid-template-columns: 1fr; } }
+
+/* ---- Preço ---- */
+.price-card {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: center;
+  padding: clamp(28px, 5vw, 56px); border-radius: var(--r-xl);
+  background: linear-gradient(150deg, var(--primary-glow), var(--surface) 55%);
+  border: 1px solid rgba(249, 115, 22, .4);
+}
+.price-card::before {
+  content: ""; position: absolute; right: -120px; top: -120px; width: 320px; height: 320px; border-radius: 50%;
+  background: radial-gradient(circle, var(--primary-glow), transparent 70%); pointer-events: none;
+}
+.price-card > * { position: relative; }
+.price-main h2 { font-size: clamp(30px, 3.8vw, 46px); line-height: 1.05; letter-spacing: -.03em; margin: 0 0 18px; }
+.price-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 26px; }
+.price-value b { font-size: clamp(44px, 6vw, 64px); line-height: 1; letter-spacing: -.04em; }
+.price-value span { color: var(--text-muted); font-weight: 600; }
+.price-note { margin: 14px 0 0; color: var(--text-dim); font-size: 14px; }
+.price-list { gap: 14px; }
+@media (max-width: 860px) {
+  .price-card { grid-template-columns: 1fr; }
+  .price-main .btn { width: 100%; }
+}
+
+/* ---- celular com prints reais do app (home: topo e Nutrição) ---- */
+/* Os prints são do tema escuro do app: a tela fica escura nos dois temas do site. */
+.phone__screen--shots { background: #0e0e12; }
+.scr--shot img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+/* hora e bateria por cima da faixa da barra de status do print */
+.m-status--over { position: absolute; inset: 0 0 auto; z-index: 4; color: #f4f4f5; pointer-events: none; }
