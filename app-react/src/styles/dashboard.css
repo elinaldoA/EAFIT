@@ -614,7 +614,10 @@
 .recap__btn--active { background: var(--primary); color: var(--on-accent); }
 .recap__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-2); }
 .recap__stat { display: flex; flex-direction: column; gap: 2px; padding: 10px var(--sp-3); background: var(--surface-2); border-radius: var(--r-md); }
-.recap__value { font-size: var(--fs-xl); font-weight: 800; text-transform: capitalize; }
+.recap__value { font-size: var(--fs-xl); font-weight: 800; }
+/* Só a primeira letra: o dia favorito vem em minúsculas ("terça"); capitalize
+   em tudo virava "Kg" e "Dia(S)" nos outros valores. */
+.recap__value::first-letter { text-transform: uppercase; }
 .recap__label { font-size: var(--fs-xs); color: var(--text-muted); }
 .recap__delta { margin: 10px 0; font-size: var(--fs-sm); font-weight: 700; color: var(--success); }
 .recap__delta--down { color: var(--error); }

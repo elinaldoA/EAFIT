@@ -10,7 +10,9 @@ import Skeleton from '../components/Skeleton';
 import SessionDetailModal from '../components/SessionDetailModal';
 
 import { t, locale } from '../lib/i18n';
-const WEEKDAYS = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+// Iniciais de segunda a domingo no idioma do app (01/01/2024 foi segunda).
+const WEEKDAYS = Array.from({ length: 7 }, (_, i) =>
+  new Date(2024, 0, 1 + i).toLocaleDateString(locale, { weekday: 'narrow' }).toUpperCase());
 
 function currentMonth() {
   const d = parseLocalDate(todayDate());
@@ -167,7 +169,7 @@ export default function HistoricoPage() {
                   </div>
                   <div className="history-item__main">
                     <div className="history-item__title">
-                      {s.dayOfWeek}
+                      {t(s.dayOfWeek)}
                       {!s.completed && <span className="history-item__tag">{t('incompleto')}</span>}
                     </div>
                     <div className="history-item__meta">

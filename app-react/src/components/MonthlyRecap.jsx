@@ -52,7 +52,7 @@ export default function MonthlyRecap({ userId, allTimeLogs, loadingLogs }) {
     { value: formatMinutes(recap.minutes), label: t('de treino') },
     { value: loadingLogs ? '…' : `${recap.volume.toLocaleString(locale)} kg`, label: t('volume (carga × reps)') },
     { value: loadingLogs ? '…' : recap.prCount, label: t('recordes batidos') },
-    { value: recap.bestStreak ? `${recap.bestStreak} dia(s)` : '—', label: t('melhor sequência') },
+    { value: recap.bestStreak ? t('{n} dia(s)', { n: recap.bestStreak }) : '—', label: t('melhor sequência') },
     { value: recap.favWeekday || '—', label: t('dia favorito') },
   ];
 

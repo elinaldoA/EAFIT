@@ -288,6 +288,7 @@ export default {
   '{setsDone} de {setsTotal} séries concluídas': '{setsDone} of {setsTotal} sets done',
   'Exercícios do treino': 'Workout exercises',
   '{v1} {v2}{setsDone}/{setsTotal} séries no total': '{v1} {v2}{setsDone}/{setsTotal} sets in total',
+  'Exercício {n} de {total}': 'Exercise {n} of {total}',
   '{series} séries': '{series} sets',
   'Sem séries pra registrar aqui — faça o combinado e siga pro próximo.': 'No sets to log here — do what was agreed and move on to the next.',
   '✅ Exercício concluído': '✅ Exercise done',
@@ -457,6 +458,7 @@ export default {
   'Exercícios': 'Exercises',
   '+ Exercício': '+ Exercise',
   'Pós-treino': 'Post-workout',
+  'atualizado automaticamente ao vencer': 'updated automatically when it expires',
   '+ Item pós-treino': '+ Post-workout item',
 
   // Perfil: seções

@@ -164,7 +164,7 @@ export default function TreinoPage() {
         </div>
         {planEndDate && !planExpired && (
           <p className="progress-card__cycle">
-            {t('📅 Treino válido de {v1} até {v2} ({v3}d restantes){v4}', { v1: planStartDate ? fmtDate(planStartDate) : '—', v2: fmtDate(planEndDate), v3: Math.max(0, daysUntil(planEndDate)), v4: planByTrainer ? '' : ' · atualizado automaticamente ao vencer' })}
+            {t('📅 Treino válido de {v1} até {v2} ({v3}d restantes){v4}', { v1: planStartDate ? fmtDate(planStartDate) : '—', v2: fmtDate(planEndDate), v3: Math.max(0, daysUntil(planEndDate)), v4: planByTrainer ? '' : ` · ${t('atualizado automaticamente ao vencer')}` })}
           </p>
         )}
       </div>
@@ -240,7 +240,7 @@ function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility }
           <span className="today-card__kicker">{done ? t('Treino de hoje concluído') : t('Treino de hoje')}</span>
           <h2 className="today-card__title">{tFoco(day.foco)}</h2>
           <span className="today-card__meta">
-            {t('{dia} · {length} exercícios {v1}', { dia: t(day.dia), length: day.exercicios.length, v1: hasSets && ` · ${sets.done}/${sets.total} séries` })}
+            {t('{dia} · {length} exercícios {v1}', { dia: t(day.dia), length: day.exercicios.length, v1: hasSets && ` · ${t('{setsDone}/{setsTotal} séries', { setsDone: sets.done, setsTotal: sets.total })}` })}
             {hasSets && !done && ` · ${t('~{m} min', { m: estimateMinutes(day) })}`}
           </span>
           {quickMinutes && <span className="today-card__quick">{t('⏱ Versão de {m} min', { m: quickMinutes })}</span>}

@@ -262,7 +262,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
         <CoachPrompt onEnabled={() => announce(true)} />
         <div className="live__ex-head">
           <span className="live__kicker">
-            {t('{v1} {v2}{setsDone}/{setsTotal} séries no total', { v1: isPos ? 'Pós-treino' : `Exercício ${index + 1} de ${day.exercicios.length}`, v2: ' · ', setsDone, setsTotal })}
+            {t('{v1} {v2}{setsDone}/{setsTotal} séries no total', { v1: isPos ? t('Pós-treino') : t('Exercício {n} de {total}', { n: index + 1, total: day.exercicios.length }), v2: ' · ', setsDone, setsTotal })}
           </span>
           {group && (
             <span className="live__group">
