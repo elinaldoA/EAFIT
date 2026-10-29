@@ -1,4 +1,5 @@
 import { t } from '../lib/i18n';
+import { TACO_FOODS } from './tacoFoods';
 
 // Base de alimentos para a busca da aba Nutrição. Valores aproximados por 100 g
 // (preparo comum no Brasil, na linha da Tabela TACO), arredondados; `portion`
@@ -79,11 +80,25 @@ export const FOOD_DATABASE = RAW.map(([icon, name, kcal, g, carbs, fat, portion]
 
 const plain = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
-// Todas as palavras digitadas precisam aparecer no nome (sem acento, qualquer ordem).
-export function searchFoods(query, list = FOOD_DATABASE, limit = 8) {
+// Base da busca: os itens acima (nomes simples, traduzidos) e a Tabela TACO completa.
+export const ALL_FOODS = [...FOOD_DATABASE, ...TACO_FOODS];
+
+// Todas as palavras digitadas precisam aparecer no nome (sem acento, qualquer
+// ordem). Os itens acima vêm antes dos da TACO e, em cada grupo, os que começam
+// pela primeira palavra ("feijão" → "Feijão, carioca…" antes de "Acarajé…").
+// Item cru vai depois do preparado, a não ser que a busca peça "cru".
+export function searchFoods(query, list = ALL_FOODS, limit = 10) {
   const words = plain(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
-  return list.filter(f => words.every(w => plain(f.name).includes(w))).slice(0, limit);
+  const wantsRaw = words.some(w => w.startsWith('cru'));
+  const rank = f => (f.source === 'taco' ? 2 : 0) + (plain(f.name).startsWith(words[0]) ? 0 : 1)
+    + (!wantsRaw && /\bcrua?\b/.test(plain(f.name)) ? 0.5 : 0);
+  return list
+    .filter(f => words.every(w => plain(f.name).includes(w)))
+    .map((f, i) => [rank(f), i, f])
+    .sort((a, b) => a[0] - b[0] || a[1] - b[1])
+    .slice(0, limit)
+    .map(([, , f]) => f);
 }
 
 // Macros de `grams` gramas de um alimento por 100 g, no formato do registro do dia.

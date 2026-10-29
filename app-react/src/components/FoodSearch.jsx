@@ -110,7 +110,7 @@ export default function FoodSearch({ onAdd }) {
             <li key={f.id}>
               <button type="button" onClick={() => pick(f)}>
                 <span aria-hidden="true">{f.icon}</span> {f.name}
-                <small>{t('{kcal} kcal por 100 g', { kcal: f.kcal })}</small>
+                <small>{t('{kcal} kcal por 100 g', { kcal: f.kcal })}{f.source === 'taco' && ' · TACO'}</small>
               </button>
             </li>
           ))}
