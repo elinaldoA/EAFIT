@@ -33,7 +33,7 @@ describe('getExerciseMedia', () => {
   });
 
   it('acha exercício de pós-treino com emoji no nome', () => {
-    expect(getExerciseMedia('🔷 Prancha Frontal Estática', '/')?.id).toBe('Plank');
+    expect(getExerciseMedia('🔷 Abdominal Polia (Corda)', '/')?.id).toBe('Cable_Crunch');
   });
 
   it('sem equivalente seguro, não tem demonstração', () => {
