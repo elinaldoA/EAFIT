@@ -131,10 +131,16 @@ async function connectThreads(code: string, adminId: string): Promise<string[]> 
 }
 
 async function handleCallback(url: URL): Promise<Response> {
+  // A Meta devolve erros de configuração (ex.: domínio do app) com error_code
+  // e sem state: volta para o painel de produção mostrando o motivo.
+  const metaError = url.searchParams.get('error_description') || url.searchParams.get('error_message');
   const state = await verifyState(TOKEN_KEY, url.searchParams.get('state') || '');
-  if (!state || !ADMIN_ORIGINS.includes(state.origin)) return new Response('Link de conexão inválido ou vencido.', { status: 400 });
-  if (url.searchParams.get('error')) {
-    return back(state.origin, { erro: url.searchParams.get('error_description') || 'Conexão cancelada.' });
+  if (!state || !ADMIN_ORIGINS.includes(state.origin)) {
+    if (metaError || url.searchParams.get('error_code')) return back(ADMIN_ORIGINS[0], { erro: metaError || 'A Meta recusou a conexão.' });
+    return new Response('Link de conexão inválido ou vencido.', { status: 400 });
+  }
+  if (url.searchParams.get('error') || metaError) {
+    return back(state.origin, { erro: metaError || 'Conexão cancelada.' });
   }
   // O Threads devolve o código com "#_" no fim.
   const code = (url.searchParams.get('code') || '').replace(/#_$/, '');
