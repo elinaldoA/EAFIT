@@ -75,11 +75,18 @@ async function connectMeta(code: string, adminId: string): Promise<string[]> {
   const short = await request(fetch, `${GRAPH_BASE}/oauth/access_token?${new URLSearchParams({
     client_id: META_APP_ID, client_secret: META_APP_SECRET, redirect_uri: REDIRECT_URI, code,
   })}`);
-  const long = await request(fetch, `${GRAPH_BASE}/oauth/access_token?${new URLSearchParams({
-    grant_type: 'fb_exchange_token', client_id: META_APP_ID, client_secret: META_APP_SECRET,
-    fb_exchange_token: String(short.access_token),
-  })}`);
-  const pages = await makeApi(fetch, GRAPH_BASE, String(long.access_token)).get('/me/accounts', {
+  // Com configuração de token de usuário do sistema (Login para Empresas) o
+  // token já não expira e a troca pode ser recusada: segue com o que veio.
+  let userToken = String(short.access_token);
+  try {
+    const long = await request(fetch, `${GRAPH_BASE}/oauth/access_token?${new URLSearchParams({
+      grant_type: 'fb_exchange_token', client_id: META_APP_ID, client_secret: META_APP_SECRET, fb_exchange_token: userToken,
+    })}`);
+    if (long.access_token) userToken = String(long.access_token);
+  } catch (err) {
+    console.warn('marketing-oauth: troca por token longo recusada, usando o original:', err);
+  }
+  const pages = await makeApi(fetch, GRAPH_BASE, userToken).get('/me/accounts', {
     fields: 'id,name,access_token,picture{url},instagram_business_account{id,username,name,profile_picture_url}',
     limit: 100,
   });
