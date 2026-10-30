@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fetchMyThread, markMessagesRead, sendReply, friendlyReplyError } from '../lib/trainerMessages';
 import ChatThread from './ChatThread';
 import MyAppointments from './MyAppointments';
@@ -19,6 +19,8 @@ export default function ProfileTrainerSection({ toast, onChange }) {
   const [busy, setBusy] = useState(false);
   const [goals, setGoals] = useState(null);
   const [sharePhotos, setShare] = useState(false);
+  // A leitura do servidor pode chegar depois do primeiro toque: não sobrescreve a escolha.
+  const shareTouched = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -64,12 +66,13 @@ export default function ProfileTrainerSection({ toast, onChange }) {
     if (!trainer) return undefined;
     let active = true;
     markMessagesRead().catch(() => { /* migration pendente */ });
-    fetchSharePhotos().then(v => { if (active) setShare(v); }).catch(() => { /* migration pendente */ });
+    fetchSharePhotos().then(v => { if (active && !shareTouched.current) setShare(v); }).catch(() => { /* migration pendente */ });
     fetchMyGoals().then(g => { if (active) setGoals(g); }).catch(() => { /* sem metas */ });
     return () => { active = false; };
   }, [trainer]);
 
   async function handleSharePhotos(next) {
+    shareTouched.current = true;
     setShare(next);
     try { await setSharePhotos(next); toast(next ? t('📸 Fotos compartilhadas com seu personal') : t('Fotos deixaram de ser compartilhadas')); }
     catch { setShare(!next); toast(t('❌ Não foi possível salvar')); }

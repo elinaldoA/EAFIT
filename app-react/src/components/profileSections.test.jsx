@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
   fb: { sendFeedback: vi.fn(), fetchMyReplies: vi.fn() },
@@ -423,6 +423,18 @@ describe('ProfileTrainerSection', () => {
     h.photos.setSharePhotos.mockRejectedValue(new Error('x'));
     fireEvent.click(screen.getByRole('checkbox'));
     await waitFor(() => expect(toast).toHaveBeenCalledWith('❌ Não foi possível salvar'));
+    expect(screen.getByRole('checkbox').checked).toBe(true);
+  });
+
+  it('compartilhar fotos: leitura do servidor que chega depois do toque não desfaz a escolha', async () => {
+    h.tr.fetchMyTrainer.mockResolvedValue({ name: 'Carlos' });
+    let resolveShare;
+    h.photos.fetchSharePhotos.mockReturnValue(new Promise(r => { resolveShare = r; }));
+    h.photos.setSharePhotos.mockResolvedValue();
+    render(<ProfileTrainerSection toast={toast} />);
+    fireEvent.click(await screen.findByRole('checkbox'));
+    await waitFor(() => expect(h.photos.setSharePhotos).toHaveBeenCalledWith(true));
+    await act(async () => { resolveShare(false); });
     expect(screen.getByRole('checkbox').checked).toBe(true);
   });
 
