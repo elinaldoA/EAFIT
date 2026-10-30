@@ -178,3 +178,6 @@ button.history-cal__cell:not(:disabled) { cursor: pointer; }
 
 .import__error { color: var(--error); }
 .import__date { display: flex; flex-direction: column; gap: var(--sp-2); }
+.import__check { display: flex; align-items: center; gap: var(--sp-2); }
+.import__plan-ex { color: var(--text-muted); font-size: var(--fs-sm); }
+.import__switch { align-self: flex-start; }

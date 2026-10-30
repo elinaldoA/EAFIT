@@ -13,6 +13,8 @@ import { MAX_IMPORT_BYTES, workoutJSONToRows } from './workoutImport';
 
 export const MAX_SCAN_BYTES = 20 * 1024 * 1024;
 const MAX_PDF_OCR_PAGES = 5;
+// Abaixo disso a página é tratada como imagem (um rodapé sozinho não conta).
+const MIN_PAGE_LETTERS = 80;
 const OCR_MAX_SIDE = 2000;
 
 export class ImportFileError extends Error {
@@ -48,7 +50,7 @@ export async function readWorkoutFile(file, onProgress) {
     case 'json':
       try { return { rows: workoutJSONToRows(await file.text()) }; } catch { throw new ImportFileError('json'); }
     case 'pdf': return { text: await readPdfText(file, onProgress) };
-    case 'image': return { text: await ocrImages([await imageToCanvas(file)], onProgress) };
+    case 'image': return { text: (await ocrImages([await imageToCanvas(file)], onProgress))[0] };
     default: return { text: await file.text() };
   }
 }
@@ -101,29 +103,33 @@ async function readPdfText(file, onProgress) {
   const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   const doc = await task.promise;
   try {
-    const lines = [];
+    const pages = [];
     for (let p = 1; p <= doc.numPages; p++) {
       const page = await doc.getPage(p);
       const content = await page.getTextContent();
-      lines.push(...pdfItemsToLines(content.items));
+      const text = pdfItemsToLines(content.items).join('\n');
+      pages.push({ page, text, scanned: (text.match(/[a-zà-ú]/gi) || []).length < MIN_PAGE_LETTERS });
       onProgress?.({ step: 'pdf', progress: p / doc.numPages });
     }
-    const text = lines.join('\n');
-    if ((text.match(/[a-zà-ú]/gi) || []).length >= 20) return text;
 
-    // PDF escaneado: sem camada de texto, então vira imagem e passa no OCR.
-    const canvases = [];
-    for (let p = 1; p <= Math.min(doc.numPages, MAX_PDF_OCR_PAGES); p++) {
-      const page = await doc.getPage(p);
-      const base = page.getViewport({ scale: 1 });
-      const viewport = page.getViewport({ scale: Math.min(3, OCR_MAX_SIDE / Math.max(base.width, base.height)) });
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.ceil(viewport.width);
-      canvas.height = Math.ceil(viewport.height);
-      await page.render({ canvas, viewport }).promise;
-      canvases.push(canvas);
+    // Página sem camada de texto (escaneada, ou tabela colada como imagem —
+    // às vezes só o rodapé é texto): vira imagem e passa no OCR.
+    const toOcr = pages.filter(p => p.scanned).slice(0, MAX_PDF_OCR_PAGES);
+    if (toOcr.length) {
+      const canvases = [];
+      for (const { page } of toOcr) {
+        const base = page.getViewport({ scale: 1 });
+        const viewport = page.getViewport({ scale: Math.min(3, OCR_MAX_SIDE / Math.max(base.width, base.height)) });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvas, viewport }).promise;
+        canvases.push(canvas);
+      }
+      const texts = await ocrImages(canvases, onProgress);
+      toOcr.forEach((p, i) => { p.text = texts[i]; });
     }
-    return await ocrImages(canvases, onProgress);
+    return pages.map(p => p.text).join('\n');
   } finally {
     task.destroy();
   }
@@ -177,7 +183,7 @@ async function ocrImages(images, onProgress) {
       texts.push(data.text);
       done++;
     }
-    return texts.join('\n');
+    return texts;
   } finally {
     await worker.terminate();
   }

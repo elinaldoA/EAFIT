@@ -7,6 +7,8 @@ import { fmtDate } from '../lib/utils';
 import { todayDate } from '../data/treinoData';
 import { parseImportSource, saveImportedSessions, summarizeImport } from '../lib/workoutImport';
 import { readWorkoutFile } from '../lib/workoutImportFiles';
+import { parseWorkoutPlanText, planDaysFromTreinos } from '../lib/workoutPlanImport';
+import { createImportedPlan } from '../lib/workoutPlans';
 
 import { t } from '../lib/i18n';
 
@@ -29,7 +31,9 @@ const ACCEPT = '.csv,.tsv,.txt,.xlsx,.json,.pdf,image/*,text/csv,text/plain,appl
 
 // Importa treinos feitos fora do app para o histórico: CSV/TSV/TXT, planilha
 // .xlsx, JSON, PDF ou foto da ficha (lida por OCR no próprio aparelho).
-// onImported é chamado depois de gravar, pra tela recarregar o mês.
+// Arquivo sem datas com séries x repetições (uma ficha: Dia A/B/C) vira um
+// plano de treino novo em vez de histórico — dá pra trocar se for o caso.
+// onImported é chamado depois de gravar, pra tela recarregar o mês e o plano.
 export default function ImportWorkoutsModal({ onImported, onClose }) {
   useBackToClose(onClose);
   const { user } = useAuth();
@@ -42,9 +46,21 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
   const [reading, setReading] = useState(null); // { step, progress } enquanto lê
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
+  const [asHistory, setAsHistory] = useState(false);
+  const [planName, setPlanName] = useState('');
+  const [activate, setActivate] = useState(true);
 
-  const parsed = useMemo(() => (source ? parseImportSource(source, fallbackDate) : null), [source, fallbackDate]);
-  const parseError = parsed?.error ? t(PARSE_ERRORS[parsed.error] || PARSE_ERRORS.none) : '';
+  const history = useMemo(() => (source ? parseImportSource(source, fallbackDate) : null), [source, fallbackDate]);
+  const plan = useMemo(() => {
+    if (!source) return null;
+    const p = parseWorkoutPlanText(source.text ?? source.rows.map(r => r.join('  ')).join('\n'));
+    return p && { ...p, days: planDaysFromTreinos(p.treinos, t('Descanso')) };
+  }, [source]);
+  // Ficha: sem datas (ou sem nada que sirva de histórico) e com exercícios de plano.
+  const isPlanFile = !!plan && (!!history?.error || !!history?.undated);
+  const planMode = isPlanFile && !asHistory;
+  const parsed = planMode ? null : history;
+  const parseError = !planMode && parsed?.error ? t(PARSE_ERRORS[parsed.error] || PARSE_ERRORS.none) : '';
   const ready = parsed && !parsed.error ? parsed : null;
   const busy = saving || !!reading;
 
@@ -52,8 +68,9 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    setError(''); setSource(null); setResult(null);
+    setError(''); setSource(null); setResult(null); setAsHistory(false); setActivate(true);
     setFileName(file.name || t('Foto'));
+    setPlanName(file.name ? file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim().slice(0, 60) : t('Plano importado'));
     setReading({ step: 'file', progress: 0 });
     try {
       setSource(await readWorkoutFile(file, setReading));
@@ -81,6 +98,23 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
     }
   }
 
+  async function handleCreatePlan() {
+    if (!user || !plan || saving) return;
+    setSaving(true); setError('');
+    try {
+      const name = planName.trim() || t('Plano importado');
+      await createImportedPlan(user.id, name, plan.days, activate);
+      setResult({ plan: name, activated: activate });
+      setSource(null);
+      onImported?.();
+    } catch (err) {
+      console.error('createImportedPlan:', err);
+      setError(t('⚠️ Erro ao criar o plano. Tente de novo.'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const totals = ready ? summarizeImport(ready.sessions) : null;
   const first = ready?.sessions[ready.sessions.length - 1]?.date;
   const last = ready?.sessions[0]?.date;
@@ -101,7 +135,7 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
         </div>
 
         <p className="app-rating__text">
-          {t('Treinou em outro app ou tem a ficha no papel? Escolha o CSV do Strong ou do Hevy, uma planilha (.xlsx), um PDF, um JSON, um texto ou tire uma foto da ficha. Os treinos entram no seu histórico, recordes e evolução. Dias que já têm treino registrado no app não são alterados.')}
+          {t('Treinou em outro app ou tem uma ficha de treino? Escolha o CSV do Strong ou do Hevy, uma planilha (.xlsx), um PDF, um JSON, um texto ou tire uma foto. Treinos com data entram no seu histórico, recordes e evolução (dias que já têm treino no app não são alterados); uma ficha sem datas vira um plano de treino.')}
         </p>
 
         <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={handleFile} />
@@ -117,6 +151,34 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
 
         {reading && <p className="app-rating__text" role="status">{readingLabel}</p>}
         {(error || parseError) && <p className="app-rating__text import__error" role="alert">{error || parseError}</p>}
+
+        {planMode && (
+          <div className="quick__preview">
+            <div className="quick__preview-title">{t('📋 Ficha com {n} treinos', { n: plan.treinos.length })}</div>
+            <ul className="quick__changes">
+              {plan.days.filter(d => d.exercicios.length).map(d => (
+                <li key={d.dia}>
+                  <b>{t(d.dia)}</b> · {d.foco} — {t('{n} exercícios', { n: d.exercicios.length })}
+                  <div className="import__plan-ex">{d.exercicios.map(e => `${e.nome} ${e.series}x${e.reps}`).join(' · ')}</div>
+                </li>
+              ))}
+            </ul>
+            <label className="app-rating__text import__date">
+              {t('Nome do plano')}
+              <input className="input input--sm" value={planName} maxLength={60} onChange={e => setPlanName(e.target.value)} />
+            </label>
+            <label className="app-rating__text import__check">
+              <input type="checkbox" checked={activate} onChange={e => setActivate(e.target.checked)} />
+              {t('Começar a usar este plano agora')}
+            </label>
+            <p className="app-rating__text">{t('Os dias da semana, nomes e séries podem ser ajustados depois em ⚙️ Editar treino.')}</p>
+          </div>
+        )}
+        {isPlanFile && history?.sessions?.length > 0 && (
+          <button type="button" className="btn btn--ghost btn--sm import__switch" onClick={() => setAsHistory(v => !v)} disabled={busy}>
+            {asHistory ? t('É uma ficha: criar um plano de treino') : t('Na verdade é um treino que já fiz: registrar no histórico')}
+          </button>
+        )}
 
         {parsed?.undated && (
           <label className="app-rating__text import__date">
@@ -144,18 +206,24 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
         {result && (
           <div className="quick__preview" role="status">
             <div className="quick__preview-title">
-              {result.imported > 0 ? t('✅ {n} treinos importados', { n: result.imported }) : t('Nenhum treino novo importado')}
+              {result.plan
+                ? (result.activated ? t('✅ Plano “{nome}” criado e ativado', { nome: result.plan }) : t('✅ Plano “{nome}” criado. Ative quando quiser em ⚙️ Editar treino.', { nome: result.plan }))
+                : result.imported > 0 ? t('✅ {n} treinos importados', { n: result.imported }) : t('Nenhum treino novo importado')}
             </div>
-            <ul className="quick__changes">
+            {result.plan ? null : <ul className="quick__changes">
               {result.skippedExisting > 0 && <li>{t('{n} dias já tinham treino no app e foram mantidos', { n: result.skippedExisting })}</li>}
               {result.skippedFuture > 0 && <li>{t('{n} treinos com data futura foram ignorados', { n: result.skippedFuture })}</li>}
-            </ul>
+            </ul>}
           </div>
         )}
 
         <div className="quick__actions">
           {result ? (
             <button type="button" className="btn btn--primary btn--sm" onClick={onClose}>{t('Fechar')}</button>
+          ) : planMode ? (
+            <button type="button" className="btn btn--primary btn--sm" onClick={handleCreatePlan} disabled={busy}>
+              {saving ? t('Criando…') : t('Criar plano')}
+            </button>
           ) : ready && (
             <button type="button" className="btn btn--primary btn--sm" onClick={handleImport} disabled={busy}>
               {saving ? t('Importando…') : t('Importar {n} treinos', { n: totals.treinos })}

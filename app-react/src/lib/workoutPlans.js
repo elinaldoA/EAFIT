@@ -139,6 +139,12 @@ export async function createGeneratedPlan(userId, name, generatedDays, durationW
   return createPlanWithDays(userId, name, generatedDays, { activate: true, durationWeeks });
 }
 
+// Ficha importada (ImportWorkoutsModal). Ativada sem prazo: com prazo, o fim
+// do ciclo geraria um plano automático por cima da ficha do usuário.
+export async function createImportedPlan(userId, name, days, activate) {
+  return createPlanWithDays(userId, name, days, { activate, durationWeeks: null });
+}
+
 const inFlightSeed = new Map();
 
 // Evita criar planos duplicados quando loadUserData roda mais de uma vez em paralelo
