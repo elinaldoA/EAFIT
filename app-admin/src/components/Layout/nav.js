@@ -62,6 +62,7 @@ export const NAV_GROUPS = [
         key: 'comunicacao', label: 'Comunicação', icon: 'bell',
         tabs: [
           { to: '/notificacoes', label: 'Enviar notificação' },
+          { to: '/sumidos', label: 'Sumidos' },
           { to: '/historico-envios', label: 'Histórico' },
           { to: '/resultados-envios', label: 'Resultados' },
           { to: '/automacoes', label: 'Automáticas' },

@@ -31,6 +31,7 @@ const ContactMessages = lazy(() => import('./pages/ContactMessages'));
 const Support = lazy(() => import('./pages/Support'));
 const UserDetail = lazy(() => import('./pages/UserDetail'));
 const Broadcast = lazy(() => import('./pages/Broadcast'));
+const Dormant = lazy(() => import('./pages/Dormant'));
 const BroadcastHistory = lazy(() => import('./pages/BroadcastHistory'));
 const CampaignResults = lazy(() => import('./pages/CampaignResults'));
 const EditorialCalendar = lazy(() => import('./pages/EditorialCalendar'));
@@ -93,6 +94,7 @@ function AppShell() {
             <Route path="/relatorios" element={<DigestAlerts />} />
             <Route path="/segmentos" element={<RequireArea area="segments"><Segments /></RequireArea>} />
             <Route path="/notificacoes" element={<RequireArea area="notifications"><Broadcast /></RequireArea>} />
+            <Route path="/sumidos" element={<Dormant />} />
             <Route path="/historico-envios" element={<BroadcastHistory />} />
             <Route path="/resultados-envios" element={<CampaignResults />} />
             <Route path="/calendario" element={<EditorialCalendar />} />
