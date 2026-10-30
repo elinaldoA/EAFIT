@@ -30,3 +30,6 @@ supabase/.temp/
 # Site: páginas geradas por scripts/build-site.mjs (npm run site / npm run build)
 public/landing/exercicios/
 public/landing/sitemap.xml
+
+# OCR da importação de treinos: copiado de node_modules por scripts/copy-ocr.mjs
+public/ocr/

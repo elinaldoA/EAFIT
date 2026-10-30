@@ -1,55 +1,77 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/useAuth';
 import { getModalRoot } from '../lib/modalRoot';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { fmtDate } from '../lib/utils';
-import { MAX_IMPORT_BYTES, parseWorkoutCSV, saveImportedSessions, summarizeImport } from '../lib/workoutImport';
+import { todayDate } from '../data/treinoData';
+import { parseImportSource, saveImportedSessions, summarizeImport } from '../lib/workoutImport';
+import { readWorkoutFile } from '../lib/workoutImportFiles';
 
 import { t } from '../lib/i18n';
 
 const PARSE_ERRORS = {
   empty: 'O arquivo está vazio.',
-  columns: 'Não achei as colunas de data e exercício. Use o CSV exportado pelo Strong ou pelo Hevy.',
-  none: 'Nenhuma série válida encontrada no arquivo.',
+  none: 'Não encontrei treinos no arquivo. Ele precisa ter o nome do exercício e as séries (ex.: “Supino 4x10 40kg”) ou as colunas de data e exercício, como no CSV do Strong e do Hevy.',
 };
 
-// Importa treinos feitos fora do app (CSV do Strong/Hevy) para o histórico.
+const FILE_ERRORS = {
+  size: 'Arquivo grande demais (máximo 5 MB).',
+  'size-scan': 'Arquivo grande demais (máximo 20 MB).',
+  xls: 'Esse formato de planilha não é lido. Salve como .xlsx ou CSV e tente de novo.',
+  xlsx: 'Não consegui abrir a planilha. Salve de novo como .xlsx ou CSV.',
+  json: 'O JSON não está num formato válido.',
+  image: 'Não consegui abrir a imagem. Tente uma foto em JPG ou PNG.',
+  ocr: 'Não consegui carregar a leitura de fotos. Verifique a internet e tente de novo.',
+};
+
+const ACCEPT = '.csv,.tsv,.txt,.xlsx,.json,.pdf,image/*,text/csv,text/plain,application/pdf,application/json';
+
+// Importa treinos feitos fora do app para o histórico: CSV/TSV/TXT, planilha
+// .xlsx, JSON, PDF ou foto da ficha (lida por OCR no próprio aparelho).
 // onImported é chamado depois de gravar, pra tela recarregar o mês.
 export default function ImportWorkoutsModal({ onImported, onClose }) {
   useBackToClose(onClose);
   const { user } = useAuth();
-  const inputRef = useRef(null);
-  const [parsed, setParsed] = useState(null);
+  const fileRef = useRef(null);
+  const cameraRef = useRef(null);
+  const [source, setSource] = useState(null);
+  const [fallbackDate, setFallbackDate] = useState(todayDate);
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState('');
+  const [reading, setReading] = useState(null); // { step, progress } enquanto lê
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
+
+  const parsed = useMemo(() => (source ? parseImportSource(source, fallbackDate) : null), [source, fallbackDate]);
+  const parseError = parsed?.error ? t(PARSE_ERRORS[parsed.error] || PARSE_ERRORS.none) : '';
+  const ready = parsed && !parsed.error ? parsed : null;
+  const busy = saving || !!reading;
 
   async function handleFile(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    setError(''); setParsed(null); setResult(null);
-    if (file.size > MAX_IMPORT_BYTES) { setError(t('Arquivo grande demais (máximo 5 MB).')); return; }
+    setError(''); setSource(null); setResult(null);
+    setFileName(file.name || t('Foto'));
+    setReading({ step: 'file', progress: 0 });
     try {
-      const out = parseWorkoutCSV(await file.text());
-      setFileName(file.name);
-      if (out.error) setError(t(PARSE_ERRORS[out.error]));
-      else setParsed(out);
+      setSource(await readWorkoutFile(file, setReading));
     } catch (err) {
       console.error('ImportWorkoutsModal:', err);
-      setError(t('Não consegui ler o arquivo.'));
+      setError(t(FILE_ERRORS[err?.code] || 'Não consegui ler o arquivo.'));
+    } finally {
+      setReading(null);
     }
   }
 
   async function handleImport() {
-    if (!user || !parsed || saving) return;
+    if (!user || !ready || saving) return;
     setSaving(true); setError('');
     try {
-      const res = await saveImportedSessions(user.id, parsed.sessions);
+      const res = await saveImportedSessions(user.id, ready.sessions);
       setResult(res);
-      setParsed(null);
+      setSource(null);
       if (res.imported > 0) onImported?.();
     } catch (err) {
       console.error('saveImportedSessions:', err);
@@ -59,9 +81,15 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
     }
   }
 
-  const totals = parsed ? summarizeImport(parsed.sessions) : null;
-  const first = parsed?.sessions[parsed.sessions.length - 1]?.date;
-  const last = parsed?.sessions[0]?.date;
+  const totals = ready ? summarizeImport(ready.sessions) : null;
+  const first = ready?.sessions[ready.sessions.length - 1]?.date;
+  const last = ready?.sessions[0]?.date;
+  const pct = reading ? Math.round((reading.progress || 0) * 100) : 0;
+  const readingLabel = !reading ? ''
+    : reading.step === 'ocr-load' ? t('Preparando a leitura da foto… (só na primeira vez demora mais)')
+    : reading.step === 'ocr' ? t('Lendo o texto… {pct}%', { pct })
+    : reading.step === 'pdf' ? t('Lendo o PDF…')
+    : t('Lendo o arquivo…');
 
   return createPortal(
     <div className="rating-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
@@ -73,24 +101,42 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
         </div>
 
         <p className="app-rating__text">
-          {t('Treinou em outro app? Exporte o histórico em CSV (Strong ou Hevy) e escolha o arquivo aqui. Os treinos entram no seu histórico, recordes e evolução. Dias que já têm treino registrado no app não são alterados.')}
+          {t('Treinou em outro app ou tem a ficha no papel? Escolha o CSV do Strong ou do Hevy, uma planilha (.xlsx), um PDF, um JSON, um texto ou tire uma foto da ficha. Os treinos entram no seu histórico, recordes e evolução. Dias que já têm treino registrado no app não são alterados.')}
         </p>
 
-        <input ref={inputRef} type="file" accept=".csv,text/csv" hidden onChange={handleFile} />
+        <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={handleFile} />
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={handleFile} />
         <div className="quick__actions">
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => inputRef.current?.click()} disabled={saving}>
-            {fileName && !result ? t('Trocar arquivo') : t('Escolher arquivo CSV')}
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => cameraRef.current?.click()} disabled={busy}>
+            {t('📷 Tirar foto')}
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()} disabled={busy}>
+            {fileName && !result ? t('Trocar arquivo') : t('Escolher arquivo')}
           </button>
         </div>
 
-        {error && <p className="app-rating__text import__error" role="alert">{error}</p>}
+        {reading && <p className="app-rating__text" role="status">{readingLabel}</p>}
+        {(error || parseError) && <p className="app-rating__text import__error" role="alert">{error || parseError}</p>}
+
+        {parsed?.undated && (
+          <label className="app-rating__text import__date">
+            {t('Não achei a data no arquivo. Em que dia foi esse treino?')}
+            <input className="input input--sm" type="date" value={fallbackDate} max={todayDate()}
+              onChange={e => e.target.value && setFallbackDate(e.target.value)} />
+          </label>
+        )}
 
         {totals && (
           <div className="quick__preview">
             <div className="quick__preview-title">{fileName}</div>
             <ul className="quick__changes">
-              <li>{t('{n} treinos, de {de} a {ate}', { n: totals.treinos, de: fmtDate(first), ate: fmtDate(last) })}</li>
+              <li>{totals.treinos === 1
+                ? t('1 treino, em {de}', { de: fmtDate(last) })
+                : t('{n} treinos, de {de} a {ate}', { n: totals.treinos, de: fmtDate(first), ate: fmtDate(last) })}</li>
               <li>{t('{ex} exercícios · {sets} séries', { ex: totals.exercicios, sets: totals.series })}</li>
+              {ready.sessions.length <= 3 && ready.sessions.flatMap(s => s.exercises).slice(0, 12).map((ex, i) => (
+                <li key={i}>{ex.nome} — {describeSets(ex.sets)}</li>
+              ))}
             </ul>
           </div>
         )}
@@ -110,8 +156,8 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
         <div className="quick__actions">
           {result ? (
             <button type="button" className="btn btn--primary btn--sm" onClick={onClose}>{t('Fechar')}</button>
-          ) : parsed && (
-            <button type="button" className="btn btn--primary btn--sm" onClick={handleImport} disabled={saving}>
+          ) : ready && (
+            <button type="button" className="btn btn--primary btn--sm" onClick={handleImport} disabled={busy}>
               {saving ? t('Importando…') : t('Importar {n} treinos', { n: totals.treinos })}
             </button>
           )}
@@ -120,4 +166,12 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
     </div>,
     getModalRoot()
   );
+}
+
+// "3 séries · 40 kg × 10" pra conferir o que a foto/PDF virou antes de gravar.
+function describeSets(sets) {
+  const s = sets[0];
+  const what = s.reps ? `${s.carga ? `${s.carga} kg × ` : ''}${s.reps}`
+    : s.distanciaKm ? `${s.distanciaKm} km` : s.duracaoS ? `${s.duracaoS} s` : '';
+  return `${t('{n} séries', { n: sets.length })}${what ? ` · ${what}` : ''}`;
 }

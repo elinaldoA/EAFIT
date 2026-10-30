@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 vi.mock('./supabase', () => ({ db: {} }));
-import { parseCSV, parseImportDate, parseImportDuration, parseWorkoutCSV, summarizeImport } from './workoutImport';
+import {
+  parseCSV, parseImportDate, parseImportDuration, parseImportSource, parseSetsInText, parseWorkoutCSV, parseWorkoutText,
+  summarizeImport, workoutJSONToRows,
+} from './workoutImport';
 
 describe('parseCSV', () => {
   it('lida com aspas, vírgula no campo e ponto e vírgula', () => {
@@ -67,5 +70,77 @@ describe('parseWorkoutCSV', () => {
   it('avisa quando o arquivo não é de treino', () => {
     expect(parseWorkoutCSV('a,b\n1,2').error).toBe('columns');
     expect(parseWorkoutCSV('').error).toBe('empty');
+  });
+});
+
+describe('outros formatos', () => {
+  it('lê TSV e tabela com título acima do cabeçalho', () => {
+    const tsv = 'Meus treinos\n\nData\tExercício\tCarga\tReps\n15/01/2024\tSupino\t40\t10\n15/01/2024\tSupino\t42,5\t8\n';
+    const { sessions, error } = parseImportSource({ text: tsv });
+    expect(error).toBeNull();
+    expect(sessions[0].exercises[0].sets.map(s => s.carga)).toEqual([40, 42.5]);
+  });
+
+  it('aceita data serial do Excel nas linhas da planilha', () => {
+    expect(parseImportDate('45306')).toBe('2024-01-15');
+    const { sessions } = parseImportSource({ rows: [['Ficha'], ['data', 'exercicio', 'peso', 'reps'], ['45306', 'Remada', '30', '12']] });
+    expect(sessions[0].date).toBe('2024-01-15');
+  });
+
+  it('lê JSON aninhado (treino > exercícios > séries) e JSON em linhas', () => {
+    const nested = JSON.stringify({ workouts: [{
+      title: 'Push', start_time: '2024-01-15T10:00:00Z', end_time: '2024-01-15T11:00:00Z',
+      exercises: [{ title: 'Supino', sets: [{ type: 'warmup', weight_kg: 20, reps: 10 }, { type: 'normal', weight_kg: 60, reps: 8 }] }],
+    }] });
+    const out = parseImportSource({ rows: workoutJSONToRows(nested) });
+    expect(out.sessions[0]).toEqual(expect.objectContaining({ date: '2024-01-15', durationSeconds: 3600, notes: 'Push' }));
+    expect(out.sessions[0].exercises[0].sets).toEqual([expect.objectContaining({ carga: 60, reps: 8 })]);
+
+    const flat = JSON.stringify([{ date: '2024-01-16', exercise: 'Agachamento', weight: 80, reps: 5 }]);
+    expect(parseImportSource({ rows: workoutJSONToRows(flat) }).sessions[0].exercises[0].nome).toBe('Agachamento');
+  });
+});
+
+describe('texto livre (PDF, foto, txt)', () => {
+  it('entende séries escritas de vários jeitos', () => {
+    expect(parseSetsInText('Supino reto 4x10 40kg')).toEqual(Array(4).fill({ weight: 40, reps: 10, distance: null, seconds: null }));
+    expect(parseSetsInText('Rosca 3 séries de 12')).toHaveLength(3);
+    expect(parseSetsInText('Leg press 100 kg x 10, 120kg × 8').map(s => [s.weight, s.reps])).toEqual([[100, 10], [120, 8]]);
+    expect(parseSetsInText('Prancha 3x30s')).toEqual(Array(3).fill({ weight: null, reps: null, distance: null, seconds: 30 }));
+    expect(parseSetsInText('Esteira 30 min 5 km')).toEqual([{ weight: null, reps: null, distance: 5, seconds: 1800 }]);
+    expect(parseSetsInText('Supino 4 x 10 100 lbs')[0].weight).toBe(45.4);
+    expect(parseSetsInText('Treino A')).toEqual([]);
+  });
+
+  it('monta treinos por data, com nome em linha própria e linhas de série', () => {
+    const text = [
+      'Treino A - 15/01/2024',
+      '1. Supino reto 4x10 40kg',
+      'Agachamento livre',
+      'Série 1: 60 kg x 10',
+      'Série 2: 70 kg x 8',
+      '',
+      '17 de janeiro de 2024',
+      '• Esteira 20 min 3 km',
+      '18/01/24 Remada curvada 3x12 30kg',
+    ].join('\n');
+    const { sessions, error, undated } = parseWorkoutText(text);
+    expect(error).toBeNull();
+    expect(undated).toBe(false);
+    expect(sessions.map(s => s.date)).toEqual(['2024-01-18', '2024-01-17', '2024-01-15']);
+    const a = sessions[2];
+    expect(a.notes).toBe('Treino A');
+    expect(a.exercises.map(e => e.nome)).toEqual(['Supino reto', 'Agachamento livre']);
+    expect(a.exercises[1].sets.map(s => [s.carga, s.reps])).toEqual([[60, 10], [70, 8]]);
+    expect(sessions[1].exercises[0].sets[0]).toEqual(expect.objectContaining({ distanciaKm: 3, duracaoMin: 20 }));
+    expect(sessions[0].exercises[0]).toEqual(expect.objectContaining({ nome: 'Remada curvada' }));
+  });
+
+  it('sem data no texto, usa o dia escolhido', () => {
+    const out = parseImportSource({ text: 'Ficha de treino\nPuxada frontal 3x12 35kg\nCrucifixo 3x15' }, '2024-02-01');
+    expect(out.undated).toBe(true);
+    expect(out.sessions[0].date).toBe('2024-02-01');
+    expect(out.sessions[0].exercises.map(e => e.nome)).toEqual(['Puxada frontal', 'Crucifixo']);
+    expect(parseImportSource({ text: 'nada aqui' }, '2024-02-01').error).toBe('none');
   });
 });

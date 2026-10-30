@@ -20,7 +20,9 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico,jpg}'],
         // og-image.png só é lida por crawlers de prévia de link (WhatsApp,
         // redes sociais), nunca pelo app — não precisa ir pro precache.
-        globIgnores: ['landing/**', 'og-image.png'],
+        // ocr/ (Tesseract, ≈5 MB) e o PDF.js (≈480 KB) só são baixados por
+        // quem importa treino por foto ou PDF — também ficam de fora.
+        globIgnores: ['landing/**', 'og-image.png', 'ocr/**', 'assets/pdf.min-*.js'],
       },
       includeAssets: ['icon.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png'],
       manifest: {

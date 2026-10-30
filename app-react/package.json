@@ -4,8 +4,10 @@
   "version": "0.3.4",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copy-ocr.mjs",
     "dev": "vite",
     "site": "node scripts/build-site.mjs",
+    "prebuild": "node scripts/copy-ocr.mjs",
     "build": "node scripts/build-site.mjs && vite build && node scripts/build-site.mjs --stamp",
     "lint": "oxlint",
     "preview": "vite preview",
@@ -13,10 +15,13 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
+    "@tesseract.js-data/por": "^1.0.0",
     "@zxing/library": "0.23.0",
+    "pdfjs-dist": "^6.4.299",
     "qrcode-generator": "2.0.4",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",
