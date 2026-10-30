@@ -323,6 +323,12 @@ export async function cancelPost(postId) {
   if (error) throw error;
 }
 
+// Apaga nas redes onde saiu e descarta o que está na fila; o post só some do
+// painel quando todas as exclusões dão certo (Edge Function marketing).
+export function deletePost(postId) {
+  return invoke('marketing', { action: 'delete', postId });
+}
+
 export async function retryTarget(targetId) {
   const { error } = await db.rpc('marketing_retry_target', { p_target: targetId });
   if (error) throw error;

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, exerciseVideoList, fetchAccounts, fetchMedia,
+  PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, exerciseVideoList, fetchAccounts, fetchMedia,
   fetchPosts, finalCaption, retryTarget, runPost, validatePost,
 } from '../lib/marketing';
 import { formatDate } from '../lib/userDetailHelpers';
@@ -31,6 +31,7 @@ export default function MarketingPublish() {
   const [when, setWhen] = useState('now');
   const [scheduleAt, setScheduleAt] = useState('');
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState('');
   const [msg, setMsg] = useState('');
   const videos = useMemo(() => exerciseVideoList(), []);
 
@@ -111,6 +112,26 @@ export default function MarketingPublish() {
       await loadPosts();
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
+    }
+  }
+
+  async function handleDelete(post) {
+    const live = post.targets.filter(t => t.status === 'published').length;
+    const question = live
+      ? `Excluir este post? Ele será apagado em ${live} rede(s), com curtidas e comentários. Não dá para desfazer.`
+      : 'Remover este post do painel?';
+    if (!window.confirm(question)) return;
+    setDeleting(post.id);
+    setMsg('');
+    try {
+      const { removed, results = [] } = await deletePost(post.id);
+      const failed = results.filter(r => !r.ok);
+      setMsg(removed ? 'Post excluído.' : `Erro: ${failed.length} rede(s) não excluíram (${failed[0]?.error}).`);
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setDeleting('');
+      loadPosts();
     }
   }
 
@@ -253,9 +274,14 @@ export default function MarketingPublish() {
                 {p.scheduled_at ? `agendado para ${formatDate(p.scheduled_at)}` : `criado em ${formatDate(p.created_at)}`}
                 {p.media?.length ? ` · ${p.media.length} mídia(s)` : ''}
               </span>
-              {p.targets.some(t => t.status === 'pending') && p.scheduled_at && (
-                <button type="button" className="btn btn--ghost btn--small" onClick={() => handleCancel(p)}>Cancelar</button>
-              )}
+              <span className="actions-row">
+                {p.targets.some(t => t.status === 'pending') && p.scheduled_at && (
+                  <button type="button" className="btn btn--ghost btn--small" onClick={() => handleCancel(p)}>Cancelar</button>
+                )}
+                <button type="button" className="btn btn--danger btn--small" disabled={deleting === p.id} onClick={() => handleDelete(p)}>
+                  {deleting === p.id ? 'Excluindo…' : 'Excluir'}
+                </button>
+              </span>
             </div>
             <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>
             <ul className="mkt-targets">

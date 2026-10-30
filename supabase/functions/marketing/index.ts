@@ -10,13 +10,14 @@
 //     { action: 'sync' }                        atualiza comentários agora
 //     { action: 'reply', commentId, text }      responde um comentário
 //     { action: 'hide', commentId, hidden }     oculta/mostra um comentário
+//     { action: 'delete', postId }              apaga o post nas redes e, dando tudo certo, do painel
 //
 // Verify JWT desligado por causa do cron; o admin é conferido aqui (JWT + admin_can).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { CRON_SECRET_HEADER, isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import {
-  type Account, baseFor, checkPost, continuePublish, decryptToken, encryptToken, fetchComments, GraphError, makeApi,
+  type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, GraphError, makeApi,
   type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step,
 } from '../_shared/marketing.ts';
 
@@ -116,6 +117,46 @@ async function runQueue(postId: string | null) {
   return results;
 }
 
+// ---------- exclusão ----------
+
+type DeleteResult = { target: string; ok: boolean; error?: string };
+
+// Apaga onde já saiu, descarta o que ainda está na fila e só remove o post do
+// painel quando nada falhou; o que falhar fica no painel com o motivo.
+async function deletePost(postId: string): Promise<{ removed: boolean; results: DeleteResult[] }> {
+  const { data: targets, error } = await db.from('marketing_post_targets')
+    .select('id, account_id, status, external_id, locked_until').eq('post_id', postId);
+  if (error) throw error;
+  if ((targets || []).some((t) => t.locked_until && new Date(t.locked_until) > new Date())) {
+    throw new Error('Este post está sendo publicado agora. Tente de novo em instantes.');
+  }
+
+  const results: DeleteResult[] = [];
+  for (const t of targets || []) {
+    if (t.status !== 'published' || !t.external_id) {
+      await db.from('marketing_post_targets').delete().eq('id', t.id);
+      results.push({ target: t.id, ok: true });
+      continue;
+    }
+    try {
+      const { account, token } = await loadAccount(t.account_id);
+      await deletePublished(makeApi(fetch, baseFor(account.platform), token), t.external_id);
+      await db.from('marketing_comments').delete().eq('account_id', t.account_id).eq('post_external_id', t.external_id);
+      await db.from('marketing_post_targets').delete().eq('id', t.id);
+      results.push({ target: t.id, ok: true });
+    } catch (err) {
+      await handleGraphError(t.account_id, err);
+      const msg = `Não deu para excluir: ${errMsg(err)}`;
+      await db.from('marketing_post_targets').update({ error: msg.slice(0, 500), updated_at: new Date().toISOString() }).eq('id', t.id);
+      results.push({ target: t.id, ok: false, error: msg });
+    }
+  }
+
+  const removed = results.every((r) => r.ok);
+  if (removed) await db.from('marketing_posts').delete().eq('id', postId);
+  return { removed, results };
+}
+
 // ---------- comentários ----------
 
 async function syncComments() {
@@ -213,6 +254,12 @@ Deno.serve(async (req) => {
       }
       case 'sync':
         return json({ results: await syncComments() });
+      case 'delete': {
+        if (typeof body.postId !== 'string') return json({ error: 'Falta postId.' }, 400);
+        const out = await deletePost(body.postId);
+        await audit('marketingDeletePost', { post: body.postId, removed: out.removed, failed: out.results.filter((r) => !r.ok).length });
+        return json(out);
+      }
       case 'reply': {
         const text = String(body.text || '').trim();
         if (!text) return json({ error: 'Escreva a resposta.' }, 400);

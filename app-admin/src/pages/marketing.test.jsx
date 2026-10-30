@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 
 const { lib } = vi.hoisted(() => ({
   lib: {
-    fetchAccounts: vi.fn(), fetchMedia: vi.fn(), fetchPosts: vi.fn(), createPost: vi.fn(), runPost: vi.fn(),
+    fetchAccounts: vi.fn(), fetchMedia: vi.fn(), fetchPosts: vi.fn(), createPost: vi.fn(), runPost: vi.fn(), deletePost: vi.fn(),
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(),
   },
@@ -126,6 +126,43 @@ describe('MarketingPublish', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
     await waitFor(() => expect(lib.retryTarget).toHaveBeenCalledWith('t9'));
     expect(lib.runPost).toHaveBeenCalledWith('p9');
+  });
+});
+
+describe('MarketingPublish: excluir', () => {
+  const POST = {
+    id: 'p7', caption: 'Carrossel', media: [], scheduled_at: null, created_at: '2026-10-30T10:00:00Z',
+    targets: [
+      { id: 't1', account_id: 'a1', status: 'published', permalink: 'https://fb/p' },
+      { id: 't2', account_id: 'a2', status: 'published', permalink: 'https://ig/p' },
+    ],
+  };
+
+  it('pergunta antes, avisa quantas redes e recarrega a lista', async () => {
+    lib.fetchPosts.mockResolvedValue([POST]);
+    lib.deletePost.mockResolvedValue({ removed: true, results: [{ ok: true }, { ok: true }] });
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('apagado em 2 rede(s)'));
+    await waitFor(() => expect(lib.deletePost).toHaveBeenCalledWith('p7'));
+    expect(await screen.findByText('Post excluído.')).toBeTruthy();
+    expect(lib.fetchPosts).toHaveBeenCalledTimes(2);
+  });
+
+  it('mostra quando alguma rede não excluiu', async () => {
+    lib.fetchPosts.mockResolvedValue([POST]);
+    lib.deletePost.mockResolvedValue({ removed: false, results: [{ ok: true }, { ok: false, error: 'Não deu para excluir: sem permissão' }] });
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
+    expect(await screen.findByText(/1 rede\(s\) não excluíram \(Não deu para excluir: sem permissão\)/)).toBeTruthy();
+  });
+
+  it('não exclui se o admin desistir', async () => {
+    lib.fetchPosts.mockResolvedValue([POST]);
+    window.confirm.mockReturnValue(false);
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
+    expect(lib.deletePost).not.toHaveBeenCalled();
   });
 });
 

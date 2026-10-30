@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import {
-  type Account, checkPost, continuePublish, decryptToken, encryptToken, fetchComments, GraphError, makeApi,
+  type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, GraphError, makeApi,
   replyToComment, setCommentHidden, signState, startPublish, verifyState,
 } from './marketing.ts';
 
@@ -14,7 +14,7 @@ function fakeFetch(routes: Record<string, Route>) {
   const fn = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(String(input));
     const method = init?.method || 'GET';
-    const params = Object.fromEntries(method === 'GET' ? url.searchParams : new URLSearchParams(String(init?.body)));
+    const params = Object.fromEntries(init?.body ? new URLSearchParams(String(init.body)) : url.searchParams);
     const path = url.pathname.replace(/^\/v[\d.]+/, '');
     calls.push({ method, path, params });
     const route = routes[`${method} ${path}`];
@@ -182,4 +182,18 @@ Deno.test('responder e ocultar usam o endpoint de cada rede', async () => {
   await setCommentHidden(api, IG, 'k1', false);
   await setCommentHidden(api, TH, 'r1', true);
   assertEquals(calls.slice(-3).map((c) => [c.path, c.params.is_hidden ?? c.params.hide]), [['/c1', 'true'], ['/k1', 'false'], ['/r1/manage_reply', 'true']]);
+});
+
+Deno.test('excluir: DELETE no id do post; já apagado na rede conta como apagado', async () => {
+  const { fn, calls } = fakeFetch({ 'DELETE /P1_9': { success: true } });
+  await deletePublished(makeApi(fn, 'https://graph.facebook.com/v23.0', 't'), 'P1_9');
+  assertEquals([calls[0].method, calls[0].path, calls[0].params.access_token], ['DELETE', '/P1_9', 't']);
+
+  const gone = (async () => new Response(JSON.stringify({
+    error: { message: "Unsupported delete request. Object with ID 'X' does not exist", code: 100 },
+  }), { status: 400 })) as typeof fetch;
+  await deletePublished(makeApi(gone, 'https://g', 't'), 'X');
+
+  const denied = (async () => new Response(JSON.stringify({ error: { message: 'Permissions error', code: 10 } }), { status: 400 })) as typeof fetch;
+  await assertRejects(() => deletePublished(makeApi(denied, 'https://g', 't'), 'X'), GraphError, 'Permissions error');
 });

@@ -21,9 +21,11 @@ export type Post = { id: string; caption: string; media: Media[] };
 export const META_SCOPES = [
   'pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'pages_manage_engagement',
   'pages_read_user_content', 'business_management',
-  'instagram_basic', 'instagram_content_publish', 'instagram_manage_comments',
+  'instagram_basic', 'instagram_content_publish', 'instagram_manage_comments', 'instagram_manage_contents',
 ];
-export const THREADS_SCOPES = ['threads_basic', 'threads_content_publish', 'threads_manage_replies', 'threads_read_replies'];
+export const THREADS_SCOPES = [
+  'threads_basic', 'threads_content_publish', 'threads_manage_replies', 'threads_read_replies', 'threads_delete',
+];
 
 export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, threads: 500 };
 
@@ -111,6 +113,10 @@ export class GraphError extends Error {
   get needsReconnect() {
     return this.code === 190;
   }
+  // 100 = objeto não existe (já apagado direto na rede).
+  get isGone() {
+    return this.code === 100 && /does not exist|n[ãa]o existe|Unsupported (get|delete) request/i.test(this.message);
+  }
 }
 
 type FetchFn = typeof fetch;
@@ -119,6 +125,7 @@ type Params = Record<string, string | number | boolean | undefined>;
 export type Api = {
   get: (path: string, params?: Params) => Promise<Record<string, unknown>>;
   post: (path: string, params?: Params) => Promise<Record<string, unknown>>;
+  del: (path: string) => Promise<Record<string, unknown>>;
 };
 
 function toQuery(params: Params): URLSearchParams {
@@ -150,6 +157,7 @@ export function makeApi(fetchFn: FetchFn, base: string, token: string): Api {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: toQuery({ ...params, access_token: token }),
     }),
+    del: (path) => request(fetchFn, `${base}${path}?${toQuery({ access_token: token })}`, { method: 'DELETE' }),
   };
 }
 
@@ -348,4 +356,18 @@ export async function setCommentHidden(api: Api, account: Account, commentId: st
   if (account.platform === 'facebook') await api.post(`/${commentId}`, { is_hidden: hidden });
   else if (account.platform === 'instagram') await api.post(`/${commentId}`, { hide: hidden });
   else await api.post(`/${commentId}/manage_reply`, { hide: hidden });
+}
+
+// ---------- exclusão ----------
+
+// Apaga o post publicado na rede (Facebook: pages_manage_posts; Instagram:
+// instagram_manage_contents; Threads: threads_delete). Se ele já não existe
+// lá (apagado direto na rede), conta como apagado.
+export async function deletePublished(api: Api, externalId: string): Promise<void> {
+  try {
+    await api.del(`/${externalId}`);
+  } catch (err) {
+    if (err instanceof GraphError && err.isGone) return;
+    throw err;
+  }
 }

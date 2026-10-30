@@ -13,6 +13,7 @@ export const ACTION_LABEL = {
   marketingConnect: 'Conectou rede social',
   marketingDisconnect: 'Desconectou rede social',
   marketingPost: 'Criou post nas redes',
+  marketingDeletePost: 'Excluiu post das redes',
   marketingReply: 'Respondeu comentário nas redes',
   marketingHideComment: 'Ocultou comentário nas redes',
   marketingShowComment: 'Mostrou comentário nas redes',
