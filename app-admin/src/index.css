@@ -1053,6 +1053,48 @@ a.dash-alert:hover { background: var(--surface-2); }
   border: 1px solid var(--border);
 }
 
+/* ---------- marketing ---------- */
+
+.mkt-account { display: inline-flex; align-items: center; gap: 10px; }
+.mkt-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex: none; }
+.mkt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.mkt-grid--picker { max-height: 360px; overflow-y: auto; padding: 2px; }
+.mkt-tile {
+  display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 8px; min-width: 0;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2);
+  color: inherit; font: inherit; text-align: left;
+}
+.mkt-tile figcaption { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; font-size: 13px; min-width: 0; }
+.mkt-tile figcaption strong { overflow-wrap: anywhere; }
+.mkt-tile--active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-glow); }
+.mkt-tile__media { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 6px; background: #000; }
+.mkt-tile__media--phone { object-fit: contain; }
+.mkt-pick { cursor: pointer; }
+.mkt-pick__label { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mkt-art { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; padding-top: 12px; border-top: 1px solid var(--border); }
+.mkt-art > .stack { flex: 1 1 280px; min-width: 0; }
+.mkt-art__preview { flex: 0 1 300px; width: 300px; max-width: 100%; border-radius: var(--radius); border: 1px solid var(--border); }
+.mkt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mkt-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border-2); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
+}
+.mkt-chip--on { border-color: var(--primary); background: var(--primary-glow); }
+.mkt-counters { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--text-muted); }
+.mkt-over { color: var(--danger); font-weight: 600; }
+.mkt-preview {
+  margin: 0; padding: 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border);
+  white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13.5px;
+}
+.mkt-errors { margin: 0; padding-left: 20px; }
+.mkt-post { padding: 12px 0; border-top: 1px solid var(--border); }
+.mkt-post__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.mkt-post__caption { margin: 6px 0; white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mkt-targets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.mkt-targets li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mkt-comment__text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mkt-reply { margin: 0; padding-left: 12px; border-left: 2px solid var(--primary); color: var(--text-muted); }
+
 /* ---------- visão gerencial ---------- */
 
 .delta { display: block; margin-top: 6px; font-size: 11.5px; font-weight: 600; }

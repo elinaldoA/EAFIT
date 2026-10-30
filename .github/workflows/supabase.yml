@@ -70,6 +70,8 @@ jobs:
           supabase/functions/email-unsubscribe/index.ts
           supabase/functions/inactivity-reason/index.ts
           supabase/functions/resolve-geo/index.ts
+          supabase/functions/marketing/index.ts
+          supabase/functions/marketing-oauth/index.ts
           supabase/functions/_shared/email.ts
 
   push-migrations:
@@ -122,6 +124,9 @@ jobs:
           deploy inactivity-reason --no-verify-jwt
           # push-event: aberto de propósito (o service worker não tem sessão); quem autoriza é o endpoint da inscrição push.
           deploy push-event --no-verify-jwt
+          # marketing: cron (x-cron-secret) e painel (JWT conferido no código); marketing-oauth: retorno do OAuth, autorizado pelo state assinado.
+          deploy marketing --no-verify-jwt
+          deploy marketing-oauth --no-verify-jwt
           for fn in send-push send-welcome delete-account admin-users admin-broadcast admin-generate-plan trainer-push reply-push; do
             deploy "$fn"
           done

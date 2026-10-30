@@ -72,6 +72,20 @@ export const NAV_GROUPS = [
     ],
   },
   {
+    label: 'Marketing',
+    sections: [
+      {
+        key: 'marketing', label: 'Marketing', icon: 'megaphone',
+        tabs: [
+          { to: '/marketing', label: 'Publicar' },
+          { to: '/marketing-comentarios', label: 'Comentários' },
+          { to: '/marketing-midia', label: 'Biblioteca de mídia' },
+          { to: '/marketing-contas', label: 'Contas conectadas' },
+        ],
+      },
+    ],
+  },
+  {
     label: 'Conteúdo',
     sections: [
       {

@@ -58,6 +58,10 @@ const Admins = lazy(() => import('./pages/Admins'));
 const AccountDeletions = lazy(() => import('./pages/AccountDeletions'));
 const PrivacyRequests = lazy(() => import('./pages/PrivacyRequests'));
 const Legal = lazy(() => import('./pages/Legal'));
+const MarketingPublish = lazy(() => import('./pages/MarketingPublish'));
+const MarketingComments = lazy(() => import('./pages/MarketingComments'));
+const MarketingMedia = lazy(() => import('./pages/MarketingMedia'));
+const MarketingAccounts = lazy(() => import('./pages/MarketingAccounts'));
 
 // Fora do HashRouter de propósito: o link de "esqueci minha senha" volta com
 // um token no fragmento da URL (#access_token=...&type=recovery), que
@@ -98,6 +102,10 @@ function AppShell() {
             <Route path="/historico-envios" element={<BroadcastHistory />} />
             <Route path="/resultados-envios" element={<CampaignResults />} />
             <Route path="/calendario" element={<EditorialCalendar />} />
+            <Route path="/marketing" element={<RequireArea area="marketing"><MarketingPublish /></RequireArea>} />
+            <Route path="/marketing-comentarios" element={<RequireArea area="marketing"><MarketingComments /></RequireArea>} />
+            <Route path="/marketing-midia" element={<RequireArea area="marketing"><MarketingMedia /></RequireArea>} />
+            <Route path="/marketing-contas" element={<RequireArea area="marketing"><MarketingAccounts /></RequireArea>} />
             <Route path="/conteudo" element={<RequireArea area="content"><Templates /></RequireArea>} />
             <Route path="/auditoria" element={<AuditLog />} />
             <Route path="/erros" element={<ClientErrors />} />

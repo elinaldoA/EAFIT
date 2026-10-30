@@ -18,6 +18,7 @@ export const AREA_LABELS = {
   segments: 'Segmentos',
   content: 'Conteúdo (exercícios, desafios, ligas, landing)',
   settings: 'Configurações do app',
+  marketing: 'Marketing (redes sociais: publicar e responder)',
 };
 
 export const ROLE_AREAS = {
