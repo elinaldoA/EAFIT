@@ -35,6 +35,10 @@ describe('describeFilters', () => {
   it('sem critérios é a base inteira', () => {
     expect(describeFilters({})).toBe('todos os usuários');
   });
+
+  it('descreve os sumidos', () => {
+    expect(describeFilters({ status: 'dormant' })).toBe('Sumidos (7+ dias sem treinar nem abrir o app)');
+  });
 });
 
 describe('countSegment / resolveSegment', () => {

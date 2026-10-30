@@ -4,7 +4,16 @@ import { fetchUsersPage } from './users';
 export const STATUS_LABELS = {
   active: 'Ativos', admin: 'Admins', banned: 'Banidos', unconfirmed: 'Não confirmados',
   inactive: 'Inativos (14+ dias sem treinar)', never_trained: 'Nunca treinaram',
+  dormant: 'Sumidos (7+ dias sem treinar nem abrir o app)',
 };
+
+// Grupos prontos para Notificações → Enviar, sem precisar salvar um segmento.
+// Mesmo formato de user_segments; o id com prefixo não colide com os uuids salvos.
+export const READY_SEGMENTS = [
+  { id: 'status:dormant', name: 'Sumidos: 7+ dias sem treinar nem abrir o app', filters: { status: 'dormant' } },
+  { id: 'status:inactive', name: 'Inativos: 14+ dias sem treinar', filters: { status: 'inactive' } },
+  { id: 'status:never_trained', name: 'Nunca treinaram', filters: { status: 'never_trained' } },
+];
 
 // Só guarda o que de fato filtra: filtro vazio não entra no segmento.
 export function cleanFilters({ search, status, nivel, meta } = {}) {

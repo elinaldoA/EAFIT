@@ -8,7 +8,10 @@ const { mockFrom, mockInvoke, an, users, seg } = vi.hoisted(() => ({
   mockInvoke: vi.fn(),
   an: { fetchRules: vi.fn(), saveRule: vi.fn(), fetchLog: vi.fn(), fetchPreview: vi.fn() },
   users: { fetchUsers: vi.fn() },
-  seg: { fetchSegments: vi.fn(), resolveSegment: vi.fn() },
+  seg: {
+    fetchSegments: vi.fn(), resolveSegment: vi.fn(),
+    READY_SEGMENTS: [{ id: 'status:dormant', name: 'Sumidos', filters: { status: 'dormant' } }],
+  },
 }));
 
 vi.mock('../lib/supabase', () => ({ db: { from: mockFrom, functions: { invoke: mockInvoke } } }));
@@ -343,11 +346,23 @@ describe('Broadcast', () => {
     await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('admin-broadcast', { body: { title: 'Olá', body: 'Mundo', targetUserIds: ['u1', 'u2', 'u3'] } }));
   });
 
+  it('grupo pronto de sumidos vale sem segmento salvo, com e-mail junto', async () => {
+    wrap(<Broadcast />, '/?segment=status:dormant');
+    expect(await screen.findByText(/3 usuário\(s\) no segmento hoje/)).toBeTruthy();
+    expect(seg.resolveSegment).toHaveBeenCalledWith(expect.objectContaining({ filters: { status: 'dormant' } }));
+    fill();
+    fireEvent.click(screen.getByLabelText(/Enviar também por e-mail/));
+    fireEvent.click(screen.getByText('Enviar notificação agora'));
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('admin-broadcast', {
+      body: expect.objectContaining({ targetUserIds: ['u1', 'u2', 'u3'] }),
+    }));
+  });
+
   it('segmento sem escolha não envia', async () => {
     seg.fetchSegments.mockResolvedValue([{ id: 'sg1', name: 'Iniciantes' }]);
     wrap(<Broadcast />);
     await screen.findByText('Antigo');
-    fireEvent.click(await screen.findByLabelText('Segmento salvo'));
+    fireEvent.click(await screen.findByLabelText('Segmento'));
     fill();
     fireEvent.click(screen.getByText('Enviar notificação agora'));
     expect(await screen.findByText('Erro: o segmento está vazio ou não foi escolhido.')).toBeTruthy();

@@ -6,7 +6,7 @@ import { fetchUsers } from '../lib/users';
 import EmptyState from '../components/EmptyState';
 import MessageEditor from '../components/MessageEditor';
 import { useSearchParams } from 'react-router-dom';
-import { fetchSegments, resolveSegment } from '../lib/segments';
+import { READY_SEGMENTS, fetchSegments, resolveSegment } from '../lib/segments';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -71,7 +71,7 @@ export default function Broadcast() {
   const pickSegment = useCallback(async (id, list) => {
     setSegmentId(id);
     setSelectedIds([]);
-    const seg = (list || segments).find(x => x.id === id);
+    const seg = [...READY_SEGMENTS, ...(list || segments)].find(x => x.id === id);
     if (!seg) return;
     setSegmentBusy(true);
     try {
@@ -87,7 +87,7 @@ export default function Broadcast() {
     fetchSegments().then(list => {
       setSegments(list);
       const fromUrl = searchParams.get('segment');
-      if (fromUrl && list.some(x => x.id === fromUrl)) {
+      if (fromUrl && [...READY_SEGMENTS, ...list].some(x => x.id === fromUrl)) {
         setScope('segment');
         pickSegment(fromUrl, list);
       }
@@ -233,9 +233,7 @@ export default function Broadcast() {
           <div className="actions-row">
             <label><input type="radio" checked={scope === 'all'} onChange={() => setScope('all')} /> Todos os usuários</label>
             <label><input type="radio" checked={scope === 'specific'} onChange={() => { setScope('specific'); setSelectedIds([]); }} /> Selecionar usuários</label>
-            {segments.length > 0 && (
-              <label><input type="radio" checked={scope === 'segment'} onChange={() => { setScope('segment'); setSelectedIds([]); setSegmentId(''); }} /> Segmento salvo</label>
-            )}
+            <label><input type="radio" checked={scope === 'segment'} onChange={() => { setScope('segment'); setSelectedIds([]); setSegmentId(''); }} /> Segmento</label>
           </div>
         </div>
 
@@ -243,11 +241,20 @@ export default function Broadcast() {
           <div className="field">
             <select className="input" value={segmentId} onChange={e => pickSegment(e.target.value)}>
               <option value="">Escolha um segmento…</option>
-              {segments.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
+              <optgroup label="Grupos prontos">
+                {READY_SEGMENTS.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
+              </optgroup>
+              {segments.length > 0 && (
+                <optgroup label="Segmentos salvos">
+                  {segments.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
+                </optgroup>
+              )}
             </select>
             {segmentId && (
               <span className="user-detail__meta">
-                {segmentBusy ? 'Calculando…' : `${selectedIds.length} usuário(s) no segmento hoje (só quem tem push ativo recebe).`}
+                {segmentBusy
+                  ? 'Calculando…'
+                  : `${selectedIds.length} usuário(s) no segmento hoje. O push chega a quem tem notificação ativa; marque "Enviar também por e-mail" para alcançar os demais.`}
               </span>
             )}
           </div>

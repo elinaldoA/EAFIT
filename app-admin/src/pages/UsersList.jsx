@@ -30,6 +30,7 @@ const STATUS_OPTIONS = [
   { value: 'unconfirmed', label: 'Não confirmados' },
   { value: 'inactive', label: 'Inativos (14+ dias sem treinar)' },
   { value: 'never_trained', label: 'Nunca treinaram' },
+  { value: 'dormant', label: 'Sumidos (7+ dias sem treinar nem abrir o app)' },
 ];
 
 const SORT_OPTIONS = [
