@@ -3,13 +3,16 @@ import { enqueue, queueSize } from './syncQueue';
 
 // Diário por refeição: o detalhe de cada alimento do dia. Os totais continuam
 // em protein_logs (nutritionTotals/proteinLog); a tela mantém os dois juntos.
-export const MEALS = ['cafe', 'almoco', 'lanche', 'jantar', 'outro'];
+export const MEALS = ['cafe', 'almoco', 'lanche', 'jantar', 'ceia', 'outro'];
 
+// Mantenha em sincronia com MEAL_REMINDERS em
+// supabase/functions/_shared/nutritionReminders.ts (lembretes às 7h, 12h, 16h, 20h e 22h).
 export function mealForHour(hour) {
   if (hour < 10) return 'cafe';
-  if (hour < 14) return 'almoco';
+  if (hour < 15) return 'almoco';
   if (hour < 18) return 'lanche';
-  return 'jantar';
+  if (hour < 21) return 'jantar';
+  return 'ceia';
 }
 
 const COLS = 'id, log_date, meal, name, icon, protein_g, kcal, carbs_g, fat_g, fiber_g, sodium_mg';

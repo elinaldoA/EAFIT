@@ -76,7 +76,7 @@ export async function fetchKcalOverview(days = 30) {
 
 // Diário por refeição, busca de alimentos e código de barras. Funções da
 // migration admin_nutrition_diary; quem chama trata a falha enquanto ela não rodou.
-export const MEAL_LABELS = { cafe: 'Café da manhã', almoco: 'Almoço', lanche: 'Lanche', jantar: 'Jantar', outro: 'Outros' };
+export const MEAL_LABELS = { cafe: 'Café da manhã', almoco: 'Almoço', lanche: 'Lanche', jantar: 'Jantar', ceia: 'Ceia', outro: 'Outros' };
 
 export async function fetchNutritionDiary(days = 30) {
   const [adoption, meals, foods, misses] = await Promise.all([

@@ -14,6 +14,7 @@ export default {
   'Almoço': 'Lunch',
   'Lanche': 'Snack',
   'Jantar': 'Dinner',
+  'Ceia': 'Late-night snack',
   'Outros': 'Other',
   'prot': 'prot',
   'Editar "{name}"': 'Edit "{name}"',

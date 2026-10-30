@@ -26,7 +26,7 @@ beforeEach(() => {
 
 describe('nutritionEntries', () => {
   it('sugere a refeição pela hora', () => {
-    expect([6, 12, 16, 21].map(mealForHour)).toEqual(['cafe', 'almoco', 'lanche', 'jantar']);
+    expect([6, 12, 16, 20, 22].map(mealForHour)).toEqual(['cafe', 'almoco', 'lanche', 'jantar', 'ceia']);
   });
 
   it('addEntry guarda no aparelho e grava na nuvem com o id dado', async () => {

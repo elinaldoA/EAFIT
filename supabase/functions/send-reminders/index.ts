@@ -4,7 +4,9 @@
 // (app-react/src/components/ReminderScheduler.jsx), mas consultando o estado
 // real salvo no banco (water_logs) em vez de localStorage.
 //
-// Também cobre notificações "inteligentes" que dependem de histórico salvo no
+// Também cobre os lembretes de nutrição (refeição sem registro, proteína abaixo
+// da meta, resumo semanal — regras em _shared/nutritionReminders.ts) e
+// notificações "inteligentes" que dependem de histórico salvo no
 // banco (streak em risco, inatividade, resumo semanal, follow-up de desconforto)
 // — essas são só server-side, de propósito: rodar a mesma checagem no
 // ReminderScheduler.jsx do navegador geraria notificação duplicada no minuto
@@ -16,6 +18,10 @@ import { langOf } from '../_shared/lang.ts';
 import {
   discomfortFollowupText, inactivityText, streakRiskText, waterText, weeklySummaryText, weightUpdateText,
 } from '../_shared/reminderTexts.ts';
+import {
+  DIARY_LOOKBACK_DAYS, MEAL_REMINDERS, NUTRITION_SUMMARY_TIME, PROTEIN_GAP_TIME,
+  mealText, nutritionSummaryText, shouldRemindMeal, proteinGap, proteinGapText, proteinGoal, summarizeWeek,
+} from '../_shared/nutritionReminders.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -132,11 +138,62 @@ Deno.serve(async (req) => {
   const isInactivitySlot = time === INACTIVITY_TIME;
   const isWeeklySummarySlot = dow === 1 && time === WEEKLY_SUMMARY_TIME;
   const isDiscomfortFollowupSlot = time === DISCOMFORT_FOLLOWUP_TIME;
+  const mealSlot = MEAL_REMINDERS.find((m) => m.time === time);
+  const isProteinGapSlot = time === PROTEIN_GAP_TIME;
+  const isNutritionSummarySlot = dow === 1 && time === NUTRITION_SUMMARY_TIME;
 
   const historyByUser = new Map();
   const weeklyCountByUser = new Map();
   const weeklyVolumeByUser = new Map();
   const discomfortByUser = new Map();
+  const diaryDaysByUser = new Map(); // dias distintos com registro nos últimos 7 (sem hoje)
+  const mealLoggedToday = new Set(); // quem já registrou a refeição do horário
+  const mealDaysByUser = new Map(); // dias com essa refeição nos últimos 7 (sem hoje)
+  const proteinTodayByUser = new Map();
+  const lastWeekProteinByUser = new Map();
+
+  if (mealSlot) {
+    const { data: entries, error: entriesErr } = await supabase
+      .from('nutrition_entries')
+      .select('user_id, log_date, meal')
+      .in('user_id', userIds)
+      .gte('log_date', addDays(date, -DIARY_LOOKBACK_DAYS));
+    if (entriesErr) return new Response(JSON.stringify({ error: entriesErr.message }), { status: 500 });
+
+    const daysByUser = new Map();
+    const mealDaySets = new Map();
+    for (const e of entries || []) {
+      if (e.log_date === date) {
+        if (e.meal === mealSlot.meal) mealLoggedToday.add(e.user_id);
+        continue;
+      }
+      if (!daysByUser.has(e.user_id)) daysByUser.set(e.user_id, new Set());
+      daysByUser.get(e.user_id).add(e.log_date);
+      if (e.meal === mealSlot.meal) {
+        if (!mealDaySets.has(e.user_id)) mealDaySets.set(e.user_id, new Set());
+        mealDaySets.get(e.user_id).add(e.log_date);
+      }
+    }
+    for (const [uid, days] of daysByUser) diaryDaysByUser.set(uid, days.size);
+    for (const [uid, days] of mealDaySets) mealDaysByUser.set(uid, days.size);
+  }
+
+  if (isProteinGapSlot || isNutritionSummarySlot) {
+    const { data: logs, error: logsErr } = await supabase
+      .from('protein_logs')
+      .select('user_id, log_date, amount_g, kcal')
+      .in('user_id', userIds)
+      .gte('log_date', isNutritionSummarySlot ? addDays(date, -7) : date);
+    if (logsErr) return new Response(JSON.stringify({ error: logsErr.message }), { status: 500 });
+
+    for (const l of logs || []) {
+      if (l.log_date === date) proteinTodayByUser.set(l.user_id, l.amount_g || 0);
+      else {
+        if (!lastWeekProteinByUser.has(l.user_id)) lastWeekProteinByUser.set(l.user_id, []);
+        lastWeekProteinByUser.get(l.user_id).push({ protein: l.amount_g || 0, kcal: l.kcal || 0 });
+      }
+    }
+  }
 
   if (isStreakRiskSlot || isInactivitySlot || isWeeklySummarySlot) {
     const historyStart = addDays(date, -HISTORY_LOOKBACK_DAYS);
@@ -207,7 +264,7 @@ Deno.serve(async (req) => {
 
     const payloads = [];
 
-    if (WATER_REMINDER_TIMES.includes(time)) {
+    if (WATER_REMINDER_TIMES.includes(time) && isNotifyEnabled(meta, 'notifyWater')) {
       const { data: waterLog } = await supabase
         .from('water_logs')
         .select('amount_ml')
@@ -218,6 +275,23 @@ Deno.serve(async (req) => {
       if (currentMl < goalMl) {
         payloads.push({ ...waterText(lang, currentMl, goalMl), tag: `water-${date}-${time}` });
       }
+    }
+
+    if (mealSlot && isNotifyEnabled(meta, 'notifyMeals') && shouldRemindMeal(
+      mealSlot.meal, diaryDaysByUser.get(userId) || 0, mealDaysByUser.get(userId) || 0, mealLoggedToday.has(userId),
+    )) {
+      payloads.push({ ...mealText(lang, mealSlot.meal), tag: `meal-${date}-${mealSlot.meal}` });
+    }
+
+    if (isProteinGapSlot && isNotifyEnabled(meta, 'notifyProteinGoal')) {
+      const goal = proteinGoal(meta);
+      const left = proteinGap(goal, proteinTodayByUser.get(userId) || 0);
+      if (left !== null && goal) payloads.push({ ...proteinGapText(lang, left, goal), tag: `protein-gap-${date}` });
+    }
+
+    if (isNutritionSummarySlot && isNotifyEnabled(meta, 'notifyNutritionSummary')) {
+      const week = summarizeWeek(lastWeekProteinByUser.get(userId) || [], proteinGoal(meta));
+      if (week) payloads.push({ ...nutritionSummaryText(lang, week), tag: `nutrition-week-${date}` });
     }
 
     if (isStreakRiskSlot && isNotifyEnabled(meta, 'notifyStreakRisk')) {
@@ -262,10 +336,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Modo pausa (user_metadata.pausedUntil, 'YYYY-MM-DD' inclusive): só o
-    // lembrete de água continua; sequência, inatividade, resumo etc. ficam quietos.
+    // Modo pausa (user_metadata.pausedUntil, 'YYYY-MM-DD' inclusive): é pausa
+    // de treino, então água e nutrição continuam; sequência, inatividade,
+    // resumo de treino etc. ficam quietos.
     const paused = typeof meta.pausedUntil === 'string' && meta.pausedUntil >= date;
-    const toSend = paused ? payloads.filter((p) => String(p.tag).startsWith('water-')) : payloads;
+    const NUTRITION_TAGS = ['water-', 'meal-', 'protein-gap-', 'nutrition-week-'];
+    const toSend = paused ? payloads.filter((p) => NUTRITION_TAGS.some((t) => String(p.tag).startsWith(t))) : payloads;
 
     for (const payload of toSend) {
       for (const sub of userSubs) {

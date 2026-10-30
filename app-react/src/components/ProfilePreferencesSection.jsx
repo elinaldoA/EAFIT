@@ -13,6 +13,10 @@ const NOTIFY_PREFS = [
   { key: 'notifyWeightUpdate', label: t('Atualizar peso (segunda de manhã)') },
   { key: 'notifyRecords', label: t('Recordes e conquistas') },
   { key: 'notifyDiscomfortFollowup', label: t('Follow-up de desconforto (dias após relato forte/lesão)') },
+  { key: 'notifyWater', label: t('Beber água (ao longo do dia, até bater a meta)') },
+  { key: 'notifyMeals', label: t('Registrar refeições: café, almoço, lanche, jantar e ceia (se você usa o diário e ainda não registrou)') },
+  { key: 'notifyProteinGoal', label: t('Proteína abaixo da meta (fim da tarde)') },
+  { key: 'notifyNutritionSummary', label: t('Resumo semanal da nutrição (segunda de manhã)') },
 ];
 
 export function NotificationsSection({ user, updateProfile, toast, remindersEnabled, toggleReminders }) {

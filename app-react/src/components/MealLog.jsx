@@ -6,6 +6,7 @@ const MEAL_LABEL = {
   almoco: () => t('Almoço'),
   lanche: () => t('Lanche'),
   jantar: () => t('Jantar'),
+  ceia: () => t('Ceia'),
   outro: () => t('Outros'),
 };
 

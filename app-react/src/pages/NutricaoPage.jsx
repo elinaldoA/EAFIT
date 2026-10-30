@@ -48,6 +48,7 @@ const MEAL_NAME = {
   almoco: () => t('Almoço'),
   lanche: () => t('Lanche'),
   jantar: () => t('Jantar'),
+  ceia: () => t('Ceia'),
   outro: () => t('Outros'),
 };
 const EMPTY_FIX = { g: '', kcal: '', carbs: '', fat: '' };

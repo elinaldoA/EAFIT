@@ -12,7 +12,7 @@ const h = vi.hoisted(() => ({
   recap: { buildMonthlyRecap: vi.fn(), fetchRecapWorkouts: vi.fn() },
   share: { shareMonthlyRecap: vi.fn() },
   tpl: { generatePlan: vi.fn() },
-  notif: { sendNotification: vi.fn() },
+  notif: { sendNotification: vi.fn(), isNotifyEnabled: (meta, key) => meta?.[key] !== false },
   push: { supported: false },
   water: { goal: 3 },
 }));
@@ -467,6 +467,14 @@ describe('ReminderScheduler', () => {
     second.unmount();
     vi.setSystemTime(at(9, 0));
     localStorage.setItem('reminders_enabled', 'false');
+    render(<ReminderScheduler />);
+    await advance(0);
+    expect(h.notif.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it('não dispara com o lembrete de água desligado no Perfil', async () => {
+    vi.setSystemTime(at(9, 0));
+    h.auth.user = { id: 'u1', user_metadata: { notifyWater: false } };
     render(<ReminderScheduler />);
     await advance(0);
     expect(h.notif.sendNotification).not.toHaveBeenCalled();
