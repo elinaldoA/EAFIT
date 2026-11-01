@@ -12,11 +12,9 @@ import { EXERCISE_MEDIA, normalizeExerciseName } from '../../../app-react/src/da
 export const BUCKET = 'exercise-media';
 export const MAX_BYTES = 15 * 1024 * 1024; // igual ao file_size_limit do bucket
 
+// Só vídeo: GIF/imagem enviados antes continuam no app até serem trocados
+// (media_type 'imagem'), mas não entram mais.
 const TYPES = {
-  'image/gif': { ext: 'gif', kind: 'imagem' },
-  'image/webp': { ext: 'webp', kind: 'imagem' },
-  'image/png': { ext: 'png', kind: 'imagem' },
-  'image/jpeg': { ext: 'jpg', kind: 'imagem' },
   'video/mp4': { ext: 'mp4', kind: 'video' },
   'video/webm': { ext: 'webm', kind: 'video' },
 };
@@ -35,7 +33,7 @@ export function defaultDemoFor(nome) {
 
 export function validateMediaFile(file) {
   if (!file) return 'Nenhum arquivo selecionado.';
-  if (!TYPES[file.type]) return 'Formato não aceito. Use GIF, WebP, PNG, JPG, MP4 ou WebM.';
+  if (!TYPES[file.type]) return 'Formato não aceito. Envie um vídeo MP4 ou WebM.';
   if (file.size > MAX_BYTES) return `Arquivo com ${(file.size / 1024 / 1024).toFixed(1)}MB — o limite é 15MB.`;
   return null;
 }

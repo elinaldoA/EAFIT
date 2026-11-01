@@ -254,7 +254,7 @@ describe('ExerciseMedia', () => {
     await screen.findByText('Supino reto');
     const tr = screen.getByText('Supino reto').closest('tr');
     fireEvent.click(within(tr).getByText('Trocar'));
-    pickFile(new File(['x'], 'a.gif', { type: 'image/gif' }));
+    pickFile(new File(['x'], 'a.mp4', { type: 'video/mp4' }));
     await waitFor(() => expect(med.uploadExerciseMedia).toHaveBeenCalledWith(expect.objectContaining({ previousPath: 'supino.gif' })));
   });
 
@@ -262,7 +262,7 @@ describe('ExerciseMedia', () => {
     wrap(<ExerciseMedia />);
     await screen.findByText('Agachamento');
     fireEvent.click(within(screen.getByText('Agachamento').closest('tr')).getByText('Enviar'));
-    pickFile(new File(['x'], 'a.pdf', { type: 'application/pdf' }));
+    pickFile(new File(['x'], 'a.gif', { type: 'image/gif' }));
     expect(await screen.findByText(/Formato não aceito/)).toBeTruthy();
     expect(med.uploadExerciseMedia).not.toHaveBeenCalled();
   });
@@ -297,7 +297,7 @@ describe('ExerciseMedia', () => {
     fireEvent.change(screen.getByLabelText('Nome do exercício fora da biblioteca'), { target: { value: 'Exercício Novo' } });
     expect(send.disabled).toBe(false);
     fireEvent.click(send);
-    const file = new File(['x'], 'a.png', { type: 'image/png' });
+    const file = new File(['x'], 'a.webm', { type: 'video/webm' });
     pickFile(file);
     await waitFor(() => expect(med.uploadExerciseMedia).toHaveBeenCalledWith(expect.objectContaining({ nome: 'Exercício Novo', file })));
   });

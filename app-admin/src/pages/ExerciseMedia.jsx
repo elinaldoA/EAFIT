@@ -34,7 +34,7 @@ function Preview({ media }) {
     : <img className="media-thumb" src={url} alt="" loading="lazy" />;
 }
 
-// Envio de GIF/imagem/vídeo curto mostrando a execução correta de cada
+// Envio de vídeo curto mostrando a execução correta de cada
 // exercício. No app, a mídia enviada aqui substitui a demonstração padrão
 // (Free Exercise DB) do botão "Ver execução".
 export default function ExerciseMedia() {
@@ -131,7 +131,7 @@ export default function ExerciseMedia() {
         <div>
           <h1 className="page-title">Demonstrações de exercícios</h1>
           <p className="page-subtitle">
-            Envie um GIF, imagem ou vídeo curto (até 15MB) com a execução correta. No app, ele substitui a
+            Envie um vídeo curto MP4 ou WebM (até 15MB) com a execução correta. No app, ele substitui a
             demonstração padrão do botão "Ver execução". {!loading && `${withMedia} de ${rows.length} com mídia própria · ${withoutVideo} ainda sem vídeo (filtro "Sem vídeo" mostra o que falta gravar).`}
           </p>
         </div>

@@ -148,6 +148,23 @@ export const EXERCISE_VIDEOS = {
   'Mini Trampolim': 'mini-trampolim',
   'Elíptico': 'eliptico',
   'Aula de Dança': 'aula-danca',
+  'Afundo Búlgaro': 'afundo-bulgaro',
+  'Afundo Búlgaro (foco glúteo)': 'afundo-bulgaro',
+  'Sit-Up com Peso': 'abdominal-sit-up-peso',
+  'Abdominal Supra no Solo': 'abdominal-supra',
+  'Remada Unilateral com Halter': 'remada-unilateral-halter',
+  'Cardio — Esteira': 'esteira-caminhada',
+  'Cardio — Caminhada (6km/h)': 'esteira-caminhada',
+  'Cardio — Caminhada Leve': 'esteira-caminhada',
+  // Variações cuja execução é a mesma de um vídeo acima (pausa, carga extra
+  // ou ritmo não mudam o movimento)
+  'Roda (Ab Wheel)': 'roda-abdominal',
+  'Supino Reto com Barra (pausa no peito)': 'supino-reto-barra',
+  'Agachamento Livre (pausa no fundo)': 'agachamento-livre',
+  'Prancha com Peso': 'prancha-frontal',
+  'HIIT na Esteira (Sprints)': 'esteira-corrida',
+  'Cardio — HIIT Esteira': 'esteira-corrida',
+  'Bicicleta Ergométrica': 'bike-spinning',
 };
 
 export const VIDEO_CREDIT = 'Vídeo: Goulart · wger.de · CC BY-SA 4.0';
@@ -239,6 +256,11 @@ const VIDEO_CREDITS = {
   'mini-trampolim': 'Vídeo: JulezCordoba · Pixabay',
   'eliptico': 'Vídeo: klimkin · Pixabay',
   'aula-danca': 'Vídeo: Matthias_Groeneveld · Pixabay',
+  'afundo-bulgaro': 'Vídeo: blackmarketmusic · Pixabay',
+  'abdominal-sit-up-peso': 'Vídeo: julientromeur · Pixabay',
+  'abdominal-supra': 'Vídeo: blackmarketmusic · Pixabay',
+  'remada-unilateral-halter': 'Vídeo: RainMeditateHub · Pixabay',
+  'esteira-caminhada': 'Vídeo: socialsudo · Pixabay',
 };
 
 export function videoCredit(slug) {
