@@ -16,8 +16,8 @@ describe('normalizeExerciseName', () => {
 });
 
 describe('getExerciseMedia', () => {
-  it('sem vídeo, monta os 2 quadros a partir do base do app', () => {
-    expect(getExerciseMedia('Esteira — Caminhada Inclinada', '/EAFIT/')).toEqual({
+  it('os 2 quadros de reserva saem do base do app', () => {
+    expect(getExerciseMedia('Esteira — Caminhada Inclinada', '/EAFIT/').fallback).toEqual({
       id: 'Walking_Treadmill',
       frames: [
         '/EAFIT/exercicios/Walking_Treadmill/0.webp',
@@ -50,12 +50,12 @@ describe('getExerciseMedia', () => {
 
   it('acha exercício de pós-treino com emoji no nome', () => {
     expect(getExerciseMedia('🔷 Abdominal Polia (Corda)', '/')?.fallback?.id).toBe('Cable_Crunch');
-    expect(getExerciseMedia('🏃 Cardio — Esteira Inclinada', '/')?.id).toBe('Walking_Treadmill');
+    expect(getExerciseMedia('🏃 Cardio — Esteira Inclinada', '/')?.fallback?.id).toBe('Walking_Treadmill');
   });
 
-  it('sem equivalente seguro, não tem demonstração', () => {
+  it('sem equivalente seguro, não tem quadros', () => {
     // "Air Bike" no Free Exercise DB é o abdominal bicicleta, não a bike de academia
-    expect(getExerciseMedia('Air Bike (Assault Bike)', '/')).toBeNull();
+    expect(getExerciseMedia('Air Bike (Assault Bike)', '/')?.fallback).toBeNull();
     expect(getExerciseMedia('', '/')).toBeNull();
   });
 
