@@ -101,7 +101,8 @@ export default function MarketingComments() {
         ))}
         <select className="input" value={platform} onChange={e => setPlatform(e.target.value)} aria-label="Rede">
           <option value="">Todas as redes</option>
-          {Object.entries(PLATFORMS).map(([k, p]) => <option key={k} value={k}>{p.label}</option>)}
+          {/* TikTok não tem API de comentários */}
+          {Object.entries(PLATFORMS).filter(([k]) => k !== 'tiktok').map(([k, p]) => <option key={k} value={k}>{p.label}</option>)}
         </select>
       </div>
 

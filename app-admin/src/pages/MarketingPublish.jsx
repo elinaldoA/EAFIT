@@ -8,6 +8,8 @@ import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 
+const NO_STORIES = ['threads', 'tiktok'];
+
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
 
 // Mesmo formato do campo datetime-local (fuso do navegador do admin).
@@ -63,11 +65,11 @@ export default function MarketingPublish() {
     caption, media, accounts: chosenAccounts, scheduledAt: when === 'schedule' ? scheduleAt : null, format,
   });
 
-  // Threads não tem stories: ao trocar para story, sai da seleção.
+  // Threads e TikTok não têm stories: ao trocar para story, saem da seleção.
   function chooseFormat(next) {
     setFormat(next);
     if (next === 'story') {
-      setSelectedAccounts(sel => new Set([...sel].filter(id => byId.get(id)?.platform !== 'threads')));
+      setSelectedAccounts(sel => new Set([...sel].filter(id => !NO_STORIES.includes(byId.get(id)?.platform))));
     }
   }
 
@@ -194,10 +196,10 @@ export default function MarketingPublish() {
             <span className="field__label">Publicar em</span>
             <div className="mkt-chips">
               {accounts.map(a => {
-                const blocked = a.status !== 'ok' || (story && a.platform === 'threads');
+                const blocked = a.status !== 'ok' || (story && NO_STORIES.includes(a.platform));
                 return (
                   <label key={a.id} className={`mkt-chip${selectedAccounts.has(a.id) ? ' mkt-chip--on' : ''}`}
-                    title={a.status !== 'ok' ? 'Precisa reconectar' : blocked ? 'Threads não tem stories' : ''}>
+                    title={a.status !== 'ok' ? 'Precisa reconectar' : blocked ? `${PLATFORMS[a.platform].label} não tem stories` : ''}>
                     <input type="checkbox" checked={selectedAccounts.has(a.id)} disabled={blocked} onChange={() => toggleAccount(a.id)} />
                     {PLATFORMS[a.platform].label} · {accountLabel(a)}
                   </label>
@@ -327,6 +329,7 @@ export default function MarketingPublish() {
                     <span>{a ? `${PLATFORMS[a.platform].label} ${accountLabel(a)}` : 'Conta removida'}</span>
                     <span className={`badge ${STATUS_BADGE[t.status] || ''}`}>{STATUS_LABEL[t.status] || t.status}</span>
                     {t.permalink && <a href={t.permalink} target="_blank" rel="noreferrer">ver post</a>}
+                    {t.status === 'published' && t.error && <span className="user-detail__meta">{t.error}</span>}
                     {t.status === 'failed' && (
                       <>
                         <span className="user-detail__meta">{t.error}</span>

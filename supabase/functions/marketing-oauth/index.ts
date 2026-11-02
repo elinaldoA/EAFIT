@@ -21,12 +21,18 @@
 //      e, se o app tiver "Login do Facebook para Empresas", META_LOGIN_CONFIG_ID
 //      e MARKETING_TOKEN_KEY (openssl rand -base64 32; não trocar depois, ou
 //      os tokens salvos deixam de abrir e é preciso reconectar).
+//   4. TikTok: developers.tiktok.com → app com Login Kit (Web) e Content
+//      Posting API (Direct Post ligado), escopos user.info.basic,
+//      user.info.profile e video.publish, e a mesma URI de redirecionamento.
+//      Secrets TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET. Até a auditoria do
+//      app pelo TikTok os vídeos saem privados; aprovado, TIKTOK_PUBLIC_POSTS=true.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import {
   encryptToken, GRAPH_BASE, GRAPH_VERSION, makeApi, META_SCOPES, type OAuthState, request, signState, THREADS_BASE,
   THREADS_SCOPES, verifyState,
 } from '../_shared/marketing.ts';
+import { makeTikTokApi, oauthToken, TIKTOK_AUTHORIZE, TIKTOK_SCOPES, tokenFromOAuth } from '../_shared/tiktok.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -40,6 +46,8 @@ const META_APP_SECRET = Deno.env.get('META_APP_SECRET') || '';
 const META_LOGIN_CONFIG_ID = Deno.env.get('META_LOGIN_CONFIG_ID') || '';
 const THREADS_APP_ID = Deno.env.get('THREADS_APP_ID') || '';
 const THREADS_APP_SECRET = Deno.env.get('THREADS_APP_SECRET') || '';
+const TIKTOK_CLIENT_KEY = Deno.env.get('TIKTOK_CLIENT_KEY') || '';
+const TIKTOK_CLIENT_SECRET = Deno.env.get('TIKTOK_CLIENT_SECRET') || '';
 
 const REDIRECT_URI = `${SUPABASE_URL}/functions/v1/marketing-oauth`;
 // Para onde o retorno pode mandar o admin de volta (o painel fica em /admin/).
@@ -53,7 +61,7 @@ function back(origin: string, params: Record<string, string>) {
 }
 
 type SavedAccount = {
-  platform: 'facebook' | 'instagram' | 'threads'; external_id: string; name: string; username?: string | null;
+  platform: 'facebook' | 'instagram' | 'threads' | 'tiktok'; external_id: string; name: string; username?: string | null;
   picture_url?: string | null; parent_id?: string | null; token_expires_at?: string | null;
 };
 
@@ -130,6 +138,23 @@ async function connectThreads(code: string, adminId: string): Promise<string[]> 
   return [`Threads: @${me.username}`];
 }
 
+// O que fica cifrado é o par acesso (24 h) + refresh (1 ano); token_expires_at
+// guarda o vencimento do refresh, que o cron renova antes de vencer.
+async function connectTikTok(code: string, adminId: string): Promise<string[]> {
+  const r = await oauthToken(fetch, {
+    client_key: TIKTOK_CLIENT_KEY, client_secret: TIKTOK_CLIENT_SECRET, code, grant_type: 'authorization_code', redirect_uri: REDIRECT_URI,
+  });
+  const tok = tokenFromOAuth(r);
+  const info = await makeTikTokApi(fetch, tok.access).get('/user/info/', { fields: 'open_id,display_name,username,avatar_url' });
+  const user = (info.user || {}) as Record<string, string>;
+  await saveAccount({
+    platform: 'tiktok', external_id: String(user.open_id || r.open_id), name: user.display_name || user.username || 'TikTok',
+    username: user.username || null, picture_url: user.avatar_url || null,
+    token_expires_at: new Date(Date.now() + Number(r.refresh_expires_in || 31_536_000) * 1000).toISOString(),
+  }, JSON.stringify(tok), adminId);
+  return [`TikTok: @${user.username || user.display_name}`];
+}
+
 async function handleCallback(url: URL): Promise<Response> {
   // A Meta devolve erros de configuração (ex.: domínio do app) com error_code
   // e sem state: volta para o painel de produção mostrando o motivo.
@@ -146,7 +171,9 @@ async function handleCallback(url: URL): Promise<Response> {
   const code = (url.searchParams.get('code') || '').replace(/#_$/, '');
   if (!code) return back(state.origin, { erro: 'A rede não devolveu o código de acesso.' });
   try {
-    const names = state.provider === 'meta' ? await connectMeta(code, state.admin) : await connectThreads(code, state.admin);
+    const names = state.provider === 'meta'
+      ? await connectMeta(code, state.admin)
+      : state.provider === 'tiktok' ? await connectTikTok(code, state.admin) : await connectThreads(code, state.admin);
     await admin.from('admin_audit_log').insert({
       admin_id: state.admin, target_user_id: null, action: 'marketingConnect', details: { provider: state.provider, accounts: names },
     });
@@ -179,7 +206,7 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('origin') || '';
   if (!ADMIN_ORIGINS.includes(origin)) return json({ error: 'Origem não permitida.' }, 400);
   const { provider } = await req.json().catch(() => ({})) as { provider?: string };
-  if (provider !== 'meta' && provider !== 'threads') return json({ error: 'Rede inválida.' }, 400);
+  if (provider !== 'meta' && provider !== 'threads' && provider !== 'tiktok') return json({ error: 'Rede inválida.' }, 400);
 
   const missing = [
     !TOKEN_KEY && 'MARKETING_TOKEN_KEY',
@@ -187,6 +214,8 @@ Deno.serve(async (req) => {
     provider === 'meta' && !META_APP_SECRET && 'META_APP_SECRET',
     provider === 'threads' && !THREADS_APP_ID && 'THREADS_APP_ID',
     provider === 'threads' && !THREADS_APP_SECRET && 'THREADS_APP_SECRET',
+    provider === 'tiktok' && !TIKTOK_CLIENT_KEY && 'TIKTOK_CLIENT_KEY',
+    provider === 'tiktok' && !TIKTOK_CLIENT_SECRET && 'TIKTOK_CLIENT_SECRET',
   ].filter(Boolean);
   if (missing.length) return json({ error: `Falta configurar nas Edge Functions: ${missing.join(', ')}.`, missing }, 503);
 
@@ -196,6 +225,10 @@ Deno.serve(async (req) => {
     ? `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth?${new URLSearchParams({
       client_id: META_APP_ID, redirect_uri: REDIRECT_URI, state: signed, response_type: 'code',
       ...(META_LOGIN_CONFIG_ID ? { config_id: META_LOGIN_CONFIG_ID } : { scope: META_SCOPES.join(',') }),
+    })}`
+    : provider === 'tiktok'
+    ? `${TIKTOK_AUTHORIZE}?${new URLSearchParams({
+      client_key: TIKTOK_CLIENT_KEY, redirect_uri: REDIRECT_URI, state: signed, response_type: 'code', scope: TIKTOK_SCOPES.join(','),
     })}`
     : `https://threads.net/oauth/authorize?${new URLSearchParams({
       client_id: THREADS_APP_ID, redirect_uri: REDIRECT_URI, state: signed, response_type: 'code', scope: THREADS_SCOPES.join(','),

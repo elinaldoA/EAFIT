@@ -20,12 +20,17 @@ import {
   type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, GraphError, makeApi,
   type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step,
 } from '../_shared/marketing.ts';
+import { continueTikTok, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const CRON_SECRET = Deno.env.get('CRON_SECRET');
 const TOKEN_KEY = Deno.env.get('MARKETING_TOKEN_KEY') || '';
+const TIKTOK_CLIENT_KEY = Deno.env.get('TIKTOK_CLIENT_KEY') || '';
+const TIKTOK_CLIENT_SECRET = Deno.env.get('TIKTOK_CLIENT_SECRET') || '';
+// Só depois da auditoria do app no TikTok: antes disso ele aceita apenas posts privados.
+const TIKTOK_PUBLIC_POSTS = Deno.env.get('TIKTOK_PUBLIC_POSTS') === 'true';
 
 // ~30 min de espera (a cada 30 s) para a rede processar um vídeo.
 const MAX_ATTEMPTS = 60;
@@ -45,7 +50,32 @@ async function loadAccount(id: string): Promise<Loaded> {
   const tok = data.marketing_tokens as unknown as { token_enc: string } | { token_enc: string }[] | null;
   const enc = Array.isArray(tok) ? tok[0]?.token_enc : tok?.token_enc;
   if (!enc) throw new Error('Conta sem token: reconecte em Marketing → Contas.');
-  return { account: data as unknown as AccountRow, token: await decryptToken(TOKEN_KEY, enc) };
+  const account = data as unknown as AccountRow;
+  const stored = await decryptToken(TOKEN_KEY, enc);
+  if (account.platform !== 'tiktok') return { account, token: stored };
+  // TikTok: o acesso vale 24 h; renova com o refresh token quando falta pouco.
+  const tiktok = parseToken(stored);
+  if (tiktok.accessExp > Date.now() + 5 * 60_000) return { account, token: tiktok.access };
+  try {
+    return { account, token: await renewTikTok(id, tiktok.refresh) };
+  } catch (err) {
+    await handleGraphError(id, err);
+    throw err;
+  }
+}
+
+async function renewTikTok(accountId: string, refresh: string): Promise<string> {
+  const r = await oauthToken(fetch, {
+    client_key: TIKTOK_CLIENT_KEY, client_secret: TIKTOK_CLIENT_SECRET, grant_type: 'refresh_token', refresh_token: refresh,
+  });
+  const tok = tokenFromOAuth(r);
+  await db.from('marketing_tokens').update({
+    token_enc: await encryptToken(TOKEN_KEY, JSON.stringify(tok)), updated_at: new Date().toISOString(),
+  }).eq('account_id', accountId);
+  await db.from('marketing_accounts').update({
+    token_expires_at: new Date(Date.now() + Number(r.refresh_expires_in || 31_536_000) * 1000).toISOString(),
+  }).eq('id', accountId);
+  return tok.access;
 }
 
 async function markReconnect(accountId: string, detail: string) {
@@ -88,10 +118,18 @@ async function processTarget(t: TargetRow, posts: Map<string, Post>): Promise<{ 
   if (t.attempts > MAX_ATTEMPTS) return finish({ status: 'failed', error: 'A rede demorou demais para processar a mídia. Tente de novo.' });
 
   try {
-    const api = makeApi(fetch, baseFor(account.platform), token);
-    const step: Step = t.container_id
-      ? await continuePublish(api, account, post, t.container_id)
-      : await startPublish(api, account, post);
+    let step: Step;
+    if (account.platform === 'tiktok') {
+      const tk = makeTikTokApi(fetch, token);
+      step = t.container_id
+        ? await continueTikTok(tk, account.username, t.container_id, TIKTOK_PUBLIC_POSTS)
+        : await startTikTok(tk, fetch, post, TIKTOK_PUBLIC_POSTS);
+    } else {
+      const api = makeApi(fetch, baseFor(account.platform), token);
+      step = t.container_id
+        ? await continuePublish(api, account, post, t.container_id)
+        : await startPublish(api, account, post);
+    }
     if (step.state === 'processing') {
       return finish({
         status: 'processing', container_id: step.containerId,
@@ -99,7 +137,7 @@ async function processTarget(t: TargetRow, posts: Map<string, Post>): Promise<{ 
       });
     }
     return finish({
-      status: 'published', external_id: step.externalId, permalink: step.permalink, error: null,
+      status: 'published', external_id: step.externalId, permalink: step.permalink, error: step.note ?? null,
       published_at: new Date().toISOString(),
     });
   } catch (err) {
@@ -138,6 +176,13 @@ async function deletePost(postId: string): Promise<{ removed: boolean; results: 
       results.push({ target: t.id, ok: true });
       continue;
     }
+    // O TikTok não tem API de exclusão: some do painel, mas o vídeo fica lá.
+    const { data: acc } = await db.from('marketing_accounts').select('platform').eq('id', t.account_id).single();
+    if (acc?.platform === 'tiktok') {
+      await db.from('marketing_post_targets').delete().eq('id', t.id);
+      results.push({ target: t.id, ok: false, error: 'O TikTok não deixa apagar pela API: apague o vídeo no app do TikTok.' });
+      continue;
+    }
     try {
       const { account, token } = await loadAccount(t.account_id);
       await deletePublished(makeApi(fetch, baseFor(account.platform), token), t.external_id);
@@ -160,7 +205,8 @@ async function deletePost(postId: string): Promise<{ removed: boolean; results: 
 // ---------- comentários ----------
 
 async function syncComments() {
-  const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok');
+  // TikTok não tem API de comentários para esta conta.
+  const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok').neq('platform', 'tiktok');
   const out: { account: string; comments?: number; error?: string }[] = [];
   for (const { id } of accounts || []) {
     try {
@@ -187,11 +233,17 @@ async function loadComment(commentId: string) {
 
 async function refreshTokens() {
   const soon = new Date(Date.now() + 15 * 86_400_000).toISOString();
-  const { data: accounts } = await db.from('marketing_accounts').select('id')
-    .eq('platform', 'threads').eq('status', 'ok').lt('token_expires_at', soon);
+  const { data: accounts } = await db.from('marketing_accounts').select('id, platform')
+    .in('platform', ['threads', 'tiktok']).eq('status', 'ok').lt('token_expires_at', soon);
   let refreshed = 0;
-  for (const { id } of accounts || []) {
+  for (const { id, platform } of accounts || []) {
     try {
+      if (platform === 'tiktok') {
+        const { data } = await db.from('marketing_tokens').select('token_enc').eq('account_id', id).single();
+        await renewTikTok(id, parseToken(await decryptToken(TOKEN_KEY, String(data?.token_enc))).refresh);
+        refreshed++;
+        continue;
+      }
       const { token } = await loadAccount(id);
       const r = await request(fetch, `https://graph.threads.net/refresh_access_token?${new URLSearchParams({
         grant_type: 'th_refresh_token', access_token: token,

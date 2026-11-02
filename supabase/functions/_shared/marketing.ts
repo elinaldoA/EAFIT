@@ -11,7 +11,7 @@ export const GRAPH_VERSION = 'v23.0';
 export const GRAPH_BASE = `https://graph.facebook.com/${GRAPH_VERSION}`;
 export const THREADS_BASE = 'https://graph.threads.net/v1.0';
 
-export type Platform = 'facebook' | 'instagram' | 'threads';
+export type Platform = 'facebook' | 'instagram' | 'threads' | 'tiktok';
 export type Media = { type: 'image' | 'video'; url: string; credit?: string };
 export type Account = { id: string; platform: Platform; external_id: string; username?: string | null };
 // format 'story': uma mídia, sem legenda (Instagram e Página do Facebook).
@@ -28,7 +28,7 @@ export const THREADS_SCOPES = [
   'threads_basic', 'threads_content_publish', 'threads_manage_replies', 'threads_read_replies', 'threads_delete',
 ];
 
-export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, threads: 500 };
+export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, threads: 500, tiktok: 2200 };
 
 // ---------- cifra e assinatura ----------
 
@@ -74,7 +74,7 @@ export async function decryptToken(secret: string, stored: string): Promise<stri
   return dec.decode(plain);
 }
 
-export type OAuthState = { admin: string; provider: 'meta' | 'threads'; origin: string; exp: number };
+export type OAuthState = { admin: string; provider: 'meta' | 'threads' | 'tiktok'; origin: string; exp: number };
 
 // state do OAuth: quem pediu, para onde voltar e validade (10 min), assinado
 // para ninguém forjar um retorno que conecte outra conta.
@@ -173,6 +173,10 @@ export function baseFor(platform: Platform): string {
 
 // O que a rede aceita deste post (o painel já valida; aqui é a última barreira).
 export function checkPost(platform: Platform, post: Post): string | null {
+  if (platform === 'tiktok') {
+    if (post.format === 'story') return 'TikTok não tem stories pelo painel.';
+    if (post.media.length !== 1 || post.media[0].type !== 'video') return 'TikTok pelo painel aceita só um vídeo por post.';
+  }
   if (post.format === 'story') {
     if (platform === 'threads') return 'Threads não tem stories.';
     if (post.media.length !== 1) return 'Story leva exatamente uma imagem ou um vídeo.';
@@ -186,8 +190,9 @@ export function checkPost(platform: Platform, post: Post): string | null {
   return null;
 }
 
+// note: aviso que fica no alvo publicado (ex.: TikTok postou como privado).
 export type Step =
-  | { state: 'published'; externalId: string; permalink: string | null }
+  | { state: 'published'; externalId: string; permalink: string | null; note?: string }
   | { state: 'processing'; containerId: string; retryInSec: number };
 
 async function permalinkOf(api: Api, platform: Platform, id: string): Promise<string | null> {

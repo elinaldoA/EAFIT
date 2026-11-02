@@ -5,8 +5,9 @@ import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 
-// Marketing → Contas conectadas: liga as redes da EAFIT por OAuth (Meta e
-// Threads). A volta do login cai aqui com ?conectado=… ou ?erro=….
+// Marketing → Contas conectadas: liga as redes da EAFIT por OAuth (Meta,
+// Threads e TikTok). A volta do login cai aqui com ?conectado=… ou ?erro=….
+const PROVIDER = { facebook: 'meta', instagram: 'meta', threads: 'threads', tiktok: 'tiktok' };
 export default function MarketingAccounts() {
   const [params, setParams] = useSearchParams();
   const [accounts, setAccounts] = useState(null);
@@ -76,10 +77,14 @@ export default function MarketingAccounts() {
           <button type="button" className="btn" disabled={!!busy} onClick={() => connect('threads')}>
             {busy === 'threads' ? 'Abrindo…' : 'Conectar Threads'}
           </button>
+          <button type="button" className="btn" disabled={!!busy} onClick={() => connect('tiktok')}>
+            {busy === 'tiktok' ? 'Abrindo…' : 'Conectar TikTok'}
+          </button>
         </div>
         <p className="user-detail__meta">
           Facebook e Instagram entram juntos: no login, marque a Página da EAFIT. O Instagram profissional ligado a ela
-          aparece automaticamente. TikTok entra numa próxima etapa.
+          aparece automaticamente. No TikTok o painel posta só vídeo (sem stories, comentários ou exclusão pela API), e
+          os vídeos saem privados até o app passar pela auditoria do TikTok.
         </p>
         {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
       </section>
@@ -118,7 +123,7 @@ export default function MarketingAccounts() {
                   <td data-label="">
                     <div className="actions-row">
                       {a.status !== 'ok' && (
-                        <button type="button" className="btn btn--small" onClick={() => connect(a.platform === 'threads' ? 'threads' : 'meta')}>
+                        <button type="button" className="btn btn--small" onClick={() => connect(PROVIDER[a.platform] || 'meta')}>
                           Reconectar
                         </button>
                       )}

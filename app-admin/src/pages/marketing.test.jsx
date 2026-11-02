@@ -60,6 +60,16 @@ describe('lib/marketing', () => {
     expect(validatePost({ caption: 'oi', media: [img], accounts: [FB, IG] })).toEqual([]);
   });
 
+  it('TikTok: só um vídeo e nada de story', () => {
+    const TK = { platform: 'tiktok' };
+    const video = { type: 'video', url: 'https://v' };
+    expect(validatePost({ caption: 'oi', media: [video], accounts: [TK] })).toEqual([]);
+    expect(validatePost({ caption: 'oi', media: [{ type: 'image', url: 'https://a' }], accounts: [TK] }))
+      .toContain('TikTok: o post precisa ser um único vídeo.');
+    expect(validatePost({ caption: '', format: 'story', media: [video], accounts: [TK] }))
+      .toContain('TikTok não tem stories pelo painel: desmarque o TikTok.');
+  });
+
   it('valida o story: uma mídia, sem Threads e sem crédito obrigatório', () => {
     const img = { type: 'image', url: 'https://a' };
     const story = args => validatePost({ caption: '', format: 'story', ...args });
@@ -215,6 +225,15 @@ describe('MarketingAccounts', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Conectar Facebook e Instagram' }));
     await waitFor(() => expect(lib.startConnect).toHaveBeenCalledWith('meta'));
     expect(await screen.findByText(/META_APP_ID/)).toBeTruthy();
+  });
+
+  it('conecta e reconecta o TikTok pelo provedor próprio', async () => {
+    lib.fetchAccounts.mockResolvedValue([{ ...TH, id: 'a4', platform: 'tiktok', username: 'eafitapp' }]);
+    lib.startConnect.mockResolvedValue();
+    wrap(<MarketingAccounts />);
+    fireEvent.click(screen.getByRole('button', { name: 'Conectar TikTok' }));
+    await waitFor(() => expect(lib.startConnect).toHaveBeenCalledWith('tiktok'));
+    expect(await screen.findByText('TikTok')).toBeTruthy();
   });
 });
 

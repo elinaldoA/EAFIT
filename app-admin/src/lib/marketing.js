@@ -15,6 +15,7 @@ export const PLATFORMS = {
   facebook: { label: 'Facebook', limit: 63000 },
   instagram: { label: 'Instagram', limit: 2200 },
   threads: { label: 'Threads', limit: 500 },
+  tiktok: { label: 'TikTok', limit: 2200 },
 };
 
 export const STATUS_LABEL = {
@@ -286,6 +287,7 @@ export function validatePost({ caption, media, accounts, scheduledAt = null, now
   if (videos > 1 || (videos === 1 && media.length > 1)) errors.push('Vídeo vai sozinho no post (sem outras mídias).');
   if (media.length > 10) errors.push('No máximo 10 imagens por post.');
   if (platforms.has('instagram') && !media.length) errors.push('Instagram exige ao menos uma imagem ou vídeo.');
+  if (platforms.has('tiktok') && !(media.length === 1 && videos === 1)) errors.push('TikTok: o post precisa ser um único vídeo.');
   for (const p of platforms) {
     const { label, limit } = PLATFORMS[p];
     if (text.length > limit) errors.push(`${label}: a legenda (com créditos) passa de ${limit} caracteres.`);
@@ -300,6 +302,7 @@ function validateStory({ media, accounts, scheduledAt, now }) {
   const errors = [];
   if (!accounts.length) errors.push('Escolha ao menos uma conta.');
   if (accounts.some(a => a.platform === 'threads')) errors.push('Threads não tem stories: desmarque o Threads.');
+  if (accounts.some(a => a.platform === 'tiktok')) errors.push('TikTok não tem stories pelo painel: desmarque o TikTok.');
   if (media.length !== 1) errors.push('Story leva exatamente uma imagem ou um vídeo.');
   if (media.some(m => m.credit)) errors.push('Mídia com crédito obrigatório não pode ir para story (não há legenda para o crédito).');
   if (scheduledAt && new Date(scheduledAt) <= now) errors.push('O horário agendado já passou.');
