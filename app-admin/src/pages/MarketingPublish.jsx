@@ -54,7 +54,8 @@ export default function MarketingPublish() {
   useEffect(() => {
     fetchAccounts().then(list => {
       setAccounts(list);
-      setSelectedAccounts(new Set(list.filter(a => a.status === 'ok').map(a => a.id)));
+      // O TikTok não vem marcado: só posta com a conta privada até a auditoria do app.
+      setSelectedAccounts(new Set(list.filter(a => a.status === 'ok' && a.platform !== 'tiktok').map(a => a.id)));
     }).catch(err => { setMsg(`Erro: ${err.message}`); setAccounts([]); });
     fetchMedia().then(setLibrary).catch(() => setLibrary([]));
     loadPosts();

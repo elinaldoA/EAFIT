@@ -159,6 +159,10 @@ describe('MarketingPublish', () => {
       },
     });
     wrap(<MarketingPublish />);
+    // Não vem marcado até a auditoria do app no TikTok.
+    const chip = await screen.findByLabelText(/TikTok · @eafitapp/);
+    expect(chip.checked).toBe(false);
+    fireEvent.click(chip);
     expect(await screen.findByText('EAFIT App')).toBeTruthy();
     expect(lib.fetchTikTokCreator).toHaveBeenCalledWith('a4');
     expect(screen.getByLabelText('Dueto').disabled).toBe(true);
