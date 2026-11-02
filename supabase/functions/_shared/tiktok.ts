@@ -63,7 +63,9 @@ async function parse(res: Response): Promise<Obj> {
   const err = body.error as { code?: string; message?: string } | undefined;
   if (!res.ok || (err?.code && err.code !== 'ok')) {
     const code = String(err?.code || '');
-    throw new GraphError(err?.message || code || `HTTP ${res.status}`, RECONNECT_CODES.includes(code) ? 190 : 0);
+    // O código diz o motivo; a mensagem às vezes é só um link genérico.
+    const msg = [err?.message, code && `(${code})`].filter(Boolean).join(' ');
+    throw new GraphError(msg || `HTTP ${res.status}`, RECONNECT_CODES.includes(code) ? 190 : 0);
   }
   return (body.data || {}) as Obj;
 }
