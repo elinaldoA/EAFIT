@@ -19,6 +19,26 @@ describe('foodDatabase', () => {
     expect(new Set(ALL_FOODS.map(f => f.id)).size).toBe(ALL_FOODS.length);
   });
 
+  it('nenhum alimento se repete pelo nome', () => {
+    const own = FOOD_DATABASE.map(f => f.ptName);
+    expect(own.filter((n, i) => own.indexOf(n) !== i)).toEqual([]);
+    // Mesmo nome da TACO só quando o item próprio é aquele mesmo da tabela (Feijoada…).
+    const taco = new Set(TACO_FOODS.map(f => f.name));
+    for (const f of FOOD_DATABASE.filter(f => taco.has(f.ptName))) expect(f, f.ptName).toMatchObject(fromTaco(f.ptName));
+  });
+
+  it('medidas caseiras dos itens da segunda leva', () => {
+    expect(measuresFor('Leite semidesnatado')).toContainEqual({ label: 'copo', grams: 200 });
+    expect(measuresFor('Queijo coalho')).toEqual([{ label: 'fatia', grams: 30 }]);
+    expect(measuresFor('Mostarda')).toEqual([{ label: 'colher de sopa', grams: 15 }]);
+    expect(measuresFor('Mostarda, folha, crua')).toEqual([]);
+    expect(measuresFor('Refrigerante zero')).toContainEqual({ label: 'lata', grams: 350 });
+    expect(measuresFor('Banana-passa')).toEqual([]);
+    expect(measuresFor('Batata palha')).toEqual([]);
+    expect(measuresFor('Salmão defumado')).toEqual([{ label: 'fatia', grams: 15 }]);
+    expect(measuresFor('Pasta de amêndoa')).toEqual([{ label: 'colher de sopa', grams: 15 }]);
+  });
+
   it('TACO tem os ~590 alimentos com valores válidos', () => {
     expect(TACO_FOODS.length).toBeGreaterThan(580);
     for (const f of TACO_FOODS) {
