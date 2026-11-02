@@ -882,6 +882,13 @@ export const EXERCISE_YOUTUBE = {
   'Prancha com Elevação de Quadril': { id: 'Xhw699i3vAc', canal: 'Olu Olamigoke Jr. OLY' },
   'Caminhada na Ponta dos Pés': { id: '3d2S7a3D9YY', canal: 'Baptist Health' },
   'Agachamento Pistol': { id: 'bH3mRwnAN88', canal: '[P]rehab' },
+  'Corrida de Ritmo': { id: 'k5vqiyry2z8', canal: 'Global Triathlon Network' },
+  'Corrida na Areia': { id: 'od8xxCp-CKo', canal: 'CK1 Sports Performance' },
+  'Esteira — Corrida Inclinada': { id: 'o6CXxscL9aM', canal: 'Training Tall' },
+  'Natação Intervalada': { id: 'M_aAdpzZxGs', canal: 'Skills N\' Talents (swimming)' },
+  'Pular Corda Intervalado': { id: 'uuaCvki7iQc', canal: 'Tabata Songs' },
+  'Tiros de 400m': { id: 'snfcp94Ro8M', canal: 'Canadian Track and Field League' },
+  'Tiros em Subida': { id: 't62tRpLCBaA', canal: 'Run Elite' },
 };
 
 export function youtubeEmbedUrl({ id, start = 0, end }, { autoplay = true } = {}) {
