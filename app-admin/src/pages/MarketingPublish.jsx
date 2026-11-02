@@ -2,14 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   EMPTY_TIKTOK, PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, exerciseVideoList, fetchAccounts,
-  fetchMedia, fetchPosts, fetchTikTokCreator, finalCaption, retryTarget, runPost, validatePost,
+  fetchMedia, fetchPosts, fetchTikTokCreator, finalCaption, retryTarget, runPost, uploadMedia, validatePost,
 } from '../lib/marketing';
+import { IMAGE_SEC, renderStoryWithMusic, storyDuration, validateStoryMusic } from '../lib/storyMusic';
+import { useAdminAuth } from '../context/useAdminAuth';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
+import MarketingStoryMusic from '../components/MarketingStoryMusic';
+import MarketingAutoMusic from '../components/MarketingAutoMusic';
 
 const NO_STORIES = ['threads', 'tiktok'];
+
+const NO_MUSIC = { id: '', start: 0, imageSec: IMAGE_SEC };
 
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
 
@@ -23,6 +29,7 @@ function toLocalInputValue(date) {
 // (marketing_post_targets) é processada pela Edge Function marketing; aqui só
 // cria o post e acompanha o estado em cada conta.
 export default function MarketingPublish() {
+  const { adminUser } = useAdminAuth();
   const [accounts, setAccounts] = useState(null);
   const [library, setLibrary] = useState([]);
   const [posts, setPosts] = useState(null);
@@ -40,6 +47,10 @@ export default function MarketingPublish() {
   const [tiktok, setTiktok] = useState(EMPTY_TIKTOK);
   const [tiktokInfo, setTiktokInfo] = useState(null); // { accountId, creator?, publicPosts?, error? }
   const [videoDuration, setVideoDuration] = useState(null);
+  const [music, setMusic] = useState(NO_MUSIC);
+  const [musicLengths, setMusicLengths] = useState({}); // { musicSec, videoSec }
+  const [rendered, setRendered] = useState(null); // { key, blob, url } do vídeo com música
+  const [progress, setProgress] = useState(null);
   const videos = useMemo(() => exerciseVideoList(), []);
 
   const loadPosts = useCallback(async () => {
@@ -72,6 +83,16 @@ export default function MarketingPublish() {
     caption, media, accounts: chosenAccounts, scheduledAt: when === 'schedule' ? scheduleAt : null, format,
     tiktok, tiktokCreator: tiktokReady ? tiktokInfo.creator : null, videoDuration,
   });
+  // Story com música: a mídia escolhida + o trecho viram um vídeo novo.
+  const tracks = library.filter(m => m.kind === 'audio');
+  const track = story ? tracks.find(t => t.id === music.id) || null : null;
+  const storyMedia = story && media.length === 1 ? media[0] : null;
+  const musicDuration = storyMedia ? storyDuration({ mediaType: storyMedia.type, videoSec: musicLengths.videoSec, imageSec: music.imageSec }) : null;
+  const renderKey = track && storyMedia ? JSON.stringify([storyMedia.url, track.id, music.start, musicDuration]) : '';
+  const musicErrors = track && storyMedia ? validateStoryMusic({
+    mediaType: storyMedia.type, videoSec: musicLengths.videoSec, imageSec: music.imageSec, start: music.start, musicSec: musicLengths.musicSec,
+  }) : [];
+  errors.push(...musicErrors);
   if (tiktokAccount && !(tiktokReady && tiktokInfo.creator)) {
     errors.push(tiktokReady && tiktokInfo.error ? `TikTok: ${tiktokInfo.error}` : 'TikTok: aguarde os dados da conta.');
   }
@@ -87,6 +108,37 @@ export default function MarketingPublish() {
       .catch(err => { if (alive) setTiktokInfo({ accountId: tiktokId, error: err.message }); });
     return () => { alive = false; };
   }, [tiktokId]);
+
+  // Libera da memória a prévia anterior.
+  useEffect(() => () => { if (rendered) URL.revokeObjectURL(rendered.url); }, [rendered]);
+
+  async function renderMusic() {
+    if (rendered?.key === renderKey) return rendered;
+    setProgress(0);
+    try {
+      const { blob } = await renderStoryWithMusic({
+        mediaUrl: storyMedia.url, mediaType: storyMedia.type, musicUrl: track.url, start: music.start, duration: musicDuration, onProgress: setProgress,
+      });
+      const out = { key: renderKey, blob, url: URL.createObjectURL(blob) };
+      setRendered(out);
+      return out;
+    } finally {
+      setProgress(null);
+    }
+  }
+
+  async function handlePreview() {
+    if (!renderKey || musicErrors.length) { setMsg(`Erro: ${musicErrors[0] || 'Escolha a mídia e a música.'}`); return; }
+    setBusy(true);
+    setMsg('');
+    try {
+      await renderMusic();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // Threads e TikTok não têm stories: ao trocar para story, saem da seleção.
   function chooseFormat(next) {
@@ -118,8 +170,17 @@ export default function MarketingPublish() {
     setBusy(true);
     setMsg('');
     try {
+      let postMedia = media;
+      if (renderKey) {
+        const { blob } = await renderMusic();
+        const { url } = await uploadMedia({
+          file: new File([blob], 'story-musica.mp4', { type: 'video/mp4' }), title: `Story com música · ${storyMedia.label || track.title}`.slice(0, 120),
+          width: 1080, height: 1920, adminId: adminUser?.id,
+        });
+        postMedia = [{ type: 'video', url, label: storyMedia.label }];
+      }
       const postId = await createPost({
-        caption, media, accountIds: chosenAccounts.map(a => a.id), scheduledAt: scheduled, format, tiktok: tiktokAccount ? tiktok : null,
+        caption, media: postMedia, accountIds: chosenAccounts.map(a => a.id), scheduledAt: scheduled, format, tiktok: tiktokAccount ? tiktok : null,
       });
       if (scheduled) {
         setMsg(story ? 'Story agendado. Ele sai sozinho no horário.' : 'Post agendado. Ele sai sozinho no horário.');
@@ -136,6 +197,9 @@ export default function MarketingPublish() {
       setMedia([]);
       setTiktok(EMPTY_TIKTOK);
       setVideoDuration(null);
+      setMusic(NO_MUSIC);
+      setRendered(null);
+      fetchMedia().then(setLibrary).catch(() => {});
       setScheduleAt('');
       setWhen('now');
     } catch (err) {
@@ -190,7 +254,7 @@ export default function MarketingPublish() {
 
   const shownVideos = videos.filter(v => v.label.toLowerCase().includes(videoQuery.trim().toLowerCase()));
   const pickerItems = pickerTab === 'library'
-    ? library.map(m => ({ key: m.id, type: m.kind, url: m.url, credit: m.credit || undefined, label: m.title }))
+    ? library.filter(m => m.kind !== 'audio').map(m => ({ key: m.id, type: m.kind, url: m.url, credit: m.credit || undefined, label: m.title }))
     : shownVideos.map(v => ({ key: v.slug, type: 'video', url: v.url, credit: v.credit, label: v.label }));
 
   return (
@@ -239,7 +303,7 @@ export default function MarketingPublish() {
           {story ? (
             <p className="user-detail__meta">
               Story não tem legenda: o texto vai na própria arte. Use imagem ou vídeo em pé (9:16, como as artes “Story ·” e os
-              Reels da biblioteca); vídeo de story no Instagram vai até 60 segundos.
+              Reels da biblioteca); vídeo de story no Instagram vai até 60 segundos. Dá para pôr música logo abaixo da mídia.
             </p>
           ) : (
             <>
@@ -273,7 +337,7 @@ export default function MarketingPublish() {
               </div>
             )}
             <div className="actions-row">
-              <button type="button" className={`btn btn--small${pickerTab === 'library' ? '' : ' btn--ghost'}`} onClick={() => setPickerTab('library')}>Minhas mídias ({library.length})</button>
+              <button type="button" className={`btn btn--small${pickerTab === 'library' ? '' : ' btn--ghost'}`} onClick={() => setPickerTab('library')}>Minhas mídias ({library.length - tracks.length})</button>
               <button type="button" className={`btn btn--small${pickerTab === 'videos' ? '' : ' btn--ghost'}`} onClick={() => setPickerTab('videos')}>Vídeos de exercício</button>
               {pickerTab === 'videos' && <input className="input search-input" placeholder="Buscar exercício" value={videoQuery} onChange={e => setVideoQuery(e.target.value)} />}
               <Link to="/marketing-midia" className="user-detail__meta">Criar arte com print do app →</Link>
@@ -296,6 +360,12 @@ export default function MarketingPublish() {
                 </div>
               )}
           </div>
+
+          {story && (
+            <MarketingStoryMusic media={storyMedia} tracks={tracks} value={music} onChange={setMusic} lengths={musicLengths}
+              onLengths={setMusicLengths} preview={rendered?.key === renderKey ? rendered.url : null} progress={progress}
+              onPreview={handlePreview} busy={busy} />
+          )}
 
           {tiktokAccount && (
             <MarketingTikTokOptions
@@ -324,11 +394,16 @@ export default function MarketingPublish() {
           )}
           <div className="actions-row">
             <button type="button" className="btn btn--primary" disabled={busy || errors.length > 0} onClick={handleSubmit}>
-              {busy ? 'Enviando…' : when === 'schedule' ? (story ? 'Agendar story' : 'Agendar post') : 'Publicar agora'}
+              {busy ? (progress != null ? 'Montando o vídeo…' : 'Enviando…') : when === 'schedule' ? (story ? 'Agendar story' : 'Agendar post') : 'Publicar agora'}
             </button>
           </div>
           {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
         </section>
+      )}
+
+      {accounts.length > 0 && (
+        <MarketingAutoMusic tracks={tracks} library={library} adminId={adminUser?.id}
+          onDone={() => { loadPosts(); fetchMedia().then(setLibrary).catch(() => {}); }} />
       )}
 
       <section className="card stack">

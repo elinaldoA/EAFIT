@@ -3,19 +3,24 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-const { lib } = vi.hoisted(() => ({
+const { lib, music } = vi.hoisted(() => ({
   lib: {
     fetchAccounts: vi.fn(), fetchMedia: vi.fn(), fetchPosts: vi.fn(), createPost: vi.fn(), runPost: vi.fn(), deletePost: vi.fn(),
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
+    uploadMedia: vi.fn(), fetchScheduledStories: vi.fn(), setStoryMedia: vi.fn(),
   },
+  music: { renderStoryWithMusic: vi.fn(), mediaDuration: vi.fn() },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../lib/marketing', async orig => ({ ...(await orig()), ...lib }));
+vi.mock('../lib/storyMusic', async orig => ({ ...(await orig()), ...music }));
+vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => ({ adminUser: { id: 'adm1' } }) }));
 
 import MarketingPublish from './MarketingPublish';
 import MarketingAccounts from './MarketingAccounts';
 import MarketingComments from './MarketingComments';
+import { autoMusicStart, containRect, formatSec, planAutoMusic, validateStoryMusic } from '../lib/storyMusic';
 import {
   EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines,
 } from '../lib/marketing';
@@ -26,6 +31,7 @@ const FB = { id: 'a1', platform: 'facebook', name: 'EAFIT', username: null, stat
 const IG = { id: 'a2', platform: 'instagram', name: 'EAFIT', username: 'eafit', status: 'ok', parent_id: 'a1', connected_at: '2026-10-30T10:00:00Z' };
 const TH = { id: 'a3', platform: 'threads', name: 'EAFIT', username: 'eafit', status: 'reconnect', status_detail: 'expirou', parent_id: null, connected_at: '2026-10-30T10:00:00Z' };
 const ART = { id: 'm1', kind: 'image', url: 'https://cdn/arte.jpg', title: 'Arte treino', credit: null, storage_path: 'arte.jpg' };
+const SONG = { id: 'm9', kind: 'audio', url: 'https://cdn/batida.mp3', title: 'Batida forte', credit: null, storage_path: 'batida.mp3' };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -36,6 +42,13 @@ beforeEach(() => {
   lib.runPost.mockResolvedValue({ results: [{ id: 't1', status: 'published' }, { id: 't2', status: 'processing' }] });
   lib.fetchComments.mockResolvedValue([]);
   vi.spyOn(window, 'confirm').mockReturnValue(true);
+  music.mediaDuration.mockResolvedValue(120);
+  music.renderStoryWithMusic.mockResolvedValue({ blob: new Blob(['mp4'], { type: 'video/mp4' }), width: 1080, height: 1920 });
+  lib.uploadMedia.mockResolvedValue({ path: 'story.mp4', url: 'https://cdn/story.mp4' });
+  lib.fetchScheduledStories.mockResolvedValue([]);
+  lib.setStoryMedia.mockResolvedValue();
+  URL.createObjectURL = vi.fn(() => 'blob:prévia');
+  URL.revokeObjectURL = vi.fn();
 });
 afterEach(cleanup);
 
@@ -96,6 +109,36 @@ describe('lib/marketing', () => {
     expect(story({ media: [img], accounts: [TH] })).toContain('Threads não tem stories: desmarque o Threads.');
     expect(story({ media: [{ ...img, credit: 'CC BY' }], accounts: [IG] }))
       .toContain('Mídia com crédito obrigatório não pode ir para story (não há legenda para o crédito).');
+  });
+
+  it('valida a música do story: duração entre 3 e 60 s e trecho dentro da música', () => {
+    const base = { mediaType: 'image', imageSec: 15, start: 0, musicSec: 120 };
+    expect(validateStoryMusic(base)).toEqual([]);
+    expect(validateStoryMusic({ ...base, imageSec: 2 })).toContain('O story com música precisa ter de 3 a 60 segundos.');
+    expect(validateStoryMusic({ ...base, start: 110 })).toContain('A música acaba antes do story: comece em até 1:45.');
+    expect(validateStoryMusic({ ...base, musicSec: null })).toEqual(['Aguarde: lendo a duração da música.']);
+    // Vídeo longo é cortado em 60 s; a música precisa cobrir isso.
+    expect(validateStoryMusic({ mediaType: 'video', videoSec: 90, start: 0, musicSec: 50 }))
+      .toContain('A música acaba antes do story: comece em até 0:00.');
+    expect(validateStoryMusic({ mediaType: 'video', videoSec: 90, start: 30, musicSec: 120 })).toEqual([]);
+    expect(formatSec(75.6)).toBe('1:15');
+  });
+
+  it('música automática: só stories de imagem, músicas se revezando, um vídeo por par arte + música', () => {
+    const img = (id, url) => ({ id, media: [{ type: 'image', url }] });
+    const stories = [img('s1', 'agua.png'), img('s2', 'bomdia.png'), { id: 'v1', media: [{ type: 'video', url: 'r.mp4' }] }, img('s3', 'agua.png'), img('s4', 'agua.png')];
+    const plan = planAutoMusic(stories, [{ id: 'A' }, { id: 'B' }]);
+    expect(plan.map(g => [g.imageUrl, g.track.id, g.postIds])).toEqual([
+      ['agua.png', 'A', ['s1', 's3']], ['bomdia.png', 'B', ['s2']], ['agua.png', 'B', ['s4']],
+    ]);
+    expect(planAutoMusic(stories, [])).toEqual([]);
+    expect(autoMusicStart(120, 15)).toBe(24);
+    expect(autoMusicStart(16, 15)).toBe(1);
+  });
+
+  it('encaixa a mídia inteira no story 9:16, centralizada', () => {
+    expect(containRect(1080, 1350)).toEqual({ x: 0, y: 285, w: 1080, h: 1350 });
+    expect(containRect(540, 960)).toEqual({ x: 0, y: 0, w: 1080, h: 1920 });
   });
 
   it('conta hashtags', () => {
@@ -185,6 +228,57 @@ describe('MarketingPublish', () => {
       accountIds: ['a4'],
       tiktok: expect.objectContaining({ privacy_level: 'PUBLIC_TO_EVERYONE', allow_comment: true, commercial: true, brand_organic: true }),
     })));
+  });
+
+  it('story com música: monta o vídeo, salva na biblioteca e publica o vídeo', async () => {
+    lib.fetchMedia.mockResolvedValue([SONG, ART]);
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByLabelText('Story'));
+    // Música não aparece entre as mídias do post.
+    expect(await screen.findByRole('button', { name: /Arte treino/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Batida forte/ })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Arte treino/ }));
+    fireEvent.change(screen.getByLabelText('Música'), { target: { value: 'm9' } });
+    expect(await screen.findByText(/a música tem 2:00/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Duração do story (segundos)'), { target: { value: '20' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar agora' }));
+
+    await waitFor(() => expect(lib.createPost).toHaveBeenCalledWith(expect.objectContaining({
+      format: 'story', media: [expect.objectContaining({ type: 'video', url: 'https://cdn/story.mp4' })],
+    })));
+    expect(music.renderStoryWithMusic).toHaveBeenCalledWith(expect.objectContaining({
+      mediaUrl: 'https://cdn/arte.jpg', mediaType: 'image', musicUrl: 'https://cdn/batida.mp3', start: 0, duration: 20,
+    }));
+    expect(lib.uploadMedia).toHaveBeenCalledWith(expect.objectContaining({ title: 'Story com música · Arte treino', adminId: 'adm1' }));
+  });
+
+  it('story com música: avisa quando a música acaba antes do story', async () => {
+    lib.fetchMedia.mockResolvedValue([SONG, ART]);
+    music.mediaDuration.mockResolvedValue(10);
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByLabelText('Story'));
+    fireEvent.click(await screen.findByRole('button', { name: /Arte treino/ }));
+    fireEvent.change(screen.getByLabelText('Música'), { target: { value: 'm9' } });
+    expect(await screen.findByText('A música acaba antes do story: comece em até 0:00.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Publicar agora' }).disabled).toBe(true);
+  });
+
+  it('música automática: monta os vídeos e troca a mídia dos stories de imagem da fila', async () => {
+    lib.fetchMedia.mockResolvedValue([SONG, ART]);
+    lib.fetchScheduledStories.mockResolvedValueOnce([
+      { id: 's1', media: [{ type: 'image', url: 'https://cdn/arte.jpg' }] },
+      { id: 's2', media: [{ type: 'image', url: 'https://cdn/arte.jpg' }] },
+      { id: 'v1', media: [{ type: 'video', url: 'https://cdn/reels.mp4' }] },
+    ]);
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Pôr música em 2 story(s)' }));
+    expect(await screen.findByText('2 story(s) agendado(s) agora saem com música.')).toBeTruthy();
+    // Um vídeo só para a mesma arte com a mesma música; começa a 20% (24 s de 120 s).
+    expect(music.renderStoryWithMusic).toHaveBeenCalledTimes(1);
+    expect(music.renderStoryWithMusic).toHaveBeenCalledWith(expect.objectContaining({ mediaUrl: 'https://cdn/arte.jpg', start: 24, duration: 15 }));
+    const media = [{ type: 'video', url: 'https://cdn/story.mp4', music: 'Batida forte', source: 'https://cdn/arte.jpg' }];
+    expect(lib.setStoryMedia.mock.calls).toEqual([['s1', media], ['s2', media]]);
   });
 
   it('agenda um story sem legenda e trava o Threads', async () => {

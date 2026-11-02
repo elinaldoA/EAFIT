@@ -1069,6 +1069,10 @@ a.dash-alert:hover { background: var(--surface-2); }
 .mkt-tile--active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-glow); }
 .mkt-tile__media { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 6px; background: #000; }
 .mkt-tile__media--phone { object-fit: contain; }
+.mkt-tile__audio { display: grid; place-items: center; font-size: 40px; background: var(--primary-glow); }
+.mkt-tile__player { width: 100%; height: 32px; }
+.mkt-music { margin: 0; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); }
+.mkt-music__range { width: 100%; }
 .mkt-pick { cursor: pointer; }
 .mkt-pick__label { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mkt-art { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; padding-top: 12px; border-top: 1px solid var(--border); }
