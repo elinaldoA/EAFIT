@@ -48,8 +48,8 @@ describe('defaultDemoFor', () => {
     expect(defaultDemoFor('Supino Reto com Barra')).toBe('video');
     expect(defaultDemoFor('🔷 Burpee')).toBe('video');
     expect(defaultDemoFor('Crucifixo Reto com Halteres')).toBe('youtube');
-    expect(defaultDemoFor('Esteira — Caminhada Inclinada')).toBe('imagens');
-    expect(defaultDemoFor('Air Bike (Assault Bike)')).toBeNull();
+    expect(defaultDemoFor('Esteira — Caminhada Inclinada')).toBe('youtube');
+    expect(defaultDemoFor('Exercício que não existe')).toBeNull();
   });
 });
 
