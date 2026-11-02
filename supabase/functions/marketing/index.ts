@@ -69,9 +69,9 @@ async function processTarget(t: TargetRow, posts: Map<string, Post>): Promise<{ 
 
   let post = posts.get(t.post_id);
   if (!post) {
-    const { data } = await db.from('marketing_posts').select('id, caption, media').eq('id', t.post_id).single();
+    const { data } = await db.from('marketing_posts').select('id, caption, media, format').eq('id', t.post_id).single();
     if (!data) return finish({ status: 'failed', error: 'Post apagado.' });
-    post = { id: data.id, caption: data.caption || '', media: (data.media || []) as Media[] };
+    post = { id: data.id, caption: data.caption || '', media: (data.media || []) as Media[], format: data.format === 'story' ? 'story' : 'feed' };
     posts.set(t.post_id, post);
   }
 

@@ -105,6 +105,54 @@ Deno.test('Instagram: carrossel cria filhos e container CAROUSEL; erro do contai
   assertEquals(calls[2].params.children, 'c1,c2');
 });
 
+Deno.test('checkPost: story só com uma mídia e fora do Threads', () => {
+  const story = (media: { type: 'image' | 'video'; url: string }[]) => ({ id: 'p', caption: '', media, format: 'story' as const });
+  assertEquals(checkPost('threads', story([IMG(1)])), 'Threads não tem stories.');
+  assertEquals(checkPost('instagram', story([IMG(1), IMG(2)])), 'Story leva exatamente uma imagem ou um vídeo.');
+  assertEquals(checkPost('instagram', story([IMG(1)])), null);
+});
+
+Deno.test('Instagram: story cria container STORIES sem legenda', async () => {
+  const { fn, calls } = fakeFetch({
+    'POST /IG1/media': { id: 'S1' },
+    'GET /S1': { status_code: 'FINISHED' },
+    'POST /IG1/media_publish': { id: 'M2' },
+    'GET /M2': {},
+  });
+  const step = await startPublish(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), IG,
+    { id: 'p', caption: '', media: [IMG(1)], format: 'story' });
+  assertEquals(step, { state: 'published', externalId: 'M2', permalink: null });
+  assertEquals(calls[0].params, { media_type: 'STORIES', image_url: 'https://x.com/1.jpg', access_token: 'tok' });
+});
+
+Deno.test('Facebook: story de foto sobe a foto sem publicar e usa photo_stories', async () => {
+  const { fn, calls } = fakeFetch({
+    'POST /P1/photos': { id: 'ph7' },
+    'POST /P1/photo_stories': { success: true, post_id: 'ST1' },
+    'GET /ST1': {},
+  });
+  const step = await startPublish(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), PAGE,
+    { id: 'p', caption: '', media: [IMG(1)], format: 'story' });
+  assertEquals(step.state === 'published' && step.externalId, 'ST1');
+  assertEquals(calls[0].params.published, 'false');
+  assertEquals(calls[1].params.photo_id, 'ph7');
+});
+
+Deno.test('Facebook: story de vídeo abre o upload, manda a URL e fecha', async () => {
+  const { fn, calls } = fakeFetch({
+    'POST /P1/video_stories': (p) => (p.upload_phase === 'start'
+      ? { video_id: 'V1', upload_url: 'https://rupload.facebook.com/video-upload/v23.0/V1' }
+      : { success: true, post_id: 'ST2' }),
+    'POST /video-upload/v23.0/V1': { success: true },
+    'GET /ST2': {},
+  });
+  const step = await startPublish(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), PAGE,
+    { id: 'p', caption: '', media: [{ type: 'video', url: 'https://x.com/v.mp4' }], format: 'story' });
+  assertEquals(step.state === 'published' && step.externalId, 'ST2');
+  assertEquals(calls.map((c) => c.path), ['/P1/video_stories', '/video-upload/v23.0/V1', '/P1/video_stories', '/ST2']);
+  assertEquals(calls[2].params, { upload_phase: 'finish', video_id: 'V1', access_token: 'tok' });
+});
+
 Deno.test('Threads: texto puro publica quando o container está pronto', async () => {
   const { fn, calls } = fakeFetch({
     'POST /T1/threads': { id: 'TC' },

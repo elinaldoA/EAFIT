@@ -275,7 +275,8 @@ export function countHashtags(text) {
 }
 
 // Mesmas regras da função (checkPost), para avisar antes de criar o post.
-export function validatePost({ caption, media, accounts, scheduledAt = null, now = new Date() }) {
+export function validatePost({ caption, media, accounts, scheduledAt = null, now = new Date(), format = 'feed' }) {
+  if (format === 'story') return validateStory({ media, accounts, scheduledAt, now });
   const errors = [];
   const text = finalCaption(caption, media);
   const platforms = new Set(accounts.map(a => a.platform));
@@ -294,12 +295,25 @@ export function validatePost({ caption, media, accounts, scheduledAt = null, now
   return errors;
 }
 
-export async function createPost({ caption, media, accountIds, scheduledAt = null }) {
+// Story não tem legenda: mídia que exige crédito (licença) não pode ir.
+function validateStory({ media, accounts, scheduledAt, now }) {
+  const errors = [];
+  if (!accounts.length) errors.push('Escolha ao menos uma conta.');
+  if (accounts.some(a => a.platform === 'threads')) errors.push('Threads não tem stories: desmarque o Threads.');
+  if (media.length !== 1) errors.push('Story leva exatamente uma imagem ou um vídeo.');
+  if (media.some(m => m.credit)) errors.push('Mídia com crédito obrigatório não pode ir para story (não há legenda para o crédito).');
+  if (scheduledAt && new Date(scheduledAt) <= now) errors.push('O horário agendado já passou.');
+  return errors;
+}
+
+export async function createPost({ caption, media, accountIds, scheduledAt = null, format = 'feed' }) {
+  const story = format === 'story';
   const { data, error } = await db.rpc('marketing_create_post', {
-    p_caption: finalCaption(caption, media),
+    p_caption: story ? '' : finalCaption(caption, media),
     p_media: media.map(({ type, url, credit }) => ({ type, url, ...(credit ? { credit } : {}) })),
     p_accounts: accountIds,
     p_scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+    p_format: format,
   });
   if (error) throw error;
   return data;
@@ -311,7 +325,7 @@ export function runPost(postId) {
 
 export async function fetchPosts(limit = 30) {
   const { data, error } = await db.from('marketing_posts')
-    .select('id, caption, media, scheduled_at, created_at, marketing_post_targets(id, account_id, status, permalink, error, published_at)')
+    .select('id, caption, media, format, scheduled_at, created_at, marketing_post_targets(id, account_id, status, permalink, error, published_at)')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;

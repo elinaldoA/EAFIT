@@ -60,6 +60,16 @@ describe('lib/marketing', () => {
     expect(validatePost({ caption: 'oi', media: [img], accounts: [FB, IG] })).toEqual([]);
   });
 
+  it('valida o story: uma mídia, sem Threads e sem crédito obrigatório', () => {
+    const img = { type: 'image', url: 'https://a' };
+    const story = args => validatePost({ caption: '', format: 'story', ...args });
+    expect(story({ media: [img], accounts: [FB, IG] })).toEqual([]);
+    expect(story({ media: [img, img], accounts: [IG] })).toContain('Story leva exatamente uma imagem ou um vídeo.');
+    expect(story({ media: [img], accounts: [TH] })).toContain('Threads não tem stories: desmarque o Threads.');
+    expect(story({ media: [{ ...img, credit: 'CC BY' }], accounts: [IG] }))
+      .toContain('Mídia com crédito obrigatório não pode ir para story (não há legenda para o crédito).');
+  });
+
   it('conta hashtags', () => {
     expect(countHashtags('#treino #açaí e #2026 # nada')).toBe(3);
   });
@@ -102,9 +112,32 @@ describe('MarketingPublish', () => {
       media: [expect.objectContaining({ type: 'image', url: 'https://cdn/arte.jpg' })],
       accountIds: ['a1', 'a2'],
       scheduledAt: null,
+      format: 'feed',
     }));
     expect(lib.runPost).toHaveBeenCalledWith('p1');
     expect(await screen.findByText(/Publicado em 1 conta\(s\)\. 1 ainda processando/)).toBeTruthy();
+  });
+
+  it('agenda um story sem legenda e trava o Threads', async () => {
+    lib.fetchAccounts.mockResolvedValue([FB, IG, { ...TH, status: 'ok' }]);
+    wrap(<MarketingPublish />);
+    expect((await screen.findByLabelText(/Threads · @eafit/)).checked).toBe(true);
+
+    fireEvent.click(screen.getByLabelText('Story'));
+    expect(screen.getByLabelText(/Threads · @eafit/).checked).toBe(false);
+    expect(screen.getByLabelText(/Threads · @eafit/).disabled).toBe(true);
+    expect(screen.queryByPlaceholderText(/Conte a novidade/)).toBeNull();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Arte treino/ }));
+    fireEvent.click(screen.getByLabelText('Agendar'));
+    fireEvent.change(screen.getByLabelText('Data e hora'), { target: { value: '2099-11-03T07:00' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Agendar story' }));
+
+    await waitFor(() => expect(lib.createPost).toHaveBeenCalledWith(expect.objectContaining({
+      accountIds: ['a1', 'a2'], scheduledAt: '2099-11-03T07:00', format: 'story',
+    })));
+    expect(lib.runPost).not.toHaveBeenCalled();
+    expect(await screen.findByText('Story agendado. Ele sai sozinho no horário.')).toBeTruthy();
   });
 
   it('não deixa publicar no Instagram sem mídia', async () => {

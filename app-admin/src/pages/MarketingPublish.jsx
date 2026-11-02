@@ -24,6 +24,7 @@ export default function MarketingPublish() {
   const [library, setLibrary] = useState([]);
   const [posts, setPosts] = useState(null);
   const [selectedAccounts, setSelectedAccounts] = useState(() => new Set());
+  const [format, setFormat] = useState('feed');
   const [caption, setCaption] = useState('');
   const [media, setMedia] = useState([]);
   const [pickerTab, setPickerTab] = useState('library');
@@ -56,10 +57,19 @@ export default function MarketingPublish() {
   const byId = useMemo(() => new Map((accounts || []).map(a => [a.id, a])), [accounts]);
   const chosenAccounts = (accounts || []).filter(a => selectedAccounts.has(a.id));
   const platforms = [...new Set(chosenAccounts.map(a => a.platform))];
-  const text = finalCaption(caption, media);
+  const story = format === 'story';
+  const text = story ? '' : finalCaption(caption, media);
   const errors = validatePost({
-    caption, media, accounts: chosenAccounts, scheduledAt: when === 'schedule' ? scheduleAt : null,
+    caption, media, accounts: chosenAccounts, scheduledAt: when === 'schedule' ? scheduleAt : null, format,
   });
+
+  // Threads não tem stories: ao trocar para story, sai da seleção.
+  function chooseFormat(next) {
+    setFormat(next);
+    if (next === 'story') {
+      setSelectedAccounts(sel => new Set([...sel].filter(id => byId.get(id)?.platform !== 'threads')));
+    }
+  }
 
   function toggleAccount(id) {
     setSelectedAccounts(sel => {
@@ -77,13 +87,14 @@ export default function MarketingPublish() {
     if (errors.length) { setMsg(`Erro: ${errors[0]}`); return; }
     const scheduled = when === 'schedule' ? scheduleAt : null;
     const names = chosenAccounts.map(a => `${PLATFORMS[a.platform].label} ${accountLabel(a)}`).join(', ');
-    if (!window.confirm(`${scheduled ? `Agendar para ${new Date(scheduled).toLocaleString('pt-BR')}` : 'Publicar agora'} em: ${names}?`)) return;
+    const what = story ? 'story' : 'post';
+    if (!window.confirm(`${scheduled ? `Agendar ${what} para ${new Date(scheduled).toLocaleString('pt-BR')}` : `Publicar ${what} agora`} em: ${names}?`)) return;
     setBusy(true);
     setMsg('');
     try {
-      const postId = await createPost({ caption, media, accountIds: chosenAccounts.map(a => a.id), scheduledAt: scheduled });
+      const postId = await createPost({ caption, media, accountIds: chosenAccounts.map(a => a.id), scheduledAt: scheduled, format });
       if (scheduled) {
-        setMsg('Post agendado. Ele sai sozinho no horário.');
+        setMsg(story ? 'Story agendado. Ele sai sozinho no horário.' : 'Post agendado. Ele sai sozinho no horário.');
       } else {
         const { results = [] } = await runPost(postId);
         const ok = results.filter(r => r.status === 'published').length;
@@ -158,8 +169,8 @@ export default function MarketingPublish() {
         <div>
           <h1 className="page-title">Publicar</h1>
           <p className="page-subtitle">
-            Um post para várias redes de uma vez, na hora ou agendado. Instagram e Threads processam a mídia antes de
-            publicar: vídeo pode levar alguns minutos.
+            Um post ou story para várias redes de uma vez, na hora ou agendado. Instagram e Threads processam a mídia
+            antes de publicar: vídeo pode levar alguns minutos.
           </p>
         </div>
       </div>
@@ -172,33 +183,56 @@ export default function MarketingPublish() {
       ) : (
         <section className="card stack">
           <div className="field">
-            <span className="field__label">Publicar em</span>
-            <div className="mkt-chips">
-              {accounts.map(a => (
-                <label key={a.id} className={`mkt-chip${selectedAccounts.has(a.id) ? ' mkt-chip--on' : ''}`} title={a.status !== 'ok' ? 'Precisa reconectar' : ''}>
-                  <input type="checkbox" checked={selectedAccounts.has(a.id)} disabled={a.status !== 'ok'} onChange={() => toggleAccount(a.id)} />
-                  {PLATFORMS[a.platform].label} · {accountLabel(a)}
-                </label>
-              ))}
+            <span className="field__label">Formato</span>
+            <div className="actions-row">
+              <label><input type="radio" name="format" checked={!story} onChange={() => chooseFormat('feed')} /> Post no feed</label>
+              <label><input type="radio" name="format" checked={story} onChange={() => chooseFormat('story')} /> Story</label>
             </div>
           </div>
 
-          <label className="field">
-            <span className="field__label">Legenda</span>
-            <textarea className="input" rows={6} value={caption} maxLength={5000} onChange={e => setCaption(e.target.value)}
-              placeholder="Conte a novidade, chame para baixar: eafit.com.br/app  #treino #academia" />
-          </label>
-          <div className="mkt-counters">
-            {platforms.map(p => (
-              <span key={p} className={text.length > PLATFORMS[p].limit ? 'mkt-over' : ''}>
-                {PLATFORMS[p].label}: {text.length}/{PLATFORMS[p].limit}
-              </span>
-            ))}
-            {platforms.includes('instagram') && <span className={countHashtags(text) > 30 ? 'mkt-over' : ''}>hashtags: {countHashtags(text)}/30</span>}
+          <div className="field">
+            <span className="field__label">Publicar em</span>
+            <div className="mkt-chips">
+              {accounts.map(a => {
+                const blocked = a.status !== 'ok' || (story && a.platform === 'threads');
+                return (
+                  <label key={a.id} className={`mkt-chip${selectedAccounts.has(a.id) ? ' mkt-chip--on' : ''}`}
+                    title={a.status !== 'ok' ? 'Precisa reconectar' : blocked ? 'Threads não tem stories' : ''}>
+                    <input type="checkbox" checked={selectedAccounts.has(a.id)} disabled={blocked} onChange={() => toggleAccount(a.id)} />
+                    {PLATFORMS[a.platform].label} · {accountLabel(a)}
+                  </label>
+                );
+              })}
+            </div>
           </div>
 
+          {story ? (
+            <p className="user-detail__meta">
+              Story não tem legenda: o texto vai na própria arte. Use imagem ou vídeo em pé (9:16, como as artes “Story ·” e os
+              Reels da biblioteca); vídeo de story no Instagram vai até 60 segundos.
+            </p>
+          ) : (
+            <>
+              <label className="field">
+                <span className="field__label">Legenda</span>
+                <textarea className="input" rows={6} value={caption} maxLength={5000} onChange={e => setCaption(e.target.value)}
+                  placeholder="Conte a novidade, chame para baixar: eafit.com.br/app  #treino #academia" />
+              </label>
+              <div className="mkt-counters">
+                {platforms.map(p => (
+                  <span key={p} className={text.length > PLATFORMS[p].limit ? 'mkt-over' : ''}>
+                    {PLATFORMS[p].label}: {text.length}/{PLATFORMS[p].limit}
+                  </span>
+                ))}
+                {platforms.includes('instagram') && <span className={countHashtags(text) > 30 ? 'mkt-over' : ''}>hashtags: {countHashtags(text)}/30</span>}
+              </div>
+            </>
+          )}
+
           <div className="field">
-            <span className="field__label">Mídia ({media.length} escolhida{media.length === 1 ? '' : 's'}: até 10 imagens ou 1 vídeo)</span>
+            <span className="field__label">
+              Mídia ({media.length} escolhida{media.length === 1 ? '' : 's'}: {story ? '1 imagem ou 1 vídeo' : 'até 10 imagens ou 1 vídeo'})
+            </span>
             {media.length > 0 && (
               <div className="mkt-chips">
                 {media.map(m => (
@@ -248,12 +282,12 @@ export default function MarketingPublish() {
             )}
           </div>
 
-          {errors.length > 0 && (caption || media.length > 0) && (
+          {errors.length > 0 && (caption || media.length > 0 || story) && (
             <ul className="form-msg form-msg--error mkt-errors">{errors.map(e => <li key={e}>{e}</li>)}</ul>
           )}
           <div className="actions-row">
             <button type="button" className="btn btn--primary" disabled={busy || errors.length > 0} onClick={handleSubmit}>
-              {busy ? 'Enviando…' : when === 'schedule' ? 'Agendar post' : 'Publicar agora'}
+              {busy ? 'Enviando…' : when === 'schedule' ? (story ? 'Agendar story' : 'Agendar post') : 'Publicar agora'}
             </button>
           </div>
           {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
@@ -271,6 +305,7 @@ export default function MarketingPublish() {
           <article key={p.id} className="mkt-post">
             <div className="mkt-post__head">
               <span className="user-detail__meta">
+                {p.format === 'story' && <span className="badge">Story</span>}{' '}
                 {p.scheduled_at ? `agendado para ${formatDate(p.scheduled_at)}` : `criado em ${formatDate(p.created_at)}`}
                 {p.media?.length ? ` · ${p.media.length} mídia(s)` : ''}
               </span>
@@ -283,7 +318,7 @@ export default function MarketingPublish() {
                 </button>
               </span>
             </div>
-            <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>
+            {p.format !== 'story' && <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>}
             <ul className="mkt-targets">
               {p.targets.map(t => {
                 const a = byId.get(t.account_id);

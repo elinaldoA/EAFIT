@@ -14,7 +14,8 @@ export const THREADS_BASE = 'https://graph.threads.net/v1.0';
 export type Platform = 'facebook' | 'instagram' | 'threads';
 export type Media = { type: 'image' | 'video'; url: string; credit?: string };
 export type Account = { id: string; platform: Platform; external_id: string; username?: string | null };
-export type Post = { id: string; caption: string; media: Media[] };
+// format 'story': uma mídia, sem legenda (Instagram e Página do Facebook).
+export type Post = { id: string; caption: string; media: Media[]; format?: 'feed' | 'story' };
 
 // Permissões pedidas no login. Com as contas da própria EAFIT e quem conecta
 // com papel no app da Meta, o "acesso padrão" basta (sem App Review).
@@ -126,6 +127,8 @@ export type Api = {
   get: (path: string, params?: Params) => Promise<Record<string, unknown>>;
   post: (path: string, params?: Params) => Promise<Record<string, unknown>>;
   del: (path: string) => Promise<Record<string, unknown>>;
+  // POST numa URL completa com o token no cabeçalho (upload de vídeo do Facebook).
+  upload: (url: string, headers: Record<string, string>) => Promise<Record<string, unknown>>;
 };
 
 function toQuery(params: Params): URLSearchParams {
@@ -158,6 +161,7 @@ export function makeApi(fetchFn: FetchFn, base: string, token: string): Api {
       body: toQuery({ ...params, access_token: token }),
     }),
     del: (path) => request(fetchFn, `${base}${path}?${toQuery({ access_token: token })}`, { method: 'DELETE' }),
+    upload: (url, headers) => request(fetchFn, url, { method: 'POST', headers: { ...headers, Authorization: `OAuth ${token}` } }),
   };
 }
 
@@ -169,6 +173,11 @@ export function baseFor(platform: Platform): string {
 
 // O que a rede aceita deste post (o painel já valida; aqui é a última barreira).
 export function checkPost(platform: Platform, post: Post): string | null {
+  if (post.format === 'story') {
+    if (platform === 'threads') return 'Threads não tem stories.';
+    if (post.media.length !== 1) return 'Story leva exatamente uma imagem ou um vídeo.';
+    return null;
+  }
   const videos = post.media.filter((m) => m.type === 'video').length;
   if (post.caption.length > CAPTION_LIMITS[platform]) return `Legenda passa de ${CAPTION_LIMITS[platform]} caracteres.`;
   if (videos > 1 || (videos === 1 && post.media.length > 1)) return 'Vídeo vai sozinho no post.';
@@ -213,8 +222,31 @@ async function publishFacebook(api: Api, account: Account, post: Post): Promise<
   return { state: 'published', externalId: id, permalink: await permalinkOf(api, 'facebook', id) };
 }
 
+// Story da Página: foto sobe sem publicar e vira story; vídeo vai em três
+// etapas (abre o upload, a Meta baixa da URL, fecha publicando).
+async function publishFacebookStory(api: Api, account: Account, post: Post): Promise<Step> {
+  const page = account.external_id;
+  const [m] = post.media;
+  let r: Record<string, unknown>;
+  if (m.type === 'video') {
+    const start = await api.post(`/${page}/video_stories`, { upload_phase: 'start' });
+    await api.upload(String(start.upload_url), { file_url: m.url });
+    r = await api.post(`/${page}/video_stories`, { upload_phase: 'finish', video_id: String(start.video_id) });
+  } else {
+    const photo = await api.post(`/${page}/photos`, { url: m.url, published: false });
+    r = await api.post(`/${page}/photo_stories`, { photo_id: String(photo.id) });
+  }
+  const id = String(r.post_id || r.id);
+  return { state: 'published', externalId: id, permalink: await permalinkOf(api, 'facebook', id) };
+}
+
 async function createInstagramContainer(api: Api, account: Account, post: Post): Promise<string> {
   const ig = account.external_id;
+  if (post.format === 'story') {
+    const m = post.media[0];
+    const params = m.type === 'video' ? { media_type: 'STORIES', video_url: m.url } : { media_type: 'STORIES', image_url: m.url };
+    return String((await api.post(`/${ig}/media`, params)).id);
+  }
   if (post.media.length === 1) {
     const m = post.media[0];
     const params = m.type === 'video'
@@ -242,7 +274,9 @@ async function createThreadsContainer(api: Api, account: Account, post: Post): P
 // Instagram e Threads publicam em duas etapas: cria o container, espera a rede
 // processar a mídia (vídeo pode levar minutos) e publica. Facebook é direto.
 export async function startPublish(api: Api, account: Account, post: Post): Promise<Step> {
-  if (account.platform === 'facebook') return publishFacebook(api, account, post);
+  if (account.platform === 'facebook') {
+    return post.format === 'story' ? publishFacebookStory(api, account, post) : publishFacebook(api, account, post);
+  }
   const containerId = account.platform === 'instagram'
     ? await createInstagramContainer(api, account, post)
     : await createThreadsContainer(api, account, post);
