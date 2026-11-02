@@ -418,6 +418,15 @@ describe('ExerciseDemo', () => {
       expect(document.querySelector('.demo-modal__loading')).toBeTruthy();
       fireEvent.load(document.querySelector('iframe'));
       expect(document.querySelector('.demo-modal__loading')).toBeNull();
+      expect(document.querySelector('.demo-modal__stage--vertical')).toBeNull();
+    });
+
+    it('Short (vertical) usa a caixa 9:16', () => {
+      setOnline(true);
+      h.media.value = { ...yt, youtube: { ...yt.youtube, vertical: true } };
+      render(<ExerciseDemo nome="Supino" />);
+      fireEvent.click(screen.getByText('Ver execução'));
+      expect(document.querySelector('.demo-modal__stage--youtube.demo-modal__stage--vertical iframe')).toBeTruthy();
     });
 
     it('offline: cai pros 2 quadros', () => {

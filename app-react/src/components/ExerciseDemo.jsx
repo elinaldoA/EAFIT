@@ -159,11 +159,11 @@ function MediaStage({ nome, media }) {
 
 // Player incorporado do YouTube (sem cookie até o play), mudo e em loop no
 // trecho da execução. Os controles (pausa, velocidade, tela cheia) são os do
-// próprio player.
+// próprio player. Shorts (vertical: true) usam caixa 9:16.
 function YoutubeStage({ nome, youtube }) {
   const [ready, setReady] = useState(false);
   return (
-    <div className="demo-modal__stage demo-modal__stage--youtube">
+    <div className={`demo-modal__stage demo-modal__stage--youtube${youtube.vertical ? ' demo-modal__stage--vertical' : ''}`}>
       <iframe
         className="demo-modal__media" src={youtubeEmbedUrl(youtube, { autoplay: !prefersReducedMotion() })}
         title={t('Demonstração de {nome}', { nome })} onLoad={() => setReady(true)}
