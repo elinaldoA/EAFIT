@@ -72,22 +72,10 @@ export async function fetchMedia() {
   return (data || []).map(m => ({ ...m, url: publicUrl(m.storage_path) }));
 }
 
-// Tipo do arquivo → extensão e tipo gravado no bucket. Música (MP3/M4A) só
-// serve para montar story com música (lib/storyMusic.js).
-const UPLOAD_TYPES = {
-  'image/jpeg': { ext: 'jpg', kind: 'image' },
-  'image/png': { ext: 'png', kind: 'image' },
-  'video/mp4': { ext: 'mp4', kind: 'video' },
-  'video/quicktime': { ext: 'mov', kind: 'video' },
-  'audio/mpeg': { ext: 'mp3', kind: 'audio' },
-  'audio/mp4': { ext: 'm4a', kind: 'audio' },
-  'audio/x-m4a': { ext: 'm4a', kind: 'audio', type: 'audio/mp4' }, // como o Windows chama o M4A
-};
-
 export function validateUpload(file) {
   if (!file) return 'Escolha um arquivo.';
-  if (!UPLOAD_TYPES[file.type]) {
-    return 'Formato não aceito: use JPG, PNG, MP4 ou MOV (é o que as redes aceitam), ou MP3/M4A para música de story.';
+  if (!['image/jpeg', 'image/png', 'video/mp4', 'video/quicktime'].includes(file.type)) {
+    return 'Formato não aceito: use JPG, PNG, MP4 ou MOV (é o que as redes aceitam).';
   }
   if (file.size > MAX_BYTES) return 'Arquivo maior que 100 MB.';
   return '';
@@ -99,19 +87,18 @@ function slugify(name) {
 }
 
 export async function uploadMedia({ file, title, credit = null, width = null, height = null, adminId }) {
-  const { ext, kind, type = file.type } = UPLOAD_TYPES[file.type];
+  const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'video/mp4': 'mp4', 'video/quicktime': 'mov' }[file.type];
   const path = `${Date.now()}-${slugify(title || file.name)}.${ext}`;
-  const { error: upErr } = await db.storage.from(BUCKET).upload(path, file, { contentType: type, upsert: false });
+  const { error: upErr } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (upErr) throw upErr;
   const { error } = await db.from('marketing_media').insert({
-    kind, storage_path: path, title: String(title || '').trim().slice(0, 120),
+    kind: file.type.startsWith('video/') ? 'video' : 'image', storage_path: path, title: String(title || '').trim().slice(0, 120),
     credit, width, height, size_bytes: file.size, created_by: adminId,
   });
   if (error) {
     await db.storage.from(BUCKET).remove([path]); // não deixa arquivo órfão
     throw error;
   }
-  return { path, url: publicUrl(path) };
 }
 
 export async function removeMedia(item) {
@@ -397,25 +384,6 @@ export async function fetchPosts(limit = 30) {
     .limit(limit);
   if (error) throw error;
   return (data || []).map(p => ({ ...p, targets: p.marketing_post_targets || [] }));
-}
-
-// Stories na fila que ainda não saíram em nenhuma rede (música automática).
-export async function fetchScheduledStories() {
-  const { data, error } = await db.from('marketing_posts')
-    .select('id, media, scheduled_at, created_at, marketing_post_targets(status)')
-    .eq('format', 'story')
-    .order('scheduled_at', { ascending: true, nullsFirst: false })
-    .limit(500);
-  if (error) throw error;
-  return (data || []).filter(p => {
-    const st = (p.marketing_post_targets || []).map(t => t.status);
-    return st.includes('pending') && st.every(x => x === 'pending' || x === 'canceled');
-  });
-}
-
-export async function setStoryMedia(postId, media) {
-  const { error } = await db.rpc('marketing_set_story_media', { p_post: postId, p_media: media });
-  if (error) throw error;
 }
 
 export async function cancelPost(postId) {

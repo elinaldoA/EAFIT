@@ -157,9 +157,8 @@ export default function MarketingMedia() {
         <h2 className="section-title">Minhas mídias</h2>
         <form className="form-grid" onSubmit={handleUpload}>
           <label className="field">
-            <span className="field__label">Arquivo (JPG, PNG, MP4, MOV ou música MP3/M4A, até 100 MB)</span>
-            <input ref={fileRef} type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime,audio/mpeg,audio/mp4,audio/x-m4a,.m4a"
-              onChange={e => setFile(e.target.files?.[0] || null)} />
+            <span className="field__label">Arquivo (JPG, PNG, MP4 ou MOV, até 100 MB)</span>
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" onChange={e => setFile(e.target.files?.[0] || null)} />
           </label>
           <label className="field">
             <span className="field__label">Nome na biblioteca</span>
@@ -169,30 +168,24 @@ export default function MarketingMedia() {
             <button type="submit" className="btn btn--primary" disabled={busy || !file}>{busy ? 'Enviando…' : 'Adicionar'}</button>
           </div>
         </form>
-        <p className="user-detail__meta">
-          Música entra nos stories em Publicar. Use só música livre para uso comercial e sem crédito obrigatório (ex.:
-          Pixabay Music): story não tem legenda para crédito, e música famosa é silenciada ou derruba o story.
-        </p>
         {!items && <Loading />}
         {items && items.length === 0 && <EmptyState icon="🖼️" label="Nada aqui ainda: envie um arquivo ou crie uma arte com um print." />}
         {items && items.length > 0 && (
           <div className="mkt-grid">
             {items.map(m => (
               <figure key={m.id} className="mkt-tile">
-                {m.kind === 'audio' && <div className="mkt-tile__media mkt-tile__audio" aria-hidden="true">🎵</div>}
-                {m.kind === 'video' && <video src={m.url} muted playsInline preload="metadata" className="mkt-tile__media" />}
-                {m.kind === 'image' && <img src={m.url} alt="" loading="lazy" className="mkt-tile__media" />}
+                {m.kind === 'video'
+                  ? <video src={m.url} muted playsInline preload="metadata" className="mkt-tile__media" />
+                  : <img src={m.url} alt="" loading="lazy" className="mkt-tile__media" />}
                 <figcaption>
                   <strong>{m.title || 'Sem nome'}</strong>
                   <span className="user-detail__meta">
-                    {{ video: 'vídeo', audio: 'música', image: 'imagem' }[m.kind]}{m.width ? ` · ${m.width}×${m.height}` : ''}{m.size_bytes ? ` · ${formatSize(m.size_bytes)}` : ''}
+                    {m.kind === 'video' ? 'vídeo' : 'imagem'}{m.width ? ` · ${m.width}×${m.height}` : ''}{m.size_bytes ? ` · ${formatSize(m.size_bytes)}` : ''}
                   </span>
                   {shared.has(m.id) && (
                     <span className="badge badge--ok" title={shared.get(m.id).map(audienceLabel).join(' · ')}>Com os parceiros</span>
                   )}
-                  {m.kind === 'audio'
-                    ? <audio src={m.url} controls preload="none" className="mkt-tile__player" />
-                    : <button type="button" className="btn btn--small" onClick={() => openShare(m)}>Enviar aos parceiros</button>}
+                  <button type="button" className="btn btn--small" onClick={() => openShare(m)}>Enviar aos parceiros</button>
                   <button type="button" className="btn btn--ghost btn--small" onClick={() => handleRemove(m)}>Remover</button>
                 </figcaption>
               </figure>
