@@ -8,13 +8,15 @@ import { formatDate } from '../lib/userDetailHelpers';
 
 // Pessoas → Embaixadores e influenciadores → Material de divulgação: o que
 // embaixadores e influenciadores baixam no app (modo do programa → Divulgar),
-// cada material para o público escolhido.
+// cada material para o público escolhido. O Marketing também envia para cá a
+// partir da Biblioteca de mídia (marcado "Do Marketing").
 export default function PromoMaterialsAdmin() {
   const { adminUser } = useAdminAuth();
   const [items, setItems] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [audience, setAudience] = useState('todos');
+  const [caption, setCaption] = useState('');
   const [file, setFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -40,10 +42,11 @@ export default function PromoMaterialsAdmin() {
     setBusy(true);
     setMsg('');
     try {
-      await uploadPromoMaterial({ title, description, audience, file, adminId: adminUser?.id });
+      await uploadPromoMaterial({ title, description, audience, caption, file, adminId: adminUser?.id });
       setMsg(`Material publicado para: ${audienceLabel(audience).toLowerCase()}. Já aparece no app.`);
       setTitle('');
       setDescription('');
+      setCaption('');
       setFile(null);
       if (fileRef.current) fileRef.current.value = '';
       await load();
@@ -105,6 +108,11 @@ export default function PromoMaterialsAdmin() {
           </select>
         </label>
         <label className="field">
+          <span className="field__label">Texto pronto (opcional; o link do parceiro entra no fim)</span>
+          <textarea className="input" rows={3} value={caption} maxLength={1000} placeholder="Ex.: Treino pronto em 1 minuto 💪 Testa grátis:"
+            onChange={e => setCaption(e.target.value)} />
+        </label>
+        <label className="field">
           <span className="field__label">Arquivo</span>
           <input ref={fileRef} className="input" type="file" accept={ACCEPT} required
             onChange={e => setFile(e.target.files?.[0] || null)} />
@@ -132,6 +140,8 @@ export default function PromoMaterialsAdmin() {
                   <td data-label="Título">
                     <strong>{item.title}</strong>
                     {item.description && <div className="user-detail__meta">{item.description}</div>}
+                    {item.caption && <div className="user-detail__meta">✍️ {item.caption}</div>}
+                    {item.source_media_id && <span className="badge">Do Marketing</span>}
                   </td>
                   <td data-label="Para">{audienceLabel(item.audience)}</td>
                   <td data-label="Arquivo">{item.file_name}</td>

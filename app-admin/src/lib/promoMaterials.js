@@ -51,7 +51,7 @@ export function formatSize(bytes) {
 
 export async function fetchPromoMaterials() {
   const { data, error } = await db.from('promo_materials')
-    .select('id, title, description, storage_path, file_name, mime_type, size_bytes, created_at, audience')
+    .select('id, title, description, caption, storage_path, file_name, mime_type, size_bytes, created_at, audience, source_media_id')
     .is('campaign_id', null) // os de campanha ficam na campanha (lib/partnerCampaigns.js)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -63,8 +63,12 @@ async function audit(adminId, action, details) {
   if (error) console.warn('admin_audit_log:', error);
 }
 
-// Com campaignId, o material é da campanha e segue o público dela.
-export async function uploadPromoMaterial({ title, description, audience = 'todos', file, adminId, campaignId = null }) {
+// Com campaignId, o material é da campanha e segue o público dela. caption é o
+// texto pronto (o app junta o link do parceiro); sourceMediaId, o item da
+// Biblioteca de mídia de onde veio.
+export async function uploadPromoMaterial({
+  title, description, audience = 'todos', file, adminId, campaignId = null, caption = '', sourceMediaId = null,
+}) {
   const path = storagePathFor(file);
   const { error: upErr } = await db.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (upErr) throw upErr;
@@ -72,7 +76,9 @@ export async function uploadPromoMaterial({ title, description, audience = 'todo
   const { error } = await db.from('promo_materials').insert({
     title: title.trim(), description: description.trim(), storage_path: path,
     file_name: String(file.name).slice(0, 120), mime_type: file.type, size_bytes: file.size, created_by: adminId, audience,
+    caption: String(caption || '').trim().slice(0, 1000),
     ...(campaignId ? { campaign_id: campaignId } : {}),
+    ...(sourceMediaId ? { source_media_id: sourceMediaId } : {}),
   });
   if (error) {
     await db.storage.from(BUCKET).remove([path]); // não deixa arquivo órfão
@@ -86,6 +92,32 @@ export async function removePromoMaterial({ item, adminId }) {
   if (error) throw error;
   await db.storage.from(BUCKET).remove([item.storage_path]);
   await audit(adminId, 'promoMaterialRemove', { title: item.title, path: item.storage_path });
+}
+
+// "Reels · Liga do mês" → "Liga do mês" (o prefixo é só organização da biblioteca).
+export function partnerTitle(mediaTitle) {
+  return String(mediaTitle || '').replace(/^(Reels|Post 4:5|Story)\s*·\s*/i, '').trim().slice(0, 80) || 'Material EAFIT';
+}
+
+// Formato pronto para a descrição do material, a partir das medidas.
+export function formatHint(media) {
+  const { kind, width, height } = media;
+  if (width && height && height / width > 1.6) return kind === 'video' ? 'Vídeo vertical (Reels, TikTok, stories)' : 'Imagem vertical para stories';
+  if (width && height && height > width) return 'Imagem 4:5 para o feed';
+  return kind === 'video' ? 'Vídeo' : 'Imagem';
+}
+
+// Item da Biblioteca de mídia (bucket público marketing-media) vira material de
+// divulgação: baixa o arquivo e sobe a cópia no bucket privado dos parceiros.
+export async function sendMediaToPartners({ media, title, description, audience, caption, adminId, fetchFn = fetch }) {
+  const res = await fetchFn(media.url);
+  if (!res.ok) throw new Error(`Não deu para ler o arquivo da biblioteca (HTTP ${res.status}).`);
+  const blob = await res.blob();
+  const type = blob.type || (media.kind === 'video' ? 'video/mp4' : 'image/jpeg');
+  const file = new File([blob], media.storage_path.replace(/^\d+-/, ''), { type });
+  const err = validatePromoFile(file);
+  if (err) throw new Error(err);
+  await uploadPromoMaterial({ title, description, audience, caption, file, adminId, sourceMediaId: media.id });
 }
 
 // Para o admin conferir o arquivo antes de divulgar.

@@ -49,7 +49,7 @@ export default function SharePage({ amb }) {
         ))}
       </div>
 
-      <PromoMaterialsCard toast={toast} />
+      <PromoMaterialsCard toast={toast} amb={amb} />
 
       <div className="dash-card">
         <div className="dash-card__title">{t('💡 Dicas')}</div>

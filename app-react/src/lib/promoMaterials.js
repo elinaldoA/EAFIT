@@ -1,5 +1,6 @@
 import { db } from './supabase';
 import { locale, t } from './i18n';
+import { ambassadorLink } from './links';
 
 // Material de divulgação do influenciador (logos, prints, vídeos, PDFs), que a
 // equipe sobe no painel admin. Bucket privado: o download é por URL assinada,
@@ -9,11 +10,19 @@ const URL_TTL = 300;
 
 export async function fetchPromoMaterials() {
   const { data, error } = await db.from('promo_materials')
-    .select('id, title, description, storage_path, file_name, mime_type, size_bytes, created_at')
+    .select('id, title, description, caption, storage_path, file_name, mime_type, size_bytes, created_at')
     .is('campaign_id', null) // material de campanha aparece na campanha (PartnerCampaignsCard)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
+}
+
+// Texto pronto do material + o link de quem copia (canal Instagram, onde a
+// maior parte do material é postada).
+export function materialCaptionText(code, caption) {
+  const text = String(caption || '').trim();
+  if (!text) return '';
+  return `${text} ${ambassadorLink(code, 'instagram')}`;
 }
 
 export function materialIcon(mime) {

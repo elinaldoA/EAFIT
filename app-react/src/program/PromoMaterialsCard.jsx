@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { downloadPromoMaterial, fetchPromoMaterials, formatSize, materialIcon } from '../lib/promoMaterials';
+import { downloadPromoMaterial, fetchPromoMaterials, formatSize, materialCaptionText, materialIcon } from '../lib/promoMaterials';
 import { timeAgo } from '../lib/inbox';
 
 import { t } from '../lib/i18n';
 
 // Modo do programa → Divulgar: material que a equipe EAFIT preparou para postar.
-export default function PromoMaterialsCard({ toast }) {
+// Material com texto pronto mostra o texto e "Copiar texto" (com o link de quem copia).
+export default function PromoMaterialsCard({ toast, amb }) {
   const [items, setItems] = useState(null);
   const [error, setError] = useState(false);
   const [busyId, setBusyId] = useState('');
@@ -31,6 +32,15 @@ export default function PromoMaterialsCard({ toast }) {
     }
   }
 
+  async function handleCopy(item) {
+    try {
+      await navigator.clipboard.writeText(materialCaptionText(amb.code, item.caption));
+      toast(t('📋 Texto copiado'));
+    } catch {
+      toast(t('⚠️ Não deu pra copiar o texto'));
+    }
+  }
+
   return (
     <div className="dash-card">
       <div className="dash-card__title">{t('📦 Material de divulgação')}</div>
@@ -49,10 +59,18 @@ export default function PromoMaterialsCard({ toast }) {
                 <strong>{item.title}</strong>
                 {item.description && <span>{item.description}</span>}
                 <small>{formatSize(item.size_bytes)} · {timeAgo(item.created_at)}</small>
+                {item.caption && amb?.code && <p className="influencer-caption__text">{materialCaptionText(amb.code, item.caption)}</p>}
               </div>
-              <button type="button" className="btn btn--outline btn--sm" disabled={busyId === item.id} onClick={() => handleDownload(item)}>
-                {busyId === item.id ? t('Baixando…') : t('Baixar')}
-              </button>
+              <div className="promo-list__actions">
+                <button type="button" className="btn btn--outline btn--sm" disabled={busyId === item.id} onClick={() => handleDownload(item)}>
+                  {busyId === item.id ? t('Baixando…') : t('Baixar')}
+                </button>
+                {item.caption && amb?.code && (
+                  <button type="button" className="btn btn--outline btn--sm" disabled={!amb.active} onClick={() => handleCopy(item)}>
+                    {t('Copiar texto')}
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

@@ -48,6 +48,25 @@ describe('PromoMaterialsCard', () => {
     await waitFor(() => expect(toast).toHaveBeenCalledWith('⚠️ Não deu pra baixar o arquivo. Tente de novo.'));
   });
 
+  it('material com texto pronto copia o texto com o link de quem copia', async () => {
+    h.fetch.mockResolvedValue([{ ...ITEM, caption: 'Meu treino fala comigo 🎧' }]);
+    const writeText = vi.fn().mockResolvedValue();
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    const toast = vi.fn();
+    render(<PromoMaterialsCard toast={toast} amb={{ code: 'ANA10', active: true }} />);
+    expect(await screen.findByText(/Meu treino fala comigo 🎧 .*ANA10/)).toBeTruthy();
+    fireEvent.click(screen.getByText('Copiar texto'));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^Meu treino fala comigo 🎧 https?:\/\/.*ANA10.*instagram/)));
+    expect(toast).toHaveBeenCalledWith('📋 Texto copiado');
+  });
+
+  it('sem texto pronto não mostra o botão de copiar', async () => {
+    h.fetch.mockResolvedValue([ITEM]);
+    render(<PromoMaterialsCard toast={vi.fn()} amb={{ code: 'ANA10', active: true }} />);
+    expect(await screen.findByText('Logo EAFIT')).toBeTruthy();
+    expect(screen.queryByText('Copiar texto')).toBeNull();
+  });
+
   it('sem material mostra o aviso', async () => {
     h.fetch.mockResolvedValue([]);
     render(<PromoMaterialsCard toast={vi.fn()} />);

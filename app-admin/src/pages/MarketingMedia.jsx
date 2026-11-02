@@ -3,14 +3,17 @@ import { useAdminAuth } from '../context/useAdminAuth';
 import {
   APP_PRINTS, ART_FORMATS, createArt, exerciseVideoList, fetchMedia, printUrl, removeMedia, uploadMedia, validateUpload,
 } from '../lib/marketing';
-import { formatSize } from '../lib/promoMaterials';
+import {
+  PROMO_AUDIENCES, audienceLabel, fetchPromoMaterials, formatHint, formatSize, partnerTitle, sendMediaToPartners,
+} from '../lib/promoMaterials';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 
 // Marketing → Biblioteca de mídia: o que pode ir para as redes. Arquivos
 // próprios e artes feitas dos prints do app ficam no bucket público
 // marketing-media; os vídeos de exercício vêm do próprio site, com o crédito
-// que a licença pede (entra sozinho na legenda).
+// que a licença pede (entra sozinho na legenda). Cada item também pode ir para
+// embaixadores e influenciadores (material de divulgação no app, com texto pronto).
 export default function MarketingMedia() {
   const { adminUser } = useAdminAuth();
   const [items, setItems] = useState(null);
@@ -26,6 +29,10 @@ export default function MarketingMedia() {
   const videos = useMemo(() => exerciseVideoList(), []);
   const shownVideos = videos.filter(v => v.label.toLowerCase().includes(videoQuery.trim().toLowerCase()));
 
+  // Material de parceiros que veio da biblioteca: id da mídia → públicos.
+  const [shared, setShared] = useState(() => new Map());
+  const [share, setShare] = useState(null); // { media, title, description, audience, caption }
+
   const load = useCallback(async () => {
     try {
       setItems(await fetchMedia());
@@ -33,7 +40,36 @@ export default function MarketingMedia() {
       setMsg(`Erro: ${err.message}`);
       setItems([]);
     }
+    try {
+      const map = new Map();
+      for (const p of await fetchPromoMaterials()) {
+        if (p.source_media_id) map.set(p.source_media_id, [...(map.get(p.source_media_id) || []), p.audience]);
+      }
+      setShared(map);
+    } catch {
+      setShared(new Map()); // sem acesso ao material de parceiros: só não marca
+    }
   }, []);
+
+  function openShare(m) {
+    setShare({ media: m, title: partnerTitle(m.title), description: formatHint(m), audience: 'todos', caption: '' });
+  }
+
+  async function handleShare(e) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg('');
+    try {
+      await sendMediaToPartners({ ...share, adminId: adminUser?.id });
+      setMsg(`“${share.title}” enviado para ${audienceLabel(share.audience).toLowerCase()}. Já aparece no app, em Divulgar.`);
+      setShare(null);
+      await load();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => { load(); }, [load]);
 
   // Libera a prévia anterior da memória.
@@ -146,11 +182,54 @@ export default function MarketingMedia() {
                   <span className="user-detail__meta">
                     {m.kind === 'video' ? 'vídeo' : 'imagem'}{m.width ? ` · ${m.width}×${m.height}` : ''}{m.size_bytes ? ` · ${formatSize(m.size_bytes)}` : ''}
                   </span>
+                  {shared.has(m.id) && (
+                    <span className="badge badge--ok" title={shared.get(m.id).map(audienceLabel).join(' · ')}>Com os parceiros</span>
+                  )}
+                  <button type="button" className="btn btn--small" onClick={() => openShare(m)}>Enviar aos parceiros</button>
                   <button type="button" className="btn btn--ghost btn--small" onClick={() => handleRemove(m)}>Remover</button>
                 </figcaption>
               </figure>
             ))}
           </div>
+        )}
+
+        {share && (
+          <form className="mkt-art" onSubmit={handleShare}>
+            <div className="stack">
+              <h3 className="section-title">Enviar aos parceiros</h3>
+              <p className="user-detail__meta">
+                Vira material de divulgação no app de embaixadores e influenciadores (Divulgar). O texto pronto aparece com
+                o botão “Copiar texto”, já com o link de quem copia.
+              </p>
+              <label className="field">
+                <span className="field__label">Título no app</span>
+                <input className="input" value={share.title} maxLength={80} required onChange={e => setShare({ ...share, title: e.target.value })} />
+              </label>
+              <label className="field">
+                <span className="field__label">Descrição</span>
+                <input className="input" value={share.description} maxLength={300} onChange={e => setShare({ ...share, description: e.target.value })} />
+              </label>
+              <label className="field">
+                <span className="field__label">Para</span>
+                <select className="input" value={share.audience} onChange={e => setShare({ ...share, audience: e.target.value })}>
+                  {PROMO_AUDIENCES.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+                </select>
+              </label>
+              <label className="field">
+                <span className="field__label">Texto pronto (opcional; o link do parceiro entra no fim)</span>
+                <textarea className="input" rows={4} value={share.caption} maxLength={1000}
+                  placeholder="Ex.: Meu treino agora fala comigo 🎧 Testa o app grátis:"
+                  onChange={e => setShare({ ...share, caption: e.target.value })} />
+              </label>
+              <div className="actions-row">
+                <button type="submit" className="btn btn--primary" disabled={busy || !share.title.trim()}>{busy ? 'Enviando…' : 'Enviar'}</button>
+                <button type="button" className="btn btn--ghost" onClick={() => setShare(null)}>Fechar</button>
+              </div>
+            </div>
+            {share.media.kind === 'video'
+              ? <video src={share.media.url} muted playsInline controls className="mkt-art__preview" />
+              : <img src={share.media.url} alt="" className="mkt-art__preview" />}
+          </form>
         )}
       </section>
 

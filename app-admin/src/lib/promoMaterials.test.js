@@ -10,7 +10,9 @@ vi.mock('./supabase', () => ({
   },
 }));
 
-import { storagePathFor, validatePromoFile, formatSize, uploadPromoMaterial, removePromoMaterial } from './promoMaterials';
+import {
+  storagePathFor, validatePromoFile, formatSize, uploadPromoMaterial, removePromoMaterial, partnerTitle, formatHint, sendMediaToPartners,
+} from './promoMaterials';
 
 const file = (name, type, size = 1000) => ({ name, type, size });
 
@@ -47,6 +49,26 @@ describe('promoMaterials (admin)', () => {
     h.insert.mockResolvedValue({ error: new Error('rls') });
     await expect(uploadPromoMaterial({ title: 'x', description: '', file: file('a.png', 'image/png'), adminId: 'adm' })).rejects.toThrow('rls');
     expect(h.remove).toHaveBeenCalled();
+  });
+
+  it('título e formato sugeridos a partir da mídia do Marketing', () => {
+    expect(partnerTitle('Reels · Liga do mês')).toBe('Liga do mês');
+    expect(partnerTitle('Story · Bateu recorde?')).toBe('Bateu recorde?');
+    expect(partnerTitle('Post 4:5 · Treino de hoje')).toBe('Treino de hoje');
+    expect(formatHint({ kind: 'video', width: 1080, height: 1920 })).toBe('Vídeo vertical (Reels, TikTok, stories)');
+    expect(formatHint({ kind: 'image', width: 1080, height: 1920 })).toBe('Imagem vertical para stories');
+    expect(formatHint({ kind: 'image', width: 1080, height: 1350 })).toBe('Imagem 4:5 para o feed');
+  });
+
+  it('envia a mídia da biblioteca aos parceiros com texto pronto e origem', async () => {
+    const blob = new Blob(['x'], { type: 'video/mp4' });
+    const fetchFn = vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(blob) });
+    const media = { id: 'mm1', kind: 'video', url: 'https://cdn/123-reels-liga.mp4', storage_path: '123-reels-liga.mp4' };
+    await sendMediaToPartners({ media, title: 'Liga do mês', description: 'Vídeo', audience: 'todos', caption: ' Bora? ', adminId: 'adm', fetchFn });
+    expect(fetchFn).toHaveBeenCalledWith('https://cdn/123-reels-liga.mp4');
+    expect(h.insert).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Liga do mês', file_name: 'reels-liga.mp4', mime_type: 'video/mp4', caption: 'Bora?', source_media_id: 'mm1', audience: 'todos',
+    }));
   });
 
   it('remove a linha e o arquivo', async () => {
