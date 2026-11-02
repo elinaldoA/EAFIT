@@ -1087,6 +1087,12 @@ a.dash-alert:hover { background: var(--surface-2); }
   white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13.5px;
 }
 .mkt-errors { margin: 0; padding-left: 20px; }
+.mkt-tiktok { margin: 0; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); }
+.mkt-tiktok__creator { display: flex; align-items: center; gap: 10px; }
+.mkt-tiktok__avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.mkt-tiktok__preview { width: 180px; max-width: 100%; aspect-ratio: 9 / 16; border-radius: var(--radius); background: #000; }
+.mkt-tiktok__off { color: var(--text-muted); }
+.mkt-tiktok__brand { padding-left: 22px; gap: 6px; }
 .mkt-post { padding: 12px 0; border-top: 1px solid var(--border); }
 .mkt-post__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
 .mkt-post__caption { margin: 6px 0; white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

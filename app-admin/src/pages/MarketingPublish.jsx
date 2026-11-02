@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, exerciseVideoList, fetchAccounts, fetchMedia,
-  fetchPosts, finalCaption, retryTarget, runPost, validatePost,
+  EMPTY_TIKTOK, PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, exerciseVideoList, fetchAccounts,
+  fetchMedia, fetchPosts, fetchTikTokCreator, finalCaption, retryTarget, runPost, validatePost,
 } from '../lib/marketing';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
 
 const NO_STORIES = ['threads', 'tiktok'];
 
@@ -36,6 +37,9 @@ export default function MarketingPublish() {
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState('');
   const [msg, setMsg] = useState('');
+  const [tiktok, setTiktok] = useState(EMPTY_TIKTOK);
+  const [tiktokInfo, setTiktokInfo] = useState(null); // { accountId, creator?, publicPosts?, error? }
+  const [videoDuration, setVideoDuration] = useState(null);
   const videos = useMemo(() => exerciseVideoList(), []);
 
   const loadPosts = useCallback(async () => {
@@ -61,9 +65,27 @@ export default function MarketingPublish() {
   const platforms = [...new Set(chosenAccounts.map(a => a.platform))];
   const story = format === 'story';
   const text = story ? '' : finalCaption(caption, media);
+  const tiktokAccount = story ? null : chosenAccounts.find(a => a.platform === 'tiktok');
+  const tiktokReady = tiktokInfo && tiktokInfo.accountId === tiktokAccount?.id;
   const errors = validatePost({
     caption, media, accounts: chosenAccounts, scheduledAt: when === 'schedule' ? scheduleAt : null, format,
+    tiktok, tiktokCreator: tiktokReady ? tiktokInfo.creator : null, videoDuration,
   });
+  if (tiktokAccount && !(tiktokReady && tiktokInfo.creator)) {
+    errors.push(tiktokReady && tiktokInfo.error ? `TikTok: ${tiktokInfo.error}` : 'TikTok: aguarde os dados da conta.');
+  }
+
+  // Regra do TikTok: mostrar a conta e as opções dela antes de postar.
+  const tiktokId = tiktokAccount?.id;
+  useEffect(() => {
+    if (!tiktokId) return;
+    let alive = true;
+    setTiktokInfo({ accountId: tiktokId });
+    fetchTikTokCreator(tiktokId)
+      .then(r => { if (alive) setTiktokInfo({ accountId: tiktokId, creator: r.creator, publicPosts: r.publicPosts }); })
+      .catch(err => { if (alive) setTiktokInfo({ accountId: tiktokId, error: err.message }); });
+    return () => { alive = false; };
+  }, [tiktokId]);
 
   // Threads e TikTok não têm stories: ao trocar para story, saem da seleção.
   function chooseFormat(next) {
@@ -82,6 +104,7 @@ export default function MarketingPublish() {
   }
 
   function toggleMedia(item) {
+    setVideoDuration(null);
     setMedia(list => (list.some(m => m.url === item.url) ? list.filter(m => m.url !== item.url) : [...list, item]));
   }
 
@@ -94,7 +117,9 @@ export default function MarketingPublish() {
     setBusy(true);
     setMsg('');
     try {
-      const postId = await createPost({ caption, media, accountIds: chosenAccounts.map(a => a.id), scheduledAt: scheduled, format });
+      const postId = await createPost({
+        caption, media, accountIds: chosenAccounts.map(a => a.id), scheduledAt: scheduled, format, tiktok: tiktokAccount ? tiktok : null,
+      });
       if (scheduled) {
         setMsg(story ? 'Story agendado. Ele sai sozinho no horário.' : 'Post agendado. Ele sai sozinho no horário.');
       } else {
@@ -108,6 +133,8 @@ export default function MarketingPublish() {
       }
       setCaption('');
       setMedia([]);
+      setTiktok(EMPTY_TIKTOK);
+      setVideoDuration(null);
       setScheduleAt('');
       setWhen('now');
     } catch (err) {
@@ -268,6 +295,13 @@ export default function MarketingPublish() {
                 </div>
               )}
           </div>
+
+          {tiktokAccount && (
+            <MarketingTikTokOptions
+              creator={tiktokReady ? tiktokInfo.creator : null} publicPosts={tiktokReady ? tiktokInfo.publicPosts : true}
+              error={tiktokReady ? tiktokInfo.error : ''} value={tiktok} onChange={setTiktok}
+              video={media.length === 1 && media[0].type === 'video' ? media[0] : null} onDuration={setVideoDuration} />
+          )}
 
           {text && (
             <div className="field">

@@ -1,6 +1,6 @@
-import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
+import { assertEquals, assertRejects, assertThrows } from 'jsr:@std/assert@1';
 import { checkPost, GraphError } from './marketing.ts';
-import { chunkPlan, continueTikTok, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from './tiktok.ts';
+import { chunkPlan, continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, postInfo, startTikTok, tokenFromOAuth } from './tiktok.ts';
 
 type Call = { method: string; url: string; headers: Record<string, string>; body: unknown };
 
@@ -86,6 +86,36 @@ Deno.test('publicar: com auditoria sai público', async () => {
   });
   await startTikTok(makeTikTokApi(fn, 'A'), fn, { id: 'p', caption: 'x', media: [VIDEO] }, true);
   assertEquals((calls[2].body as { post_info: { privacy_level: string } }).post_info.privacy_level, 'PUBLIC_TO_EVERYONE');
+});
+
+const CREATOR = {
+  nickname: 'EAFIT', username: 'eafitapp', avatarUrl: '', privacyOptions: ['PUBLIC_TO_EVERYONE', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'],
+  commentDisabled: false, duetDisabled: true, stitchDisabled: false, maxDurationSec: 600,
+};
+const SETTINGS = { privacy_level: 'FOLLOWER_OF_CREATOR', allow_comment: true, allow_duet: true, allow_stitch: false, brand_organic: true, brand_content: false };
+
+Deno.test('creator info: normaliza o que o painel mostra', async () => {
+  const { fn } = fakeFetch({
+    [`POST ${API}/post/publish/creator_info/query/`]: () => ok({
+      creator_nickname: 'EAFIT', creator_username: 'eafitapp', creator_avatar_url: 'https://p/a.jpg',
+      privacy_level_options: ['SELF_ONLY'], comment_disabled: false, duet_disabled: true, stitch_disabled: false, max_video_post_duration_sec: 600,
+    }),
+  });
+  assertEquals(await creatorInfo(makeTikTokApi(fn, 'A')), {
+    nickname: 'EAFIT', username: 'eafitapp', avatarUrl: 'https://p/a.jpg', privacyOptions: ['SELF_ONLY'],
+    commentDisabled: false, duetDisabled: true, stitchDisabled: false, maxDurationSec: 600,
+  });
+});
+
+Deno.test('post_info: usa as escolhas do painel e respeita o que a conta desligou', () => {
+  const post = { id: 'p', caption: 'x', media: [VIDEO], tiktok: SETTINGS };
+  assertEquals(postInfo(post, CREATOR, true), {
+    title: 'x', privacy_level: 'FOLLOWER_OF_CREATOR', disable_comment: false, disable_duet: true, disable_stitch: true,
+    brand_content_toggle: false, brand_organic_toggle: true,
+  });
+  assertEquals(postInfo(post, CREATOR, false).privacy_level, 'SELF_ONLY');
+  assertThrows(() => postInfo({ ...post, tiktok: { ...SETTINGS, privacy_level: 'MUTUAL_FOLLOW_FRIENDS' } }, CREATOR, true), Error, 'não permite');
+  assertThrows(() => postInfo({ ...post, tiktok: { ...SETTINGS, brand_content: true } }, CREATOR, false), Error, 'Conteúdo de marca');
 });
 
 Deno.test('status: processando, concluído com link e falha', async () => {

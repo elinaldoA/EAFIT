@@ -91,6 +91,52 @@ export function chunkPlan(size: number): { chunkSize: number; count: number } {
   return { chunkSize, count: Math.floor(size / chunkSize) };
 }
 
+// Dados da conta que o painel mostra antes de publicar (regra do TikTok):
+// nome e foto, quem pode ver, interações que a conta desligou e duração máxima.
+export type TikTokCreator = {
+  nickname: string; username: string; avatarUrl: string; privacyOptions: string[];
+  commentDisabled: boolean; duetDisabled: boolean; stitchDisabled: boolean; maxDurationSec: number;
+};
+
+export async function creatorInfo(api: TikTokApi): Promise<TikTokCreator> {
+  const c = await api.post('/post/publish/creator_info/query/');
+  return {
+    nickname: String(c.creator_nickname || ''),
+    username: String(c.creator_username || ''),
+    avatarUrl: String(c.creator_avatar_url || ''),
+    privacyOptions: (c.privacy_level_options as string[] | undefined) || [],
+    commentDisabled: c.comment_disabled === true,
+    duetDisabled: c.duet_disabled === true,
+    stitchDisabled: c.stitch_disabled === true,
+    maxDurationSec: Number(c.max_video_post_duration_sec || 0),
+  };
+}
+
+// post_info do init. Sem auditoria o TikTok só aceita "Somente eu". Posts
+// sem escolhas (anteriores à tela do TikTok) seguem o padrão antigo.
+export function postInfo(post: Post, creator: TikTokCreator, publicPosts: boolean): Obj {
+  const s = post.tiktok;
+  const wanted = s?.privacy_level || 'PUBLIC_TO_EVERYONE';
+  let privacy = 'SELF_ONLY';
+  if (publicPosts) {
+    if (creator.privacyOptions.includes(wanted)) privacy = wanted;
+    else if (s) throw new Error(`A conta do TikTok não permite essa visibilidade (${wanted}).`);
+  }
+  const brandContent = s ? s.brand_content : false;
+  if (brandContent && privacy === 'SELF_ONLY') {
+    throw new Error('Conteúdo de marca não pode sair como "Somente eu" no TikTok (o app ainda não foi auditado).');
+  }
+  return {
+    title: post.caption,
+    privacy_level: privacy,
+    disable_comment: creator.commentDisabled || (s ? !s.allow_comment : false),
+    disable_duet: creator.duetDisabled || (s ? !s.allow_duet : false),
+    disable_stitch: creator.stitchDisabled || (s ? !s.allow_stitch : false),
+    brand_content_toggle: brandContent,
+    brand_organic_toggle: s ? s.brand_organic : true, // padrão antigo: divulga a própria EAFIT
+  };
+}
+
 // Baixa o vídeo da biblioteca, abre a postagem e envia as partes. O TikTok
 // processa depois: o publish_id faz o papel do container da Meta.
 export async function startTikTok(api: TikTokApi, fetchFn: FetchFn, post: Post, publicPosts: boolean): Promise<Step> {
@@ -99,21 +145,10 @@ export async function startTikTok(api: TikTokApi, fetchFn: FetchFn, post: Post, 
   if (!file.ok) throw new Error(`Não deu para baixar o vídeo da biblioteca (HTTP ${file.status}).`);
   const bytes = new Uint8Array(await file.arrayBuffer());
 
-  const creator = await api.post('/post/publish/creator_info/query/');
-  const options = (creator.privacy_level_options as string[] | undefined) || [];
-  const privacy = publicPosts && options.includes('PUBLIC_TO_EVERYONE') ? 'PUBLIC_TO_EVERYONE' : 'SELF_ONLY';
-
+  const info = postInfo(post, await creatorInfo(api), publicPosts);
   const { chunkSize, count } = chunkPlan(bytes.length);
   const init = await api.post('/post/publish/video/init/', {
-    post_info: {
-      title: post.caption,
-      privacy_level: privacy,
-      disable_comment: false,
-      disable_duet: false,
-      disable_stitch: false,
-      brand_content_toggle: false,
-      brand_organic_toggle: true, // divulga a própria EAFIT
-    },
+    post_info: info,
     source_info: { source: 'FILE_UPLOAD', video_size: bytes.length, chunk_size: chunkSize, total_chunk_count: count },
   });
 

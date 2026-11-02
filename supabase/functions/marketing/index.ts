@@ -11,6 +11,7 @@
 //     { action: 'reply', commentId, text }      responde um comentário
 //     { action: 'hide', commentId, hidden }     oculta/mostra um comentário
 //     { action: 'delete', postId }              apaga o post nas redes e, dando tudo certo, do painel
+//     { action: 'tiktokCreator', accountId }    dados da conta TikTok para a tela de publicar (regra do TikTok)
 //
 // Verify JWT desligado por causa do cron; o admin é conferido aqui (JWT + admin_can).
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -20,7 +21,7 @@ import {
   type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, GraphError, makeApi,
   type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step,
 } from '../_shared/marketing.ts';
-import { continueTikTok, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
+import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -99,9 +100,12 @@ async function processTarget(t: TargetRow, posts: Map<string, Post>): Promise<{ 
 
   let post = posts.get(t.post_id);
   if (!post) {
-    const { data } = await db.from('marketing_posts').select('id, caption, media, format').eq('id', t.post_id).single();
+    const { data } = await db.from('marketing_posts').select('id, caption, media, format, tiktok').eq('id', t.post_id).single();
     if (!data) return finish({ status: 'failed', error: 'Post apagado.' });
-    post = { id: data.id, caption: data.caption || '', media: (data.media || []) as Media[], format: data.format === 'story' ? 'story' : 'feed' };
+    post = {
+      id: data.id, caption: data.caption || '', media: (data.media || []) as Media[], format: data.format === 'story' ? 'story' : 'feed',
+      tiktok: data.tiktok as Post['tiktok'],
+    };
     posts.set(t.post_id, post);
   }
 
@@ -341,6 +345,16 @@ Deno.serve(async (req) => {
         await db.from('marketing_comments').update({ hidden }).eq('id', comment.id);
         await audit(hidden ? 'marketingHideComment' : 'marketingShowComment', { comment: comment.id, platform: account.platform });
         return json({ ok: true });
+      }
+      case 'tiktokCreator': {
+        const { account, token } = await loadAccount(String(body.accountId || ''));
+        if (account.platform !== 'tiktok') return json({ error: 'Conta não é do TikTok.' }, 400);
+        try {
+          return json({ creator: await creatorInfo(makeTikTokApi(fetch, token)), publicPosts: TIKTOK_PUBLIC_POSTS });
+        } catch (err) {
+          await handleGraphError(account.id, err);
+          throw err;
+        }
       }
       default:
         return json({ error: 'Ação inválida.' }, 400);

@@ -276,7 +276,9 @@ export function countHashtags(text) {
 }
 
 // Mesmas regras da função (checkPost), para avisar antes de criar o post.
-export function validatePost({ caption, media, accounts, scheduledAt = null, now = new Date(), format = 'feed' }) {
+export function validatePost({
+  caption, media, accounts, scheduledAt = null, now = new Date(), format = 'feed', tiktok = null, tiktokCreator = null, videoDuration = null,
+}) {
   if (format === 'story') return validateStory({ media, accounts, scheduledAt, now });
   const errors = [];
   const text = finalCaption(caption, media);
@@ -288,6 +290,7 @@ export function validatePost({ caption, media, accounts, scheduledAt = null, now
   if (media.length > 10) errors.push('No máximo 10 imagens por post.');
   if (platforms.has('instagram') && !media.length) errors.push('Instagram exige ao menos uma imagem ou vídeo.');
   if (platforms.has('tiktok') && !(media.length === 1 && videos === 1)) errors.push('TikTok: o post precisa ser um único vídeo.');
+  if (platforms.has('tiktok')) errors.push(...validateTikTok(tiktok, tiktokCreator, videoDuration));
   for (const p of platforms) {
     const { label, limit } = PLATFORMS[p];
     if (text.length > limit) errors.push(`${label}: a legenda (com créditos) passa de ${limit} caracteres.`);
@@ -309,7 +312,54 @@ function validateStory({ media, accounts, scheduledAt, now }) {
   return errors;
 }
 
-export async function createPost({ caption, media, accountIds, scheduledAt = null, format = 'feed' }) {
+// ---------- TikTok (regras de compartilhamento exigidas na auditoria) ----------
+
+export const TIKTOK_PRIVACY_LABEL = {
+  PUBLIC_TO_EVERYONE: 'Todos',
+  MUTUAL_FOLLOW_FRIENDS: 'Amigos',
+  FOLLOWER_OF_CREATOR: 'Seguidores',
+  SELF_ONLY: 'Somente eu',
+};
+
+// Nada vem marcado: quem publica escolhe (regra do TikTok).
+export const EMPTY_TIKTOK = {
+  privacy_level: '', allow_comment: false, allow_duet: false, allow_stitch: false,
+  commercial: false, brand_organic: false, brand_content: false,
+};
+
+export function validateTikTok(tiktok, creator, videoDuration) {
+  const errors = [];
+  const s = tiktok || EMPTY_TIKTOK;
+  if (!s.privacy_level) errors.push('TikTok: escolha quem pode ver o vídeo.');
+  if (s.commercial && !s.brand_organic && !s.brand_content) errors.push('TikTok: diga se o conteúdo comercial é da sua marca ou de marca parceira.');
+  if (s.commercial && s.brand_content && s.privacy_level === 'SELF_ONLY') errors.push('TikTok: conteúdo de marca não pode ficar como "Somente eu".');
+  if (creator?.maxDurationSec && videoDuration && videoDuration > creator.maxDurationSec) {
+    errors.push(`TikTok: a conta aceita vídeos de até ${creator.maxDurationSec} segundos.`);
+  }
+  return errors;
+}
+
+// O que vai para o banco: divulgação comercial só conta com a chave ligada.
+export function tiktokPayload(s) {
+  return {
+    privacy_level: s.privacy_level,
+    allow_comment: !!s.allow_comment, allow_duet: !!s.allow_duet, allow_stitch: !!s.allow_stitch,
+    brand_organic: !!(s.commercial && s.brand_organic), brand_content: !!(s.commercial && s.brand_content),
+  };
+}
+
+export function tiktokLabel(s) {
+  if (!s?.commercial) return '';
+  if (s.brand_content) return 'Seu vídeo será rotulado como "Parceria paga".';
+  if (s.brand_organic) return 'Seu vídeo será rotulado como "Conteúdo promocional".';
+  return '';
+}
+
+export function fetchTikTokCreator(accountId) {
+  return invoke('marketing', { action: 'tiktokCreator', accountId });
+}
+
+export async function createPost({ caption, media, accountIds, scheduledAt = null, format = 'feed', tiktok = null }) {
   const story = format === 'story';
   const { data, error } = await db.rpc('marketing_create_post', {
     p_caption: story ? '' : finalCaption(caption, media),
@@ -317,6 +367,7 @@ export async function createPost({ caption, media, accountIds, scheduledAt = nul
     p_accounts: accountIds,
     p_scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
     p_format: format,
+    ...(tiktok ? { p_tiktok: tiktokPayload(tiktok) } : {}),
   });
   if (error) throw error;
   return data;

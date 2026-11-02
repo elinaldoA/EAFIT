@@ -15,7 +15,12 @@ export type Platform = 'facebook' | 'instagram' | 'threads' | 'tiktok';
 export type Media = { type: 'image' | 'video'; url: string; credit?: string };
 export type Account = { id: string; platform: Platform; external_id: string; username?: string | null };
 // format 'story': uma mídia, sem legenda (Instagram e Página do Facebook).
-export type Post = { id: string; caption: string; media: Media[]; format?: 'feed' | 'story' };
+// Escolhas do TikTok feitas no painel (ver 20261227010000_marketing_tiktok_settings.sql).
+export type TikTokSettings = {
+  privacy_level: string; allow_comment: boolean; allow_duet: boolean; allow_stitch: boolean;
+  brand_organic: boolean; brand_content: boolean;
+};
+export type Post = { id: string; caption: string; media: Media[]; format?: 'feed' | 'story'; tiktok?: TikTokSettings | null };
 
 // Permissões pedidas no login. Com as contas da própria EAFIT e quem conecta
 // com papel no app da Meta, o "acesso padrão" basta (sem App Review).

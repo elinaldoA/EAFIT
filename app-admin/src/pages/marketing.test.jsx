@@ -7,7 +7,7 @@ const { lib } = vi.hoisted(() => ({
   lib: {
     fetchAccounts: vi.fn(), fetchMedia: vi.fn(), fetchPosts: vi.fn(), createPost: vi.fn(), runPost: vi.fn(), deletePost: vi.fn(),
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
-    fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(),
+    fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
   },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
@@ -17,7 +17,7 @@ import MarketingPublish from './MarketingPublish';
 import MarketingAccounts from './MarketingAccounts';
 import MarketingComments from './MarketingComments';
 import {
-  countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, validatePost, wrapLines,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -63,11 +63,29 @@ describe('lib/marketing', () => {
   it('TikTok: só um vídeo e nada de story', () => {
     const TK = { platform: 'tiktok' };
     const video = { type: 'video', url: 'https://v' };
-    expect(validatePost({ caption: 'oi', media: [video], accounts: [TK] })).toEqual([]);
-    expect(validatePost({ caption: 'oi', media: [{ type: 'image', url: 'https://a' }], accounts: [TK] }))
+    const tiktok = { ...EMPTY_TIKTOK, privacy_level: 'PUBLIC_TO_EVERYONE' };
+    expect(validatePost({ caption: 'oi', media: [video], accounts: [TK], tiktok })).toEqual([]);
+    expect(validatePost({ caption: 'oi', media: [{ type: 'image', url: 'https://a' }], accounts: [TK], tiktok }))
       .toContain('TikTok: o post precisa ser um único vídeo.');
     expect(validatePost({ caption: '', format: 'story', media: [video], accounts: [TK] }))
       .toContain('TikTok não tem stories pelo painel: desmarque o TikTok.');
+  });
+
+  it('TikTok: quem pode ver sem padrão, divulgação comercial e duração', () => {
+    const TK = { platform: 'tiktok' };
+    const video = { type: 'video', url: 'https://v' };
+    const v = (tiktok, extra = {}) => validatePost({ caption: 'oi', media: [video], accounts: [TK], tiktok, ...extra });
+    expect(v(EMPTY_TIKTOK)).toContain('TikTok: escolha quem pode ver o vídeo.');
+    expect(v({ ...EMPTY_TIKTOK, privacy_level: 'SELF_ONLY', commercial: true }))
+      .toContain('TikTok: diga se o conteúdo comercial é da sua marca ou de marca parceira.');
+    expect(v({ ...EMPTY_TIKTOK, privacy_level: 'SELF_ONLY', commercial: true, brand_content: true }))
+      .toContain('TikTok: conteúdo de marca não pode ficar como "Somente eu".');
+    expect(v({ ...EMPTY_TIKTOK, privacy_level: 'SELF_ONLY' }, { tiktokCreator: { maxDurationSec: 60 }, videoDuration: 90 }))
+      .toContain('TikTok: a conta aceita vídeos de até 60 segundos.');
+    expect(tiktokPayload({ ...EMPTY_TIKTOK, privacy_level: 'SELF_ONLY', brand_organic: true, allow_comment: true }))
+      .toEqual({ privacy_level: 'SELF_ONLY', allow_comment: true, allow_duet: false, allow_stitch: false, brand_organic: false, brand_content: false });
+    expect(tiktokLabel({ commercial: true, brand_organic: true })).toBe('Seu vídeo será rotulado como "Conteúdo promocional".');
+    expect(tiktokLabel({ commercial: true, brand_organic: true, brand_content: true })).toBe('Seu vídeo será rotulado como "Parceria paga".');
   });
 
   it('valida o story: uma mídia, sem Threads e sem crédito obrigatório', () => {
@@ -123,9 +141,46 @@ describe('MarketingPublish', () => {
       accountIds: ['a1', 'a2'],
       scheduledAt: null,
       format: 'feed',
+      tiktok: null,
     }));
     expect(lib.runPost).toHaveBeenCalledWith('p1');
     expect(await screen.findByText(/Publicado em 1 conta\(s\)\. 1 ainda processando/)).toBeTruthy();
+  });
+
+  it('TikTok: mostra a conta, exige escolher quem vê e respeita o que a conta desligou', async () => {
+    const TK = { ...TH, id: 'a4', platform: 'tiktok', username: 'eafitapp', status: 'ok' };
+    lib.fetchAccounts.mockResolvedValue([TK]);
+    lib.fetchMedia.mockResolvedValue([{ ...ART, id: 'm2', kind: 'video', url: 'https://cdn/v.mp4', title: 'Reels treino' }]);
+    lib.fetchTikTokCreator.mockResolvedValue({
+      publicPosts: false,
+      creator: {
+        nickname: 'EAFIT App', username: 'eafitapp', avatarUrl: '', privacyOptions: ['PUBLIC_TO_EVERYONE', 'SELF_ONLY'],
+        commentDisabled: false, duetDisabled: true, stitchDisabled: false, maxDurationSec: 600,
+      },
+    });
+    wrap(<MarketingPublish />);
+    expect(await screen.findByText('EAFIT App')).toBeTruthy();
+    expect(lib.fetchTikTokCreator).toHaveBeenCalledWith('a4');
+    expect(screen.getByLabelText('Dueto').disabled).toBe(true);
+    expect(screen.getByLabelText('Comentários').checked).toBe(false);
+    expect(screen.getByText(/sai como “Somente eu”/)).toBeTruthy();
+
+    fireEvent.change(screen.getByPlaceholderText(/Conte a novidade/), { target: { value: 'Treino!' } });
+    fireEvent.click(await screen.findByRole('button', { name: /Reels treino/ }));
+    expect(screen.getByText('TikTok: escolha quem pode ver o vídeo.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Publicar agora' }).disabled).toBe(true);
+
+    fireEvent.change(screen.getByLabelText('Quem pode ver este vídeo'), { target: { value: 'PUBLIC_TO_EVERYONE' } });
+    fireEvent.click(screen.getByLabelText('Comentários'));
+    fireEvent.click(screen.getByLabelText(/Divulgar conteúdo comercial/));
+    fireEvent.click(screen.getByLabelText(/Sua marca/));
+    expect(screen.getByText('Seu vídeo será rotulado como "Conteúdo promocional".')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar agora' }));
+
+    await waitFor(() => expect(lib.createPost).toHaveBeenCalledWith(expect.objectContaining({
+      accountIds: ['a4'],
+      tiktok: expect.objectContaining({ privacy_level: 'PUBLIC_TO_EVERYONE', allow_comment: true, commercial: true, brand_organic: true }),
+    })));
   });
 
   it('agenda um story sem legenda e trava o Threads', async () => {
