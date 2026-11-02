@@ -20,6 +20,10 @@ import Trainers from './Trainers';
 import { mapTrainerResult, rankTrainers } from '../lib/trainers';
 
 beforeEach(() => {
+  // Datas dos alunos são fixas (último treino em 19/10): congela o relógio pra
+  // "parado" (14+ dias) não mudar conforme o dia em que o teste roda.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-21T12:00:00Z'));
   h.results.mockReset().mockResolvedValue({ p1: mapTrainerResult({ tr_clients: 3, tr_trained14: 2, tr_train_days: 18, tr_days: 30, tr_pr_clients: 1, tr_old: 2, tr_old_active: 1, tr_no_plan: 1, tr_appt_past: 4, tr_appt_attended: 3 }) });
   h.rpc.mockReset().mockResolvedValue({
     data: [{ tc_user: 'p1', tc_name: 'Paulo', tc_email: 'p@x', tc_code: 'PAULO1', tc_clients: 3, tc_since: '2026-10-01' }],
@@ -35,7 +39,7 @@ beforeEach(() => {
     { userId: 'c2', name: 'Caio', since: '2025-01-01T10:00:00Z', days30: 0, lastDay: null, weeklyGoal: 4, goalWeeks: 4, goalHit: 1, lastContact: null },
   ]);
 });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 const renderPage = () => render(<MemoryRouter><Trainers /></MemoryRouter>);
 
