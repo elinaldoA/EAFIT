@@ -401,6 +401,42 @@ describe('ExerciseDemo', () => {
     fireEvent.error(document.querySelector('video'));
     expect(screen.getByText(/Sem conexão/)).toBeTruthy();
   });
+
+  describe('YouTube', () => {
+    const yt = { type: 'youtube', youtube: { id: 'abc123', start: 4, end: 20, canal: 'Canal' }, credit: 'Vídeo: Canal · YouTube', fallback: frames };
+    const setOnline = v => vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(v);
+
+    it('online: abre o player sem cookie, mudo, em loop no trecho, com crédito do canal', () => {
+      setOnline(true);
+      h.media.value = yt;
+      render(<ExerciseDemo nome="Supino" />);
+      fireEvent.click(screen.getByText('Ver execução'));
+      const src = new URL(document.querySelector('iframe').src);
+      expect(src.origin + src.pathname).toBe('https://www.youtube-nocookie.com/embed/abc123');
+      expect(Object.fromEntries(src.searchParams)).toMatchObject({ mute: '1', loop: '1', playlist: 'abc123', start: '4', end: '20', autoplay: '1' });
+      expect(screen.getByText('Vídeo: Canal · YouTube')).toBeTruthy();
+      expect(document.querySelector('.demo-modal__loading')).toBeTruthy();
+      fireEvent.load(document.querySelector('iframe'));
+      expect(document.querySelector('.demo-modal__loading')).toBeNull();
+    });
+
+    it('offline: cai pros 2 quadros', () => {
+      setOnline(false);
+      h.media.value = yt;
+      render(<ExerciseDemo nome="Supino" />);
+      fireEvent.click(screen.getByText('Ver execução'));
+      expect(document.querySelector('iframe')).toBeNull();
+      expect(document.querySelectorAll('.demo-modal__frame')).toHaveLength(2);
+    });
+
+    it('offline sem quadros de reserva mostra o aviso', () => {
+      setOnline(false);
+      h.media.value = { ...yt, fallback: null };
+      render(<ExerciseDemo nome="Supino" />);
+      fireEvent.click(screen.getByText('Ver execução'));
+      expect(screen.getByText(/Sem conexão/)).toBeTruthy();
+    });
+  });
 });
 
 describe('useTrainerGoalsSync', () => {

@@ -16,6 +16,7 @@ const FILTERS = [
 
 const PADRAO = {
   video: { cls: 'badge--ok', label: 'Padrão: vídeo' },
+  youtube: { cls: 'badge--ok', label: 'Padrão: YouTube' },
   imagens: { cls: 'badge--warning', label: 'Padrão: 2 imagens' },
 };
 
@@ -25,7 +26,7 @@ function DefaultDemo({ padrao }) {
   return p ? <span className={`badge ${p.cls}`}>{p.label}</span> : <span className="muted">Sem demonstração</span>;
 }
 
-const hasVideo = r => r.media?.media_type === 'video' || (!r.media && r.padrao === 'video');
+const hasVideo = r => r.media?.media_type === 'video' || (!r.media && (r.padrao === 'video' || r.padrao === 'youtube'));
 
 function Preview({ media }) {
   const url = publicUrl(media.storage_path);

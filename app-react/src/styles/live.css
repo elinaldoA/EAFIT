@@ -394,6 +394,8 @@ body.live-open .toast.show { transform: translateX(-50%) translateY(0); }
   max-height: 70svh;
 }
 .demo-modal__media:fullscreen { max-height: none; background: #000; }
+.demo-modal__stage--youtube { aspect-ratio: 16 / 9; background: #000; cursor: default; }
+.demo-modal__stage--youtube iframe { border: 0; }
 /* Canto superior direito do vídeo, como nos players comuns */
 .demo-modal__fullscreen {
   position: absolute;

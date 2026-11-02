@@ -3,6 +3,7 @@ import { fetchAllLibraryRows } from './exerciseLibrary';
 // Demonstração padrão que o app já mostra sem mídia própria (vídeo curto ou 2
 // quadros) — mesma fonte do app, pra não divergir.
 import { EXERCISE_VIDEOS } from '../../../app-react/src/data/exerciseVideos.js';
+import { EXERCISE_YOUTUBE } from '../../../app-react/src/data/exerciseYoutube.js';
 import { EXERCISE_MEDIA, normalizeExerciseName } from '../../../app-react/src/data/exerciseMedia.js';
 
 // Mídia própria de demonstração de execução (tabela exercise_media + bucket
@@ -24,10 +25,11 @@ export const ACCEPT = Object.keys(TYPES).join(',');
 // nos exercícios de pós-treino.
 export const normalizeName = normalizeExerciseName;
 
-// 'video' | 'imagens' | null
+// 'video' | 'youtube' | 'imagens' | null
 export function defaultDemoFor(nome) {
   const key = normalizeName(nome);
   if (EXERCISE_VIDEOS[key]) return 'video';
+  if (EXERCISE_YOUTUBE[key]) return 'youtube';
   return EXERCISE_MEDIA[key] ? 'imagens' : null;
 }
 

@@ -3,6 +3,7 @@ import { trackFeature } from '../lib/tracking';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { getExerciseMedia, MEDIA_CREDIT } from '../data/exerciseMedia';
+import { youtubeEmbedUrl } from '../data/exerciseYoutube';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useCustomExerciseMedia } from '../hooks/useCustomExerciseMedia';
 
@@ -156,6 +157,35 @@ function MediaStage({ nome, media }) {
   );
 }
 
+// Player incorporado do YouTube (sem cookie até o play), mudo e em loop no
+// trecho da execução. Os controles (pausa, velocidade, tela cheia) são os do
+// próprio player.
+function YoutubeStage({ nome, youtube }) {
+  const [ready, setReady] = useState(false);
+  return (
+    <div className="demo-modal__stage demo-modal__stage--youtube">
+      <iframe
+        className="demo-modal__media" src={youtubeEmbedUrl(youtube, { autoplay: !prefersReducedMotion() })}
+        title={t('Demonstração de {nome}', { nome })} onLoad={() => setReady(true)}
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+      {!ready && <div className="demo-modal__loading skeleton" />}
+    </div>
+  );
+}
+
+function DemoStage({ nome, media }) {
+  if (media.type === 'youtube') {
+    // Sem rede o player não carrega: usa os 2 quadros salvos, se houver.
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (!offline) return <YoutubeStage nome={nome} youtube={media.youtube} />;
+    if (media.fallback) return <FramesStage nome={nome} frames={media.fallback.frames} />;
+    return <div className="demo-modal__stage"><p className="demo-modal__error">{OFFLINE_MSG}</p></div>;
+  }
+  return media.frames ? <FramesStage nome={nome} frames={media.frames} /> : <MediaStage nome={nome} media={media} />;
+}
+
 function ExerciseDemoModal({ nome: nomePt, tecnica: tecnicaPt, media, onClose }) {
   const nome = tEx(nomePt);
   const tecnica = tTec(tecnicaPt);
@@ -179,11 +209,11 @@ function ExerciseDemoModal({ nome: nomePt, tecnica: tecnicaPt, media, onClose })
           <button type="button" className="summary-modal__close" aria-label={t('Fechar')} onClick={onClose}>✕</button>
         </div>
 
-        {media.frames ? <FramesStage nome={nome} frames={media.frames} /> : <MediaStage nome={nome} media={media} />}
+        <DemoStage nome={nome} media={media} />
 
         {tecnica && <p className="demo-modal__tip">💡 {tecnica}</p>}
         <p className="demo-modal__credit">
-          {media.custom ? t('Demonstração da equipe EAFIT') : media.stock ? media.credit : t('Imagens: {MEDIA_CREDIT}', { MEDIA_CREDIT })}
+          {media.custom ? t('Demonstração da equipe EAFIT') : media.credit || t('Imagens: {MEDIA_CREDIT}', { MEDIA_CREDIT })}
         </p>
       </div>
     </div>,
@@ -192,7 +222,7 @@ function ExerciseDemoModal({ nome: nomePt, tecnica: tecnicaPt, media, onClose })
 }
 
 // Botão "Ver execução" — não renderiza nada se o exercício não tem mídia
-// própria (admin), vídeo nem quadros padrão (data/exerciseMedia.js).
+// própria (admin), vídeo, YouTube nem quadros padrão (data/exerciseMedia.js).
 export default function ExerciseDemo({ nome, tecnica, variant = 'link' }) {
   const [open, setOpen] = useState(false);
   const custom = useCustomExerciseMedia();

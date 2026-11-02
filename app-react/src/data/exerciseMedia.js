@@ -1,4 +1,5 @@
 import { EXERCISE_VIDEOS, videoCredit } from './exerciseVideos';
+import { EXERCISE_YOUTUBE } from './exerciseYoutube';
 
 // Demonstração de execução (2 quadros do movimento, sem ordem garantida) por nome de
 // exercício. Imagens do Free Exercise DB (github.com/yuhonas/free-exercise-db),
@@ -226,7 +227,8 @@ export function normalizeExerciseName(nome) {
 }
 
 // Ordem: mídia própria do admin (custom, lib/customExerciseMedia.js) → vídeo
-// curto (data/exerciseVideos.js) → 2 quadros do Free Exercise DB.
+// curto (data/exerciseVideos.js) → player do YouTube (data/exerciseYoutube.js,
+// com os 2 quadros como reserva offline) → 2 quadros do Free Exercise DB.
 export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom = null) {
   const key = normalizeExerciseName(nome);
   const own = custom?.[key];
@@ -234,6 +236,8 @@ export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom =
   const video = EXERCISE_VIDEOS[key];
   if (video) return { stock: true, type: 'video', url: `${base}videos/${video}.mp4`, credit: videoCredit(video) };
   const id = EXERCISE_MEDIA[key];
-  if (!id) return null;
-  return { id, frames: [0, 1].map(n => `${base}exercicios/${id}/${n}.webp`) };
+  const frames = id ? { id, frames: [0, 1].map(n => `${base}exercicios/${id}/${n}.webp`) } : null;
+  const yt = EXERCISE_YOUTUBE[key];
+  if (yt) return { type: 'youtube', youtube: yt, credit: `Vídeo: ${yt.canal} · YouTube`, fallback: frames };
+  return frames;
 }
