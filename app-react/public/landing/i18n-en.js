@@ -561,6 +561,8 @@ window.LANDING_EN = {
     'Prefere e-mail?': 'Prefer email?',
     'Escreva direto para a equipe.': 'Write straight to the team.',
     'Siga no Instagram': 'Follow us on Instagram',
+    'Siga no TikTok': 'Follow us on TikTok',
+    'Siga no Facebook': 'Follow us on Facebook',
     'Novidades, dicas de treino e o app por dentro.': 'News, workout tips and a look inside the app.',
     'Ver como protegemos seus dados': 'See how we protect your data',
     'Enviando…': 'Sending…',
