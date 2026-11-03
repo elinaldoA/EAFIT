@@ -13,6 +13,8 @@ import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
 import MobilityButton from './MobilityButton';
 import { useAppConfig } from '../context/useAppConfig';
+import { isWorkoutHydrationOn } from '../lib/workoutHydration';
+import { addWaterMl } from '../lib/waterLog';
 import { isFlagOn } from '../lib/appConfig';
 import { dayMuscles } from '../lib/muscleVolume';
 
@@ -22,7 +24,7 @@ import { t, locale, tFoco } from '../lib/i18n';
 // que é quem tem o cronômetro e as ações de série do dia.
 export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
-  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays } = useWorkout();
+  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays, markPending } = useWorkout();
   const toast = useToast();
   const { config } = useAppConfig();
   const [open, setOpen] = useState(isToday);
@@ -396,6 +398,11 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
           renderExercise={(ex, onLiveRest, onGroupStep) => renderExerciseBlock(ex, { onRestStart: onLiveRest, onGroupStep })}
           onFinish={finishFromLive}
           onClose={closeLive}
+          hydration={isWorkoutHydrationOn(user)}
+          onDrink={ml => {
+            const total = addWaterMl(user, ml, markPending);
+            toast(t('💧 +{ml} ml · {total} ml hoje', { ml, total }));
+          }}
         />
       )}
     </div>

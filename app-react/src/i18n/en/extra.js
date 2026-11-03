@@ -284,4 +284,10 @@ export default {
   'visitas pelo link da campanha': 'visits through the campaign link',
   'contas criadas na campanha': 'accounts created in the campaign',
   'Texto sugerido': 'Suggested text',
+  'Hora de se hidratar': 'Time to hydrate',
+  'Alguns goles de água ajudam a manter o rendimento.': 'A few sips of water help you keep performing.',
+  'Bebi +{ml} ml': 'Drank +{ml} ml',
+  'Dispensar lembrete de água': 'Dismiss water reminder',
+  '💧 +{ml} ml · {total} ml hoje': '💧 +{ml} ml · {total} ml today',
+  'Lembrar de beber água durante o treino (a cada 15 min, no modo treino)': 'Remind me to drink water while training (every 15 min, in workout mode)',
 };

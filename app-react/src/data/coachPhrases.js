@@ -24,6 +24,7 @@
 // 'light' = falas que ainda saem no modo "só o essencial".
 // 'free' = falas que só saem no modo "à vontade", em que ele toma a iniciativa:
 // dicas no descanso, pausa/retomada e um chamado quando o treino fica parado.
+// hydrate = lembrete de beber água (a cada 15 min de treino ativo).
 export const TONES = ['animado', 'zoeira', 'calmo'];
 
 export const LIGHT_EVENTS = ['start', 'startOther', 'review', 'restDone', 'pr', 'finish', 'finishRecord', 'finishRecords', 'weekFirst', 'weekLast', 'weekGoal'];
@@ -195,6 +196,11 @@ export const PHRASES = {
       'Ei, ainda tô aqui! Bora pra próxima série de {exercicio}?',
       'Tudo certo por aí? {exercicio} tá te esperando!',
       'Não esfria! Vamos voltar pra {exercicio}.',
+    ],
+    hydrate: [
+      'Hora de se hidratar! Uns goles de água e seguimos.',
+      'Pausa pra água! Corpo hidratado rende mais.',
+      'Bebe uma água aí! Já já a gente volta com tudo.',
     ],
     paused: [
       'Treino pausado. Te espero aqui!',
@@ -373,6 +379,11 @@ export const PHRASES = {
       'Esse descanso já virou férias. Bora voltar pra {exercicio}!',
       'Larga o celular! Tem série de {exercicio} te esperando.',
     ],
+    hydrate: [
+      'Ô, planta precisa de água e você também. Bebe aí!',
+      'Hidrata, que suor não é decoração. Uns goles e bora.',
+      'Água! Não é energético, mas funciona melhor.',
+    ],
     paused: [
       'Treino pausado. Vou fingir que acredito que você volta.',
       'Pausa! Não some, hein.',
@@ -543,6 +554,11 @@ export const PHRASES = {
       'Quando quiser, vamos para a próxima série de {exercicio}.',
       'Sem pressa. {exercicio} continua esperando por você.',
       'Tudo bem por aí? Podemos continuar com {exercicio}.',
+    ],
+    hydrate: [
+      'Bom momento para beber um pouco de água.',
+      'Faça uma pausa breve e se hidrate.',
+      'Alguns goles de água ajudam a manter o rendimento.',
     ],
     paused: [
       'Treino pausado. Volte quando quiser.',

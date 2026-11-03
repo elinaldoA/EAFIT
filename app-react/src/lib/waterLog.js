@@ -1,5 +1,7 @@
 import { db } from './supabase';
 import { trackFeature } from './tracking';
+import { enqueue } from './syncQueue';
+import { todayDate, waterStorageKey } from '../data/treinoData';
 
 export async function fetchWaterLog(userId, date) {
   const { data, error } = await db
@@ -32,4 +34,21 @@ export async function fetchWaterLogsRange(userId, sinceDate) {
     .order('log_date', { ascending: true });
   if (error) throw error;
   return data || [];
+}
+
+// Soma no consumo de água do dia (o mesmo da página Hidratação), usado pelo
+// lembrete do modo treino. Sem rede, vai
+// para a fila de sincronização. Devolve o total do dia em ml.
+export function addWaterMl(user, ml, onQueued) {
+  const total = (parseInt(localStorage.getItem(waterStorageKey()), 10) || 0) + ml;
+  localStorage.setItem(waterStorageKey(), total);
+  if (user) {
+    const date = todayDate();
+    upsertWaterLog(user.id, date, total).catch(err => {
+      console.error('upsertWaterLog:', err);
+      enqueue('water_log', { userId: user.id, date, amountMl: total });
+      onQueued?.();
+    });
+  }
+  return total;
 }

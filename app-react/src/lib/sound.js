@@ -101,3 +101,14 @@ export function playRunCue(phase) {
   } catch { /* som indisponível */ }
   if (navigator.vibrate) navigator.vibrate(phase === 'run' ? [120, 60, 120] : [300]);
 }
+
+// Lembrete de hidratação no treino: duas notas descendentes, suaves, como uma
+// gota — diferente do alarme do descanso para não confundir.
+export function playHydrationSound() {
+  try {
+    const ctx = getAudioCtx();
+    tone(ctx, 1046.5, ctx.currentTime, 0.12, 0.16);
+    tone(ctx, 784, ctx.currentTime + 0.11, 0.2, 0.16);
+  } catch { /* som indisponível */ }
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+}

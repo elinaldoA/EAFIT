@@ -244,6 +244,23 @@
   color: var(--warning);
 }
 
+/* Lembrete de hidratação (a cada 15 min de treino) */
+.live__drink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 14px 10px;
+  padding: 10px var(--sp-3);
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(56, 189, 248, .5);
+  background: rgba(56, 189, 248, .1);
+  animation: fadeUp 0.2s ease both;
+}
+.live__drink-icon { font-size: 1.6rem; line-height: 1; }
+.live__drink-text { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: var(--fs-xs); color: var(--text-muted); }
+.live__drink-text strong { font-size: var(--fs-sm); color: var(--text); }
+.live__drink-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
 /* ── Rodapé de navegação ── */
 .live__footer {
   display: flex;
