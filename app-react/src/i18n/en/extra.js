@@ -289,5 +289,6 @@ export default {
   'Bebi +{ml} ml': 'Drank +{ml} ml',
   'Dispensar lembrete de água': 'Dismiss water reminder',
   '💧 +{ml} ml · {total} ml hoje': '💧 +{ml} ml · {total} ml today',
-  'Lembrar de beber água durante o treino (a cada 15 min, no modo treino)': 'Remind me to drink water while training (every 15 min, in workout mode)',
+  'Lembrar de beber água durante o treino (automático a cada 15 min de treino)': 'Remind me to drink water while training (automatic every 15 min of training)',
+  '💧 Hora de se hidratar': '💧 Time to hydrate',
 };

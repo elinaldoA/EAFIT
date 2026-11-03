@@ -79,7 +79,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
       {/* Aviso dentro do modo treino: não depende das notificações do aparelho. */}
       <div className="profile-field profile-field--row">
         <label className="profile-field__label" htmlFor="notifyWorkoutWater">
-          {t('Lembrar de beber água durante o treino (a cada 15 min, no modo treino)')}
+          {t('Lembrar de beber água durante o treino (automático a cada 15 min de treino)')}
         </label>
         <input
           type="checkbox" id="notifyWorkoutWater"

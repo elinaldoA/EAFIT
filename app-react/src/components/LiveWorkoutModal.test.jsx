@@ -2,9 +2,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
 
-const { playSound, playDrink } = vi.hoisted(() => ({ playSound: vi.fn(), playDrink: vi.fn() }));
+const { playSound } = vi.hoisted(() => ({ playSound: vi.fn() }));
 
-vi.mock('../lib/sound', () => ({ playRestDoneSound: playSound, playHydrationSound: playDrink }));
+vi.mock('../lib/sound', () => ({ playRestDoneSound: playSound }));
 vi.mock('../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: null }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => () => {} }));
@@ -46,7 +46,6 @@ Element.prototype.scrollTo = () => {};
 beforeEach(() => {
   localStorage.clear();
   playSound.mockClear();
-  playDrink.mockClear();
 });
 afterEach(() => {
   cleanup();
@@ -222,53 +221,18 @@ describe('LiveWorkoutModal — bi-set', () => {
     expect(screen.getByRole('heading', { name: 'Supino Reto' })).toBeTruthy();
   });
 
-  describe('lembrete de hidratação', () => {
-    const MIN = 60 * 1000;
-    const at = ms => timer('running', { elapsedMs: ms });
-    function mount(props) {
-      const onDrink = vi.fn();
-      const renderExercise = vi.fn((ex, onRestStart) => (
-        <button type="button" onClick={() => onRestStart(`Descanso ${ex.nome}`, 30)}>marcar {ex.nome}</button>
-      ));
-      const base = { day: DAY, renderExercise, onFinish: vi.fn(), onClose: vi.fn(), hydration: true, onDrink };
-      const utils = render(<LiveWorkoutModal {...base} timer={at(10 * MIN)} {...props} />);
-      const tick = ms => utils.rerender(<LiveWorkoutModal {...base} timer={at(ms)} {...props} />);
-      return { ...utils, tick, onDrink };
-    }
+  it('mostra o lembrete de água vindo do DayCard; "Bebi" soma o gole', () => {
+    const onDrink = vi.fn();
+    const onDismissDrink = vi.fn();
+    setup({ drinkAlert: { id: 1 }, onDrink, onDismissDrink });
+    fireEvent.click(screen.getByText('Bebi +200 ml'));
+    expect(onDrink).toHaveBeenCalledWith(200);
+    fireEvent.click(screen.getByLabelText('Dispensar lembrete de água'));
+    expect(onDismissDrink).toHaveBeenCalled();
+  });
 
-    it('aos 15 min espera o descanso para avisar', () => {
-      const { tick } = mount();
-      tick(15 * MIN + 1000);
-      expect(screen.queryByText('Hora de se hidratar')).toBeNull();
-      fireEvent.click(screen.getByText('marcar Supino Reto'));
-      tick(15 * MIN + 2000);
-      expect(screen.getByText('Hora de se hidratar')).toBeTruthy();
-      expect(playDrink).toHaveBeenCalledTimes(1);
-    });
-
-    it('sem descanso por 3 min, avisa mesmo assim — e só de novo 15 min depois', () => {
-      const { tick } = mount();
-      tick(18 * MIN);
-      expect(screen.getByText('Hora de se hidratar')).toBeTruthy();
-      fireEvent.click(screen.getByLabelText('Dispensar lembrete de água'));
-      tick(25 * MIN);
-      expect(screen.queryByText('Hora de se hidratar')).toBeNull();
-      tick(36 * MIN);
-      expect(screen.getByText('Hora de se hidratar')).toBeTruthy();
-    });
-
-    it('"Bebi" soma o gole e fecha o aviso', () => {
-      const { tick, onDrink } = mount();
-      tick(18 * MIN);
-      fireEvent.click(screen.getByText('Bebi +200 ml'));
-      expect(onDrink).toHaveBeenCalledWith(200);
-      expect(screen.queryByText('Hora de se hidratar')).toBeNull();
-    });
-
-    it('desligado, não avisa', () => {
-      const { tick } = mount({ hydration: false });
-      tick(40 * MIN);
-      expect(screen.queryByText('Hora de se hidratar')).toBeNull();
-    });
+  it('sem lembrete pendente, não mostra o cartão de água', () => {
+    setup();
+    expect(screen.queryByText('Hora de se hidratar')).toBeNull();
   });
 });

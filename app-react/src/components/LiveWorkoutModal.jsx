@@ -4,8 +4,7 @@ import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
 import { todayName } from '../data/treinoData';
 import { formatDuration } from '../lib/utils';
-import { playRestDoneSound, playHydrationSound } from '../lib/sound';
-import { nextHydrationAt, shouldRemindHydration, HYDRATION_EVERY_MS, HYDRATION_SHOW_MS, HYDRATION_SIP_ML } from '../lib/workoutHydration';
+import { playRestDoneSound } from '../lib/sound';
 import { allSetsDone, countSets, gatherExerciseDetails, setCountOf } from '../lib/workoutSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
@@ -16,6 +15,7 @@ import {
 import { findGroup, groupKindLabel } from '../lib/supersets';
 import ExerciseDemo from './ExerciseDemo';
 import CoachPrompt from './CoachPrompt';
+import HydrationAlert from './HydrationAlert';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
 function isExerciseDone(ex) {
@@ -33,9 +33,9 @@ const IDLE_NUDGE_MS = 3 * 60 * 1000;
 // igual nos dois modos. Re-renderiza a cada bump() da TreinoPage e a cada
 // tique do cronômetro do DayCard.
 // week: { done, total } treinos da semana, para o treinador comentar na abertura.
-// hydration: liga o lembrete de beber água (lib/workoutHydration.js); onDrink(ml)
-// soma o gole na hidratação do dia.
-export default function LiveWorkoutModal({ day, timer, week, renderExercise, onFinish, onClose, hydration = false, onDrink }) {
+// drinkAlert/onDrink/onDismissDrink: lembrete de água, disparado pelo DayCard
+// (hooks/useWorkoutHydration) — aqui só aparece no lugar certo da tela.
+export default function LiveWorkoutModal({ day, timer, week, renderExercise, onFinish, onClose, drinkAlert = null, onDrink, onDismissDrink }) {
   useBackToClose(onClose);
   useWakeLock();
   const items = [...day.exercicios, ...day.pos];
@@ -214,30 +214,6 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canIdle, index]);
 
-  // Lembrete de hidratação, como nos relógios: a cada 15 min de treino ativo,
-  // de preferência no descanso. O marco conta a partir de onde o treino está.
-  const [drinkAlert, setDrinkAlert] = useState(null); // { id }
-  const hydrationAt = useRef(nextHydrationAt(timer.elapsedMs));
-  const resting = !!rest && !restDone;
-  useEffect(() => {
-    if (!hydration || timer.status !== 'running') return;
-    if (!shouldRemindHydration({ elapsedMs: timer.elapsedMs, nextAt: hydrationAt.current, resting })) return;
-    hydrationAt.current = timer.elapsedMs + HYDRATION_EVERY_MS;
-    setDrinkAlert({ id: Date.now() });
-    playHydrationSound();
-    coachSay('hydrate', {}, { queue: true });
-  }, [hydration, timer.status, timer.elapsedMs, resting]);
-  useEffect(() => {
-    if (!drinkAlert) return;
-    const id = setTimeout(() => setDrinkAlert(null), HYDRATION_SHOW_MS);
-    return () => clearTimeout(id);
-  }, [drinkAlert]);
-
-  function drink() {
-    onDrink?.(HYDRATION_SIP_ML);
-    setDrinkAlert(null);
-  }
-
   const pct = setsTotal ? (setsDone / setsTotal) * 100 : 0;
   const finished = timer.status === 'finished';
   const isPos = index >= day.exercicios.length;
@@ -342,23 +318,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
         </div>
       )}
 
-      {drinkAlert && (
-        <div className="live__drink" role="alert">
-          <span className="live__drink-icon" aria-hidden="true">💧</span>
-          <div className="live__drink-text">
-            <strong>{t('Hora de se hidratar')}</strong>
-            <span>{t('Alguns goles de água ajudam a manter o rendimento.')}</span>
-          </div>
-          <div className="live__drink-actions">
-            {onDrink && (
-              <button type="button" className="btn btn--primary btn--sm" onClick={drink}>
-                {t('Bebi +{ml} ml', { ml: HYDRATION_SIP_ML })}
-              </button>
-            )}
-            <button type="button" className="btn btn--ghost btn--sm" aria-label={t('Dispensar lembrete de água')} onClick={() => setDrinkAlert(null)}>✕</button>
-          </div>
-        </div>
-      )}
+      {drinkAlert && <HydrationAlert onDrink={onDrink} onDismiss={onDismissDrink} />}
 
       {timer.status === 'paused' && (
         <div className="live__paused" role="status">

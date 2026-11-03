@@ -257,6 +257,19 @@
   animation: fadeUp 0.2s ease both;
 }
 .live__drink-icon { font-size: 1.6rem; line-height: 1; }
+/* Fora do modo ao vivo: flutua acima da lista e do timer de descanso. */
+.drink-float {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  z-index: 1001;
+  max-width: 520px;
+  margin: 0 auto;
+  width: calc(100% - 28px);
+  background: var(--surface-2);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .35);
+}
 .live__drink-text { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: var(--fs-xs); color: var(--text-muted); }
 .live__drink-text strong { font-size: var(--fs-sm); color: var(--text); }
 .live__drink-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
@@ -15,6 +16,9 @@ import MobilityButton from './MobilityButton';
 import { useAppConfig } from '../context/useAppConfig';
 import { isWorkoutHydrationOn } from '../lib/workoutHydration';
 import { addWaterMl } from '../lib/waterLog';
+import { useWorkoutHydration } from '../hooks/useWorkoutHydration';
+import { getModalRoot } from '../lib/modalRoot';
+import HydrationAlert from './HydrationAlert';
 import { isFlagOn } from '../lib/appConfig';
 import { dayMuscles } from '../lib/muscleVolume';
 
@@ -37,6 +41,16 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   // localStorage só na montagem e ficariam com os valores de antes.
   const [liveEpoch, setLiveEpoch] = useState(0);
   const timer = useWorkoutTimer(day.dia);
+  // Fim do descanso em andamento (lista ou modo ao vivo), para o lembrete de
+  // água preferir esse momento a interromper uma série.
+  const restUntil = useRef(0);
+  const markRest = seconds => { restUntil.current = Date.now() + seconds * 1000; };
+  const drink = useWorkoutHydration({ timer, resting: Date.now() < restUntil.current, enabled: isWorkoutHydrationOn(user) });
+  function handleDrink(ml) {
+    const total = addWaterMl(user, ml, markPending);
+    drink.dismiss();
+    toast(t('💧 +{ml} ml · {total} ml hoje', { ml, total }));
+  }
   async function markDone(next) {
     setChecked(next);
     localStorage.setItem(`treino_${day.dia}`, next);
@@ -239,14 +253,14 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   function handleGroupSetDone(group, ex, n, live) {
     const step = nextInGroup(group, ex.nome, n, (nome, k) => localStorage.getItem(`set_${nome}_${k}_done`) === 'true');
     if (live) live.onGroupStep(ex, step);
-    else if (step.rest && step.seconds > 0) onRestStart(ex.nome, step.seconds);
+    else if (step.rest && step.seconds > 0) { markRest(step.seconds); onRestStart(ex.nome, step.seconds); }
   }
 
   function renderExerciseBlock(ex, live = null) {
     const group = findGroup(day.exercicios, ex.nome);
     return (
       <ExerciseBlock
-        key={ex.nome} ex={ex} day={day} bump={bump} onRestStart={live ? live.onRestStart : onRestStart}
+        key={ex.nome} ex={ex} day={day} bump={bump} onRestStart={(label, seconds, ...rest) => { markRest(seconds); (live ? live.onRestStart : onRestStart)(label, seconds, ...rest); }}
         onSetDone={group ? n => handleGroupSetDone(group, ex, n, live) : undefined}
         // Na lista, não busca sugestões enquanto o modo ao vivo (que tem as
         // próprias instâncias do bloco) estiver aberto por cima.
@@ -390,19 +404,26 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         )}
       </div>
 
+      {/* Fora do modo ao vivo o lembrete flutua por cima da lista (e do timer de descanso). */}
+      {drink.alert && !liveOpen && createPortal(
+        <HydrationAlert className="live__drink drink-float" onDrink={handleDrink} onDismiss={drink.dismiss} />,
+        getModalRoot()
+      )}
+
       {liveOpen && (
         <LiveWorkoutModal
           day={day}
           timer={timer}
           week={weekProgress()}
-          renderExercise={(ex, onLiveRest, onGroupStep) => renderExerciseBlock(ex, { onRestStart: onLiveRest, onGroupStep })}
+          renderExercise={(ex, onLiveRest, onGroupStep) => renderExerciseBlock(ex, {
+            onRestStart: onLiveRest,
+            onGroupStep: (doneEx, step) => { if (step.rest && step.seconds > 0) markRest(step.seconds); onGroupStep(doneEx, step); },
+          })}
           onFinish={finishFromLive}
           onClose={closeLive}
-          hydration={isWorkoutHydrationOn(user)}
-          onDrink={ml => {
-            const total = addWaterMl(user, ml, markPending);
-            toast(t('💧 +{ml} ml · {total} ml hoje', { ml, total }));
-          }}
+          drinkAlert={drink.alert}
+          onDrink={handleDrink}
+          onDismissDrink={drink.dismiss}
         />
       )}
     </div>
