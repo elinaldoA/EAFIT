@@ -36,6 +36,7 @@ export default function MarketingPublish() {
   const [scheduleAt, setScheduleAt] = useState('');
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const [msg, setMsg] = useState('');
   const [tiktok, setTiktok] = useState(EMPTY_TIKTOK);
   const [tiktokInfo, setTiktokInfo] = useState(null); // { accountId, creator?, publicPosts?, error? }
@@ -144,6 +145,13 @@ export default function MarketingPublish() {
       setBusy(false);
       loadPosts();
     }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    setMsg('');
+    await loadPosts();
+    setRefreshing(false);
   }
 
   async function handleCancel(post) {
@@ -334,8 +342,11 @@ export default function MarketingPublish() {
       <section className="card stack">
         <div className="actions-row" style={{ justifyContent: 'space-between' }}>
           <h2 className="section-title">Posts recentes</h2>
-          <button type="button" className="btn btn--ghost btn--small" onClick={loadPosts}>Atualizar</button>
+          <button type="button" className="btn btn--ghost btn--small" disabled={refreshing} onClick={handleRefresh}>
+            {refreshing ? 'Atualizando…' : 'Atualizar'}
+          </button>
         </div>
+        {msg && accounts.length === 0 && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
         {!posts && <Loading />}
         {posts && posts.length === 0 && <EmptyState icon="📣" label="Nenhum post ainda." />}
         {posts && posts.map(p => (

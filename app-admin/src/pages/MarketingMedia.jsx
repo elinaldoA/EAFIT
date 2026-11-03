@@ -51,9 +51,23 @@ export default function MarketingMedia() {
     }
   }, []);
 
+  const shareRef = useRef(null);
+  const msgRef = useRef(null);
+
   function openShare(m) {
+    setMsg('');
     setShare({ media: m, title: partnerTitle(m.title), description: formatHint(m), audience: 'todos', caption: '' });
   }
+
+  // O formulário abre abaixo da lista: leva a tela até ele, senão o botão parece morto.
+  useEffect(() => {
+    if (share) shareRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  }, [share?.media?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // O resultado (ok ou erro) aparece no topo: garante que ele fique à vista.
+  useEffect(() => {
+    if (msg && !share) msgRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  }, [msg, share]);
 
   async function handleShare(e) {
     e.preventDefault();
@@ -151,7 +165,7 @@ export default function MarketingMedia() {
         </div>
       </div>
 
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && !share && <p ref={msgRef} className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
 
       <section className="card stack">
         <h2 className="section-title">Minhas mídias</h2>
@@ -194,7 +208,7 @@ export default function MarketingMedia() {
         )}
 
         {share && (
-          <form className="mkt-art" onSubmit={handleShare}>
+          <form ref={shareRef} className="mkt-art" onSubmit={handleShare}>
             <div className="stack">
               <h3 className="section-title">Enviar aos parceiros</h3>
               <p className="user-detail__meta">
@@ -221,6 +235,7 @@ export default function MarketingMedia() {
                   placeholder="Ex.: Meu treino agora fala comigo 🎧 Testa o app grátis:"
                   onChange={e => setShare({ ...share, caption: e.target.value })} />
               </label>
+              {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
               <div className="actions-row">
                 <button type="submit" className="btn btn--primary" disabled={busy || !share.title.trim()}>{busy ? 'Enviando…' : 'Enviar'}</button>
                 <button type="button" className="btn btn--ghost" onClick={() => setShare(null)}>Fechar</button>
