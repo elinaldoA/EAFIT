@@ -1,4 +1,4 @@
-# EAFIT — Treino
+# EAFIT — App de Treino
 
 PWA (Progressive Web App) para acompanhamento de treino, hidratação e evolução física, com sincronização em nuvem e uso offline.
 
