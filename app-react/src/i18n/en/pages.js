@@ -215,6 +215,8 @@ export default {
   '{n} exercícios': '{n} exercises',
   'Começar a usar este plano agora': 'Start using this plan now',
   'Os dias da semana, nomes e séries podem ser ajustados depois em ⚙️ Editar treino.': 'Weekdays, names and sets can be adjusted later in ⚙️ Edit workout.',
+  '▶ {n} de {total} exercícios com demonstração de execução no treino.': '▶ {n} of {total} exercises with a how-to demo in the workout.',
+  'Nenhum exercício da ficha tem demonstração de execução por enquanto.': 'None of the exercises in this sheet has a how-to demo yet.',
   'É uma ficha: criar um plano de treino': "It's a workout sheet: create a plan",
   'Na verdade é um treino que já fiz: registrar no histórico': "It's actually a workout I already did: log it in history",
   '⚠️ Erro ao criar o plano. Tente de novo.': '⚠️ Failed to create the plan. Please try again.',

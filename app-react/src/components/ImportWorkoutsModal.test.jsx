@@ -9,6 +9,7 @@ let fileText = '';
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }));
 vi.mock('../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
+vi.mock('../hooks/useCustomExerciseMedia', () => ({ useCustomExerciseMedia: () => null }));
 vi.mock('../lib/workoutPlans', () => ({ createImportedPlan: (...a) => createImportedPlan(...a) }));
 vi.mock('../lib/workoutImportFiles', () => ({ readWorkoutFile: async () => ({ text: fileText }) }));
 vi.mock('../lib/workoutImport', async (orig) => ({ ...(await orig()), saveImportedSessions: (...a) => saveImportedSessions(...a) }));
@@ -30,6 +31,8 @@ describe('ImportWorkoutsModal', () => {
     await choose('Treino_ABC.pdf');
     await screen.findByText('📋 Ficha com 2 treinos');
     expect(screen.getByDisplayValue('Treino ABC')).toBeTruthy();
+    // Nomes da ficha casados com o catálogo de demonstrações.
+    expect(screen.getByText(/▶ 4 de 4 exercícios com demonstração/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Criar plano' }));
     await screen.findByText('✅ Plano “Treino ABC” criado e ativado');
     const [, name, days, activate] = createImportedPlan.mock.calls[0];

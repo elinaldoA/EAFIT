@@ -1,5 +1,6 @@
 import { EXERCISE_VIDEOS, videoCredit } from './exerciseVideos';
 import { EXERCISE_YOUTUBE } from './exerciseYoutube';
+import { matchCatalogExercise } from './exerciseMatch';
 
 // Demonstração de execução (2 quadros do movimento, sem ordem garantida) por nome de
 // exercício. Imagens do Free Exercise DB (github.com/yuhonas/free-exercise-db),
@@ -226,11 +227,26 @@ export function normalizeExerciseName(nome) {
   return String(nome || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
 
+const hasExactMedia = (key, custom) => !!(custom?.[key] || EXERCISE_VIDEOS[key] || EXERCISE_MEDIA[key] || EXERCISE_YOUTUBE[key]);
+
+// Nomes com alguma demonstração. A mesma lista (mesma referência) enquanto a
+// mídia do admin não muda, pra o índice do matcher não ser refeito.
+const STOCK_NAMES = [...new Set([...Object.keys(EXERCISE_VIDEOS), ...Object.keys(EXERCISE_YOUTUBE), ...Object.keys(EXERCISE_MEDIA)])];
+let namesCache = { custom: null, names: STOCK_NAMES };
+function catalogNames(custom) {
+  if (!custom || !Object.keys(custom).length) return STOCK_NAMES;
+  if (namesCache.custom !== custom) namesCache = { custom, names: [...new Set([...STOCK_NAMES, ...Object.keys(custom)])] };
+  return namesCache.names;
+}
+
 // Ordem: mídia própria do admin (custom, lib/customExerciseMedia.js) → vídeo
 // curto (data/exerciseVideos.js) → player do YouTube (data/exerciseYoutube.js,
 // com os 2 quadros como reserva offline) → 2 quadros do Free Exercise DB.
 export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom = null) {
-  const key = normalizeExerciseName(nome);
+  const exact = normalizeExerciseName(nome);
+  // Nome de fora do catálogo (ficha importada, Strong/Hevy, personal): procura
+  // o mesmo exercício escrito de outro jeito (data/exerciseMatch.js).
+  const key = hasExactMedia(exact, custom) ? exact : (matchCatalogExercise(exact, catalogNames(custom)) || exact);
   const own = custom?.[key];
   if (own) return { custom: true, type: own.type, url: own.url };
   const video = EXERCISE_VIDEOS[key];

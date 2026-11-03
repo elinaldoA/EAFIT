@@ -9,6 +9,8 @@ import { parseImportSource, saveImportedSessions, summarizeImport } from '../lib
 import { readWorkoutFile } from '../lib/workoutImportFiles';
 import { parseWorkoutPlanText, planDaysFromTreinos } from '../lib/workoutPlanImport';
 import { createImportedPlan } from '../lib/workoutPlans';
+import { getExerciseMedia } from '../data/exerciseMedia';
+import { useCustomExerciseMedia } from '../hooks/useCustomExerciseMedia';
 
 import { t } from '../lib/i18n';
 
@@ -56,6 +58,13 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
     const p = parseWorkoutPlanText(source.text ?? source.rows.map(r => r.join('  ')).join('\n'));
     return p && { ...p, days: planDaysFromTreinos(p.treinos, t('Descanso')) };
   }, [source]);
+  // Quantos exercícios da ficha vão ter "Ver execução" no treino (o nome
+  // digitado é casado com o catálogo de demonstrações em getExerciseMedia).
+  const customMedia = useCustomExerciseMedia();
+  const demos = useMemo(() => {
+    const nomes = [...new Set((plan?.days || []).flatMap(d => d.exercicios.map(e => e.nome)))];
+    return { n: nomes.filter(nome => getExerciseMedia(nome, undefined, customMedia)).length, total: nomes.length };
+  }, [plan, customMedia]);
   // Ficha: sem datas (ou sem nada que sirva de histórico) e com exercícios de plano.
   const isPlanFile = !!plan && (!!history?.error || !!history?.undated);
   const planMode = isPlanFile && !asHistory;
@@ -163,6 +172,13 @@ export default function ImportWorkoutsModal({ onImported, onClose }) {
                 </li>
               ))}
             </ul>
+            {demos.total > 0 && (
+              <p className="app-rating__text">
+                {demos.n > 0
+                  ? t('▶ {n} de {total} exercícios com demonstração de execução no treino.', demos)
+                  : t('Nenhum exercício da ficha tem demonstração de execução por enquanto.')}
+              </p>
+            )}
             <label className="app-rating__text import__date">
               {t('Nome do plano')}
               <input className="input input--sm" value={planName} maxLength={60} onChange={e => setPlanName(e.target.value)} />
