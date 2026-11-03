@@ -408,16 +408,16 @@ export default function NutricaoPage({ active }) {
         />
       ) : <ProfileNutritionSection goals={goals} />}
 
-      <NutritionCoach
-        pace={pace} action={action} meal={meal} spread={spread}
-        hasMore={actions.length > 1} onNext={() => setCoachPick(i => i + 1)} onAdd={handleAddMany}
-      />
-
       <GoalMeals
         meta={user?.user_metadata?.meta} goals={goals} totals={totals}
         meal={meal} onMealChange={m => { setMeal(m); setCoachPick(0); }}
         hour={now.getHours() + now.getMinutes() / 60} trainingHour={user?.user_metadata?.trainingHour}
         onAdd={foods => { handleAddMany(foods); toast(t('Refeição registrada')); }}
+      />
+
+      <NutritionCoach
+        pace={pace} action={action} meal={meal} spread={spread}
+        hasMore={actions.length > 1} onNext={() => setCoachPick(i => i + 1)} onAdd={handleAddMany}
       />
 
       <div className="section-group">
