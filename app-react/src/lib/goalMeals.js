@@ -303,9 +303,12 @@ export function fitMeal(template, target) {
     const grams = roundGrams(p.name, p.grams * scale, p.grams);
     const unit = UNIT[p.name];
     const n = unit ? grams / unit : 0;
-    let label = `${p.food.name} ${grams} g`;
-    if (p.name === 'Ovo cozido') label = n === 1 ? t('1 ovo cozido') : t('{n} ovos cozidos', { n });
-    return { icon: p.food.icon, label, grams, ...at(p, grams) };
+    // name e amount: para a tela; label: o nome que vai para o diário.
+    const egg = p.name === 'Ovo cozido';
+    const name = egg ? (n === 1 ? t('1 ovo cozido') : t('{n} ovos cozidos', { n })) : p.food.name;
+    const amount = egg ? '' : `${grams} g`;
+    const label = egg ? name : `${name} ${grams} g`;
+    return { icon: p.food.icon, label, name, amount, grams, ...at(p, grams) };
   });
   return { items, total: sumOf(items) };
 }

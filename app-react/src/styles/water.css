@@ -299,33 +299,29 @@
 .nutri-ref summary { cursor: pointer; font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); min-height: 32px; display: flex; align-items: center; }
 .nutri-ref[open] summary { margin-bottom: var(--sp-2); }
 
-/* Refeições para o objetivo (aba Nutrição) */
+/* Sua próxima refeição (aba Nutrição) */
 .goal-meals { display: flex; flex-direction: column; gap: var(--sp-3); }
-.goal-meals__focus { display: flex; flex-direction: column; gap: 2px; padding-left: var(--sp-3); border-left: 3px solid var(--primary); }
-.goal-meals__focus strong { font-size: var(--fs-md); }
-.goal-meals__focus span { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.4; }
-.goal-meals__meals { display: flex; gap: var(--sp-2); overflow-x: auto; scrollbar-width: none; margin: 0 calc(var(--sp-1) * -1); padding: 0 var(--sp-1); }
-.goal-meals__meals::-webkit-scrollbar { display: none; }
-.goal-meals__chip {
-  flex-shrink: 0; min-height: 32px; padding: 0 var(--sp-3); border-radius: 999px;
+.goal-meals__title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
+.goal-meals__meal {
+  min-height: 40px; padding: var(--sp-1) 28px var(--sp-1) var(--sp-3); border-radius: var(--r-lg);
   border: 1px solid var(--border); background: var(--surface); color: var(--text);
-  font-size: var(--fs-sm); cursor: pointer;
+  font-size: var(--fs-md); font-weight: 700;
 }
-.goal-meals__chip--active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
-.goal-meals__target, .goal-meals__train { margin: 0; font-size: var(--fs-sm); line-height: 1.4; }
-.goal-meals__target { font-weight: 600; }
-.goal-meals__train { color: var(--text-muted); }
+.goal-meals__target { font-size: var(--fs-sm); color: var(--text-muted); }
 .goal-meals__card { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3); border-radius: var(--r-lg); background: var(--surface-2); }
 .goal-meals__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
 .goal-meals__head strong { font-size: var(--fs-md); overflow-wrap: anywhere; }
 .goal-meals__badge { flex-shrink: 0; font-size: var(--fs-xs); font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--primary); color: #fff; }
-.goal-meals__items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); }
-.goal-meals__macros { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-xs); color: var(--text-muted); }
-.goal-meals__macros b { color: var(--text); font-size: var(--fs-sm); }
-.goal-meals__why { margin: 0; }
-.goal-meals__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
-.goal-meals__tips-btn { align-self: flex-start; }
-.goal-meals__tips { margin: 0; padding-left: var(--sp-4); display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); line-height: 1.4; }
-.goal-meals__pace { font-size: var(--fs-sm); }
 .goal-meals__badge--habit { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
-.goal-meals__spread { margin: 0; }
+.goal-meals__items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; font-size: var(--fs-sm); }
+.goal-meals__items li { display: flex; align-items: baseline; gap: var(--sp-2); padding: 6px 0; border-top: 1px solid var(--border); }
+.goal-meals__items li:first-child { border-top: 0; }
+.goal-meals__name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.goal-meals__amount { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.goal-meals__macros { margin: 0; font-size: var(--fs-xs); color: var(--text-muted); }
+.goal-meals__why { margin: 0; font-size: var(--fs-sm); line-height: 1.4; }
+.goal-meals__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
+.goal-meals__how { align-self: flex-start; }
+.goal-meals__how-body { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-sm); line-height: 1.4; }
+.goal-meals__how-body p { margin: 0; }
+.goal-meals__how-body ul { margin: 0; padding-left: var(--sp-4); display: flex; flex-direction: column; gap: 4px; }

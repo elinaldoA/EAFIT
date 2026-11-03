@@ -217,10 +217,10 @@ describe('NutricaoPage', () => {
     pastRows = [r(day(1), 'Tapioca', 200), r(day(1), 'Suco', 100), r(day(2), 'Tapioca', 200), r(day(2), 'Suco', 100)];
     render(<NutricaoPage active />);
     await screen.findByText('Ovo');
-    fireEvent.click(screen.getByRole('tab', { name: 'Jantar' }));
+    fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'jantar' } });
     const name = () => document.querySelector('.goal-meals__head strong').textContent;
-    await waitFor(() => expect(screen.getByText(/Outra sugestão/)).toBeTruthy());
-    for (let i = 0; i < 6 && name() !== 'O de sempre no jantar'; i++) fireEvent.click(screen.getByText(/Outra sugestão/));
+    await waitFor(() => expect(screen.getByText(/Outra opção/)).toBeTruthy());
+    for (let i = 0; i < 6 && name() !== 'O de sempre no jantar'; i++) fireEvent.click(screen.getByText(/Outra opção/));
     expect(name()).toBe('O de sempre no jantar');
     expect(screen.getByText('Seu hábito')).toBeTruthy();
     fireEvent.click(screen.getByText('Registrar esta refeição'));
@@ -230,15 +230,15 @@ describe('NutricaoPage', () => {
     expect(screen.queryByText('Seu hábito')).toBeNull();
   });
 
-  it('um card só: sem o "Próximo passo" separado, com o ritmo do dia no card do objetivo', async () => {
+  it('um card só: sem o "Próximo passo" separado, e a refeição escolhida nele vale para "Adicionar ao dia"', async () => {
     render(<NutricaoPage active />);
     await screen.findByText('Ovo');
     expect(screen.queryByText('Próximo passo')).toBeNull();
     expect(screen.queryByText('Registrar agora')).toBeNull();
-    expect(document.querySelector('.goal-meals .coach__pace')).toBeTruthy();
+    expect(screen.getByText('Adicionar ao dia · ' + document.querySelector('.goal-meals__meal option:checked').textContent)).toBeTruthy();
     const name = () => document.querySelector('.goal-meals__head strong').textContent;
     const first = name();
-    fireEvent.click(screen.getByText(/Outra sugestão/));
+    fireEvent.click(screen.getByText(/Outra opção/));
     expect(name()).not.toBe(first);
   });
 
@@ -251,8 +251,8 @@ describe('NutricaoPage', () => {
 
   it('refeições para o objetivo: escolher a refeição e registrar soma todos os itens nela', async () => {
     render(<NutricaoPage active />);
-    await screen.findByText('Refeições para o seu objetivo');
-    fireEvent.click(screen.getByRole('tab', { name: 'Almoço' }));
+    await screen.findByText('Sua próxima refeição');
+    fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'almoco' } });
     expect(screen.getByLabelText('Refeição').value).toBe('almoco');
     const n = document.querySelectorAll('.goal-meals__items li').length;
     expect(n).toBeGreaterThan(1);

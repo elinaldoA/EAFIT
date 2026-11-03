@@ -369,6 +369,14 @@ export default function NutricaoPage({ active }) {
   const habit = useMemo(() => mealHabit(pastEntries, meal, todayDate(), entries), [pastEntries, meal, entries]);
   // Só no fim do dia: antes disso as outras refeições ainda nem chegaram.
   const spread = now.getHours() >= SPREAD_FROM_HOUR ? proteinSpread(entries) : null;
+  // Um aviso só no resumo do dia: fora do ritmo, depois a proteína concentrada
+  // (fim do dia), depois a sequência na meta.
+  const dayHint = (() => {
+    if (pace?.status === 'over_kcal') return t('Você passou {kcal} kcal da meta. Se for comer de novo, só proteína magra.', { kcal: fmt(-pace.left.kcal) });
+    if (pace?.status === 'behind') return t('{g} g de proteína atrás do ritmo para este horário.', { g: fmt(pace.behindG) });
+    if (spread) return t('{share}% da proteína de hoje veio de uma refeição só ({meal}). Amanhã, divida melhor entre as refeições.', { share: spread.share, meal: MEAL_NAME[spread.meal]() });
+    return stats.streak >= 2 ? t('🔥 {n} dias seguidos na meta', { n: stats.streak }) : null;
+  })();
   const newKcal = suggestedKcal(kcalGoal, reading, user?.user_metadata?.meta);
   // Gasto real pelo histórico (comida registrada + balança). A meta sugerida só
   // aparece quando foge 5% ou mais da meta da fórmula.
@@ -394,27 +402,37 @@ export default function NutricaoPage({ active }) {
         <NutritionDayCard
           totals={totals} goals={goals} micros={micros}
           status={done ? t('Proteína batida! 🎉') : t('Faltam {g} g de proteína', { g: fmt(remaining) })}
-          hint={stats.streak >= 2 ? t('🔥 {n} dias seguidos na meta', { n: stats.streak }) : null}
+          hint={dayHint}
         />
       ) : <ProfileNutritionSection goals={goals} />}
 
-      <GoalMeals
-        meta={user?.user_metadata?.meta} goals={goals} totals={totals}
-        meal={meal} onMealChange={setMeal}
-        hour={now.getHours() + now.getMinutes() / 60} trainingHour={user?.user_metadata?.trainingHour}
-        onAdd={foods => { handleAddMany(foods); toast(t('Refeição registrada')); }}
-        pace={pace} habit={habit} spread={spread}
-      />
+      {goals && (
+        <div className="section-group">
+          <div className="section-group__label">{t('Sua próxima refeição')}</div>
+          <GoalMeals
+            meta={user?.user_metadata?.meta} goals={goals} totals={totals}
+            meal={meal} onMealChange={setMeal}
+            hour={now.getHours() + now.getMinutes() / 60} trainingHour={user?.user_metadata?.trainingHour}
+            onAdd={foods => { handleAddMany(foods); toast(t('Refeição registrada')); }}
+            habit={habit}
+          />
+        </div>
+      )}
 
       <div className="section-group">
-        <div className="section-group__label">{t('Adicionar ao dia')}</div>
+        {/* Com metas, a refeição se escolhe no card da próxima refeição; aqui só se mostra onde vai entrar. */}
+        <div className="section-group__label">
+          {goals ? t('Adicionar ao dia · {meal}', { meal: MEAL_NAME[meal]() }) : t('Adicionar ao dia')}
+        </div>
         <div className="water-actions meal-pick">
-          <label>
-            {t('Refeição')}
-            <select value={meal} onChange={e => setMeal(e.target.value)}>
-              {MEALS.map(m => <option key={m} value={m}>{MEAL_NAME[m]()}</option>)}
-            </select>
-          </label>
+          {!goals && (
+            <label>
+              {t('Refeição')}
+              <select value={meal} onChange={e => setMeal(e.target.value)}>
+                {MEALS.map(m => <option key={m} value={m}>{MEAL_NAME[m]()}</option>)}
+              </select>
+            </label>
+          )}
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSearchOpen(o => !o)} aria-expanded={searchOpen}>
             {searchOpen ? t('Fechar busca') : t('🔎 Buscar alimento')}
           </button>
