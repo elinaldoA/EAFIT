@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 
 const { mockToast, mockMarkPending, proteinLog, foods, weight } = vi.hoisted(() => ({
   mockToast: vi.fn(),
@@ -164,7 +164,7 @@ describe('NutricaoPage', () => {
     render(<NutricaoPage active />);
     fireEvent.click(await screen.findByText('🔎 Buscar alimento'));
     fireEvent.change(screen.getByLabelText('Buscar alimento'), { target: { value: 'arroz branco' } });
-    fireEvent.click(await screen.findByText(/Arroz branco cozido/));
+    fireEvent.click(await within(document.querySelector('.food-search')).findByText(/Arroz branco cozido/));
     fireEvent.change(screen.getByLabelText('Quantidade (g)'), { target: { value: '200' } });
     fireEvent.click(screen.getByText('Adicionar'));
     expect(readLocalTotals().kcal).toBe(256);
@@ -181,7 +181,7 @@ describe('NutricaoPage', () => {
     render(<NutricaoPage active />);
     fireEvent.click(await screen.findByText('🔎 Buscar alimento'));
     fireEvent.change(screen.getByLabelText('Buscar alimento'), { target: { value: 'arroz branco' } });
-    fireEvent.click(await screen.findByText(/Arroz branco cozido/));
+    fireEvent.click(await within(document.querySelector('.food-search')).findByText(/Arroz branco cozido/));
     fireEvent.change(screen.getByLabelText('Medida'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Quantidade'), { target: { value: '2' } });
     fireEvent.click(screen.getByText('Adicionar'));
@@ -243,5 +243,19 @@ describe('NutricaoPage', () => {
     await screen.findByText('Ovo');
     expect(screen.queryByText(/Desfazer/)).toBeNull();
     expect(screen.queryByText('Zerar o dia')).toBeNull();
+  });
+
+  it('refeições para o objetivo: escolher a refeição e registrar soma todos os itens nela', async () => {
+    render(<NutricaoPage active />);
+    await screen.findByText('Refeições para o seu objetivo');
+    fireEvent.click(screen.getByRole('tab', { name: 'Almoço' }));
+    expect(screen.getByLabelText('Refeição').value).toBe('almoco');
+    const n = document.querySelectorAll('.goal-meals__items li').length;
+    expect(n).toBeGreaterThan(1);
+    fireEvent.click(screen.getByText('Registrar esta refeição'));
+    expect(readLocalTotals().kcal).toBeGreaterThan(300);
+    expect(document.querySelectorAll('.meal-log__item')).toHaveLength(n);
+    expect(document.querySelector('.meal-log').textContent).toContain('Almoço');
+    expect(mockToast).toHaveBeenCalledWith('Refeição registrada');
   });
 });
