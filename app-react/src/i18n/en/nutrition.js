@@ -415,4 +415,10 @@ export default {
   'Carboidrato em todas as refeições, mais nos dias de treino longo.': 'Carbs at every meal, more on long training days.',
   'Antes de treinar, algo leve e fácil de digerir: banana, tapioca, pão.': 'Before training, something light and easy to digest: banana, tapioca, bread.',
   'Depois de treinos com muito suor, reponha água e sal.': 'After sweaty sessions, replace water and salt.',
+  'O dia está acabando e ainda faltam {g} g de proteína. Priorize a proteína nesta refeição.': 'The day is ending and {g} g of protein are still missing. Prioritize protein in this meal.',
+  '{g} g de proteína atrás do ritmo para este horário. Priorize a proteína nesta refeição.': '{g} g of protein behind pace for this time. Prioritize protein in this meal.',
+  'É o que você costuma comer e cabe no alvo desta refeição.': 'This is what you usually eat, and it fits this meal\'s target.',
+  'É o que você costuma comer, mas passa {kcal} kcal do alvo desta refeição.': 'This is what you usually eat, but it goes {kcal} kcal over this meal\'s target.',
+  'É o que você costuma comer, mas faltam {g} g de proteína para o alvo desta refeição.': 'This is what you usually eat, but it is {g} g of protein short of this meal\'s target.',
+  'Seu hábito': 'Your habit',
 };

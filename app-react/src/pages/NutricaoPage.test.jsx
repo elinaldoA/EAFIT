@@ -211,31 +211,35 @@ describe('NutricaoPage', () => {
     expect(mockToast).toHaveBeenCalledWith('Dia corrigido');
   });
 
-  it('próximo passo: a refeição de sempre entra inteira com um toque', async () => {
+  it('refeições para o objetivo: a refeição de sempre aparece como opção e entra inteira com um toque', async () => {
     const day = n => { const d = new Date(`${todayDate()}T12:00:00`); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
     const r = (date, name, kcal) => ({ log_date: date, meal: 'jantar', name, icon: '🍽️', protein_g: 10, kcal, carbs_g: 0, fat_g: 0 });
     pastRows = [r(day(1), 'Tapioca', 200), r(day(1), 'Suco', 100), r(day(2), 'Tapioca', 200), r(day(2), 'Suco', 100)];
     render(<NutricaoPage active />);
     await screen.findByText('Ovo');
-    fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'jantar' } });
-    expect(await screen.findByText(/Tapioca \+ Suco/)).toBeTruthy();
-    fireEvent.click(screen.getByText('Registrar agora'));
+    fireEvent.click(screen.getByRole('tab', { name: 'Jantar' }));
+    const name = () => document.querySelector('.goal-meals__head strong').textContent;
+    await waitFor(() => expect(screen.getByText(/Outra sugestão/)).toBeTruthy());
+    for (let i = 0; i < 6 && name() !== 'O de sempre no jantar'; i++) fireEvent.click(screen.getByText(/Outra sugestão/));
+    expect(name()).toBe('O de sempre no jantar');
+    expect(screen.getByText('Seu hábito')).toBeTruthy();
+    fireEvent.click(screen.getByText('Registrar esta refeição'));
     expect(readLocalTotals()).toMatchObject({ kcal: 300, protein: 20 });
     expect(document.querySelector('.meal-log').textContent).toContain('Tapioca');
-    // Lançada a refeição, o próximo passo vira uma sugestão de proteína.
-    expect(screen.queryByText(/Tapioca \+ Suco/)).toBeNull();
+    // Lançada a refeição de sempre, ela sai das opções.
+    expect(screen.queryByText('Seu hábito')).toBeNull();
   });
 
-  it('próximo passo: uma sugestão por vez, "Outra opção" troca, registrar soma as porções', async () => {
+  it('um card só: sem o "Próximo passo" separado, com o ritmo do dia no card do objetivo', async () => {
     render(<NutricaoPage active />);
     await screen.findByText('Ovo');
-    const label = () => document.querySelector('.coach__what strong').textContent;
-    const first = label();
-    fireEvent.click(screen.getByText('Outra opção'));
-    expect(label()).not.toBe(first);
-    fireEvent.click(screen.getByText('Registrar agora'));
-    expect(readLocalTotals().protein).toBeGreaterThan(0);
-    expect(document.querySelectorAll('.meal-log__item')).toHaveLength(1);
+    expect(screen.queryByText('Próximo passo')).toBeNull();
+    expect(screen.queryByText('Registrar agora')).toBeNull();
+    expect(document.querySelector('.goal-meals .coach__pace')).toBeTruthy();
+    const name = () => document.querySelector('.goal-meals__head strong').textContent;
+    const first = name();
+    fireEvent.click(screen.getByText(/Outra sugestão/));
+    expect(name()).not.toBe(first);
   });
 
   it('sem nada para desfazer, não mostra o botão de desfazer nem o de zerar', async () => {

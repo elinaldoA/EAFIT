@@ -15,12 +15,11 @@ import { computeNutritionGoals, goalKcalFactor, MIN_KCAL } from '../lib/nutritio
 import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS } from '../lib/foodShortcuts';
 import { MEALS, mealForHour, readCachedEntries, fetchEntries, fetchEntriesRange, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
-import { dayPace, suggestFoods, portionFood, mealHabit, proteinSpread, suggestedKcal } from '../lib/nutritionCoach';
+import { dayPace, mealHabit, proteinSpread, suggestedKcal } from '../lib/nutritionCoach';
 import FoodSearch from '../components/FoodSearch';
 import MealLog from '../components/MealLog';
 import ProteinBars from '../components/ProteinBars';
 import NutritionDayCard from '../components/NutritionDayCard';
-import NutritionCoach from '../components/NutritionCoach';
 import GoalMeals from '../components/GoalMeals';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import Skeleton from '../components/Skeleton';
@@ -95,7 +94,6 @@ export default function NutricaoPage({ active }) {
   const [useCounts, setUseCounts] = useState(readUseCounts);
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [manage, setManage] = useState(false);
-  const [coachPick, setCoachPick] = useState(0);
   const [chart, setChart] = useState('kcal');
 
   const totals = readLocalTotals();
@@ -368,7 +366,6 @@ export default function NutricaoPage({ active }) {
   const hasLog = totals.protein + totals.kcal + totals.carbs + totals.fat > 0;
   const now = new Date();
   const pace = dayPace(totals, goals, now.getHours() + now.getMinutes() / 60);
-  const suggestions = pace && pace.status !== 'done' ? suggestFoods(allFoods, pace.left) : [];
   const habit = useMemo(() => mealHabit(pastEntries, meal, todayDate(), entries), [pastEntries, meal, entries]);
   // Só no fim do dia: antes disso as outras refeições ainda nem chegaram.
   const spread = now.getHours() >= SPREAD_FROM_HOUR ? proteinSpread(entries) : null;
@@ -390,13 +387,6 @@ export default function NutricaoPage({ active }) {
       partial: known.length < entries.length,
     };
   })();
-  // Uma ação só: a refeição de sempre vem antes (é o que a pessoa ia comer);
-  // "Outra opção" passa pelas sugestões que fecham a proteína.
-  const actions = [
-    ...(habit ? [{ kind: habit.kind, date: habit.date, label: habit.items.map(i => i.label).join(' + '), foods: habit.items }] : []),
-    ...suggestions.map(s => ({ kind: 'suggest', label: portionFood(s).label, foods: [portionFood(s)] })),
-  ];
-  const action = actions.length ? actions[coachPick % actions.length] : null;
 
   return (
     <section id="page-nutricao" className="page active">
@@ -410,14 +400,10 @@ export default function NutricaoPage({ active }) {
 
       <GoalMeals
         meta={user?.user_metadata?.meta} goals={goals} totals={totals}
-        meal={meal} onMealChange={m => { setMeal(m); setCoachPick(0); }}
+        meal={meal} onMealChange={setMeal}
         hour={now.getHours() + now.getMinutes() / 60} trainingHour={user?.user_metadata?.trainingHour}
         onAdd={foods => { handleAddMany(foods); toast(t('Refeição registrada')); }}
-      />
-
-      <NutritionCoach
-        pace={pace} action={action} meal={meal} spread={spread}
-        hasMore={actions.length > 1} onNext={() => setCoachPick(i => i + 1)} onAdd={handleAddMany}
+        pace={pace} habit={habit} spread={spread}
       />
 
       <div className="section-group">
@@ -425,7 +411,7 @@ export default function NutricaoPage({ active }) {
         <div className="water-actions meal-pick">
           <label>
             {t('Refeição')}
-            <select value={meal} onChange={e => { setMeal(e.target.value); setCoachPick(0); }}>
+            <select value={meal} onChange={e => setMeal(e.target.value)}>
               {MEALS.map(m => <option key={m} value={m}>{MEAL_NAME[m]()}</option>)}
             </select>
           </label>
