@@ -563,6 +563,7 @@ window.LANDING_EN = {
     'Siga no Instagram': 'Follow us on Instagram',
     'Siga no TikTok': 'Follow us on TikTok',
     'Siga no Facebook': 'Follow us on Facebook',
+    'Siga no Threads': 'Follow us on Threads',
     'Novidades, dicas de treino e o app por dentro.': 'News, workout tips and a look inside the app.',
     'Ver como protegemos seus dados': 'See how we protect your data',
     'Enviando…': 'Sending…',
