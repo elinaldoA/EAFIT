@@ -18,7 +18,7 @@ import MarketingPublish from './MarketingPublish';
 import MarketingAccounts from './MarketingAccounts';
 import MarketingComments from './MarketingComments';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, brtDay,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -36,7 +36,12 @@ beforeEach(() => {
   lib.createPost.mockResolvedValue('p1');
   lib.runPost.mockResolvedValue({ results: [{ id: 't1', status: 'published' }, { id: 't2', status: 'processing' }] });
   lib.fetchComments.mockResolvedValue([]);
-  lib.fetchAutopost.mockResolvedValue({ enabled: true, pending: [{ id: 'q1', format: 'feed' }, { id: 'q2', format: 'story' }, { id: 'q3', format: 'story' }], posted: 4 });
+  const pending = [
+    { id: 'q1', format: 'feed', caption: 'Primeira linha\nresto', media: [{ url: 'https://x/a.jpg' }] },
+    { id: 'q2', format: 'story', caption: '', media: [{ url: 'https://x/b.jpg' }] },
+    { id: 'q3', format: 'story', caption: '', media: [{ url: 'https://x/c.jpg' }] },
+  ];
+  lib.fetchAutopost.mockResolvedValue({ enabled: true, items: pending, pending, posted: 4 });
   lib.setAutopostEnabled.mockResolvedValue();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
@@ -344,5 +349,28 @@ describe('Publicação automática', () => {
     wrap(<MarketingPublish />);
     await waitFor(() => expect(lib.fetchAutopost).toHaveBeenCalled());
     expect(screen.queryByText('Publicação automática')).toBeNull();
+  });
+});
+
+describe('nextAutopostSlots', () => {
+  const pending = [{ id: 'f', format: 'feed' }, { id: 's', format: 'story' }];
+
+  it('antes das 12h de Brasília: feed e story saem hoje', () => {
+    const slots = nextAutopostSlots(pending, new Date('2026-11-05T13:00:00Z')); // 10h BRT
+    expect(slots.map(s => [s.format, s.today])).toEqual([['feed', true], ['story', true]]);
+  });
+
+  it('depois do feed: só o story sai hoje, o feed fica para amanhã', () => {
+    const slots = nextAutopostSlots(pending, new Date('2026-11-05T18:00:00Z')); // 15h BRT
+    expect(slots.map(s => [s.format, s.today])).toEqual([['story', true], ['feed', false]]);
+  });
+
+  it('a meia-noite de Brasília já é outro dia', () => {
+    expect(brtDay('2026-11-05T02:59:00Z')).toBe('2026-11-04');
+    expect(brtDay('2026-11-05T03:00:00Z')).toBe('2026-11-05');
+  });
+
+  it('sem item pendente de um formato, ele não aparece', () => {
+    expect(nextAutopostSlots([{ id: 'f', format: 'feed' }], new Date('2026-11-05T13:00:00Z')).map(s => s.format)).toEqual(['feed']);
   });
 });

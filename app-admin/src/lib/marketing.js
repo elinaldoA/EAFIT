@@ -447,13 +447,14 @@ export function hideComment(commentId, hidden) {
 export async function fetchAutopost() {
   const [settings, queue] = await Promise.all([
     db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
-    db.from('marketing_autopost_queue').select('id, position, key, format, posted_at').order('position'),
+    db.from('marketing_autopost_queue').select('id, position, key, format, caption, media, posted_at').order('position'),
   ]);
   if (settings.error) throw settings.error;
   if (queue.error) throw queue.error;
   const items = queue.data || [];
   return {
     enabled: settings.data?.enabled !== false,
+    items,
     pending: items.filter(i => !i.posted_at),
     posted: items.filter(i => i.posted_at).length,
   };
@@ -462,4 +463,27 @@ export async function fetchAutopost() {
 export async function setAutopostEnabled(enabled) {
   const { error } = await db.rpc('marketing_autopost_set_enabled', { p_enabled: enabled });
   if (error) throw error;
+}
+
+// Horários do cron (UTC) de cada formato: 12h e 19h de Brasília (UTC-3, sem horário de verão).
+export const AUTOPOST_HOUR_UTC = { feed: 15, story: 22 };
+const BRT_OFFSET_MS = 3 * 3600 * 1000;
+
+// Dia de Brasília (AAAA-MM-DD) de um instante.
+export function brtDay(date) {
+  return new Date(new Date(date).getTime() - BRT_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+// Próxima saída de cada formato: o primeiro item pendente no próximo horário do cron.
+export function nextAutopostSlots(pending, now = new Date()) {
+  const out = [];
+  for (const format of ['feed', 'story']) {
+    const item = pending.find(i => i.format === format);
+    if (!item) continue;
+    const at = new Date(now);
+    at.setUTCHours(AUTOPOST_HOUR_UTC[format], 0, 0, 0);
+    if (at <= now) at.setUTCDate(at.getUTCDate() + 1);
+    out.push({ item, format, at, today: brtDay(at) === brtDay(now) });
+  }
+  return out.sort((a, b) => a.at - b.at);
 }
