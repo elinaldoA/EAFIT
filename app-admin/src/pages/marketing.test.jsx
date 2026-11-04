@@ -26,7 +26,7 @@ import MarketingComments from './MarketingComments';
 import MarketingResults from './MarketingResults';
 import MarketingMedia from './MarketingMedia';
 import { synthTrack } from '../lib/reelAudio';
-import { DURATION, FPS, drawReelFrame } from '../lib/reelRender';
+import { DURATION, FPS, STORY_DROP, STORY_DURATION, STORY_VARIANTS, drawReelFrame, drawStoryFrame } from '../lib/reelRender';
 import {
   EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition,
 } from '../lib/marketing';
@@ -643,10 +643,11 @@ describe('Gerador de story em vídeo', () => {
     fireEvent.click((await screen.findAllByRole('button', { name: 'Criar story' }))[0]);
     expect(screen.getByLabelText('Título').value).toBe('Treino pronto em segundos');
     fireEvent.change(screen.getByLabelText(/Etiqueta/), { target: { value: 'DICA' } });
+    fireEvent.change(screen.getByLabelText('Visual'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Música'), { target: { value: 'calm' } });
     fireEvent.click(screen.getByRole('button', { name: 'Gerar story' }));
     await waitFor(() => expect(reelVideo.renderStory).toHaveBeenCalledWith(expect.objectContaining({
-      imageUrl: 'https://eafit.com.br/img/app/treino.webp', pill: 'DICA', title: 'Treino pronto em segundos', style: 'calm',
+      imageUrl: 'https://eafit.com.br/img/app/treino.webp', pill: 'DICA', title: 'Treino pronto em segundos', style: 'calm', variant: 2,
     })));
     expect(await screen.findByLabelText('Prévia do story')).toBeTruthy();
 
@@ -687,6 +688,37 @@ describe('quadros e trilha do Reel', () => {
     for (const t of [0, 1, 3.5, 6, 9.7, 11.9]) drawReelFrame(ctx, { hook: 'Gancho', title: 'Título', sub: 'Sub' }, img, t);
     expect(calls.some(([n]) => n === 'drawImage')).toBe(true); // o print aparece na cena 2
     expect(FPS * DURATION).toBe(288);
+  });
+});
+
+describe('story em vídeo: quadros e trilha eletrônica', () => {
+  it('trilha eletrônica: 8 s em estéreo, pico em 0,7, sempre igual e cada transposição soa diferente', () => {
+    const opts = { style: 'electric', sweeps: [STORY_DROP] };
+    const a = synthTrack(STORY_DURATION, opts);
+    const b = synthTrack(STORY_DURATION, opts);
+    const c = synthTrack(STORY_DURATION, { ...opts, shift: 3 });
+    expect(a.left.length).toBe(STORY_DURATION * a.sampleRate);
+    expect(a.left.reduce((m, v) => Math.max(m, Math.abs(v)), 0)).toBeGreaterThan(0.6);
+    expect(a.left.reduce((m, v) => Math.max(m, Math.abs(v)), 0)).toBeLessThanOrEqual(0.7);
+    expect(a.left[44100]).toBe(b.left[44100]);
+    expect(a.left.some((v, i) => v !== c.left[i])).toBe(true);
+    expect(a.left[a.left.length - 1]).toBeCloseTo(0, 3);
+  });
+
+  it('desenha todas as variantes sem erro, com o print entrando e o flash do drop', () => {
+    const img = { width: 100, height: 200 };
+    for (let variant = 0; variant < STORY_VARIANTS.length; variant += 1) {
+      const calls = [];
+      const ctx = new Proxy({}, {
+        get: (_, name) => (name === 'measureText' ? () => ({ width: 100 }) : name === 'createLinearGradient' || name === 'createRadialGradient'
+          ? () => ({ addColorStop() {} }) : (...args) => calls.push([name, args])),
+        set: () => true,
+      });
+      for (const t of [0, 0.5, 1.5, STORY_DROP, 2.2, 5, 7.9]) drawStoryFrame(ctx, { pill: 'DICA', title: 'Treino pronto em segundos', sub: 'Sub', variant }, img, t);
+      expect(calls.some(([n]) => n === 'drawImage')).toBe(true);
+      // chamada para o app em todo story
+      expect(calls.some(([n, args]) => n === 'fillText' && /LINK NA BIO/.test(args[0]))).toBe(true);
+    }
   });
 });
 

@@ -5,6 +5,7 @@ import {
   APP_PRINTS, ART_FORMATS, REEL_DEFAULTS, createArt, exerciseVideoList, fetchMedia, printUrl, removeMedia, uploadMedia, validateUpload,
 } from '../lib/marketing';
 import { canRenderReels, renderReel, renderStory } from '../lib/reelVideo';
+import { STORY_VARIANTS } from '../lib/reelRender';
 import {
   PROMO_AUDIENCES, audienceLabel, fetchPromoMaterials, formatHint, formatSize, partnerTitle, sendMediaToPartners,
 } from '../lib/promoMaterials';
@@ -194,7 +195,7 @@ export default function MarketingMedia() {
     const d = REEL_DEFAULTS[p.slug] || { title: p.label, sub: '' };
     setArt(null);
     setReel(null);
-    setStory({ slug: p.slug, label: p.label, pill: '', title: d.title, sub: d.sub, style: 'energy', progress: 0, preview: null, saved: false });
+    setStory({ slug: p.slug, label: p.label, pill: '', title: d.title, sub: d.sub, style: 'electric', variant: 0, progress: 0, preview: null, saved: false });
   }
 
   const editStory = patch => setStory(s => ({ ...s, ...patch, preview: null, saved: false }));
@@ -205,7 +206,7 @@ export default function MarketingMedia() {
     setStory(s => ({ ...s, progress: 0, preview: null, saved: false }));
     try {
       const out = await renderStory({
-        imageUrl: printUrl(story.slug, lang), pill: story.pill.trim(), title: story.title, sub: story.sub, style: story.style,
+        imageUrl: printUrl(story.slug, lang), pill: story.pill.trim(), title: story.title, sub: story.sub, style: story.style, variant: story.variant,
         onProgress: progress => setStory(s => (s ? { ...s, progress } : s)),
       });
       setStory(s => ({ ...s, progress: 1, preview: { ...out, url: URL.createObjectURL(out.blob) } }));
@@ -397,7 +398,7 @@ export default function MarketingMedia() {
             <div className="stack">
               <h3 className="section-title">Story em vídeo: {story.label}</h3>
               <p className="user-detail__meta">
-                Vídeo de 8 segundos, na vertical, com música: etiqueta opcional, título, subtítulo e o print do app entrando.
+                Vídeo de 8 segundos, na vertical, com música eletrônica: título animado, fundo em movimento e o print do app caindo no "drop". Troque o visual para stories do mesmo tema não ficarem iguais.
                 Leva cerca de 6 segundos para gerar.
               </p>
               {!canRenderReels() && (
@@ -416,9 +417,16 @@ export default function MarketingMedia() {
                 <input className="input" value={story.sub} maxLength={70} onChange={e => editStory({ sub: e.target.value })} />
               </label>
               <label className="field">
+                <span className="field__label">Visual</span>
+                <select className="input" value={story.variant} onChange={e => editStory({ variant: Number(e.target.value) })}>
+                  {STORY_VARIANTS.map((vr, i) => <option key={vr.name} value={i}>{vr.name}</option>)}
+                </select>
+              </label>
+              <label className="field">
                 <span className="field__label">Música</span>
                 <select className="input" value={story.style} onChange={e => editStory({ style: e.target.value })}>
-                  <option value="energy">Energia (geral)</option>
+                  <option value="electric">Eletrônica (treino)</option>
+                  <option value="energy">Energia</option>
                   <option value="bright">Leve (manhã e dia)</option>
                   <option value="calm">Calma (noite)</option>
                 </select>

@@ -1,5 +1,5 @@
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer';
-import { DURATION, FPS, H, STORY_DURATION, W, drawReelFrame, drawStoryFrame } from './reelRender';
+import { DURATION, FPS, H, STORY_DROP, STORY_DURATION, W, drawReelFrame, drawStoryFrame } from './reelRender';
 import { SAMPLE_RATE, synthTrack } from './reelAudio';
 
 // Gerador de Reel do painel: desenha os quadros (reelRender), sintetiza a trilha
@@ -98,11 +98,11 @@ export function renderReel({ imageUrl, hook, title, sub, onProgress }) {
   return renderVideo({ imageUrl, seconds: DURATION, draw: (ctx, img, t) => drawReelFrame(ctx, reel, img, t), onProgress });
 }
 
-// Story de 8 s: { imageUrl, pill, title, sub, style: 'energy' | 'bright' | 'calm', onProgress(0..1) }
-export function renderStory({ imageUrl, pill, title, sub, style = 'energy', onProgress }) {
-  const story = { pill, title, sub };
+// Story de 8 s: { imageUrl, pill, title, sub, variant: 0..5 (cor e fundo), style: 'electric' | 'energy' | 'bright' | 'calm', onProgress(0..1) }
+export function renderStory({ imageUrl, pill, title, sub, variant = 0, style = 'electric', onProgress }) {
+  const story = { pill, title, sub, variant };
   return renderVideo({
     imageUrl, seconds: STORY_DURATION, draw: (ctx, img, t) => drawStoryFrame(ctx, story, img, t),
-    audio: { style, sweeps: [1.2] }, onProgress,
+    audio: { style, sweeps: [STORY_DROP], shift: [0, 2, 3, 5, 7, -2][variant % 6] }, onProgress,
   });
 }

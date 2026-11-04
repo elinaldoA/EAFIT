@@ -1,7 +1,8 @@
 // Stories em vídeo da publicação automática do Marketing, com música:
 //   - nutrição, nos horários das refeições (café, almoço, jantar: 4 de cada) e de hidratação (15h: 12);
 //   - os 6 stories gerais (13h), que antes eram só imagem, agora em vídeo.
-// Feitos só com os prints do app e a trilha original (src/lib/reelAudio.js).
+// Feitos só com os prints do app e a trilha eletrônica original (src/lib/reelAudio.js).
+// Cada story usa uma variante visual (cor, fundo e enquadramento: reelRender.js).
 //
 //   node app-admin/scripts/marketing-stories.mjs            (todos)
 //   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua)
@@ -11,12 +12,12 @@
 // supabase/migrations/20270104010000_marketing_story_slots.items.sql.txt (colado na migration).
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeWav } from './marketing-reels-audio.mjs';
-import { FPS, H, STORY_DURATION, W, drawStoryFrame } from '../src/lib/reelRender.js';
+import { FPS, H, STORY_DROP, STORY_DURATION, W, drawStoryFrame } from '../src/lib/reelRender.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PRINTS = join(root, 'app-react', 'public', 'landing', 'img', 'app');
@@ -81,16 +82,75 @@ const GENERAL = [
   ['agua', 'Meta de água em dia', 'Um hábito simples que muda o treino.', 'agua'],
 ];
 
-async function render(file, story, print, style) {
+const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por variante
+
+// Trilha licenciada (opcional): app-admin/music/song.mp3, fora do site e do git.
+// Cada story usa um trecho de 8 s diferente, começando de forma que uma batida
+// forte caia no "drop" do visual (STORY_DROP). Sem o arquivo, usa a trilha original.
+const SONG = process.env.SONG || join(root, 'app-admin', 'music', 'song.mp3');
+const HOP = 512;
+const AN_SR = 11025;
+
+function decodeMono(file) {
+  return new Promise((resolve, reject) => {
+    const ff = spawn('ffmpeg', ['-loglevel', 'error', '-i', file, '-ac', '1', '-ar', String(AN_SR), '-f', 'f32le', '-'], { stdio: ['ignore', 'pipe', 'inherit'] });
+    const chunks = [];
+    ff.stdout.on('data', (c) => chunks.push(c));
+    ff.on('error', reject);
+    ff.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`ffmpeg saiu com ${code}`));
+      const buf = Buffer.concat(chunks);
+      resolve(new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4)));
+    });
+  });
+}
+
+// Instantes (s) das batidas mais fortes: aumento de energia entre janelas curtas.
+async function strongOnsets(file, count) {
+  const pcm = await decodeMono(file);
+  const frames = Math.floor(pcm.length / HOP);
+  const energy = new Float32Array(frames);
+  for (let i = 0; i < frames; i += 1) {
+    let e = 0;
+    for (let k = 0; k < HOP; k += 1) e += pcm[i * HOP + k] ** 2;
+    energy[i] = Math.sqrt(e / HOP);
+  }
+  const total = pcm.length / AN_SR;
+  const flux = [];
+  for (let i = 8; i < frames - 1; i += 1) {
+    let avg = 0;
+    for (let k = 1; k <= 8; k += 1) avg += energy[i - k];
+    avg /= 8;
+    const t = (i * HOP) / AN_SR;
+    if (t > STORY_DROP && t < total - (STORY_DURATION - STORY_DROP) - 0.2) flux.push({ t, v: Math.max(0, energy[i] - avg) });
+  }
+  const chosen = [];
+  for (const o of flux.sort((a, b) => b.v - a.v)) {
+    if (chosen.length >= count) break;
+    if (chosen.every(c => Math.abs(c.t - o.t) >= 4.5)) chosen.push(o);
+  }
+  // Se a música é curta para tantos trechos, repete os mesmos em outra ordem.
+  const times = chosen.map(c => c.t).sort((a, b) => a - b);
+  return Array.from({ length: count }, (_, i) => times[(i * 7) % times.length] - STORY_DROP);
+}
+
+async function render(file, story, print) {
   const img = await loadImage(readFileSync(join(PRINTS, `${print}.webp`)));
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
-  const audio = join(tmpdir(), `eafit-story-${style}.wav`);
-  writeFileSync(audio, makeWav(STORY_DURATION, { style, sweeps: [1.2] }));
+  let audioIn;
+  if (story.songStart !== undefined) {
+    audioIn = ['-ss', story.songStart.toFixed(3), '-t', String(STORY_DURATION), '-i', SONG];
+  } else {
+    const audio = join(tmpdir(), `eafit-story-v${story.variant}.wav`);
+    writeFileSync(audio, makeWav(STORY_DURATION, { style: 'electric', sweeps: [STORY_DROP], shift: SHIFTS[story.variant % 6] }));
+    audioIn = ['-i', audio];
+  }
   const ff = spawn('ffmpeg', [
     '-y', '-loglevel', 'error',
     '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
-    '-i', audio,
+    ...audioIn,
+    ...(story.songStart !== undefined ? ['-af', `afade=t=in:d=0.12,afade=t=out:st=${STORY_DURATION - 0.8}:d=0.8,loudnorm=I=-14:TP=-1.5:LRA=11`] : []),
     '-t', String(STORY_DURATION), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '24', '-preset', 'medium', '-profile:v', 'high',
     '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', join(OUT, file),
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
@@ -119,6 +179,13 @@ async function main() {
   let position = 22; // depois dos 22 itens que já estão na fila
   if (only === 'agua') position = 38; // só a hidratação: continua depois dos stories de refeição
 
+  // Trechos da trilha licenciada, um por story (SONG_OFF=1 usa a trilha original).
+  const useSong = existsSync(SONG) && process.env.SONG_OFF !== '1';
+  const starts = useSong ? await strongOnsets(SONG, 40) : [];
+  let used = 0;
+  const songStart = () => (useSong ? starts[used++ % starts.length] : undefined);
+  console.log(useSong ? `Trilha: ${SONG}` : 'Trilha original (sem song.mp3)');
+
   if (only !== 'geral') {
     for (let n = 0; n < 12; n += 1) {
       for (const [slot, meal] of Object.entries(MEALS)) {
@@ -126,7 +193,7 @@ async function main() {
         if (!meal.items[n]) continue;
         const [title, sub, print] = meal.items[n];
         const file = `story-${slot}-${n + 1}.mp4`;
-        await render(file, { pill: meal.pill, title, sub }, print, meal.style);
+        await render(file, { pill: meal.pill, title, sub, variant: (n + Object.keys(MEALS).indexOf(slot) * 2) % 6, songStart: songStart() }, print);
         position += 1;
         rows.push(`  (${position}, ${sqlText(`nutri-${slot}-${n + 1}`)}, 'story', ${sqlText(slot)}, '', ${sqlText(mediaOf(file))}::jsonb)`);
         console.log('ok', file);
@@ -134,9 +201,9 @@ async function main() {
     }
   }
   if (only !== 'nutri' && only !== 'agua') {
-    for (const [key, title, sub, print] of GENERAL) {
+    for (const [i, [key, title, sub, print]] of GENERAL.entries()) {
       const file = `story-${key}.mp4`;
-      await render(file, { title, sub }, print, 'energy');
+      await render(file, { title, sub, variant: i % 6, songStart: songStart() }, print);
       updates.push(`update public.marketing_autopost_queue set media = ${sqlText(mediaOf(file))}::jsonb where key = ${sqlText(`${key}-story`)} and posted_at is null;`);
       console.log('ok', file);
     }
