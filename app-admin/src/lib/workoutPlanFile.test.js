@@ -23,9 +23,9 @@ describe('workoutPlanFile', () => {
     const res = parsePlanFile(JSON.stringify(buildPlanExport(active)));
     expect(res.plan.name).toBe('Plano A');
     expect(res.plan.durationWeeks).toBe(4);
-    expect(res.plan.days[0].exercicios[0]).toMatchObject({ nome: 'Supino', series: '3', grupo: 'A', aquecimento: 2 });
-    expect(res.plan.days[0].pos[0].nome).toBe('Prancha');
-    expect(summarizePlan(res.plan)).toEqual({ days: 2, exercises: 2 });
+    expect(res.plan.days[0].exercicios[0]).toMatchObject({ nome: 'Supino Reto com Barra', series: '3', grupo: 'A', aquecimento: 2 });
+    expect(res.plan.days[0].pos[0].nome).toBe('Prancha Frontal Estática');
+    expect(summarizePlan(res.plan)).toEqual({ days: 2, exercises: 2, withDemo: 2 });
   });
 
   it('recusa JSON inválido, arquivo de outro tipo e plano vazio', () => {
@@ -72,7 +72,7 @@ describe('readPlanFile', () => {
     expect(res.plan.name).toBe('ficha joao');
     expect(res.plan.days).toHaveLength(7);
     expect(res.plan.days.filter(d => d.exercicios.length).length).toBe(2);
-    expect(res.plan.days.find(d => d.exercicios[0]?.nome === 'Supino reto').exercicios[0]).toMatchObject({ series: '4', reps: '10' });
+    expect(res.plan.days.find(d => d.exercicios[0]?.nome === 'Supino Reto com Barra').exercicios[0]).toMatchObject({ series: '4', reps: '10' });
   });
 
   it('aceita o JSON exportado', async () => {
@@ -85,5 +85,15 @@ describe('readPlanFile', () => {
     expect((await readPlanFile(file('x', 'a.xls'))).error).toMatch(/\.xlsx/);
     expect((await readPlanFile(file('x', 'a.jpg', 'image/jpeg'))).error).toMatch(/Foto/);
     expect(planFromText('', 'x').error).toBeTruthy();
+  });
+});
+
+describe('vídeos de execução', () => {
+  it('casa o nome digitado com o catálogo e conta quantos têm vídeo', () => {
+    const res = planFromText('Dia A\nsupino reto barra 4x10\nExercicio Inventado Xyz 3x12', 'f');
+    const names = res.plan.days.flatMap(d => d.exercicios.map(e => e.nome));
+    expect(names).toContain('Supino Reto com Barra');
+    expect(names).toContain('Exercicio Inventado Xyz');
+    expect(summarizePlan(res.plan)).toMatchObject({ exercises: 2, withDemo: 1 });
   });
 });

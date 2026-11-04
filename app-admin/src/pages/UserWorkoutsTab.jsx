@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState } from 'react';
-import { PLAN_FILE_ACCEPT, readPlanFile, summarizePlan } from '../lib/workoutPlanFile';
+import { PLAN_FILE_ACCEPT, hasDemo, readPlanFile, summarizePlan } from '../lib/workoutPlanFile';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { SEVERITY_BADGE, SEVERITY_LABEL, parseSetNumber } from '../lib/userDetailHelpers';
@@ -93,7 +93,14 @@ function PlanImport({ onImportPlan }) {
           <p className="user-detail__meta">
             “{parsed.name}” — {sum.days} dia(s), {sum.exercises} exercício(s)
             {parsed.durationWeeks ? `, ${parsed.durationWeeks} semanas` : ''}.
+            {' '}🎬 {sum.withDemo} de {sum.exercises} com vídeo de execução no app.
           </p>
+          {parsed.days.filter(d => d.exercicios.length + d.pos.length > 0).map(d => (
+            <p className="user-detail__meta" key={d.dia}>
+              <strong>{d.dia}{d.foco ? ` — ${d.foco}` : ''}:</strong>{' '}
+              {[...d.exercicios, ...d.pos].map(e => `${hasDemo(e.nome) ? '🎬 ' : ''}${e.nome} ${e.series}x${e.reps}`).join(' · ')}
+            </p>
+          ))}
           <label>
             <input type="checkbox" checked={activate} onChange={e => setActivate(e.target.checked)} /> Ativar agora (substitui o plano ativo)
           </label>

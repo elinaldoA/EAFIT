@@ -1,5 +1,9 @@
 import { db } from './supabase';
 import { parseWorkoutPlanText, planDaysFromTreinos } from './planTextParser';
+import { EXERCISE_VIDEOS } from '../../../app-react/src/data/exerciseVideos.js';
+import { EXERCISE_YOUTUBE } from '../../../app-react/src/data/exerciseYoutube.js';
+import { EXERCISE_MEDIA, normalizeExerciseName } from '../../../app-react/src/data/exerciseMedia.js';
+import { matchCatalogExercise } from '../../../app-react/src/data/exerciseMatch.js';
 import { PlanFileError, readPdfText, readXlsxRows } from './planFileReader';
 
 // Arquivo de plano de treino: JSON versionado, o mesmo para exportar de um
@@ -10,11 +14,27 @@ export const MAX_PLAN_FILE_BYTES = 1024 * 1024;
 const MAX_DAYS = 14;
 const MAX_EXERCISES = 60;
 
+// Exercícios com demonstração no app ("Ver execução"): o mesmo catálogo e o
+// mesmo casamento de nomes do app (data/exerciseMedia.js + exerciseMatch.js).
+const CATALOG = [...new Set([...Object.keys(EXERCISE_VIDEOS), ...Object.keys(EXERCISE_YOUTUBE), ...Object.keys(EXERCISE_MEDIA)])];
+const hasExact = key => !!(EXERCISE_VIDEOS[key] || EXERCISE_YOUTUBE[key] || EXERCISE_MEDIA[key]);
+
+// Nome digitado -> nome do catálogo quando é o mesmo exercício escrito de outro
+// jeito ("supino reto barra" -> "Supino Reto com Barra"); assim o treino
+// importado já abre com o vídeo no app. Sem equivalente seguro, fica como veio.
+export function canonicalExerciseName(nome) {
+  const key = normalizeExerciseName(nome);
+  if (!key || hasExact(key)) return key || nome;
+  return matchCatalogExercise(key, CATALOG) || nome;
+}
+export const hasDemo = nome => hasExact(normalizeExerciseName(nome));
+
 const str = (v, max = 120) => (v === null || v === undefined ? '' : String(v)).trim().slice(0, max);
 
 function cleanExercise(ex, withExtras) {
-  const nome = str(ex?.nome);
-  if (!nome) return null;
+  const typed = str(ex?.nome);
+  if (!typed) return null;
+  const nome = canonicalExerciseName(typed);
   const out = { nome, series: str(ex.series, 20), reps: str(ex.reps, 40), descanso: str(ex.descanso, 40), tecnica: str(ex.tecnica, 200) };
   if (withExtras) {
     const grupo = str(ex.grupo, 1).toUpperCase();
@@ -92,6 +112,7 @@ export function summarizePlan(plan) {
   return {
     days: plan.days.length,
     exercises: plan.days.reduce((n, d) => n + d.exercicios.length + d.pos.length, 0),
+    withDemo: plan.days.reduce((n, d) => n + [...d.exercicios, ...d.pos].filter(e => hasDemo(e.nome)).length, 0),
   };
 }
 
