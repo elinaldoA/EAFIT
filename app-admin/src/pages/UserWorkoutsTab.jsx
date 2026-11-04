@@ -1,4 +1,5 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
+import { MAX_PLAN_FILE_BYTES, parsePlanFile, summarizePlan } from '../lib/workoutPlanFile';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { SEVERITY_BADGE, SEVERITY_LABEL, parseSetNumber } from '../lib/userDetailHelpers';
@@ -51,16 +52,75 @@ function SetRow({ set, onFix }) {
   );
 }
 
+// Importar um plano (.json exportado pelo painel) para este usuário: mostra o
+// resumo e só grava depois de confirmar. Planos novos entram desativados, a
+// menos que "ativar" esteja marcado (aí substitui o plano ativo atual).
+function PlanImport({ onImportPlan }) {
+  const fileRef = useRef(null);
+  const [parsed, setParsed] = useState(null);
+  const [error, setError] = useState('');
+  const [activate, setActivate] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    setParsed(null); setError('');
+    if (!file) return;
+    if (file.size > MAX_PLAN_FILE_BYTES) { setError('Arquivo grande demais (máximo 1 MB).'); return; }
+    const res = parsePlanFile(await file.text());
+    if (res.error) setError(res.error); else setParsed(res.plan);
+  }
+
+  async function confirm() {
+    setBusy(true);
+    const ok = await onImportPlan(parsed, activate);
+    setBusy(false);
+    if (ok) setParsed(null);
+  }
+
+  const sum = parsed ? summarizePlan(parsed) : null;
+  return (
+    <div className="stack">
+      <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={handleFile} />
+      <button className="btn btn--small" onClick={() => fileRef.current?.click()} disabled={busy}>Importar plano (JSON)</button>
+      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {parsed && (
+        <div className="stack">
+          <p className="user-detail__meta">
+            “{parsed.name}” — {sum.days} dia(s), {sum.exercises} exercício(s)
+            {parsed.durationWeeks ? `, ${parsed.durationWeeks} semanas` : ''}.
+          </p>
+          <label>
+            <input type="checkbox" checked={activate} onChange={e => setActivate(e.target.checked)} /> Ativar agora (substitui o plano ativo)
+          </label>
+          <div className="actions-row">
+            <button className="btn btn--primary btn--small" disabled={busy} onClick={confirm}>Importar para este usuário</button>
+            <button className="btn btn--ghost btn--small" disabled={busy} onClick={() => setParsed(null)}>Cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function UserWorkoutsTab({
   activePlan, workouts, expandedWorkoutId, workoutSets, setsLoading,
   onToggleWorkoutDetail, onExportTreinos, personalRecords, discomfortLogs, onFixSet, onDeleteWorkout,
+  onExportPlan, onImportPlan,
 }) {
   return (
     <div className="stack">
       <section>
-        <h2 className="section-title">
-          Plano de treino ativo {activePlan ? `— ${activePlan.name}` : ''}
-        </h2>
+        <div className="page-header">
+          <h2 className="section-title">
+            Plano de treino ativo {activePlan ? `— ${activePlan.name}` : ''}
+          </h2>
+          {onExportPlan && (
+            <button className="btn btn--small" onClick={onExportPlan} disabled={!activePlan}>Exportar plano (JSON)</button>
+          )}
+        </div>
+        {onImportPlan && <PlanImport onImportPlan={onImportPlan} />}
         {!activePlan && <EmptyState icon="🏋️" label="Sem plano de treino ativo." />}
         {activePlan && (
           <div className="stack">

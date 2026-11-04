@@ -33,6 +33,8 @@ export const ACTION_LABEL = {
   confirmUser: 'Confirmou e-mail',
   fixWorkoutSet: 'Corrigiu série de treino',
   deleteWorkout: 'Apagou treino',
+  importWorkoutPlan: 'Importou plano de treino',
+  exportWorkoutPlan: 'Exportou plano de treino',
   exportUserData: 'Exportou dados do usuário',
   purgeOldData: 'Limpou dados antigos',
   revokeTrainerLink: 'Encerrou vínculo com personal',

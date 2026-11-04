@@ -9,6 +9,7 @@ import {
   profileFormFromMetadata, profileFieldsToSave,
 } from '../lib/userDetailHelpers';
 import { downloadUserExport } from '../lib/userExport';
+import { buildPlanExport, downloadPlanFile, importPlanForUser, logPlanExport } from '../lib/workoutPlanFile';
 import UserProfileTab from './UserProfileTab';
 import UserWorkoutsTab from './UserWorkoutsTab';
 import UserActionsTab from './UserActionsTab';
@@ -54,7 +55,7 @@ export default function UserDetail() {
       const [{ data: userRows, error: userErr }, plan, w, wa, we, allWorkoutIds, disc, ach, photos, push, deact, pr, ne, nf] = await Promise.all([
         db.rpc('admin_get_user', { target: id }),
         db.from('workout_plans')
-          .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, is_post_workout, order_index))')
+          .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, grupo, aquecimento, is_post_workout, order_index))')
           .eq('user_id', id).eq('is_active', true).maybeSingle(),
         db.from('workouts').select('id, workout_date, day_of_week, completed, duration_seconds').eq('user_id', id).order('workout_date', { ascending: false }).limit(20),
         db.from('water_logs').select('id, log_date, amount_ml').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
@@ -271,6 +272,31 @@ export default function UserDetail() {
     }
   }
 
+  function handleExportPlan() {
+    if (!activePlan) return;
+    const data = buildPlanExport(activePlan);
+    const slug = data.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'plano';
+    downloadPlanFile(`plano_${slug}.json`, data);
+    logPlanExport(id, adminUser?.id, data.name);
+    setActionMsg('Plano exportado.');
+  }
+
+  // Devolve true quando gravou (a aba fecha o resumo da importação).
+  async function handleImportPlan(plan, activate) {
+    if (activate && activePlan
+      && !window.confirm(`Ativar “${plan.name}” vai substituir o plano ativo atual (“${activePlan.name}”). Continuar?`)) return false;
+    setActionMsg('');
+    try {
+      await importPlanForUser(id, plan, { activate, adminId: adminUser?.id });
+      setActionMsg(activate ? 'Plano importado e ativado.' : 'Plano importado (inativo).');
+      await load();
+      return true;
+    } catch (err) {
+      setActionMsg(`Erro: ${err.message}`);
+      return false;
+    }
+  }
+
   async function handleExportData() {
     setBusy(true);
     setActionMsg('');
@@ -350,6 +376,7 @@ export default function UserDetail() {
           onToggleWorkoutDetail={toggleWorkoutDetail} onExportTreinos={exportTreinos}
           personalRecords={personalRecords} discomfortLogs={discomfortLogs}
           onFixSet={handleFixSet} onDeleteWorkout={handleDeleteWorkout}
+          onExportPlan={handleExportPlan} onImportPlan={handleImportPlan}
         />
       )}
 
