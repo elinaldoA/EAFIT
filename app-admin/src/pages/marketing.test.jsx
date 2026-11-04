@@ -338,7 +338,7 @@ describe('MarketingComments', () => {
 describe('Publicação automática', () => {
   it('mostra o que falta e pausa', async () => {
     wrap(<MarketingPublish />);
-    expect(await screen.findByText(/4 já publicados · faltam 1 no feed e 2 em stories/)).toBeTruthy();
+    expect(await screen.findByText(/4 já publicados · faltam 1 no feed, 0 em Reels e 2 em stories/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await waitFor(() => expect(lib.setAutopostEnabled).toHaveBeenCalledWith(false));
     expect(await screen.findByRole('button', { name: 'Ligar' })).toBeTruthy();
@@ -400,5 +400,13 @@ describe('cartão da publicação automática', () => {
     expect(screen.getByText(/Primeira linha/)).toBeTruthy();
     expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
     expect(screen.getAllByText('Hoje').length + screen.getAllByText(/^Amanhã/).length).toBeGreaterThan(0);
+  });
+});
+
+describe('Reels na agenda', () => {
+  it('o Reel sai às 17h entre o feed e o story', () => {
+    const pending = [{ id: 'f', format: 'feed' }, { id: 'r', format: 'reel' }, { id: 's', format: 'story' }];
+    const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'));
+    expect(sched.map(s => `${s.format}@${s.at.toISOString().slice(11, 13)}`)).toEqual(['feed@15', 'reel@20', 'story@22']);
   });
 });

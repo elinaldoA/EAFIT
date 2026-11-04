@@ -465,8 +465,8 @@ export async function setAutopostEnabled(enabled) {
   if (error) throw error;
 }
 
-// Horários do cron (UTC) de cada formato: 12h e 19h de Brasília (UTC-3, sem horário de verão).
-export const AUTOPOST_HOUR_UTC = { feed: 15, story: 22 };
+// Horários do cron (UTC) de cada formato: 12h (feed), 17h (reel) e 19h (story) de Brasília (UTC-3, sem horário de verão).
+export const AUTOPOST_HOUR_UTC = { feed: 15, reel: 20, story: 22 };
 const BRT_OFFSET_MS = 3 * 3600 * 1000;
 
 // Dia de Brasília (AAAA-MM-DD) de um instante.
@@ -479,7 +479,7 @@ export function brtDay(date) {
 // do próximo horário do cron.
 export function autopostSchedule(pending, now = new Date()) {
   const out = [];
-  for (const format of ['feed', 'story']) {
+  for (const format of ['feed', 'reel', 'story']) {
     const first = new Date(now);
     first.setUTCHours(AUTOPOST_HOUR_UTC[format], 0, 0, 0);
     if (first <= now) first.setUTCDate(first.getUTCDate() + 1);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PLATFORMS, STATUS_LABEL, autopostSchedule, brtDay, fetchAutopost, setAutopostEnabled, splitCaption } from '../lib/marketing';
 
-const FORMAT_LABEL = { feed: 'Feed', story: 'Story' };
+const FORMAT_LABEL = { feed: 'Feed', reel: 'Reel', story: 'Story' };
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
 const TZ = 'America/Sao_Paulo';
 
@@ -33,7 +33,9 @@ function Preview({ item, format, accounts }) {
   return (
     <div className="mkt-planned">
       <div className="mkt-planned__thumbs">
-        {media.slice(0, 3).map(m => <img key={m.url} src={m.url} alt="" width="56" height="70" loading="lazy" />)}
+        {media.slice(0, 3).map(m => (m.type === 'video'
+          ? <video key={m.url} src={`${m.url}#t=1`} width="56" height="100" muted playsInline preload="metadata" />
+          : <img key={m.url} src={m.url} alt="" width="56" height="70" loading="lazy" />))}
         {media.length > 3 && <span className="user-detail__meta">+{media.length - 3}</span>}
       </div>
       <div className="stack">
@@ -73,8 +75,8 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
 
   const now = new Date();
   const today = brtDay(now);
-  const feed = state.pending.filter(i => i.format === 'feed').length;
-  const story = state.pending.filter(i => i.format === 'story').length;
+  const count = format => state.pending.filter(i => i.format === format).length;
+  const problems = posts.filter(p => p.targets?.some(t => t.status === 'failed' || t.status === 'processing'));
 
   // Agenda da fila (se ligada) + posts agendados à mão e ainda não publicados.
   const planned = [
@@ -121,10 +123,10 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
       </div>
       <p>
         <span className={`badge ${state.enabled ? 'badge--ok' : 'badge--warning'}`}>{state.enabled ? 'Ligada' : 'Pausada'}</span>
-        {' '}Feed às 12h (Instagram, Facebook e Threads) e story às 19h (Instagram e Facebook), todo dia.
+        {' '}Todo dia: feed às 12h e Reel às 17h (Instagram, Facebook e Threads) e story às 19h (Instagram e Facebook).
       </p>
       <p className="user-detail__meta">
-        Resumo da fila: {state.posted} já publicados · faltam {feed} no feed e {story} em stories.
+        Resumo da fila: {state.posted} já publicados · faltam {count('feed')} no feed, {count('reel')} em Reels e {count('story')} em stories.
         {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
       </p>
       {msg && <p role="alert">{msg}</p>}
@@ -148,6 +150,25 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
           </ul>
         </div>
       ))}
+
+      {problems.length > 0 && (
+        <>
+          <h3>Em andamento ou com problema</h3>
+          <ul className="mkt-targets">
+            {problems.flatMap(p => p.targets.filter(t => t.status === 'failed' || t.status === 'processing').map(t => {
+              const a = accountById.get(t.account_id);
+              return (
+                <li key={t.id}>
+                  <span>{FORMAT_LABEL[p.media?.[0]?.type === 'video' && p.format === 'feed' ? 'reel' : p.format] || p.format} · {(p.caption || '').split('\n')[0].slice(0, 50) || 'story'}</span>
+                  <span>{a ? PLATFORMS[a.platform]?.label : 'Conta removida'}</span>
+                  <span className={`badge ${STATUS_BADGE[t.status] || ''}`}>{STATUS_LABEL[t.status] || t.status}</span>
+                  {t.status === 'failed' && t.error && <span className="user-detail__meta">{t.error}</span>}
+                </li>
+              );
+            }))}
+          </ul>
+        </>
+      )}
 
       <h3>Já publicado</h3>
       {published.length === 0 && <p className="user-detail__meta">Nada publicado ainda pela fila automática.</p>}
