@@ -40,3 +40,20 @@ describe('planTable', () => {
     expect(ex[0].descanso).toBe('90s');
   });
 });
+
+describe('cabeçalhos com nomes longos', () => {
+  it('pega "Repetições ou duração" (reps e tempo) e variações', () => {
+    const t = parsePlanTable([
+      ['Exercício', 'Séries', 'Repetições ou duração', 'Descanso (s)', 'Observações'],
+      ['Supino', '4', '8-10', '90', 'Lento'],
+      ['Prancha', '3', '30 segundos', '45', ''],
+    ]);
+    const ex = t.treinos[0].exercicios;
+    expect(ex[0]).toMatchObject({ series: '4', reps: '8-10', descanso: '90', tecnica: 'Lento' });
+    expect(ex[1]).toMatchObject({ nome: 'Prancha', reps: '30 segundos' });
+    const alt = parsePlanTable([['Exercício', 'Séries', 'Reps/Tempo'], ['Agachamento', '3', '12']]);
+    expect(alt.treinos[0].exercicios[0].reps).toBe('12');
+    const dur = parsePlanTable([['Exercício', 'Duração'], ['Esteira', '20 min']]);
+    expect(dur.treinos[0].exercicios[0]).toMatchObject({ nome: 'Esteira', series: '3', reps: '20 min' });
+  });
+});

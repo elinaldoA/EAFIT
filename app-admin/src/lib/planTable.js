@@ -9,13 +9,15 @@ import { PLAN_WEEK } from './planTextParser';
 const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
 const clean = s => String(s ?? '').replace(/\s+/g, ' ').trim();
 
+// Cabeçalhos aceitos pelo começo do texto (já sem acento e minúsculo), para
+// pegar "Repetições ou duração", "Reps/Tempo", "Séries (nº)", "Observações"…
 const HEADERS = {
-  exercicio: /^(exercicios?|nome do exercicio|nome)$/,
-  series: /^(series?|sets?)$/,
-  reps: /^(reps?|repeticoes|repeticao|rep\.?)$/,
-  descanso: /^(descanso|intervalo|pausa|rest)$/,
-  tecnica: /^(tecnicas?|observac(?:ao|oes)|obs\.?|metodo|notas?)$/,
-  dia: /^(dia|treino|ficha|divisao)$/,
+  exercicio: /^(exercicios?|nome do exercicio|nome)\b/,
+  series: /^(series?|sets?)\b/,
+  reps: /^(reps?\b|repeticao|repeticoes|duracao|tempo)/,
+  descanso: /^(descanso|intervalo|pausa|rest)/,
+  tecnica: /^(tecnicas?|observac|obs\b|metodo|notas?\b)/,
+  dia: /^(dia|treino|ficha|divisao)\b/,
 };
 
 // Texto CSV/TSV -> linhas de células. Delimitador (tab, ; ou ,) pela primeira
