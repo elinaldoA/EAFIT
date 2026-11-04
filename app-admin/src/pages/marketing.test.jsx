@@ -459,8 +459,8 @@ describe('Resultados', () => {
     lib.fetchMetrics.mockResolvedValue(METRICS);
     lib.refreshMetrics.mockResolvedValue({ results: [{ account: 'a2', posts: 2 }] });
     lib.fetchConversion.mockResolvedValue([
-      { source: 'instagram', medium: 'bio', visits: 100, signups: 8, confirmed: 6, activated: 3 },
-      { source: 'instagram', medium: 'story', visits: 40, signups: 1, confirmed: 1, activated: 0 },
+      { source: 'instagram', medium: 'bio', visits: 100, signups: 8, confirmed: 6, activated: 3, mature: 6, retained: 2 },
+      { source: 'instagram', medium: 'story', visits: 40, signups: 1, confirmed: 1, activated: 0, mature: 0, retained: 0 },
     ]);
   });
 
@@ -469,6 +469,7 @@ describe('Resultados', () => {
     expect(await screen.findByText('Link da bio')).toBeTruthy();
     expect(screen.getByText('8%')).toBeTruthy(); // 8 cadastros em 100 visitas
     expect(screen.getByText('2,5%')).toBeTruthy(); // 1 em 40
+    expect(screen.getByText('2 de 6')).toBeTruthy(); // seguiram treinando entre os dias 8 e 30
     const posts = await screen.findAllByText(/ver post/);
     expect(posts.length).toBe(3);
     expect(screen.getAllByText('Reel de treino').length).toBeGreaterThan(0);

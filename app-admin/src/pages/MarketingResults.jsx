@@ -119,7 +119,8 @@ export default function MarketingResults() {
 
   const totals = (conversion || []).reduce((t, r) => ({
     visits: t.visits + r.visits, signups: t.signups + r.signups, activated: t.activated + r.activated,
-  }), { visits: 0, signups: 0, activated: 0 });
+    mature: t.mature + r.mature, retained: t.retained + r.retained,
+  }), { visits: 0, signups: 0, activated: 0, mature: 0, retained: 0 });
 
   return (
     <div className="stack">
@@ -156,6 +157,10 @@ export default function MarketingResults() {
             <div className="mkt-stat"><span className="mkt-stat__n">{fmt(totals.signups)}</span><span className="mkt-stat__l">cadastros</span></div>
             <div className="mkt-stat"><span className="mkt-stat__n">{fmt(totals.activated)}</span><span className="mkt-stat__l">treinaram na 1ª semana</span></div>
             <div className="mkt-stat">
+              <span className="mkt-stat__n">{totals.mature ? pct(conversionRate(totals.mature, totals.retained)) : '—'}</span>
+              <span className="mkt-stat__l">seguiram treinando (dias 8 a 30)</span>
+            </div>
+            <div className="mkt-stat">
               <span className="mkt-stat__n">{pct(conversionRate(totals.visits, totals.signups))}</span>
               <span className="mkt-stat__l">cadastros por visita</span>
             </div>
@@ -168,7 +173,7 @@ export default function MarketingResults() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Rede</th><th>Tipo de link</th><th>Visitas</th><th>Cadastros</th><th>Por visita</th><th>Treinaram</th></tr>
+                <tr><th>Rede</th><th>Tipo de link</th><th>Visitas</th><th>Cadastros</th><th>Por visita</th><th>Treinaram</th><th>Seguiram</th></tr>
               </thead>
               <tbody>
                 {conversion.map(r => {
@@ -181,6 +186,7 @@ export default function MarketingResults() {
                       <td data-label="Cadastros">{fmt(r.signups)}</td>
                       <td data-label="Por visita">{pct(rate)}</td>
                       <td data-label="Treinaram">{fmt(r.activated)}</td>
+                      <td data-label="Seguiram">{r.mature ? `${fmt(r.retained)} de ${fmt(r.mature)}` : '—'}</td>
                     </tr>
                   );
                 })}
@@ -190,7 +196,8 @@ export default function MarketingResults() {
         )}
         <p className="user-detail__meta">
           Links para usar: <code>eafit.com.br/?utm_source=instagram&amp;utm_medium=bio</code> (bio), <code>utm_medium=story</code>,
-          {' '}<code>utm_medium=post</code> e <code>utm_medium=ads</code>.
+          {' '}<code>utm_medium=post</code> e <code>utm_medium=ads</code>. “Seguiram” conta, entre quem se cadastrou há mais de 7 dias,
+          {' '}quem voltou a treinar entre o dia 8 e o dia 30.
         </p>
       </section>
 

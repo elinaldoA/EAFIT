@@ -583,6 +583,7 @@ export async function fetchConversion(days = 30) {
   return (data || []).map(r => ({
     source: r.mc_source, medium: r.mc_medium, visits: Number(r.mc_visits), signups: Number(r.mc_signups),
     confirmed: Number(r.mc_confirmed), activated: Number(r.mc_activated),
+    mature: Number(r.mc_mature || 0), retained: Number(r.mc_retained || 0),
   }));
 }
 
