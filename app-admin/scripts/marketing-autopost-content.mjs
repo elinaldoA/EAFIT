@@ -11,6 +11,7 @@ import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { drawPhone } from '../src/lib/reelRender.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PRINTS = join(root, 'app-react', 'public', 'landing', 'img', 'app');
@@ -135,16 +136,6 @@ function wrap(ctx, text, maxWidth, maxLines) {
   return lines;
 }
 
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
 function footer(ctx, w, h) {
   ctx.fillStyle = '#f97316';
   ctx.font = `700 40px ${FONT}`;
@@ -170,23 +161,13 @@ async function printArt(item, format) {
   for (const line of wrap(ctx, item.sub, w - pad * 2, 2)) { ctx.fillText(line, pad, y + 6); y += 46; }
   const top = y + 40;
   const img = await loadImage(readFileSync(join(PRINTS, `${item.print}.webp`)));
-  const maxH = h - top - 130;
-  const scale = Math.min((w - pad * 2) / img.width, maxH / img.height);
+  const bezel = Math.round(w * 0.017);
+  const maxH = h - top - 130 - bezel * 2;
+  const scale = Math.min((w - pad * 2 - bezel * 2) / img.width, maxH / img.height);
   const iw = img.width * scale;
   const ih = img.height * scale;
   const ix = (w - iw) / 2;
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,.6)';
-  ctx.shadowBlur = 50;
-  roundRect(ctx, ix, top, iw, ih, 36);
-  ctx.fillStyle = '#000';
-  ctx.fill();
-  ctx.restore();
-  ctx.save();
-  roundRect(ctx, ix, top, iw, ih, 36);
-  ctx.clip();
-  ctx.drawImage(img, ix, top, iw, ih);
-  ctx.restore();
+  drawPhone(ctx, img, ix, top + bezel, iw, ih, { bezel });
   footer(ctx, w, h);
   return canvas.toBuffer('image/jpeg', 90);
 }

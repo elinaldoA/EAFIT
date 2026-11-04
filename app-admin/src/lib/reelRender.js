@@ -63,6 +63,61 @@ export function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+// Print do app dentro de um smartphone: corpo escuro com borda clara, botões
+// laterais, tela arredondada e "ilha" da câmera. (x, y, w, h) é a tela; a moldura
+// (`bezel` px) fica por fora. `src` = [sx, sy, sw, sh] recorta o print.
+export function drawPhone(ctx, img, x, y, w, h, { bezel = 18, src = null, glow = 'rgba(0,0,0,.6)', blur = 50 } = {}) {
+  const rs = Math.min(w * 0.11, 64);
+  const ro = rs + bezel;
+  const ox = x - bezel;
+  const oy = y - bezel;
+  const ow = w + bezel * 2;
+  const oh = h + bezel * 2;
+
+  ctx.save();
+  ctx.fillStyle = '#2c2c33';
+  ctx.fillRect(ox - 6, oy + oh * 0.2, 6, oh * 0.06);
+  ctx.fillRect(ox - 6, oy + oh * 0.28, 6, oh * 0.06);
+  ctx.fillRect(ox + ow, oy + oh * 0.25, 6, oh * 0.1);
+  ctx.restore();
+
+  ctx.save();
+  ctx.shadowColor = glow;
+  ctx.shadowBlur = blur;
+  roundRect(ctx, ox, oy, ow, oh, ro);
+  const body = ctx.createLinearGradient(ox, oy, ox + ow, oy + oh);
+  body.addColorStop(0, '#3d3d46');
+  body.addColorStop(0.5, '#141418');
+  body.addColorStop(1, '#2d2d34');
+  ctx.fillStyle = body;
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  roundRect(ctx, ox + 1.5, oy + 1.5, ow - 3, oh - 3, ro - 1.5);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(255,255,255,.2)';
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  roundRect(ctx, x, y, w, h, rs);
+  ctx.fillStyle = '#000';
+  ctx.fill();
+  ctx.clip();
+  if (src) ctx.drawImage(img, src[0], src[1], src[2], src[3], x, y, w, h);
+  else ctx.drawImage(img, x, y, w, h);
+  ctx.restore();
+
+  const pw = w * 0.24;
+  const ph = Math.max(10, w * 0.045);
+  ctx.save();
+  roundRect(ctx, x + w / 2 - pw / 2, y + w * 0.022, pw, ph, ph / 2);
+  ctx.fillStyle = '#000';
+  ctx.fill();
+  ctx.restore();
+}
+
 export function drawReelFrame(ctx, reel, img, t) {
   background(ctx);
 
@@ -82,24 +137,14 @@ export function drawReelFrame(ctx, reel, img, t) {
     const maxH = H - top - 190;
     const slide = easeOut((t - 3.5) / 0.9);
     const zoom = 1 + 0.05 * clamp((t - 4.4) / 5);
-    const base = Math.min((W - 144) / img.width, maxH / img.height);
+    const base = Math.min((W - 144 - 36) / img.width, (maxH - 36) / img.height);
     const iw = img.width * base * zoom;
     const ih = img.height * base * zoom;
     const ix = (W - iw) / 2;
-    const iy = top + (1 - slide) * 700;
+    const iy = top + 18 + (1 - slide) * 700;
     ctx.save();
     ctx.globalAlpha = a2;
-    ctx.shadowColor = 'rgba(0,0,0,.6)';
-    ctx.shadowBlur = 50;
-    roundRect(ctx, ix, iy, iw, ih, 40);
-    ctx.fillStyle = '#000';
-    ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.globalAlpha = a2;
-    roundRect(ctx, ix, iy, iw, ih, 40);
-    ctx.clip();
-    ctx.drawImage(img, ix, iy, iw, ih);
+    drawPhone(ctx, img, ix, iy, iw, ih);
     ctx.restore();
   }
 
@@ -311,11 +356,11 @@ export function drawStoryFrame(ctx, story, img, t) {
   let sw = img.width;
   let sh = img.height;
   if (v.layout === 'crop') { sy = img.height * 0.1; sh = img.height * 0.62; }
-  const base = Math.min((W - 144) / sw, maxH / sh);
+  const base = Math.min((W - 144 - 36) / sw, (maxH - 36) / sh);
   const iw = sw * base * bump;
   const ih = sh * base * bump;
   const ix = (W - iw) / 2;
-  const iy = top + (1 - slide) * 900 + (maxH - ih) / 2 * (v.layout === 'crop' ? 1 : 0);
+  const iy = top + 18 + (1 - slide) * 900 + (maxH - 36 - ih) / 2 * (v.layout === 'crop' ? 1 : 0);
   const angle = v.layout === 'tilt' ? (v.motif === 'rings' ? -0.06 : 0.06) * (1 - (1 - slide) * 0.5) : 0;
   const a = clamp((t - 1.0) / 0.3) * out;
   if (a > 0) {
@@ -324,20 +369,7 @@ export function drawStoryFrame(ctx, story, img, t) {
     ctx.rotate(angle);
     ctx.translate(-W / 2, -(iy + ih / 2));
     ctx.globalAlpha = a;
-    ctx.shadowColor = `rgba(${c},${0.35 + 0.4 * pulse})`;
-    ctx.shadowBlur = 60 + 40 * pulse;
-    roundRect(ctx, ix, iy, iw, ih, 40);
-    ctx.fillStyle = '#000';
-    ctx.fill();
-    ctx.restore();
-    ctx.save();
-    ctx.translate(W / 2, iy + ih / 2);
-    ctx.rotate(angle);
-    ctx.translate(-W / 2, -(iy + ih / 2));
-    ctx.globalAlpha = a;
-    roundRect(ctx, ix, iy, iw, ih, 40);
-    ctx.clip();
-    ctx.drawImage(img, sx, sy, sw, sh, ix, iy, iw, ih);
+    drawPhone(ctx, img, ix, iy, iw, ih, { src: [sx, sy, sw, sh], glow: `rgba(${c},${0.35 + 0.4 * pulse})`, blur: 60 + 40 * pulse });
     ctx.restore();
   }
 

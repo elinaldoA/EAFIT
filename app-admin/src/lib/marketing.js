@@ -1,3 +1,4 @@
+import { drawPhone } from './reelRender';
 import { db } from './supabase';
 // Vídeos de execução que o app já usa, com o crédito exigido pela licença.
 import { EXERCISE_VIDEOS, videoCredit } from '../../../app-react/src/data/exerciseVideos.js';
@@ -156,16 +157,6 @@ function loadImage(src) {
   });
 }
 
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
 // Print do app centralizado sobre o fundo da marca, com título, subtítulo e o
 // endereço do site. Sai em JPEG (o Instagram não aceita WebP).
 export async function createArt({ imageUrl, headline, subline, format = 'feed' }) {
@@ -207,23 +198,13 @@ export async function createArt({ imageUrl, headline, subline, format = 'feed' }
   const footer = 110;
   const top = y + 40;
   const img = await loadImage(imageUrl);
-  const maxH = h - top - footer;
-  const scale = Math.min((w - pad * 2) / img.width, maxH / img.height);
+  const bezel = Math.round(w * 0.017);
+  const maxH = h - top - footer - bezel * 2;
+  const scale = Math.min((w - pad * 2 - bezel * 2) / img.width, maxH / img.height);
   const iw = img.width * scale;
   const ih = img.height * scale;
   const ix = (w - iw) / 2;
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,.6)';
-  ctx.shadowBlur = 50;
-  roundRect(ctx, ix, top, iw, ih, 36);
-  ctx.fillStyle = '#000';
-  ctx.fill();
-  ctx.restore();
-  ctx.save();
-  roundRect(ctx, ix, top, iw, ih, 36);
-  ctx.clip();
-  ctx.drawImage(img, ix, top, iw, ih);
-  ctx.restore();
+  drawPhone(ctx, img, ix, top + bezel, iw, ih, { bezel });
 
   ctx.fillStyle = '#f97316';
   ctx.font = '700 40px Inter, system-ui, sans-serif';
