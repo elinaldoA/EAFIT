@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  addQueueItem, fetchAutopost, moveQueueItem, queuePosition, removeQueueItem, restoreQueueItem, splitCaption, updateQueueCaption,
+  AUTOPOST_LANES, SLOT_LABEL, addQueueItem, fetchAutopost, laneKey, laneLabel, moveQueueItem, queuePosition, removeQueueItem, restoreQueueItem,
+  splitCaption, updateQueueCaption,
 } from '../lib/marketing';
 import Loading from './Loading';
 
-const FORMATS = [
-  { key: 'feed', label: 'Feed', hour: '12h' },
-  { key: 'reel', label: 'Reels', hour: '17h' },
-  { key: 'story', label: 'Stories', hour: '19h' },
+const FORMAT_CHOICES = [
+  { key: 'feed', label: 'Feed' },
+  { key: 'reel', label: 'Reel' },
+  { key: 'story', label: 'Story' },
 ];
 
 function Thumb({ media = [] }) {
@@ -28,7 +29,7 @@ export default function MarketingQueue({ library = [] }) {
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState('');
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState({ format: 'feed', caption: '', media: [] });
+  const [draft, setDraft] = useState({ format: 'feed', slot: '', caption: '', media: [] });
 
   const load = useCallback(async () => {
     try {
@@ -66,7 +67,7 @@ export default function MarketingQueue({ library = [] }) {
   async function submitAdd() {
     await run('add', async () => {
       await addQueueItem(draft);
-      setDraft({ format: 'feed', caption: '', media: [] });
+      setDraft({ format: 'feed', slot: '', caption: '', media: [] });
       setAdding(false);
     }, 'Item adicionado ao fim da fila.');
   }
@@ -139,14 +140,25 @@ export default function MarketingQueue({ library = [] }) {
             <div className="field">
               <span className="field__label">Formato</span>
               <div className="actions-row">
-                {FORMATS.map(f => (
+                {FORMAT_CHOICES.map(f => (
                   <label key={f.key}>
                     <input type="radio" name="queue-format" checked={draft.format === f.key}
-                      onChange={() => setDraft({ format: f.key, caption: draft.caption, media: [] })} /> {f.label.replace(/s$/, '')}
+                      onChange={() => setDraft({ format: f.key, slot: '', caption: draft.caption, media: [] })} /> {f.label}
                   </label>
                 ))}
               </div>
             </div>
+            {draft.format === 'story' && (
+              <label className="field">
+                <span className="field__label">Horário do story</span>
+                <select className="input" value={draft.slot} onChange={e => setDraft({ ...draft, slot: e.target.value })}>
+                  <option value="">Geral (19h)</option>
+                  {Object.entries(SLOT_LABEL).map(([k, label]) => (
+                    <option key={k} value={k}>{label} ({AUTOPOST_LANES.find(l => l.key === `story:${k}`)?.time})</option>
+                  ))}
+                </select>
+              </label>
+            )}
             {draft.format !== 'story' && (
               <label className="field">
                 <span className="field__label">Legenda</span>
@@ -190,11 +202,11 @@ export default function MarketingQueue({ library = [] }) {
         )}
       </section>
 
-      {FORMATS.map(f => {
-        const items = state.pending.filter(i => i.format === f.key);
+      {AUTOPOST_LANES.map(f => {
+        const items = state.pending.filter(i => laneKey(i) === f.key);
         return (
           <section key={f.key} className="card stack" aria-label={f.label}>
-            <h3 className="section-title">{f.label} · todo dia às {f.hour} ({items.length} na fila)</h3>
+            <h3 className="section-title">{f.label} · todo dia às {f.time} ({items.length} na fila)</h3>
             {items.length === 0 && <p className="user-detail__meta">Fila vazia: nada mais sai deste formato.</p>}
             <ul className="mkt-list">{items.map(itemRow)}</ul>
           </section>
@@ -211,7 +223,7 @@ export default function MarketingQueue({ library = [] }) {
                 <div className="mkt-row__time">pulado</div>
                 <Thumb media={item.media} />
                 <div className="mkt-row__main">
-                  <div className="mkt-row__caption">{item.format === 'story' ? 'Story' : (splitCaption(item.caption).body.split('\n')[0] || '(sem legenda)')}</div>
+                  <div className="mkt-row__caption">{item.format === 'story' ? laneLabel(item) : (splitCaption(item.caption).body.split('\n')[0] || '(sem legenda)')}</div>
                   <div className="actions-row">
                     {item.format !== 'story' && (
                       <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing({ id: item.id, text: item.caption })}>Editar legenda</button>

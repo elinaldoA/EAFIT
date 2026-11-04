@@ -2,8 +2,8 @@
 // sintetizador, igual ao do gerador do painel, está em src/lib/reelAudio.js.
 import { synthTrack } from '../src/lib/reelAudio.js';
 
-export function makeWav(seconds) {
-  const { left, right, sampleRate } = synthTrack(seconds);
+export function makeWav(seconds, options) {
+  const { left, right, sampleRate } = synthTrack(seconds, options);
   const n = left.length;
   const out = Buffer.alloc(44 + n * 4);
   out.write('RIFF', 0);

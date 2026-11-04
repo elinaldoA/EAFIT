@@ -28,7 +28,7 @@ import MarketingMedia from './MarketingMedia';
 import { synthTrack } from '../lib/reelAudio';
 import { DURATION, FPS, drawReelFrame } from '../lib/reelRender';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -210,7 +210,7 @@ describe('MarketingPublish', () => {
     wrap(<MarketingPublish />, '/?aba=novo');
     expect((await screen.findByLabelText(/Threads · @eafit/)).checked).toBe(true);
 
-    fireEvent.click(screen.getByLabelText('Story'));
+    fireEvent.click(screen.getByRole('radio', { name: 'Story' }));
     expect(screen.getByLabelText(/Threads · @eafit/).checked).toBe(false);
     expect(screen.getByLabelText(/Threads · @eafit/).disabled).toBe(true);
     expect(screen.queryByPlaceholderText(/Conte a novidade/)).toBeNull();
@@ -348,7 +348,7 @@ describe('MarketingComments', () => {
 describe('Publicação automática', () => {
   it('mostra o que falta e pausa', async () => {
     wrap(<MarketingPublish />);
-    expect(await screen.findByText(/faltam 1 no feed, 0 em Reels e 2 em stories/)).toBeTruthy();
+    expect(await screen.findByText(/faltam 1 no feed, 0 em Reels, 2 em stories e 0 de nutrição/)).toBeTruthy();
     expect(screen.getByText('já publicados').previousSibling.textContent).toBe('4');
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await waitFor(() => expect(lib.setAutopostEnabled).toHaveBeenCalledWith(false));
@@ -566,7 +566,7 @@ describe('Fila: editor', () => {
     fireEvent.click(screen.getByRole('button', { name: /Arte treino/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar ao fim da fila' }));
     await waitFor(() => expect(lib.addQueueItem).toHaveBeenCalledWith({
-      format: 'feed', caption: 'Post novo #treino', media: [{ type: 'image', url: 'https://cdn/arte.jpg', title: 'Arte treino' }],
+      format: 'feed', slot: '', caption: 'Post novo #treino', media: [{ type: 'image', url: 'https://cdn/arte.jpg', title: 'Arte treino' }],
     }));
     expect(await screen.findByText('Item adicionado ao fim da fila.')).toBeTruthy();
   });
@@ -768,5 +768,51 @@ describe('Agenda: editar e excluir o que já saiu', () => {
     wrap(<MarketingPublish />);
     expect(await screen.findByText('Post excluído.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Excluir' })).toBeNull();
+  });
+});
+
+describe('stories de nutrição por refeição', () => {
+  it('cada refeição tem o seu horário em Brasília: 7h, 11h30, 18h e 21h30', () => {
+    const pending = [
+      { id: 'c', format: 'story', slot: 'cafe' }, { id: 'a', format: 'story', slot: 'almoco' },
+      { id: 'j', format: 'story', slot: 'jantar' }, { id: 'e', format: 'story', slot: 'ceia' },
+    ];
+    const sched = autopostSchedule(pending, new Date('2026-11-05T05:00:00Z')); // 2h BRT
+    // a ceia, 21h30 de Brasília, é 00h30 UTC do dia seguinte
+    expect(sched.map(x => `${x.item.id}@${x.at.toISOString().slice(0, 16)}`)).toEqual([
+      'c@2026-11-05T10:00', 'a@2026-11-05T14:30', 'j@2026-11-05T21:00', 'e@2026-11-06T00:30',
+    ]);
+  });
+
+  it('o story de nutrição não atrapalha a faixa do story geral', () => {
+    expect(laneKey({ format: 'story', slot: 'cafe' })).toBe('story:cafe');
+    expect(laneKey({ format: 'story', slot: null })).toBe('story');
+    expect(laneKey({ format: 'reel' })).toBe('reel');
+    const sched = autopostSchedule([{ id: 'g', format: 'story' }, { id: 'c', format: 'story', slot: 'cafe' }], new Date('2026-11-05T05:00:00Z'));
+    expect(sched.map(x => x.lane).sort()).toEqual(['story', 'story:cafe']);
+  });
+
+  it('na Fila, o story de nutrição é adicionado com o horário escolhido', async () => {
+    lib.fetchAutopost.mockResolvedValue({ enabled: true, items: [], pending: [], skipped: [], posted: 0 });
+    lib.addQueueItem.mockResolvedValue(undefined);
+    wrap(<MarketingPublish />, '/?aba=fila');
+    fireEvent.click(await screen.findByRole('button', { name: 'Adicionar à fila' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Story' }));
+    fireEvent.change(screen.getByLabelText('Horário do story'), { target: { value: 'almoco' } });
+    fireEvent.click(screen.getByRole('button', { name: /Arte treino/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar ao fim da fila' }));
+    await waitFor(() => expect(lib.addQueueItem).toHaveBeenCalledWith({
+      format: 'story', slot: 'almoco', caption: '', media: [{ type: 'image', url: 'https://cdn/arte.jpg', title: 'Arte treino' }],
+    }));
+  });
+
+  it('a Fila mostra uma seção para cada refeição', async () => {
+    lib.fetchAutopost.mockResolvedValue({
+      enabled: true, items: [], skipped: [], posted: 0,
+      pending: [{ id: 's1', format: 'story', slot: 'ceia', position: 1, caption: '', media: [{ type: 'video', url: 'https://x/s.mp4' }] }],
+    });
+    wrap(<MarketingPublish />, '/?aba=fila');
+    expect(await screen.findByText(/Story · Ceia · todo dia às 21h30 \(1 na fila\)/)).toBeTruthy();
+    expect(screen.getByText(/Story · Café da manhã · todo dia às 7h \(0 na fila\)/)).toBeTruthy();
   });
 });

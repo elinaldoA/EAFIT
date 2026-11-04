@@ -486,7 +486,7 @@ export function hideComment(commentId, hidden) {
 export async function fetchAutopost() {
   const [settings, queue] = await Promise.all([
     db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
-    db.from('marketing_autopost_queue').select('id, position, key, format, caption, media, posted_at, skipped_at').order('position'),
+    db.from('marketing_autopost_queue').select('id, position, key, format, slot, caption, media, posted_at, skipped_at').order('position'),
   ]);
   if (settings.error) throw settings.error;
   if (queue.error) throw queue.error;
@@ -505,9 +505,29 @@ export async function setAutopostEnabled(enabled) {
   if (error) throw error;
 }
 
-// Horários do cron (UTC) de cada formato: 12h (feed), 17h (reel) e 19h (story) de Brasília (UTC-3, sem horário de verão).
-export const AUTOPOST_HOUR_UTC = { feed: 15, reel: 20, story: 22 };
+// Faixas da publicação automática: cada uma publica um item por dia no seu horário
+// (cron em UTC; Brasília é UTC-3, sem horário de verão). Story pode ter um horário
+// de refeição (`slot`): café, almoço, jantar e ceia, com conteúdo de nutrição.
+export const SLOT_LABEL = { cafe: 'Café da manhã', almoco: 'Almoço', jantar: 'Jantar', ceia: 'Ceia' };
+export const AUTOPOST_LANES = [
+  { key: 'story:cafe', format: 'story', slot: 'cafe', utc: [10, 0], time: '7h', label: 'Story · Café da manhã' },
+  { key: 'story:almoco', format: 'story', slot: 'almoco', utc: [14, 30], time: '11h30', label: 'Story · Almoço' },
+  { key: 'feed', format: 'feed', slot: null, utc: [15, 0], time: '12h', label: 'Feed' },
+  { key: 'reel', format: 'reel', slot: null, utc: [20, 0], time: '17h', label: 'Reel' },
+  { key: 'story:jantar', format: 'story', slot: 'jantar', utc: [21, 0], time: '18h', label: 'Story · Jantar' },
+  { key: 'story', format: 'story', slot: null, utc: [22, 0], time: '19h', label: 'Story' },
+  { key: 'story:ceia', format: 'story', slot: 'ceia', utc: [0, 30], time: '21h30', label: 'Story · Ceia' },
+];
 const BRT_OFFSET_MS = 3 * 3600 * 1000;
+
+// Faixa de um item da fila: o formato, mais o horário de refeição quando é story de nutrição.
+export function laneKey(item) {
+  return item.format === 'story' && item.slot ? `story:${item.slot}` : item.format;
+}
+
+export function laneLabel(item) {
+  return AUTOPOST_LANES.find(l => l.key === laneKey(item))?.label || item.format;
+}
 
 // Dia de Brasília (AAAA-MM-DD) de um instante.
 export function brtDay(date) {
@@ -515,27 +535,27 @@ export function brtDay(date) {
 }
 
 // Agenda da fila: cada item pendente no seu horário. O cron publica um item de
-// cada formato por dia, então o k-ésimo pendente do formato sai k dias depois
-// do próximo horário do cron.
+// cada faixa por dia, então o k-ésimo pendente da faixa sai k dias depois do
+// próximo horário do cron.
 export function autopostSchedule(pending, now = new Date()) {
   const out = [];
-  for (const format of ['feed', 'reel', 'story']) {
+  for (const lane of AUTOPOST_LANES) {
     const first = new Date(now);
-    first.setUTCHours(AUTOPOST_HOUR_UTC[format], 0, 0, 0);
+    first.setUTCHours(lane.utc[0], lane.utc[1], 0, 0);
     if (first <= now) first.setUTCDate(first.getUTCDate() + 1);
-    pending.filter(i => i.format === format).forEach((item, k) => {
+    pending.filter(i => laneKey(i) === lane.key).forEach((item, k) => {
       const at = new Date(first);
       at.setUTCDate(at.getUTCDate() + k);
-      out.push({ item, format, at, today: brtDay(at) === brtDay(now) });
+      out.push({ item, format: lane.format, lane: lane.key, at, today: brtDay(at) === brtDay(now) });
     });
   }
   return out.sort((a, b) => a.at - b.at);
 }
 
-// Próxima saída de cada formato.
+// Próxima saída de cada faixa.
 export function nextAutopostSlots(pending, now = new Date()) {
   const seen = new Set();
-  return autopostSchedule(pending, now).filter(s => (seen.has(s.format) ? false : seen.add(s.format)));
+  return autopostSchedule(pending, now).filter(s => (seen.has(s.lane) ? false : seen.add(s.lane)));
 }
 
 // Separa as hashtags do fim da legenda do texto.
@@ -630,14 +650,14 @@ export const updateQueueCaption = (id, caption) => queueRpc('marketing_autopost_
 export const moveQueueItem = (id, direction) => queueRpc('marketing_autopost_move', { p_id: id, p_direction: direction });
 export const removeQueueItem = id => queueRpc('marketing_autopost_remove', { p_id: id });
 export const restoreQueueItem = id => queueRpc('marketing_autopost_restore', { p_id: id });
-export const addQueueItem = ({ format, caption, media }) => queueRpc('marketing_autopost_add', {
-  p_format: format, p_caption: format === 'story' ? '' : caption,
+export const addQueueItem = ({ format, slot = null, caption, media }) => queueRpc('marketing_autopost_add', {
+  p_format: format, p_slot: format === 'story' ? slot || null : null, p_caption: format === 'story' ? '' : caption,
   p_media: media.map(({ type, url }) => ({ type, url })),
 });
 
 // Primeiro/último do formato entre os pendentes: desliga o botão de subir/descer.
 export function queuePosition(pending, item) {
-  const same = pending.filter(i => i.format === item.format);
+  const same = pending.filter(i => laneKey(i) === laneKey(item));
   const idx = same.findIndex(i => i.id === item.id);
   return { first: idx === 0, last: idx === same.length - 1, number: idx + 1, total: same.length };
 }

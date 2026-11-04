@@ -117,3 +117,67 @@ export function drawReelFrame(ctx, reel, img, t) {
     text(ctx, 'eafit.com.br', { x: W / 2, y: 1000 + dy, size: 72, weight: 700, color: '#f97316', align: 'center', alpha: a3 });
   }
 }
+
+// ---------- stories em vídeo ----------
+// Uma cena só, de 8 s: etiqueta (ex.: CAFÉ DA MANHÃ), título, subtítulo e o print
+// do app entrando de baixo, com o endereço do site no rodapé.
+export const STORY_DURATION = 8;
+
+export function drawStoryFrame(ctx, story, img, t) {
+  background(ctx);
+  const out = clamp((STORY_DURATION - t) / 0.4); // some nos últimos 0,4 s
+  const pad = 72;
+  let y = 120;
+
+  if (story.pill) {
+    const a = clamp((t - 0.15) / 0.4) * out;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.font = `800 36px ${FONT}`;
+    const w = ctx.measureText(story.pill).width + 56;
+    ctx.fillStyle = '#f97316';
+    roundRect(ctx, pad, y, w, 68, 34);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(story.pill, pad + 28, y + 36);
+    ctx.restore();
+    y += 108;
+  }
+
+  const rise = (1 - easeOut((t - 0.4) / 0.7)) * 50;
+  y = text(ctx, story.title, { x: pad, y: y + rise, size: 84, alpha: clamp((t - 0.4) / 0.5) * out });
+  if (story.sub) {
+    text(ctx, story.sub, { x: pad, y: y + 10, size: 42, weight: 500, color: '#a1a1aa', alpha: clamp((t - 0.9) / 0.5) * out });
+  }
+
+  const top = 560;
+  const maxH = H - top - 190;
+  const slide = easeOut((t - 1.2) / 0.9);
+  const zoom = 1 + 0.04 * clamp((t - 2) / 6);
+  const base = Math.min((W - 144) / img.width, maxH / img.height);
+  const iw = img.width * base * zoom;
+  const ih = img.height * base * zoom;
+  const ix = (W - iw) / 2;
+  const iy = top + (1 - slide) * 800;
+  const a = clamp((t - 1.2) / 0.4) * out;
+  if (a > 0) {
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.shadowColor = 'rgba(0,0,0,.6)';
+    ctx.shadowBlur = 50;
+    roundRect(ctx, ix, iy, iw, ih, 40);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = a;
+    roundRect(ctx, ix, iy, iw, ih, 40);
+    ctx.clip();
+    ctx.drawImage(img, ix, iy, iw, ih);
+    ctx.restore();
+  }
+
+  text(ctx, 'eafit.com.br', { x: W / 2, y: H - 120, size: 44, weight: 700, color: '#f97316', align: 'center', alpha: clamp((t - 2) / 0.5) * out });
+}

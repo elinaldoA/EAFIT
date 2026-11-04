@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PLATFORMS, STATUS_LABEL, autopostSchedule, brtDay, fetchAutopost, setAutopostEnabled, splitCaption } from '../lib/marketing';
+import { PLATFORMS, STATUS_LABEL, autopostSchedule, brtDay, fetchAutopost, laneLabel, setAutopostEnabled, splitCaption } from '../lib/marketing';
 
 const FORMAT_LABEL = { feed: 'Feed', reel: 'Reel', story: 'Story' };
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
@@ -8,7 +8,10 @@ const UPCOMING_OPEN_DAYS = 2; // dias à vista; o resto fica num "ver mais"
 const PUBLISHED_SHOWN = 5;
 
 function hourBRT(date) {
-  return `${new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', timeZone: TZ })}h`;
+  const d = new Date(date);
+  const hour = d.toLocaleTimeString('pt-BR', { hour: '2-digit', hour12: false, timeZone: TZ }).replace(/\D/g, '').replace(/^0(?=\d)/, '');
+  const minute = Number(d.toLocaleTimeString('pt-BR', { minute: '2-digit', timeZone: TZ }).replace(/\D/g, ''));
+  return minute ? `${hour}h${String(minute).padStart(2, '0')}` : `${hour}h`;
 }
 
 function dayLabel(date, today) {
@@ -37,7 +40,7 @@ function Thumb({ media = [] }) {
 
 // Uma linha da agenda: horário, miniatura, formato e a primeira linha da
 // legenda; a legenda inteira e as hashtags abrem sob demanda.
-function Row({ when, format, item, accounts, note, statuses, tools }) {
+function Row({ when, format, label, item, accounts, note, statuses, tools }) {
   const { body, tags } = splitCaption(item.caption);
   const media = item.media || [];
   const networks = networksFor(format, accounts);
@@ -48,7 +51,7 @@ function Row({ when, format, item, accounts, note, statuses, tools }) {
       <Thumb media={media} />
       <div className="mkt-row__main">
         <div className="mkt-row__title">
-          <span className="badge">{FORMAT_LABEL[format]}</span>
+          <span className="badge">{label || FORMAT_LABEL[format]}</span>
           {media.length > 1 && <span className="user-detail__meta">carrossel de {media.length}</span>}
           {note && <span className="user-detail__meta">{note}</span>}
         </div>
@@ -85,7 +88,9 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
 
   const now = new Date();
   const today = brtDay(now);
-  const count = format => state.pending.filter(i => i.format === format).length;
+  const count = format => state.pending.filter(i => i.format === format && !i.slot).length;
+  const countGeneral = () => state.pending.filter(i => i.format === 'story' && !i.slot).length;
+  const countNutri = () => state.pending.filter(i => i.format === 'story' && i.slot).length;
   const problems = posts.filter(p => p.targets?.some(t => t.status === 'failed' || t.status === 'processing'));
   const accountById = new Map(accounts.map(a => [a.id, a]));
   const postById = new Map(posts.map(p => [p.id, p]));
@@ -125,7 +130,7 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
   }
 
   const planRow = (p, when) => (
-    <Row key={p.key} when={when} format={p.format} item={p.item} accounts={accounts} note={p.auto ? 'automático' : 'agendado à mão'} />
+    <Row key={p.key} when={when} format={p.format} label={p.auto ? laneLabel(p.item) : undefined} item={p.item} accounts={accounts} note={p.auto ? 'automático' : 'agendado à mão'} />
   );
 
   const dayBlock = d => (
@@ -155,7 +160,7 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
     const tools = post && renderTools
       ? renderTools(post)
       : (!post && <span className="user-detail__meta">{i.post_id ? 'Mais antigo: veja no Histórico.' : 'Post excluído.'}</span>);
-    return <Row key={i.id} when={`${dayLabel(i.posted_at, today)} ${hourBRT(i.posted_at)}`} format={i.format} item={i} accounts={accounts} statuses={statuses} tools={tools} />;
+    return <Row key={i.id} when={`${dayLabel(i.posted_at, today)} ${hourBRT(i.posted_at)}`} format={i.format} label={laneLabel(i)} item={i} accounts={accounts} statuses={statuses} tools={tools} />;
   };
 
   return (
@@ -172,7 +177,8 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
         </div>
         <p className="user-detail__meta">
           Publicação automática, todo dia: feed às 12h e Reel às 17h (Instagram, Facebook e Threads) e story às 19h (Instagram e Facebook).
-          {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels e {count('story')} em stories.
+          {' '}Stories de nutrição no café (7h), almoço (11h30), jantar (18h) e ceia (21h30).
+          {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels, {countGeneral()} em stories e {countNutri()} de nutrição.
           {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
           {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
         </p>
