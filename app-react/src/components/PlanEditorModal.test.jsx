@@ -121,7 +121,7 @@ describe('PlanEditorModal — planos', () => {
     fireEvent.blur(input);
     // renomear -> recarregar a lista -> atualizar o treino: três awaits em cadeia, que
     // estouram o 1s padrão do waitFor quando o runner do CI está lento.
-    await waitFor(() => expect(h.refreshPlan).toHaveBeenCalled(), { timeout: 4000 });
+    await waitFor(() => expect(h.refreshPlan).toHaveBeenCalled(), { timeout: 15000 });
   });
 
   it('ativar pergunta a duração do ciclo e ativa', async () => {

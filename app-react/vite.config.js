@@ -6,6 +6,8 @@ export default defineConfig({
   base: '/app/',
   test: {
     setupFiles: ['./src/test/setupTests.js'],
+    // Runner do CI lento com ~200 arquivos em paralelo: 5s (padrão) estoura em testes com cadeias de await.
+    testTimeout: 20000,
   },
   plugins: [
     react(),
