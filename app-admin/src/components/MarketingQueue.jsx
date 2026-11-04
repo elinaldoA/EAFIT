@@ -131,7 +131,7 @@ export default function MarketingQueue({ library = [] }) {
         </div>
         <p className="user-detail__meta">
           O que está aqui sai sozinho, um de cada formato por dia, na ordem da lista. Só dá para mexer no que ainda não saiu.
-          Os horários são fixos: story geral 13h, feed 19h e Reel 20h30.
+          Os horários são fixos: story geral 13h, feed 18h e Reel 20h30.
         </p>
         {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
 
