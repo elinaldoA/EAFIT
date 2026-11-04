@@ -9,6 +9,8 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { makeWav } from './marketing-reels-audio.mjs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -176,12 +178,14 @@ async function render(reel) {
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
   const file = join(OUT, `reel-${reel.key}.mp4`);
+  const audio = join(tmpdir(), 'eafit-reel-trilha.wav');
+  writeFileSync(audio, makeWav(DURATION)); // trilha original sintetizada
   const ff = spawn('ffmpeg', [
     '-y', '-loglevel', 'error',
     '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
-    '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100',
+    '-i', audio,
     '-t', String(DURATION), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '24', '-preset', 'medium', '-profile:v', 'high',
-    '-c:a', 'aac', '-b:a', '64k', '-shortest', '-movflags', '+faststart', file,
+    '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', file,
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((resolve, reject) => {
     ff.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg saiu com ${code}`))));
