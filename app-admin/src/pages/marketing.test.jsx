@@ -366,14 +366,14 @@ describe('Publicação automática', () => {
 describe('nextAutopostSlots', () => {
   const pending = [{ id: 'f', format: 'feed' }, { id: 's', format: 'story' }];
 
-  it('antes das 12h de Brasília: feed e story saem hoje', () => {
+  it('antes das 13h de Brasília: story e feed saem hoje', () => {
     const slots = nextAutopostSlots(pending, new Date('2026-11-05T13:00:00Z')); // 10h BRT
-    expect(slots.map(s => [s.format, s.today])).toEqual([['feed', true], ['story', true]]);
+    expect(slots.map(s => [s.format, s.today])).toEqual([['story', true], ['feed', true]]);
   });
 
-  it('depois do feed: só o story sai hoje, o feed fica para amanhã', () => {
+  it('depois do story das 13h: só o feed sai hoje, o story fica para amanhã', () => {
     const slots = nextAutopostSlots(pending, new Date('2026-11-05T18:00:00Z')); // 15h BRT
-    expect(slots.map(s => [s.format, s.today])).toEqual([['story', true], ['feed', false]]);
+    expect(slots.map(s => [s.format, s.today])).toEqual([['feed', true], ['story', false]]);
   });
 
   it('a meia-noite de Brasília já é outro dia', () => {
@@ -393,7 +393,7 @@ describe('agenda da fila automática', () => {
     ];
     const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'));
     expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 13)}`)).toEqual([
-      'f1@2026-11-05T15', 's1@2026-11-05T22', 'f2@2026-11-06T15', 'f3@2026-11-07T15',
+      's1@2026-11-05T16', 'f1@2026-11-05T22', 'f2@2026-11-06T22', 'f3@2026-11-07T22',
     ]);
   });
 
@@ -415,10 +415,10 @@ describe('cartão da publicação automática', () => {
 });
 
 describe('Reels na agenda', () => {
-  it('o Reel sai às 17h entre o feed e o story', () => {
+  it('o Reel sai às 20h30, depois do story das 13h e do feed das 19h', () => {
     const pending = [{ id: 'f', format: 'feed' }, { id: 'r', format: 'reel' }, { id: 's', format: 'story' }];
     const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'));
-    expect(sched.map(s => `${s.format}@${s.at.toISOString().slice(11, 13)}`)).toEqual(['feed@15', 'reel@20', 'story@22']);
+    expect(sched.map(s => `${s.format}@${s.at.toISOString().slice(11, 13)}`)).toEqual(['story@16', 'feed@22', 'reel@23']);
   });
 });
 
@@ -529,7 +529,7 @@ describe('Fila: editor', () => {
 
   it('lista a fila por formato e desliga subir no primeiro e descer no último', async () => {
     wrap(<MarketingPublish />, '/?aba=fila');
-    expect(await screen.findByText(/Feed · todo dia às 12h \(2 na fila\)/)).toBeTruthy();
+    expect(await screen.findByText(/Feed · todo dia às 19h \(2 na fila\)/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Subir item 1 de feed' }).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Descer item 2 de feed' }).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Descer item 1 de feed' }).disabled).toBe(false);
@@ -550,7 +550,7 @@ describe('Fila: editor', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
     expect(lib.removeQueueItem).not.toHaveBeenCalled();
     fireEvent.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
-    await waitFor(() => expect(lib.removeQueueItem).toHaveBeenCalledWith('q1'));
+    await waitFor(() => expect(lib.removeQueueItem).toHaveBeenCalledWith('q3')); // a faixa do story (13h) vem antes do feed (19h)
   });
 
   it('repõe um item pulado por repetição', async () => {

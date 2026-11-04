@@ -71,7 +71,7 @@ function Row({ when, format, label, item, accounts, note, statuses, tools }) {
 }
 
 // Aba "Agenda": o que sai hoje, os próximos dias e o que já saiu, com a
-// publicação automática (feed 12h, Reel 17h, story 19h, horário de Brasília).
+// publicação automática (story geral 13h, feed 19h, Reel 20h30, horário de Brasília).
 // `posts` e `accounts` vêm da página; `onOpenHistory` leva à aba de histórico.
 export default function MarketingAutopost({ posts = [], accounts = [], onOpenHistory, renderTools }) {
   const [state, setState] = useState(null);
@@ -176,7 +176,7 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
           </div>
         </div>
         <p className="user-detail__meta">
-          Publicação automática, todo dia: feed às 12h e Reel às 17h (Instagram, Facebook e Threads) e story às 19h (Instagram e Facebook).
+          Publicação automática, todo dia: feed às 19h e Reel às 20h30 (Instagram, Facebook e Threads), story geral às 13h e stories de refeição às 7h, 11h30, 18h e 21h30 (Instagram e Facebook).
           {' '}Stories de nutrição no café (7h), almoço (11h30), jantar (18h) e ceia (21h30).
           {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels, {countGeneral()} em stories e {countNutri()} de nutrição.
           {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}

@@ -481,7 +481,8 @@ export function hideComment(commentId, hidden) {
 
 // ---------- publicação automática ----------
 // Fila de conteúdo pronto que o cron publica sozinho (migration
-// 20261230010000_marketing_autopost.sql): feed 12h e stories 19h (Brasília).
+// 20261230010000_marketing_autopost.sql; horários ajustados em
+// 20270106010000_marketing_horarios_pico.sql): story geral 13h, feed 19h, Reel 20h30 (Brasília).
 
 export async function fetchAutopost() {
   const columns = 'id, position, key, format, caption, media, posted_at, skipped_at';
@@ -517,10 +518,10 @@ export const SLOT_LABEL = { cafe: 'Café da manhã', almoco: 'Almoço', jantar: 
 export const AUTOPOST_LANES = [
   { key: 'story:cafe', format: 'story', slot: 'cafe', utc: [10, 0], time: '7h', label: 'Story · Café da manhã' },
   { key: 'story:almoco', format: 'story', slot: 'almoco', utc: [14, 30], time: '11h30', label: 'Story · Almoço' },
-  { key: 'feed', format: 'feed', slot: null, utc: [15, 0], time: '12h', label: 'Feed' },
-  { key: 'reel', format: 'reel', slot: null, utc: [20, 0], time: '17h', label: 'Reel' },
+  { key: 'story', format: 'story', slot: null, utc: [16, 0], time: '13h', label: 'Story' },
   { key: 'story:jantar', format: 'story', slot: 'jantar', utc: [21, 0], time: '18h', label: 'Story · Jantar' },
-  { key: 'story', format: 'story', slot: null, utc: [22, 0], time: '19h', label: 'Story' },
+  { key: 'feed', format: 'feed', slot: null, utc: [22, 0], time: '19h', label: 'Feed' },
+  { key: 'reel', format: 'reel', slot: null, utc: [23, 30], time: '20h30', label: 'Reel' },
   { key: 'story:ceia', format: 'story', slot: 'ceia', utc: [0, 30], time: '21h30', label: 'Story · Ceia' },
 ];
 const BRT_OFFSET_MS = 3 * 3600 * 1000;
