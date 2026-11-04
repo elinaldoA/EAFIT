@@ -1,5 +1,5 @@
 import { Fragment, useRef, useState } from 'react';
-import { MAX_PLAN_FILE_BYTES, parsePlanFile, summarizePlan } from '../lib/workoutPlanFile';
+import { PLAN_FILE_ACCEPT, readPlanFile, summarizePlan } from '../lib/workoutPlanFile';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { SEVERITY_BADGE, SEVERITY_LABEL, parseSetNumber } from '../lib/userDetailHelpers';
@@ -61,14 +61,16 @@ function PlanImport({ onImportPlan }) {
   const [error, setError] = useState('');
   const [activate, setActivate] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
 
   async function handleFile(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
     setParsed(null); setError('');
     if (!file) return;
-    if (file.size > MAX_PLAN_FILE_BYTES) { setError('Arquivo grande demais (máximo 1 MB).'); return; }
-    const res = parsePlanFile(await file.text());
+    setReading(true);
+    const res = await readPlanFile(file);
+    setReading(false);
     if (res.error) setError(res.error); else setParsed(res.plan);
   }
 
@@ -82,8 +84,9 @@ function PlanImport({ onImportPlan }) {
   const sum = parsed ? summarizePlan(parsed) : null;
   return (
     <div className="stack">
-      <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={handleFile} />
-      <button className="btn btn--small" onClick={() => fileRef.current?.click()} disabled={busy}>Importar plano (JSON)</button>
+      <input ref={fileRef} type="file" accept={PLAN_FILE_ACCEPT} hidden onChange={handleFile} />
+      <button className="btn btn--small" onClick={() => fileRef.current?.click()} disabled={busy || reading}>{reading ? 'Lendo o arquivo…' : 'Importar plano'}</button>
+      <p className="user-detail__meta">Aceita PDF (com texto), planilha .xlsx, CSV, TXT ou o JSON exportado. Fichas em texto: uma linha por exercício, como “Supino 4x10”, separadas por Dia A/B/C ou dia da semana.</p>
       {error && <p className="form-msg form-msg--error">{error}</p>}
       {parsed && (
         <div className="stack">

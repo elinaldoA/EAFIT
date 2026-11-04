@@ -61,3 +61,29 @@ describe('workoutPlanFile', () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 });
+
+import { readPlanFile, planFromText } from './workoutPlanFile';
+
+describe('readPlanFile', () => {
+  const file = (content, name, type = '') => new File([content], name, { type });
+
+  it('lê ficha em texto/CSV e monta os 7 dias', async () => {
+    const res = await readPlanFile(file('Dia A - Peito\nSupino reto 4x10\nCrucifixo 3x12\nDia B - Costas\nRemada curvada 4x8\nPuxada 3x12', 'ficha_joao.txt'));
+    expect(res.plan.name).toBe('ficha joao');
+    expect(res.plan.days).toHaveLength(7);
+    expect(res.plan.days.filter(d => d.exercicios.length).length).toBe(2);
+    expect(res.plan.days.find(d => d.exercicios[0]?.nome === 'Supino reto').exercicios[0]).toMatchObject({ series: '4', reps: '10' });
+  });
+
+  it('aceita o JSON exportado', async () => {
+    const json = JSON.stringify(buildPlanExport(active));
+    expect((await readPlanFile(file(json, 'p.json', 'application/json'))).plan.name).toBe('Plano A');
+  });
+
+  it('avisa quando não acha exercícios e recusa formatos sem leitura', async () => {
+    expect((await readPlanFile(file('nada aqui', 'a.txt'))).error).toMatch(/Não encontrei exercícios/);
+    expect((await readPlanFile(file('x', 'a.xls'))).error).toMatch(/\.xlsx/);
+    expect((await readPlanFile(file('x', 'a.jpg', 'image/jpeg'))).error).toMatch(/Foto/);
+    expect(planFromText('', 'x').error).toBeTruthy();
+  });
+});

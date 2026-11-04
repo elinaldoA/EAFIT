@@ -1,4 +1,6 @@
 import { db } from './supabase';
+import { parseWorkoutPlanText, planDaysFromTreinos } from './planTextParser';
+import { PlanFileError, readPdfText, readXlsxRows } from './planFileReader';
 
 // Arquivo de plano de treino: JSON versionado, o mesmo para exportar de um
 // usuário e importar em outro. O painel só lê/grava planos — nada de histórico.
@@ -58,8 +60,12 @@ export function downloadPlanFile(filename, data) {
 export function parsePlanFile(text) {
   let raw;
   try { raw = JSON.parse(text); } catch { return { error: 'O arquivo não é um JSON válido.' }; }
-  if (!raw || raw.kind !== PLAN_FILE_KIND) return { error: 'Este arquivo não é um plano de treino exportado pelo painel.' };
+  if (!raw || raw.kind !== PLAN_FILE_KIND) return { error: 'Este JSON não é um plano de treino exportado pelo painel.' };
   if (raw.version !== PLAN_FILE_VERSION) return { error: 'Versão do arquivo não suportada.' };
+  return normalizePlan(raw);
+}
+
+function normalizePlan(raw) {
   if (!Array.isArray(raw.days) || raw.days.length === 0) return { error: 'O plano não tem nenhum dia.' };
   if (raw.days.length > MAX_DAYS) return { error: `O plano tem dias demais (máximo ${MAX_DAYS}).` };
 
@@ -115,4 +121,55 @@ export async function logPlanExport(userId, adminId, name) {
     admin_id: adminId, target_user_id: userId, action: 'exportWorkoutPlan', details: { name },
   });
   if (error) console.error('audit log:', error.message);
+}
+
+const FILE_ERRORS = {
+  xlsx: 'Não consegui abrir a planilha. Salve de novo como .xlsx ou CSV.',
+  xls: 'Esse formato de planilha (.xls, .ods, .numbers) não é lido. Salve como .xlsx ou CSV e tente de novo.',
+  image: 'Foto/imagem não é lida no painel. Use PDF com texto, planilha, CSV, TXT ou o JSON exportado.',
+  pdf: 'Não consegui ler o PDF.',
+};
+export const PLAN_FILE_ACCEPT = '.json,.csv,.tsv,.txt,.xlsx,.pdf,application/json,text/csv,text/plain,application/pdf';
+
+const extOf = name => (String(name || '').toLowerCase().match(/\.([a-z0-9]+)$/) || [])[1] || '';
+
+// Ficha em texto livre (CSV, TXT, planilha, PDF) -> plano. Mesmo leitor da
+// importação do app: "Supino 4x10", Dia A/B/C, dias da semana.
+export function planFromText(text, name) {
+  const parsed = parseWorkoutPlanText(text);
+  if (!parsed) {
+    return { error: 'Não encontrei exercícios no arquivo. Cada linha precisa ter o nome e as séries, como “Supino 4x10” (ou colunas de exercício, séries e repetições).' };
+  }
+  return normalizePlan({ name, days: planDaysFromTreinos(parsed.treinos, 'Descanso') });
+}
+
+// Arquivo escolhido -> { plan } ou { error }. Aceita o JSON exportado pelo
+// painel, planilha .xlsx, CSV/TSV/TXT e PDF com texto.
+export async function readPlanFile(file) {
+  if (file.size > MAX_PLAN_FILE_BYTES * 10 && extOf(file.name) !== 'pdf') return { error: 'Arquivo grande demais (máximo 10 MB).' };
+  if (file.size > 20 * 1024 * 1024) return { error: 'Arquivo grande demais (máximo 20 MB).' };
+  const ext = extOf(file.name);
+  const name = String(file.name || '').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim().slice(0, 80) || 'Plano importado';
+  try {
+    if (ext === 'json' || file.type === 'application/json') {
+      if (file.size > MAX_PLAN_FILE_BYTES) return { error: 'Arquivo grande demais (máximo 1 MB).' };
+      return parsePlanFile(await file.text());
+    }
+    if (ext === 'xlsx') {
+      const rows = await readXlsxRows(await file.arrayBuffer());
+      return planFromText(rows.map(r => r.join('  ')).join('\n'), name);
+    }
+    if (ext === 'pdf' || file.type === 'application/pdf') {
+      const text = await readPdfText(file);
+      if (!text.trim()) return { error: 'Esse PDF não tem texto (parece escaneado). Use um PDF com texto, planilha, CSV ou TXT.' };
+      return planFromText(text, name);
+    }
+    if (['xls', 'ods', 'numbers'].includes(ext)) return { error: FILE_ERRORS.xls };
+    if (file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'heic', 'bmp', 'gif'].includes(ext)) return { error: FILE_ERRORS.image };
+    return planFromText(await file.text(), name);
+  } catch (err) {
+    if (err instanceof PlanFileError) return { error: FILE_ERRORS[err.code] || 'Não consegui ler o arquivo.' };
+    console.error('readPlanFile:', err);
+    return { error: ext === 'pdf' ? FILE_ERRORS.pdf : 'Não consegui ler o arquivo.' };
+  }
 }
