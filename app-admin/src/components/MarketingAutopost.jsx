@@ -4,6 +4,8 @@ import { PLATFORMS, STATUS_LABEL, autopostSchedule, brtDay, fetchAutopost, setAu
 const FORMAT_LABEL = { feed: 'Feed', reel: 'Reel', story: 'Story' };
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
 const TZ = 'America/Sao_Paulo';
+const UPCOMING_OPEN_DAYS = 2; // dias à vista; o resto fica num "ver mais"
+const PUBLISHED_SHOWN = 5;
 
 function hourBRT(date) {
   return `${new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', timeZone: TZ })}h`;
@@ -20,47 +22,54 @@ function dayLabel(date, today) {
 // Redes que recebem o formato (as contas conectadas e ok; story não vai ao Threads).
 function networksFor(format, accounts) {
   const names = (accounts || [])
-    .filter(a => a.status === 'ok' && PLATFORMS[a.platform] && (format === 'feed' || a.platform !== 'threads')
-      && ['facebook', 'instagram', 'threads'].includes(a.platform))
+    .filter(a => a.status === 'ok' && ['facebook', 'instagram', 'threads'].includes(a.platform) && (format !== 'story' || a.platform !== 'threads'))
     .map(a => PLATFORMS[a.platform].label);
   return [...new Set(names)];
 }
 
-function Preview({ item, format, accounts }) {
+function Thumb({ media = [] }) {
+  const first = media[0];
+  if (!first) return <span className="mkt-row__thumb mkt-row__thumb--empty" aria-hidden="true" />;
+  return first.type === 'video'
+    ? <video className="mkt-row__thumb" src={`${first.url}#t=1`} muted playsInline preload="metadata" />
+    : <img className="mkt-row__thumb" src={first.url} alt="" loading="lazy" />;
+}
+
+// Uma linha da agenda: horário, miniatura, formato e a primeira linha da
+// legenda; a legenda inteira e as hashtags abrem sob demanda.
+function Row({ when, format, item, accounts, note, statuses }) {
   const { body, tags } = splitCaption(item.caption);
   const media = item.media || [];
   const networks = networksFor(format, accounts);
+  const first = format === 'story' ? 'Só a imagem, sem legenda.' : (body.split('\n')[0] || '(sem legenda)');
   return (
-    <div className="mkt-planned">
-      <div className="mkt-planned__thumbs">
-        {media.slice(0, 3).map(m => (m.type === 'video'
-          ? <video key={m.url} src={`${m.url}#t=1`} width="56" height="100" muted playsInline preload="metadata" />
-          : <img key={m.url} src={m.url} alt="" width="56" height="70" loading="lazy" />))}
-        {media.length > 3 && <span className="user-detail__meta">+{media.length - 3}</span>}
-      </div>
-      <div className="stack">
-        <div>
-          <strong>{FORMAT_LABEL[format]}</strong>
-          {media.length > 1 && ` · carrossel de ${media.length} imagens`}
-          {networks.length > 0 && ` · ${networks.join(', ')}`}
+    <li className="mkt-row">
+      <div className="mkt-row__time">{when}</div>
+      <Thumb media={media} />
+      <div className="mkt-row__main">
+        <div className="mkt-row__title">
+          <span className="badge">{FORMAT_LABEL[format]}</span>
+          {media.length > 1 && <span className="user-detail__meta">carrossel de {media.length}</span>}
+          {note && <span className="user-detail__meta">{note}</span>}
         </div>
-        {format === 'story'
-          ? <div className="user-detail__meta">Story: só a imagem, sem legenda.</div>
-          : (
-            <>
-              <div className="mkt-planned__caption">{body || <em>(sem legenda)</em>}</div>
-              {tags.length > 0 && <div className="user-detail__meta">Hashtags: {tags.join(' ')}</div>}
-            </>
-          )}
+        <div className="mkt-row__caption">{first}</div>
+        {statuses || (networks.length > 0 && <div className="user-detail__meta">{networks.join(' · ')}</div>)}
+        {format !== 'story' && (
+          <details className="mkt-row__more">
+            <summary>Legenda e hashtags</summary>
+            <div className="mkt-planned__caption">{body || <em>(sem legenda)</em>}</div>
+            {tags.length > 0 && <div className="user-detail__meta">Hashtags: {tags.join(' ')}</div>}
+          </details>
+        )}
       </div>
-    </div>
+    </li>
   );
 }
 
-// Cartão em Marketing → Publicar: a agenda da publicação automática (feed 12h
-// e story 19h, horário de Brasília) dia a dia com legenda e hashtags, o que já
-// saiu em cada rede e o botão de pausar. `posts` e `accounts` vêm da página.
-export default function MarketingAutopost({ posts = [], accounts = [] }) {
+// Aba "Agenda": o que sai hoje, os próximos dias e o que já saiu, com a
+// publicação automática (feed 12h, Reel 17h, story 19h, horário de Brasília).
+// `posts` e `accounts` vêm da página; `onOpenHistory` leva à aba de histórico.
+export default function MarketingAutopost({ posts = [], accounts = [], onOpenHistory }) {
   const [state, setState] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -71,19 +80,21 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
     return () => { alive = false; };
   }, []);
 
-  if (!state) return null; // sem migration ou sem permissão: o cartão some
+  if (!state) return null; // sem migration ou sem permissão: a agenda some
 
   const now = new Date();
   const today = brtDay(now);
   const count = format => state.pending.filter(i => i.format === format).length;
   const problems = posts.filter(p => p.targets?.some(t => t.status === 'failed' || t.status === 'processing'));
+  const accountById = new Map(accounts.map(a => [a.id, a]));
+  const postById = new Map(posts.map(p => [p.id, p]));
 
-  // Agenda da fila (se ligada) + posts agendados à mão e ainda não publicados.
+  // Fila automática (se ligada) + posts agendados à mão e ainda não publicados.
   const planned = [
     ...(state.enabled ? autopostSchedule(state.pending, now).map(s => ({ key: s.item.id, at: s.at, format: s.format, item: s.item, auto: true })) : []),
     ...posts
       .filter(p => p.scheduled_at && new Date(p.scheduled_at) > now && p.targets?.some(t => t.status === 'pending'))
-      .map(p => ({ key: p.id, at: new Date(p.scheduled_at), format: p.format, item: p, auto: false })),
+      .map(p => ({ key: p.id, at: new Date(p.scheduled_at), format: p.format === 'feed' && p.media?.[0]?.type === 'video' ? 'reel' : p.format, item: p, auto: false })),
   ].sort((a, b) => a.at - b.at);
   const days = [];
   for (const p of planned) {
@@ -92,13 +103,12 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
     if (last && last.day === day) last.items.push(p);
     else days.push({ day, items: [p] });
   }
+  const todayItems = days.find(d => d.day === today)?.items || [];
+  const nextDays = days.filter(d => d.day !== today);
 
-  const postById = new Map(posts.map(p => [p.id, p]));
   const published = state.items
     .filter(i => i.posted_at)
-    .sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at))
-    .slice(0, 10);
-  const accountById = new Map(accounts.map(a => [a.id, a]));
+    .sort((a, b) => new Date(b.posted_at) - new Date(a.posted_at));
 
   async function toggle() {
     setBusy(true);
@@ -113,54 +123,67 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
     }
   }
 
-  return (
-    <section className="card stack" aria-label="Publicação automática">
-      <div className="actions-row">
-        <h2>Publicação automática</h2>
-        <button type="button" className="btn btn--small" onClick={toggle} disabled={busy}>
-          {state.enabled ? 'Pausar' : 'Ligar'}
-        </button>
-      </div>
-      <p>
-        <span className={`badge ${state.enabled ? 'badge--ok' : 'badge--warning'}`}>{state.enabled ? 'Ligada' : 'Pausada'}</span>
-        {' '}Todo dia: feed às 12h e Reel às 17h (Instagram, Facebook e Threads) e story às 19h (Instagram e Facebook).
-      </p>
-      <p className="user-detail__meta">
-        Resumo da fila: {state.posted} já publicados · faltam {count('feed')} no feed, {count('reel')} em Reels e {count('story')} em stories.
-        {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
-        {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
-      </p>
-      {msg && <p role="alert">{msg}</p>}
+  const planRow = (p, when) => (
+    <Row key={p.key} when={when} format={p.format} item={p.item} accounts={accounts} note={p.auto ? 'automático' : 'agendado à mão'} />
+  );
 
-      <h3>Programado</h3>
-      {days.length === 0 && (
-        <p className="user-detail__meta">
-          {state.enabled ? 'Nada programado.' : 'Pausada: nada sai sozinho. Os posts agendados à mão continuam valendo.'}
-        </p>
-      )}
-      {days.map(d => (
-        <div key={d.day} className="stack">
-          <h4>{dayLabel(d.items[0].at, today)}</h4>
-          <ul className="stack">
-            {d.items.map(p => (
-              <li key={p.key} className="stack">
-                <div><strong>{hourBRT(p.at)}</strong>{p.auto ? ' · automático' : ' · agendado à mão'}</div>
-                <Preview item={p.item} format={p.format} accounts={accounts} />
-              </li>
-            ))}
-          </ul>
+  const dayBlock = d => (
+    <div key={d.day} className="stack">
+      <h4 className="mkt-day">{dayLabel(d.items[0].at, today)}</h4>
+      <ul className="mkt-list">{d.items.map(p => planRow(p, hourBRT(p.at)))}</ul>
+    </div>
+  );
+
+  const publishedRow = i => {
+    const post = i.post_id ? postById.get(i.post_id) : null;
+    const statuses = post && (
+      <div className="mkt-row__nets">
+        {post.targets.map(t => {
+          const a = accountById.get(t.account_id);
+          return (
+            <span key={t.id} className="mkt-net">
+              {a ? PLATFORMS[a.platform]?.label : 'Conta removida'}
+              <span className={`badge ${STATUS_BADGE[t.status] || ''}`}>{STATUS_LABEL[t.status] || t.status}</span>
+              {t.permalink && <a href={t.permalink} target="_blank" rel="noreferrer">ver post</a>}
+            </span>
+          );
+        })}
+      </div>
+    );
+    return <Row key={i.id} when={`${dayLabel(i.posted_at, today)} ${hourBRT(i.posted_at)}`} format={i.format} item={i} accounts={accounts} statuses={statuses} />;
+  };
+
+  return (
+    <div className="stack">
+      <section className="card stack" aria-label="Publicação automática">
+        <div className="mkt-stats">
+          <div className="mkt-stat"><span className="mkt-stat__n">{todayItems.length}</span><span className="mkt-stat__l">saem hoje</span></div>
+          <div className="mkt-stat"><span className="mkt-stat__n">{state.pending.length}</span><span className="mkt-stat__l">na fila</span></div>
+          <div className="mkt-stat"><span className="mkt-stat__n">{state.posted}</span><span className="mkt-stat__l">já publicados</span></div>
+          <div className="mkt-stat mkt-stat--switch">
+            <span className={`badge ${state.enabled ? 'badge--ok' : 'badge--warning'}`}>{state.enabled ? 'Ligada' : 'Pausada'}</span>
+            <button type="button" className="btn btn--small" onClick={toggle} disabled={busy}>{state.enabled ? 'Pausar' : 'Ligar'}</button>
+          </div>
         </div>
-      ))}
+        <p className="user-detail__meta">
+          Publicação automática, todo dia: feed às 12h e Reel às 17h (Instagram, Facebook e Threads) e story às 19h (Instagram e Facebook).
+          {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels e {count('story')} em stories.
+          {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
+          {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
+        </p>
+        {msg && <p role="alert" className="form-msg form-msg--error">{msg}</p>}
+      </section>
 
       {problems.length > 0 && (
-        <>
-          <h3>Em andamento ou com problema</h3>
+        <section className="card stack mkt-alert" aria-label="Atenção">
+          <h3 className="section-title">Atenção: {problems.length} post(s) em andamento ou com problema</h3>
           <ul className="mkt-targets">
             {problems.flatMap(p => p.targets.filter(t => t.status === 'failed' || t.status === 'processing').map(t => {
               const a = accountById.get(t.account_id);
+              const kind = p.media?.[0]?.type === 'video' && p.format === 'feed' ? 'reel' : p.format;
               return (
                 <li key={t.id}>
-                  <span>{FORMAT_LABEL[p.media?.[0]?.type === 'video' && p.format === 'feed' ? 'reel' : p.format] || p.format} · {(p.caption || '').split('\n')[0].slice(0, 50) || 'story'}</span>
+                  <span>{FORMAT_LABEL[kind] || p.format} · {(p.caption || '').split('\n')[0].slice(0, 50) || 'story'}</span>
                   <span>{a ? PLATFORMS[a.platform]?.label : 'Conta removida'}</span>
                   <span className={`badge ${STATUS_BADGE[t.status] || ''}`}>{STATUS_LABEL[t.status] || t.status}</span>
                   {t.status === 'failed' && t.error && <span className="user-detail__meta">{t.error}</span>}
@@ -168,40 +191,44 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
               );
             }))}
           </ul>
-        </>
+          {onOpenHistory && <div className="actions-row"><button type="button" className="btn btn--small" onClick={onOpenHistory}>Ver no histórico</button></div>}
+        </section>
       )}
 
-      <h3>Já publicado</h3>
-      {published.length === 0 && <p className="user-detail__meta">Nada publicado ainda pela fila automática.</p>}
-      <ul className="stack">
-        {published.map(i => {
-          const post = i.post_id ? postById.get(i.post_id) : null;
-          return (
-            <li key={i.id} className="stack">
-              <div>
-                <strong>{dayLabel(i.posted_at, today)} às {hourBRT(i.posted_at)}</strong>
-                {' · '}{FORMAT_LABEL[i.format]}
-              </div>
-              <Preview item={i} format={i.format} accounts={accounts} />
-              {post && (
-                <ul className="mkt-targets">
-                  {post.targets.map(t => {
-                    const a = accountById.get(t.account_id);
-                    return (
-                      <li key={t.id}>
-                        <span>{a ? PLATFORMS[a.platform]?.label : 'Conta removida'}</span>
-                        <span className={`badge ${STATUS_BADGE[t.status] || ''}`}>{STATUS_LABEL[t.status] || t.status}</span>
-                        {t.permalink && <a href={t.permalink} target="_blank" rel="noreferrer">ver post</a>}
-                        {t.status === 'failed' && t.error && <span className="user-detail__meta">{t.error}</span>}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
+      <section className="card stack" aria-label="Hoje">
+        <h3 className="section-title">Hoje</h3>
+        {todayItems.length > 0
+          ? <ul className="mkt-list">{todayItems.map(p => planRow(p, hourBRT(p.at)))}</ul>
+          : (
+            <p className="user-detail__meta">
+              {state.enabled ? 'Nada mais programado para hoje.' : 'Pausada: nada sai sozinho. Os posts agendados à mão continuam valendo.'}
+            </p>
+          )}
+      </section>
+
+      <section className="card stack" aria-label="Próximos dias">
+        <h3 className="section-title">Próximos dias</h3>
+        {nextDays.length === 0 && <p className="user-detail__meta">Nada programado.</p>}
+        {nextDays.slice(0, UPCOMING_OPEN_DAYS).map(dayBlock)}
+        {nextDays.length > UPCOMING_OPEN_DAYS && (
+          <details className="mkt-more">
+            <summary>Ver mais {nextDays.length - UPCOMING_OPEN_DAYS} dia(s)</summary>
+            <div className="stack">{nextDays.slice(UPCOMING_OPEN_DAYS).map(dayBlock)}</div>
+          </details>
+        )}
+      </section>
+
+      <section className="card stack" aria-label="Já publicado">
+        <h3 className="section-title">Já publicado</h3>
+        {published.length === 0 && <p className="user-detail__meta">Nada publicado ainda pela fila automática.</p>}
+        <ul className="mkt-list">{published.slice(0, PUBLISHED_SHOWN).map(publishedRow)}</ul>
+        {published.length > PUBLISHED_SHOWN && (
+          <details className="mkt-more">
+            <summary>Ver mais {published.length - PUBLISHED_SHOWN}</summary>
+            <ul className="mkt-list">{published.slice(PUBLISHED_SHOWN).map(publishedRow)}</ul>
+          </details>
+        )}
+      </section>
+    </div>
   );
 }

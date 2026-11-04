@@ -8,6 +8,7 @@ import {
 } from '../lib/promoMaterials';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import MarketingNav from '../components/MarketingNav';
 
 // Marketing → Biblioteca de mídia: o que pode ir para as redes. Arquivos
 // próprios e artes feitas dos prints do app ficam no bucket público
@@ -164,6 +165,8 @@ export default function MarketingMedia() {
           </p>
         </div>
       </div>
+
+      <MarketingNav />
 
       {msg && !share && <p ref={msgRef} className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
 

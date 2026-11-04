@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   EMPTY_TIKTOK, PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, exerciseVideoList, fetchAccounts,
   fetchMedia, fetchPosts, fetchTikTokCreator, finalCaption, retryTarget, runPost, validatePost,
@@ -9,8 +9,21 @@ import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
 import MarketingAutopost from '../components/MarketingAutopost';
+import MarketingNav from '../components/MarketingNav';
 
 const NO_STORIES = ['threads', 'tiktok'];
+
+const TABS = [
+  { key: 'agenda', label: 'Agenda' },
+  { key: 'novo', label: 'Novo post' },
+  { key: 'historico', label: 'Histórico' },
+];
+const HISTORY_FILTERS = [
+  { key: 'todos', label: 'Todos', test: () => true },
+  { key: 'agendados', label: 'Agendados', test: p => Boolean(p.scheduled_at) && p.targets.some(t => t.status === 'pending') },
+  { key: 'problema', label: 'Com problema', test: p => p.targets.some(t => t.status === 'failed') },
+  { key: 'publicados', label: 'Publicados', test: p => p.targets.length > 0 && p.targets.every(t => t.status === 'published') },
+];
 
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
 
@@ -24,6 +37,10 @@ function toLocalInputValue(date) {
 // (marketing_post_targets) é processada pela Edge Function marketing; aqui só
 // cria o post e acompanha o estado em cada conta.
 export default function MarketingPublish() {
+  const [params, setParams] = useSearchParams();
+  const tab = TABS.some(t => t.key === params.get('aba')) ? params.get('aba') : 'agenda';
+  const setTab = key => setParams(key === 'agenda' ? {} : { aba: key }, { replace: true });
+  const [historyFilter, setHistoryFilter] = useState('todos');
   const [accounts, setAccounts] = useState(null);
   const [library, setLibrary] = useState([]);
   const [posts, setPosts] = useState(null);
@@ -202,27 +219,47 @@ export default function MarketingPublish() {
     ? library.map(m => ({ key: m.id, type: m.kind, url: m.url, credit: m.credit || undefined, label: m.title }))
     : shownVideos.map(v => ({ key: v.slug, type: 'video', url: v.url, credit: v.credit, label: v.label }));
 
+  const problemCount = (posts || []).filter(p => p.targets.some(t => t.status === 'failed')).length;
+  const filterDef = HISTORY_FILTERS.find(f => f.key === historyFilter) || HISTORY_FILTERS[0];
+  const shownPosts = (posts || []).filter(filterDef.test);
+
   return (
     <div className="stack">
       <div className="page-header">
         <div>
           <h1 className="page-title">Publicar</h1>
           <p className="page-subtitle">
-            Um post ou story para várias redes de uma vez, na hora ou agendado. Instagram e Threads processam a mídia
-            antes de publicar: vídeo pode levar alguns minutos.
+            Veja o que vai ao ar, publique um post ou story novo e acompanhe o que já saiu. Instagram e Threads processam
+            a mídia antes de publicar: vídeo pode levar alguns minutos.
           </p>
         </div>
       </div>
 
-      <MarketingAutopost posts={posts || []} accounts={accounts || []} />
+      <MarketingNav />
 
-      {accounts.length === 0 ? (
+      <div className="tabs" role="tablist" aria-label="Publicações">
+        {TABS.map(t => (
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key}
+            className={`tabs__btn${tab === t.key ? ' tabs__btn--active' : ''}`} onClick={() => setTab(t.key)}>
+            {t.label}
+            {t.key === 'historico' && problemCount > 0 && <> <span className="badge badge--danger">{problemCount}</span></>}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'agenda' && (
+        <MarketingAutopost posts={posts || []} accounts={accounts || []} onOpenHistory={() => setTab('historico')} />
+      )}
+
+      {tab === 'novo' && (accounts.length === 0 ? (
         <section className="card stack">
           <EmptyState icon="🔌" label="Conecte as redes primeiro." />
           <div className="actions-row"><Link className="btn btn--primary" to="/marketing-contas">Conectar contas</Link></div>
         </section>
       ) : (
-        <section className="card stack">
+        <>
+          <section className="card mkt-step">
+            <h2 className="mkt-step__title"><span className="mkt-step__n">1</span> Onde e como publicar</h2>
           <div className="field">
             <span className="field__label">Formato</span>
             <div className="actions-row">
@@ -246,7 +283,10 @@ export default function MarketingPublish() {
               })}
             </div>
           </div>
+          </section>
 
+          <section className="card mkt-step">
+            <h2 className="mkt-step__title"><span className="mkt-step__n">2</span> Conteúdo</h2>
           {story ? (
             <p className="user-detail__meta">
               Story não tem legenda: o texto vai na própria arte. Use imagem ou vídeo em pé (9:16, como as artes “Story ·” e os
@@ -321,7 +361,10 @@ export default function MarketingPublish() {
               <pre className="mkt-preview">{text}</pre>
             </div>
           )}
+          </section>
 
+          <section className="card mkt-step">
+            <h2 className="mkt-step__title"><span className="mkt-step__n">3</span> Quando publicar</h2>
           <div className="actions-row">
             <label><input type="radio" name="when" checked={when === 'now'} onChange={() => setWhen('now')} /> Publicar agora</label>
             <label><input type="radio" name="when" checked={when === 'schedule'} onChange={() => { setWhen('schedule'); if (!scheduleAt) setScheduleAt(toLocalInputValue(new Date(Date.now() + 3600_000))); }} /> Agendar</label>
@@ -339,59 +382,73 @@ export default function MarketingPublish() {
             </button>
           </div>
           {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+          </section>
+        </>
+      ))}
+
+      {tab === 'historico' && (
+      <section className="card stack">
+          <div className="actions-row" style={{ justifyContent: 'space-between' }}>
+            <h2 className="section-title">Histórico de posts</h2>
+            <button type="button" className="btn btn--ghost btn--small" disabled={refreshing} onClick={handleRefresh}>
+              {refreshing ? 'Atualizando…' : 'Atualizar'}
+            </button>
+          </div>
+          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+          {posts && posts.length > 0 && (
+            <div className="mkt-filter" role="group" aria-label="Filtrar posts">
+              {HISTORY_FILTERS.map(f => (
+                <button key={f.key} type="button" aria-pressed={historyFilter === f.key}
+                  className={`btn btn--small${historyFilter === f.key ? '' : ' btn--ghost'}`} onClick={() => setHistoryFilter(f.key)}>
+                  {f.label} ({posts.filter(f.test).length})
+                </button>
+              ))}
+            </div>
+          )}
+          {!posts && <Loading />}
+          {posts && posts.length === 0 && <EmptyState icon="📣" label="Nenhum post ainda." />}
+          {posts && posts.length > 0 && shownPosts.length === 0 && <p className="user-detail__meta">Nenhum post nesta situação.</p>}
+          {posts && shownPosts.map(p => (
+            <article key={p.id} className="mkt-post">
+              <div className="mkt-post__head">
+                <span className="user-detail__meta">
+                  {p.format === 'story' && <span className="badge">Story</span>}{' '}
+                  {p.scheduled_at ? `agendado para ${formatDate(p.scheduled_at)}` : `criado em ${formatDate(p.created_at)}`}
+                  {p.media?.length ? ` · ${p.media.length} mídia(s)` : ''}
+                </span>
+                <span className="actions-row">
+                  {p.targets.some(t => t.status === 'pending') && p.scheduled_at && (
+                    <button type="button" className="btn btn--ghost btn--small" onClick={() => handleCancel(p)}>Cancelar</button>
+                  )}
+                  <button type="button" className="btn btn--danger btn--small" disabled={deleting === p.id} onClick={() => handleDelete(p)}>
+                    {deleting === p.id ? 'Excluindo…' : 'Excluir'}
+                  </button>
+                </span>
+              </div>
+              {p.format !== 'story' && <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>}
+              <ul className="mkt-targets">
+                {p.targets.map(t => {
+                  const a = byId.get(t.account_id);
+                  return (
+                    <li key={t.id}>
+                      <span>{a ? `${PLATFORMS[a.platform].label} ${accountLabel(a)}` : 'Conta removida'}</span>
+                      <span className={`badge ${STATUS_BADGE[t.status] || ''}`}>{STATUS_LABEL[t.status] || t.status}</span>
+                      {t.permalink && <a href={t.permalink} target="_blank" rel="noreferrer">ver post</a>}
+                      {t.status === 'published' && t.error && <span className="user-detail__meta">{t.error}</span>}
+                      {t.status === 'failed' && (
+                        <>
+                          <span className="user-detail__meta">{t.error}</span>
+                          <button type="button" className="btn btn--small" onClick={() => handleRetry({ ...t, post_id: p.id })}>Tentar de novo</button>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </article>
+          ))}
         </section>
       )}
-
-      <section className="card stack">
-        <div className="actions-row" style={{ justifyContent: 'space-between' }}>
-          <h2 className="section-title">Posts recentes</h2>
-          <button type="button" className="btn btn--ghost btn--small" disabled={refreshing} onClick={handleRefresh}>
-            {refreshing ? 'Atualizando…' : 'Atualizar'}
-          </button>
-        </div>
-        {msg && accounts.length === 0 && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
-        {!posts && <Loading />}
-        {posts && posts.length === 0 && <EmptyState icon="📣" label="Nenhum post ainda." />}
-        {posts && posts.map(p => (
-          <article key={p.id} className="mkt-post">
-            <div className="mkt-post__head">
-              <span className="user-detail__meta">
-                {p.format === 'story' && <span className="badge">Story</span>}{' '}
-                {p.scheduled_at ? `agendado para ${formatDate(p.scheduled_at)}` : `criado em ${formatDate(p.created_at)}`}
-                {p.media?.length ? ` · ${p.media.length} mídia(s)` : ''}
-              </span>
-              <span className="actions-row">
-                {p.targets.some(t => t.status === 'pending') && p.scheduled_at && (
-                  <button type="button" className="btn btn--ghost btn--small" onClick={() => handleCancel(p)}>Cancelar</button>
-                )}
-                <button type="button" className="btn btn--danger btn--small" disabled={deleting === p.id} onClick={() => handleDelete(p)}>
-                  {deleting === p.id ? 'Excluindo…' : 'Excluir'}
-                </button>
-              </span>
-            </div>
-            {p.format !== 'story' && <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>}
-            <ul className="mkt-targets">
-              {p.targets.map(t => {
-                const a = byId.get(t.account_id);
-                return (
-                  <li key={t.id}>
-                    <span>{a ? `${PLATFORMS[a.platform].label} ${accountLabel(a)}` : 'Conta removida'}</span>
-                    <span className={`badge ${STATUS_BADGE[t.status] || ''}`}>{STATUS_LABEL[t.status] || t.status}</span>
-                    {t.permalink && <a href={t.permalink} target="_blank" rel="noreferrer">ver post</a>}
-                    {t.status === 'published' && t.error && <span className="user-detail__meta">{t.error}</span>}
-                    {t.status === 'failed' && (
-                      <>
-                        <span className="user-detail__meta">{t.error}</span>
-                        <button type="button" className="btn btn--small" onClick={() => handleRetry({ ...t, post_id: p.id })}>Tentar de novo</button>
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </article>
-        ))}
-      </section>
     </div>
   );
 }

@@ -134,7 +134,7 @@ describe('lib/marketing', () => {
 
 describe('MarketingPublish', () => {
   it('publica na hora nas contas ativas com a arte escolhida', async () => {
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=novo');
     expect(await screen.findByText('Facebook · EAFIT')).toBeTruthy();
     // Threads precisa reconectar: fica desmarcado e travado.
     expect(screen.getByLabelText(/Threads · @eafit/).disabled).toBe(true);
@@ -166,7 +166,7 @@ describe('MarketingPublish', () => {
         commentDisabled: false, duetDisabled: true, stitchDisabled: false, maxDurationSec: 600,
       },
     });
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=novo');
     // Não vem marcado até a auditoria do app no TikTok.
     const chip = await screen.findByLabelText(/TikTok · @eafitapp/);
     expect(chip.checked).toBe(false);
@@ -197,7 +197,7 @@ describe('MarketingPublish', () => {
 
   it('agenda um story sem legenda e trava o Threads', async () => {
     lib.fetchAccounts.mockResolvedValue([FB, IG, { ...TH, status: 'ok' }]);
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=novo');
     expect((await screen.findByLabelText(/Threads · @eafit/)).checked).toBe(true);
 
     fireEvent.click(screen.getByLabelText('Story'));
@@ -218,7 +218,7 @@ describe('MarketingPublish', () => {
   });
 
   it('não deixa publicar no Instagram sem mídia', async () => {
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=novo');
     fireEvent.change(await screen.findByPlaceholderText(/Conte a novidade/), { target: { value: 'Só texto' } });
     expect(screen.getByText('Instagram exige ao menos uma imagem ou vídeo.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Publicar agora' }).disabled).toBe(true);
@@ -231,7 +231,7 @@ describe('MarketingPublish', () => {
     }]);
     lib.retryTarget.mockResolvedValue();
     lib.runPost.mockResolvedValue({ results: [] });
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=historico');
     expect(await screen.findByText('Imagem fora da proporção')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Tentar de novo' }));
     await waitFor(() => expect(lib.retryTarget).toHaveBeenCalledWith('t9'));
@@ -251,7 +251,7 @@ describe('MarketingPublish: excluir', () => {
   it('pergunta antes, avisa quantas redes e recarrega a lista', async () => {
     lib.fetchPosts.mockResolvedValue([POST]);
     lib.deletePost.mockResolvedValue({ removed: true, results: [{ ok: true }, { ok: true }] });
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=historico');
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
     expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('apagado em 2 rede(s)'));
     await waitFor(() => expect(lib.deletePost).toHaveBeenCalledWith('p7'));
@@ -262,7 +262,7 @@ describe('MarketingPublish: excluir', () => {
   it('mostra quando alguma rede não excluiu', async () => {
     lib.fetchPosts.mockResolvedValue([POST]);
     lib.deletePost.mockResolvedValue({ removed: false, results: [{ ok: true }, { ok: false, error: 'Não deu para excluir: sem permissão' }] });
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=historico');
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
     expect(await screen.findByText(/1 rede\(s\) não excluíram \(Não deu para excluir: sem permissão\)/)).toBeTruthy();
   });
@@ -270,7 +270,7 @@ describe('MarketingPublish: excluir', () => {
   it('não exclui se o admin desistir', async () => {
     lib.fetchPosts.mockResolvedValue([POST]);
     window.confirm.mockReturnValue(false);
-    wrap(<MarketingPublish />);
+    wrap(<MarketingPublish />, '/?aba=historico');
     fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
     expect(lib.deletePost).not.toHaveBeenCalled();
   });
@@ -338,7 +338,8 @@ describe('MarketingComments', () => {
 describe('Publicação automática', () => {
   it('mostra o que falta e pausa', async () => {
     wrap(<MarketingPublish />);
-    expect(await screen.findByText(/4 já publicados · faltam 1 no feed, 0 em Reels e 2 em stories/)).toBeTruthy();
+    expect(await screen.findByText(/faltam 1 no feed, 0 em Reels e 2 em stories/)).toBeTruthy();
+    expect(screen.getByText('já publicados').previousSibling.textContent).toBe('4');
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     await waitFor(() => expect(lib.setAutopostEnabled).toHaveBeenCalledWith(false));
     expect(await screen.findByRole('button', { name: 'Ligar' })).toBeTruthy();
@@ -396,8 +397,8 @@ describe('agenda da fila automática', () => {
 describe('cartão da publicação automática', () => {
   it('mostra a legenda, as hashtags e o dia de cada item da fila', async () => {
     wrap(<MarketingPublish />);
-    expect(await screen.findByText(/Resumo da fila: 4 já publicados.*1 pulado\(s\) por repetição/)).toBeTruthy();
-    expect(screen.getByText(/Primeira linha/)).toBeTruthy();
+    expect(await screen.findByText(/1 pulado\(s\) por repetição/)).toBeTruthy();
+    expect(screen.getAllByText(/Primeira linha/).length).toBeGreaterThan(0);
     expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
     expect(screen.getAllByText('Hoje').length + screen.getAllByText(/^Amanhã/).length).toBeGreaterThan(0);
   });
@@ -408,5 +409,36 @@ describe('Reels na agenda', () => {
     const pending = [{ id: 'f', format: 'feed' }, { id: 'r', format: 'reel' }, { id: 's', format: 'story' }];
     const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'));
     expect(sched.map(s => `${s.format}@${s.at.toISOString().slice(11, 13)}`)).toEqual(['feed@15', 'reel@20', 'story@22']);
+  });
+});
+
+describe('Publicar em abas', () => {
+  it('abre na agenda, troca para o novo post e para o histórico', async () => {
+    wrap(<MarketingPublish />);
+    expect(await screen.findByRole('tab', { name: 'Agenda', selected: true })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Publicar agora' })).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Novo post' }));
+    expect(await screen.findByText('Onde e como publicar')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Publicar agora' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: /Histórico/ }));
+    expect(await screen.findByText('Histórico de posts')).toBeTruthy();
+  });
+
+  it('as quatro páginas do Marketing têm a mesma barra de navegação', async () => {
+    wrap(<MarketingPublish />);
+    const nav = await screen.findByRole('navigation', { name: 'Marketing' });
+    expect(nav.querySelectorAll('a').length).toBe(4);
+  });
+
+  it('o histórico filtra por situação e conta cada grupo', async () => {
+    lib.fetchPosts.mockResolvedValue([
+      { id: 'p1', caption: 'ok', media: [], format: 'feed', scheduled_at: null, created_at: '2026-11-01T10:00:00Z', targets: [{ id: 't1', account_id: 'a1', status: 'published' }] },
+      { id: 'p2', caption: 'falhou', media: [], format: 'feed', scheduled_at: null, created_at: '2026-11-01T11:00:00Z', targets: [{ id: 't2', account_id: 'a1', status: 'failed', error: 'x' }] },
+    ]);
+    wrap(<MarketingPublish />, '/?aba=historico');
+    expect(await screen.findByRole('button', { name: 'Todos (2)' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Com problema (1)' }));
+    expect(screen.getByText('falhou')).toBeTruthy();
+    expect(screen.queryByText('ok')).toBeNull();
   });
 });
