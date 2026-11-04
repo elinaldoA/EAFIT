@@ -4,6 +4,7 @@ import { EXERCISE_VIDEOS } from '../../../app-react/src/data/exerciseVideos.js';
 import { EXERCISE_YOUTUBE } from '../../../app-react/src/data/exerciseYoutube.js';
 import { EXERCISE_MEDIA, normalizeExerciseName } from '../../../app-react/src/data/exerciseMedia.js';
 import { matchCatalogExercise } from '../../../app-react/src/data/exerciseMatch.js';
+import { parsePlanTable, parseDelimited } from './planTable';
 import { PlanFileError, readPdfText, readXlsxRows } from './planFileReader';
 
 // Arquivo de plano de treino: JSON versionado, o mesmo para exportar de um
@@ -156,8 +157,9 @@ const extOf = name => (String(name || '').toLowerCase().match(/\.([a-z0-9]+)$/) 
 
 // Ficha em texto livre (CSV, TXT, planilha, PDF) -> plano. Mesmo leitor da
 // importação do app: "Supino 4x10", Dia A/B/C, dias da semana.
-export function planFromText(text, name) {
-  const parsed = parseWorkoutPlanText(text);
+export function planFromText(text, name, rows = null) {
+  // Tabela com coluna "Exercício": lê dela em diante; senão, texto livre.
+  const parsed = parsePlanTable(rows || parseDelimited(text)) || parseWorkoutPlanText(text);
   if (!parsed) {
     return { error: 'Não encontrei exercícios no arquivo. Cada linha precisa ter o nome e as séries, como “Supino 4x10” (ou colunas de exercício, séries e repetições).' };
   }
@@ -178,7 +180,7 @@ export async function readPlanFile(file) {
     }
     if (ext === 'xlsx') {
       const rows = await readXlsxRows(await file.arrayBuffer());
-      return planFromText(rows.map(r => r.join('  ')).join('\n'), name);
+      return planFromText(rows.map(r => r.join('  ')).join('\n'), name, rows);
     }
     if (ext === 'pdf' || file.type === 'application/pdf') {
       const text = await readPdfText(file);
