@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  KIND_LABEL, MEDIUM_LABEL, PLATFORMS, averageByKind, conversionRate, fetchAccounts, fetchConversion, fetchMetrics, postScore, refreshMetrics,
+  KIND_LABEL, MEDIUM_LABEL, PLATFORMS, averageByKind, conversionRate, deleteExternalPost, editExternalPost, fetchAccounts, fetchConversion, fetchMetrics,
+  postScore, refreshMetrics,
 } from '../lib/marketing';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
@@ -32,6 +33,8 @@ export default function MarketingResults() {
   const [conversion, setConversion] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [editing, setEditing] = useState(null); // { key, accountId, externalId, text }
+  const [rowBusy, setRowBusy] = useState('');
 
   const loadMetrics = useCallback(async () => {
     try {
@@ -68,6 +71,38 @@ export default function MarketingResults() {
       setMsg(`Erro: ${err.message}`);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleDelete(m) {
+    const net = PLATFORMS[accountById.get(m.account_id)?.platform]?.label || 'a rede';
+    if (!window.confirm(`Excluir este post no ${net}? Ele some da rede, com curtidas e comentários. Não dá para desfazer.`)) return;
+    const key = `${m.account_id}-${m.external_id}`;
+    setRowBusy(key);
+    setMsg('');
+    try {
+      await deleteExternalPost(m.account_id, m.external_id);
+      setMsg('Post excluído.');
+      await loadMetrics();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setRowBusy('');
+    }
+  }
+
+  async function handleSaveEdit() {
+    setRowBusy(editing.key);
+    setMsg('');
+    try {
+      await editExternalPost(editing.accountId, editing.externalId, editing.text);
+      setMsg('Legenda atualizada no Facebook.');
+      setEditing(null);
+      await loadMetrics();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setRowBusy('');
     }
   }
 
@@ -227,7 +262,26 @@ export default function MarketingResults() {
                             <span className="user-detail__meta">{m.posted_at ? formatDate(m.posted_at) : ''}</span>
                           </div>
                           <div className="mkt-row__caption">{firstLine(m.caption)}</div>
-                          {m.permalink && <a href={m.permalink} target="_blank" rel="noreferrer">ver post</a>}
+                          <div className="actions-row">
+                            {m.permalink && <a href={m.permalink} target="_blank" rel="noreferrer">ver post</a>}
+                            {platformOf(m) === 'facebook' && (
+                              <button type="button" className="btn btn--ghost btn--small"
+                                onClick={() => setEditing({ key: `${m.account_id}-${m.external_id}`, accountId: m.account_id, externalId: m.external_id, text: m.caption || '' })}>
+                                Editar legenda
+                              </button>
+                            )}
+                            <button type="button" className="btn btn--danger btn--small" disabled={rowBusy === `${m.account_id}-${m.external_id}`} onClick={() => handleDelete(m)}>Excluir</button>
+                          </div>
+                          {editing?.key === `${m.account_id}-${m.external_id}` && (
+                            <div className="stack">
+                              <textarea className="input" rows={5} value={editing.text} maxLength={5000} aria-label="Nova legenda"
+                                onChange={e => setEditing({ ...editing, text: e.target.value })} />
+                              <div className="actions-row">
+                                <button type="button" className="btn btn--primary btn--small" disabled={rowBusy === editing.key || !editing.text.trim()} onClick={handleSaveEdit}>Salvar</button>
+                                <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing(null)}>Cancelar</button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

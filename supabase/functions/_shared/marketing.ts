@@ -524,3 +524,19 @@ export async function fetchMetrics(api: Api, account: Account): Promise<MetricRo
   }
   return rows;
 }
+
+// ---------- edição ----------
+
+// Só o Facebook deixa mudar o texto de um post já publicado pela API (vídeo usa
+// `description`, o resto `message`). Instagram e Threads não têm essa chamada:
+// para eles o caminho é apagar e publicar de novo.
+export async function editPublished(api: Api, account: Account, externalId: string, caption: string, isVideo: boolean): Promise<void> {
+  if (account.platform === 'instagram') {
+    throw new Error('O Instagram não permite editar a legenda pela API. Exclua e publique de novo.');
+  }
+  if (account.platform === 'threads') {
+    throw new Error('O Threads não permite editar um post publicado pela API. Exclua e publique de novo.');
+  }
+  if (account.platform !== 'facebook') throw new Error('Esta rede não permite editar pela API.');
+  await api.post(`/${externalId}`, isVideo ? { description: caption } : { message: caption });
+}

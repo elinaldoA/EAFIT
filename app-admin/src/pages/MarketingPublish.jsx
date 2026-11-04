@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
-  EMPTY_TIKTOK, PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, exerciseVideoList, fetchAccounts,
+  EMPTY_TIKTOK, PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, editPost, editSummary, exerciseVideoList, fetchAccounts,
   fetchMedia, fetchPosts, fetchTikTokCreator, finalCaption, retryTarget, runPost, validatePost,
 } from '../lib/marketing';
 import { formatDate } from '../lib/userDetailHelpers';
@@ -55,6 +55,8 @@ export default function MarketingPublish() {
   const [scheduleAt, setScheduleAt] = useState('');
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState('');
+  const [editing, setEditing] = useState(null); // { id, text }
+  const [editBusy, setEditBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [msg, setMsg] = useState('');
   const [tiktok, setTiktok] = useState(EMPTY_TIKTOK);
@@ -199,6 +201,52 @@ export default function MarketingPublish() {
       setMsg(`Erro: ${err.message}`);
     } finally {
       setDeleting('');
+      loadPosts();
+    }
+  }
+
+  async function handleEdit(post) {
+    const text = editing.text.trim();
+    if (!text) { setMsg('Erro: escreva a legenda.'); return; }
+    setEditBusy(true);
+    setMsg('');
+    try {
+      const { changed, results = [] } = await editPost(post.id, text);
+      setMsg(`${changed ? '' : 'Erro: '}${editSummary(post, results, byId)}`);
+      if (changed) setEditing(null);
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setEditBusy(false);
+      loadPosts();
+    }
+  }
+
+  // Instagram e Threads não deixam editar: apaga nas redes e publica de novo com a legenda nova.
+  async function handleRepost(post) {
+    const text = editing.text.trim();
+    if (!text) { setMsg('Erro: escreva a legenda.'); return; }
+    const accountIds = post.targets.map(t => t.account_id).filter(id => byId.get(id) && byId.get(id).status === 'ok' && byId.get(id).platform !== 'tiktok');
+    if (!accountIds.length) { setMsg('Erro: nenhuma conta conectada para republicar.'); return; }
+    const live = post.targets.filter(t => t.status === 'published').length;
+    if (!window.confirm(`Excluir este post em ${live} rede(s) e publicar de novo com a legenda nova? Curtidas, comentários e visualizações do post atual serão perdidos. Não dá para desfazer.`)) return;
+    setEditBusy(true);
+    setMsg('');
+    try {
+      const { removed, results = [] } = await deletePost(post.id);
+      if (!removed) {
+        const failed = results.filter(r => !r.ok);
+        throw new Error(`${failed.length} rede(s) não excluíram (${failed[0]?.error}). Nada foi republicado.`);
+      }
+      const postId = await createPost({ caption: text, media: post.media, accountIds, format: post.format });
+      const { results: sent = [] } = await runPost(postId);
+      const bad = sent.filter(r => r.status === 'failed');
+      setMsg(bad.length ? `Erro: republicado, mas ${bad.length} conta(s) falharam (${bad[0].error}).` : 'Excluído e republicado com a legenda nova.');
+      setEditing(null);
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setEditBusy(false);
       loadPosts();
     }
   }
@@ -422,12 +470,32 @@ export default function MarketingPublish() {
                   {p.targets.some(t => t.status === 'pending') && p.scheduled_at && (
                     <button type="button" className="btn btn--ghost btn--small" onClick={() => handleCancel(p)}>Cancelar</button>
                   )}
+                  {p.format !== 'story' && p.targets.some(t => t.status === 'published') && (
+                    <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing({ id: p.id, text: p.caption || '' })}>Editar legenda</button>
+                  )}
                   <button type="button" className="btn btn--danger btn--small" disabled={deleting === p.id} onClick={() => handleDelete(p)}>
                     {deleting === p.id ? 'Excluindo…' : 'Excluir'}
                   </button>
                 </span>
               </div>
-              {p.format !== 'story' && <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>}
+              {p.format !== 'story' && editing?.id !== p.id && <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>}
+              {editing?.id === p.id && (
+                <div className="stack mkt-edit">
+                  <textarea className="input" rows={6} value={editing.text} maxLength={5000} aria-label="Nova legenda"
+                    onChange={e => setEditing({ id: p.id, text: e.target.value })} />
+                  <p className="user-detail__meta">
+                    No Facebook a legenda muda na hora. Instagram e Threads não permitem editar um post publicado: para eles,
+                    use “Excluir e republicar” (as curtidas e os comentários do post atual se perdem).
+                  </p>
+                  <div className="actions-row">
+                    <button type="button" className="btn btn--primary btn--small" disabled={editBusy} onClick={() => handleEdit(p)}>
+                      {editBusy ? 'Salvando…' : 'Salvar nas redes que permitem'}
+                    </button>
+                    <button type="button" className="btn btn--danger btn--small" disabled={editBusy} onClick={() => handleRepost(p)}>Excluir e republicar</button>
+                    <button type="button" className="btn btn--ghost btn--small" disabled={editBusy} onClick={() => setEditing(null)}>Cancelar</button>
+                  </div>
+                </div>
+              )}
               <ul className="mkt-targets">
                 {p.targets.map(t => {
                   const a = byId.get(t.account_id);

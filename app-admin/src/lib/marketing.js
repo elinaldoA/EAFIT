@@ -408,6 +408,34 @@ export function deletePost(postId) {
   return invoke('marketing', { action: 'delete', postId });
 }
 
+// Muda a legenda de um post já publicado. Só o Facebook deixa; Instagram e Threads
+// voltam com `ok: false` e o motivo, e o caminho para eles é excluir e republicar.
+export function editPost(postId, caption) {
+  return invoke('marketing', { action: 'edit', postId, caption });
+}
+
+// Post feito direto no app da rede (lista de Resultados): excluir e, no Facebook, editar.
+export function deleteExternalPost(accountId, externalId) {
+  return invoke('marketing', { action: 'deleteExternal', accountId, externalId });
+}
+
+export function editExternalPost(accountId, externalId, caption) {
+  return invoke('marketing', { action: 'editExternal', accountId, externalId, caption });
+}
+
+// Quem mudou e quem não mudou, em português, a partir do retorno de editPost.
+export function editSummary(post, results, accountsById) {
+  const name = t => {
+    const a = accountsById.get(t.account_id);
+    return a ? PLATFORMS[a.platform].label : 'Conta removida';
+  };
+  const byTarget = new Map(post.targets.map(t => [t.id, t]));
+  const done = results.filter(r => r.ok).map(r => name(byTarget.get(r.target) || {}));
+  const failed = results.filter(r => !r.ok).map(r => `${name(byTarget.get(r.target) || {})}: ${r.error}`);
+  if (!failed.length) return `Legenda atualizada em ${done.join(', ')}.`;
+  return `${done.length ? `Mudou em ${done.join(', ')}. ` : ''}Não mudou: ${failed.join(' · ')}`;
+}
+
 export async function retryTarget(targetId) {
   const { error } = await db.rpc('marketing_retry_target', { p_target: targetId });
   if (error) throw error;

@@ -13,6 +13,9 @@
 //     { action: 'reply', commentId, text }      responde um comentário
 //     { action: 'hide', commentId, hidden }     oculta/mostra um comentário
 //     { action: 'delete', postId }              apaga o post nas redes e, dando tudo certo, do painel
+//     { action: 'edit', postId, caption }       muda a legenda do post publicado (só o Facebook deixa)
+//     { action: 'deleteExternal', accountId, externalId }  apaga um post feito direto na rede (lista de Resultados)
+//     { action: 'editExternal', accountId, externalId, caption }  muda a legenda de um post do Facebook feito direto na rede
 //     { action: 'tiktokCreator', accountId }    dados da conta TikTok para a tela de publicar (regra do TikTok)
 //
 // Verify JWT desligado por causa do cron; o admin é conferido aqui (JWT + admin_can).
@@ -20,7 +23,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { CRON_SECRET_HEADER, isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import {
-  type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
+  type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, editPublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
   type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step,
 } from '../_shared/marketing.ts';
 import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
@@ -167,6 +170,45 @@ type DeleteResult = { target: string; ok: boolean; error?: string };
 
 // Apaga onde já saiu, descarta o que ainda está na fila e só remove o post do
 // painel quando nada falhou; o que falhar fica no painel com o motivo.
+type EditResult = { target: string; ok: boolean; error?: string };
+
+// Muda a legenda nas redes que deixam (Facebook). O texto do painel só muda se todas
+// as redes publicadas aceitaram; senão fica o antigo e o resultado diz quem não mudou.
+async function editPost(postId: string, caption: string): Promise<{ changed: boolean; results: EditResult[] }> {
+  const { data: post, error: postErr } = await db.from('marketing_posts').select('id, media, format').eq('id', postId).single();
+  if (postErr || !post) throw new Error('Post não encontrado.');
+  if (post.format === 'story') throw new Error('Story não tem legenda.');
+  const { data: targets, error } = await db.from('marketing_post_targets')
+    .select('id, account_id, status, external_id').eq('post_id', postId).eq('status', 'published');
+  if (error) throw error;
+  const live = (targets || []).filter((t) => t.external_id);
+  if (!live.length) throw new Error('Este post ainda não foi publicado em nenhuma rede.');
+  const isVideo = Array.isArray(post.media) && (post.media as Media[])[0]?.type === 'video';
+
+  const results: EditResult[] = [];
+  for (const t of live) {
+    try {
+      const { account, token } = await loadAccount(t.account_id);
+      await editPublished(makeApi(fetch, baseFor(account.platform), token), account, t.external_id!, caption, isVideo);
+      results.push({ target: t.id, ok: true });
+    } catch (err) {
+      await handleGraphError(t.account_id, err);
+      results.push({ target: t.id, ok: false, error: errMsg(err) });
+    }
+  }
+  const changed = results.every((r) => r.ok);
+  if (changed) await db.from('marketing_posts').update({ caption }).eq('id', postId);
+  return { changed, results };
+}
+
+// Post feito direto no app da rede: só existe em marketing_post_metrics (a lista de Resultados).
+async function loadExternal(accountId: string, externalId: string) {
+  const { data, error } = await db.from('marketing_post_metrics').select('kind')
+    .eq('account_id', accountId).eq('external_id', externalId).single();
+  if (error || !data) throw new Error('Post não encontrado nos resultados. Atualize as métricas e tente de novo.');
+  return { kind: String(data.kind), ...(await loadAccount(accountId)) };
+}
+
 async function deletePost(postId: string): Promise<{ removed: boolean; results: DeleteResult[] }> {
   const { data: targets, error } = await db.from('marketing_post_targets')
     .select('id, account_id, status, external_id, locked_until').eq('post_id', postId);
@@ -334,6 +376,44 @@ Deno.serve(async (req) => {
         return json({ results: await syncComments() });
       case 'metrics':
         return json({ results: await syncMetrics() });
+      case 'edit': {
+        if (typeof body.postId !== 'string') return json({ error: 'Falta postId.' }, 400);
+        const caption = String(body.caption ?? '').trim();
+        if (!caption) return json({ error: 'Escreva a legenda.' }, 400);
+        const out = await editPost(body.postId, caption);
+        await audit('marketingEditPost', { post: body.postId, changed: out.changed, failed: out.results.filter((r) => !r.ok).length });
+        return json(out);
+      }
+      case 'deleteExternal': {
+        if (typeof body.accountId !== 'string' || typeof body.externalId !== 'string') return json({ error: 'Faltam dados do post.' }, 400);
+        const { account, token } = await loadExternal(body.accountId, body.externalId);
+        try {
+          await deletePublished(makeApi(fetch, baseFor(account.platform), token), body.externalId);
+        } catch (err) {
+          await handleGraphError(account.id, err);
+          throw err;
+        }
+        await db.from('marketing_comments').delete().eq('account_id', account.id).eq('post_external_id', body.externalId);
+        await db.from('marketing_post_metrics').delete().eq('account_id', account.id).eq('external_id', body.externalId);
+        await audit('marketingDeleteExternal', { account: account.id, post: body.externalId });
+        return json({ removed: true });
+      }
+      case 'editExternal': {
+        if (typeof body.accountId !== 'string' || typeof body.externalId !== 'string') return json({ error: 'Faltam dados do post.' }, 400);
+        const caption = String(body.caption ?? '').trim();
+        if (!caption) return json({ error: 'Escreva a legenda.' }, 400);
+        const { account, token, kind } = await loadExternal(body.accountId, body.externalId);
+        try {
+          await editPublished(makeApi(fetch, baseFor(account.platform), token), account, body.externalId, caption, kind === 'video');
+        } catch (err) {
+          await handleGraphError(account.id, err);
+          throw err;
+        }
+        await db.from('marketing_post_metrics').update({ caption: caption.slice(0, 300) })
+          .eq('account_id', account.id).eq('external_id', body.externalId);
+        await audit('marketingEditExternal', { account: account.id, post: body.externalId });
+        return json({ changed: true });
+      }
       case 'delete': {
         if (typeof body.postId !== 'string') return json({ error: 'Falta postId.' }, 400);
         const out = await deletePost(body.postId);

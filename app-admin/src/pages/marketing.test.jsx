@@ -10,7 +10,7 @@ const { lib } = vi.hoisted(() => ({
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
     fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchConversion: vi.fn(),
-    uploadMedia: vi.fn(),
+    uploadMedia: vi.fn(), editPost: vi.fn(), deleteExternalPost: vi.fn(), editExternalPost: vi.fn(),
     updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
 }));
@@ -649,5 +649,84 @@ describe('quadros e trilha do Reel', () => {
     for (const t of [0, 1, 3.5, 6, 9.7, 11.9]) drawReelFrame(ctx, { hook: 'Gancho', title: 'Título', sub: 'Sub' }, img, t);
     expect(calls.some(([n]) => n === 'drawImage')).toBe(true); // o print aparece na cena 2
     expect(FPS * DURATION).toBe(288);
+  });
+});
+
+describe('editar e excluir o que já foi publicado', () => {
+  const POST = {
+    id: 'p8', caption: 'Legenda antiga', format: 'feed', media: [{ type: 'image', url: 'https://x/1.jpg' }], scheduled_at: null, created_at: '2026-10-30T10:00:00Z',
+    targets: [
+      { id: 't1', account_id: 'a1', status: 'published', permalink: 'https://fb/p' },
+      { id: 't2', account_id: 'a2', status: 'published', permalink: 'https://ig/p' },
+    ],
+  };
+
+  beforeEach(() => { lib.fetchPosts.mockResolvedValue([POST]); });
+
+  it('edita a legenda no Facebook e avisa que o Instagram não deixa', async () => {
+    lib.editPost.mockResolvedValue({ changed: false, results: [{ target: 't1', ok: true }, { target: 't2', ok: false, error: 'O Instagram não permite editar a legenda pela API.' }] });
+    wrap(<MarketingPublish />, '/?aba=historico');
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar legenda' }));
+    fireEvent.change(screen.getByLabelText('Nova legenda'), { target: { value: 'Legenda nova' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar nas redes que permitem' }));
+    await waitFor(() => expect(lib.editPost).toHaveBeenCalledWith('p8', 'Legenda nova'));
+    expect(await screen.findByText(/Mudou em Facebook\. Não mudou: Instagram: O Instagram não permite editar/)).toBeTruthy();
+  });
+
+  it('legenda mudou em todas as redes: fecha o editor', async () => {
+    lib.editPost.mockResolvedValue({ changed: true, results: [{ target: 't1', ok: true }, { target: 't2', ok: true }] });
+    wrap(<MarketingPublish />, '/?aba=historico');
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar legenda' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar nas redes que permitem' }));
+    expect(await screen.findByText('Legenda atualizada em Facebook, Instagram.')).toBeTruthy();
+    expect(screen.queryByLabelText('Nova legenda')).toBeNull();
+  });
+
+  it('excluir e republicar: apaga nas redes, cria o post de novo com a legenda nova e publica', async () => {
+    lib.deletePost.mockResolvedValue({ removed: true, results: [{ ok: true }, { ok: true }] });
+    lib.createPost.mockResolvedValue('p9');
+    lib.runPost.mockResolvedValue({ results: [{ id: 'n1', status: 'published' }] });
+    wrap(<MarketingPublish />, '/?aba=historico');
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar legenda' }));
+    fireEvent.change(screen.getByLabelText('Nova legenda'), { target: { value: 'Legenda nova' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir e republicar' }));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('Curtidas, comentários e visualizações'));
+    await waitFor(() => expect(lib.createPost).toHaveBeenCalledWith({
+      caption: 'Legenda nova', media: POST.media, accountIds: ['a1', 'a2'], format: 'feed',
+    }));
+    expect(lib.deletePost).toHaveBeenCalledWith('p8');
+    expect(lib.runPost).toHaveBeenCalledWith('p9');
+    expect(await screen.findByText('Excluído e republicado com a legenda nova.')).toBeTruthy();
+  });
+
+  it('não republica se alguma rede não conseguiu excluir', async () => {
+    lib.deletePost.mockResolvedValue({ removed: false, results: [{ ok: true }, { ok: false, error: 'sem permissão' }] });
+    wrap(<MarketingPublish />, '/?aba=historico');
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar legenda' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir e republicar' }));
+    expect(await screen.findByText(/Nada foi republicado/)).toBeTruthy();
+    expect(lib.createPost).not.toHaveBeenCalled();
+  });
+
+  it('Resultados: edita só posts do Facebook e exclui posts feitos direto na rede', async () => {
+    lib.fetchMetrics.mockResolvedValue([
+      { account_id: 'a2', external_id: 'm1', permalink: 'https://ig/1', caption: 'Post do Instagram', kind: 'image', thumb_url: null, posted_at: new Date().toISOString(), likes: 1, comments: 0, shares: null, saves: null, reach: null, views: null, insights_ok: false },
+      { account_id: 'a1', external_id: 'f1', permalink: 'https://fb/1', caption: 'Post do Facebook', kind: 'image', thumb_url: null, posted_at: new Date().toISOString(), likes: 2, comments: 0, shares: 0, saves: null, reach: null, views: null, insights_ok: false },
+    ]);
+    lib.fetchConversion.mockResolvedValue([]);
+    lib.deleteExternalPost.mockResolvedValue({ removed: true });
+    lib.editExternalPost.mockResolvedValue({ changed: true });
+    wrap(<MarketingResults />);
+    const edits = await screen.findAllByRole('button', { name: 'Editar legenda' });
+    expect(edits.length).toBe(1); // só o do Facebook
+
+    fireEvent.click(edits[0]);
+    fireEvent.change(screen.getByLabelText('Nova legenda'), { target: { value: 'Texto novo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(lib.editExternalPost).toHaveBeenCalledWith('a1', 'f1', 'Texto novo'));
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Excluir' })[0]);
+    await waitFor(() => expect(lib.deleteExternalPost).toHaveBeenCalled());
+    expect(await screen.findByText('Post excluído.')).toBeTruthy();
   });
 });
