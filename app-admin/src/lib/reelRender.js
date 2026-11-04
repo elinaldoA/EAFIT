@@ -6,14 +6,14 @@ export const W = 1080;
 export const H = 1920;
 export const FPS = 24;
 export const DURATION = 12;
-const FONT = 'Arial, Helvetica, sans-serif';
+export const FONT = 'Arial, Helvetica, sans-serif';
 
-const clamp = (v) => Math.min(1, Math.max(0, v));
-const easeOut = (v) => 1 - (1 - clamp(v)) ** 3;
+export const clamp = (v) => Math.min(1, Math.max(0, v));
+export const easeOut = (v) => 1 - (1 - clamp(v)) ** 3;
 // Aparece em [a, a+0.5] e some em [b-0.4, b].
 const fade = (t, a, b) => clamp((t - a) / 0.5) * clamp((b - t) / 0.4);
 
-function background(ctx) {
+export function background(ctx) {
   const bg = ctx.createLinearGradient(0, 0, 0, H);
   bg.addColorStop(0, '#17171b');
   bg.addColorStop(1, '#0e0e12');
@@ -37,7 +37,7 @@ function lines(ctx, text, maxWidth) {
   return out;
 }
 
-function text(ctx, str, { x, y, size, weight = 800, color = '#fff', align = 'left', alpha = 1, maxWidth = W - 144, gap = 1.15 }) {
+export function text(ctx, str, { x, y, size, weight = 800, color = '#fff', align = 'left', alpha = 1, maxWidth = W - 144, gap = 1.15 }) {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
@@ -53,7 +53,7 @@ function text(ctx, str, { x, y, size, weight = 800, color = '#fff', align = 'lef
   return yy;
 }
 
-function roundRect(ctx, x, y, w, h, r) {
+export function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
