@@ -484,10 +484,15 @@ export function hideComment(commentId, hidden) {
 // 20261230010000_marketing_autopost.sql): feed 12h e stories 19h (Brasília).
 
 export async function fetchAutopost() {
-  const [settings, queue] = await Promise.all([
+  const columns = 'id, position, key, format, caption, media, posted_at, skipped_at';
+  const [settings, withSlot] = await Promise.all([
     db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
-    db.from('marketing_autopost_queue').select('id, position, key, format, slot, caption, media, posted_at, skipped_at').order('position'),
+    db.from('marketing_autopost_queue').select(`${columns}, slot`).order('position'),
   ]);
+  // Sem a migration dos horários de refeição a coluna `slot` não existe: lê sem ela.
+  const queue = withSlot.error
+    ? await db.from('marketing_autopost_queue').select(columns).order('position')
+    : withSlot;
   if (settings.error) throw settings.error;
   if (queue.error) throw queue.error;
   const items = queue.data || [];
@@ -651,8 +656,10 @@ export const moveQueueItem = (id, direction) => queueRpc('marketing_autopost_mov
 export const removeQueueItem = id => queueRpc('marketing_autopost_remove', { p_id: id });
 export const restoreQueueItem = id => queueRpc('marketing_autopost_restore', { p_id: id });
 export const addQueueItem = ({ format, slot = null, caption, media }) => queueRpc('marketing_autopost_add', {
-  p_format: format, p_slot: format === 'story' ? slot || null : null, p_caption: format === 'story' ? '' : caption,
+  p_format: format, p_caption: format === 'story' ? '' : caption,
   p_media: media.map(({ type, url }) => ({ type, url })),
+  // Só envia quando há horário de refeição: a função antiga (sem a migration) não tem esse parâmetro.
+  ...(format === 'story' && slot ? { p_slot: slot } : {}),
 });
 
 // Primeiro/último do formato entre os pendentes: desliga o botão de subir/descer.
