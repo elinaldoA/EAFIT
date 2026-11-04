@@ -447,7 +447,7 @@ export function hideComment(commentId, hidden) {
 export async function fetchAutopost() {
   const [settings, queue] = await Promise.all([
     db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
-    db.from('marketing_autopost_queue').select('id, position, key, format, caption, media, posted_at').order('position'),
+    db.from('marketing_autopost_queue').select('id, position, key, format, caption, media, posted_at, skipped_at').order('position'),
   ]);
   if (settings.error) throw settings.error;
   if (queue.error) throw queue.error;
@@ -455,7 +455,8 @@ export async function fetchAutopost() {
   return {
     enabled: settings.data?.enabled !== false,
     items,
-    pending: items.filter(i => !i.posted_at),
+    pending: items.filter(i => !i.posted_at && !i.skipped_at),
+    skipped: items.filter(i => i.skipped_at),
     posted: items.filter(i => i.posted_at).length,
   };
 }

@@ -127,6 +127,7 @@ export default function MarketingAutopost({ posts = [], accounts = [] }) {
       </p>
       <p className="user-detail__meta">
         Resumo da fila: {state.posted} já publicados · faltam {count('feed')} no feed, {count('reel')} em Reels e {count('story')} em stories.
+        {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
         {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
       </p>
       {msg && <p role="alert">{msg}</p>}

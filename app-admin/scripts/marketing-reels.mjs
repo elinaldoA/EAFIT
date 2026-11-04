@@ -5,7 +5,7 @@
 //   node app-admin/scripts/marketing-reels.mjs
 //
 // Precisa do ffmpeg no PATH. Gera os MP4 em app-react/public/landing/img/marketing/
-// (reel-*.mp4) e o seed SQL dos itens em supabase/migrations/20261231010000_marketing_autopost_reels.seed.sql.txt.
+// (reel-*.mp4) e o seed SQL da segunda leva em supabase/migrations/20270101010000_marketing_autopost_dedup.reels.sql.txt.
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -39,6 +39,25 @@ const REELS = [
   {
     key: 'nutricao', print: 'nutricao', hook: 'Treino e dieta em apps diferentes?', title: 'Tudo no mesmo app', sub: 'Treino, calorias e macros juntos.',
     caption: `Resultado vem do treino e da comida. 🍽️\nO aluno acompanha as duas coisas num só lugar.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  // Segunda leva (migration 20270101010000): temas novos, legendas diferentes das do feed.
+  {
+    key: 'historico', later: true, print: 'historico', hook: 'Qual foi a carga do aluno semana passada?', title: 'Todo o histórico num só lugar', sub: 'Treinos, cargas e datas sempre à mão.',
+    caption: `Esqueceu a carga do último treino? 🧠
+No histórico do app, cada treino fica salvo com data, carga e repetições.
+
+Link na bio 👇
+
+${TAGS}`,
+  },
+  {
+    key: 'agua', later: true, print: 'agua', hook: 'Seu aluno bebe água o suficiente?', title: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
+    caption: `Treinar desidratado rende menos. 💧
+O app registra a meta diária de água do aluno.
+
+Link na bio 👇
+
+${TAGS}`,
   },
 ];
 
@@ -182,16 +201,26 @@ const sqlText = (s) => `'${s.replace(/'/g, "''")}'`;
 
 async function main() {
   mkdirSync(OUT, { recursive: true });
+  const only = process.env.ONLY; // 'later' renderiza só a segunda leva
   const rows = [];
-  let position = 14; // depois dos 14 itens de feed/story já na fila
+  const laterRows = [];
+  let position = 14;
+  let laterPosition = 20; // depois dos 14 itens de feed/story já na fila
   for (const reel of REELS) {
+    if (only === 'later' && !reel.later) continue;
     await render(reel);
-    position += 1;
     const media = [{ type: 'video', url: `${SITE}/img/marketing/reel-${reel.key}.mp4` }];
+    if (reel.later) {
+      laterPosition += 1;
+      laterRows.push(`  (${laterPosition}, ${sqlText(`${reel.key}-reel`)}, 'reel', ${sqlText(reel.caption)}, ${sqlText(JSON.stringify(media))}::jsonb)`);
+      console.log('ok', reel.key);
+      continue;
+    }
+    position += 1;
     rows.push(`  (${position}, ${sqlText(`${reel.key}-reel`)}, 'reel', ${sqlText(reel.caption)}, ${sqlText(JSON.stringify(media))}::jsonb)`);
     console.log('ok', reel.key);
   }
-  writeFileSync(join(root, 'supabase', 'migrations', '20261231010000_marketing_autopost_reels.seed.sql.txt'), rows.join(',\n') + ';\n');
+  writeFileSync(join(root, 'supabase', 'migrations', '20270101010000_marketing_autopost_dedup.reels.sql.txt'), laterRows.join(',\n') + ';\n');
 }
 
 main();

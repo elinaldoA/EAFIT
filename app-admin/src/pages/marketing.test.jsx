@@ -41,7 +41,7 @@ beforeEach(() => {
     { id: 'q2', format: 'story', caption: '', media: [{ url: 'https://x/b.jpg' }] },
     { id: 'q3', format: 'story', caption: '', media: [{ url: 'https://x/c.jpg' }] },
   ];
-  lib.fetchAutopost.mockResolvedValue({ enabled: true, items: pending, pending, posted: 4 });
+  lib.fetchAutopost.mockResolvedValue({ enabled: true, items: pending, pending, skipped: [{ id: 'x' }], posted: 4 });
   lib.setAutopostEnabled.mockResolvedValue();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
@@ -396,7 +396,7 @@ describe('agenda da fila automática', () => {
 describe('cartão da publicação automática', () => {
   it('mostra a legenda, as hashtags e o dia de cada item da fila', async () => {
     wrap(<MarketingPublish />);
-    expect(await screen.findByText(/Resumo da fila: 4 já publicados/)).toBeTruthy();
+    expect(await screen.findByText(/Resumo da fila: 4 já publicados.*1 pulado\(s\) por repetição/)).toBeTruthy();
     expect(screen.getByText(/Primeira linha/)).toBeTruthy();
     expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
     expect(screen.getAllByText('Hoje').length + screen.getAllByText(/^Amanhã/).length).toBeGreaterThan(0);

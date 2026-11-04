@@ -69,6 +69,39 @@ export const ITEMS = [
     key: 'agua', kind: 'print', print: 'agua', headline: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
     caption: `Hidratação também é treino. 💧\nO app lembra e registra a meta diária de água.\n\nLink na bio 👇\n\n${TAGS}`,
   },
+  // Segunda leva (migration 20270101010000): temas novos, nunca publicados antes.
+  {
+    key: 'erros', later: true, kind: 'slides', headline: '4 erros que fazem o aluno largar o treino',
+    slides: [
+      ['1', 'Treino igual para todo mundo'],
+      ['2', 'Nunca ajustar a carga'],
+      ['3', 'Não dar retorno depois do treino'],
+      ['4', 'Não mostrar o resultado dele'],
+    ],
+    closing: 'Corrija isso com o app.',
+    caption: `Quase todo aluno que larga o treino passou por um destes quatro erros. ⚠️
+Salve e revise a sua rotina com os alunos.
+
+Link na bio 👇
+
+${TAGS}`,
+  },
+  {
+    key: 'checklist', later: true, kind: 'slides', headline: 'Checklist antes de enviar o treino',
+    slides: [
+      ['1', 'Objetivo do aluno'],
+      ['2', 'Nível e lesões'],
+      ['3', 'Dias disponíveis na semana'],
+      ['4', 'Carga inicial segura'],
+    ],
+    closing: 'Monte e envie pelo app.',
+    caption: `Treino bom começa antes do primeiro exercício. ✅
+Salve este checklist para o próximo aluno novo.
+
+Link na bio 👇
+
+${TAGS}`,
+  },
 ];
 
 const FONT = 'Arial, Helvetica, sans-serif';
@@ -191,7 +224,9 @@ const sqlText = (s) => `'${s.replace(/'/g, "''")}'`;
 async function main() {
   mkdirSync(OUT, { recursive: true });
   const rows = [];
+  const laterRows = [];
   let position = 0;
+  let laterPosition = 18;
   const add = (format, item, files) => {
     position += 1;
     const media = files.map((f) => ({ type: 'image', url: `${SITE}/img/marketing/${f}` }));
@@ -199,6 +234,24 @@ async function main() {
   };
 
   for (const item of ITEMS) {
+    if (item.later) {
+      const files = [];
+      const cover = `${item.key}-1.jpg`;
+      writeFileSync(join(OUT, cover), slideArt(item.headline, { big: true, small: 'Deslize →' }));
+      files.push(cover);
+      item.slides.forEach(([n, text], i) => {
+        const f = `${item.key}-${i + 2}.jpg`;
+        writeFileSync(join(OUT, f), slideArt(text, { number: n }));
+        files.push(f);
+      });
+      const last = `${item.key}-${item.slides.length + 2}.jpg`;
+      writeFileSync(join(OUT, last), slideArt(item.closing, { big: true, small: 'Link na bio.' }));
+      files.push(last);
+      laterPosition += 1;
+      const media = files.map((f) => ({ type: 'image', url: `${SITE}/img/marketing/${f}` }));
+      laterRows.push(`  (${laterPosition}, ${sqlText(`${item.key}-feed`)}, 'feed', ${sqlText(item.caption)}, ${sqlText(JSON.stringify(media))}::jsonb)`);
+      continue;
+    }
     if (item.kind === 'print') {
       const feedFile = `${item.key}-feed.jpg`;
       const storyFile = `${item.key}-story.jpg`;
@@ -223,6 +276,7 @@ async function main() {
     }
   }
   writeFileSync(join(root, 'supabase', 'migrations', '20261230010000_marketing_autopost.seed.sql.txt'), rows.join(',\n') + ';\n');
+  writeFileSync(join(root, 'supabase', 'migrations', '20270101010000_marketing_autopost_dedup.later.sql.txt'), laterRows.join(',\n') + ';\n');
   console.log(`${position} itens, artes em ${OUT}`);
 }
 
