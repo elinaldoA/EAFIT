@@ -107,3 +107,22 @@ export async function removeExerciseMedia({ nome, path, adminId }) {
   await db.storage.from(BUCKET).remove([path]);
   await audit(adminId, 'exerciseMediaRemove', { nome, path });
 }
+
+// Mapa nome -> { url, type } das mídias próprias (mesmo formato que o app usa
+// em getExerciseMedia). Uma busca por sessão; falha vira mapa vazio e vale a
+// demonstração padrão.
+let customMapPromise = null;
+export function loadCustomMediaMap() {
+  if (!customMapPromise) {
+    customMapPromise = (async () => {
+      const { data, error } = await db.from('exercise_media').select('nome, storage_path, media_type');
+      if (error) throw error;
+      const map = {};
+      (data || []).forEach(r => {
+        if (r?.nome && r.storage_path) map[normalizeName(r.nome)] = { url: publicUrl(r.storage_path), type: r.media_type === 'video' ? 'video' : 'imagem' };
+      });
+      return map;
+    })().catch(() => { customMapPromise = null; return {}; });
+  }
+  return customMapPromise;
+}

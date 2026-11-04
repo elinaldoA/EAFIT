@@ -1,5 +1,6 @@
 import { Fragment, useRef, useState } from 'react';
 import { PLAN_FILE_ACCEPT, hasDemo, readPlanFile, summarizePlan } from '../lib/workoutPlanFile';
+import ExerciseDemoPreview, { useCustomMedia } from '../components/ExerciseDemoPreview';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { SEVERITY_BADGE, SEVERITY_LABEL, parseSetNumber } from '../lib/userDetailHelpers';
@@ -119,6 +120,7 @@ export default function UserWorkoutsTab({
   onToggleWorkoutDetail, onExportTreinos, personalRecords, discomfortLogs, onFixSet, onDeleteWorkout,
   onExportPlan, onImportPlan,
 }) {
+  const customMedia = useCustomMedia();
   return (
     <div className="stack">
       <section>
@@ -142,8 +144,8 @@ export default function UserWorkoutsTab({
             )}
             {activePlan.plan_days.map(day => (
               <table className="resp-table" key={day.id}>
-                <thead className="resp-table__title"><tr><th colSpan={4}>{day.dia} — {day.foco}</th></tr></thead>
-                <thead><tr><th>Exercício</th><th>Séries</th><th>Reps</th><th>Descanso</th></tr></thead>
+                <thead className="resp-table__title"><tr><th colSpan={5}>{day.dia} — {day.foco}</th></tr></thead>
+                <thead><tr><th>Exercício</th><th>Séries</th><th>Reps</th><th>Descanso</th><th>Execução</th></tr></thead>
                 <tbody>
                   {day.plan_exercises.map(ex => (
                     <tr key={ex.id}>
@@ -151,9 +153,10 @@ export default function UserWorkoutsTab({
                       <td data-label="Séries">{ex.series}</td>
                       <td data-label="Reps">{ex.reps}</td>
                       <td data-label="Descanso">{ex.descanso}</td>
+                      <td data-label="Execução"><ExerciseDemoPreview nome={ex.nome} custom={customMedia} /></td>
                     </tr>
                   ))}
-                  {day.plan_exercises.length === 0 && <tr><td colSpan={4}><EmptyState icon="💤" label="Dia de descanso." /></td></tr>}
+                  {day.plan_exercises.length === 0 && <tr><td colSpan={5}><EmptyState icon="💤" label="Dia de descanso." /></td></tr>}
                 </tbody>
               </table>
             ))}
