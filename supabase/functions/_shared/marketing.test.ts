@@ -1,7 +1,7 @@
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import {
   type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
-  replyToComment, setCommentHidden, signState, startPublish, THREADS_CHILD_POLL, verifyState,
+  replyToComment, setCommentHidden, signState, startPublish, THREADS_CHILD_POLL, trackedCaption, verifyState,
 } from './marketing.ts';
 
 type Call = { method: string; path: string; params: Record<string, string> };
@@ -314,4 +314,25 @@ Deno.test('métricas do Facebook: reações, comentários e compartilhamentos', 
   });
   const [row] = await fetchMetrics(makeApi(fb.fn, 'https://graph.facebook.com/v23.0', 't'), PAGE);
   assertEquals([row.kind, row.likes, row.comments, row.shares, row.reach], ['image', 14, 3, 2, 410]);
+});
+
+Deno.test('trackedCaption: Facebook e Threads levam link com o id do post; Instagram, story e TikTok nao', () => {
+  const post = { id: 'AB12CD34-0000-4000-8000-000000000000', caption: 'Treino de hoje', format: 'feed' as const };
+  assertEquals(
+    trackedCaption('facebook', post),
+    'Treino de hoje
+
+Comece grátis: https://eafit.com.br/app/?utm_source=facebook&utm_medium=post&utm_content=ab12cd34',
+  );
+  assertEquals(trackedCaption('threads', post).includes('utm_source=threads&utm_medium=post&utm_content=ab12cd34'), true);
+  assertEquals(trackedCaption('instagram', post), 'Treino de hoje');
+  assertEquals(trackedCaption('tiktok', post), 'Treino de hoje');
+  assertEquals(trackedCaption('facebook', { ...post, format: 'story' }), 'Treino de hoje');
+});
+
+Deno.test('trackedCaption: nao duplica o link nem estoura o limite da rede', () => {
+  const tagged = { id: 'ab12cd34', caption: 'Veja https://eafit.com.br/app/?utm_content=x', format: 'feed' as const };
+  assertEquals(trackedCaption('facebook', tagged), tagged.caption);
+  const full = { id: 'ab12cd34', caption: 'a'.repeat(480), format: 'feed' as const };
+  assertEquals(trackedCaption('threads', full), full.caption);
 });

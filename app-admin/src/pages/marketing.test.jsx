@@ -9,7 +9,7 @@ const { lib } = vi.hoisted(() => ({
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
-    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchConversion: vi.fn(),
+    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
     uploadMedia: vi.fn(), editPost: vi.fn(), deleteExternalPost: vi.fn(), editExternalPost: vi.fn(),
     updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
@@ -458,6 +458,9 @@ describe('Resultados', () => {
   beforeEach(() => {
     lib.fetchMetrics.mockResolvedValue(METRICS);
     lib.refreshMetrics.mockResolvedValue({ results: [{ account: 'a2', posts: 2 }] });
+    lib.fetchContentConversion.mockResolvedValue([
+      { source: 'facebook', content: 'ab12cd34', caption: 'Erros que travam o ganho de massa', visits: 30, signups: 4, activated: 2, mature: 3, retained: 1 },
+    ]);
     lib.fetchConversion.mockResolvedValue([
       { source: 'instagram', medium: 'bio', visits: 100, signups: 8, confirmed: 6, activated: 3, mature: 6, retained: 2 },
       { source: 'instagram', medium: 'story', visits: 40, signups: 1, confirmed: 1, activated: 0, mature: 0, retained: 0 },
@@ -470,6 +473,8 @@ describe('Resultados', () => {
     expect(screen.getByText('8%')).toBeTruthy(); // 8 cadastros em 100 visitas
     expect(screen.getByText('2,5%')).toBeTruthy(); // 1 em 40
     expect(screen.getByText('2 de 6')).toBeTruthy(); // seguiram treinando entre os dias 8 e 30
+    expect(screen.getByText('Erros que travam o ganho de massa')).toBeTruthy(); // cadastros por post
+    expect(screen.getByText('1 de 3')).toBeTruthy();
     const posts = await screen.findAllByText(/ver post/);
     expect(posts.length).toBe(3);
     expect(screen.getAllByText('Reel de treino').length).toBeGreaterThan(0);

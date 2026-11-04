@@ -24,7 +24,7 @@ import { corsHeadersFor } from '../_shared/cors.ts';
 import { CRON_SECRET_HEADER, isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import {
   type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, editPublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
-  type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step,
+  type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step, trackedCaption,
 } from '../_shared/marketing.ts';
 import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
 
@@ -135,9 +135,10 @@ async function processTarget(t: TargetRow, posts: Map<string, Post>): Promise<{ 
         : await startTikTok(tk, fetch, post, TIKTOK_PUBLIC_POSTS);
     } else {
       const api = makeApi(fetch, baseFor(account.platform), token);
+      const out = { ...post, caption: trackedCaption(account.platform, post) };
       step = t.container_id
-        ? await continuePublish(api, account, post, t.container_id)
-        : await startPublish(api, account, post);
+        ? await continuePublish(api, account, out, t.container_id)
+        : await startPublish(api, account, out);
     }
     if (step.state === 'processing') {
       return finish({
@@ -189,7 +190,7 @@ async function editPost(postId: string, caption: string): Promise<{ changed: boo
   for (const t of live) {
     try {
       const { account, token } = await loadAccount(t.account_id);
-      await editPublished(makeApi(fetch, baseFor(account.platform), token), account, t.external_id!, caption, isVideo);
+      await editPublished(makeApi(fetch, baseFor(account.platform), token), account, t.external_id!, trackedCaption(account.platform, { id: postId, caption, format: 'feed' }), isVideo);
       results.push({ target: t.id, ok: true });
     } catch (err) {
       await handleGraphError(t.account_id, err);

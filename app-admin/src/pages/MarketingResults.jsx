@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  KIND_LABEL, MEDIUM_LABEL, PLATFORMS, averageByKind, conversionRate, deleteExternalPost, editExternalPost, fetchAccounts, fetchConversion, fetchMetrics,
+  KIND_LABEL, MEDIUM_LABEL, PLATFORMS, averageByKind, conversionRate, deleteExternalPost, editExternalPost, fetchAccounts, fetchContentConversion, fetchConversion, fetchMetrics,
   postScore, refreshMetrics,
 } from '../lib/marketing';
 import { formatDate } from '../lib/userDetailHelpers';
@@ -31,6 +31,7 @@ export default function MarketingResults() {
   const [metrics, setMetrics] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [conversion, setConversion] = useState(null);
+  const [byPost, setByPost] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [editing, setEditing] = useState(null); // { key, accountId, externalId, text }
@@ -56,6 +57,8 @@ export default function MarketingResults() {
     fetchConversion(days).then(r => { if (alive) setConversion(r); }).catch(err => {
       if (alive) { setMsg(`Erro: ${err.message}`); setConversion([]); }
     });
+    // Sem a migration aplicada a lista por post só fica vazia; não é erro da tela.
+    fetchContentConversion(days).then(r => { if (alive) setByPost(r); }).catch(() => { if (alive) setByPost([]); });
     return () => { alive = false; };
   }, [days]);
 
@@ -200,6 +203,34 @@ export default function MarketingResults() {
           {' '}quem voltou a treinar entre o dia 8 e o dia 30.
         </p>
       </section>
+
+      {byPost.length > 0 && (
+        <section className="card stack" aria-label="Cadastros por post">
+          <h2 className="section-title">Cadastros por post (Facebook e Threads)</h2>
+          <div className="table-wrap">
+            <table className="resp-table">
+              <thead>
+                <tr><th>Post</th><th>Rede</th><th>Visitas</th><th>Cadastros</th><th>Treinaram</th><th>Seguiram</th></tr>
+              </thead>
+              <tbody>
+                {byPost.map(r => (
+                  <tr key={`${r.source}-${r.content}`}>
+                    <td data-label="Post">{r.caption || `Post ${r.content}`}</td>
+                    <td data-label="Rede">{PLATFORMS[r.source]?.label || r.source}</td>
+                    <td data-label="Visitas">{fmt(r.visits)}</td>
+                    <td data-label="Cadastros">{fmt(r.signups)}</td>
+                    <td data-label="Treinaram">{fmt(r.activated)}</td>
+                    <td data-label="Seguiram">{r.mature ? `${fmt(r.retained)} de ${fmt(r.mature)}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="user-detail__meta">
+            Os posts do Facebook e do Threads saem com um link do app marcado com o id do post; cada cadastro por esse link entra aqui.
+          </p>
+        </section>
+      )}
 
       <section className="card stack" aria-label="Desempenho dos posts">
         <h2 className="section-title">Desempenho dos posts</h2>

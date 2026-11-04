@@ -587,6 +587,16 @@ export async function fetchConversion(days = 30) {
   }));
 }
 
+// Cadastros e retenção por post do Facebook e do Threads (link marcado com utm_content).
+export async function fetchContentConversion(days = 30) {
+  const { data, error } = await db.rpc('admin_marketing_content', { days_back: days });
+  if (error) throw error;
+  return (data || []).map(r => ({
+    source: r.mx_source, content: r.mx_content, caption: r.mx_caption || '', visits: Number(r.mx_visits), signups: Number(r.mx_signups),
+    activated: Number(r.mx_activated), mature: Number(r.mx_mature), retained: Number(r.mx_retained),
+  }));
+}
+
 // Pontuação para ranquear posts: alcance quando a rede deu; senão visualizações;
 // senão a soma das interações. Assim posts sem insights ainda entram na lista.
 export function postScore(m) {
