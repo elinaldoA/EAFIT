@@ -772,15 +772,14 @@ describe('Agenda: editar e excluir o que já saiu', () => {
 });
 
 describe('stories de nutrição por refeição', () => {
-  it('cada refeição tem o seu horário em Brasília: 7h, 12h, 15h (água), 19h30 e 21h30', () => {
+  it('cada refeição tem o seu horário em Brasília: 7h, 12h, 15h (água) e 19h30', () => {
     const pending = [
       { id: 'c', format: 'story', slot: 'cafe' }, { id: 'a', format: 'story', slot: 'almoco' }, { id: 'w', format: 'story', slot: 'agua' },
-      { id: 'j', format: 'story', slot: 'jantar' }, { id: 'e', format: 'story', slot: 'ceia' },
+      { id: 'j', format: 'story', slot: 'jantar' },
     ];
     const sched = autopostSchedule(pending, new Date('2026-11-05T05:00:00Z')); // 2h BRT
-    // a ceia, 21h30 de Brasília, é 00h30 UTC do dia seguinte
     expect(sched.map(x => `${x.item.id}@${x.at.toISOString().slice(0, 16)}`)).toEqual([
-      'c@2026-11-05T10:00', 'a@2026-11-05T15:00', 'w@2026-11-05T18:00', 'j@2026-11-05T22:30', 'e@2026-11-06T00:30',
+      'c@2026-11-05T10:00', 'a@2026-11-05T15:00', 'w@2026-11-05T18:00', 'j@2026-11-05T22:30'
     ]);
   });
 
@@ -809,10 +808,10 @@ describe('stories de nutrição por refeição', () => {
   it('a Fila mostra uma seção para cada refeição', async () => {
     lib.fetchAutopost.mockResolvedValue({
       enabled: true, items: [], skipped: [], posted: 0,
-      pending: [{ id: 's1', format: 'story', slot: 'ceia', position: 1, caption: '', media: [{ type: 'video', url: 'https://x/s.mp4' }] }],
+      pending: [{ id: 's1', format: 'story', slot: 'jantar', position: 1, caption: '', media: [{ type: 'video', url: 'https://x/s.mp4' }] }],
     });
     wrap(<MarketingPublish />, '/?aba=fila');
-    expect(await screen.findByText(/Story · Ceia · todo dia às 21h30 \(1 na fila\)/)).toBeTruthy();
+    expect(await screen.findByText(/Story · Jantar · todo dia às 19h30 \(1 na fila\)/)).toBeTruthy();
     expect(screen.getByText(/Story · Café da manhã · todo dia às 7h \(0 na fila\)/)).toBeTruthy();
   });
 });

@@ -1,5 +1,5 @@
 // Stories em vídeo da publicação automática do Marketing, com música:
-//   - nutrição, nos horários das refeições (café, almoço, jantar, ceia) e de hidratação (15h), 4 de cada;
+//   - nutrição, nos horários das refeições (café, almoço, jantar: 4 de cada) e de hidratação (15h: 12);
 //   - os 6 stories gerais (13h), que antes eram só imagem, agora em vídeo.
 // Feitos só com os prints do app e a trilha original (src/lib/reelAudio.js).
 //
@@ -59,15 +59,14 @@ const MEALS = {
       ['Meio da tarde: hora de hidratar', 'Confira quanto falta para a meta de água.', 'agua'],
       ['Hidratação é parte do treino', 'Água em dia, mais rendimento.', 'agua'],
       ['Um copo agora?', 'Anote no app e acompanhe a meta do dia.', 'agua'],
-    ],
-  },
-  ceia: {
-    pill: 'CEIA', style: 'calm', label: 'ceia',
-    items: [
-      ['Ceia também conta', 'Registre e feche o diário do dia.', 'nutricao-diario'],
-      ['Antes de dormir: diário em dia?', 'Um minuto para revisar o dia.', 'nutricao'],
-      ['Hidratação até o fim do dia', 'Veja se a meta de água foi atingida.', 'agua'],
-      ['Amanhã tem treino', 'Feche o dia e comece com tudo.', 'nutricao-diario'],
+      ['Água antes do treino', 'Chegue hidratado e treine mais forte.', 'agua'],
+      ['Treinou? Reponha a água', 'Registre o que bebeu depois do treino.', 'agua'],
+      ['Sede é sinal tardio', 'Beba aos poucos ao longo do dia.', 'agua'],
+      ['Meta de água do dia', 'Quantos copos já foram?', 'agua'],
+      ['Garrafinha sempre por perto', 'Anote cada gole no app.', 'agua'],
+      ['Pele, foco e energia', 'Hidratação em dia ajuda em tudo.', 'agua'],
+      ['Falta pouco para a meta?', 'Veja quanto resta e termine o dia em dia.', 'agua'],
+      ['Hábito simples, resultado grande', 'Acompanhe a água dia após dia.', 'agua'],
     ],
   },
 };
@@ -121,9 +120,10 @@ async function main() {
   if (only === 'agua') position = 38; // só a hidratação: continua depois dos stories de refeição
 
   if (only !== 'geral') {
-    for (let n = 0; n < 4; n += 1) {
+    for (let n = 0; n < 12; n += 1) {
       for (const [slot, meal] of Object.entries(MEALS)) {
         if (only === 'agua' ? slot !== 'agua' : slot === 'agua') continue;
+        if (!meal.items[n]) continue;
         const [title, sub, print] = meal.items[n];
         const file = `story-${slot}-${n + 1}.mp4`;
         await render(file, { pill: meal.pill, title, sub }, print, meal.style);

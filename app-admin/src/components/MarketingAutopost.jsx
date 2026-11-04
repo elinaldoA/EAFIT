@@ -176,8 +176,8 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
           </div>
         </div>
         <p className="user-detail__meta">
-          Publicação automática, todo dia: feed às 18h e Reel às 20h30 (Instagram, Facebook e Threads), story geral às 13h e stories de refeição às 7h, 12h, 15h, 19h30 e 21h30 (Instagram e Facebook).
-          {' '}Stories de nutrição no café (7h), almoço (12h), hidratação (15h), jantar (19h30) e ceia (21h30).
+          Publicação automática, todo dia: feed às 18h e Reel às 20h30 (Instagram, Facebook e Threads), story geral às 13h e stories de refeição às 7h, 12h, 15h e 19h30 (Instagram e Facebook).
+          {' '}Stories de nutrição no café (7h), almoço (12h), hidratação (15h) e jantar (19h30).
           {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels, {countGeneral()} em stories e {countNutri()} de nutrição.
           {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
           {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
