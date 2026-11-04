@@ -772,15 +772,15 @@ describe('Agenda: editar e excluir o que já saiu', () => {
 });
 
 describe('stories de nutrição por refeição', () => {
-  it('cada refeição tem o seu horário em Brasília: 7h, 11h30, 19h30 e 21h30', () => {
+  it('cada refeição tem o seu horário em Brasília: 7h, 12h, 15h (água), 19h30 e 21h30', () => {
     const pending = [
-      { id: 'c', format: 'story', slot: 'cafe' }, { id: 'a', format: 'story', slot: 'almoco' },
+      { id: 'c', format: 'story', slot: 'cafe' }, { id: 'a', format: 'story', slot: 'almoco' }, { id: 'w', format: 'story', slot: 'agua' },
       { id: 'j', format: 'story', slot: 'jantar' }, { id: 'e', format: 'story', slot: 'ceia' },
     ];
     const sched = autopostSchedule(pending, new Date('2026-11-05T05:00:00Z')); // 2h BRT
     // a ceia, 21h30 de Brasília, é 00h30 UTC do dia seguinte
     expect(sched.map(x => `${x.item.id}@${x.at.toISOString().slice(0, 16)}`)).toEqual([
-      'c@2026-11-05T10:00', 'a@2026-11-05T14:30', 'j@2026-11-05T22:30', 'e@2026-11-06T00:30',
+      'c@2026-11-05T10:00', 'a@2026-11-05T15:00', 'w@2026-11-05T18:00', 'j@2026-11-05T22:30', 'e@2026-11-06T00:30',
     ]);
   });
 

@@ -513,12 +513,13 @@ export async function setAutopostEnabled(enabled) {
 
 // Faixas da publicação automática: cada uma publica um item por dia no seu horário
 // (cron em UTC; Brasília é UTC-3, sem horário de verão). Story pode ter um horário
-// de refeição (`slot`): café, almoço, jantar e ceia, com conteúdo de nutrição.
-export const SLOT_LABEL = { cafe: 'Café da manhã', almoco: 'Almoço', jantar: 'Jantar', ceia: 'Ceia' };
+// de refeição (`slot`): café, almoço, hidratação, jantar e ceia, com conteúdo de nutrição.
+export const SLOT_LABEL = { cafe: 'Café da manhã', almoco: 'Almoço', agua: 'Hidratação', jantar: 'Jantar', ceia: 'Ceia' };
 export const AUTOPOST_LANES = [
   { key: 'story:cafe', format: 'story', slot: 'cafe', utc: [10, 0], time: '7h', label: 'Story · Café da manhã' },
-  { key: 'story:almoco', format: 'story', slot: 'almoco', utc: [14, 30], time: '11h30', label: 'Story · Almoço' },
+  { key: 'story:almoco', format: 'story', slot: 'almoco', utc: [15, 0], time: '12h', label: 'Story · Almoço' },
   { key: 'story', format: 'story', slot: null, utc: [16, 0], time: '13h', label: 'Story' },
+  { key: 'story:agua', format: 'story', slot: 'agua', utc: [18, 0], time: '15h', label: 'Story · Hidratação' },
   { key: 'story:jantar', format: 'story', slot: 'jantar', utc: [22, 30], time: '19h30', label: 'Story · Jantar' },
   { key: 'feed', format: 'feed', slot: null, utc: [21, 0], time: '18h', label: 'Feed' },
   { key: 'reel', format: 'reel', slot: null, utc: [23, 30], time: '20h30', label: 'Reel' },

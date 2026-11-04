@@ -1,10 +1,10 @@
 // Stories em vídeo da publicação automática do Marketing, com música:
-//   - nutrição, nos horários das refeições (café, almoço, jantar, ceia), 4 de cada;
-//   - os 6 stories gerais (19h), que antes eram só imagem, agora em vídeo.
+//   - nutrição, nos horários das refeições (café, almoço, jantar, ceia) e de hidratação (15h), 4 de cada;
+//   - os 6 stories gerais (13h), que antes eram só imagem, agora em vídeo.
 // Feitos só com os prints do app e a trilha original (src/lib/reelAudio.js).
 //
 //   node app-admin/scripts/marketing-stories.mjs            (todos)
-//   ONLY=nutri node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral)
+//   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua)
 //
 // Precisa do ffmpeg no PATH. Gera os MP4 em app-react/public/landing/img/marketing/
 // (story-*.mp4) e o SQL dos itens em
@@ -52,6 +52,15 @@ const MEALS = {
       ['Treino e jantar no mesmo app', 'Evolução e alimentação juntas.', 'nutricao'],
     ],
   },
+  agua: {
+    pill: 'HIDRATAÇÃO', style: 'bright', label: 'hidratação',
+    items: [
+      ['Já bebeu água hoje?', 'Registre cada copo no app.', 'agua'],
+      ['Meio da tarde: hora de hidratar', 'Confira quanto falta para a meta de água.', 'agua'],
+      ['Hidratação é parte do treino', 'Água em dia, mais rendimento.', 'agua'],
+      ['Um copo agora?', 'Anote no app e acompanhe a meta do dia.', 'agua'],
+    ],
+  },
   ceia: {
     pill: 'CEIA', style: 'calm', label: 'ceia',
     items: [
@@ -63,7 +72,7 @@ const MEALS = {
   },
 };
 
-// Stories gerais (19h): mesmos títulos das artes de imagem que já estão na fila.
+// Stories gerais (13h): mesmos títulos das artes de imagem que já estão na fila.
 const GENERAL = [
   ['treino', 'Treino pronto em segundos', 'Monte, envie e acompanhe.', 'treino'],
   ['evolucao', 'Quem vê a evolução não desiste', 'Cada carga e cada série viram progresso.', 'evolucao'],
@@ -109,10 +118,12 @@ async function main() {
   const rows = [];
   const updates = [];
   let position = 22; // depois dos 22 itens que já estão na fila
+  if (only === 'agua') position = 38; // só a hidratação: continua depois dos stories de refeição
 
   if (only !== 'geral') {
     for (let n = 0; n < 4; n += 1) {
       for (const [slot, meal] of Object.entries(MEALS)) {
+        if (only === 'agua' ? slot !== 'agua' : slot === 'agua') continue;
         const [title, sub, print] = meal.items[n];
         const file = `story-${slot}-${n + 1}.mp4`;
         await render(file, { pill: meal.pill, title, sub }, print, meal.style);
@@ -122,7 +133,7 @@ async function main() {
       }
     }
   }
-  if (only !== 'nutri') {
+  if (only !== 'nutri' && only !== 'agua') {
     for (const [key, title, sub, print] of GENERAL) {
       const file = `story-${key}.mp4`;
       await render(file, { title, sub }, print, 'energy');
