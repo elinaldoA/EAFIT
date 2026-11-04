@@ -10,6 +10,7 @@ const { lib } = vi.hoisted(() => ({
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
     fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchConversion: vi.fn(),
+    updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
@@ -20,7 +21,7 @@ import MarketingAccounts from './MarketingAccounts';
 import MarketingComments from './MarketingComments';
 import MarketingResults from './MarketingResults';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, splitCaption, brtDay, averageByKind, conversionRate, postScore,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -418,6 +419,7 @@ describe('Publicar em abas', () => {
   it('abre na agenda, troca para o novo post e para o histórico', async () => {
     wrap(<MarketingPublish />);
     expect(await screen.findByRole('tab', { name: 'Agenda', selected: true })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Fila' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Publicar agora' })).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: 'Novo post' }));
     expect(await screen.findByText('Onde e como publicar')).toBeTruthy();
@@ -508,5 +510,68 @@ describe('lib: resultados', () => {
     expect(conversionRate(100, 8)).toBe(8);
     expect(conversionRate(0, 3)).toBeNull();
     expect(conversionRate(40, 1)).toBe(2.5);
+  });
+});
+
+describe('Fila: editor', () => {
+  const QUEUE = [
+    { id: 'q1', format: 'feed', position: 1, caption: 'Primeiro post\n\n#treino', media: [{ type: 'image', url: 'https://x/1.jpg' }] },
+    { id: 'q2', format: 'feed', position: 2, caption: 'Segundo post', media: [{ type: 'image', url: 'https://x/2.jpg' }] },
+    { id: 'q3', format: 'story', position: 3, caption: '', media: [{ type: 'image', url: 'https://x/3.jpg' }] },
+  ];
+  const skipped = { id: 'q9', format: 'feed', position: 9, caption: 'Repetido', media: [{ type: 'image', url: 'https://x/9.jpg' }], skipped_at: '2026-11-04T10:00:00Z' };
+
+  beforeEach(() => {
+    lib.fetchAutopost.mockResolvedValue({ enabled: true, items: QUEUE, pending: QUEUE, skipped: [skipped], posted: 0 });
+    for (const fn of ['updateQueueCaption', 'moveQueueItem', 'removeQueueItem', 'restoreQueueItem', 'addQueueItem']) lib[fn].mockResolvedValue(undefined);
+  });
+
+  it('lista a fila por formato e desliga subir no primeiro e descer no último', async () => {
+    wrap(<MarketingPublish />, '/?aba=fila');
+    expect(await screen.findByText(/Feed · todo dia às 12h \(2 na fila\)/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Subir item 1 de feed' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Descer item 2 de feed' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Descer item 1 de feed' }).disabled).toBe(false);
+  });
+
+  it('reordena, edita a legenda e remove só depois de confirmar', async () => {
+    wrap(<MarketingPublish />, '/?aba=fila');
+    fireEvent.click(await screen.findByRole('button', { name: 'Descer item 1 de feed' }));
+    await waitFor(() => expect(lib.moveQueueItem).toHaveBeenCalledWith('q1', 'down'));
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Editar legenda' })[0]);
+    fireEvent.change(screen.getByLabelText('Legenda'), { target: { value: 'Legenda nova' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(lib.updateQueueCaption).toHaveBeenCalledWith('q1', 'Legenda nova'));
+    expect(await screen.findByText('Legenda salva.')).toBeTruthy();
+
+    window.confirm.mockReturnValueOnce(false);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
+    expect(lib.removeQueueItem).not.toHaveBeenCalled();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remover' })[0]);
+    await waitFor(() => expect(lib.removeQueueItem).toHaveBeenCalledWith('q1'));
+  });
+
+  it('repõe um item pulado por repetição', async () => {
+    wrap(<MarketingPublish />, '/?aba=fila');
+    fireEvent.click(await screen.findByRole('button', { name: 'Repor na fila' }));
+    await waitFor(() => expect(lib.restoreQueueItem).toHaveBeenCalledWith('q9'));
+  });
+
+  it('adiciona um item novo com a mídia da biblioteca', async () => {
+    wrap(<MarketingPublish />, '/?aba=fila');
+    fireEvent.click(await screen.findByRole('button', { name: 'Adicionar à fila' }));
+    fireEvent.change(screen.getByLabelText('Legenda'), { target: { value: 'Post novo #treino' } });
+    fireEvent.click(screen.getByRole('button', { name: /Arte treino/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar ao fim da fila' }));
+    await waitFor(() => expect(lib.addQueueItem).toHaveBeenCalledWith({
+      format: 'feed', caption: 'Post novo #treino', media: [{ type: 'image', url: 'https://cdn/arte.jpg', title: 'Arte treino' }],
+    }));
+    expect(await screen.findByText('Item adicionado ao fim da fila.')).toBeTruthy();
+  });
+
+  it('numera a posição dentro do formato', () => {
+    expect(queuePosition(QUEUE, QUEUE[1])).toEqual({ first: false, last: true, number: 2, total: 2 });
+    expect(queuePosition(QUEUE, QUEUE[2])).toEqual({ first: true, last: true, number: 1, total: 1 });
   });
 });

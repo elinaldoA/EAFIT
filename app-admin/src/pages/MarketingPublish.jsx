@@ -10,11 +10,13 @@ import EmptyState from '../components/EmptyState';
 import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
 import MarketingAutopost from '../components/MarketingAutopost';
 import MarketingNav from '../components/MarketingNav';
+import MarketingQueue from '../components/MarketingQueue';
 
 const NO_STORIES = ['threads', 'tiktok'];
 
 const TABS = [
   { key: 'agenda', label: 'Agenda' },
+  { key: 'fila', label: 'Fila' },
   { key: 'novo', label: 'Novo post' },
   { key: 'historico', label: 'Histórico' },
 ];
@@ -250,6 +252,8 @@ export default function MarketingPublish() {
       {tab === 'agenda' && (
         <MarketingAutopost posts={posts || []} accounts={accounts || []} onOpenHistory={() => setTab('historico')} />
       )}
+
+      {tab === 'fila' && <MarketingQueue library={library} />}
 
       {tab === 'novo' && (accounts.length === 0 ? (
         <section className="card stack">
