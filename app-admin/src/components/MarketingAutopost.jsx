@@ -37,7 +37,7 @@ function Thumb({ media = [] }) {
 
 // Uma linha da agenda: horário, miniatura, formato e a primeira linha da
 // legenda; a legenda inteira e as hashtags abrem sob demanda.
-function Row({ when, format, item, accounts, note, statuses }) {
+function Row({ when, format, item, accounts, note, statuses, tools }) {
   const { body, tags } = splitCaption(item.caption);
   const media = item.media || [];
   const networks = networksFor(format, accounts);
@@ -61,6 +61,7 @@ function Row({ when, format, item, accounts, note, statuses }) {
             {tags.length > 0 && <div className="user-detail__meta">Hashtags: {tags.join(' ')}</div>}
           </details>
         )}
+        {tools}
       </div>
     </li>
   );
@@ -69,7 +70,7 @@ function Row({ when, format, item, accounts, note, statuses }) {
 // Aba "Agenda": o que sai hoje, os próximos dias e o que já saiu, com a
 // publicação automática (feed 12h, Reel 17h, story 19h, horário de Brasília).
 // `posts` e `accounts` vêm da página; `onOpenHistory` leva à aba de histórico.
-export default function MarketingAutopost({ posts = [], accounts = [], onOpenHistory }) {
+export default function MarketingAutopost({ posts = [], accounts = [], onOpenHistory, renderTools }) {
   const [state, setState] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -150,7 +151,11 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
         })}
       </div>
     );
-    return <Row key={i.id} when={`${dayLabel(i.posted_at, today)} ${hourBRT(i.posted_at)}`} format={i.format} item={i} accounts={accounts} statuses={statuses} />;
+    // Editar e excluir o que já saiu; se o post foi apagado, a fila só guarda o registro.
+    const tools = post && renderTools
+      ? renderTools(post)
+      : (!post && <span className="user-detail__meta">{i.post_id ? 'Mais antigo: veja no Histórico.' : 'Post excluído.'}</span>);
+    return <Row key={i.id} when={`${dayLabel(i.posted_at, today)} ${hourBRT(i.posted_at)}`} format={i.format} item={i} accounts={accounts} statuses={statuses} tools={tools} />;
   };
 
   return (

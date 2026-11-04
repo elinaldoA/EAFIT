@@ -730,3 +730,43 @@ describe('editar e excluir o que já foi publicado', () => {
     expect(await screen.findByText('Post excluído.')).toBeTruthy();
   });
 });
+
+describe('Agenda: editar e excluir o que já saiu', () => {
+  const sent = { id: 'q1', format: 'feed', position: 1, caption: 'Legenda publicada', media: [{ type: 'image', url: 'https://x/1.jpg' }], post_id: 'p20', posted_at: new Date().toISOString() };
+  const POST = {
+    id: 'p20', caption: 'Legenda publicada', format: 'feed', media: sent.media, scheduled_at: null, created_at: new Date().toISOString(),
+    targets: [{ id: 't1', account_id: 'a1', status: 'published', permalink: 'https://fb/p' }],
+  };
+
+  beforeEach(() => {
+    lib.fetchAutopost.mockResolvedValue({ enabled: true, items: [sent], pending: [], skipped: [], posted: 1 });
+    lib.fetchPosts.mockResolvedValue([POST]);
+  });
+
+  it('o item já publicado traz Editar legenda e Excluir direto na Agenda', async () => {
+    lib.deletePost.mockResolvedValue({ removed: true, results: [{ ok: true }] });
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Excluir' }));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('apagado em 1 rede(s)'));
+    await waitFor(() => expect(lib.deletePost).toHaveBeenCalledWith('p20'));
+    expect(await screen.findByText('Post excluído.')).toBeTruthy();
+  });
+
+  it('edita a legenda sem sair da Agenda', async () => {
+    lib.editPost.mockResolvedValue({ changed: true, results: [{ target: 't1', ok: true }] });
+    wrap(<MarketingPublish />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar legenda' }));
+    fireEvent.change(screen.getByLabelText('Nova legenda'), { target: { value: 'Texto novo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar nas redes que permitem' }));
+    await waitFor(() => expect(lib.editPost).toHaveBeenCalledWith('p20', 'Texto novo'));
+    expect(await screen.findByText('Legenda atualizada em Facebook.')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Agenda', selected: true })).toBeTruthy();
+  });
+
+  it('item cujo post já foi excluído só mostra o aviso', async () => {
+    lib.fetchAutopost.mockResolvedValue({ enabled: true, items: [{ ...sent, post_id: null }], pending: [], skipped: [], posted: 1 });
+    wrap(<MarketingPublish />);
+    expect(await screen.findByText('Post excluído.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Excluir' })).toBeNull();
+  });
+});

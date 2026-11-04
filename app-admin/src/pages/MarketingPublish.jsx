@@ -261,6 +261,41 @@ export default function MarketingPublish() {
     }
   }
 
+  // Ações de um post já publicado (Histórico e Agenda).
+  const postButtons = p => (
+    <>
+      {p.targets.some(t => t.status === 'pending') && p.scheduled_at && (
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => handleCancel(p)}>Cancelar</button>
+      )}
+      {p.format !== 'story' && p.targets.some(t => t.status === 'published') && (
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing({ id: p.id, text: p.caption || '' })}>Editar legenda</button>
+      )}
+      <button type="button" className="btn btn--danger btn--small" disabled={deleting === p.id} onClick={() => handleDelete(p)}>
+        {deleting === p.id ? 'Excluindo…' : 'Excluir'}
+      </button>
+    </>
+  );
+
+  const postEditor = p => (
+    editing?.id === p.id && (
+      <div className="stack mkt-edit">
+        <textarea className="input" rows={6} value={editing.text} maxLength={5000} aria-label="Nova legenda"
+          onChange={e => setEditing({ id: p.id, text: e.target.value })} />
+        <p className="user-detail__meta">
+          No Facebook a legenda muda na hora. Instagram e Threads não permitem editar um post publicado: para eles,
+          use “Excluir e republicar” (as curtidas e os comentários do post atual se perdem).
+        </p>
+        <div className="actions-row">
+          <button type="button" className="btn btn--primary btn--small" disabled={editBusy} onClick={() => handleEdit(p)}>
+            {editBusy ? 'Salvando…' : 'Salvar nas redes que permitem'}
+          </button>
+          <button type="button" className="btn btn--danger btn--small" disabled={editBusy} onClick={() => handleRepost(p)}>Excluir e republicar</button>
+          <button type="button" className="btn btn--ghost btn--small" disabled={editBusy} onClick={() => setEditing(null)}>Cancelar</button>
+        </div>
+      </div>
+    )
+  );
+
   if (!accounts) return <Loading />;
 
   const shownVideos = videos.filter(v => v.label.toLowerCase().includes(videoQuery.trim().toLowerCase()));
@@ -296,7 +331,17 @@ export default function MarketingPublish() {
       </div>
 
       {tab === 'agenda' && (
-        <MarketingAutopost posts={posts || []} accounts={accounts || []} onOpenHistory={() => setTab('historico')} />
+        <>
+          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+          <MarketingAutopost
+            posts={posts || []} accounts={accounts || []} onOpenHistory={() => setTab('historico')}
+            renderTools={p => (
+              <>
+                <div className="actions-row">{postButtons(p)}</div>
+                {postEditor(p)}
+              </>
+            )} />
+        </>
       )}
 
       {tab === 'fila' && <MarketingQueue library={library} />}
@@ -466,36 +511,10 @@ export default function MarketingPublish() {
                   {p.scheduled_at ? `agendado para ${formatDate(p.scheduled_at)}` : `criado em ${formatDate(p.created_at)}`}
                   {p.media?.length ? ` · ${p.media.length} mídia(s)` : ''}
                 </span>
-                <span className="actions-row">
-                  {p.targets.some(t => t.status === 'pending') && p.scheduled_at && (
-                    <button type="button" className="btn btn--ghost btn--small" onClick={() => handleCancel(p)}>Cancelar</button>
-                  )}
-                  {p.format !== 'story' && p.targets.some(t => t.status === 'published') && (
-                    <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing({ id: p.id, text: p.caption || '' })}>Editar legenda</button>
-                  )}
-                  <button type="button" className="btn btn--danger btn--small" disabled={deleting === p.id} onClick={() => handleDelete(p)}>
-                    {deleting === p.id ? 'Excluindo…' : 'Excluir'}
-                  </button>
-                </span>
+                <span className="actions-row">{postButtons(p)}</span>
               </div>
               {p.format !== 'story' && editing?.id !== p.id && <p className="mkt-post__caption">{p.caption || <em>(sem legenda)</em>}</p>}
-              {editing?.id === p.id && (
-                <div className="stack mkt-edit">
-                  <textarea className="input" rows={6} value={editing.text} maxLength={5000} aria-label="Nova legenda"
-                    onChange={e => setEditing({ id: p.id, text: e.target.value })} />
-                  <p className="user-detail__meta">
-                    No Facebook a legenda muda na hora. Instagram e Threads não permitem editar um post publicado: para eles,
-                    use “Excluir e republicar” (as curtidas e os comentários do post atual se perdem).
-                  </p>
-                  <div className="actions-row">
-                    <button type="button" className="btn btn--primary btn--small" disabled={editBusy} onClick={() => handleEdit(p)}>
-                      {editBusy ? 'Salvando…' : 'Salvar nas redes que permitem'}
-                    </button>
-                    <button type="button" className="btn btn--danger btn--small" disabled={editBusy} onClick={() => handleRepost(p)}>Excluir e republicar</button>
-                    <button type="button" className="btn btn--ghost btn--small" disabled={editBusy} onClick={() => setEditing(null)}>Cancelar</button>
-                  </div>
-                </div>
-              )}
+              {postEditor(p)}
               <ul className="mkt-targets">
                 {p.targets.map(t => {
                   const a = byId.get(t.account_id);
