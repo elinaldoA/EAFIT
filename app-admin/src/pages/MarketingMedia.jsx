@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
-  APP_PRINTS, ART_FORMATS, createArt, exerciseVideoList, fetchMedia, printUrl, removeMedia, uploadMedia, validateUpload,
+  APP_PRINTS, ART_FORMATS, REEL_DEFAULTS, createArt, exerciseVideoList, fetchMedia, printUrl, removeMedia, uploadMedia, validateUpload,
 } from '../lib/marketing';
+import { canRenderReels, renderReel } from '../lib/reelVideo';
 import {
   PROMO_AUDIENCES, audienceLabel, fetchPromoMaterials, formatHint, formatSize, partnerTitle, sendMediaToPartners,
 } from '../lib/promoMaterials';
@@ -26,6 +28,7 @@ export default function MarketingMedia() {
 
   const [lang, setLang] = useState('pt');
   const [art, setArt] = useState(null); // { slug, label, headline, subline, format, preview }
+  const [reel, setReel] = useState(null); // { slug, label, hook, title, sub, progress, preview, saved }
   const [videoQuery, setVideoQuery] = useState('');
   const videos = useMemo(() => exerciseVideoList(), []);
   const shownVideos = videos.filter(v => v.label.toLowerCase().includes(videoQuery.trim().toLowerCase()));
@@ -87,6 +90,9 @@ export default function MarketingMedia() {
   }
   useEffect(() => { load(); }, [load]);
 
+  // Libera a prévia do Reel da memória.
+  useEffect(() => () => { if (reel?.preview) URL.revokeObjectURL(reel.preview.url); }, [reel?.preview]);
+
   // Libera a prévia anterior da memória.
   useEffect(() => () => { if (art?.preview) URL.revokeObjectURL(art.preview.url); }, [art?.preview]);
 
@@ -136,6 +142,46 @@ export default function MarketingMedia() {
       await uploadMedia({ file: new File([blob], `${art.slug}.jpg`, { type: 'image/jpeg' }), title: name, width, height, adminId: adminUser?.id });
       setMsg(`Arte “${name}” salva. Já dá para usar em Publicar.`);
       setArt(null);
+      await load();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openReel(p) {
+    const d = REEL_DEFAULTS[p.slug] || { hook: p.label, title: p.label, sub: '' };
+    setArt(null);
+    setReel({ slug: p.slug, label: p.label, ...d, progress: 0, preview: null, saved: false });
+  }
+
+  async function makeReel() {
+    setBusy(true);
+    setMsg('');
+    setReel(r => ({ ...r, progress: 0, preview: null, saved: false }));
+    try {
+      const out = await renderReel({
+        imageUrl: printUrl(reel.slug, lang), hook: reel.hook, title: reel.title, sub: reel.sub,
+        onProgress: progress => setReel(r => (r ? { ...r, progress } : r)),
+      });
+      setReel(r => ({ ...r, progress: 1, preview: { ...out, url: URL.createObjectURL(out.blob) } }));
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+      setReel(r => (r ? { ...r, progress: 0 } : r));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveReel() {
+    setBusy(true);
+    setMsg('');
+    try {
+      const { blob, width, height } = reel.preview;
+      await uploadMedia({ file: new File([blob], `reel-${reel.slug}.mp4`, { type: 'video/mp4' }), title: `Reel · ${reel.title}`, width, height, adminId: adminUser?.id });
+      setReel(r => ({ ...r, saved: true }));
+      setMsg(`Reel “${reel.title}” salvo na biblioteca.`);
       await load();
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
@@ -268,7 +314,8 @@ export default function MarketingMedia() {
               <img src={printUrl(p.slug, lang)} alt={p.label} loading="lazy" className="mkt-tile__media mkt-tile__media--phone" />
               <figcaption>
                 <strong>{p.label}</strong>
-                <button type="button" className="btn btn--small" onClick={() => openArt(p)}>Criar arte</button>
+                <button type="button" className="btn btn--small" onClick={() => { setReel(null); openArt(p); }}>Criar arte</button>
+                <button type="button" className="btn btn--small" onClick={() => openReel(p)}>Criar Reel</button>
               </figcaption>
             </figure>
           ))}
@@ -299,6 +346,49 @@ export default function MarketingMedia() {
               </div>
             </div>
             {art.preview && <img src={art.preview.url} alt="Prévia da arte" className="mkt-art__preview" />}
+          </div>
+        )}
+
+        {reel && (
+          <div className="mkt-art">
+            <div className="stack">
+              <h3 className="section-title">Reel: {reel.label}</h3>
+              <p className="user-detail__meta">
+                Vídeo de 12 segundos, na vertical, com a trilha original do painel: gancho em texto, o print do app entrando
+                e a chamada para o link da bio. Leva cerca de 10 segundos para gerar.
+              </p>
+              {!canRenderReels() && (
+                <p className="form-msg form-msg--error">Este navegador não gera vídeo. Use o Chrome ou o Edge no computador.</p>
+              )}
+              <label className="field">
+                <span className="field__label">Gancho (abre o vídeo)</span>
+                <input className="input" value={reel.hook} maxLength={60} onChange={e => setReel({ ...reel, hook: e.target.value, preview: null, saved: false })} />
+              </label>
+              <label className="field">
+                <span className="field__label">Título (junto do print)</span>
+                <input className="input" value={reel.title} maxLength={50} onChange={e => setReel({ ...reel, title: e.target.value, preview: null, saved: false })} />
+              </label>
+              <label className="field">
+                <span className="field__label">Subtítulo</span>
+                <input className="input" value={reel.sub} maxLength={70} onChange={e => setReel({ ...reel, sub: e.target.value, preview: null, saved: false })} />
+              </label>
+              {busy && reel.progress > 0 && reel.progress < 1 && (
+                <progress value={reel.progress} max="1" aria-label="Gerando o Reel">{Math.round(reel.progress * 100)}%</progress>
+              )}
+              <div className="actions-row">
+                <button type="button" className="btn" disabled={busy || !canRenderReels() || !reel.hook.trim() || !reel.title.trim()} onClick={makeReel}>
+                  {busy && !reel.preview ? 'Gerando…' : 'Gerar Reel'}
+                </button>
+                <button type="button" className="btn btn--primary" disabled={busy || !reel.preview || reel.saved} onClick={saveReel}>Salvar na biblioteca</button>
+                <button type="button" className="btn btn--ghost" onClick={() => setReel(null)}>Fechar</button>
+              </div>
+              {reel.saved && (
+                <p className="form-msg form-msg--ok">
+                  Pronto. Agora <Link to="/marketing?aba=fila">adicione à fila da publicação automática</Link> (formato Reel) ou publique em Publicar → Novo post.
+                </p>
+              )}
+            </div>
+            {reel.preview && <video src={reel.preview.url} controls playsInline className="mkt-art__preview" aria-label="Prévia do Reel" />}
           </div>
         )}
       </section>

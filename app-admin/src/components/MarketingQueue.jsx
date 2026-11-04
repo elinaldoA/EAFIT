@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   addQueueItem, fetchAutopost, moveQueueItem, queuePosition, removeQueueItem, restoreQueueItem, splitCaption, updateQueueCaption,
 } from '../lib/marketing';
@@ -158,8 +159,11 @@ export default function MarketingQueue({ library = [] }) {
                 Mídia ({draft.media.length} escolhida{draft.media.length === 1 ? '' : 's'}:
                 {draft.format === 'story' ? ' 1 imagem ou vídeo' : draft.format === 'reel' ? ' 1 vídeo' : ' até 10 imagens ou 1 vídeo'})
               </span>
+              <p className="user-detail__meta">
+                Precisa de mídia nova? Em <Link to="/marketing-midia">Biblioteca de mídia</Link> dá para criar uma arte ou um Reel a partir dos prints do app.
+              </p>
               {pickable.length === 0
-                ? <p className="user-detail__meta">Nada na biblioteca para este formato. Envie em “Biblioteca de mídia”.</p>
+                ? <p className="user-detail__meta">Nada na biblioteca para este formato.</p>
                 : (
                   <div className="mkt-grid mkt-grid--picker">
                     {pickable.map(m => {

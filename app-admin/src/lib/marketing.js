@@ -44,6 +44,17 @@ export const APP_PRINTS = [
   { slug: 'agua', label: 'Água' },
 ];
 
+// Texto sugerido para o Reel de cada print (gancho, título e subtítulo); o admin edita.
+export const REEL_DEFAULTS = {
+  treino: { hook: 'Ainda monta treino em planilha?', title: 'Treino pronto em segundos', sub: 'Monte, envie e acompanhe.' },
+  'ao-vivo': { hook: 'Chega de anotar série no papel', title: 'Registre cada série na hora', sub: 'Treino ao vivo, sem papel.' },
+  evolucao: { hook: 'Seu aluno enxerga a própria evolução?', title: 'Quem vê a evolução não desiste', sub: 'Cada carga vira progresso.' },
+  historico: { hook: 'Qual foi a carga do aluno semana passada?', title: 'Todo o histórico num só lugar', sub: 'Treinos, cargas e datas sempre à mão.' },
+  nutricao: { hook: 'Treino e dieta em apps diferentes?', title: 'Tudo no mesmo app', sub: 'Treino, calorias e macros juntos.' },
+  'nutricao-diario': { hook: 'Anotar o que comeu é chato?', title: 'Diário de nutrição rápido', sub: 'Registre as refeições em segundos.' },
+  agua: { hook: 'Seu aluno bebe água o suficiente?', title: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.' },
+};
+
 export function printUrl(slug, lang = 'pt') {
   return `${SITE}/img/app/${slug}${lang === 'en' ? '-en' : ''}.webp`;
 }

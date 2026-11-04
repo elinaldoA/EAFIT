@@ -10,16 +10,23 @@ const { lib } = vi.hoisted(() => ({
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
     fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchConversion: vi.fn(),
+    uploadMedia: vi.fn(),
     updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
+vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => ({ adminUser: { id: 'admin-1' } }) }));
+const { reelVideo } = vi.hoisted(() => ({ reelVideo: { renderReel: vi.fn(), canRenderReels: vi.fn(() => true) } }));
+vi.mock('../lib/reelVideo', () => reelVideo);
 vi.mock('../lib/marketing', async orig => ({ ...(await orig()), ...lib }));
 
 import MarketingPublish from './MarketingPublish';
 import MarketingAccounts from './MarketingAccounts';
 import MarketingComments from './MarketingComments';
 import MarketingResults from './MarketingResults';
+import MarketingMedia from './MarketingMedia';
+import { synthTrack } from '../lib/reelAudio';
+import { DURATION, FPS, drawReelFrame } from '../lib/reelRender';
 import {
   EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition,
 } from '../lib/marketing';
@@ -573,5 +580,80 @@ describe('Fila: editor', () => {
   it('numera a posição dentro do formato', () => {
     expect(queuePosition(QUEUE, QUEUE[1])).toEqual({ first: false, last: true, number: 2, total: 2 });
     expect(queuePosition(QUEUE, QUEUE[2])).toEqual({ first: true, last: true, number: 1, total: 1 });
+  });
+});
+
+describe('Gerador de Reel', () => {
+  beforeEach(() => {
+    reelVideo.canRenderReels.mockReturnValue(true);
+    reelVideo.renderReel.mockImplementation(async ({ onProgress }) => {
+      onProgress(0.5);
+      return { blob: new Blob(['mp4'], { type: 'video/mp4' }), width: 1080, height: 1920, seconds: 12 };
+    });
+    lib.uploadMedia.mockResolvedValue(undefined);
+    URL.createObjectURL = vi.fn(() => 'blob:reel');
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  it('gera o Reel com o texto sugerido, mostra a prévia e salva na biblioteca como MP4', async () => {
+    wrap(<MarketingMedia />);
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Criar Reel' }))[0]);
+    expect(screen.getByLabelText('Gancho (abre o vídeo)').value).toBe('Ainda monta treino em planilha?');
+    fireEvent.change(screen.getByLabelText('Título (junto do print)'), { target: { value: 'Treino em segundos' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Gerar Reel' }));
+    await waitFor(() => expect(reelVideo.renderReel).toHaveBeenCalledWith(expect.objectContaining({
+      imageUrl: 'https://eafit.com.br/img/app/treino.webp', hook: 'Ainda monta treino em planilha?', title: 'Treino em segundos',
+    })));
+    expect(await screen.findByLabelText('Prévia do Reel')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar na biblioteca' }));
+    await waitFor(() => expect(lib.uploadMedia).toHaveBeenCalled());
+    const arg = lib.uploadMedia.mock.calls[0][0];
+    expect([arg.file.type, arg.title, arg.width, arg.height, arg.adminId]).toEqual(['video/mp4', 'Reel · Treino em segundos', 1080, 1920, 'admin-1']);
+    const link = await screen.findByRole('link', { name: /adicione à fila/ });
+    expect(link.getAttribute('href')).toBe('/marketing?aba=fila');
+  });
+
+  it('avisa quando o navegador não gera vídeo e trava o botão', async () => {
+    reelVideo.canRenderReels.mockReturnValue(false);
+    wrap(<MarketingMedia />);
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Criar Reel' }))[0]);
+    expect(screen.getByText(/Este navegador não gera vídeo/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Gerar Reel' }).disabled).toBe(true);
+  });
+
+  it('mostra o erro do codificador sem travar a tela', async () => {
+    reelVideo.renderReel.mockRejectedValue(new Error('Este navegador não codifica áudio AAC'));
+    wrap(<MarketingMedia />);
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Criar Reel' }))[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Gerar Reel' }));
+    expect(await screen.findByText(/Erro: Este navegador não codifica áudio AAC/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Gerar Reel' }).disabled).toBe(false);
+  });
+});
+
+describe('quadros e trilha do Reel', () => {
+  it('trilha: 12 s em estéreo, pico em 0,7 e sempre igual', () => {
+    const a = synthTrack(DURATION);
+    const b = synthTrack(DURATION);
+    expect(a.left.length).toBe(DURATION * a.sampleRate);
+    const peak = a.left.reduce((m, v) => Math.max(m, Math.abs(v)), 0);
+    expect(peak).toBeGreaterThan(0.5);
+    expect(peak).toBeLessThanOrEqual(0.7);
+    expect(a.left[1000]).toBe(b.left[1000]);
+    expect(a.left[a.left.length - 1]).toBeCloseTo(0, 3); // termina em silêncio
+  });
+
+  it('desenha as 3 cenas sem erro em qualquer instante', () => {
+    const calls = [];
+    const ctx = new Proxy({}, {
+      get: (_, name) => (name === 'measureText' ? () => ({ width: 100 }) : name === 'createLinearGradient' || name === 'createRadialGradient'
+        ? () => ({ addColorStop() {} }) : (...args) => calls.push([name, args])),
+      set: () => true,
+    });
+    const img = { width: 100, height: 200 };
+    for (const t of [0, 1, 3.5, 6, 9.7, 11.9]) drawReelFrame(ctx, { hook: 'Gancho', title: 'Título', sub: 'Sub' }, img, t);
+    expect(calls.some(([n]) => n === 'drawImage')).toBe(true); // o print aparece na cena 2
+    expect(FPS * DURATION).toBe(288);
   });
 });
