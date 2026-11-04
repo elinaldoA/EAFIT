@@ -214,7 +214,7 @@ export default function MarketingPublish() {
         </div>
       </div>
 
-      <MarketingAutopost posts={posts || []} />
+      <MarketingAutopost posts={posts || []} accounts={accounts || []} />
 
       {accounts.length === 0 ? (
         <section className="card stack">

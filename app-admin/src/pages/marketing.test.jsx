@@ -18,7 +18,7 @@ import MarketingPublish from './MarketingPublish';
 import MarketingAccounts from './MarketingAccounts';
 import MarketingComments from './MarketingComments';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, brtDay,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, splitCaption, brtDay,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -37,7 +37,7 @@ beforeEach(() => {
   lib.runPost.mockResolvedValue({ results: [{ id: 't1', status: 'published' }, { id: 't2', status: 'processing' }] });
   lib.fetchComments.mockResolvedValue([]);
   const pending = [
-    { id: 'q1', format: 'feed', caption: 'Primeira linha\nresto', media: [{ url: 'https://x/a.jpg' }] },
+    { id: 'q1', format: 'feed', caption: 'Primeira linha\nresto\n\nLink na bio\n\n#treino #app', media: [{ url: 'https://x/a.jpg' }] },
     { id: 'q2', format: 'story', caption: '', media: [{ url: 'https://x/b.jpg' }] },
     { id: 'q3', format: 'story', caption: '', media: [{ url: 'https://x/c.jpg' }] },
   ];
@@ -372,5 +372,33 @@ describe('nextAutopostSlots', () => {
 
   it('sem item pendente de um formato, ele não aparece', () => {
     expect(nextAutopostSlots([{ id: 'f', format: 'feed' }], new Date('2026-11-05T13:00:00Z')).map(s => s.format)).toEqual(['feed']);
+  });
+});
+
+describe('agenda da fila automática', () => {
+  it('um item por dia em cada formato, na ordem da fila', () => {
+    const pending = [
+      { id: 'f1', format: 'feed' }, { id: 's1', format: 'story' }, { id: 'f2', format: 'feed' }, { id: 'f3', format: 'feed' },
+    ];
+    const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'));
+    expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 13)}`)).toEqual([
+      'f1@2026-11-05T15', 's1@2026-11-05T22', 'f2@2026-11-06T15', 'f3@2026-11-07T15',
+    ]);
+  });
+
+  it('separa as hashtags da legenda', () => {
+    expect(splitCaption('Texto aqui 📲\n\nLink na bio 👇\n\n#personaltrainer #treino')).toEqual({
+      body: 'Texto aqui 📲\n\nLink na bio 👇', tags: ['#personaltrainer', '#treino'],
+    });
+  });
+});
+
+describe('cartão da publicação automática', () => {
+  it('mostra a legenda, as hashtags e o dia de cada item da fila', async () => {
+    wrap(<MarketingPublish />);
+    expect(await screen.findByText(/Resumo da fila: 4 já publicados/)).toBeTruthy();
+    expect(screen.getByText(/Primeira linha/)).toBeTruthy();
+    expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
+    expect(screen.getAllByText('Hoje').length + screen.getAllByText(/^Amanhã/).length).toBeGreaterThan(0);
   });
 });

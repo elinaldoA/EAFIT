@@ -474,16 +474,34 @@ export function brtDay(date) {
   return new Date(new Date(date).getTime() - BRT_OFFSET_MS).toISOString().slice(0, 10);
 }
 
-// Próxima saída de cada formato: o primeiro item pendente no próximo horário do cron.
-export function nextAutopostSlots(pending, now = new Date()) {
+// Agenda da fila: cada item pendente no seu horário. O cron publica um item de
+// cada formato por dia, então o k-ésimo pendente do formato sai k dias depois
+// do próximo horário do cron.
+export function autopostSchedule(pending, now = new Date()) {
   const out = [];
   for (const format of ['feed', 'story']) {
-    const item = pending.find(i => i.format === format);
-    if (!item) continue;
-    const at = new Date(now);
-    at.setUTCHours(AUTOPOST_HOUR_UTC[format], 0, 0, 0);
-    if (at <= now) at.setUTCDate(at.getUTCDate() + 1);
-    out.push({ item, format, at, today: brtDay(at) === brtDay(now) });
+    const first = new Date(now);
+    first.setUTCHours(AUTOPOST_HOUR_UTC[format], 0, 0, 0);
+    if (first <= now) first.setUTCDate(first.getUTCDate() + 1);
+    pending.filter(i => i.format === format).forEach((item, k) => {
+      const at = new Date(first);
+      at.setUTCDate(at.getUTCDate() + k);
+      out.push({ item, format, at, today: brtDay(at) === brtDay(now) });
+    });
   }
   return out.sort((a, b) => a.at - b.at);
+}
+
+// Próxima saída de cada formato.
+export function nextAutopostSlots(pending, now = new Date()) {
+  const seen = new Set();
+  return autopostSchedule(pending, now).filter(s => (seen.has(s.format) ? false : seen.add(s.format)));
+}
+
+// Separa as hashtags do fim da legenda do texto.
+export function splitCaption(caption) {
+  const text = String(caption || '');
+  const tags = text.match(/#[\p{L}\p{N}_]+/gu) || [];
+  const body = text.replace(/#[\p{L}\p{N}_]+/gu, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  return { body, tags };
 }
