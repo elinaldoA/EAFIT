@@ -78,6 +78,7 @@ export default function SystemHealth() {
   const [health, setHealth] = useState(null);
   const [updatedAt, setUpdatedAt] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   const alive = useRef(true);
   useEffect(() => () => { alive.current = false; }, []);
@@ -88,9 +89,11 @@ export default function SystemHealth() {
       const next = await fetchHealth();
       if (!alive.current) return;
       setHealth(next);
+      setLoadError('');
       setUpdatedAt(new Date());
     } catch (err) {
       console.error('fetchHealth:', err);
+      if (alive.current) setLoadError(err?.message || 'Erro desconhecido.');
     } finally {
       if (alive.current) setRefreshing(false);
     }
@@ -102,6 +105,15 @@ export default function SystemHealth() {
     return () => clearInterval(t);
   }, [load]);
 
+  if (!health && loadError) {
+    return (
+      <div className="card">
+        <h2 className="section-title">Saúde do sistema</h2>
+        <BlockError message={loadError} />
+        <button className="btn btn--small" onClick={load} disabled={refreshing}>{refreshing ? 'Tentando…' : 'Tentar de novo'}</button>
+      </div>
+    );
+  }
   if (!health) return <Loading />;
 
   const jobs = health.cron.data ? evaluateJobs(health.cron.data) : [];

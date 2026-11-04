@@ -86,6 +86,18 @@ export function formatBytes(bytes) {
 
 // Cada bloco é independente: falha de um (ex.: extensão indisponível) não
 // derruba os outros. Devolve { data } ou { error } por chave.
+export const HEALTH_TIMEOUT_MS = 20000;
+
+// Uma consulta pendurada não pode segurar a tela inteira: passou do prazo vira
+// erro daquele bloco e os outros aparecem normalmente.
+function withTimeout(promise, ms = HEALTH_TIMEOUT_MS) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('A consulta demorou demais para responder.')), ms);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => clearTimeout(timer));
+}
+
 export async function fetchHealth() {
   const calls = {
     cron: () => db.rpc('admin_cron_status'),
@@ -99,7 +111,7 @@ export async function fetchHealth() {
   };
   const entries = await Promise.all(Object.entries(calls).map(async ([key, call]) => {
     try {
-      const res = await call();
+      const res = await withTimeout(call());
       if (res.error) return [key, { error: res.error.message }];
       return [key, { data: key === 'overdue' ? res.count || 0 : res.data || [] }];
     } catch (err) {

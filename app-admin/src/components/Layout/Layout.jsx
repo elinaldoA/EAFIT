@@ -8,6 +8,7 @@ import { useAdminAccess } from '../../context/useAdminAccess';
 import { isHidden } from '../../lib/adminAccess';
 import EmptyState from '../EmptyState';
 import Loading from '../Loading';
+import ErrorBoundary from '../ErrorBoundary';
 
 const COLLAPSED_KEY = 'sidebarCollapsed';
 
@@ -59,7 +60,7 @@ function Shell() {
 
   const content = blocked
     ? <EmptyState icon="🔒" label="Você não tem acesso a esta tela. Fale com um superadmin se precisar dela." />
-    : <Suspense fallback={<Loading />}><Outlet /></Suspense>;
+    : <ErrorBoundary key={pathname}><Suspense fallback={<Loading />}><Outlet /></Suspense></ErrorBoundary>;
 
   return (
     <div className="shell">

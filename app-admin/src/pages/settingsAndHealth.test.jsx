@@ -295,3 +295,12 @@ describe('SystemHealth', () => {
     await waitFor(() => expect(hl.fetchHealth).toHaveBeenCalledTimes(2));
   });
 });
+
+describe('SystemHealth com falha total', () => {
+  it('mostra o erro e permite tentar de novo em vez de ficar carregando', async () => {
+    hl.fetchHealth.mockRejectedValueOnce(new Error('rede caiu'));
+    render(<SystemHealth />);
+    expect(await screen.findByText(/rede caiu/)).toBeTruthy();
+    expect(screen.getByText('Tentar de novo')).toBeTruthy();
+  });
+});
