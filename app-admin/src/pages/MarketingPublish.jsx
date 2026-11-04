@@ -8,6 +8,7 @@ import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
+import MarketingAutopost from '../components/MarketingAutopost';
 
 const NO_STORIES = ['threads', 'tiktok'];
 
@@ -212,6 +213,8 @@ export default function MarketingPublish() {
           </p>
         </div>
       </div>
+
+      <MarketingAutopost />
 
       {accounts.length === 0 ? (
         <section className="card stack">

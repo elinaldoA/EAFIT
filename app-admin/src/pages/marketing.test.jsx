@@ -8,6 +8,7 @@ const { lib } = vi.hoisted(() => ({
     fetchAccounts: vi.fn(), fetchMedia: vi.fn(), fetchPosts: vi.fn(), createPost: vi.fn(), runPost: vi.fn(), deletePost: vi.fn(),
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
+    fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
   },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
@@ -35,6 +36,8 @@ beforeEach(() => {
   lib.createPost.mockResolvedValue('p1');
   lib.runPost.mockResolvedValue({ results: [{ id: 't1', status: 'published' }, { id: 't2', status: 'processing' }] });
   lib.fetchComments.mockResolvedValue([]);
+  lib.fetchAutopost.mockResolvedValue({ enabled: true, pending: [{ id: 'q1', format: 'feed' }, { id: 'q2', format: 'story' }, { id: 'q3', format: 'story' }], posted: 4 });
+  lib.setAutopostEnabled.mockResolvedValue();
   vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 afterEach(cleanup);
@@ -324,5 +327,22 @@ describe('MarketingComments', () => {
     await waitFor(() => expect(lib.hideComment).toHaveBeenCalledWith('c1', true));
     fireEvent.click(screen.getByRole('button', { name: 'Atualizar agora' }));
     expect(await screen.findByText('Comentários atualizados.')).toBeTruthy();
+  });
+});
+
+describe('Publicação automática', () => {
+  it('mostra o que falta e pausa', async () => {
+    wrap(<MarketingPublish />);
+    expect(await screen.findByText(/4 já publicados · faltam 1 no feed e 2 em stories/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
+    await waitFor(() => expect(lib.setAutopostEnabled).toHaveBeenCalledWith(false));
+    expect(await screen.findByRole('button', { name: 'Ligar' })).toBeTruthy();
+  });
+
+  it('some quando a fila não existe (migration pendente)', async () => {
+    lib.fetchAutopost.mockRejectedValue(new Error('relation does not exist'));
+    wrap(<MarketingPublish />);
+    await waitFor(() => expect(lib.fetchAutopost).toHaveBeenCalled());
+    expect(screen.queryByText('Publicação automática')).toBeNull();
   });
 });

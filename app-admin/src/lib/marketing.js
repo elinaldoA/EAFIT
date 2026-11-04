@@ -439,3 +439,27 @@ export function replyComment(commentId, text) {
 export function hideComment(commentId, hidden) {
   return invoke('marketing', { action: 'hide', commentId, hidden });
 }
+
+// ---------- publicação automática ----------
+// Fila de conteúdo pronto que o cron publica sozinho (migration
+// 20261230010000_marketing_autopost.sql): feed 12h e stories 19h (Brasília).
+
+export async function fetchAutopost() {
+  const [settings, queue] = await Promise.all([
+    db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
+    db.from('marketing_autopost_queue').select('id, position, key, format, posted_at').order('position'),
+  ]);
+  if (settings.error) throw settings.error;
+  if (queue.error) throw queue.error;
+  const items = queue.data || [];
+  return {
+    enabled: settings.data?.enabled !== false,
+    pending: items.filter(i => !i.posted_at),
+    posted: items.filter(i => i.posted_at).length,
+  };
+}
+
+export async function setAutopostEnabled(enabled) {
+  const { error } = await db.rpc('marketing_autopost_set_enabled', { p_enabled: enabled });
+  if (error) throw error;
+}
