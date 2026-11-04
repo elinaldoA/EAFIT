@@ -60,6 +60,7 @@ const PrivacyRequests = lazy(() => import('./pages/PrivacyRequests'));
 const Legal = lazy(() => import('./pages/Legal'));
 const MarketingPublish = lazy(() => import('./pages/MarketingPublish'));
 const MarketingComments = lazy(() => import('./pages/MarketingComments'));
+const MarketingResults = lazy(() => import('./pages/MarketingResults'));
 const MarketingMedia = lazy(() => import('./pages/MarketingMedia'));
 const MarketingAccounts = lazy(() => import('./pages/MarketingAccounts'));
 
@@ -103,6 +104,7 @@ function AppShell() {
             <Route path="/resultados-envios" element={<CampaignResults />} />
             <Route path="/calendario" element={<EditorialCalendar />} />
             <Route path="/marketing" element={<RequireArea area="marketing"><MarketingPublish /></RequireArea>} />
+            <Route path="/marketing-resultados" element={<RequireArea area="marketing"><MarketingResults /></RequireArea>} />
             <Route path="/marketing-comentarios" element={<RequireArea area="marketing"><MarketingComments /></RequireArea>} />
             <Route path="/marketing-midia" element={<RequireArea area="marketing"><MarketingMedia /></RequireArea>} />
             <Route path="/marketing-contas" element={<RequireArea area="marketing"><MarketingAccounts /></RequireArea>} />

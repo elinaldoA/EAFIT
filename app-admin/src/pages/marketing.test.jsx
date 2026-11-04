@@ -9,6 +9,7 @@ const { lib } = vi.hoisted(() => ({
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
+    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchConversion: vi.fn(),
   },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
@@ -17,8 +18,9 @@ vi.mock('../lib/marketing', async orig => ({ ...(await orig()), ...lib }));
 import MarketingPublish from './MarketingPublish';
 import MarketingAccounts from './MarketingAccounts';
 import MarketingComments from './MarketingComments';
+import MarketingResults from './MarketingResults';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, splitCaption, brtDay,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, splitCaption, brtDay, averageByKind, conversionRate, postScore,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -424,10 +426,10 @@ describe('Publicar em abas', () => {
     expect(await screen.findByText('Histórico de posts')).toBeTruthy();
   });
 
-  it('as quatro páginas do Marketing têm a mesma barra de navegação', async () => {
+  it('as cinco páginas do Marketing têm a mesma barra de navegação', async () => {
     wrap(<MarketingPublish />);
     const nav = await screen.findByRole('navigation', { name: 'Marketing' });
-    expect(nav.querySelectorAll('a').length).toBe(4);
+    expect(nav.querySelectorAll('a').length).toBe(5);
   });
 
   it('o histórico filtra por situação e conta cada grupo', async () => {
@@ -440,5 +442,71 @@ describe('Publicar em abas', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Com problema (1)' }));
     expect(screen.getByText('falhou')).toBeTruthy();
     expect(screen.queryByText('ok')).toBeNull();
+  });
+});
+
+describe('Resultados', () => {
+  const METRICS = [
+    { account_id: 'a2', external_id: 'm1', permalink: 'https://ig/1', caption: 'Reel de treino\nresto', kind: 'reel', thumb_url: null, posted_at: new Date().toISOString(), likes: 12, comments: 3, shares: 4, saves: 9, reach: 300, views: 800, insights_ok: true },
+    { account_id: 'a2', external_id: 'm2', permalink: 'https://ig/2', caption: 'Foto simples', kind: 'image', thumb_url: null, posted_at: new Date().toISOString(), likes: 5, comments: 0, shares: null, saves: 1, reach: 90, views: null, insights_ok: true },
+    { account_id: 'a1', external_id: 'f1', permalink: 'https://fb/1', caption: 'Post no Facebook', kind: 'image', thumb_url: null, posted_at: new Date().toISOString(), likes: 2, comments: 0, shares: 0, saves: null, reach: null, views: null, insights_ok: false },
+  ];
+
+  beforeEach(() => {
+    lib.fetchMetrics.mockResolvedValue(METRICS);
+    lib.refreshMetrics.mockResolvedValue({ results: [{ account: 'a2', posts: 2 }] });
+    lib.fetchConversion.mockResolvedValue([
+      { source: 'instagram', medium: 'bio', visits: 100, signups: 8, confirmed: 6, activated: 3 },
+      { source: 'instagram', medium: 'story', visits: 40, signups: 1, confirmed: 1, activated: 0 },
+    ]);
+  });
+
+  it('mostra cadastros por tipo de link e o desempenho, do melhor para o pior', async () => {
+    wrap(<MarketingResults />);
+    expect(await screen.findByText('Link da bio')).toBeTruthy();
+    expect(screen.getByText('8%')).toBeTruthy(); // 8 cadastros em 100 visitas
+    expect(screen.getByText('2,5%')).toBeTruthy(); // 1 em 40
+    const posts = await screen.findAllByText(/ver post/);
+    expect(posts.length).toBe(3);
+    expect(screen.getAllByText('Reel de treino').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Melhor post do período/)).toBeTruthy();
+  });
+
+  it('filtra por rede e atualiza as métricas na hora', async () => {
+    wrap(<MarketingResults />);
+    await screen.findAllByText('Reel de treino');
+    fireEvent.click(screen.getByRole('button', { name: 'Facebook' }));
+    expect(screen.queryByText('Reel de treino')).toBeNull();
+    expect(screen.getAllByText('Post no Facebook').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Atualizar métricas' }));
+    await waitFor(() => expect(lib.refreshMetrics).toHaveBeenCalled());
+    expect(await screen.findByText('Métricas atualizadas.')).toBeTruthy();
+  });
+
+  it('sem insights, avisa que falta a permissão', async () => {
+    lib.fetchMetrics.mockResolvedValue([{ ...METRICS[2] }]);
+    wrap(<MarketingResults />);
+    expect(await screen.findByText(/permissão de insights/)).toBeTruthy();
+  });
+});
+
+describe('lib: resultados', () => {
+  it('pontua pelo alcance, depois visualizações, depois interações', () => {
+    expect(postScore({ reach: 300, views: 800, likes: 1 })).toBe(300);
+    expect(postScore({ reach: null, views: 800, likes: 1 })).toBe(800);
+    expect(postScore({ reach: null, views: null, likes: 5, comments: 2, shares: 1, saves: 2 })).toBe(10);
+  });
+
+  it('média por formato, do que mais rende para o que menos', () => {
+    const avg = averageByKind([
+      { kind: 'reel', reach: 300 }, { kind: 'reel', reach: 100 }, { kind: 'image', reach: 90 },
+    ]);
+    expect(avg.map(g => [g.kind, g.average, g.posts])).toEqual([['reel', 200, 2], ['image', 90, 1]]);
+  });
+
+  it('cadastros por visita', () => {
+    expect(conversionRate(100, 8)).toBe(8);
+    expect(conversionRate(0, 3)).toBeNull();
+    expect(conversionRate(40, 1)).toBe(2.5);
   });
 });

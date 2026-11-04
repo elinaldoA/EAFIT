@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import {
-  type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, GraphError, makeApi,
+  type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
   replyToComment, setCommentHidden, signState, startPublish, verifyState,
 } from './marketing.ts';
 
@@ -244,4 +244,48 @@ Deno.test('excluir: DELETE no id do post; já apagado na rede conta como apagado
 
   const denied = (async () => new Response(JSON.stringify({ error: { message: 'Permissions error', code: 10 } }), { status: 400 })) as typeof fetch;
   await assertRejects(() => deletePublished(makeApi(denied, 'https://g', 't'), 'X'), GraphError, 'Permissions error');
+});
+
+Deno.test('métricas do Instagram: curtidas, alcance e salvamentos; sem permissão fica só o básico', async () => {
+  const media = {
+    data: [
+      { id: 'm1', caption: 'Reel', permalink: 'https://ig/p/1', timestamp: '2026-11-04T15:00:00+0000', media_type: 'VIDEO', media_product_type: 'REELS', like_count: 12, comments_count: 3, thumbnail_url: 'https://x/t.jpg' },
+      { id: 'm2', caption: 'Foto', permalink: 'https://ig/p/2', timestamp: '2026-11-03T15:00:00+0000', media_type: 'IMAGE', media_product_type: 'FEED', like_count: 5, comments_count: 0, media_url: 'https://x/m.jpg' },
+    ],
+  };
+  const withInsights = fakeFetch({
+    'GET /IG1/media': media,
+    'GET /m1/insights': { data: [{ name: 'reach', values: [{ value: 300 }] }, { name: 'saved', values: [{ value: 9 }] }, { name: 'shares', values: [{ value: 4 }] }, { name: 'views', values: [{ value: 800 }] }] },
+    'GET /m2/insights': { data: [{ name: 'reach', values: [{ value: 90 }] }, { name: 'saved', values: [{ value: 1 }] }] },
+  });
+  const rows = await fetchMetrics(makeApi(withInsights.fn, 'https://graph.facebook.com/v23.0', 't'), IG);
+  assertEquals(rows.map((r) => [r.kind, r.likes, r.comments, r.reach, r.saves, r.shares, r.views, r.insights_ok]), [
+    ['reel', 12, 3, 300, 9, 4, 800, true],
+    ['image', 5, 0, 90, 1, null, null, true],
+  ]);
+  assertEquals(rows[0].thumb_url, 'https://x/t.jpg');
+
+  // Permissão de insights negada (código 10): não tenta de novo nos outros posts.
+  const denied = fakeFetch({
+    'GET /IG1/media': media,
+    'GET /m1/insights': () => ({ error: { message: 'permission', code: 10 } }),
+  });
+  const basic = await fetchMetrics(makeApi(denied.fn, 'https://graph.facebook.com/v23.0', 't'), IG);
+  assertEquals(basic.map((r) => [r.likes, r.reach, r.insights_ok]), [[12, null, false], [5, null, false]]);
+  assertEquals(denied.calls.filter((c) => c.path.endsWith('/insights')).length, 1);
+});
+
+Deno.test('métricas do Facebook: reações, comentários e compartilhamentos', async () => {
+  const fb = fakeFetch({
+    'GET /P1/published_posts': {
+      data: [{
+        id: 'P1_9', message: 'Oi', permalink_url: 'https://fb/9', created_time: '2026-11-04T15:00:00+0000', full_picture: 'https://x/f.jpg',
+        attachments: { data: [{ media_type: 'photo' }] }, shares: { count: 2 },
+        reactions: { summary: { total_count: 14 } }, comments: { summary: { total_count: 3 } },
+      }],
+    },
+    'GET /P1_9/insights': { data: [{ name: 'post_impressions_unique', values: [{ value: 410 }] }] },
+  });
+  const [row] = await fetchMetrics(makeApi(fb.fn, 'https://graph.facebook.com/v23.0', 't'), PAGE);
+  assertEquals([row.kind, row.likes, row.comments, row.shares, row.reach], ['image', 14, 3, 2, 410]);
 });

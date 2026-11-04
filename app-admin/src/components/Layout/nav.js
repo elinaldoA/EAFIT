@@ -78,6 +78,7 @@ export const NAV_GROUPS = [
         key: 'marketing', label: 'Marketing', icon: 'megaphone',
         tabs: [
           { to: '/marketing', label: 'Publicar' },
+          { to: '/marketing-resultados', label: 'Resultados' },
           { to: '/marketing-comentarios', label: 'Comentários' },
           { to: '/marketing-midia', label: 'Biblioteca de mídia' },
           { to: '/marketing-contas', label: 'Contas conectadas' },

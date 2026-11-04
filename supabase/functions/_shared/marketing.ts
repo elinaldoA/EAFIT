@@ -28,9 +28,11 @@ export const META_SCOPES = [
   'pages_show_list', 'pages_read_engagement', 'pages_manage_posts', 'pages_manage_engagement',
   'pages_read_user_content', 'business_management',
   'instagram_basic', 'instagram_content_publish', 'instagram_manage_comments', 'instagram_manage_contents',
+  // Resultados (alcance e salvamentos). Sem elas o painel mostra só curtidas e comentários.
+  'read_insights', 'instagram_manage_insights',
 ];
 export const THREADS_SCOPES = [
-  'threads_basic', 'threads_content_publish', 'threads_manage_replies', 'threads_read_replies', 'threads_delete',
+  'threads_basic', 'threads_content_publish', 'threads_manage_replies', 'threads_read_replies', 'threads_delete', 'threads_manage_insights',
 ];
 
 export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, threads: 500, tiktok: 2200 };
@@ -414,4 +416,111 @@ export async function deletePublished(api: Api, externalId: string): Promise<voi
     if (err instanceof GraphError && err.isGone) return;
     throw err;
   }
+}
+
+// ---------- métricas dos posts ----------
+
+export type MetricRow = {
+  external_id: string;
+  permalink: string | null;
+  caption: string;
+  kind: string; // reel | carousel | image | video | text
+  thumb_url: string | null;
+  posted_at: string | null;
+  likes: number | null;
+  comments: number | null;
+  shares: number | null;
+  saves: number | null;
+  reach: number | null;
+  views: number | null;
+  insights_ok: boolean;
+};
+
+const num = (v: unknown): number | null => (v === undefined || v === null || Number.isNaN(Number(v)) ? null : Number(v));
+const total = (v: unknown): number | null => num(((v as Obj | undefined)?.summary as Obj | undefined)?.total_count);
+
+// Sem permissão de insights (ou o tipo de mídia não tem a métrica): o post fica só
+// com o que a rede devolve de graça (curtidas e comentários).
+const NO_PERMISSION = new Set([10, 200, 283]);
+
+// Lê as métricas pedidas de um objeto (`/{id}/insights`); devolve nome → valor.
+async function readInsights(api: Api, id: string, metrics: string): Promise<Record<string, number>> {
+  const res = await api.get(`/${id}/insights`, { metric: metrics });
+  const out: Record<string, number> = {};
+  for (const m of list(res)) {
+    const first = list({ data: m.values })[0];
+    const value = first?.value ?? (m.total_value as Obj | undefined)?.value;
+    if (typeof m.name === 'string' && typeof value === 'number') out[m.name] = value;
+  }
+  return out;
+}
+
+// Últimos 25 posts de cada conta com as métricas que a rede der. Roda também para
+// posts feitos direto no app da rede (não só os do painel).
+export async function fetchMetrics(api: Api, account: Account): Promise<MetricRow[]> {
+  const rows: MetricRow[] = [];
+  let insightsOn = true;
+  // Uma tentativa de insights por post; permissão negada desliga o resto da conta.
+  const tryInsights = async (id: string, metrics: string[]): Promise<Record<string, number> | null> => {
+    if (!insightsOn) return null;
+    let wanted = metrics;
+    while (wanted.length) {
+      try {
+        return await readInsights(api, id, wanted.join(','));
+      } catch (err) {
+        if (!(err instanceof GraphError)) throw err;
+        if (NO_PERMISSION.has(err.code)) { insightsOn = false; return null; }
+        if (err.needsReconnect) throw err;
+        wanted = wanted.slice(0, -1); // métrica que o tipo de mídia não tem: tenta com menos
+      }
+    }
+    return null;
+  };
+
+  if (account.platform === 'instagram') {
+    const media = await api.get(`/${account.external_id}/media`, {
+      fields: 'id,caption,permalink,timestamp,media_type,media_product_type,like_count,comments_count,thumbnail_url,media_url',
+      limit: 25,
+    });
+    for (const m of list(media)) {
+      const kind = m.media_product_type === 'REELS' ? 'reel' : m.media_type === 'CAROUSEL_ALBUM' ? 'carousel' : m.media_type === 'VIDEO' ? 'video' : 'image';
+      const ins = await tryInsights(String(m.id), ['reach', 'saved', 'shares', 'views']);
+      rows.push({
+        external_id: String(m.id), permalink: (m.permalink as string) || null, caption: String(m.caption || ''), kind,
+        thumb_url: ((m.thumbnail_url || m.media_url) as string) || null, posted_at: (m.timestamp as string) || null,
+        likes: num(m.like_count), comments: num(m.comments_count), shares: ins?.shares ?? null, saves: ins?.saved ?? null,
+        reach: ins?.reach ?? null, views: ins?.views ?? null, insights_ok: ins !== null,
+      });
+    }
+  } else if (account.platform === 'facebook') {
+    const page = account.external_id;
+    const posts = await api.get(`/${page}/published_posts`, {
+      fields: 'id,message,permalink_url,created_time,full_picture,attachments{media_type},shares,reactions.summary(true).limit(0),comments.summary(true).limit(0)',
+      limit: 25,
+    });
+    for (const p of list(posts)) {
+      const att = list(p.attachments)[0]?.media_type;
+      const kind = att === 'video' ? 'video' : att === 'album' ? 'carousel' : att === 'photo' ? 'image' : 'text';
+      const ins = await tryInsights(String(p.id), ['post_impressions_unique']);
+      rows.push({
+        external_id: String(p.id), permalink: (p.permalink_url as string) || null, caption: String(p.message || ''), kind,
+        thumb_url: (p.full_picture as string) || null, posted_at: (p.created_time as string) || null,
+        likes: total(p.reactions), comments: total(p.comments), shares: num((p.shares as Obj | undefined)?.count),
+        saves: null, reach: ins?.post_impressions_unique ?? null, views: null, insights_ok: ins !== null,
+      });
+    }
+  } else if (account.platform === 'threads') {
+    const threads = await api.get(`/${account.external_id}/threads`, { fields: 'id,text,permalink,timestamp,media_type', limit: 25 });
+    for (const t of list(threads)) {
+      const ins = await tryInsights(String(t.id), ['views', 'likes', 'replies', 'reposts', 'shares']);
+      rows.push({
+        external_id: String(t.id), permalink: (t.permalink as string) || null, caption: String(t.text || ''),
+        kind: t.media_type === 'VIDEO' ? 'video' : t.media_type === 'IMAGE' ? 'image' : t.media_type === 'CAROUSEL_ALBUM' ? 'carousel' : 'text',
+        thumb_url: null, posted_at: (t.timestamp as string) || null,
+        likes: ins?.likes ?? null, comments: ins?.replies ?? null, shares: ins ? (ins.shares ?? 0) + (ins.reposts ?? 0) : null,
+        saves: null, reach: null, views: ins?.views ?? null, insights_ok: ins !== null,
+      });
+    }
+  }
+  return rows;
 }

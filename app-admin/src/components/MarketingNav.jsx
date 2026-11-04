@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 
 const LINKS = [
   { to: '/marketing', label: 'Publicar', end: true },
+  { to: '/marketing-resultados', label: 'Resultados' },
   { to: '/marketing-comentarios', label: 'Comentários' },
   { to: '/marketing-midia', label: 'Biblioteca de mídia' },
   { to: '/marketing-contas', label: 'Contas conectadas' },

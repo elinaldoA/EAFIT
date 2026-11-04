@@ -1107,6 +1107,8 @@ a.dash-alert:hover { background: var(--surface-2); }
 .mkt-day { margin: 4px 0 0; font-size: 13px; text-transform: capitalize; color: var(--text-muted); }
 .mkt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .mkt-row { display: grid; grid-template-columns: 64px 56px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--border); }
+.mkt-row--metric { grid-template-columns: 56px minmax(0, 1fr); border-top: 0; padding: 0; }
+.mkt-row__thumb--empty { display: inline-block; background: var(--surface-2, #222); }
 .mkt-row:first-child { border-top: 0; padding-top: 0; }
 .mkt-row__time { font-weight: 700; font-size: 14px; }
 .mkt-row__thumb { width: 56px; height: 70px; border-radius: 6px; object-fit: cover; background: var(--surface-2, #000); }

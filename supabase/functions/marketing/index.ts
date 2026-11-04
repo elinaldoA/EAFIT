@@ -4,10 +4,12 @@
 //   cron (header x-cron-secret, ver 20261222010000_marketing.sql)
 //     { job: 'publish' }  alvos vencidos da fila (agendados e containers em processamento)
 //     { job: 'sync' }     comentários de todas as contas
+//     { job: 'metrics' }  desempenho dos últimos posts de cada conta (Marketing → Resultados)
 //     { job: 'refresh' }  renova token do Threads perto de vencer
 //   admin logado com a área 'marketing'
 //     { action: 'run', postId }                 publica já (o painel chama logo após criar o post)
 //     { action: 'sync' }                        atualiza comentários agora
+//     { action: 'metrics' }                     atualiza o desempenho dos posts agora
 //     { action: 'reply', commentId, text }      responde um comentário
 //     { action: 'hide', commentId, hidden }     oculta/mostra um comentário
 //     { action: 'delete', postId }              apaga o post nas redes e, dando tudo certo, do painel
@@ -18,7 +20,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { CRON_SECRET_HEADER, isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import {
-  type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, GraphError, makeApi,
+  type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
   type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step,
 } from '../_shared/marketing.ts';
 import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
@@ -227,6 +229,25 @@ async function syncComments() {
   return out;
 }
 
+// Desempenho dos últimos posts de cada conta. Falha numa conta não derruba as outras.
+async function syncMetrics() {
+  const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok').neq('platform', 'tiktok');
+  const out: { account: string; posts?: number; error?: string }[] = [];
+  for (const { id } of accounts || []) {
+    try {
+      const { account, token } = await loadAccount(id);
+      const rows = await fetchMetrics(makeApi(fetch, baseFor(account.platform), token), account);
+      const { data: n, error } = await db.rpc('marketing_upsert_metrics', { p_account: id, p_rows: rows });
+      if (error) throw error;
+      out.push({ account: id, posts: Number(n) || 0 });
+    } catch (err) {
+      await handleGraphError(id, err);
+      out.push({ account: id, error: errMsg(err) });
+    }
+  }
+  return out;
+}
+
 async function loadComment(commentId: string) {
   const { data, error } = await db.from('marketing_comments').select('id, account_id, external_id').eq('id', commentId).single();
   if (error || !data) throw new Error('Comentário não encontrado.');
@@ -283,6 +304,7 @@ Deno.serve(async (req) => {
     try {
       if (body.job === 'publish') return json({ results: await runQueue(null) });
       if (body.job === 'sync') return json({ results: await syncComments() });
+      if (body.job === 'metrics') return json({ results: await syncMetrics() });
       if (body.job === 'refresh') return json(await refreshTokens());
       return json({ error: 'Job inválido.' }, 400);
     } catch (err) {
@@ -310,6 +332,8 @@ Deno.serve(async (req) => {
       }
       case 'sync':
         return json({ results: await syncComments() });
+      case 'metrics':
+        return json({ results: await syncMetrics() });
       case 'delete': {
         if (typeof body.postId !== 'string') return json({ error: 'Falta postId.' }, 400);
         const out = await deletePost(body.postId);
