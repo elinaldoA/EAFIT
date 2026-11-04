@@ -16,7 +16,7 @@ const { lib } = vi.hoisted(() => ({
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => ({ adminUser: { id: 'admin-1' } }) }));
-const { reelVideo } = vi.hoisted(() => ({ reelVideo: { renderReel: vi.fn(), canRenderReels: vi.fn(() => true) } }));
+const { reelVideo } = vi.hoisted(() => ({ reelVideo: { renderReel: vi.fn(), renderStory: vi.fn(), canRenderReels: vi.fn(() => true) } }));
 vi.mock('../lib/reelVideo', () => reelVideo);
 vi.mock('../lib/marketing', async orig => ({ ...(await orig()), ...lib }));
 
@@ -623,6 +623,44 @@ describe('Gerador de Reel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Gerar Reel' }));
     expect(await screen.findByText(/Erro: Este navegador não codifica áudio AAC/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Gerar Reel' }).disabled).toBe(false);
+  });
+});
+
+describe('Gerador de story em vídeo', () => {
+  beforeEach(() => {
+    reelVideo.canRenderReels.mockReturnValue(true);
+    reelVideo.renderStory.mockImplementation(async ({ onProgress }) => {
+      onProgress(0.5);
+      return { blob: new Blob(['mp4'], { type: 'video/mp4' }), width: 1080, height: 1920, seconds: 8 };
+    });
+    lib.uploadMedia.mockResolvedValue(undefined);
+    URL.createObjectURL = vi.fn(() => 'blob:story');
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  it('gera o story com etiqueta, título e música escolhidos e salva na biblioteca como MP4', async () => {
+    wrap(<MarketingMedia />);
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Criar story' }))[0]);
+    expect(screen.getByLabelText('Título').value).toBe('Treino pronto em segundos');
+    fireEvent.change(screen.getByLabelText(/Etiqueta/), { target: { value: 'DICA' } });
+    fireEvent.change(screen.getByLabelText('Música'), { target: { value: 'calm' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Gerar story' }));
+    await waitFor(() => expect(reelVideo.renderStory).toHaveBeenCalledWith(expect.objectContaining({
+      imageUrl: 'https://eafit.com.br/img/app/treino.webp', pill: 'DICA', title: 'Treino pronto em segundos', style: 'calm',
+    })));
+    expect(await screen.findByLabelText('Prévia do story')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar na biblioteca' }));
+    await waitFor(() => expect(lib.uploadMedia).toHaveBeenCalled());
+    const arg = lib.uploadMedia.mock.calls[0][0];
+    expect([arg.file.type, arg.title, arg.width, arg.height]).toEqual(['video/mp4', 'Story · Treino pronto em segundos', 1080, 1920]);
+  });
+
+  it('trava o botão quando o navegador não gera vídeo', async () => {
+    reelVideo.canRenderReels.mockReturnValue(false);
+    wrap(<MarketingMedia />);
+    fireEvent.click((await screen.findAllByRole('button', { name: 'Criar story' }))[0]);
+    expect(screen.getByRole('button', { name: 'Gerar story' }).disabled).toBe(true);
   });
 });
 

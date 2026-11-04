@@ -4,7 +4,7 @@ import { useAdminAuth } from '../context/useAdminAuth';
 import {
   APP_PRINTS, ART_FORMATS, REEL_DEFAULTS, createArt, exerciseVideoList, fetchMedia, printUrl, removeMedia, uploadMedia, validateUpload,
 } from '../lib/marketing';
-import { canRenderReels, renderReel } from '../lib/reelVideo';
+import { canRenderReels, renderReel, renderStory } from '../lib/reelVideo';
 import {
   PROMO_AUDIENCES, audienceLabel, fetchPromoMaterials, formatHint, formatSize, partnerTitle, sendMediaToPartners,
 } from '../lib/promoMaterials';
@@ -27,6 +27,7 @@ export default function MarketingMedia() {
 
   const [lang, setLang] = useState('pt');
   const [art, setArt] = useState(null); // { slug, label, headline, subline, format, preview }
+  const [story, setStory] = useState(null); // { slug, label, pill, title, sub, style, progress, preview, saved }
   const [reel, setReel] = useState(null); // { slug, label, hook, title, sub, progress, preview, saved }
   const [videoQuery, setVideoQuery] = useState('');
   const videos = useMemo(() => exerciseVideoList(), []);
@@ -189,6 +190,49 @@ export default function MarketingMedia() {
     }
   }
 
+  function openStory(p) {
+    const d = REEL_DEFAULTS[p.slug] || { title: p.label, sub: '' };
+    setArt(null);
+    setReel(null);
+    setStory({ slug: p.slug, label: p.label, pill: '', title: d.title, sub: d.sub, style: 'energy', progress: 0, preview: null, saved: false });
+  }
+
+  const editStory = patch => setStory(s => ({ ...s, ...patch, preview: null, saved: false }));
+
+  async function makeStory() {
+    setBusy(true);
+    setMsg('');
+    setStory(s => ({ ...s, progress: 0, preview: null, saved: false }));
+    try {
+      const out = await renderStory({
+        imageUrl: printUrl(story.slug, lang), pill: story.pill.trim(), title: story.title, sub: story.sub, style: story.style,
+        onProgress: progress => setStory(s => (s ? { ...s, progress } : s)),
+      });
+      setStory(s => ({ ...s, progress: 1, preview: { ...out, url: URL.createObjectURL(out.blob) } }));
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+      setStory(s => (s ? { ...s, progress: 0 } : s));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveStory() {
+    setBusy(true);
+    setMsg('');
+    try {
+      const { blob, width, height } = story.preview;
+      await uploadMedia({ file: new File([blob], `story-${story.slug}.mp4`, { type: 'video/mp4' }), title: `Story · ${story.title}`, width, height, adminId: adminUser?.id });
+      setStory(s => ({ ...s, saved: true }));
+      setMsg(`Story “${story.title}” salvo na biblioteca.`);
+      await load();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleRemove(item) {
     if (!window.confirm(`Remover “${item.title || item.storage_path}” da biblioteca? Posts já publicados não mudam.`)) return;
     try {
@@ -312,8 +356,9 @@ export default function MarketingMedia() {
               <img src={printUrl(p.slug, lang)} alt={p.label} loading="lazy" className="mkt-tile__media mkt-tile__media--phone" />
               <figcaption>
                 <strong>{p.label}</strong>
-                <button type="button" className="btn btn--small" onClick={() => { setReel(null); openArt(p); }}>Criar arte</button>
-                <button type="button" className="btn btn--small" onClick={() => openReel(p)}>Criar Reel</button>
+                <button type="button" className="btn btn--small" onClick={() => { setReel(null); setStory(null); openArt(p); }}>Criar arte</button>
+                <button type="button" className="btn btn--small" onClick={() => { setStory(null); openReel(p); }}>Criar Reel</button>
+                <button type="button" className="btn btn--small" onClick={() => openStory(p)}>Criar story</button>
               </figcaption>
             </figure>
           ))}
@@ -347,6 +392,56 @@ export default function MarketingMedia() {
           </div>
         )}
 
+        {story && (
+          <div className="mkt-art">
+            <div className="stack">
+              <h3 className="section-title">Story em vídeo: {story.label}</h3>
+              <p className="user-detail__meta">
+                Vídeo de 8 segundos, na vertical, com música: etiqueta opcional, título, subtítulo e o print do app entrando.
+                Leva cerca de 6 segundos para gerar.
+              </p>
+              {!canRenderReels() && (
+                <p className="form-msg form-msg--error">Este navegador não gera vídeo. Use o Chrome ou o Edge no computador.</p>
+              )}
+              <label className="field">
+                <span className="field__label">Etiqueta (opcional, ex.: HIDRATAÇÃO)</span>
+                <input className="input" value={story.pill} maxLength={24} onChange={e => editStory({ pill: e.target.value })} />
+              </label>
+              <label className="field">
+                <span className="field__label">Título</span>
+                <input className="input" value={story.title} maxLength={60} onChange={e => editStory({ title: e.target.value })} />
+              </label>
+              <label className="field">
+                <span className="field__label">Subtítulo</span>
+                <input className="input" value={story.sub} maxLength={70} onChange={e => editStory({ sub: e.target.value })} />
+              </label>
+              <label className="field">
+                <span className="field__label">Música</span>
+                <select className="input" value={story.style} onChange={e => editStory({ style: e.target.value })}>
+                  <option value="energy">Energia (geral)</option>
+                  <option value="bright">Leve (manhã e dia)</option>
+                  <option value="calm">Calma (noite)</option>
+                </select>
+              </label>
+              {busy && story.progress > 0 && story.progress < 1 && (
+                <progress value={story.progress} max="1" aria-label="Gerando o story">{Math.round(story.progress * 100)}%</progress>
+              )}
+              <div className="actions-row">
+                <button type="button" className="btn" disabled={busy || !canRenderReels() || !story.title.trim()} onClick={makeStory}>
+                  {busy && !story.preview ? 'Gerando…' : 'Gerar story'}
+                </button>
+                <button type="button" className="btn btn--primary" disabled={busy || !story.preview || story.saved} onClick={saveStory}>Salvar na biblioteca</button>
+                <button type="button" className="btn btn--ghost" onClick={() => setStory(null)}>Fechar</button>
+              </div>
+              {story.saved && (
+                <p className="form-msg form-msg--ok">
+                  Pronto. Agora <Link to="/marketing?aba=fila">adicione à fila da publicação automática</Link> (formato Story, no horário que quiser) ou publique em Publicar → Novo post.
+                </p>
+              )}
+            </div>
+            {story.preview && <video src={story.preview.url} controls playsInline className="mkt-art__preview" aria-label="Prévia do story" />}
+          </div>
+        )}
         {reel && (
           <div className="mkt-art">
             <div className="stack">
