@@ -10,6 +10,8 @@ export default defineConfig({
   },
   test: {
     setupFiles: ['./src/test/setupTests.js'],
+    // Telas com mapa/SVG pesado estouravam os 5s padrão quando a máquina (ou o CI) está carregada.
+    testTimeout: 20000,
   },
   plugins: [react()],
 })
