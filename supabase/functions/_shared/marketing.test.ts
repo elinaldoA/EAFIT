@@ -1,7 +1,7 @@
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import {
   type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
-  replyToComment, setCommentHidden, signState, startPublish, verifyState,
+  replyToComment, setCommentHidden, signState, startPublish, THREADS_CHILD_POLL, verifyState,
 } from './marketing.ts';
 
 type Call = { method: string; path: string; params: Record<string, string> };
@@ -151,6 +151,32 @@ Deno.test('Facebook: story de vídeo abre o upload, manda a URL e fecha', async 
   assertEquals(step.state === 'published' && step.externalId, 'ST2');
   assertEquals(calls.map((c) => c.path), ['/P1/video_stories', '/video-upload/v23.0/V1', '/P1/video_stories', '/ST2']);
   assertEquals(calls[2].params, { upload_phase: 'finish', video_id: 'V1', access_token: 'tok' });
+});
+
+Deno.test('Threads: carrossel espera cada item ficar pronto antes de criar o container', async () => {
+  THREADS_CHILD_POLL.delayMs = 0;
+  let n = 0;
+  const { fn, calls } = fakeFetch({
+    'POST /T1/threads': (p) => ({ id: p.media_type === 'CAROUSEL' ? 'CAR' : `K${++n}` }),
+    'GET /K1': { status: 'FINISHED' },
+    'GET /K2': (() => { let polls = 0; return () => ({ status: ++polls < 3 ? 'IN_PROGRESS' : 'FINISHED' }); })(),
+    'GET /CAR': { status: 'IN_PROGRESS' },
+  });
+  const step = await startPublish(makeApi(fn, 'https://graph.threads.net/v1.0', 'tok'), TH, { id: 'p', caption: 'Olá', media: [IMG(1), IMG(2)] });
+  assertEquals(step, { state: 'processing', containerId: 'CAR', retryInSec: 10 });
+  const order = calls.map((c) => `${c.method} ${c.path}`);
+  // o container do carrossel só é criado depois que os dois itens terminaram
+  assertEquals(order.lastIndexOf('GET /K2') < order.lastIndexOf('POST /T1/threads'), true);
+  assertEquals(calls.filter((c) => c.path === '/K2').length, 3);
+});
+
+Deno.test('Threads: carrossel com item recusado falha com a mensagem da rede', async () => {
+  THREADS_CHILD_POLL.delayMs = 0;
+  const { fn } = fakeFetch({
+    'POST /T1/threads': { id: 'K1' },
+    'GET /K1': { status: 'ERROR', error_message: 'imagem inválida' },
+  });
+  await assertRejects(() => startPublish(makeApi(fn, 'https://graph.threads.net/v1.0', 'tok'), TH, { id: 'p', caption: 'c', media: [IMG(1), IMG(2)] }), GraphError, 'A rede recusou a mídia (imagem inválida)');
 });
 
 Deno.test('Threads: texto puro publica quando o container está pronto', async () => {

@@ -271,6 +271,22 @@ async function createInstagramContainer(api: Api, account: Account, post: Post):
   return String((await api.post(`/${ig}/media`, { media_type: 'CAROUSEL', children: children.join(','), caption: post.caption })).id);
 }
 
+// O Threads só aceita montar o carrossel depois que cada item terminou de ser
+// processado; sem a espera ele recusa com "children ... invalid, nonexistent, or expired".
+export const THREADS_CHILD_POLL = { tries: 10, delayMs: 3000 };
+
+async function waitThreadsChild(api: Api, id: string): Promise<void> {
+  for (let i = 0; i < THREADS_CHILD_POLL.tries; i += 1) {
+    const data = await api.get(`/${id}`, { fields: 'status,error_message' });
+    const status = String(data.status || '');
+    if (status === 'FINISHED' || status === 'PUBLISHED') return;
+    if (status === 'ERROR' || status === 'EXPIRED') {
+      throw new GraphError(`A rede recusou a mídia (${String(data.error_message || status)}).`);
+    }
+    await new Promise((r) => setTimeout(r, THREADS_CHILD_POLL.delayMs));
+  }
+}
+
 async function createThreadsContainer(api: Api, account: Account, post: Post): Promise<string> {
   const uid = account.external_id;
   const item = (m: Media) => (m.type === 'video' ? { media_type: 'VIDEO', video_url: m.url } : { media_type: 'IMAGE', image_url: m.url });
@@ -279,7 +295,11 @@ async function createThreadsContainer(api: Api, account: Account, post: Post): P
     return String((await api.post(`/${uid}/threads`, params)).id);
   }
   const children: string[] = [];
-  for (const m of post.media) children.push(String((await api.post(`/${uid}/threads`, { ...item(m), is_carousel_item: true })).id));
+  for (const m of post.media) {
+    const id = String((await api.post(`/${uid}/threads`, { ...item(m), is_carousel_item: true })).id);
+    await waitThreadsChild(api, id);
+    children.push(id);
+  }
   return String((await api.post(`/${uid}/threads`, { media_type: 'CAROUSEL', children: children.join(','), text: post.caption })).id);
 }
 
