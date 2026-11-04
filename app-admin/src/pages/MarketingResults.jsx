@@ -5,7 +5,6 @@ import {
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
-import MarketingNav from '../components/MarketingNav';
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -102,7 +101,6 @@ export default function MarketingResults() {
         </button>
       </div>
 
-      <MarketingNav />
 
       <div className="mkt-filter" role="group" aria-label="Período">
         {PERIODS.map(p => (

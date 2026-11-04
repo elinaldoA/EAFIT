@@ -9,7 +9,6 @@ import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
 import MarketingAutopost from '../components/MarketingAutopost';
-import MarketingNav from '../components/MarketingNav';
 import MarketingQueue from '../components/MarketingQueue';
 
 const NO_STORIES = ['threads', 'tiktok'];
@@ -237,7 +236,6 @@ export default function MarketingPublish() {
         </div>
       </div>
 
-      <MarketingNav />
 
       <div className="tabs" role="tablist" aria-label="Publicações">
         {TABS.map(t => (

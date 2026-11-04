@@ -4,7 +4,6 @@ import { PLATFORMS, accountLabel, disconnectAccount, fetchAccounts, startConnect
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
-import MarketingNav from '../components/MarketingNav';
 
 // Marketing → Contas conectadas: liga as redes da EAFIT por OAuth (Meta,
 // Threads e TikTok). A volta do login cai aqui com ?conectado=… ou ?erro=….
@@ -69,7 +68,6 @@ export default function MarketingAccounts() {
         </div>
       </div>
 
-      <MarketingNav />
 
       <section className="card stack">
         <h2 className="section-title">Conectar</h2>

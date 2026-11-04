@@ -435,12 +435,6 @@ describe('Publicar em abas', () => {
     expect(await screen.findByText('Histórico de posts')).toBeTruthy();
   });
 
-  it('as cinco páginas do Marketing têm a mesma barra de navegação', async () => {
-    wrap(<MarketingPublish />);
-    const nav = await screen.findByRole('navigation', { name: 'Marketing' });
-    expect(nav.querySelectorAll('a').length).toBe(5);
-  });
-
   it('o histórico filtra por situação e conta cada grupo', async () => {
     lib.fetchPosts.mockResolvedValue([
       { id: 'p1', caption: 'ok', media: [], format: 'feed', scheduled_at: null, created_at: '2026-11-01T10:00:00Z', targets: [{ id: 't1', account_id: 'a1', status: 'published' }] },
