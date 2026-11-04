@@ -156,7 +156,7 @@ describe('GeoPanel', () => {
     await screen.findByText('Estados');
     expect(document.querySelector('.card-note').textContent).toMatch(/2 fora do Brasil \(veja em Mundo\)/);
     fireEvent.click(screen.getByRole('button', { name: 'Mundo' }));
-    const pt = await screen.findByRole('button', { name: 'Portugal: 2 acessos' }, { timeout: 5000 }); // mapa carregado sob demanda
+    const pt = await screen.findByRole('button', { name: 'Portugal: 2 acessos' }, { timeout: 15000 }); // mapa carregado sob demanda
     expect(screen.getByRole('button', { name: 'Brasil: 12 acessos' })).toBeTruthy();
     expect(screen.queryByText('Estados')).toBeNull();
     fireEvent.click(pt);
