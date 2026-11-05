@@ -11,7 +11,7 @@ import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
 import MarketingAutopost from '../components/MarketingAutopost';
 import MarketingQueue from '../components/MarketingQueue';
 
-const NO_STORIES = ['threads', 'tiktok'];
+const NO_STORIES = ['tiktok'];
 
 const TABS = [
   { key: 'agenda', label: 'Agenda' },
@@ -110,7 +110,7 @@ export default function MarketingPublish() {
     return () => { alive = false; };
   }, [tiktokId]);
 
-  // Threads e TikTok não têm stories: ao trocar para story, saem da seleção.
+  // O TikTok não tem stories pelo painel: ao trocar para story, sai da seleção.
   function chooseFormat(next) {
     setFormat(next);
     if (next === 'story') {
@@ -222,7 +222,7 @@ export default function MarketingPublish() {
     }
   }
 
-  // Instagram e Threads não deixam editar: apaga nas redes e publica de novo com a legenda nova.
+  // O Instagram não deixa editar: apaga na rede e publica de novo com a legenda nova.
   async function handleRepost(post) {
     const text = editing.text.trim();
     if (!text) { setMsg('Erro: escreva a legenda.'); return; }
@@ -282,7 +282,7 @@ export default function MarketingPublish() {
         <textarea className="input" rows={6} value={editing.text} maxLength={5000} aria-label="Nova legenda"
           onChange={e => setEditing({ id: p.id, text: e.target.value })} />
         <p className="user-detail__meta">
-          No Facebook a legenda muda na hora. Instagram e Threads não permitem editar um post publicado: para eles,
+          No Facebook a legenda muda na hora. O Instagram não permite editar um post publicado: para ele,
           use “Excluir e republicar” (as curtidas e os comentários do post atual se perdem).
         </p>
         <div className="actions-row">
@@ -313,7 +313,7 @@ export default function MarketingPublish() {
         <div>
           <h1 className="page-title">Publicar</h1>
           <p className="page-subtitle">
-            Veja o que vai ao ar, publique um post ou story novo e acompanhe o que já saiu. Instagram e Threads processam
+            Veja o que vai ao ar, publique um post ou story novo e acompanhe o que já saiu. O Instagram processa
             a mídia antes de publicar: vídeo pode levar alguns minutos.
           </p>
         </div>

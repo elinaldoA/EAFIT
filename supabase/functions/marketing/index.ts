@@ -5,7 +5,7 @@
 //     { job: 'publish' }  alvos vencidos da fila (agendados e containers em processamento)
 //     { job: 'sync' }     comentários de todas as contas
 //     { job: 'metrics' }  desempenho dos últimos posts de cada conta (Marketing → Resultados)
-//     { job: 'refresh' }  renova token do Threads perto de vencer
+//     { job: 'refresh' }  renova token do TikTok perto de vencer
 //   admin logado com a área 'marketing'
 //     { action: 'run', postId }                 publica já (o painel chama logo após criar o post)
 //     { action: 'sync' }                        atualiza comentários agora
@@ -24,7 +24,7 @@ import { corsHeadersFor } from '../_shared/cors.ts';
 import { CRON_SECRET_HEADER, isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import {
   type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, editPublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
-  type Media, type Post, replyToComment, request, setCommentHidden, startPublish, type Step, trackedCaption,
+  type Media, type Post, replyToComment, setCommentHidden, startPublish, type Step, trackedCaption,
 } from '../_shared/marketing.ts';
 import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
 
@@ -301,27 +301,13 @@ async function loadComment(commentId: string) {
 
 async function refreshTokens() {
   const soon = new Date(Date.now() + 15 * 86_400_000).toISOString();
-  const { data: accounts } = await db.from('marketing_accounts').select('id, platform')
-    .in('platform', ['threads', 'tiktok']).eq('status', 'ok').lt('token_expires_at', soon);
+  const { data: accounts } = await db.from('marketing_accounts').select('id')
+    .eq('platform', 'tiktok').eq('status', 'ok').lt('token_expires_at', soon);
   let refreshed = 0;
-  for (const { id, platform } of accounts || []) {
+  for (const { id } of accounts || []) {
     try {
-      if (platform === 'tiktok') {
-        const { data } = await db.from('marketing_tokens').select('token_enc').eq('account_id', id).single();
-        await renewTikTok(id, parseToken(await decryptToken(TOKEN_KEY, String(data?.token_enc))).refresh);
-        refreshed++;
-        continue;
-      }
-      const { token } = await loadAccount(id);
-      const r = await request(fetch, `https://graph.threads.net/refresh_access_token?${new URLSearchParams({
-        grant_type: 'th_refresh_token', access_token: token,
-      })}`);
-      await db.from('marketing_tokens').update({
-        token_enc: await encryptToken(TOKEN_KEY, String(r.access_token)), updated_at: new Date().toISOString(),
-      }).eq('account_id', id);
-      await db.from('marketing_accounts').update({
-        token_expires_at: new Date(Date.now() + Number(r.expires_in || 5_184_000) * 1000).toISOString(),
-      }).eq('id', id);
+      const { data } = await db.from('marketing_tokens').select('token_enc').eq('account_id', id).single();
+      await renewTikTok(id, parseToken(await decryptToken(TOKEN_KEY, String(data?.token_enc))).refresh);
       refreshed++;
     } catch (err) {
       await markReconnect(id, `Não deu para renovar o acesso: ${errMsg(err)}`);

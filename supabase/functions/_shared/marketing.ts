@@ -1,5 +1,5 @@
 // Marketing (painel → Marketing): conversa com as APIs oficiais da Meta
-// (Graph API para Página do Facebook e Instagram profissional; Threads API).
+// (Graph API para Página do Facebook e Instagram profissional) e com o TikTok.
 // Usado por marketing-oauth (conectar contas) e marketing (publicar,
 // comentários, renovar token). O fetch é injetado para os testes.
 //
@@ -9,9 +9,8 @@
 // Cada versão da Graph API vale ~2 anos; ao trocar, conferir o changelog da Meta.
 export const GRAPH_VERSION = 'v23.0';
 export const GRAPH_BASE = `https://graph.facebook.com/${GRAPH_VERSION}`;
-export const THREADS_BASE = 'https://graph.threads.net/v1.0';
 
-export type Platform = 'facebook' | 'instagram' | 'threads' | 'tiktok';
+export type Platform = 'facebook' | 'instagram' | 'tiktok';
 export type Media = { type: 'image' | 'video'; url: string; credit?: string };
 export type Account = { id: string; platform: Platform; external_id: string; username?: string | null };
 // format 'story': uma mídia, sem legenda (Instagram e Página do Facebook).
@@ -31,11 +30,8 @@ export const META_SCOPES = [
   // Resultados (alcance e salvamentos). Sem elas o painel mostra só curtidas e comentários.
   'read_insights', 'instagram_manage_insights',
 ];
-export const THREADS_SCOPES = [
-  'threads_basic', 'threads_content_publish', 'threads_manage_replies', 'threads_read_replies', 'threads_delete', 'threads_manage_insights',
-];
 
-export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, threads: 500, tiktok: 2200 };
+export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, tiktok: 2200 };
 
 // ---------- cifra e assinatura ----------
 
@@ -81,7 +77,7 @@ export async function decryptToken(secret: string, stored: string): Promise<stri
   return dec.decode(plain);
 }
 
-export type OAuthState = { admin: string; provider: 'meta' | 'threads' | 'tiktok'; origin: string; exp: number };
+export type OAuthState = { admin: string; provider: 'meta' | 'tiktok'; origin: string; exp: number };
 
 // state do OAuth: quem pediu, para onde voltar e validade (10 min), assinado
 // para ninguém forjar um retorno que conecte outra conta.
@@ -172,8 +168,8 @@ export function makeApi(fetchFn: FetchFn, base: string, token: string): Api {
   };
 }
 
-export function baseFor(platform: Platform): string {
-  return platform === 'threads' ? THREADS_BASE : GRAPH_BASE;
+export function baseFor(_platform: Platform): string {
+  return GRAPH_BASE;
 }
 
 // ---------- publicação ----------
@@ -185,7 +181,6 @@ export function checkPost(platform: Platform, post: Post): string | null {
     if (post.media.length !== 1 || post.media[0].type !== 'video') return 'TikTok pelo painel aceita só um vídeo por post.';
   }
   if (post.format === 'story') {
-    if (platform === 'threads') return 'Threads não tem stories.';
     if (post.media.length !== 1) return 'Story leva exatamente uma imagem ou um vídeo.';
     return null;
   }
@@ -199,7 +194,6 @@ export function checkPost(platform: Platform, post: Post): string | null {
 
 // O post do Facebook sai com um link do app marcado com o id do post (utm_content),
 // para o painel ligar cada cadastro ao conteudo que o trouxe (Marketing -> Resultados).
-// Threads fica sem: perfil novo postando link no automatico foi suspenso (nov/2026).
 // Instagram nao tem link na legenda e story nao tem legenda. Legenda que ja tem
 // utm_content ou que estouraria o limite da rede sai como esta.
 export function trackedCaption(platform: Platform, post: Pick<Post, 'id' | 'caption' | 'format'>): string {
@@ -286,54 +280,20 @@ async function createInstagramContainer(api: Api, account: Account, post: Post):
   return String((await api.post(`/${ig}/media`, { media_type: 'CAROUSEL', children: children.join(','), caption: post.caption })).id);
 }
 
-// O Threads só aceita montar o carrossel depois que cada item terminou de ser
-// processado; sem a espera ele recusa com "children ... invalid, nonexistent, or expired".
-export const THREADS_CHILD_POLL = { tries: 10, delayMs: 3000 };
-
-async function waitThreadsChild(api: Api, id: string): Promise<void> {
-  for (let i = 0; i < THREADS_CHILD_POLL.tries; i += 1) {
-    const data = await api.get(`/${id}`, { fields: 'status,error_message' });
-    const status = String(data.status || '');
-    if (status === 'FINISHED' || status === 'PUBLISHED') return;
-    if (status === 'ERROR' || status === 'EXPIRED') {
-      throw new GraphError(`A rede recusou a mídia (${String(data.error_message || status)}).`);
-    }
-    await new Promise((r) => setTimeout(r, THREADS_CHILD_POLL.delayMs));
-  }
-}
-
-async function createThreadsContainer(api: Api, account: Account, post: Post): Promise<string> {
-  const uid = account.external_id;
-  const item = (m: Media) => (m.type === 'video' ? { media_type: 'VIDEO', video_url: m.url } : { media_type: 'IMAGE', image_url: m.url });
-  if (post.media.length <= 1) {
-    const params = post.media.length ? { ...item(post.media[0]), text: post.caption } : { media_type: 'TEXT', text: post.caption };
-    return String((await api.post(`/${uid}/threads`, params)).id);
-  }
-  const children: string[] = [];
-  for (const m of post.media) {
-    const id = String((await api.post(`/${uid}/threads`, { ...item(m), is_carousel_item: true })).id);
-    await waitThreadsChild(api, id);
-    children.push(id);
-  }
-  return String((await api.post(`/${uid}/threads`, { media_type: 'CAROUSEL', children: children.join(','), text: post.caption })).id);
-}
-
-// Instagram e Threads publicam em duas etapas: cria o container, espera a rede
+// O Instagram publica em duas etapas: cria o container, espera a rede
 // processar a mídia (vídeo pode levar minutos) e publica. Facebook é direto.
 export async function startPublish(api: Api, account: Account, post: Post): Promise<Step> {
   if (account.platform === 'facebook') {
     return post.format === 'story' ? publishFacebookStory(api, account, post) : publishFacebook(api, account, post);
   }
-  const containerId = account.platform === 'instagram'
-    ? await createInstagramContainer(api, account, post)
-    : await createThreadsContainer(api, account, post);
+  if (account.platform !== 'instagram') throw new Error('Esta rede não publica por aqui.');
+  const containerId = await createInstagramContainer(api, account, post);
   return continuePublish(api, account, post, containerId);
 }
 
 export async function continuePublish(api: Api, account: Account, post: Post, containerId: string): Promise<Step> {
-  const isIg = account.platform === 'instagram';
-  const data = await api.get(`/${containerId}`, { fields: isIg ? 'status_code,status' : 'status,error_message' });
-  const status = String((isIg ? data.status_code : data.status) || '');
+  const data = await api.get(`/${containerId}`, { fields: 'status_code,status' });
+  const status = String(data.status_code || '');
   if (status === 'ERROR' || status === 'EXPIRED') {
     throw new GraphError(`A rede recusou a mídia (${String(data.error_message || data.status || status)}).`);
   }
@@ -341,8 +301,7 @@ export async function continuePublish(api: Api, account: Account, post: Post, co
     const hasVideo = post.media.some((m) => m.type === 'video');
     return { state: 'processing', containerId, retryInSec: hasVideo ? 30 : 10 };
   }
-  const path = isIg ? `/${account.external_id}/media_publish` : `/${account.external_id}/threads_publish`;
-  const id = String((await api.post(path, { creation_id: containerId })).id);
+  const id = String((await api.post(`/${account.external_id}/media_publish`, { creation_id: containerId })).id);
   return { state: 'published', externalId: id, permalink: await permalinkOf(api, account.platform, id) };
 }
 
@@ -403,24 +362,6 @@ export async function fetchComments(api: Api, account: Account): Promise<Comment
         });
       }
     }
-  } else {
-    const threads = await api.get(`/${account.external_id}/threads`, { fields: 'id,text,permalink', limit: 10 });
-    for (const t of list(threads)) {
-      const convo = list(await api.get(`/${t.id}/conversation`, {
-        fields: 'id,text,username,timestamp,hide_status,replied_to,is_reply_owned_by_me',
-        reverse: false,
-      }));
-      const mine = (r: Obj) => r.is_reply_owned_by_me === true || String(r.username || '').toLowerCase() === own;
-      for (const c of convo) {
-        if ((c.replied_to as Obj | undefined)?.id !== t.id || mine(c)) continue;
-        rows.push({
-          external_id: String(c.id), post_external_id: String(t.id), post_permalink: (t.permalink as string) || null,
-          post_caption: String(t.text || ''), author: `@${String(c.username || '')}`, text: String(c.text || ''),
-          commented_at: (c.timestamp as string) || null, hidden: String(c.hide_status || '') === 'HIDDEN',
-          answered: convo.some((r) => (r.replied_to as Obj | undefined)?.id === c.id && mine(r)),
-        });
-      }
-    }
   }
   return rows;
 }
@@ -428,21 +369,19 @@ export async function fetchComments(api: Api, account: Account): Promise<Comment
 export async function replyToComment(api: Api, account: Account, commentId: string, text: string): Promise<string> {
   if (account.platform === 'facebook') return String((await api.post(`/${commentId}/comments`, { message: text })).id);
   if (account.platform === 'instagram') return String((await api.post(`/${commentId}/replies`, { message: text })).id);
-  const uid = account.external_id;
-  const container = String((await api.post(`/${uid}/threads`, { media_type: 'TEXT', text, reply_to_id: commentId })).id);
-  return String((await api.post(`/${uid}/threads_publish`, { creation_id: container })).id);
+  throw new Error('Esta rede não tem comentários pelo painel.');
 }
 
 export async function setCommentHidden(api: Api, account: Account, commentId: string, hidden: boolean): Promise<void> {
   if (account.platform === 'facebook') await api.post(`/${commentId}`, { is_hidden: hidden });
   else if (account.platform === 'instagram') await api.post(`/${commentId}`, { hide: hidden });
-  else await api.post(`/${commentId}/manage_reply`, { hide: hidden });
+  else throw new Error('Esta rede não tem comentários pelo painel.');
 }
 
 // ---------- exclusão ----------
 
 // Apaga o post publicado na rede (Facebook: pages_manage_posts; Instagram:
-// instagram_manage_contents; Threads: threads_delete). Se ele já não existe
+// instagram_manage_contents). Se ele já não existe
 // lá (apagado direto na rede), conta como apagado.
 export async function deletePublished(api: Api, externalId: string): Promise<void> {
   try {
@@ -544,18 +483,6 @@ export async function fetchMetrics(api: Api, account: Account): Promise<MetricRo
         saves: null, reach: ins?.post_impressions_unique ?? null, views: null, insights_ok: ins !== null,
       });
     }
-  } else if (account.platform === 'threads') {
-    const threads = await api.get(`/${account.external_id}/threads`, { fields: 'id,text,permalink,timestamp,media_type', limit: 25 });
-    for (const t of list(threads)) {
-      const ins = await tryInsights(String(t.id), ['views', 'likes', 'replies', 'reposts', 'shares']);
-      rows.push({
-        external_id: String(t.id), permalink: (t.permalink as string) || null, caption: String(t.text || ''),
-        kind: t.media_type === 'VIDEO' ? 'video' : t.media_type === 'IMAGE' ? 'image' : t.media_type === 'CAROUSEL_ALBUM' ? 'carousel' : 'text',
-        thumb_url: null, posted_at: (t.timestamp as string) || null,
-        likes: ins?.likes ?? null, comments: ins?.replies ?? null, shares: ins ? (ins.shares ?? 0) + (ins.reposts ?? 0) : null,
-        saves: null, reach: null, views: ins?.views ?? null, insights_ok: ins !== null,
-      });
-    }
   }
   return rows;
 }
@@ -563,14 +490,11 @@ export async function fetchMetrics(api: Api, account: Account): Promise<MetricRo
 // ---------- edição ----------
 
 // Só o Facebook deixa mudar o texto de um post já publicado pela API (vídeo usa
-// `description`, o resto `message`). Instagram e Threads não têm essa chamada:
-// para eles o caminho é apagar e publicar de novo.
+// `description`, o resto `message`). O Instagram não tem essa chamada: o
+// caminho é apagar e publicar de novo.
 export async function editPublished(api: Api, account: Account, externalId: string, caption: string, isVideo: boolean): Promise<void> {
   if (account.platform === 'instagram') {
     throw new Error('O Instagram não permite editar a legenda pela API. Exclua e publique de novo.');
-  }
-  if (account.platform === 'threads') {
-    throw new Error('O Threads não permite editar um post publicado pela API. Exclua e publique de novo.');
   }
   if (account.platform !== 'facebook') throw new Error('Esta rede não permite editar pela API.');
   await api.post(`/${externalId}`, isVideo ? { description: caption } : { message: caption });

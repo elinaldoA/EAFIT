@@ -16,7 +16,7 @@ const SORTS = [
   { key: 'score', label: 'Melhores' },
   { key: 'recent', label: 'Mais recentes' },
 ];
-const NETWORKS = ['instagram', 'facebook', 'threads'];
+const NETWORKS = ['instagram', 'facebook'];
 
 const fmt = n => (n === null || n === undefined ? '–' : Number(n).toLocaleString('pt-BR'));
 const pct = rate => (rate === null ? '–' : `${rate.toLocaleString('pt-BR')}%`);
@@ -228,7 +228,6 @@ export default function MarketingResults() {
           </div>
           <p className="user-detail__meta">
             Os posts do Facebook saem com um link do app marcado com o id do post; cada cadastro por esse link entra aqui.
-            O Threads sai sem link, para não ser tratado como spam (posts antigos dele com link continuam contando).
           </p>
         </section>
       )}

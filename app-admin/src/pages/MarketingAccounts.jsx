@@ -5,9 +5,9 @@ import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 
-// Marketing → Contas conectadas: liga as redes da EAFIT por OAuth (Meta,
-// Threads e TikTok). A volta do login cai aqui com ?conectado=… ou ?erro=….
-const PROVIDER = { facebook: 'meta', instagram: 'meta', threads: 'threads', tiktok: 'tiktok' };
+// Marketing → Contas conectadas: liga as redes da EAFIT por OAuth (Meta e
+// TikTok). A volta do login cai aqui com ?conectado=… ou ?erro=….
+const PROVIDER = { facebook: 'meta', instagram: 'meta', tiktok: 'tiktok' };
 export default function MarketingAccounts() {
   const [params, setParams] = useSearchParams();
   const [accounts, setAccounts] = useState(null);
@@ -74,9 +74,6 @@ export default function MarketingAccounts() {
         <div className="actions-row">
           <button type="button" className="btn btn--primary" disabled={!!busy} onClick={() => connect('meta')}>
             {busy === 'meta' ? 'Abrindo…' : 'Conectar Facebook e Instagram'}
-          </button>
-          <button type="button" className="btn" disabled={!!busy} onClick={() => connect('threads')}>
-            {busy === 'threads' ? 'Abrindo…' : 'Conectar Threads'}
           </button>
           <button type="button" className="btn" disabled={!!busy} onClick={() => connect('tiktok')}>
             {busy === 'tiktok' ? 'Abrindo…' : 'Conectar TikTok'}

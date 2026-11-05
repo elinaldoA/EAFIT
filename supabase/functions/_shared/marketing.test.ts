@@ -1,7 +1,7 @@
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import {
   type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
-  replyToComment, setCommentHidden, signState, startPublish, THREADS_CHILD_POLL, trackedCaption, verifyState,
+  replyToComment, setCommentHidden, signState, startPublish, trackedCaption, verifyState,
 } from './marketing.ts';
 
 type Call = { method: string; path: string; params: Record<string, string> };
@@ -27,7 +27,6 @@ function fakeFetch(routes: Record<string, Route>) {
 
 const PAGE: Account = { id: 'a1', platform: 'facebook', external_id: 'P1' };
 const IG: Account = { id: 'a2', platform: 'instagram', external_id: 'IG1', username: 'eafit' };
-const TH: Account = { id: 'a3', platform: 'threads', external_id: 'T1', username: 'eafit' };
 const IMG = (n: number) => ({ type: 'image' as const, url: `https://x.com/${n}.jpg` });
 
 Deno.test('token cifrado volta igual e não aparece em claro', async () => {
@@ -50,7 +49,7 @@ Deno.test('state do OAuth: válido, adulterado e vencido', async () => {
 
 Deno.test('checkPost barra o que a rede recusaria', () => {
   assertEquals(checkPost('instagram', { id: 'p', caption: 'oi', media: [] }), 'Instagram exige ao menos uma imagem ou vídeo.');
-  assertEquals(checkPost('threads', { id: 'p', caption: 'a'.repeat(501), media: [] }), 'Legenda passa de 500 caracteres.');
+  assertEquals(checkPost('instagram', { id: 'p', caption: 'a'.repeat(2201), media: [IMG(1)] }), 'Legenda passa de 2200 caracteres.');
   assertEquals(checkPost('facebook', { id: 'p', caption: '', media: [{ type: 'video', url: 'https://v' }, IMG(1)] }), 'Vídeo vai sozinho no post.');
   assertEquals(checkPost('facebook', { id: 'p', caption: 'oi', media: [] }), null);
 });
@@ -105,9 +104,8 @@ Deno.test('Instagram: carrossel cria filhos e container CAROUSEL; erro do contai
   assertEquals(calls[2].params.children, 'c1,c2');
 });
 
-Deno.test('checkPost: story só com uma mídia e fora do Threads', () => {
+Deno.test('checkPost: story só com uma mídia', () => {
   const story = (media: { type: 'image' | 'video'; url: string }[]) => ({ id: 'p', caption: '', media, format: 'story' as const });
-  assertEquals(checkPost('threads', story([IMG(1)])), 'Threads não tem stories.');
   assertEquals(checkPost('instagram', story([IMG(1), IMG(2)])), 'Story leva exatamente uma imagem ou um vídeo.');
   assertEquals(checkPost('instagram', story([IMG(1)])), null);
 });
@@ -153,44 +151,6 @@ Deno.test('Facebook: story de vídeo abre o upload, manda a URL e fecha', async 
   assertEquals(calls[2].params, { upload_phase: 'finish', video_id: 'V1', access_token: 'tok' });
 });
 
-Deno.test('Threads: carrossel espera cada item ficar pronto antes de criar o container', async () => {
-  THREADS_CHILD_POLL.delayMs = 0;
-  let n = 0;
-  const { fn, calls } = fakeFetch({
-    'POST /T1/threads': (p) => ({ id: p.media_type === 'CAROUSEL' ? 'CAR' : `K${++n}` }),
-    'GET /K1': { status: 'FINISHED' },
-    'GET /K2': (() => { let polls = 0; return () => ({ status: ++polls < 3 ? 'IN_PROGRESS' : 'FINISHED' }); })(),
-    'GET /CAR': { status: 'IN_PROGRESS' },
-  });
-  const step = await startPublish(makeApi(fn, 'https://graph.threads.net/v1.0', 'tok'), TH, { id: 'p', caption: 'Olá', media: [IMG(1), IMG(2)] });
-  assertEquals(step, { state: 'processing', containerId: 'CAR', retryInSec: 10 });
-  const order = calls.map((c) => `${c.method} ${c.path}`);
-  // o container do carrossel só é criado depois que os dois itens terminaram
-  assertEquals(order.lastIndexOf('GET /K2') < order.lastIndexOf('POST /T1/threads'), true);
-  assertEquals(calls.filter((c) => c.path === '/K2').length, 3);
-});
-
-Deno.test('Threads: carrossel com item recusado falha com a mensagem da rede', async () => {
-  THREADS_CHILD_POLL.delayMs = 0;
-  const { fn } = fakeFetch({
-    'POST /T1/threads': { id: 'K1' },
-    'GET /K1': { status: 'ERROR', error_message: 'imagem inválida' },
-  });
-  await assertRejects(() => startPublish(makeApi(fn, 'https://graph.threads.net/v1.0', 'tok'), TH, { id: 'p', caption: 'c', media: [IMG(1), IMG(2)] }), GraphError, 'A rede recusou a mídia (imagem inválida)');
-});
-
-Deno.test('Threads: texto puro publica quando o container está pronto', async () => {
-  const { fn, calls } = fakeFetch({
-    'POST /T1/threads': { id: 'TC' },
-    'GET /TC': { status: 'FINISHED' },
-    'POST /T1/threads_publish': { id: 'TP' },
-    'GET /TP': { permalink: 'https://threads.net/@eafit/post/TP' },
-  });
-  const step = await startPublish(makeApi(fn, 'https://graph.threads.net/v1.0', 'tok'), TH, { id: 'p', caption: 'Olá', media: [] });
-  assertEquals(step.state, 'published');
-  assertEquals(calls[0].params.media_type, 'TEXT');
-});
-
 Deno.test('token inválido (190) pede reconexão', async () => {
   const fn = (async () => new Response(JSON.stringify({ error: { message: 'Session expired', code: 190 } }), { status: 400 })) as typeof fetch;
   const err = await assertRejects(() => makeApi(fn, 'https://g', 't').get('/me'), GraphError);
@@ -217,7 +177,7 @@ Deno.test('comentários do Facebook: ignora os da Página e marca os respondidos
   ]);
 });
 
-Deno.test('comentários do Instagram e Threads', async () => {
+Deno.test('comentários do Instagram', async () => {
   const ig = fakeFetch({
     'GET /IG1/media': {
       data: [{ id: 'm1', caption: 'Treino', permalink: 'https://ig/m1', comments: { data: [
@@ -229,33 +189,19 @@ Deno.test('comentários do Instagram e Threads', async () => {
   const igRows = await fetchComments(makeApi(ig.fn, 'https://graph.facebook.com/v23.0', 't'), IG);
   assertEquals(igRows.map((r) => [r.external_id, r.author, r.answered]), [['k1', '@bia', true]]);
 
-  const th = fakeFetch({
-    'GET /T1/threads': { data: [{ id: 'th1', text: 'Post', permalink: 'https://threads/th1' }] },
-    'GET /th1/conversation': { data: [
-      { id: 'r1', text: 'Como baixo?', username: 'caio', replied_to: { id: 'th1' }, hide_status: 'NOT_HUSHED' },
-      { id: 'r2', text: 'No site', username: 'eafit', replied_to: { id: 'r1' }, is_reply_owned_by_me: true },
-      { id: 'r3', text: 'eu tbm', username: 'duda', replied_to: { id: 'r1' } },
-      { id: 'r4', text: 'spam', username: 'bot', replied_to: { id: 'th1' }, hide_status: 'HIDDEN' },
-    ] },
-  });
-  const thRows = await fetchComments(makeApi(th.fn, 'https://graph.threads.net/v1.0', 't'), TH);
-  assertEquals(thRows.map((r) => [r.external_id, r.answered, r.hidden]), [['r1', true, false], ['r4', false, true]]);
 });
 
 Deno.test('responder e ocultar usam o endpoint de cada rede', async () => {
   const { fn, calls } = fakeFetch({
-    'POST /c1/comments': { id: 'r' }, 'POST /k1/replies': { id: 'r' }, 'POST /T1/threads': { id: 'RC' }, 'POST /T1/threads_publish': { id: 'R' },
-    'POST /c1': { success: true }, 'POST /k1': { success: true }, 'POST /r1/manage_reply': { success: true },
+    'POST /c1/comments': { id: 'r' }, 'POST /k1/replies': { id: 'r' },
+    'POST /c1': { success: true }, 'POST /k1': { success: true },
   });
   const api = makeApi(fn, 'https://g', 't');
   await replyToComment(api, PAGE, 'c1', 'Oi');
   await replyToComment(api, IG, 'k1', 'Oi');
-  assertEquals(await replyToComment(api, TH, 'r1', 'Oi'), 'R');
-  assertEquals(calls[2].params.reply_to_id, 'r1');
   await setCommentHidden(api, PAGE, 'c1', true);
   await setCommentHidden(api, IG, 'k1', false);
-  await setCommentHidden(api, TH, 'r1', true);
-  assertEquals(calls.slice(-3).map((c) => [c.path, c.params.is_hidden ?? c.params.hide]), [['/c1', 'true'], ['/k1', 'false'], ['/r1/manage_reply', 'true']]);
+  assertEquals(calls.slice(-2).map((c) => [c.path, c.params.is_hidden ?? c.params.hide]), [['/c1', 'true'], ['/k1', 'false']]);
 });
 
 Deno.test('excluir: DELETE no id do post; já apagado na rede conta como apagado', async () => {
@@ -316,13 +262,12 @@ Deno.test('métricas do Facebook: reações, comentários e compartilhamentos', 
   assertEquals([row.kind, row.likes, row.comments, row.shares, row.reach], ['image', 14, 3, 2, 410]);
 });
 
-Deno.test('trackedCaption: Facebook leva link com o id do post; Threads, Instagram, story e TikTok nao', () => {
+Deno.test('trackedCaption: Facebook leva link com o id do post; Instagram, story e TikTok nao', () => {
   const post = { id: 'AB12CD34-0000-4000-8000-000000000000', caption: 'Treino de hoje', format: 'feed' as const };
   assertEquals(
     trackedCaption('facebook', post),
     'Treino de hoje\n\nComece grátis: https://eafit.com.br/app/?utm_source=facebook&utm_medium=post&utm_content=ab12cd34',
   );
-  assertEquals(trackedCaption('threads', post), 'Treino de hoje');
   assertEquals(trackedCaption('instagram', post), 'Treino de hoje');
   assertEquals(trackedCaption('tiktok', post), 'Treino de hoje');
   assertEquals(trackedCaption('facebook', { ...post, format: 'story' }), 'Treino de hoje');

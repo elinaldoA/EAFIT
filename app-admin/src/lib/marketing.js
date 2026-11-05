@@ -3,7 +3,7 @@ import { db } from './supabase';
 // Vídeos de execução que o app já usa, com o crédito exigido pela licença.
 import { EXERCISE_VIDEOS, videoCredit } from '../../../app-react/src/data/exerciseVideos.js';
 
-// Marketing: redes da EAFIT conectadas (Facebook, Instagram, Threads), fila de
+// Marketing: redes da EAFIT conectadas (Facebook, Instagram, TikTok), fila de
 // publicação, biblioteca de mídia e comentários. Tabelas e RPCs em
 // supabase/migrations/20261222010000_marketing.sql; quem fala com as redes são
 // as Edge Functions marketing-oauth e marketing (tokens nunca chegam aqui).
@@ -15,7 +15,6 @@ export const MAX_BYTES = 100 * 1024 * 1024; // igual ao file_size_limit do bucke
 export const PLATFORMS = {
   facebook: { label: 'Facebook', limit: 63000 },
   instagram: { label: 'Instagram', limit: 2200 },
-  threads: { label: 'Threads', limit: 500 },
   tiktok: { label: 'TikTok', limit: 2200 },
 };
 
@@ -243,7 +242,7 @@ async function invoke(fn, body) {
   return data;
 }
 
-// Leva para o login da Meta/Threads; a volta cai em #/marketing-contas.
+// Leva para o login da Meta ou do TikTok; a volta cai em #/marketing-contas.
 export async function startConnect(provider) {
   const { url } = await invoke('marketing-oauth', { provider });
   window.location.assign(url);
@@ -296,7 +295,6 @@ export function validatePost({
 function validateStory({ media, accounts, scheduledAt, now }) {
   const errors = [];
   if (!accounts.length) errors.push('Escolha ao menos uma conta.');
-  if (accounts.some(a => a.platform === 'threads')) errors.push('Threads não tem stories: desmarque o Threads.');
   if (accounts.some(a => a.platform === 'tiktok')) errors.push('TikTok não tem stories pelo painel: desmarque o TikTok.');
   if (media.length !== 1) errors.push('Story leva exatamente uma imagem ou um vídeo.');
   if (media.some(m => m.credit)) errors.push('Mídia com crédito obrigatório não pode ir para story (não há legenda para o crédito).');
@@ -389,8 +387,8 @@ export function deletePost(postId) {
   return invoke('marketing', { action: 'delete', postId });
 }
 
-// Muda a legenda de um post já publicado. Só o Facebook deixa; Instagram e Threads
-// voltam com `ok: false` e o motivo, e o caminho para eles é excluir e republicar.
+// Muda a legenda de um post já publicado. Só o Facebook deixa; o Instagram
+// volta com `ok: false` e o motivo, e o caminho para eles é excluir e republicar.
 export function editPost(postId, caption) {
   return invoke('marketing', { action: 'edit', postId, caption });
 }
@@ -630,8 +628,7 @@ export async function fetchConversion(days = 30) {
   }));
 }
 
-// Cadastros e retenção por post com link marcado com utm_content (Facebook; o Threads
-// saiu com link só até nov/2026).
+// Cadastros e retenção por post com link marcado com utm_content (Facebook).
 export async function fetchContentConversion(days = 30) {
   const { data, error } = await db.rpc('admin_marketing_content', { days_back: days });
   if (error) throw error;

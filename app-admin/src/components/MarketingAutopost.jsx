@@ -22,10 +22,10 @@ function dayLabel(date, today) {
   return day === tomorrow ? `Amanhã · ${long}` : long;
 }
 
-// Redes que recebem o formato (as contas conectadas e ok; story não vai ao Threads).
+// Redes que recebem a publicação automática (as contas conectadas e ok).
 function networksFor(format, accounts) {
   const names = (accounts || [])
-    .filter(a => a.status === 'ok' && ['facebook', 'instagram', 'threads'].includes(a.platform) && (format !== 'story' || a.platform !== 'threads'))
+    .filter(a => a.status === 'ok' && ['facebook', 'instagram'].includes(a.platform))
     .map(a => PLATFORMS[a.platform].label);
   return [...new Set(names)];
 }
@@ -180,7 +180,7 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
           </div>
         </div>
         <p className="user-detail__meta">
-          Publicação automática, todo dia: feed às 18h e Reel às 20h30 (Instagram, Facebook e Threads), story geral às 13h e stories de refeição às 7h, 12h, 15h e 19h30 (Instagram e Facebook).
+          Publicação automática, todo dia: feed às 18h e Reel às 20h30, story geral às 13h e stories de refeição às 7h, 12h, 15h e 19h30 (Instagram e Facebook).
           {' '}Stories de nutrição no café (7h), almoço (12h), hidratação (15h) e jantar (19h30).
           {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels, {countGeneral()} em stories e {countNutri()} de nutrição.
           {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}

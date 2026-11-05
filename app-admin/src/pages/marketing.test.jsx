@@ -35,12 +35,12 @@ const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{u
 
 const FB = { id: 'a1', platform: 'facebook', name: 'EAFIT', username: null, status: 'ok', parent_id: null, connected_at: '2026-10-30T10:00:00Z' };
 const IG = { id: 'a2', platform: 'instagram', name: 'EAFIT', username: 'eafit', status: 'ok', parent_id: 'a1', connected_at: '2026-10-30T10:00:00Z' };
-const TH = { id: 'a3', platform: 'threads', name: 'EAFIT', username: 'eafit', status: 'reconnect', status_detail: 'expirou', parent_id: null, connected_at: '2026-10-30T10:00:00Z' };
+const TT = { id: 'a3', platform: 'tiktok', name: 'EAFIT', username: 'eafitbr', status: 'reconnect', status_detail: 'expirou', parent_id: null, connected_at: '2026-10-30T10:00:00Z' };
 const ART = { id: 'm1', kind: 'image', url: 'https://cdn/arte.jpg', title: 'Arte treino', credit: null, storage_path: 'arte.jpg' };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  lib.fetchAccounts.mockResolvedValue([FB, IG, TH]);
+  lib.fetchAccounts.mockResolvedValue([FB, IG, TT]);
   lib.fetchMedia.mockResolvedValue([ART]);
   lib.fetchPosts.mockResolvedValue([]);
   lib.createPost.mockResolvedValue('p1');
@@ -71,8 +71,8 @@ describe('lib/marketing', () => {
     expect(validatePost({ caption: 'oi', media: [], accounts: [] })).toContain('Escolha ao menos uma conta.');
     expect(validatePost({ caption: 'oi', media: [], accounts: [IG] })).toContain('Instagram exige ao menos uma imagem ou vídeo.');
     expect(validatePost({ caption: 'oi', media: [video, img], accounts: [FB] })).toContain('Vídeo vai sozinho no post (sem outras mídias).');
-    expect(validatePost({ caption: 'a'.repeat(501), media: [], accounts: [{ platform: 'threads' }] }))
-      .toContain('Threads: a legenda (com créditos) passa de 500 caracteres.');
+    expect(validatePost({ caption: 'a'.repeat(2201), media: [img], accounts: [IG] }))
+      .toContain('Instagram: a legenda (com créditos) passa de 2200 caracteres.');
     expect(validatePost({ caption: 'oi', media: [], accounts: [FB], scheduledAt: '2026-01-01T10:00', now: new Date('2026-06-01') }))
       .toContain('O horário agendado já passou.');
     expect(validatePost({ caption: 'oi', media: [img], accounts: [FB, IG] })).toEqual([]);
@@ -106,12 +106,12 @@ describe('lib/marketing', () => {
     expect(tiktokLabel({ commercial: true, brand_organic: true, brand_content: true })).toBe('Seu vídeo será rotulado como "Parceria paga".');
   });
 
-  it('valida o story: uma mídia, sem Threads e sem crédito obrigatório', () => {
+  it('valida o story: uma mídia, sem TikTok e sem crédito obrigatório', () => {
     const img = { type: 'image', url: 'https://a' };
     const story = args => validatePost({ caption: '', format: 'story', ...args });
     expect(story({ media: [img], accounts: [FB, IG] })).toEqual([]);
     expect(story({ media: [img, img], accounts: [IG] })).toContain('Story leva exatamente uma imagem ou um vídeo.');
-    expect(story({ media: [img], accounts: [TH] })).toContain('Threads não tem stories: desmarque o Threads.');
+    expect(story({ media: [img], accounts: [TT] })).toContain('TikTok não tem stories pelo painel: desmarque o TikTok.');
     expect(story({ media: [{ ...img, credit: 'CC BY' }], accounts: [IG] }))
       .toContain('Mídia com crédito obrigatório não pode ir para story (não há legenda para o crédito).');
   });
@@ -146,8 +146,8 @@ describe('MarketingPublish', () => {
   it('publica na hora nas contas ativas com a arte escolhida', async () => {
     wrap(<MarketingPublish />, '/?aba=novo');
     expect(await screen.findByText('Facebook · EAFIT')).toBeTruthy();
-    // Threads precisa reconectar: fica desmarcado e travado.
-    expect(screen.getByLabelText(/Threads · @eafit/).disabled).toBe(true);
+    // TikTok precisa reconectar: fica desmarcado e travado.
+    expect(screen.getByLabelText(/TikTok · @eafitbr/).disabled).toBe(true);
 
     fireEvent.change(screen.getByPlaceholderText(/Conte a novidade/), { target: { value: 'Treino novo no app!' } });
     fireEvent.click(await screen.findByRole('button', { name: /Arte treino/ }));
@@ -166,7 +166,7 @@ describe('MarketingPublish', () => {
   });
 
   it('TikTok: mostra a conta, exige escolher quem vê e respeita o que a conta desligou', async () => {
-    const TK = { ...TH, id: 'a4', platform: 'tiktok', username: 'eafitapp', status: 'ok' };
+    const TK = { ...TT, id: 'a4', username: 'eafitapp', status: 'ok' };
     lib.fetchAccounts.mockResolvedValue([TK]);
     lib.fetchMedia.mockResolvedValue([{ ...ART, id: 'm2', kind: 'video', url: 'https://cdn/v.mp4', title: 'Reels treino' }]);
     lib.fetchTikTokCreator.mockResolvedValue({
@@ -205,14 +205,14 @@ describe('MarketingPublish', () => {
     })));
   });
 
-  it('agenda um story sem legenda e trava o Threads', async () => {
-    lib.fetchAccounts.mockResolvedValue([FB, IG, { ...TH, status: 'ok' }]);
+  it('agenda um story sem legenda e trava o TikTok', async () => {
+    lib.fetchAccounts.mockResolvedValue([FB, IG, { ...TT, status: 'ok' }]);
     wrap(<MarketingPublish />, '/?aba=novo');
-    expect((await screen.findByLabelText(/Threads · @eafit/)).checked).toBe(true);
+    expect(await screen.findByLabelText(/TikTok · @eafitbr/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('radio', { name: 'Story' }));
-    expect(screen.getByLabelText(/Threads · @eafit/).checked).toBe(false);
-    expect(screen.getByLabelText(/Threads · @eafit/).disabled).toBe(true);
+    expect(screen.getByLabelText(/TikTok · @eafitbr/).checked).toBe(false);
+    expect(screen.getByLabelText(/TikTok · @eafitbr/).disabled).toBe(true);
     expect(screen.queryByPlaceholderText(/Conte a novidade/)).toBeNull();
 
     fireEvent.click(await screen.findByRole('button', { name: /Arte treino/ }));
@@ -305,7 +305,7 @@ describe('MarketingAccounts', () => {
   });
 
   it('conecta e reconecta o TikTok pelo provedor próprio', async () => {
-    lib.fetchAccounts.mockResolvedValue([{ ...TH, id: 'a4', platform: 'tiktok', username: 'eafitapp' }]);
+    lib.fetchAccounts.mockResolvedValue([{ ...TT, id: 'a4', username: 'eafitapp' }]);
     lib.startConnect.mockResolvedValue();
     wrap(<MarketingAccounts />);
     fireEvent.click(screen.getByRole('button', { name: 'Conectar TikTok' }));
