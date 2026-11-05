@@ -28,7 +28,7 @@ import MarketingMedia from './MarketingMedia';
 import { synthTrack } from '../lib/reelAudio';
 import { DURATION, FPS, STORY_DROP, STORY_DURATION, STORY_VARIANTS, drawReelFrame, drawStoryFrame } from '../lib/reelRender';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES, autopostTheme,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -441,6 +441,40 @@ describe('cartão da publicação automática', () => {
     expect(screen.getAllByText(/Primeira linha/).length).toBeGreaterThan(0);
     expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
     expect(screen.getAllByText('Hoje').length + screen.getAllByText(/^Amanhã/).length).toBeGreaterThan(0);
+  });
+});
+
+describe('sem o mesmo roteiro em dias seguidos', () => {
+  it('o tema é a chave sem o formato', () => {
+    expect(autopostTheme('treino-feed')).toBe('treino');
+    expect(autopostTheme('personal-painel-story')).toBe('personal-painel');
+    expect(autopostTheme('nutri-cafe-1')).toBe('nutri-cafe-1');
+  });
+
+  it('tema que saiu nos últimos 3 dias fica para depois, em qualquer formato', () => {
+    const posted = [{ key: 'treino-feed', posted_at: '2026-11-04T15:00:00Z' }, { key: 'evolucao-feed', posted_at: '2026-11-04T21:00:00Z' }];
+    const pending = [
+      { id: 's1', key: 'treino-story', format: 'story' }, { id: 's2', key: 'evolucao-story', format: 'story' },
+      { id: 's3', key: 'ao-vivo-story', format: 'story' },
+      { id: 'r1', key: 'evolucao-reel', format: 'reel' }, { id: 'r2', key: 'ao-vivo-reel', format: 'reel' }, { id: 'r3', key: 'nutricao-reel', format: 'reel' },
+    ];
+    const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'), null, posted); // qui 10h BRT
+    const today = sched.filter(x => x.today).map(x => x.item.key);
+    // story 17h30: treino e evolução saíram ontem → ao vivo; Reel 20h45: evolução recente, ao vivo acabou de sair → nutrição.
+    expect(today).toEqual(['ao-vivo-story', 'nutricao-reel']);
+    // Sem outra opção, o tema recente sai mesmo assim (não trava a faixa).
+    expect(sched.map(x => x.item.key)).toEqual(expect.arrayContaining(['treino-story', 'evolucao-story', 'evolucao-reel', 'ao-vivo-reel']));
+  });
+
+  it('item de temporada também espera o tema esfriar', () => {
+    const SEASON = { enabled: true, periods: [{ theme: 'novembro_azul', startsOn: '2026-11-03', endsOn: '2026-11-30' }] };
+    const pending = [
+      { id: 'fa', key: 'azul-feed', format: 'feed', season: 'novembro_azul' }, { id: 'sa', key: 'azul-story', format: 'story', season: 'novembro_azul' },
+      { id: 's1', key: 'carga-story', format: 'story' }, { id: 's2', key: 'corpo-story', format: 'story' },
+      { id: 's3', key: 'liga-story', format: 'story' },
+    ];
+    const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'), SEASON);
+    expect(sched.map(x => `${x.item.id}@${brtDay(x.at)}`)).toEqual(['fa@2026-11-05', 's1@2026-11-05', 's2@2026-11-06', 's3@2026-11-07', 'sa@2026-11-08']);
   });
 });
 

@@ -571,27 +571,55 @@ export function brtDay(date) {
 // Até quantos dias à frente a agenda procura a temporada de um item.
 const SEASON_HORIZON_DAYS = 400;
 
+// Tema de um item da fila: "treino-feed" → "treino" (igual a marketing_autopost_theme).
+export function autopostTheme(key) {
+  return String(key || '').replace(/-(feed|reel|story)$/, '');
+}
+
+// Tema que saiu em qualquer formato há menos disso fica para depois.
+export const THEME_GAP_DAYS = 3;
+const THEME_GAP_MS = THEME_GAP_DAYS * 24 * 3600 * 1000;
+
 // Agenda da fila: cada item pendente no seu horário. O cron publica um item de
-// cada faixa por dia, na ordem da fila. Item de temporada (`season`) só sai nos
-// dias em que o tema está no ar no app (`season` = app_settings "season") e,
-// nesses dias, passa na frente; fora deles espera. Item cuja temporada não cai
-// nos próximos SEASON_HORIZON_DAYS dias fica fora da agenda.
-export function autopostSchedule(pending, now = new Date(), season = null) {
+// cada faixa por dia, na ordem da fila, com as regras de marketing_autopost_run:
+// item cujo tema saiu (em qualquer formato) nos últimos THEME_GAP_DAYS dias vai
+// para o fim da vez; item de temporada (`season`) só sai nos dias em que o tema
+// está no ar no app (`season` = app_settings "season") e, nesses dias, passa na
+// frente; fora deles espera. `posted` são os itens já publicados (key, posted_at).
+// Item cuja temporada não cai nos próximos SEASON_HORIZON_DAYS dias fica fora.
+export function autopostSchedule(pending, now = new Date(), season = null, posted = []) {
   const out = [];
+  const last = new Map();
+  const mark = (key, ms) => { if (key && !(last.get(autopostTheme(key)) >= ms)) last.set(autopostTheme(key), ms); };
+  for (const p of posted) if (p.posted_at) mark(p.key, new Date(p.posted_at).getTime());
+  const queues = new Map(AUTOPOST_LANES.map(l => [l.key, pending.filter(i => laneKey(i) === l.key)]));
   const today = brtDay(now);
   const [ty, tm, td] = today.split('-').map(Number);
-  for (const lane of AUTOPOST_LANES) {
-    const queue = pending.filter(i => laneKey(i) === lane.key);
-    for (let d = 0; queue.length > 0 && d <= SEASON_HORIZON_DAYS; d += 1) {
-      if (!queue.some(i => !i.season) && season?.enabled !== true) break;
-      const at = laneAt(lane, new Date(Date.UTC(ty, tm - 1, td + d)).toISOString().slice(0, 10));
-      if (at <= now) continue;
-      const theme = seasonOnDay(season, brtDay(at));
-      let idx = theme ? queue.findIndex(i => i.season === theme) : -1;
-      if (idx < 0) idx = queue.findIndex(i => !i.season);
-      if (idx < 0) continue;
-      const [item] = queue.splice(idx, 1);
-      out.push({ item, format: lane.format, lane: lane.key, at, today: brtDay(at) === brtDay(now) });
+  for (let d = 0; d <= SEASON_HORIZON_DAYS; d += 1) {
+    const left = [...queues.values()].flat();
+    if (left.length === 0 || (season?.enabled !== true && !left.some(i => !i.season))) break;
+    const day = new Date(Date.UTC(ty, tm - 1, td + d)).toISOString().slice(0, 10);
+    const runs = AUTOPOST_LANES.map(lane => ({ lane, at: laneAt(lane, day) }))
+      .filter(r => r.at > now && queues.get(r.lane.key).length > 0)
+      .sort((a, b) => a.at - b.at);
+    for (const { lane, at } of runs) {
+      const queue = queues.get(lane.key);
+      const theme = seasonOnDay(season, day);
+      const recent = i => {
+        const t = i.key ? last.get(autopostTheme(i.key)) : undefined;
+        return t !== undefined && at.getTime() - t < THEME_GAP_MS;
+      };
+      // Mesma ordem do banco: tema fora dos últimos dias, depois temporada, depois posição.
+      const rank = i => (recent(i) ? 2 : 0) + (i.season ? 0 : 1);
+      let best = null;
+      for (const i of queue) {
+        if (i.season && i.season !== theme) continue;
+        if (!best || rank(i) < rank(best)) best = i;
+      }
+      if (!best) continue;
+      queue.splice(queue.indexOf(best), 1);
+      mark(best.key, at.getTime());
+      out.push({ item: best, format: lane.format, lane: lane.key, at, today: brtDay(at) === brtDay(now) });
     }
   }
   return out.sort((a, b) => a.at - b.at);

@@ -97,7 +97,7 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
 
   // Fila automática (se ligada) + posts agendados à mão e ainda não publicados.
   // Itens de temporada só entram nos dias em que o tema está no ar no app.
-  const schedule = autopostSchedule(state.pending, now, state.season);
+  const schedule = autopostSchedule(state.pending, now, state.season, (state.items || []).filter(i => i.posted_at));
   const scheduledIds = new Set(schedule.map(s => s.item.id));
   const waitingSeason = state.pending.filter(i => i.season && !scheduledIds.has(i.id));
   const planned = [
