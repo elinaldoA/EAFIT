@@ -1,11 +1,12 @@
 // Stories em vídeo da publicação automática do Marketing, com música:
 //   - nutrição, nos horários das refeições (café, almoço, jantar: 4 de cada) e de hidratação (15h: 12);
-//   - os 6 stories gerais (13h), que antes eram só imagem, agora em vídeo.
+//   - os 6 stories gerais (13h), que antes eram só imagem, agora em vídeo;
+//   - 8 stories gerais das telas novas do app (musculos, carga, recordes...).
 // Feitos só com os prints do app e a trilha eletrônica original (src/lib/reelAudio.js).
 // Cada story usa uma variante visual (cor, fundo e enquadramento: reelRender.js).
 //
 //   node app-admin/scripts/marketing-stories.mjs            (todos)
-//   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua)
+//   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua | novas)
 //
 // Precisa do ffmpeg no PATH. Gera os MP4 em app-react/public/landing/img/marketing/
 // (story-*.mp4) e o SQL dos itens em
@@ -80,6 +81,19 @@ const GENERAL = [
   ['historico', 'Todo o histórico num só lugar', 'Treinos, cargas e datas sempre à mão.', 'historico'],
   ['nutricao', 'Treino e alimentação juntos', 'Calorias e macros no mesmo app.', 'nutricao'],
   ['agua', 'Meta de água em dia', 'Um hábito simples que muda o treino.', 'agua'],
+];
+
+// Terceira leva (migration 20270108010000): telas novas do app. Mesmo texto das
+// artes do feed (marketing-autopost-content.mjs). ONLY=novas gera só estes.
+const NEW_GENERAL = [
+  ['musculos', 'Qual músculo ficou para trás?', 'O app mostra o volume da semana de cada músculo.', 'musculos'],
+  ['carga', 'Sua carga subindo, semana a semana', 'Escolha o exercício e veja a evolução.', 'carga'],
+  ['consistencia', 'Constância que dá para ver', 'Os últimos 35 dias de treino num só quadro.', 'consistencia'],
+  ['recordes', 'Seus recordes, todos anotados', 'Maior carga e 1RM estimado de cada exercício.', 'recordes'],
+  ['corpo', 'Peso e medidas no mesmo lugar', 'Acompanhe o corpo mudando, mês a mês.', 'corpo'],
+  ['progressao', 'O app sugere a carga de hoje', 'Com base no que você fez no último treino.', 'progressao'],
+  ['nutricao-macros', 'Proteína, carbo e gordura num toque', 'Veja quanto falta para a meta do dia.', 'nutricao-macros'],
+  ['nutricao-semana', 'Quanto você gasta de verdade?', 'O app calcula pelo seu diário e pela balança.', 'nutricao-semana'],
 ];
 
 const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por variante
@@ -186,7 +200,7 @@ async function main() {
   const songStart = () => (useSong ? starts[used++ % starts.length] : undefined);
   console.log(useSong ? `Trilha: ${SONG}` : 'Trilha original (sem song.mp3)');
 
-  if (only !== 'geral') {
+  if (!only || only === 'nutri' || only === 'agua') {
     for (let n = 0; n < 12; n += 1) {
       for (const [slot, meal] of Object.entries(MEALS)) {
         if (only === 'agua' ? slot !== 'agua' : slot === 'agua') continue;
@@ -200,11 +214,20 @@ async function main() {
       }
     }
   }
-  if (only !== 'nutri' && only !== 'agua') {
+  if (!only || only === 'geral') {
     for (const [i, [key, title, sub, print]] of GENERAL.entries()) {
       const file = `story-${key}.mp4`;
       await render(file, { title, sub, variant: i % 6, songStart: songStart() }, print);
       updates.push(`update public.marketing_autopost_queue set media = ${sqlText(mediaOf(file))}::jsonb where key = ${sqlText(`${key}-story`)} and posted_at is null;`);
+      console.log('ok', file);
+    }
+  }
+  // Os itens da fila destes ficam na migration 20270108010000 (com as artes do feed).
+  if (!only || only === 'novas') {
+    used = 18; // mesmos trechos da trilha da execução completa (depois de refeições e gerais)
+    for (const [i, [key, title, sub, print]] of NEW_GENERAL.entries()) {
+      const file = `story-${key}.mp4`;
+      await render(file, { title, sub, variant: (i + 2) % 6, songStart: songStart() }, print);
       console.log('ok', file);
     }
   }

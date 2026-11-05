@@ -70,6 +70,40 @@ export const ITEMS = [
     key: 'agua', kind: 'print', print: 'agua', headline: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
     caption: `Hidratação também é treino. 💧\nO app lembra e registra a meta diária de água.\n\nLink na bio 👇\n\n${TAGS}`,
   },
+  // Terceira leva (migration 20270108010000): telas novas do app, para quem treina.
+  // Os stories em vídeo destes temas saem do marketing-stories.mjs (NEW_GENERAL).
+  {
+    key: 'musculos', kind: 'print', print: 'musculos', headline: 'Qual músculo ficou para trás?', sub: 'O app mostra o volume da semana de cada músculo.',
+    caption: `Peito em dia e posterior esquecido? 👀\nO app conta as séries da semana de cada músculo e mostra o que está ficando para trás.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'carga', kind: 'print', print: 'carga', headline: 'Sua carga subindo, semana a semana', sub: 'Escolha o exercício e veja a evolução.',
+    caption: `Lembra quanto você pegava no agachamento mês passado? 📈\nNo app, cada exercício tem o gráfico da sua carga ao longo das semanas.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'consistencia', kind: 'print', print: 'consistencia', headline: 'Constância que dá para ver', sub: 'Os últimos 35 dias de treino num só quadro.',
+    caption: `Resultado é constância. 🔥\nO app mostra cada dia treinado e quantos treinos você fez por semana. Dá vontade de não quebrar a sequência.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'recordes', kind: 'print', print: 'recordes', headline: 'Seus recordes, todos anotados', sub: 'Maior carga e 1RM estimado de cada exercício.',
+    caption: `Bateu recorde no leg press? 🏆\nO app guarda a maior carga de cada exercício e estima o seu 1RM, sem planilha.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'corpo', kind: 'print', print: 'corpo', headline: 'Peso e medidas no mesmo lugar', sub: 'Acompanhe o corpo mudando, mês a mês.',
+    caption: `A balança não conta tudo. 📏\nRegistre peso e medidas (cintura, quadril, braço, coxa) e veja a evolução em gráfico.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'progressao', kind: 'print', print: 'progressao', headline: 'O app sugere a carga de hoje', sub: 'Com base no que você fez no último treino.',
+    caption: `Subo a carga ou repito? 🤔\nO app olha o seu último treino e sugere a carga e as repetições de hoje, com séries de aquecimento.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'nutricao-macros', kind: 'print', print: 'nutricao-macros', headline: 'Proteína, carbo e gordura num toque', sub: 'Veja quanto falta para a meta do dia.',
+    caption: `Bateu a proteína hoje? 🍗\nO app soma as calorias e os macros de cada refeição e mostra quanto falta para a meta.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'nutricao-semana', kind: 'print', print: 'nutricao-semana', headline: 'Quanto você gasta de verdade?', sub: 'O app calcula pelo seu diário e pela balança.',
+    caption: `Comendo certo e o peso não muda? ⚖️\nCom o diário alimentar e o seu peso, o app estima o seu gasto real e ajusta a meta de calorias.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
   // Segunda leva (migration 20270101010000): temas novos, nunca publicados antes.
   {
     key: 'erros', later: true, kind: 'slides', headline: '4 erros que fazem o aluno largar o treino',

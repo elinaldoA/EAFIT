@@ -342,25 +342,29 @@ export function drawStoryFrame(ctx, story, img, t) {
   ctx.fillStyle = v.accent;
   ctx.fillRect(pad, y + 6, 360 * easeOut((t - 0.9) / 0.5) * (1 + 0.08 * pulse), 10);
   ctx.restore();
+  let textEnd = y;
   if (story.sub) {
-    text(ctx, story.sub, { x: pad, y: y + 36, size: 42, weight: 500, color: '#d4d4d8', alpha: clamp((t - 1) / 0.4) * out });
+    textEnd = text(ctx, story.sub, { x: pad, y: y + 36, size: 42, weight: 500, color: '#d4d4d8', alpha: clamp((t - 1) / 0.4) * out });
   }
 
-  // O print cai no drop; depois pulsa com a batida.
-  const top = 600;
-  const maxH = H - top - 330; // sobra espaço embaixo para a chamada do app
+  // O print cai no drop; depois pulsa com a batida. O celular inteiro (moldura,
+  // zoom máximo e inclinação) cabe entre o texto e o botão da chamada, que
+  // começa em H - 300: nada da moldura fica escondido atrás dele.
+  const top = Math.max(600, textEnd + 40);
+  const bottom = H - 300 - 50;
+  const maxBump = 1 + 0.018 + 0.04;
   const slide = easeOut((t - 1.0) / 0.85);
   const bump = 1 + 0.018 * pulse + 0.04 * clamp((t - 2) / 6);
-  let sx = 0;
-  let sy = 0;
-  let sw = img.width;
-  let sh = img.height;
-  if (v.layout === 'crop') { sy = img.height * 0.1; sh = img.height * 0.62; }
-  const base = Math.min((W - 144 - 36) / sw, (maxH - 36) / sh);
+  // O print sempre aparece inteiro (com a barra de navegação do app).
+  const sx = 0;
+  const sy = 0;
+  const sw = img.width;
+  const sh = img.height;
+  const base = Math.min((W - 144 - 36) / (sw * maxBump), (bottom - top - 36) / (sh * maxBump));
   const iw = sw * base * bump;
   const ih = sh * base * bump;
   const ix = (W - iw) / 2;
-  const iy = top + 18 + (1 - slide) * 900 + (maxH - 36 - ih) / 2 * (v.layout === 'crop' ? 1 : 0);
+  const iy = top + 18 + (1 - slide) * 900;
   const angle = v.layout === 'tilt' ? (v.motif === 'rings' ? -0.06 : 0.06) * (1 - (1 - slide) * 0.5) : 0;
   const a = clamp((t - 1.0) / 0.3) * out;
   if (a > 0) {
@@ -380,7 +384,7 @@ export function drawStoryFrame(ctx, story, img, t) {
     ctx.strokeStyle = `rgba(${c},${(1 - k) * 0.8})`;
     ctx.lineWidth = 14 * (1 - k) + 2;
     ctx.beginPath();
-    ctx.arc(W / 2, top + maxH / 2, 80 + k * 900, 0, Math.PI * 2);
+    ctx.arc(W / 2, (top + bottom) / 2, 80 + k * 900, 0, Math.PI * 2);
     ctx.stroke();
     ctx.fillStyle = `rgba(255,255,255,${0.32 * (1 - k) ** 3})`;
     ctx.fillRect(0, 0, W, H);
