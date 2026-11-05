@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { addPoint, trimRoute, cleanRoute, projectRoute, countPoints, MAX_POINTS } from './route';
+import { addPoint, trimRoute, cleanRoute, projectRoute, countPoints, MAX_POINTS, mapView, MAX_MAP_ZOOM, TILE_SIZE,
+  applyZones, cleanZones, privateRoute, kmPoints, paceRuns, PACE_LEVELS } from './route';
 import { haversineM } from './geoTrack';
 import { startRun, pauseRun, resumeRun, addRoutePoint, finishRun, setDistance } from './liveRun';
 
@@ -79,5 +80,129 @@ describe('percurso na corrida ao vivo', () => {
     expect(countPoints(saved.route)).toBeLessThan(countPoints(s.route));
     expect(countPoints(saved.route)).toBeGreaterThan(0);
     expect(finishRun(startRun({ gps: false }, T), { now: T + 1000 }).route).toEqual([]);
+  });
+});
+
+describe('mapView (percurso sobre os blocos do mapa)', () => {
+  // ~2 km para leste em São Paulo.
+  const line = [Array.from({ length: 21 }, (_, i) => [-2358740, -4665760 + i * 100])];
+
+  it('escolhe o maior zoom em que o percurso cabe e centraliza', () => {
+    const v = mapView(line, 320, 170, 16);
+    expect(v.z).toBeLessThanOrEqual(MAX_MAP_ZOOM);
+    const [x0] = v.start;
+    const [x1] = v.end;
+    expect(x1 - x0).toBeLessThanOrEqual(320 - 32);
+    // no zoom seguinte já não caberia
+    expect((x1 - x0) * 2).toBeGreaterThan(320 - 32);
+    expect((x0 + x1) / 2).toBeCloseTo(160, 0);
+    expect(v.start[1]).toBeCloseTo(85, 0);
+  });
+
+  it('os blocos cobrem o quadro inteiro, sem buraco', () => {
+    const v = mapView(line, 320, 170);
+    const minL = Math.min(...v.tiles.map(t => t.left));
+    const maxR = Math.max(...v.tiles.map(t => t.left + TILE_SIZE));
+    const minT = Math.min(...v.tiles.map(t => t.top));
+    const maxB = Math.max(...v.tiles.map(t => t.top + TILE_SIZE));
+    expect(minL).toBeLessThanOrEqual(0);
+    expect(maxR).toBeGreaterThanOrEqual(320);
+    expect(minT).toBeLessThanOrEqual(0);
+    expect(maxB).toBeGreaterThanOrEqual(170);
+    for (const t of v.tiles) {
+      expect(t.x).toBeGreaterThanOrEqual(0);
+      expect(t.x).toBeLessThan(2 ** v.z);
+    }
+  });
+
+  it('percurso curtinho fica no zoom máximo; sem percurso, nada', () => {
+    expect(mapView([[[-2358740, -4665760], [-2358742, -4665758]]], 320, 170).z).toBe(MAX_MAP_ZOOM);
+    expect(mapView([], 320, 170)).toBeNull();
+  });
+});
+
+// Reta para leste: 1 ponto a cada ~10 m (100 unidades de 1e-5 grau de longitude
+// no equador ≈ 11 m), com o tempo em segundos.
+const timed = (n, secPerPoint = 4, lon0 = 0) => [Array.from({ length: n }, (_, i) => [0, lon0 + i * 100, i * secPerPoint])];
+
+describe('tempo em cada ponto', () => {
+  it('addPoint guarda t quando vem, e cleanRoute aceita os dois formatos', () => {
+    let r = addPoint([], 0, 0, false, 0);
+    r = addPoint(r, 0, 0.001, false, 12.4);
+    expect(r[0][1]).toEqual([0, 100, 12]);
+    expect(cleanRoute([[[0, 0], [0, 100]], [[0, 0, 1], [0, 100, 2]], [[0, 0, 1, 9], [0, 1]]])).toHaveLength(2);
+  });
+
+  it('addRoutePoint marca os segundos de corrida (sem as pausas)', () => {
+    let s = startRun({ gps: true }, 0);
+    s = addRoutePoint(s, 0, 0, { now: 10000 });
+    s = addRoutePoint(s, 0, 0.001, { now: 20000 });
+    expect(s.route[0].map(p => p[2])).toEqual([10, 20]);
+  });
+});
+
+describe('zonas de privacidade', () => {
+  it('tira os pontos dentro da zona e corta o trecho ali', () => {
+    const route = timed(60); // ~660 m
+    const zone = { lat: 0, lon: 0.003, r: 200 }; // centro a ~330 m do início
+    const out = applyZones(route, [zone]);
+    expect(out).toHaveLength(2);
+    for (const seg of out) for (const p of seg) expect(haversineM({ lat: 0, lon: 0.003 }, { lat: p[0] / 1e5, lon: p[1] / 1e5 })).toBeGreaterThanOrEqual(200);
+  });
+
+  it('sem zonas não muda nada; zona inválida é ignorada e o raio fica entre os permitidos', () => {
+    const route = timed(10);
+    expect(applyZones(route, [])).toEqual(route);
+    expect(cleanZones([{ lat: 'x', lon: 1 }, { lat: 1.234567, lon: 2.345678, r: 999 }])).toEqual([{ lat: 1.2346, lon: 2.3457, r: 400, name: '' }]);
+  });
+
+  it('privateRoute corta as pontas e as zonas', () => {
+    const route = timed(150); // ~1,6 km
+    const out = privateRoute(route, [{ lat: 0, lon: 0.008, r: 200 }]);
+    const first = out[0][0];
+    expect(haversineM({ lat: 0, lon: 0 }, { lat: first[0] / 1e5, lon: first[1] / 1e5 })).toBeGreaterThanOrEqual(200);
+    expect(out.length).toBe(2);
+  });
+});
+
+describe('marcas de km pelo tempo', () => {
+  it('acha o ponto de cada km pelos splits, mesmo com o começo cortado', () => {
+    const route = trimRoute(timed(300, 3)); // ~3,3 km, 3 s por ponto (~11 m)
+    // splits de 270 s ≈ 90 pontos ≈ 1 km cada
+    const kms = kmPoints(route, [270, 270, 270, 270]);
+    expect(kms.map(k => k.km)).toEqual([1, 2, 3]); // o 4º passaria do fim do percurso
+    expect(kms[0].p[1]).toBeCloseTo(9000, -1);
+    expect(kms[1].p[1]).toBeCloseTo(18000, -1);
+  });
+
+  it('percurso antigo (sem t) ou sem splits: nenhuma marca', () => {
+    expect(kmPoints([[[0, 0], [0, 100]]], [300])).toEqual([]);
+    expect(kmPoints(timed(10), [])).toEqual([]);
+  });
+});
+
+describe('ritmo por trecho', () => {
+  // pontos a ~11 m (10 unidades de 1e-5 grau no equador)
+  const stretch = (n, secPerPt, start) => Array.from({ length: n }, (_, i) => [0, start.lon + i * 10, start.t + i * secPerPt]);
+
+  it('trecho bem mais lento e bem mais rápido que o ritmo da corrida mudam de cor', () => {
+    const steady = stretch(200, 4, { lon: 0, t: 0 });
+    const slow = stretch(40, 7, { lon: 2000, t: 800 });
+    const fast = stretch(40, 2, { lon: 2400, t: 1080 });
+    const runs = paceRuns([[...steady, ...slow, ...fast]]);
+    const levelAt = lon => runs.find(r => r.pts.some(p => p[1] === lon)).level;
+    expect(levelAt(500)).toBe(2);
+    expect(levelAt(2200)).toBe(0);
+    expect(levelAt(2600)).toBe(PACE_LEVELS - 1);
+    expect(runs.reduce((n, r) => n + r.pts.length - 1, 0)).toBe(279);
+  });
+
+  it('ritmo constante com ruído do GPS fica no nível do meio', () => {
+    const noisy = Array.from({ length: 200 }, (_, i) => [0, i * 10, i * 4 + (i % 2)]);
+    expect(paceRuns([noisy]).every(r => r.level === Math.floor(PACE_LEVELS / 2))).toBe(true);
+  });
+
+  it('sem tempo nos pontos: sem cores', () => {
+    expect(paceRuns([[[0, 0], [0, 100], [0, 200]]])).toEqual([]);
   });
 });

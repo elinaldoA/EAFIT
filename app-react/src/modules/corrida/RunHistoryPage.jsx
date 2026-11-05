@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
 import { todayDate } from '../../data/treinoData';
@@ -8,13 +8,35 @@ import {
 } from './runs';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
+import PrivacyZones from './PrivacyZones';
+import { renderRunCard, shareRunCard } from './runShareCard';
 
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
 
 function RunItem({ run, onDelete }) {
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  // O card é desenhado ao abrir a corrida: no toque em Compartilhar ele já
+  // está pronto e o share nativo não perde o gesto (lib/shareCard.js).
+  const prepared = useRef(null);
+  useEffect(() => {
+    if (open && !prepared.current) prepared.current = renderRunCard(run).catch(() => null);
+  }, [open, run]);
+
+  async function handleShare() {
+    setSharing(true);
+    try {
+      const result = await shareRunCard(run, prepared.current);
+      if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
+    } catch (err) {
+      if (err?.name !== 'AbortError') toast(t('⚠️ Não foi possível gerar a imagem'));
+    } finally {
+      setSharing(false);
+    }
+  }
   const pace = paceSeconds(run.duration_s, run.distance_m);
   return (
     <li className={`run-item${open ? ' run-item--open' : ''}`}>
@@ -29,7 +51,7 @@ function RunItem({ run, onDelete }) {
       </button>
       {open && (
         <div className="run-item__body">
-          <RouteDrawing route={run.route} width={320} height={170} />
+          <RouteDrawing route={run.route} splits={run.splits} detail width={320} height={190} />
           {run.splits.length > 0 ? (
             <ol className="run-item__splits" aria-label={t('Tempo por km')}>
               {run.splits.map((sec, i) => <li key={i}>{t('Km {v1}', { v1: i + 1 })}: <strong>{formatPace(sec)}</strong></li>)}
@@ -38,6 +60,9 @@ function RunItem({ run, onDelete }) {
           {run.effort && <p>{t('Esforço: {v1}/10', { v1: run.effort })}</p>}
           {run.notes && <p className="run-item__notes">{run.notes}</p>}
           {run.pending && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
+          <button type="button" className="btn btn--primary btn--sm" disabled={sharing} onClick={handleShare}>
+            {sharing ? t('Gerando imagem…') : t('📤 Compartilhar nos stories')}
+          </button>
           <button
             type="button" className="btn btn--ghost btn--sm"
             onClick={() => { if (confirm) onDelete(run); else setConfirm(true); }}
@@ -188,6 +213,8 @@ export default function RunHistoryPage() {
           {runs.map(r => <RunItem key={r.client_id} run={r} onDelete={handleDelete} />)}
         </ul>
       </div>
+
+      <PrivacyZones />
     </section>
   );
 }

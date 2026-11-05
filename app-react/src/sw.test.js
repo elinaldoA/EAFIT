@@ -69,14 +69,24 @@ describe('service worker: setup', () => {
 });
 
 describe('service worker: rotas de cache', () => {
-  it('registra duas rotas CacheFirst com expiração', () => {
-    expect(wb.registerRoute).toHaveBeenCalledTimes(2);
+  it('registra três rotas CacheFirst com expiração', () => {
+    expect(wb.registerRoute).toHaveBeenCalledTimes(3);
     const [, firstStrategy] = wb.registerRoute.mock.calls[0];
     const [, secondStrategy] = wb.registerRoute.mock.calls[1];
     expect(firstStrategy.opts.cacheName).toBe('exercise-media');
     expect(secondStrategy.opts.cacheName).toBe('exercise-media-custom');
     expect(wb.ExpirationPlugin).toHaveBeenCalledWith({ maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 180 });
     expect(wb.ExpirationPlugin).toHaveBeenCalledWith({ maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 180 });
+    expect(wb.registerRoute.mock.calls[2][1].opts.cacheName).toBe('run-map-tiles');
+    expect(wb.ExpirationPlugin).toHaveBeenCalledWith({ maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 14 });
+  });
+
+  it('mapa do EAFIT Run: só imagens do tile.openstreetmap.org', () => {
+    const [match] = wb.registerRoute.mock.calls[2];
+    const url = new URL('https://tile.openstreetmap.org/15/12140/18584.png');
+    expect(match({ url, request: { destination: 'image' } })).toBe(true);
+    expect(match({ url, request: { destination: 'fetch' } })).toBe(false);
+    expect(match({ url: new URL('https://a.tile.outro.org/1/2/3.png'), request: { destination: 'image' } })).toBe(false);
   });
 
   it('demonstrações do app: só mesma origem e caminho /app/exercicios/', () => {

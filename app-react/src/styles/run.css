@@ -177,19 +177,44 @@
 }
 .run-item__notes { color: var(--text-muted); white-space: pre-wrap; }
 
-/* ---- Desenho do percurso (sem mapa de fundo) ---- */
+/* ---- Percurso sobre o mapa (blocos do OpenStreetMap, RouteDrawing.jsx) ---- */
 .run-route {
+  position: relative;
   display: block;
   width: 100%;
-  height: auto;
+  overflow: hidden;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
+  isolation: isolate;
 }
-.run-route--live { max-height: 130px; }
-.run-route__line { fill: none; stroke: var(--primary); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
-.run-route__start { fill: var(--success); stroke: var(--bg); stroke-width: 2; }
-.run-route__end { fill: var(--primary); stroke: var(--bg); stroke-width: 2; }
+.run-map__tiles { position: absolute; inset: 0; pointer-events: none; }
+.run-map__tiles img { position: absolute; max-width: none; user-select: none; }
+/* Tema escuro (padrão): o mapa claro do OSM invertido vira um mapa escuro. */
+.run-map__tiles { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.6); }
+[data-theme="light"] .run-map__tiles { filter: saturate(.75); }
+.run-map__route { position: absolute; inset: 0; width: 100%; height: 100%; }
+.run-map__credit {
+  position: absolute; right: 4px; bottom: 3px;
+  padding: 1px 5px; border-radius: 4px;
+  font-size: 10px; line-height: 1.4; color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  text-decoration: none;
+}
+.run-route__casing { fill: none; stroke: var(--bg); stroke-opacity: .55; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.run-route__line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.run-route__km circle { fill: var(--surface); stroke: var(--text); stroke-width: 1.5; }
+.run-route__km text { fill: var(--text); font-size: 9px; font-weight: 800; }
+.run-map__legend {
+  position: absolute; left: 4px; bottom: 3px;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 6px; border-radius: 4px;
+  font-size: 10px; line-height: 1.4; color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+.run-map__legend i { display: inline-block; width: 10px; height: 6px; border-radius: 2px; }
+.run-route__start { fill: var(--success); stroke: #fff; stroke-width: 2; }
+.run-route__end { fill: var(--primary); stroke: #fff; stroke-width: 2; }
 .run-live__route-preview { display: flex; flex-direction: column; gap: 6px; }
 
 /* ---- Aba Gravar ---- */
@@ -285,3 +310,11 @@
 .run-periods__item span { font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
 .run-periods__item strong { font-size: var(--fs-xl); color: var(--primary); font-variant-numeric: tabular-nums; }
 .run-periods__item small { font-size: var(--fs-xs); color: var(--text-muted); }
+
+/* ---- Zonas de privacidade (aba Você) ---- */
+.run-zones { display: flex; flex-direction: column; gap: var(--sp-3); }
+.run-zones__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-zones__list li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-sm); }
+.run-zones__form { display: flex; flex-direction: column; gap: var(--sp-3); }
+.run-zones__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.run-item__body > .btn { width: 100%; }

@@ -1,7 +1,7 @@
 import { db } from '../../lib/supabase';
 import { parseLocalDate, toDateStr } from '../../lib/utils';
 import { mondayOf } from './program';
-import { cleanRoute } from './route';
+import { cleanRoute, applyZones } from './route';
 
 import { t, lang } from '../../lib/i18n';
 // Corridas do EAFIT Run (tabela public.runs): salvar, listar, apagar e as
@@ -250,4 +250,26 @@ export async function deleteRun(userId, run) {
   }
   const { error } = await db.from('runs').delete().eq('id', run.id).eq('user_id', userId);
   if (error) throw error;
+}
+
+// Zona de privacidade nova: tira a zona também das corridas já salvas (e das
+// que ainda esperam internet no aparelho). Devolve quantas mudaram.
+export async function applyZonesToRuns(userId, zones) {
+  const list = pendingRuns(userId);
+  const fixed = list.map(r => ({ ...r, route: applyZones(r.route, zones) }));
+  if (list.length) setPending(userId, fixed);
+
+  const { data, error } = await db.from('runs').select('id, route').eq('user_id', userId);
+  if (error) throw error;
+  let changed = 0;
+  for (const row of data || []) {
+    const before = cleanRoute(row.route);
+    if (!before.length) continue;
+    const after = applyZones(before, zones);
+    if (JSON.stringify(after) === JSON.stringify(before)) continue;
+    const { error: upErr } = await db.from('runs').update({ route: after }).eq('id', row.id).eq('user_id', userId);
+    if (upErr) throw upErr;
+    changed++;
+  }
+  return changed;
 }

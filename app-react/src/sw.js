@@ -43,6 +43,18 @@ registerRoute(
   })
 );
 
+// Blocos do mapa do percurso (EAFIT Run, RouteDrawing.jsx). Guardar no
+// aparelho deixa o feed rápido e é o que a política de uso do OpenStreetMap
+// pede. O <img> pede com crossOrigin, então a resposta é CORS (não opaca) e
+// só as respostas 200 entram no cache.
+registerRoute(
+  ({ url, request }) => request.destination === 'image' && url.hostname === 'tile.openstreetmap.org',
+  new CacheFirst({
+    cacheName: 'run-map-tiles',
+    plugins: [new ExpirationPlugin({ maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 14 })],
+  })
+);
+
 self.addEventListener('push', (event) => {
   let data = {};
   try {

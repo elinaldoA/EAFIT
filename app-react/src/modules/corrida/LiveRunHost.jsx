@@ -15,7 +15,7 @@ import {
 } from './liveRun';
 import { RUN_SAVED_EVENT, decimal, defaultRunTitle, saveRun, fetchRuns, newRecords, describeRecord, paceSeconds, formatPace, formatClock, formatKm } from './runs';
 import { SESSION_TITLE, describeSession } from './program';
-import { trimRoute, cleanRoute } from './route';
+import { privateRoute } from './route';
 import RouteDrawing from './RouteDrawing';
 
 import { t } from '../../lib/i18n';
@@ -222,12 +222,13 @@ function FinishRun({ run, now, onBack, onDone }) {
   const [busy, setBusy] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const totalS = Math.floor(elapsedMs(run, now) / 1000);
+  const zones = user?.user_metadata?.runZones;
 
   async function handleSave() {
     const parsed = Number(String(km).replace(',', '.'));
     if (edited && (!Number.isFinite(parsed) || parsed < 0 || parsed > 500)) return toast(t('⚠️ Distância inválida'));
     setBusy(true);
-    const record = finishRun(run, { meters: edited ? parsed * 1000 : undefined, effort, notes, title, visibility });
+    const record = finishRun(run, { meters: edited ? parsed * 1000 : undefined, effort, notes, title, visibility, zones });
     let previous = [];
     try { previous = await fetchRuns(user.id); } catch { /* sem rede: sem recorde agora */ }
     const { pending } = await saveRun(user.id, record);
@@ -270,7 +271,7 @@ function FinishRun({ run, now, onBack, onDone }) {
 
       {run.gps && (
         <div className="run-live__route-preview">
-          <RouteDrawing route={trimRoute(cleanRoute(run.route))} width={320} height={150} />
+          <RouteDrawing route={privateRoute(run.route, zones)} splits={splitsOf(run.kmMarks)} detail width={320} height={150} />
           <span className="profile-field__hint">{t('🔒 Por privacidade, os primeiros e os últimos 200 m do percurso não são salvos.')}</span>
         </div>
       )}

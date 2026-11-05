@@ -1221,3 +1221,11 @@ export async function shareInviteQr(code) {
   const blob = await renderInviteQrCard(code);
   return shareImageBlob(blob, `eafit-qr-${code}.png`, 'EAFIT', t('Treine comigo no EAFIT 💪 É grátis: {link}', { link: ambassadorLink(code, 'qr') }));
 }
+
+// Peças do card para os módulos de esporte (modules/corrida/runShareCard.js)
+// montarem o próprio card com a mesma marca, fundo e rodapé.
+export const cardKit = {
+  CARD_WIDTH, CARD_HEIGHT, PAD_X, CONTENT_W, FONT, ORANGE, ORANGE_LIGHT, MUTED,
+  drawBackground, drawPanel, drawStatBox, drawFooter, drawLogo, setTracking, fitFont, roundedRectPath,
+  shareImageBlob, cardUrl, formatCardDate,
+};

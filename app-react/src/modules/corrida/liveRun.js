@@ -1,4 +1,4 @@
-import { addPoint, trimRoute, cleanRoute } from './route';
+import { addPoint, privateRoute } from './route';
 
 // Corrida ao vivo do EAFIT Run: cronômetro com pausa, distância e a marca de
 // tempo de cada quilômetro (splits). O estado é puro (funções que devolvem um
@@ -67,7 +67,7 @@ export function setDistance(s, meters, now = Date.now()) {
 // (túnel, perda de sinal) e o trecho recomeça no ponto novo.
 export function addRoutePoint(s, lat, lon, { jump = false, now = Date.now() } = {}) {
   if (!s || isPaused(s)) return s;
-  const route = addPoint(s.route, lat, lon, s.routeBreak || jump);
+  const route = addPoint(s.route, lat, lon, s.routeBreak || jump, elapsedMs(s, now) / 1000);
   if (route === s.route && !s.routeBreak) return s;
   return { ...s, route, routeBreak: false, updatedAt: now };
 }
@@ -79,7 +79,7 @@ export function splitsOf(kmMarks) {
 
 // Registro para salvar (runs.js). `meters` permite corrigir a distância no fim
 // (corrida sem GPS ou GPS que falhou): sem os splits do GPS, ficam vazios.
-export function finishRun(s, { now = Date.now(), meters, effort = null, notes = '', title = '', visibility = 'amigos' } = {}) {
+export function finishRun(s, { now = Date.now(), meters, effort = null, notes = '', title = '', visibility = 'amigos', zones = [] } = {}) {
   const durationS = Math.max(1, Math.round(elapsedMs(s, now) / 1000));
   const manual = meters != null && Math.round(meters) !== Math.round(s.meters);
   const distance = Math.max(0, Math.round(manual ? meters : s.meters));
@@ -96,8 +96,9 @@ export function finishRun(s, { now = Date.now(), meters, effort = null, notes = 
     program_week: s.session?.week || null,
     program_day: Number.isInteger(s.session?.dayIndex) ? s.session.dayIndex : null,
     gps: !!s.gps && !manual,
-    // Percurso sem os 200 m do começo e do fim (route.js); sem GPS, vazio.
-    route: s.gps ? trimRoute(cleanRoute(s.route)) : [],
+    // Percurso sem os 200 m do começo e do fim e sem as zonas de privacidade
+    // (route.js); sem GPS, vazio.
+    route: s.gps ? privateRoute(s.route, zones) : [],
     effort: Number.isInteger(effort) && effort >= 1 && effort <= 10 ? effort : null,
     notes: String(notes || '').trim().slice(0, 500) || null,
     title: String(title || '').trim().slice(0, 80) || null,
