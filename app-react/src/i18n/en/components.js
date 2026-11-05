@@ -926,4 +926,8 @@ export default {
   'Pouco volume na semana: {musculos}.': 'Low volume this week: {musculos}.',
   '⏱ Fazer a versão de 30 min': '⏱ Do the 30-min version',
   '⚡ Recuperar treino de {dia}': "⚡ Make up {dia}'s workout",
+  "Menu": "Menu",
+  "Menu ({v1} aviso(s) novo(s))": "Menu ({v1} new notice(s))",
+  "Tema escuro": "Dark theme",
+  "Tema claro": "Light theme",
 };

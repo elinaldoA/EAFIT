@@ -28,3 +28,16 @@
   font-weight: 700;
   letter-spacing: .02em;
 }
+
+/* Embaixo do nome na barra superior (TopbarProfile): sem cápsula, só o texto
+   na cor do módulo, para caber inteiro. */
+.topbar__module.module-brand {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .03em;
+}

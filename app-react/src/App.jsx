@@ -12,11 +12,10 @@ import { markKnownUser } from './lib/knownUser';
 import { setTrackingUser, trackClient, trackAccess, startSession, trackScreen, trackEvent, trackInstall, flushPushOpen, markVisitor } from './lib/tracking';
 import { detectDisplayMode } from './lib/clientInfo';
 import OnboardingScreen from './components/OnboardingScreen';
-import ThemeToggle from './components/ThemeToggle';
 import TopbarProfile from './components/TopbarProfile';
+import TopbarMenu from './components/TopbarMenu';
 import BottomNav from './components/BottomNav';
 import Tutorial from './components/Tutorial';
-import InboxBell from './components/InboxBell';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 import { useDayRollover } from './hooks/useDayRollover';
@@ -184,18 +183,13 @@ function Shell() {
             <TrainerInvitePrompt />
             <div className="app-screen" style={{ display: 'flex' }}>
               <header className="topbar">
-                <TopbarProfile />
-                {sport.name && <span className="module-brand">{brandName(sport)}</span>}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {isTrainer && (
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>{t('🧑‍🏫 Personal')}</button>
-                  )}
-                  {programKind && (
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('program')}>{programLabels(programKind).button}</button>
-                  )}
-                  <InboxBell />
-                  <ThemeToggle />
-                </div>
+                <TopbarProfile subtitle={sport.name ? brandName(sport) : ''} />
+                <TopbarMenu
+                  modes={[
+                    ...(isTrainer ? [{ label: t('🧑‍🏫 Personal'), onClick: () => setMode('trainer') }] : []),
+                    ...(programKind ? [{ label: programLabels(programKind).button, onClick: () => setMode('program') }] : []),
+                  ]}
+                />
               </header>
 
               <main className="pages">

@@ -51,6 +51,75 @@
   border-radius: 50%;
 }
 
+.topbar__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+/* Menu do canto direito (TopbarMenu.jsx): avisos, tema e troca de modo. */
+.topbar-menu { position: relative; flex-shrink: 0; }
+.topbar-menu__btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  background: var(--surface-3);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.topbar-menu__btn svg { width: 18px; height: 18px; pointer-events: none; }
+.topbar-menu__btn[aria-expanded="true"] { border-color: var(--primary); }
+.topbar-menu__list {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md, 12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+  z-index: 50;
+}
+.topbar-menu__list[hidden] { display: none; }
+.topbar-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--tap-min, 44px);
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.topbar-menu__item:hover, .topbar-menu__item:focus-visible { background: var(--surface-3); }
+.topbar-menu__text { flex: 1; }
+.topbar-menu__count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--error);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 20px;
+}
+
 .topbar__name {
   font-size: var(--fs-base);
   font-weight: 800;

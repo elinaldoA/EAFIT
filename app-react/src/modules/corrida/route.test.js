@@ -206,3 +206,24 @@ describe('ritmo por trecho', () => {
     expect(paceRuns([[[0, 0], [0, 100], [0, 200]]])).toEqual([]);
   });
 });
+
+describe('mapView em tela cheia (zoom e arrastar)', () => {
+  const line = [Array.from({ length: 21 }, (_, i) => [-2358740, -4665760 + i * 100])];
+
+  it('zoomDelta aproxima mantendo o centro; pan arrasta', () => {
+    const fit = mapView(line, 360, 640);
+    const mid = [(fit.start[0] + fit.end[0]) / 2, (fit.start[1] + fit.end[1]) / 2];
+    const zoomed = mapView(line, 360, 640, 16, { zoomDelta: 1 });
+    expect(zoomed.z).toBe(fit.z + 1);
+    expect(zoomed.fitZ).toBe(fit.z);
+    expect((zoomed.start[0] + zoomed.end[0]) / 2).toBeCloseTo(mid[0], 0);
+    expect(zoomed.end[0] - zoomed.start[0]).toBeCloseTo((fit.end[0] - fit.start[0]) * 2, 0);
+    const moved = mapView(line, 360, 640, 16, { pan: [50, -20] });
+    expect(moved.start[0]).toBeCloseTo(fit.start[0] - 50, 0);
+    expect(moved.start[1]).toBeCloseTo(fit.start[1] + 20, 0);
+  });
+
+  it('o zoom não passa do limite dos blocos', () => {
+    expect(mapView(line, 360, 640, 16, { zoomDelta: 99 }).z).toBe(19);
+  });
+});

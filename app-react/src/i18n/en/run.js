@@ -212,4 +212,9 @@ export default {
   "Corra com o EAFIT Run": "Run with EAFIT Run",
   "{v1} km de corrida no EAFIT Run 🏃 Corra com a gente: {v2}": "{v1} km run on EAFIT Run 🏃 Run with us: {v2}",
   "Minha corrida": "My run",
+  "Fechar mapa": "Close map",
+  "Aproximar": "Zoom in",
+  "Afastar": "Zoom out",
+  "Ver o percurso inteiro": "Show the whole route",
+  "Toque para ver em tela cheia": "Tap to view full screen",
 };

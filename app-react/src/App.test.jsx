@@ -36,6 +36,7 @@ vi.mock('./hooks/useDayRollover', () => ({ useDayRollover: () => h.hooks.rollove
 vi.mock('./components/AuthScreen', () => ({ default: () => <div>tela-auth</div> }));
 vi.mock('./components/OnboardingScreen', () => ({ default: () => <div>tela-onboarding</div> }));
 vi.mock('./components/ThemeToggle', () => ({ default: () => <div>theme-toggle</div> }));
+vi.mock('./context/useTheme', () => ({ useTheme: () => ({ theme: 'dark', toggleTheme: () => {} }) }));
 vi.mock('./components/TopbarProfile', () => ({ default: () => <div>topbar-profile</div> }));
 vi.mock('./components/BottomNav', () => ({
   default: ({ active, onChange, badges }) => (
@@ -181,11 +182,12 @@ describe('App', () => {
     expect(screen.getByText('reminders')).toBeTruthy();
     expect(screen.getByText('topbar-profile')).toBeTruthy();
     expect(screen.getByText('inbox-bell')).toBeTruthy();
-    expect(screen.getByText('theme-toggle')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Menu/ })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: 'Tema claro', hidden: true })).toBeTruthy();
     expect(screen.getByText('tutorial:aluno:u1')).toBeTruthy();
     expect(screen.getByText('update-prompt:true')).toBeTruthy();
     expect(screen.getByText('nav-ativo:treino')).toBeTruthy();
-    expect(screen.queryByText('🧑‍🏫 Personal')).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'Personal', hidden: true })).toBeNull();
   });
 
   it.each([
@@ -211,7 +213,8 @@ describe('App', () => {
   it('personal no modo aluno vê o botão para o painel e troca de modo', () => {
     h.trainer = { isTrainer: true, mode: 'aluno', setMode: vi.fn() };
     render(<App />);
-    fireEvent.click(screen.getByText('🧑‍🏫 Personal'));
+    fireEvent.click(screen.getByRole('button', { name: /^Menu/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Personal' }));
     expect(h.trainer.setMode).toHaveBeenCalledWith('trainer');
   });
 
@@ -236,15 +239,17 @@ describe('App', () => {
     h.program = 'influenciador';
     render(<App />);
     expect(screen.getByText('pg-treino')).toBeTruthy();
-    fireEvent.click(screen.getByText('📣 Influenciador'));
+    fireEvent.click(screen.getByRole('button', { name: /^Menu/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Influenciador' }));
     expect(h.trainer.setMode).toHaveBeenCalledWith('program');
   });
 
   it('embaixador também tem o botão, com o próprio nome', () => {
     h.program = 'embaixador';
     render(<App />);
-    expect(screen.queryByText('📣 Influenciador')).toBeNull();
-    fireEvent.click(screen.getByText('📣 Embaixador'));
+    expect(screen.queryByRole('menuitem', { name: 'Influenciador', hidden: true })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^Menu/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Embaixador' }));
     expect(h.trainer.setMode).toHaveBeenCalledWith('program');
   });
 
@@ -264,7 +269,7 @@ describe('App', () => {
     h.trainer = { isTrainer: false, mode: 'program', setMode: vi.fn() };
     render(<App />);
     expect(screen.queryByText(/painel-programa/)).toBeNull();
-    expect(screen.queryByText('📣 Embaixador')).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: 'Embaixador', hidden: true })).toBeNull();
     expect(screen.getByText('pg-treino')).toBeTruthy();
   });
 

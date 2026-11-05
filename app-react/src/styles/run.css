@@ -318,3 +318,60 @@
 .run-zones__form { display: flex; flex-direction: column; gap: var(--sp-3); }
 .run-zones__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .run-item__body > .btn { width: 100%; }
+
+/* ---- Mapa em tela cheia (RouteDrawing.jsx) ---- */
+.run-map--tap { cursor: zoom-in; }
+.run-map--tap:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.run-map-full {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--surface-2);
+}
+.run-map--full {
+  border: 0;
+  border-radius: 0;
+  touch-action: none;
+  cursor: grab;
+}
+.run-map--full:active { cursor: grabbing; }
+.run-map--full .run-route__line { stroke-width: 5; }
+.run-map--full .run-route__casing { stroke-width: 9; }
+.run-map--full .run-route__km circle { r: 11px; }
+.run-map--full .run-route__km text { font-size: 12px; }
+.run-map--full .run-map__legend,
+.run-map--full .run-map__credit {
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  font-size: 12px;
+}
+.run-map--full .run-map__legend { left: 12px; }
+.run-map--full .run-map__credit { right: 12px; }
+.run-map-full__close,
+.run-map-full__zoom button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+  cursor: pointer;
+}
+.run-map-full__close {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: 12px;
+}
+.run-map-full__zoom {
+  position: absolute;
+  right: 12px;
+  bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

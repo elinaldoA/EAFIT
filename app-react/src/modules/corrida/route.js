@@ -101,6 +101,8 @@ export function projectRoute(route, w, h, pad = 8) {
 // ruas. Calculado aqui para o mapa ser só <img> + <svg>, sem biblioteca.
 export const TILE_SIZE = 256;
 export const MAX_MAP_ZOOM = 17;
+// Em tela cheia dá para aproximar até aqui (limite dos blocos do OSM).
+export const MAX_FULL_ZOOM = 19;
 const MIN_MAP_ZOOM = 3;
 
 // Posição em pixels do "mundo" no zoom z.
@@ -113,23 +115,27 @@ function worldPx(lat, lon, z) {
 // Vista do mapa para um quadro w×h: o maior zoom em que o percurso cabe
 // (com `pad` de folga), os blocos que cobrem o quadro ({ z, x, y, left, top },
 // left/top em px do quadro) e o percurso já em px do quadro. null sem percurso.
-export function mapView(route, w, h, pad = 16) {
+// Tela cheia: `zoomDelta` aproxima/afasta a partir do enquadramento e `pan`
+// ([dx, dy] em px, no zoom final) arrasta o centro.
+export function mapView(route, w, h, pad = 16, { zoomDelta = 0, pan = [0, 0] } = {}) {
   const segs = cleanRoute(route);
   if (!segs.length) return null;
   const pts = segs.flat().map(toDeg);
   let z = MAX_MAP_ZOOM;
   let box;
-  for (; z >= MIN_MAP_ZOOM; z--) {
+  for (;; z--) {
     const px = pts.map(p => worldPx(p.lat, p.lon, z));
     box = {
       minX: Math.min(...px.map(p => p[0])), maxX: Math.max(...px.map(p => p[0])),
       minY: Math.min(...px.map(p => p[1])), maxY: Math.max(...px.map(p => p[1])),
     };
-    if (box.maxX - box.minX <= w - 2 * pad && box.maxY - box.minY <= h - 2 * pad) break;
+    if (z === MIN_MAP_ZOOM || (box.maxX - box.minX <= w - 2 * pad && box.maxY - box.minY <= h - 2 * pad)) break;
   }
-  z = Math.max(z, MIN_MAP_ZOOM);
-  const ox = (box.minX + box.maxX) / 2 - w / 2;
-  const oy = (box.minY + box.maxY) / 2 - h / 2;
+  const fitZ = z;
+  z = Math.max(MIN_MAP_ZOOM, Math.min(MAX_FULL_ZOOM, fitZ + Math.round(zoomDelta)));
+  const k = 2 ** (z - fitZ);
+  const ox = ((box.minX + box.maxX) / 2) * k + (pan[0] || 0) - w / 2;
+  const oy = ((box.minY + box.maxY) / 2) * k + (pan[1] || 0) - h / 2;
   const count = 2 ** z;
   const tiles = [];
   for (let ty = Math.floor(oy / TILE_SIZE); ty <= Math.floor((oy + h - 1) / TILE_SIZE); ty++) {
@@ -145,7 +151,7 @@ export function mapView(route, w, h, pad = 16) {
   };
   const paths = segs.map(seg => seg.map((p, i) => `${i ? 'L' : 'M'}${place(p).join(' ')}`).join(''));
   // place: projeta outros pontos [lat, lon] (inteiros) no mesmo quadro (marcas de km, ritmo).
-  return { z, tiles, paths, place, start: place(segs[0][0]), end: place(segs.at(-1).at(-1)) };
+  return { z, fitZ, tiles, paths, place, start: place(segs[0][0]), end: place(segs.at(-1).at(-1)) };
 }
 
 // ---- Zonas de privacidade ----

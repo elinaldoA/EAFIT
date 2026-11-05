@@ -11,7 +11,9 @@ const SYNC_TITLE = {
   error: t('Erro de sync — toque para tentar novamente'),
 };
 
-export default function TopbarProfile() {
+// `subtitle`: marca do módulo de esporte ("EAFIT · Run"), embaixo do nome —
+// numa linha só, nome, módulo e botões não cabem no celular.
+export default function TopbarProfile({ subtitle = '' }) {
   const { user } = useAuth();
   const { avatarData } = useAvatar();
   const { syncStatus, syncNow } = useWorkout();
@@ -25,7 +27,10 @@ export default function TopbarProfile() {
           ? <img src={avatarData} alt="" className="topbar__avatar-img" />
           : (name?.[0]?.toUpperCase() || '?')}
       </span>
-      <span className="topbar__name">{name}</span>
+      <span className="topbar__who">
+        <span className="topbar__name" title={name}>{subtitle ? String(name || '').split(' ')[0] : name}</span>
+        {subtitle && <span className="topbar__module module-brand">{subtitle}</span>}
+      </span>
       {clickable ? (
         <button
           type="button" className={`sync-dot sync-dot--${syncStatus} sync-dot--clickable`}

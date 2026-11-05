@@ -1,17 +1,20 @@
-import { useState } from 'react';
-import { mapView, kmPoints, paceRuns, TILE_SIZE } from './route';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { mapView, kmPoints, paceRuns, TILE_SIZE, MAX_FULL_ZOOM } from './route';
 import { t } from '../../lib/i18n';
 import { tileSrc, PACE_COLORS, kmStep } from './mapStyle';
+import { useBackToClose } from '../../hooks/useBackToClose';
+import { getModalRoot } from '../../lib/modalRoot';
 
 const pct = (v, total) => `${(v / total) * 100}%`;
 
-// Percurso sobre o mapa de ruas. O percurso salvo já vem sem os primeiros e
-// os últimos 200 m (route.js). Sem internet os blocos não carregam e fica só a
-// linha, como antes. Some sem percurso.
-// `detail` (tela da corrida): linha colorida pelo ritmo e marcas de km, quando
-// o percurso tem o tempo de cada ponto (route.js) e `splits` vem junto.
-export default function RouteDrawing({ route, splits, detail = false, width = 320, height = 180, className = '', label }) {
-  const view = mapView(route, width, height);
+// O mapa em si: blocos do OpenStreetMap + percurso em SVG, num quadro w×h.
+// O percurso salvo já vem sem os primeiros e os últimos 200 m e sem as zonas
+// de privacidade (route.js). Sem internet os blocos não carregam e fica só a
+// linha. `detail`: linha colorida pelo ritmo e marcas de km, quando o
+// percurso tem o tempo de cada ponto e `splits` vem junto.
+function MapCanvas({ route, splits, detail, width, height, zoomDelta = 0, pan, className = '', style, ...rest }) {
+  const view = mapView(route, width, height, 16, { zoomDelta, pan });
   // Blocos que não carregaram (sem internet). Se nenhum carregar, some também
   // o crédito do mapa e fica só a linha.
   const [failed, setFailed] = useState(() => new Set());
@@ -22,11 +25,7 @@ export default function RouteDrawing({ route, splits, detail = false, width = 32
   const step = kmStep(kms.length);
   const toPath = pts => pts.map((p, i) => `${i ? 'L' : 'M'}${view.place(p).join(' ')}`).join('');
   return (
-    <div
-      className={`run-route run-map ${className}`.trim()}
-      style={{ aspectRatio: `${width} / ${height}` }}
-      role="img" aria-label={label || t('Mapa do percurso')}
-    >
+    <div className={`run-route run-map ${className}`.trim()} style={style} {...rest}>
       {hasMap && (
         <div className="run-map__tiles" aria-hidden="true">
           {view.tiles.map(tile => (
@@ -74,5 +73,119 @@ export default function RouteDrawing({ route, splits, detail = false, width = 32
         </a>
       )}
     </div>
+  );
+}
+
+function readViewport() {
+  return { w: window.innerWidth || 360, h: window.innerHeight || 640 };
+}
+
+function useViewport() {
+  const [size, setSize] = useState(readViewport);
+  useEffect(() => {
+    const onResize = () => setSize(readViewport());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return size;
+}
+
+// Mapa em tela cheia: arrastar com o dedo, pinça ou + / − para o zoom, toque
+// duplo aproxima. Fecha no ✕ ou no "voltar" do celular.
+function MapFullscreen({ route, splits, onClose }) {
+  useBackToClose(onClose);
+  const { w, h } = useViewport();
+  const [zoom, setZoom] = useState(0);
+  const [pan, setPan] = useState([0, 0]);
+  const pointers = useRef(new Map());
+  const pinch = useRef(null);
+  const lastTap = useRef(0);
+  const fitZ = mapView(route, w, h)?.fitZ ?? 0;
+
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => document.body.classList.remove('modal-open');
+  }, []);
+
+  // Muda o zoom mantendo o mesmo centro (o deslocamento cresce junto).
+  function zoomBy(delta) {
+    const next = Math.max(-6, Math.min(MAX_FULL_ZOOM - fitZ, zoom + delta));
+    if (next === zoom) return;
+    const k = 2 ** (next - zoom);
+    setZoom(next);
+    setPan(p => [p[0] * k, p[1] * k]);
+  }
+
+  const dist = () => {
+    const [a, b] = [...pointers.current.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+
+  function onPointerDown(e) {
+    if (e.target.closest('button, a')) return;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 2) pinch.current = dist();
+    if (pointers.current.size === 1) {
+      const now = Date.now();
+      if (now - lastTap.current < 300) zoomBy(1);
+      lastTap.current = now;
+    }
+  }
+
+  function onPointerMove(e) {
+    const prev = pointers.current.get(e.pointerId);
+    if (!prev) return;
+    const cur = { x: e.clientX, y: e.clientY };
+    pointers.current.set(e.pointerId, cur);
+    if (pointers.current.size === 2 && pinch.current) {
+      const ratio = dist() / pinch.current;
+      if (ratio > 1.6) { zoomBy(1); pinch.current = dist(); } else if (ratio < 0.62) { zoomBy(-1); pinch.current = dist(); }
+      return;
+    }
+    if (pointers.current.size === 1) setPan(p => [p[0] - (cur.x - prev.x), p[1] - (cur.y - prev.y)]);
+  }
+
+  function onPointerUp(e) {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) pinch.current = null;
+  }
+
+  return createPortal(
+    <div className="run-map-full" role="dialog" aria-modal="true" aria-label={t('Mapa do percurso')}>
+      <MapCanvas
+        route={route} splits={splits} detail width={w} height={h} zoomDelta={zoom} pan={pan}
+        className="run-map--full" style={{ width: w, height: h }}
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
+        onWheel={e => zoomBy(e.deltaY < 0 ? 1 : -1)}
+      />
+      <button type="button" className="run-map-full__close" aria-label={t('Fechar mapa')} onClick={onClose}>✕</button>
+      <div className="run-map-full__zoom">
+        <button type="button" aria-label={t('Aproximar')} onClick={() => zoomBy(1)}>+</button>
+        <button type="button" aria-label={t('Afastar')} onClick={() => zoomBy(-1)}>−</button>
+        <button type="button" aria-label={t('Ver o percurso inteiro')} onClick={() => { setZoom(0); setPan([0, 0]); }}>⤢</button>
+      </div>
+    </div>,
+    getModalRoot(),
+  );
+}
+
+// Percurso sobre o mapa de ruas, em todas as telas da corrida. Tocar abre o
+// mapa em tela cheia. Some sem percurso.
+export default function RouteDrawing({ route, splits, detail = false, width = 320, height = 180, className = '', label }) {
+  const [full, setFull] = useState(false);
+  if (!mapView(route, width, height)) return null;
+  return (
+    <>
+      <MapCanvas
+        route={route} splits={splits} detail={detail} width={width} height={height}
+        className={`run-map--tap ${className}`.trim()} style={{ aspectRatio: `${width} / ${height}` }}
+        role="button" tabIndex={0}
+        aria-label={`${label || t('Mapa do percurso')}. ${t('Toque para ver em tela cheia')}`}
+        onClick={e => { if (!e.target.closest('a')) setFull(true); }}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFull(true); } }}
+      />
+      {full && <MapFullscreen route={route} splits={splits} onClose={() => setFull(false)} />}
+    </>
   );
 }

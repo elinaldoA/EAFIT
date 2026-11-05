@@ -77,7 +77,9 @@ function InboxModal({ items, hasMore, onMore, onClose, onReadOne, onReadAll, onG
 // sino fica cortado quando estão desligados). Abrir não marca nada como lido:
 // o aluno marca um aviso ou todos, e o que foi lido sai da lista. Falha ao
 // carregar (offline, migration pendente) conta como "sem avisos", sem barulho.
-export default function InboxBell() {
+// `asMenuItem`: vira uma linha do menu da barra superior (TopbarMenu), que
+// recebe o número de não lidos por `onUnreadChange` para a bolinha no botão.
+export default function InboxBell({ asMenuItem = false, onUnreadChange }) {
   const { user } = useAuth();
   const toast = useToast();
   const [remindersEnabled, toggleReminders] = useReminders(toast, user);
@@ -107,6 +109,7 @@ export default function InboxBell() {
   }, [refresh]);
 
   const unread = items.filter(i => i.unread).length;
+  useEffect(() => { onUnreadChange?.(unread); }, [unread, onUnreadChange]);
 
   // O aviso sai da lista na hora; se o servidor recusar, volta pro lugar.
   async function markRead(ids, request) {
@@ -146,6 +149,27 @@ export default function InboxBell() {
     setTimeout(go, 400);
   }
 
+  const modal = open && (
+    <InboxModal
+      items={items} hasMore={items.length >= limit} onMore={() => setLimit(n => n + INBOX_PAGE)}
+      onClose={() => setOpen(false)} onReadOne={handleReadOne} onReadAll={handleReadAll} onGo={handleGo}
+      remindersEnabled={remindersEnabled} onToggleReminders={toggleReminders}
+    />
+  );
+
+  if (asMenuItem) {
+    return (
+      <>
+        <button type="button" role="menuitem" className="topbar-menu__item" onClick={() => setOpen(true)}>
+          <span aria-hidden="true">🔔</span>
+          <span className="topbar-menu__text">{t('Avisos')}</span>
+          {unread > 0 && <span className="topbar-menu__count">{unread > 9 ? '9+' : unread}</span>}
+        </button>
+        {modal}
+      </>
+    );
+  }
+
   return (
     <>
       <button type="button" className="inbox-bell" title={t('Avisos')} aria-label={unread ? t('Avisos ({unread} novo(s))', { unread }) : t('Avisos')} onClick={() => setOpen(true)}>
@@ -156,13 +180,7 @@ export default function InboxBell() {
         </svg>
         {unread > 0 && <span className="inbox-bell__badge">{unread > 9 ? '9+' : unread}</span>}
       </button>
-      {open && (
-        <InboxModal
-          items={items} hasMore={items.length >= limit} onMore={() => setLimit(n => n + INBOX_PAGE)}
-          onClose={() => setOpen(false)} onReadOne={handleReadOne} onReadAll={handleReadAll} onGo={handleGo}
-          remindersEnabled={remindersEnabled} onToggleReminders={toggleReminders}
-        />
-      )}
+      {modal}
     </>
   );
 }
