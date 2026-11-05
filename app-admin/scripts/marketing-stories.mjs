@@ -192,9 +192,12 @@ async function render(file, story, print) {
     '-y', '-loglevel', 'error',
     '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
     ...audioIn,
-    ...(story.songStart !== undefined ? ['-af', `afade=t=in:d=0.12,afade=t=out:st=${STORY_DURATION - 0.8}:d=0.8,loudnorm=I=-14:TP=-1.5:LRA=11`] : []),
+    // Volume primeiro, fades depois (o loudnorm segura uns segundos de áudio e,
+    // com -shortest, o fim era cortado: o áudio parava em ~4 s). Sem -shortest:
+    // -t fecha os dois em STORY_DURATION. 48 kHz, o padrão do Instagram e do Facebook.
+    ...(story.songStart !== undefined ? ['-af', `loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,afade=t=in:d=0.12,afade=t=out:st=${STORY_DURATION - 0.8}:d=0.8,apad`] : ['-af', 'aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,apad']),
     '-t', String(STORY_DURATION), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '24', '-preset', 'medium', '-profile:v', 'high',
-    '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', join(OUT, file),
+    '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-movflags', '+faststart', join(OUT, file),
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((resolve, reject) => {
     ff.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`ffmpeg saiu com ${code}`))));
