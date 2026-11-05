@@ -28,7 +28,7 @@ import MarketingMedia from './MarketingMedia';
 import { synthTrack } from '../lib/reelAudio';
 import { DURATION, FPS, STORY_DROP, STORY_DURATION, STORY_VARIANTS, drawReelFrame, drawStoryFrame } from '../lib/reelRender';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -395,6 +395,36 @@ describe('agenda da fila automática', () => {
     expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 13)}`)).toEqual([
       's1@2026-11-05T16', 'f1@2026-11-05T21', 'f2@2026-11-06T21', 'f3@2026-11-07T21',
     ]);
+  });
+
+  const SEASON = { enabled: true, periods: [
+    { theme: 'novembro_azul', startsOn: '2026-11-03', endsOn: '2026-11-30' },
+    { theme: 'natal', startsOn: '2026-12-01', endsOn: '2026-12-26' },
+  ] };
+
+  it('item de temporada só sai com o tema no ar no app e, nele, passa na frente', () => {
+    const pending = [
+      { id: 'f1', format: 'feed' }, { id: 'natal', format: 'feed', season: 'natal' },
+      { id: 'azul', format: 'feed', season: 'novembro_azul' }, { id: 'f2', format: 'feed' },
+    ];
+    const sched = autopostSchedule(pending, new Date('2026-11-29T13:00:00Z'), SEASON);
+    expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 10)}`)).toEqual([
+      'azul@2026-11-29', 'f1@2026-11-30', 'natal@2026-12-01', 'f2@2026-12-02',
+    ]);
+  });
+
+  it('sem a temporada programada no app, o item de temporada fica fora da agenda', () => {
+    const pending = [{ id: 'f1', format: 'feed' }, { id: 'carnaval', format: 'feed', season: 'carnaval' }];
+    expect(autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'), SEASON).map(s => s.item.id)).toEqual(['f1']);
+    expect(autopostSchedule(pending, new Date('2026-11-05T13:00:00Z')).map(s => s.item.id)).toEqual(['f1']);
+  });
+
+  it('acha o tema do dia e marca o item de temporada', () => {
+    expect(seasonOnDay(SEASON, '2026-12-01')).toBe('natal');
+    expect(seasonOnDay(SEASON, '2026-12-27')).toBeNull();
+    expect(seasonOnDay({ ...SEASON, enabled: false }, '2026-12-01')).toBeNull();
+    expect(seasonOnDay({ enabled: true, theme: 'natal', startsOn: '2026-12-01', endsOn: '2026-12-26' }, '2026-12-10')).toBe('natal');
+    expect(laneLabel({ format: 'story', season: 'natal' })).toBe('Story · 🎄 Natal');
   });
 
   it('separa as hashtags da legenda', () => {

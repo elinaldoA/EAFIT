@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  AUTOPOST_LANES, SLOT_LABEL, addQueueItem, fetchAutopost, laneKey, laneLabel, moveQueueItem, queuePosition, removeQueueItem, restoreQueueItem,
+  AUTOPOST_LANES, SLOT_LABEL, addQueueItem, fetchAutopost, laneKey, laneLabel, moveQueueItem, queuePosition, removeQueueItem, restoreQueueItem, seasonTag,
   splitCaption, updateQueueCaption,
 } from '../lib/marketing';
 import Loading from './Loading';
@@ -96,6 +96,11 @@ export default function MarketingQueue({ library = [] }) {
           ) : (
             <>
               <div className="mkt-row__caption">{item.format === 'story' ? 'Story: só a imagem, sem legenda.' : (body.split('\n')[0] || '(sem legenda)')}</div>
+              {item.season && (
+                <div className="user-detail__meta">
+                  <span className="badge">{seasonTag(item.season)}</span> sai só enquanto essa temporada estiver no ar no app
+                </div>
+              )}
               {item.format !== 'story' && (
                 <details className="mkt-row__more">
                   <summary>Legenda e hashtags</summary>

@@ -96,8 +96,12 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
   const postById = new Map(posts.map(p => [p.id, p]));
 
   // Fila automática (se ligada) + posts agendados à mão e ainda não publicados.
+  // Itens de temporada só entram nos dias em que o tema está no ar no app.
+  const schedule = autopostSchedule(state.pending, now, state.season);
+  const scheduledIds = new Set(schedule.map(s => s.item.id));
+  const waitingSeason = state.pending.filter(i => i.season && !scheduledIds.has(i.id));
   const planned = [
-    ...(state.enabled ? autopostSchedule(state.pending, now).map(s => ({ key: s.item.id, at: s.at, format: s.format, item: s.item, auto: true })) : []),
+    ...(state.enabled ? schedule.map(s => ({ key: s.item.id, at: s.at, format: s.format, item: s.item, auto: true })) : []),
     ...posts
       .filter(p => p.scheduled_at && new Date(p.scheduled_at) > now && p.targets?.some(t => t.status === 'pending'))
       .map(p => ({ key: p.id, at: new Date(p.scheduled_at), format: p.format === 'feed' && p.media?.[0]?.type === 'video' ? 'reel' : p.format, item: p, auto: false })),
@@ -180,6 +184,8 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
           {' '}Stories de nutrição no café (7h), almoço (12h), hidratação (15h) e jantar (19h30).
           {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels, {countGeneral()} em stories e {countNutri()} de nutrição.
           {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
+          {' '}Peças de temporada só saem enquanto o tema estiver no ar no app e, nesse período, passam na frente.
+          {waitingSeason.length > 0 && ` ${waitingSeason.length} esperando uma temporada que não está programada no app.`}
           {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
         </p>
         {msg && <p role="alert" className="form-msg form-msg--error">{msg}</p>}

@@ -191,9 +191,19 @@ export const ITEMS = [
     key: 'treinador-voz', kind: 'print', print: 'treinador-voz', headline: 'Um treinador falando no seu ouvido', sub: 'Apresenta os exercícios, conta o descanso e comemora recordes.',
     caption: `Treina de fone? 🎧\nLigue o treinador por voz: ele apresenta cada exercício, conta o descanso e comemora os seus recordes. Escolha o jeito de falar: animado, zoeira ou calmo.\n\nLink na bio 👇\n\n${TAGS}`,
   },
+  // Temporada (migration 20270111020000): `season` = tema do app (lib/season.js).
+  // A fila só publica enquanto esse tema estiver no ar no app.
   {
-    key: 'temporada', kind: 'print', print: 'temporada-natal', headline: 'O app entra no clima de cada data', sub: 'Tema de época e conquista especial para quem treina.',
-    caption: `Carnaval, Outubro Rosa, Dia das Bruxas, Novembro Azul, Natal… 🎉\nEm cada data o app ganha um tema e um desafio: treine no período e ganhe uma conquista especial.\n\nLink na bio 👇\n\n${TAGS}`,
+    key: 'temporada-novembro-azul', season: 'novembro_azul', kind: 'print', print: 'temporada-novembro-azul', headline: 'Novembro Azul no EAFIT', sub: 'Treino em dia e exames de rotina também.',
+    caption: `Novembro Azul: mês de cuidar da saúde do homem. 💙\nTreino em dia e exames de rotina também. No app, treine no período e ganhe a conquista Novembro Azul.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'temporada', season: 'natal', kind: 'print', print: 'temporada-natal', headline: 'Natal no EAFIT', sub: 'Treine no período e ganhe a conquista Treino de Natal.',
+    caption: `O app entrou no clima de Natal. 🎄\nTreine no período e ganhe a conquista Treino de Natal. Bora fechar o ano em movimento?\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'temporada-ano-novo', season: 'ano_novo', kind: 'print', print: 'temporada-ano-novo', headline: 'Comece o ano treinando', sub: 'Treine na primeira semana e ganhe a conquista Ano Novo.',
+    caption: `Ano novo, treino em dia. 🎆\nFaça um treino na primeira semana do ano e ganhe a conquista Ano Novo no app.\n\nLink na bio 👇\n\n${TAGS}`,
   },
   // Segunda leva (migration 20270101010000): temas novos, nunca publicados antes.
   {

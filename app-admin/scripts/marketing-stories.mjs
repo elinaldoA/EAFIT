@@ -118,7 +118,10 @@ const RECURSOS = [
   ['amigos-atividade', 'Comemore os recordes dos amigos', 'Treinos, recordes e sequências de quem treina com você.', 'amigos-atividade'],
   ['liga', 'Liga do mês: quem treina mais vence', 'Divisões Ouro, Prata e Bronze, com medalha para o top 3.', 'liga'],
   ['treinador-voz', 'Um treinador falando no seu ouvido', 'Apresenta os exercícios, conta o descanso e comemora recordes.', 'treinador-voz'],
-  ['temporada', 'O app entra no clima de cada data', 'Tema de época e conquista especial para quem treina.', 'temporada-natal'],
+  // Temporada: só sai enquanto o tema estiver no ar no app (coluna season da fila).
+  ['temporada-novembro-azul', 'Novembro Azul no EAFIT', 'Treino em dia e exames de rotina também.', 'temporada-novembro-azul'],
+  ['temporada', 'Natal no EAFIT', 'Treine no período e ganhe a conquista Treino de Natal.', 'temporada-natal'],
+  ['temporada-ano-novo', 'Comece o ano treinando', 'Treine na primeira semana e ganhe a conquista Ano Novo.', 'temporada-ano-novo'],
 ];
 
 const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por variante

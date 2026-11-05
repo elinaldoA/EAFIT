@@ -467,14 +467,16 @@ export function hideComment(commentId, hidden) {
 
 export async function fetchAutopost() {
   const columns = 'id, position, key, format, caption, media, posted_at, skipped_at';
-  const [settings, withSlot] = await Promise.all([
+  const [settings, full, seasonRow] = await Promise.all([
     db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
-    db.from('marketing_autopost_queue').select(`${columns}, slot`).order('position'),
+    db.from('marketing_autopost_queue').select(`${columns}, slot, season`).order('position'),
+    db.from('app_settings').select('value').eq('key', 'season').maybeSingle(),
   ]);
-  // Sem a migration dos horários de refeição a coluna `slot` não existe: lê sem ela.
-  const queue = withSlot.error
-    ? await db.from('marketing_autopost_queue').select(columns).order('position')
-    : withSlot;
+  // Sem as migrations dos horários de refeição (`slot`) ou da temporada
+  // (`season`, 20270111010000) a coluna não existe: lê sem ela.
+  let queue = full;
+  if (queue.error) queue = await db.from('marketing_autopost_queue').select(`${columns}, slot`).order('position');
+  if (queue.error) queue = await db.from('marketing_autopost_queue').select(columns).order('position');
   if (settings.error) throw settings.error;
   if (queue.error) throw queue.error;
   const items = queue.data || [];
@@ -484,6 +486,8 @@ export async function fetchAutopost() {
     pending: items.filter(i => !i.posted_at && !i.skipped_at),
     skipped: items.filter(i => i.skipped_at),
     posted: items.filter(i => i.posted_at).length,
+    // Temporadas do app (app_settings "season"): decidem quando sai cada item de temporada.
+    season: seasonRow?.error ? null : (seasonRow?.data?.value || null),
   };
 }
 
@@ -513,7 +517,34 @@ export function laneKey(item) {
 }
 
 export function laneLabel(item) {
-  return AUTOPOST_LANES.find(l => l.key === laneKey(item))?.label || item.format;
+  const label = AUTOPOST_LANES.find(l => l.key === laneKey(item))?.label || item.format;
+  return item.season ? `${label} · ${seasonTag(item.season)}` : label;
+}
+
+// Temporadas do app (app-react/src/lib/season.js). Um item da fila com `season`
+// só sai enquanto esse tema estiver no ar no app e, nesse período, passa na
+// frente dos itens comuns (migration 20270111010000, marketing_autopost_run).
+export const SEASON_LABEL = {
+  carnaval: 'Carnaval', pascoa: 'Páscoa', namorados: 'Namorados', festa_junina: 'Festa Junina', outubro_rosa: 'Outubro Rosa',
+  halloween: 'Dia das Bruxas', novembro_azul: 'Novembro Azul', natal: 'Natal', ano_novo: 'Ano Novo',
+};
+const SEASON_EMOJI = {
+  carnaval: '🎭', pascoa: '🐰', namorados: '💕', festa_junina: '🌽', outubro_rosa: '💗', halloween: '🎃', novembro_azul: '💙', natal: '🎄', ano_novo: '🎆',
+};
+
+export function seasonTag(theme) {
+  return `${SEASON_EMOJI[theme] || ''} ${SEASON_LABEL[theme] || theme}`.trim();
+}
+
+const isDay = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
+// Tema no ar num dia (AAAA-MM-DD) pela configuração de temporada do app
+// ({ enabled, periods: [{ theme, startsOn, endsOn }] } ou o formato antigo de um
+// tema só), igual a marketing_active_season no banco.
+export function seasonOnDay(season, day) {
+  if (!season || season.enabled !== true) return null;
+  const list = Array.isArray(season.periods) ? season.periods : [season];
+  return list.find(p => p?.theme && isDay(p.startsOn) && isDay(p.endsOn) && day >= p.startsOn && day <= p.endsOn)?.theme || null;
 }
 
 // Dia de Brasília (AAAA-MM-DD) de um instante.
@@ -521,20 +552,32 @@ export function brtDay(date) {
   return new Date(new Date(date).getTime() - BRT_OFFSET_MS).toISOString().slice(0, 10);
 }
 
+// Até quantos dias à frente a agenda procura a temporada de um item.
+const SEASON_HORIZON_DAYS = 400;
+
 // Agenda da fila: cada item pendente no seu horário. O cron publica um item de
-// cada faixa por dia, então o k-ésimo pendente da faixa sai k dias depois do
-// próximo horário do cron.
-export function autopostSchedule(pending, now = new Date()) {
+// cada faixa por dia, na ordem da fila. Item de temporada (`season`) só sai nos
+// dias em que o tema está no ar no app (`season` = app_settings "season") e,
+// nesses dias, passa na frente; fora deles espera. Item cuja temporada não cai
+// nos próximos SEASON_HORIZON_DAYS dias fica fora da agenda.
+export function autopostSchedule(pending, now = new Date(), season = null) {
   const out = [];
   for (const lane of AUTOPOST_LANES) {
     const first = new Date(now);
     first.setUTCHours(lane.utc[0], lane.utc[1], 0, 0);
     if (first <= now) first.setUTCDate(first.getUTCDate() + 1);
-    pending.filter(i => laneKey(i) === lane.key).forEach((item, k) => {
+    const queue = pending.filter(i => laneKey(i) === lane.key);
+    for (let d = 0; queue.length > 0 && d < SEASON_HORIZON_DAYS; d += 1) {
+      if (!queue.some(i => !i.season) && season?.enabled !== true) break;
       const at = new Date(first);
-      at.setUTCDate(at.getUTCDate() + k);
+      at.setUTCDate(at.getUTCDate() + d);
+      const theme = seasonOnDay(season, brtDay(at));
+      let idx = theme ? queue.findIndex(i => i.season === theme) : -1;
+      if (idx < 0) idx = queue.findIndex(i => !i.season);
+      if (idx < 0) continue;
+      const [item] = queue.splice(idx, 1);
       out.push({ item, format: lane.format, lane: lane.key, at, today: brtDay(at) === brtDay(now) });
-    });
+    }
   }
   return out.sort((a, b) => a.at - b.at);
 }
