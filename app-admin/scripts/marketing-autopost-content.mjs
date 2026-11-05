@@ -104,6 +104,75 @@ export const ITEMS = [
     key: 'nutricao-semana', kind: 'print', print: 'nutricao-semana', headline: 'Quanto você gasta de verdade?', sub: 'O app calcula pelo seu diário e pela balança.',
     caption: `Comendo certo e o peso não muda? ⚖️\nCom o diário alimentar e o seu peso, o app estima o seu gasto real e ajusta a meta de calorias.\n\nLink na bio 👇\n\n${TAGS}`,
   },
+  // Quarta leva (migration 20270109010000): modo Personal, para personal trainers.
+  // Prints pt-* (alunos fictícios). Os stories em vídeo saem do marketing-stories.mjs (PERSONAL).
+  {
+    key: 'personal-painel', kind: 'print', print: 'pt-painel', headline: 'Todos os seus alunos num painel', sub: 'Quem treinou, quem sumiu e quem precisa de você hoje.',
+    caption: `Começa o dia sabendo quem precisa de você. 📊\nO painel do Personal mostra quem treinou na semana, quem sumiu, quem relatou dor e qual plano está vencendo.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'personal-alunos', kind: 'print', print: 'pt-alunos', headline: 'Cada aluno com a sua aderência', sub: 'Treinos da semana, últimos 14 dias e plano.',
+    caption: `Quantos treinos o seu aluno fez essa semana? 🗓️\nNa lista de alunos você vê a aderência de cada um, os últimos 14 dias e quando o plano vence.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'personal-treinos', kind: 'print', print: 'pt-ficha-treinos', headline: 'Veja o que o aluno fez de verdade', sub: 'Cada treino, carga e série, com o que evoluiu.',
+    caption: `"Fiz o treino todo, prof." 😅\nNa ficha do aluno você vê cada treino feito: duração, nota, cargas e quantos exercícios evoluíram.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'personal-evolucao', kind: 'print', print: 'pt-ficha-evolucao', headline: 'A evolução do aluno em gráfico', sub: 'Peso, medidas e como ele tem se sentido.',
+    caption: `Mostre o resultado, não só fale dele. 📈\nPeso, medidas e o check-in de energia, sono e humor de cada aluno, num gráfico pronto para a reavaliação.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'personal-montar', kind: 'print', print: 'pt-montar-treino', headline: 'Monte e envie o treino pelo app', sub: 'Dias, exercícios, séries e prazo do plano.',
+    caption: `Chega de PDF e print de planilha. 📲\nMonte o treino no app (dias, exercícios, séries, descanso e prazo) e ele chega direto no celular do aluno.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'personal-modelos', kind: 'print', print: 'pt-modelos', headline: 'Seus treinos prontos para reusar', sub: 'Salve modelos e envie para vários alunos.',
+    caption: `Monta o mesmo treino toda semana? ♻️\nSalve como modelo e envie para um ou vários alunos de uma vez, ajustando só o que muda.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'personal-conversa', kind: 'print', print: 'pt-conversa', headline: 'Recado direto no app do aluno', sub: 'Sem misturar com o seu WhatsApp pessoal.',
+    caption: `Seu WhatsApp não precisa ser o canal de treino. 💬\nMande recados e converse com cada aluno pelo app. Ele recebe uma notificação e responde por lá.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'personal-agenda', kind: 'print', print: 'pt-agenda', headline: 'Aulas marcadas e confirmadas', sub: 'O aluno confirma a aula pelo app.',
+    caption: `Agenda de aulas sem troca de mensagens. 📅\nMarque a aula presencial ou online e o aluno confirma pelo app. Tudo aparece no seu painel.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'consultoria', kind: 'slides', headline: 'Consultoria online: como acompanhar o aluno de longe',
+    slides: [
+      ['1', 'Treino no celular do aluno, não em PDF'],
+      ['2', 'Veja o que ele fez de verdade: cargas e séries'],
+      ['3', 'Um recado curto toda semana'],
+      ['4', 'Peso e medidas a cada 30 dias'],
+      ['5', 'Ajuste o plano antes de ele vencer'],
+    ],
+    closing: 'Tudo isso no modo Personal do EAFIT.',
+    caption: `Consultoria online não é mandar uma planilha e sumir. 🌐\nSalve estes 5 passos e acompanhe o aluno de longe como se estivesse na academia.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'trocar-treino', kind: 'slides', headline: 'Quando trocar o treino do aluno?',
+    slides: [
+      ['1', 'A carga está parada há 3 treinos'],
+      ['2', 'O plano chegou ao fim: 6 a 8 semanas'],
+      ['3', 'Dor ou desconforto no mesmo exercício'],
+      ['4', 'Ele faltou a mais da metade dos treinos'],
+    ],
+    closing: 'O app mostra cada um desses sinais.',
+    caption: `Trocar o treino cedo demais atrapalha. Tarde demais, o aluno desanima. 🔄\nOs 4 sinais de que está na hora de mudar.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'primeira-semana', kind: 'slides', headline: 'A primeira semana do aluno novo',
+    slides: [
+      ['1', 'Convite pelo seu link: ele já entra vinculado a você'],
+      ['2', 'Treino enviado no primeiro dia'],
+      ['3', 'Meta de treinos por semana combinada'],
+      ['4', 'Um recado depois do primeiro treino'],
+      ['5', 'No painel, veja quem ainda não treinou'],
+    ],
+    closing: 'Comece com o modo Personal do EAFIT.',
+    caption: `A primeira semana decide se o aluno fica. 👋\nUm roteiro simples para o aluno novo começar bem.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
   // Segunda leva (migration 20270101010000): temas novos, nunca publicados antes.
   {
     key: 'erros', later: true, kind: 'slides', headline: '4 erros que fazem o aluno largar o treino',

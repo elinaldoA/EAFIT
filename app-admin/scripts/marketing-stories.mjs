@@ -1,12 +1,13 @@
 // Stories em vídeo da publicação automática do Marketing, com música:
 //   - nutrição, nos horários das refeições (café, almoço, jantar: 4 de cada) e de hidratação (15h: 12);
 //   - os 6 stories gerais (13h), que antes eram só imagem, agora em vídeo;
-//   - 8 stories gerais das telas novas do app (musculos, carga, recordes...).
+//   - 8 stories gerais das telas novas do app (musculos, carga, recordes...);
+//   - 8 stories para personal trainers (modo Personal: painel, alunos, ficha...).
 // Feitos só com os prints do app e a trilha eletrônica original (src/lib/reelAudio.js).
 // Cada story usa uma variante visual (cor, fundo e enquadramento: reelRender.js).
 //
 //   node app-admin/scripts/marketing-stories.mjs            (todos)
-//   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua | novas)
+//   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua | novas | personal)
 //
 // Precisa do ffmpeg no PATH. Gera os MP4 em app-react/public/landing/img/marketing/
 // (story-*.mp4) e o SQL dos itens em
@@ -94,6 +95,19 @@ const NEW_GENERAL = [
   ['progressao', 'O app sugere a carga de hoje', 'Com base no que você fez no último treino.', 'progressao'],
   ['nutricao-macros', 'Proteína, carbo e gordura num toque', 'Veja quanto falta para a meta do dia.', 'nutricao-macros'],
   ['nutricao-semana', 'Quanto você gasta de verdade?', 'O app calcula pelo seu diário e pela balança.', 'nutricao-semana'],
+];
+
+// Quarta leva (migration 20270109010000): modo Personal, para personal trainers.
+// Mesmo texto das artes do feed. ONLY=personal gera só estes.
+const PERSONAL = [
+  ['personal-painel', 'Todos os seus alunos num painel', 'Quem treinou, quem sumiu e quem precisa de você hoje.', 'pt-painel'],
+  ['personal-alunos', 'Cada aluno com a sua aderência', 'Treinos da semana, últimos 14 dias e plano.', 'pt-alunos'],
+  ['personal-treinos', 'Veja o que o aluno fez de verdade', 'Cada treino, carga e série, com o que evoluiu.', 'pt-ficha-treinos'],
+  ['personal-evolucao', 'A evolução do aluno em gráfico', 'Peso, medidas e como ele tem se sentido.', 'pt-ficha-evolucao'],
+  ['personal-montar', 'Monte e envie o treino pelo app', 'Dias, exercícios, séries e prazo do plano.', 'pt-montar-treino'],
+  ['personal-modelos', 'Seus treinos prontos para reusar', 'Salve modelos e envie para vários alunos.', 'pt-modelos'],
+  ['personal-conversa', 'Recado direto no app do aluno', 'Sem misturar com o seu WhatsApp pessoal.', 'pt-conversa'],
+  ['personal-agenda', 'Aulas marcadas e confirmadas', 'O aluno confirma a aula pelo app.', 'pt-agenda'],
 ];
 
 const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por variante
@@ -228,6 +242,15 @@ async function main() {
     for (const [i, [key, title, sub, print]] of NEW_GENERAL.entries()) {
       const file = `story-${key}.mp4`;
       await render(file, { title, sub, variant: (i + 2) % 6, songStart: songStart() }, print);
+      console.log('ok', file);
+    }
+  }
+  // Itens da fila na migration 20270109010000 (com as artes do feed).
+  if (!only || only === 'personal') {
+    used = 26; // depois de refeições, gerais e telas novas
+    for (const [i, [key, title, sub, print]] of PERSONAL.entries()) {
+      const file = `story-${key}.mp4`;
+      await render(file, { pill: 'PARA PERSONAL', title, sub, variant: (i + 4) % 6, songStart: songStart() }, print);
       console.log('ok', file);
     }
   }
