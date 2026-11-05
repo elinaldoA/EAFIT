@@ -6,6 +6,8 @@ import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
 import { validateBody } from '../lib/profileValidation';
+import SportPicker from './SportPicker';
+import { useSportModule } from '../hooks/useSportModule';
 
 import { t } from '../lib/i18n';
 export default function OnboardingScreen() {
@@ -18,6 +20,11 @@ export default function OnboardingScreen() {
   const [meta, setMeta] = useState('massa');
   const [nivel, setNivel] = useState('intermediario');
   const [local, setLocal] = useState('academia');
+  // Esporte = versão do app (modules/registry.js); só pergunta com mais de um liberado.
+  const { module: sport, available: sports } = useSportModule();
+  const [esporte, setEsporte] = useState(sport.id);
+  // Módulo sem plano de musculação (ex.: EAFIT Run): sem objetivo, local nem treino gerado.
+  const usesPlan = sports.find(m => m.id === esporte)?.workoutPlan !== false;
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar
@@ -54,13 +61,13 @@ export default function OnboardingScreen() {
       // essa busca corre em paralelo com a criação do plano personalizado e
       // pode disparar o fallback de plano padrão antes dele existir,
       // gerando dois planos ativos.
-      if (!seeded.current) {
+      if (!seeded.current && usesPlan) {
         const generatedDays = await generatePlan({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
         await seedGeneratedPlan(user.id, generatedDays);
         seeded.current = true;
       }
 
-      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local });
+      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, esporte });
       if (error) throw error;
       trackEvent('onboarding', 'done');
     } catch (err) {
@@ -79,9 +86,10 @@ export default function OnboardingScreen() {
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="EAFIT" />
           <div className="auth-logo__name">EAFIT</div>
-          <p className="auth-logo__tagline">{t('Vamos montar seu treino personalizado')}</p>
+          <p className="auth-logo__tagline">{usesPlan ? t('Vamos montar seu treino personalizado') : t('Conte um pouco sobre você')}</p>
         </div>
         <div className="auth-form">
+          <SportPicker id="onbSport" value={esporte} onChange={setEsporte} modules={sports} />
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbSexo">{t('Sexo biológico')}</label>
             <select id="onbSexo" className="input" value={sexo} onChange={e => setSexo(e.target.value)}>
@@ -111,17 +119,19 @@ export default function OnboardingScreen() {
               min="100" max="250" value={altura} onChange={e => setAltura(e.target.value)}
             />
           </div>
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbMeta">{t('Objetivo principal')}</label>
-            <select id="onbMeta" className="input" value={meta} onChange={e => setMeta(e.target.value)}>
-              <option value="massa">{t('Ganho de massa')}</option>
-              <option value="forca">{t('Aumento de força')}</option>
-              <option value="emagrecer">{t('Emagrecimento')}</option>
-              <option value="definicao">{t('Definição muscular')}</option>
-              <option value="saude">{t('Saúde e bem-estar')}</option>
-              <option value="resistencia">{t('Resistência / Condicionamento')}</option>
-            </select>
-          </div>
+          {usesPlan && (
+            <div className="profile-field">
+              <label className="profile-field__label" htmlFor="onbMeta">{t('Objetivo principal')}</label>
+              <select id="onbMeta" className="input" value={meta} onChange={e => setMeta(e.target.value)}>
+                <option value="massa">{t('Ganho de massa')}</option>
+                <option value="forca">{t('Aumento de força')}</option>
+                <option value="emagrecer">{t('Emagrecimento')}</option>
+                <option value="definicao">{t('Definição muscular')}</option>
+                <option value="saude">{t('Saúde e bem-estar')}</option>
+                <option value="resistencia">{t('Resistência / Condicionamento')}</option>
+              </select>
+            </div>
+          )}
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbNivel">{t('Nível de experiência')}</label>
             <select id="onbNivel" className="input" value={nivel} onChange={e => setNivel(e.target.value)}>
@@ -130,16 +140,18 @@ export default function OnboardingScreen() {
               <option value="avancado">{t('Avançado')}</option>
             </select>
           </div>
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
-            <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
-              <option value="academia">{t('Academia')}</option>
-              <option value="condominio">{t('Academia do condomínio')}</option>
-              <option value="casa">{t('Em casa')}</option>
-            </select>
-          </div>
+          {usesPlan && (
+            <div className="profile-field">
+              <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
+              <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
+                <option value="academia">{t('Academia')}</option>
+                <option value="condominio">{t('Academia do condomínio')}</option>
+                <option value="casa">{t('Em casa')}</option>
+              </select>
+            </div>
+          )}
           <button className="btn btn--primary btn--full" disabled={busy} onClick={handleSubmit}>
-            {busy ? t('Gerando seu plano…') : t('Gerar meu treino')}
+            {busy ? (usesPlan ? t('Gerando seu plano…') : t('Salvando…')) : usesPlan ? t('Gerar meu treino') : t('Começar')}
           </button>
           <p className="auth-form__msg auth-form__msg--error">{msg}</p>
         </div>

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 const { st, hl } = vi.hoisted(() => ({
-  st: { fetchSettings: vi.fn(), saveSetting: vi.fn() },
+  st: { fetchSettings: vi.fn(), saveSetting: vi.fn(), fetchModuleStats: vi.fn() },
   hl: { fetchHealth: vi.fn() },
 }));
 
@@ -28,11 +28,16 @@ describe('AppSettings', () => {
     moved: { enabled: false, url: '' },
     season: { enabled: false, periods: [] },
     minVersion: { version: '', mode: 'warn', message: '' },
+    modules: { enabled: [] },
   };
 
   beforeEach(() => {
     st.fetchSettings.mockResolvedValue(base);
     st.saveSetting.mockResolvedValue();
+    st.fetchModuleStats.mockResolvedValue({
+      musculacao: { users: 120, new30: 10, program: 0, runners30: 1, runs30: 2, km30: 8 },
+      corrida: { users: 4, new30: 2, program: 3, runners30: 3, runs30: 9, km30: 41.5 },
+    });
   });
 
   const saveButtons = () => screen.getAllByRole('button', { name: 'Salvar' });
@@ -183,10 +188,28 @@ describe('AppSettings', () => {
   it('recursos: alterna uma flag preservando as demais', async () => {
     render(<AppSettings />);
     await screen.findByText('Recursos do app');
-    expect(screen.getAllByText('Desligado').length).toBe(1);
-    const flagBoxes = screen.getAllByRole('checkbox').slice(2);
+    expect(screen.getAllByText('Desligado').length).toBe(2); // a flag e o módulo de corrida
+    const flagBoxes = screen.getAllByRole('checkbox').slice(3);
     fireEvent.click(flagBoxes[0]);
     await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('flags', { feedback: false, fotos_progresso: false }, 'adm1'));
+  });
+});
+
+describe('AppSettings → módulos de esporte', () => {
+  it('libera a corrida e mostra os números do módulo', async () => {
+    st.fetchSettings.mockResolvedValue({
+      maintenance: { enabled: false, message: '' },
+      banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 2 },
+      flags: {}, moved: { enabled: false, url: '' }, season: { enabled: false, periods: [] },
+      minVersion: { version: '', mode: 'warn', message: '' }, modules: { enabled: [] },
+    });
+    st.saveSetting.mockResolvedValue();
+    st.fetchModuleStats.mockResolvedValue({ corrida: { users: 4, new30: 2, program: 3, runners30: 3, runs30: 9, km30: 41.5 } });
+    render(<AppSettings />);
+    await screen.findByText('Módulos de esporte');
+    expect(await screen.findByText(/4 contas no módulo · 3 com programa/)).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('checkbox')[2]);
+    await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('modules', { enabled: ['corrida'] }, 'adm1'));
   });
 });
 

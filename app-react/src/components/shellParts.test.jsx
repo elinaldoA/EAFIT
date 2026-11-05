@@ -78,6 +78,11 @@ describe('BottomNav', () => {
     expect(onChange).toHaveBeenCalledWith('nutricao');
   });
 
+  it('mostra só as abas do módulo de esporte, na ordem dele', () => {
+    render(<BottomNav active="perfil" onChange={() => {}} tabs={['perfil', 'treino', 'inexistente']} />);
+    expect(screen.getAllByRole('button').map(b => b.textContent)).toEqual(['Perfil', 'Treino']);
+  });
+
   it('mostra a bolinha de não lidos só quando maior que zero', () => {
     render(<BottomNav active="treino" onChange={() => {}} badges={{ perfil: 2, dash: 0 }} />);
     expect(screen.getByLabelText('2 não lido(s)')).toBeTruthy();

@@ -18,6 +18,9 @@ export function useHashTab(tabs, fallback) {
 
   useEffect(() => {
     function sync() { setTabState(tabFromHash(tabs, fallback)); }
+    // As abas mudam com o módulo de esporte (ex.: a conta carrega depois da
+    // primeira tela e a pessoa é do EAFIT Run): relê o hash com as abas novas.
+    sync();
     window.addEventListener('popstate', sync);
     window.addEventListener('hashchange', sync);
     return () => {

@@ -104,7 +104,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers, leagueResults,
-    proteinLogs, customFoods, nutritionEntries,
+    proteinLogs, customFoods, nutritionEntries, runs,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -124,6 +124,7 @@ export async function gatherUserData(userId) {
     safe('proteinLogs', () => fetchProteinLogsRange(userId, EPOCH), []),
     safe('customFoods', () => fetchCustomFoods(userId), []),
     safe('nutritionEntries', () => fetchEntriesRange(userId, EPOCH), []),
+    safe('runs', () => fetchMyRuns(userId), []),
   ]);
 
   return {
@@ -131,7 +132,7 @@ export async function gatherUserData(userId) {
     profile,
     workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
-    weightLogs, bodyMeasurements, dailyCheckins,
+    weightLogs, bodyMeasurements, dailyCheckins, runs,
     progressPhotos: photos, waterLogs, proteinLogs, customFoods, nutritionEntries,
     discomfortReports, achievements,
     challenges, friendProfile, friends,
@@ -139,6 +140,16 @@ export async function gatherUserData(userId) {
     feedback, notifications, surveyAnswers, leagueResults,
     incomplete,
   };
+}
+
+// Corridas do EAFIT Run (modules/corrida/runs.js), com tempo por km.
+async function fetchMyRuns(userId) {
+  const { data, error } = await db.from('runs')
+    .select('run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes')
+    .eq('user_id', userId)
+    .order('started_at');
+  if (error) throw error;
+  return data || [];
 }
 
 // Conta e dados de perfil (nome, peso, altura, meta, preferências). Fica de

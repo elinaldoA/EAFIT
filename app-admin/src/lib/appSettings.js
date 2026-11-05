@@ -19,6 +19,13 @@ export const KNOWN_FLAGS = [
   { key: 'metas_carga', label: 'Metas de carga', hint: 'Metas com prazo e projeção em Dashboard → Recordes, e a meta no exercício durante o treino.' },
 ];
 
+// Módulos de esporte ainda não lançados para todos (released: false em
+// app-react/src/modules/registry.js). Liberado aqui = qualquer pessoa pode
+// escolher o esporte no cadastro e no Perfil do app.
+export const SPORT_MODULES = [
+  { key: 'corrida', label: '🏃 EAFIT Run (corrida)', hint: 'Abas Início (feed de corridas dos amigos com aplausos), Gravar (corrida ao vivo com GPS e voz, programa 5K/10K/meia opcional), Desafios (do mês e km da semana entre amigos) e Você (totais e recordes). Sem aba de musculação. Liberar mostra "Seu esporte" no cadastro e "Meu esporte" no Perfil.' },
+];
+
 export const BANNER_LEVELS = [
   { value: 'info', label: 'Informação' },
   { value: 'success', label: 'Novidade' },
@@ -32,6 +39,7 @@ export const DEFAULT_SETTINGS = {
   moved: { enabled: false, url: '' },
   season: { enabled: false, periods: [] },
   minVersion: { version: '', mode: 'warn', message: '' },
+  modules: { enabled: [] },
 };
 
 // Temas de temporada que o app e o site sabem desenhar (SEASONS em
@@ -107,7 +115,29 @@ export function normalizeSettings(rows) {
       mode: map.min_version?.mode === 'block' ? 'block' : 'warn',
       message: String(map.min_version?.message || ''),
     },
+    modules: {
+      enabled: Array.isArray(map.modules?.enabled)
+        ? [...new Set(map.modules.enabled.filter(k => SPORT_MODULES.some(m => m.key === k)))]
+        : [],
+    },
   };
+}
+
+// Liga/desliga um módulo na lista de liberados (sem repetir, na ordem de SPORT_MODULES).
+export function toggleModule(enabled, key, on) {
+  const set = new Set(enabled || []);
+  if (on) set.add(key); else set.delete(key);
+  return SPORT_MODULES.map(m => m.key).filter(k => set.has(k));
+}
+
+// Números de cada módulo (admin_module_stats): { musculacao: {...}, corrida: {...} }.
+export async function fetchModuleStats() {
+  const { data, error } = await db.rpc('admin_module_stats');
+  if (error) throw error;
+  return Object.fromEntries((data || []).map(r => [r.ms_module, {
+    users: Number(r.ms_users) || 0, new30: Number(r.ms_new30) || 0, program: Number(r.ms_program) || 0,
+    runners30: Number(r.ms_runners30) || 0, runs30: Number(r.ms_runs30) || 0, km30: Number(r.ms_km30) || 0,
+  }]));
 }
 
 // season: { enabled, periods: [{ theme, startsOn, endsOn }] }. Mesma leitura

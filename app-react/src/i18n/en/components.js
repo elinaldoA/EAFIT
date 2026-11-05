@@ -385,6 +385,11 @@ export default {
   'Duração (segundos)': 'Duration (seconds)',
   '⏱ Cronometrar': '⏱ Time it',
   'Musculação': 'Weight training',
+  'Seu esporte': 'Your sport',
+  'Meu esporte': 'My sport',
+  'Trocar de esporte': 'Switch sport',
+  '✅ Agora você está no {v1}': '✅ You are now on {v1}',
+  'Cada esporte tem sua versão do EAFIT, com treinos, telas e cores próprios. Seus dados continuam os mesmos.': 'Each sport has its own version of EAFIT, with its own workouts, screens and colors. Your data stays the same.',
   'Gerando seu plano…': 'Building your plan…',
   'Gerar meu treino': 'Generate my workout',
 

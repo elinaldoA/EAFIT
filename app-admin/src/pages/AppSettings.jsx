@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
-  KNOWN_FLAGS, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
+  KNOWN_FLAGS, SPORT_MODULES, toggleModule, fetchModuleStats, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
   SEASON_THEMES, isValidSeasonWindow as isValidPeriod, seasonScheduleError, seasonStatus, seasonThemeLabel, sortPeriods, withDefaultPeriods,
 } from '../lib/appSettings';
 import { todayStr } from '../lib/community';
@@ -168,6 +168,64 @@ function BannerCard({ saved, adminId, onSaved }) {
         <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(saved); setMsg(''); }}>Desfazer</button>
         <SectionMessage msg={msg} />
       </div>
+    </div>
+  );
+}
+
+function ModulesCard({ saved, adminId, onSaved }) {
+  const [busyKey, setBusyKey] = useState('');
+  const [msg, setMsg] = useState('');
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    fetchModuleStats().then(setStats).catch(err => setMsg(`Erro nos números: ${err.message}`));
+  }, []);
+
+  async function toggle(key, on) {
+    setBusyKey(key);
+    setMsg('');
+    try {
+      await saveSetting('modules', { enabled: toggleModule(saved.enabled, key, on) }, adminId);
+      setMsg(on ? 'Liberado. Aparece no app na próxima leitura da configuração (até 5 minutos).' : 'Desligado. Quem já estava no módulo volta para a musculação.');
+      await onSaved();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusyKey('');
+    }
+  }
+
+  const base = stats?.musculacao;
+  return (
+    <div className="card stack" style={{ gap: 6 }}>
+      <h2 className="section-title">Módulos de esporte</h2>
+      <p className="user-detail__meta" style={{ margin: '0 0 8px' }}>
+        Cada esporte é uma versão do app com marca EAFIT. Desligado, ninguém vê o módulo (nem o seletor de esporte); as corridas já registradas continuam salvas.
+      </p>
+      {base && <div className="user-detail__meta">🏋️ Musculação: {base.users} contas · {base.new30} novas em 30 dias</div>}
+      {SPORT_MODULES.map(m => {
+        const on = saved.enabled.includes(m.key);
+        const s = stats?.[m.key];
+        return (
+          <div className="flag-row" key={m.key}>
+            <div>
+              <strong>{m.label}</strong>
+              <div className="user-detail__meta">{m.hint}</div>
+              {m.key === 'corrida' && stats && (
+                <div className="user-detail__meta">
+                  {s?.users || 0} contas no módulo · {s?.program || 0} com programa ·
+                  {' '}{(s?.runners30 || 0) + (base?.runners30 || 0)} correram em 30 dias · {(s?.runs30 || 0) + (base?.runs30 || 0)} corridas · {((s?.km30 || 0) + (base?.km30 || 0)).toLocaleString('pt-BR')} km
+                </div>
+              )}
+            </div>
+            <label className="switch-row">
+              <input type="checkbox" checked={on} disabled={busyKey === m.key} onChange={e => toggle(m.key, e.target.checked)} />
+              <span>{on ? 'Liberado' : 'Desligado'}</span>
+            </label>
+          </div>
+        );
+      })}
+      <SectionMessage msg={msg} />
     </div>
   );
 }
@@ -414,6 +472,7 @@ export default function AppSettings() {
       </div>
       <MaintenanceCard key={`m-${JSON.stringify(settings.maintenance)}`} saved={settings.maintenance} adminId={adminUser?.id} onSaved={load} />
       <BannerCard key={`b-${settings.banner.version}-${settings.banner.enabled}`} saved={settings.banner} adminId={adminUser?.id} onSaved={load} />
+      <ModulesCard saved={settings.modules} adminId={adminUser?.id} onSaved={load} />
       <FlagsCard saved={settings.flags} adminId={adminUser?.id} onSaved={load} />
       <MinVersionCard key={`v-${JSON.stringify(settings.minVersion)}`} saved={settings.minVersion} adminId={adminUser?.id} onSaved={load} />
       <MovedCard key={`mv-${JSON.stringify(settings.moved)}`} saved={settings.moved} adminId={adminUser?.id} onSaved={load} />

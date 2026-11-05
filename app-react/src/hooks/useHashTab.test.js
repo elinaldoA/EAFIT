@@ -30,6 +30,15 @@ describe('useHashTab', () => {
     expect(window.location.hash).toBe('#access_token=abc&type=recovery');
   });
 
+  it('abas novas (troca de módulo de esporte) relêem o hash', () => {
+    window.history.replaceState(null, '', '/#correr');
+    const RUN = ['correr', 'treino', 'perfil'];
+    const { result, rerender } = renderHook(({ tabs, fallback }) => useHashTab(tabs, fallback), { initialProps: { tabs: TABS, fallback: 'treino' } });
+    expect(result.current[0]).toBe('treino');
+    rerender({ tabs: RUN, fallback: 'correr' });
+    expect(result.current[0]).toBe('correr');
+  });
+
   it('setTab muda a aba e empilha no histórico', () => {
     const { result } = renderHook(() => useHashTab(TABS, 'treino'));
     const before = window.history.length;

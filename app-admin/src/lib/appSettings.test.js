@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('./supabase', () => ({ db: {} }));
 
-import { normalizeSettings, isValidLink, isValidMovedUrl, nextBannerVersion, DEFAULT_SETTINGS } from './appSettings';
+import { normalizeSettings, isValidLink, isValidMovedUrl, nextBannerVersion, DEFAULT_SETTINGS, toggleModule } from './appSettings';
 
 describe('normalizeSettings', () => {
   it('sem linhas devolve o padrão', () => {
@@ -21,6 +21,19 @@ describe('normalizeSettings', () => {
     ]);
     expect(s.maintenance).toEqual({ enabled: true, message: 'Volto já' });
     expect(s.flags).toEqual({ fotos_progresso: false });
+  });
+});
+
+describe('módulos de esporte', () => {
+  it('lê só módulos conhecidos, sem repetir', () => {
+    expect(normalizeSettings([{ key: 'modules', value: { enabled: ['corrida', 'corrida', 'xadrez'] } }]).modules).toEqual({ enabled: ['corrida'] });
+    expect(normalizeSettings([{ key: 'modules', value: { enabled: 'corrida' } }]).modules).toEqual({ enabled: [] });
+  });
+
+  it('liga e desliga um módulo na lista', () => {
+    expect(toggleModule([], 'corrida', true)).toEqual(['corrida']);
+    expect(toggleModule(['corrida'], 'corrida', true)).toEqual(['corrida']);
+    expect(toggleModule(['corrida'], 'corrida', false)).toEqual([]);
   });
 });
 

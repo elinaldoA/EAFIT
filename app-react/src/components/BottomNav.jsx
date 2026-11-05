@@ -1,6 +1,7 @@
 import { t } from '../lib/i18n';
 import { useSeason } from '../hooks/useSeason';
 import { seasonNavIcon } from './seasonIcons';
+import { BASE_TABS } from '../modules/registry';
 const ITEMS = [
   { key: 'treino', label: t('Treino') },
   { key: 'historico', label: t('Histórico') },
@@ -49,11 +50,15 @@ const ICONS = {
   ),
 };
 
-export default function BottomNav({ active, onChange, badges = {} }) {
+// `tabs`: abas do módulo de esporte (modules/registry.js), na ordem;
+// `extraItems`: as abas próprias dele ({ key, label, icon }).
+export default function BottomNav({ active, onChange, badges = {}, tabs = BASE_TABS, extraItems = [] }) {
   const { theme } = useSeason();
+  const all = [...ITEMS, ...extraItems];
+  const items = tabs.map(key => all.find(item => item.key === key)).filter(Boolean);
   return (
     <nav className="bottom-nav" aria-label={t('Navegação principal')}>
-      {ITEMS.map(item => (
+      {items.map(item => (
         <button
           key={item.key}
           type="button"
@@ -61,7 +66,7 @@ export default function BottomNav({ active, onChange, badges = {} }) {
           aria-current={active === item.key ? 'page' : undefined}
           onClick={() => onChange(item.key)}
         >
-          <span className="nav-item__icon" aria-hidden="true">{seasonNavIcon(theme, item.key, ICONS[item.key])}</span>
+          <span className="nav-item__icon" aria-hidden="true">{seasonNavIcon(theme, item.key, item.icon || ICONS[item.key])}</span>
           <span>{item.label}</span>
           {badges[item.key] > 0 && <span className="trainer-badge" aria-label={t('{v1} não lido(s)', { v1: badges[item.key] })}>{badges[item.key]}</span>}
         </button>

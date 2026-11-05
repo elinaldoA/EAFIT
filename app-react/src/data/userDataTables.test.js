@@ -108,6 +108,7 @@ describe('backup cobre as tabelas do usuário', () => {
     inactivity_surveys: 'controle de envio da pesquisa de inatividade; a resposta chega por link de e-mail, sem login, e o app não lê a tabela',
     feed_events: 'atividade já refletida em treinos/recordes; os amigos veem só apelido',
     feed_reactions: 'reações em publicações de terceiros',
+    run_kudos: 'aplausos em corridas de amigos (reação a conteúdo de terceiros), mesma natureza de feed_reactions',
     feed_reports: 'denúncias de publicações (moderação interna do feed)',
     friendships: 'a lista de amigos (apelido e status) vai em friends',
     friend_profiles: 'código e compartilhamento vão em friendProfile',

@@ -33,6 +33,9 @@ import { NotificationsSection, ExportSection, CoachSection } from '../components
 import ProfileAccountSection from '../components/ProfileAccountSection';
 import ProfileBiometricSection from '../components/ProfileBiometricSection';
 import ProfileSeasonSection from '../components/ProfileSeasonSection';
+import ProfileSportSection from '../components/ProfileSportSection';
+import { useSportModule } from '../hooks/useSportModule';
+import { brandName } from '../lib/sportModule';
 import { useSeason } from '../hooks/useSeason';
 import { SEASONS } from '../lib/season';
 import { SEASON_DECOR_TITLE } from '../lib/seasonLabels';
@@ -78,6 +81,7 @@ export default function PerfilPage({ active }) {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricOn, setBiometricOn] = useState(() => !!getLock(user?.id));
   const season = useSeason();
+  const { module: sport, available: sports } = useSportModule();
 
   useEffect(() => {
     let alive = true;
@@ -287,6 +291,12 @@ export default function PerfilPage({ active }) {
             apelido={apelido} setApelido={setApelido} onSave={handleSavePersonal}
           />
         </CollapsibleCard>
+
+        {sports.length > 1 && (
+          <CollapsibleCard icon={sport.icon} title={t('Meu esporte')} summary={`${sport.label} · ${brandName(sport)}`}>
+            <ProfileSportSection key={sport.id} current={sport} modules={sports} updateProfile={updateProfile} toast={toast} />
+          </CollapsibleCard>
+        )}
 
         <CollapsibleCard icon="📏" title={t('Meu corpo')} summary={bodySummary} defaultOpen={cardToOpen === 'corpo'}>
           <ProfileBodySection

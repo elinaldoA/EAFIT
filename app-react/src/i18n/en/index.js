@@ -9,5 +9,6 @@ import extra from './extra';
 import trainer from './trainer';
 import tools from './tools';
 import nutrition from './nutrition';
+import run from './run';
 
-export default { ...components, ...libs, ...pages, ...dates, ...extra, ...trainer, ...tools, ...nutrition };
+export default { ...components, ...libs, ...pages, ...dates, ...extra, ...trainer, ...tools, ...nutrition, ...run };

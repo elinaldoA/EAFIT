@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { ThemeProvider } from './context/ThemeContext';
@@ -50,6 +50,8 @@ import { useUnreadMessages } from './hooks/useUnreadMessages';
 import { useTrainerGoalsSync } from './hooks/useTrainerGoalsSync';
 import { useSyncLang } from './hooks/useSyncLang';
 import { NAV_EVENT } from './lib/appNav';
+import { useSportModule } from './hooks/useSportModule';
+import { applyModuleTheme, brandName } from './lib/sportModule';
 
 import { t } from './lib/i18n';
 import { importPage } from './lib/chunkReload';
@@ -59,6 +61,9 @@ const HidratacaoPage = lazy(() => importPage(() => import('./pages/HidratacaoPag
 const NutricaoPage = lazy(() => importPage(() => import('./pages/NutricaoPage')));
 const DashPage = lazy(() => importPage(() => import('./pages/DashPage')));
 const PerfilPage = lazy(() => importPage(() => import('./pages/PerfilPage')));
+
+const noSubscribe = () => () => {};
+const notBusy = () => false;
 
 function PageFallback() {
   return (
@@ -70,12 +75,16 @@ function PageFallback() {
   );
 }
 
-const TABS = ['treino', 'historico', 'hidratacao', 'nutricao', 'dash', 'perfil'];
-
 function Shell() {
   const { user, authLoading, recoveryMode } = useAuth();
   const { config } = useAppConfig();
-  const [page, setPage] = useHashTab(TABS, 'treino');
+  // Versão do app do esporte da pessoa (modules/registry.js): abas, cores e marca.
+  const { module: sport } = useSportModule();
+  const [page, setPage] = useHashTab(sport.tabs, sport.defaultTab);
+  useEffect(() => { applyModuleTheme(sport.id); }, [sport.id]);
+  // Módulo ocupado (ex.: corrida rodando): manutenção e atualização obrigatória
+  // esperam o fim — trocar a tela inteira mataria o GPS e o cronômetro.
+  const moduleBusy = useSyncExternalStore(sport.busy?.subscribe || noSubscribe, sport.busy?.get || notBusy);
   const { isTrainer, mode, setMode } = useTrainerMode(user?.id);
   const programKind = useProgram(user?.id);
   const unreadMessages = useUnreadMessages(user?.id);
@@ -135,11 +144,11 @@ function Shell() {
   if (movedUrl) return <MovedScreen url={movedUrl} />;
 
   // Manutenção ligada no painel admin: bloqueia o app inteiro (antes até do login).
-  if (config.maintenance.enabled) return <MaintenanceScreen message={config.maintenance.message} />;
+  if (config.maintenance.enabled && !moduleBusy) return <MaintenanceScreen message={config.maintenance.message} />;
 
   // Versão mínima do painel: abaixo dela, 'block' para tudo e 'warn' mostra a faixa.
   const outdated = isOutdated(config.minVersion?.version);
-  if (outdated && config.minVersion.mode === 'block') return <ForceUpdateScreen message={config.minVersion.message} />;
+  if (outdated && config.minVersion.mode === 'block' && !moduleBusy) return <ForceUpdateScreen message={config.minVersion.message} />;
 
   if (unsubscribeToken) return <EmailUnsubscribeScreen token={unsubscribeToken} onClose={() => setUnsubscribeToken(null)} />;
   if (surveyLink) return <InactivitySurveyScreen token={surveyLink.token} reason={surveyLink.reason} onClose={() => setSurveyLink(null)} />;
@@ -148,6 +157,7 @@ function Shell() {
   if (user && recoveryMode) return <div className="shell"><PasswordRecoveryScreen /></div>;
 
   const studentView = !!user && !trainerView && !programView;
+  const ModulePage = sport.pages?.[page];
   const needsOnboarding = studentView && !user.user_metadata?.peso;
 
   return (
@@ -170,10 +180,12 @@ function Shell() {
         <AvatarProvider>
           <WorkoutProvider>
             <ReminderScheduler />
+            {sport.Host && <Suspense fallback={null}><sport.Host /></Suspense>}
             <TrainerInvitePrompt />
             <div className="app-screen" style={{ display: 'flex' }}>
               <header className="topbar">
                 <TopbarProfile />
+                {sport.name && <span className="module-brand">{brandName(sport)}</span>}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {isTrainer && (
                     <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMode('trainer')}>{t('🧑‍🏫 Personal')}</button>
@@ -190,6 +202,7 @@ function Shell() {
                 {/* key={page}: trocar de aba limpa o erro da aba anterior */}
                 <ErrorBoundary variant="page" key={`${page}:${navSeq}`}>
                 <Suspense fallback={<PageFallback />}>
+                  {ModulePage && <ModulePage active />}
                   {page === 'treino' && <TreinoPage />}
                   {page === 'historico' && <HistoricoPage />}
                   {page === 'hidratacao' && <HidratacaoPage active={page === 'hidratacao'} />}
@@ -200,8 +213,8 @@ function Shell() {
                 </ErrorBoundary>
               </main>
 
-              <BottomNav active={page} onChange={setPage} badges={{ perfil: unreadMessages }} />
-              <Tutorial role="aluno" userId={user.id} onNavigate={setPage} />
+              <BottomNav active={page} onChange={setPage} badges={{ perfil: unreadMessages }} tabs={sport.tabs} extraItems={sport.navItems} />
+              {sport.tutorial && <Tutorial role="aluno" userId={user.id} onNavigate={setPage} />}
             </div>
           </WorkoutProvider>
         </AvatarProvider>

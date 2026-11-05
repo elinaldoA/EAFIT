@@ -15,6 +15,8 @@ export const DEFAULT_CONFIG = {
   experiments: {},
   // Versão mínima do app (painel → Configurações): 'warn' mostra faixa, 'block' tela cheia.
   minVersion: { version: '', mode: 'warn', message: '' },
+  // Módulos de esporte ainda não lançados que o painel liberou (lib/sportModule.js).
+  modules: { enabled: [] },
 };
 
 const BANNER_LEVELS = ['info', 'warning', 'success'];
@@ -83,6 +85,11 @@ export function normalizeConfig(rows, today = todayInAppZone(), experimentRows =
       version: /^\d+(\.\d+){0,2}$/.test(str(map.min_version?.version)) ? str(map.min_version.version) : '',
       mode: map.min_version?.mode === 'block' ? 'block' : 'warn',
       message: str(map.min_version?.message),
+    },
+    modules: {
+      enabled: Array.isArray(map.modules?.enabled)
+        ? [...new Set(map.modules.enabled.map(str).filter(id => /^[a-z0-9_-]+$/.test(id)))]
+        : [],
     },
   };
 }

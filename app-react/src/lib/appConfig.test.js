@@ -22,6 +22,12 @@ describe('normalizeConfig', () => {
     expect(cfg.flags).toEqual({ fotos_progresso: false, convite_amigos: true });
   });
 
+  it('lê os módulos de esporte liberados, sem repetidos nem ids inválidos', () => {
+    const cfg = normalizeConfig([{ key: 'modules', value: { enabled: ['corrida', ' corrida ', 'Luta!', 7, 'beach_tennis'] } }]);
+    expect(cfg.modules).toEqual({ enabled: ['corrida', 'beach_tennis'] });
+    expect(normalizeConfig([{ key: 'modules', value: { enabled: 'corrida' } }]).modules).toEqual({ enabled: [] });
+  });
+
   it('banner sem mensagem não aparece, mesmo ligado', () => {
     const cfg = normalizeConfig([{ key: 'banner', value: { enabled: true, message: '   ' } }]);
     expect(cfg.banner.enabled).toBe(false);

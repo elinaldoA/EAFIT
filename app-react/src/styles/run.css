@@ -1,0 +1,287 @@
+/* ============================================================
+   EAFIT RUN (modules/corrida)
+   Aba Correr, aba Corridas e a corrida ao vivo em tela cheia. Usa os tokens
+   do app: a cor é o laranja da marca, nos temas escuro e claro.
+============================================================ */
+
+/* ---- Corrida ao vivo (tela cheia, abaixo dos modais e do toast) ---- */
+.run-live {
+  position: fixed;
+  inset: 0;
+  z-index: 990;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: max(var(--sp-4), env(safe-area-inset-top)) var(--sp-4) max(var(--sp-4), env(safe-area-inset-bottom));
+  background: var(--bg);
+  overflow-y: auto;
+  animation: liveIn 0.22s cubic-bezier(.2, .8, .2, 1) both;
+}
+.run-live__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.run-live__brand {
+  font-weight: 800;
+  letter-spacing: .04em;
+  color: var(--primary);
+}
+.run-live__session { display: flex; flex-direction: column; gap: 2px; color: var(--text-muted); font-size: var(--fs-sm); }
+.run-live__session strong { color: var(--text); font-size: var(--fs-lg); }
+.run-live__title { margin: 0; font-size: var(--fs-xl); }
+
+.run-live__clock {
+  margin: var(--sp-4) 0 0;
+  text-align: center;
+  font-size: clamp(3.5rem, 18vw, 5.5rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+}
+.run-live__clock--paused { color: var(--text-dim); }
+.run-live__clock--small { font-size: 2.5rem; margin: 0; }
+.run-live__paused { text-align: center; color: var(--warning); font-weight: 700; text-transform: uppercase; font-size: var(--fs-sm); }
+
+.run-live__phase {
+  align-self: center;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+}
+.run-live__phase--run { background: var(--primary); color: var(--on-primary); }
+.run-live__phase--walk { background: var(--surface-3); color: var(--text); }
+
+.run-live__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+.run-live__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--sp-3) var(--sp-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.run-live__value { font-size: var(--fs-xl); font-weight: 800; font-variant-numeric: tabular-nums; }
+.run-live__label { font-size: var(--fs-xs); color: var(--text-muted); text-align: center; }
+
+.run-live__target { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); color: var(--text-muted); }
+.run-live__bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.run-live__bar span { display: block; height: 100%; background: var(--primary); transition: width .4s ease; }
+
+.run-live__gps { font-size: var(--fs-sm); color: var(--text-muted); text-align: center; }
+.run-live__splits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.run-live__actions { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.run-live__btn { min-height: 56px; font-size: var(--fs-lg); }
+.run-live__discard { align-self: center; color: var(--text-dim); }
+.run-live textarea { font: inherit; resize: vertical; }
+
+.run-effort { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.run-effort__btn {
+  min-height: var(--tap-min);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+}
+.run-effort__btn--on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+
+/* ---- Aba Correr ---- */
+.run-setup__title { margin: 0; font-size: var(--fs-xl); }
+.run-setup__text { margin: 0; color: var(--text-muted); }
+.run-setup__actions { display: flex; justify-content: flex-end; gap: var(--sp-2); flex-wrap: wrap; }
+
+.run-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.run-chip {
+  min-height: var(--tap-min);
+  padding: 0 var(--sp-4);
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 700;
+}
+.run-chip--on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+
+.run-today__done { margin: 0; color: var(--success); font-weight: 700; }
+.run-record__gps { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); text-align: center; }
+.run-record__gps--tracking { color: var(--success, var(--text)); }
+.run-today__gps { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-muted); min-height: var(--tap-min); }
+
+.run-week { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.run-week__day {
+  display: grid;
+  grid-template-columns: 44px 1fr 24px;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+}
+.run-week__day--today { border-color: var(--primary); }
+.run-week__name { font-weight: 700; color: var(--text-muted); }
+.run-week__day--today .run-week__name { color: var(--primary); }
+.run-week__mark { color: var(--success); font-weight: 800; text-align: center; }
+
+/* ---- Aba Corridas ---- */
+.run-records { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); }
+@media (max-width: 380px) { .run-records { grid-template-columns: repeat(2, 1fr); } }
+
+.run-weeks { flex-direction: row; align-items: flex-end; justify-content: space-between; height: 170px; gap: 4px; }
+.run-weeks__col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; }
+.run-weeks__bar { width: 70%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--primary); }
+.run-weeks__value, .run-weeks__label { font-size: 10px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.run-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.run-item__head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: none;
+  border: 0;
+  color: var(--text);
+  text-align: left;
+}
+.run-item__date { font-size: var(--fs-sm); color: var(--text-muted); }
+.run-item__main { display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+.run-item__main span { font-size: var(--fs-sm); color: var(--text-muted); }
+.run-item__kind { font-size: var(--fs-xs); color: var(--primary); font-weight: 700; text-align: right; }
+.run-item__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-sm); }
+.run-item__body p { margin: 0; }
+.run-item__splits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 4px var(--sp-3);
+  font-variant-numeric: tabular-nums;
+}
+.run-item__notes { color: var(--text-muted); white-space: pre-wrap; }
+
+/* ---- Desenho do percurso (sem mapa de fundo) ---- */
+.run-route {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.run-route--live { max-height: 130px; }
+.run-route__line { fill: none; stroke: var(--primary); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.run-route__start { fill: var(--success); stroke: var(--bg); stroke-width: 2; }
+.run-route__end { fill: var(--primary); stroke: var(--bg); stroke-width: 2; }
+.run-live__route-preview { display: flex; flex-direction: column; gap: 6px; }
+
+/* ---- Aba Gravar ---- */
+.run-record { align-items: center; text-align: center; gap: var(--sp-3); }
+.run-record__week { display: flex; gap: var(--sp-5); font-size: var(--fs-sm); color: var(--text-muted); }
+.run-record__week strong { color: var(--text); font-size: var(--fs-lg); }
+.run-record__start {
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--primary);
+  color: var(--on-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  box-shadow: 0 0 0 10px var(--primary-glow), 0 12px 30px rgba(0, 0, 0, .25);
+  transition: transform .12s ease;
+}
+.run-record__start:active { transform: scale(.96); }
+.run-record__play { font-size: 2.6rem; line-height: 1; }
+.run-record__hint { margin: 0; color: var(--text-muted); font-size: var(--fs-sm); }
+.run-plan-cta { text-align: left; color: var(--text); cursor: pointer; }
+.run-plan-cta span { color: var(--text-muted); font-size: var(--fs-sm); }
+
+/* ---- Aba Início (feed) ---- */
+.run-feed { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-3); }
+.run-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.run-card__head { display: flex; align-items: center; gap: var(--sp-3); }
+.run-card__avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--primary); color: var(--on-primary); font-weight: 800;
+}
+.run-card__who { display: flex; flex-direction: column; font-size: var(--fs-sm); }
+.run-card__who span { color: var(--text-muted); font-size: var(--fs-xs); }
+.run-card__title { margin: 0; font-size: var(--fs-lg); }
+.run-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+.run-card__stats div { display: flex; flex-direction: column; }
+.run-card__stats span { font-size: var(--fs-xs); color: var(--text-muted); }
+.run-card__stats strong { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.run-card__foot { display: flex; justify-content: flex-start; }
+.run-card__kudos {
+  min-height: var(--tap-min);
+  padding: 0 var(--sp-4);
+  border-radius: 999px;
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+}
+.run-card__kudos--on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.run-card__kudos--mine { color: var(--text-muted); border-style: dashed; }
+
+/* ---- Aba Desafios ---- */
+.run-challenges { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-challenge {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.run-challenge--done { border-color: var(--success); }
+.run-challenge__icon { font-size: 1.8rem; text-align: center; }
+.run-challenge__main { display: flex; flex-direction: column; gap: 6px; }
+.run-challenge__meta { font-size: var(--fs-xs); color: var(--text-muted); }
+
+/* ---- Aba Você ---- */
+.run-periods { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.run-periods__item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: var(--sp-3) var(--sp-2);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
+}
+.run-periods__item span { font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.run-periods__item strong { font-size: var(--fs-xl); color: var(--primary); font-variant-numeric: tabular-nums; }
+.run-periods__item small { font-size: var(--fs-xs); color: var(--text-muted); }

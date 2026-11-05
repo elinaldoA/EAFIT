@@ -1,0 +1,30 @@
+/* ============================================================
+   MÓDULOS DE ESPORTE (modules/registry.js, lib/sportModule.js)
+   Cada esporte é uma versão do app com identidade própria, ativa com
+   <html data-module="...">. Um módulo repinta o app trocando os tokens de
+   tokens.css (principalmente --primary, --primary-h e --primary-glow), nos
+   temas escuro e claro, mantendo o contraste de texto. A musculação não
+   marca nada: é o visual padrão.
+
+   Novo módulo:
+     [data-module="corrida"] { --primary: ...; --primary-h: ...; --primary-glow: ...; }
+     [data-theme="light"][data-module="corrida"] { ... }
+============================================================ */
+
+/* Marca do módulo na barra superior: "EAFIT · Run". A marca EAFIT vai em
+   todos os módulos; a musculação não mostra a etiqueta. */
+.module-brand {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--primary);
+  background: var(--primary-glow);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
