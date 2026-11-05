@@ -2,12 +2,13 @@
 //   - nutrição, nos horários das refeições (café, almoço, jantar: 4 de cada) e de hidratação (15h: 12);
 //   - os 6 stories gerais (13h), que antes eram só imagem, agora em vídeo;
 //   - 8 stories gerais das telas novas do app (musculos, carga, recordes...);
-//   - 8 stories para personal trainers (modo Personal: painel, alunos, ficha...).
+//   - 8 stories para personal trainers (modo Personal: painel, alunos, ficha...);
+//   - 5 stories de amigos, liga do mês, treinador por voz e temporada.
 // Feitos só com os prints do app e a trilha eletrônica original (src/lib/reelAudio.js).
 // Cada story usa uma variante visual (cor, fundo e enquadramento: reelRender.js).
 //
 //   node app-admin/scripts/marketing-stories.mjs            (todos)
-//   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua | novas | personal)
+//   ONLY=agua node app-admin/scripts/marketing-stories.mjs (só um grupo: nutri | geral | agua | novas | personal | recursos)
 //
 // Precisa do ffmpeg no PATH. Gera os MP4 em app-react/public/landing/img/marketing/
 // (story-*.mp4) e o SQL dos itens em
@@ -108,6 +109,16 @@ const PERSONAL = [
   ['personal-modelos', 'Seus treinos prontos para reusar', 'Salve modelos e envie para vários alunos.', 'pt-modelos'],
   ['personal-conversa', 'Recado direto no app do aluno', 'Sem misturar com o seu WhatsApp pessoal.', 'pt-conversa'],
   ['personal-agenda', 'Aulas marcadas e confirmadas', 'O aluno confirma a aula pelo app.', 'pt-agenda'],
+];
+
+// Quinta leva (migration 20270110010000): amigos, liga, treinador por voz e
+// temporada. Mesmo texto das artes do feed. ONLY=recursos gera só estes.
+const RECURSOS = [
+  ['amigos', 'Treine junto com os amigos', 'Ranking da semana por dias treinados.', 'amigos'],
+  ['amigos-atividade', 'Comemore os recordes dos amigos', 'Treinos, recordes e sequências de quem treina com você.', 'amigos-atividade'],
+  ['liga', 'Liga do mês: quem treina mais vence', 'Divisões Ouro, Prata e Bronze, com medalha para o top 3.', 'liga'],
+  ['treinador-voz', 'Um treinador falando no seu ouvido', 'Apresenta os exercícios, conta o descanso e comemora recordes.', 'treinador-voz'],
+  ['temporada', 'O app entra no clima de cada data', 'Tema de época e conquista especial para quem treina.', 'temporada-natal'],
 ];
 
 const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por variante
@@ -251,6 +262,15 @@ async function main() {
     for (const [i, [key, title, sub, print]] of PERSONAL.entries()) {
       const file = `story-${key}.mp4`;
       await render(file, { pill: 'PARA PERSONAL', title, sub, variant: (i + 4) % 6, songStart: songStart() }, print);
+      console.log('ok', file);
+    }
+  }
+  // Itens da fila na migration 20270110010000 (com as artes do feed).
+  if (!only || only === 'recursos') {
+    used = 34; // depois de refeições, gerais, telas novas e personal
+    for (const [i, [key, title, sub, print]] of RECURSOS.entries()) {
+      const file = `story-${key}.mp4`;
+      await render(file, { title, sub, variant: (i + 1) % 6, songStart: songStart() }, print);
       console.log('ok', file);
     }
   }

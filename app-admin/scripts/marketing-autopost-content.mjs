@@ -173,6 +173,28 @@ export const ITEMS = [
     closing: 'Comece com o modo Personal do EAFIT.',
     caption: `A primeira semana decide se o aluno fica. 👋\nUm roteiro simples para o aluno novo começar bem.\n\nLink na bio 👇\n\n${TAGS}`,
   },
+  // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
+  // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
+  {
+    key: 'amigos', kind: 'print', print: 'amigos', headline: 'Treine junto com os amigos', sub: 'Ranking da semana por dias treinados.',
+    caption: `Com amigo junto fica mais difícil faltar. 👊\nAdicione os amigos pelo código e dispute o ranking da semana: quem treina mais dias fica no topo.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'amigos-atividade', kind: 'print', print: 'amigos-atividade', headline: 'Comemore os recordes dos amigos', sub: 'Treinos, recordes e sequências de quem treina com você.',
+    caption: `Seu amigo bateu recorde no agachamento? Manda um 🔥\nNo app você acompanha os treinos, recordes e sequências dos amigos e reage com 💪 🔥 👏. Só aparece quem escolheu compartilhar.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'liga', kind: 'print', print: 'liga', headline: 'Liga do mês: quem treina mais vence', sub: 'Divisões Ouro, Prata e Bronze, com medalha para o top 3.',
+    caption: `Todo mês uma liga nova. 🏅\nVocê disputa com quem treina no mesmo ritmo (Ouro, Prata ou Bronze) e os 3 primeiros de cada divisão ganham medalha. No ranking aparece só o seu apelido.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'treinador-voz', kind: 'print', print: 'treinador-voz', headline: 'Um treinador falando no seu ouvido', sub: 'Apresenta os exercícios, conta o descanso e comemora recordes.',
+    caption: `Treina de fone? 🎧\nLigue o treinador por voz: ele apresenta cada exercício, conta o descanso e comemora os seus recordes. Escolha o jeito de falar: animado, zoeira ou calmo.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
+  {
+    key: 'temporada', kind: 'print', print: 'temporada-natal', headline: 'O app entra no clima de cada data', sub: 'Tema de época e conquista especial para quem treina.',
+    caption: `Carnaval, Outubro Rosa, Dia das Bruxas, Novembro Azul, Natal… 🎉\nEm cada data o app ganha um tema e um desafio: treine no período e ganhe uma conquista especial.\n\nLink na bio 👇\n\n${TAGS}`,
+  },
   // Segunda leva (migration 20270101010000): temas novos, nunca publicados antes.
   {
     key: 'erros', later: true, kind: 'slides', headline: '4 erros que fazem o aluno largar o treino',
