@@ -206,7 +206,7 @@ export default function MarketingResults() {
 
       {byPost.length > 0 && (
         <section className="card stack" aria-label="Cadastros por post">
-          <h2 className="section-title">Cadastros por post (Facebook e Threads)</h2>
+          <h2 className="section-title">Cadastros por post</h2>
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
@@ -227,7 +227,8 @@ export default function MarketingResults() {
             </table>
           </div>
           <p className="user-detail__meta">
-            Os posts do Facebook e do Threads saem com um link do app marcado com o id do post; cada cadastro por esse link entra aqui.
+            Os posts do Facebook saem com um link do app marcado com o id do post; cada cadastro por esse link entra aqui.
+            O Threads sai sem link, para não ser tratado como spam (posts antigos dele com link continuam contando).
           </p>
         </section>
       )}

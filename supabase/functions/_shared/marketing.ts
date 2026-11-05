@@ -197,13 +197,13 @@ export function checkPost(platform: Platform, post: Post): string | null {
   return null;
 }
 
-// Facebook e Threads deixam link clicavel na legenda: o post sai com um link do app
-// marcado com o id do post (utm_content), para o painel ligar cada cadastro ao
-// conteudo que o trouxe (Marketing -> Resultados). Instagram nao tem link na legenda
-// e story nao tem legenda. Legenda que ja tem utm_content ou que estouraria o limite
-// da rede sai como esta.
+// O post do Facebook sai com um link do app marcado com o id do post (utm_content),
+// para o painel ligar cada cadastro ao conteudo que o trouxe (Marketing -> Resultados).
+// Threads fica sem: perfil novo postando link no automatico foi suspenso (nov/2026).
+// Instagram nao tem link na legenda e story nao tem legenda. Legenda que ja tem
+// utm_content ou que estouraria o limite da rede sai como esta.
 export function trackedCaption(platform: Platform, post: Pick<Post, 'id' | 'caption' | 'format'>): string {
-  if ((platform !== 'facebook' && platform !== 'threads') || post.format === 'story') return post.caption;
+  if (platform !== 'facebook' || post.format === 'story') return post.caption;
   if (post.caption.includes('utm_content=')) return post.caption;
   const content = post.id.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 8);
   if (!content) return post.caption;

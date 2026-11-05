@@ -587,7 +587,8 @@ export async function fetchConversion(days = 30) {
   }));
 }
 
-// Cadastros e retenção por post do Facebook e do Threads (link marcado com utm_content).
+// Cadastros e retenção por post com link marcado com utm_content (Facebook; o Threads
+// saiu com link só até nov/2026).
 export async function fetchContentConversion(days = 30) {
   const { data, error } = await db.rpc('admin_marketing_content', { days_back: days });
   if (error) throw error;
