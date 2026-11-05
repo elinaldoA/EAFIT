@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  AUTOPOST_LANES, SLOT_LABEL, addQueueItem, fetchAutopost, laneKey, laneLabel, moveQueueItem, queuePosition, removeQueueItem, restoreQueueItem, seasonTag,
+  AUTOPOST_LANES, SLOT_LABEL, addQueueItem, fetchAutopost, laneKey, laneLabel, laneWhen, moveQueueItem, queuePosition, removeQueueItem, restoreQueueItem, seasonTag,
   splitCaption, updateQueueCaption,
 } from '../lib/marketing';
 import Loading from './Loading';
@@ -136,7 +136,7 @@ export default function MarketingQueue({ library = [] }) {
         </div>
         <p className="user-detail__meta">
           O que está aqui sai sozinho, um de cada formato por dia, na ordem da lista. Só dá para mexer no que ainda não saiu.
-          Os horários são fixos: story geral 13h, feed 18h e Reel 20h30.
+          Os horários de cada faixa aparecem no título dela.
         </p>
         {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
 
@@ -157,9 +157,9 @@ export default function MarketingQueue({ library = [] }) {
               <label className="field">
                 <span className="field__label">Horário do story</span>
                 <select className="input" value={draft.slot} onChange={e => setDraft({ ...draft, slot: e.target.value })}>
-                  <option value="">Geral (13h)</option>
+                  <option value="">Geral ({laneWhen(AUTOPOST_LANES.find(l => l.key === 'story'))})</option>
                   {Object.entries(SLOT_LABEL).map(([k, label]) => (
-                    <option key={k} value={k}>{label} ({AUTOPOST_LANES.find(l => l.key === `story:${k}`)?.time})</option>
+                    <option key={k} value={k}>{label} ({laneWhen(AUTOPOST_LANES.find(l => l.key === `story:${k}`))})</option>
                   ))}
                 </select>
               </label>
@@ -211,7 +211,7 @@ export default function MarketingQueue({ library = [] }) {
         const items = state.pending.filter(i => laneKey(i) === f.key);
         return (
           <section key={f.key} className="card stack" aria-label={f.label}>
-            <h3 className="section-title">{f.label} · todo dia às {f.time} ({items.length} na fila)</h3>
+            <h3 className="section-title">{f.label} · {laneWhen(f)} ({items.length} na fila)</h3>
             {items.length === 0 && <p className="user-detail__meta">Fila vazia: nada mais sai deste formato.</p>}
             <ul className="mkt-list">{items.map(itemRow)}</ul>
           </section>

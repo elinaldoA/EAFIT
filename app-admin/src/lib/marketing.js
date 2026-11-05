@@ -497,16 +497,34 @@ export async function setAutopostEnabled(enabled) {
 // Faixas da publicação automática: cada uma publica um item por dia no seu horário
 // (cron em UTC; Brasília é UTC-3, sem horário de verão). Story pode ter um horário
 // de refeição (`slot`): café, almoço, hidratação e jantar, com conteúdo de nutrição.
+// `utc`/`time` valem de segunda a sexta; `weekendUtc`/`weekendTime`, quando há, no
+// sábado e no domingo (migration 20270113010000_marketing_horarios_rendimento.sql).
+// Formatos espaçados para não competirem entre si: feed no pico do almoço, Reel no
+// pico da noite, stories distribuídos pelo dia.
 export const SLOT_LABEL = { cafe: 'Café da manhã', almoco: 'Almoço', agua: 'Hidratação', jantar: 'Jantar' };
 export const AUTOPOST_LANES = [
-  { key: 'story:cafe', format: 'story', slot: 'cafe', utc: [10, 0], time: '7h', label: 'Story · Café da manhã' },
-  { key: 'story:almoco', format: 'story', slot: 'almoco', utc: [15, 0], time: '12h', label: 'Story · Almoço' },
-  { key: 'story', format: 'story', slot: null, utc: [16, 0], time: '13h', label: 'Story' },
+  { key: 'story:cafe', format: 'story', slot: 'cafe', utc: [9, 30], time: '6h30', weekendUtc: [12, 0], weekendTime: '9h', label: 'Story · Café da manhã' },
+  { key: 'feed', format: 'feed', slot: null, utc: [14, 30], time: '11h30', weekendUtc: [13, 30], weekendTime: '10h30', label: 'Feed' },
+  { key: 'story:almoco', format: 'story', slot: 'almoco', utc: [15, 30], time: '12h30', label: 'Story · Almoço' },
   { key: 'story:agua', format: 'story', slot: 'agua', utc: [18, 0], time: '15h', label: 'Story · Hidratação' },
+  { key: 'story', format: 'story', slot: null, utc: [20, 30], time: '17h30', label: 'Story' },
   { key: 'story:jantar', format: 'story', slot: 'jantar', utc: [22, 30], time: '19h30', label: 'Story · Jantar' },
-  { key: 'feed', format: 'feed', slot: null, utc: [21, 0], time: '18h', label: 'Feed' },
-  { key: 'reel', format: 'reel', slot: null, utc: [23, 30], time: '20h30', label: 'Reel' },
+  { key: 'reel', format: 'reel', slot: null, utc: [23, 45], time: '20h45', weekendUtc: [21, 30], weekendTime: '18h30', label: 'Reel' },
 ];
+
+// Quando a faixa sai, para mostrar no painel: "todo dia às 15h" ou
+// "seg a sex às 6h30, sáb e dom às 9h".
+export function laneWhen(lane) {
+  return lane.weekendTime ? `seg a sex às ${lane.time}, sáb e dom às ${lane.weekendTime}` : `todo dia às ${lane.time}`;
+}
+
+// Horário (UTC) da faixa num dia de Brasília (AAAA-MM-DD).
+export function laneAt(lane, day) {
+  const [y, m, d] = day.split('-').map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const [h, min] = (dow === 0 || dow === 6) && lane.weekendUtc ? lane.weekendUtc : lane.utc;
+  return new Date(Date.UTC(y, m - 1, d, h, min));
+}
 const BRT_OFFSET_MS = 3 * 3600 * 1000;
 
 // Faixa de um item da fila: o formato, mais o horário de refeição quando é story de nutrição.
@@ -560,15 +578,14 @@ const SEASON_HORIZON_DAYS = 400;
 // nos próximos SEASON_HORIZON_DAYS dias fica fora da agenda.
 export function autopostSchedule(pending, now = new Date(), season = null) {
   const out = [];
+  const today = brtDay(now);
+  const [ty, tm, td] = today.split('-').map(Number);
   for (const lane of AUTOPOST_LANES) {
-    const first = new Date(now);
-    first.setUTCHours(lane.utc[0], lane.utc[1], 0, 0);
-    if (first <= now) first.setUTCDate(first.getUTCDate() + 1);
     const queue = pending.filter(i => laneKey(i) === lane.key);
-    for (let d = 0; queue.length > 0 && d < SEASON_HORIZON_DAYS; d += 1) {
+    for (let d = 0; queue.length > 0 && d <= SEASON_HORIZON_DAYS; d += 1) {
       if (!queue.some(i => !i.season) && season?.enabled !== true) break;
-      const at = new Date(first);
-      at.setUTCDate(at.getUTCDate() + d);
+      const at = laneAt(lane, new Date(Date.UTC(ty, tm - 1, td + d)).toISOString().slice(0, 10));
+      if (at <= now) continue;
       const theme = seasonOnDay(season, brtDay(at));
       let idx = theme ? queue.findIndex(i => i.season === theme) : -1;
       if (idx < 0) idx = queue.findIndex(i => !i.season);
