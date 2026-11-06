@@ -5,6 +5,7 @@
 import { APP_URL, type EmailContent } from './emailLayout.ts';
 import { INACTIVITY_REASONS, type InactivityReason, reasonLabel } from './inactivity.ts';
 import type { Lang } from './lang.ts';
+import type { Sport } from './sport.ts';
 import type { WhyEmail } from './weeklyEmails.ts';
 
 // Primeiro nome da pessoa (user_metadata.nome, com o apelido como alternativa),
@@ -26,20 +27,38 @@ function greet(lang: Lang, name: string | undefined, content: EmailContent): Ema
   return { ...content, paragraphs: [hello, ...content.paragraphs] };
 }
 
-export function welcomeEmail(lang: Lang, name?: string): EmailContent {
-  return greet(lang, name, lang === 'en'
+export function welcomeEmail(lang: Lang, name?: string, sport: Sport = 'musculacao'): EmailContent {
+  const base = welcomeBase(lang, name);
+  if (sport !== 'corrida') return greet(lang, name, base);
+  const en = lang === 'en';
+  return greet(lang, name, {
+    ...base,
+    paragraphs: [
+      en
+        ? 'So glad you are here! With EAFIT you record your runs with GPS, see your pace and route, take on challenges with friends and watch your progress grow.'
+        : 'Que bom ter você por aqui! No EAFIT você grava suas corridas com GPS, vê ritmo e percurso, entra em desafios com os amigos e acompanha a sua evolução.',
+      ...base.paragraphs.slice(1),
+    ],
+    footnote: en
+      ? 'Turn on notifications in the app and we will remind you to run.'
+      : 'Ative as notificações no app e a gente te lembra de correr.',
+  });
+}
+
+function welcomeBase(lang: Lang, name?: string): EmailContent {
+  return (lang === 'en'
     ? {
       subject: name ? `Welcome to EAFIT, ${name}!` : 'Welcome to EAFIT',
       preheader: 'Your account is ready. Here is how to get started.',
       eyebrow: 'Welcome',
       heading: 'Your account is ready',
       paragraphs: [
-        'So glad you are here! At EAFIT you pick your sport: in strength training you get a plan made for you and log your loads, records and water; in running you record your runs with GPS, see your pace and route and take on challenges with friends. Either way, you watch your progress grow.',
+        'So glad you are here! With EAFIT you get a training plan made for you, you can log your loads and records, keep track of your water and watch your progress grow.',
         'Tip: to keep the app one tap away, open eafit.com.br/app on your phone and choose Install (or Add to Home Screen). Once installed, it even works without internet.',
         'Any question along the way? Just reply to this email, a real person reads it.',
       ],
       cta: { label: 'Open the app', url: APP_URL },
-      footnote: 'Turn on notifications in the app and we will remind you to train or run.',
+      footnote: 'Turn on notifications in the app and we will remind you of your workouts and your water.',
     }
     : {
       subject: name ? `Boas-vindas ao EAFIT, ${name}!` : 'Boas-vindas ao EAFIT',
@@ -47,13 +66,13 @@ export function welcomeEmail(lang: Lang, name?: string): EmailContent {
       eyebrow: 'Boas-vindas',
       heading: 'Sua conta está pronta',
       paragraphs: [
-        'Que bom ter você por aqui! No EAFIT você escolhe o seu esporte: na musculação recebe um plano de treino feito pra você e registra cargas, recordes e a água do dia; na corrida grava seus treinos com GPS, vê ritmo e percurso e entra em desafios com os amigos. Em qualquer um, você vê a sua evolução crescer.',
+        'Que bom ter você por aqui! No EAFIT você recebe um plano de treino feito pra você, registra suas cargas e recordes, acompanha a água do dia e vê a sua evolução crescer.',
         'Uma dica: pra deixar o app a um toque de distância, abra eafit.com.br/app no celular e escolha Instalar (ou Adicionar à tela de início). Depois de instalado, ele funciona até sem internet.',
         'Ficou com alguma dúvida? É só responder a este e-mail, tem uma pessoa de verdade lendo.',
       ],
       cta: { label: 'Abrir o app', url: APP_URL },
-      footnote: 'Ative as notificações no app e a gente te lembra de treinar ou correr.',
-    });
+      footnote: 'Ative as notificações no app e a gente te lembra dos treinos e da água.',
+    }) as EmailContent;
 }
 
 export function accountDeletedEmail(lang: Lang, name?: string): EmailContent {

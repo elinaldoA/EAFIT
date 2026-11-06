@@ -31,12 +31,17 @@ Deno.test('weeklySummaryEmail: números da semana e meta batida ou não', () => 
   assertEquals(hit.cta?.url, 'https://eafit.com.br/app/#dash');
 });
 
-Deno.test('welcomeEmail: neutro, fala dos dois esportes (o cadastro ainda não escolheu)', () => {
+Deno.test('welcomeEmail: só musculação (o módulo de corrida ainda não é público)', () => {
   const pt = welcomeEmail('pt', 'Ana');
-  assertStringIncludes(pt.paragraphs.join(' '), 'musculação');
-  assertStringIncludes(pt.paragraphs.join(' '), 'corrida');
-  assertStringIncludes(pt.footnote ?? '', 'treinar ou correr');
-  assertStringIncludes(welcomeEmail('en').paragraphs.join(' '), 'running');
+  assertStringIncludes(pt.paragraphs.join(' '), 'plano de treino');
+  assertEquals(/corr(ida|er)/i.test(pt.paragraphs.join(' ') + (pt.footnote ?? '')), false);
+  assertEquals(/run/i.test(welcomeEmail('en').paragraphs.join(' ')), false);
+});
+
+Deno.test('welcomeEmail: quem é da corrida recebe só texto de corrida', () => {
+  const pt = welcomeEmail('pt', 'Ana', 'corrida');
+  assertStringIncludes(pt.paragraphs.join(' '), 'corridas com GPS');
+  assertEquals(/muscula|carga|água|treino/i.test(pt.paragraphs.join(' ') + (pt.footnote ?? '')), false);
 });
 
 Deno.test('runWeeklySummaryEmail: km, corridas, comparação e meta', () => {

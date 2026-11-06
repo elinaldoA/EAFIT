@@ -8,6 +8,7 @@ import { corsHeadersFor } from '../_shared/cors.ts';
 import { sendEmail } from '../_shared/email.ts';
 import { renderEmail } from '../_shared/emailLayout.ts';
 import { firstNameOf, shouldSendWelcome, welcomeEmail } from '../_shared/emailTexts.ts';
+import { sportOf } from '../_shared/sport.ts';
 import { langOf } from '../_shared/lang.ts';
 import { inboxFromEmail, saveInbox } from '../_shared/inbox.ts';
 
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
   if (!user.email || !shouldSendWelcome(user)) return json({ sent: false });
 
   const lang = langOf(user.user_metadata);
-  const content = welcomeEmail(lang, firstNameOf(user.user_metadata));
+  const content = welcomeEmail(lang, firstNameOf(user.user_metadata), sportOf(user.user_metadata));
   const result = await sendEmail(user.email, renderEmail(lang, content), { kind: 'boas-vindas' });
   // Só marca quando saiu de verdade: sem os secrets do Gmail ('skipped') ou
   // com falha no envio, a próxima chamada tenta de novo.
