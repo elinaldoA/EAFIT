@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { unsubscribeEmail } from '../lib/emailUnsubscribe';
 import { t } from '../lib/i18n';
+import Wordmark from './Wordmark';
 
 // Tela cheia aberta pelo link de descadastro do rodapé dos e-mails (ver
 // lib/emailUnsubscribe.js): cancela na hora, sem pedir login, e mostra o
@@ -17,7 +18,7 @@ export default function EmailUnsubscribeScreen({ token, onClose }) {
   return (
     <div className="boot maintenance" role="status">
       <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
-      <div className="boot__name">EAFIT</div>
+      <div className="boot__name"><Wordmark /></div>
       {state === 'working' && <p className="maintenance__text">{t('Cancelando o envio de e-mails…')}</p>}
       {state === 'done' && (
         <>

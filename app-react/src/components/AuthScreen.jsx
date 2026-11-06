@@ -8,6 +8,7 @@ import { recordVisit } from '../lib/pageVisits';
 import { visibleInvite, fetchInviteName } from '../lib/trainerInvite';
 import { trackAuthEvent } from '../lib/tracking';
 import { t } from '../lib/i18n';
+import Wordmark from './Wordmark';
 
 // Só o formato básico (algo@algo.algo); o resto o Supabase confere.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -110,7 +111,7 @@ export default function AuthScreen() {
         <LanguageSwitch id="authLang" compact />
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="" />
-          <h1 className="auth-logo__name">EAFIT</h1>
+          <h1 className="auth-logo__name"><Wordmark /></h1>
           <p className="auth-logo__tagline">{t('Seu treino, sempre com você')}</p>
           {inviter && (
             <p className="auth-invite">{t('🤝 {name} convidou você para treinar com acompanhamento. Crie sua conta (ou entre) para aceitar.', { name: inviter })}</p>

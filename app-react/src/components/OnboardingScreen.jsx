@@ -10,6 +10,7 @@ import SportPicker from './SportPicker';
 import { useSportModule } from '../hooks/useSportModule';
 
 import { t } from '../lib/i18n';
+import Wordmark from './Wordmark';
 export default function OnboardingScreen() {
   const { user, updateProfile } = useAuth();
   const toast = useToast();
@@ -85,7 +86,7 @@ export default function OnboardingScreen() {
       <div className="auth-inner">
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="EAFIT" />
-          <div className="auth-logo__name">EAFIT</div>
+          <div className="auth-logo__name"><Wordmark /></div>
           <p className="auth-logo__tagline">{usesPlan ? t('Vamos montar seu treino personalizado') : t('Conte um pouco sobre você')}</p>
         </div>
         <div className="auth-form">

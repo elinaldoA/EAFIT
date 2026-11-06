@@ -4,6 +4,7 @@ import { getLock, verifyLock, isCancelled } from '../lib/biometricLock';
 import PasswordInput from './PasswordInput';
 
 import { t } from '../lib/i18n';
+import Wordmark from './Wordmark';
 // Tela por cima do app enquanto a trava de biometria está fechada. Fica
 // sobreposta (em vez de trocar a tela) para não desmontar um treino em
 // andamento quando a trava volta depois de um tempo em segundo plano.
@@ -55,7 +56,7 @@ export default function BiometricLockScreen({ user, onUnlock }) {
   return (
     <div className="boot bio-lock" role="dialog" aria-modal="true" aria-label={t('App bloqueado')}>
       <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
-      <div className="boot__name">EAFIT</div>
+      <div className="boot__name"><Wordmark /></div>
       <p className="bio-lock__text">{t('App bloqueado. Use a biometria do aparelho para continuar.')}</p>
 
       {!usePassword ? (

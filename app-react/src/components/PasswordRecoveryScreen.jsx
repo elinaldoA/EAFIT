@@ -5,6 +5,7 @@ import logoMark from '../assets/app-icon.png';
 import PasswordInput from './PasswordInput';
 
 import { t } from '../lib/i18n';
+import Wordmark from './Wordmark';
 // Mostrada no lugar do app quando o usuário chega pelo link de "Esqueci minha
 // senha" (evento PASSWORD_RECOVERY, ver AuthContext) — a sessão já está
 // válida, falta só definir a senha nova.
@@ -38,7 +39,7 @@ export default function PasswordRecoveryScreen() {
       <div className="auth-inner">
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="" />
-          <h1 className="auth-logo__name">EAFIT</h1>
+          <h1 className="auth-logo__name"><Wordmark /></h1>
         </div>
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="auth-form__intro">

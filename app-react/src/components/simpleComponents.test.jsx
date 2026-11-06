@@ -92,7 +92,7 @@ describe('BootSplash, DumbbellSpinner, Skeleton', () => {
   it('splash tem papel de status acessível', () => {
     render(<BootSplash />);
     expect(screen.getByRole('status', { name: 'Carregando o EAFIT' })).toBeTruthy();
-    expect(screen.getByText('EAFIT')).toBeTruthy();
+    expect(document.querySelector('.boot__name').textContent).toBe('EAFIT');
   });
 
   it('spinner usa o tamanho pedido (padrão md)', () => {

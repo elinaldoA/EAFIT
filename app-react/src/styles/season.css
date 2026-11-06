@@ -786,3 +786,8 @@ body.live-open .season-fx { display: none; }
     100% { transform: translate(-10px, 96vh) rotate(430deg); opacity: 0; }
   }
 }
+
+/* Nome da marca (components/Wordmark.jsx): FIT sempre laranja; EA na cor do tema da temporada. */
+.wordmark__ea { color: var(--text); -webkit-text-fill-color: currentColor; }
+.wordmark__fit { color: #f97316; -webkit-text-fill-color: currentColor; }
+[data-season] .wordmark__ea { color: var(--season-accent); }

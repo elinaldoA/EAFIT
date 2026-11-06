@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { COMMENT_MAX, REASONS, sendInactivityReason } from '../lib/inactivitySurvey';
 import { t } from '../lib/i18n';
+import Wordmark from './Wordmark';
 
 // Tela cheia aberta pelos links da pesquisa "por que você parou?" do e-mail
 // (ver lib/inactivitySurvey.js): o motivo tocado no e-mail é gravado na hora,
@@ -29,7 +30,7 @@ export default function InactivitySurveyScreen({ token, reason: initialReason, o
     return (
       <div className="boot maintenance" role="status">
         <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
-        <div className="boot__name">EAFIT</div>
+        <div className="boot__name"><Wordmark /></div>
         <h1 className="maintenance__title">{t('Obrigado por contar pra gente')}</h1>
         <p className="maintenance__text">{t('Sua resposta ajuda a melhorar o app. Seu plano e seu histórico continuam guardados, pra quando você quiser voltar.')}</p>
         <button className="btn btn--primary" type="button" onClick={onClose}>{t('Continuar para o app')}</button>
@@ -40,7 +41,7 @@ export default function InactivitySurveyScreen({ token, reason: initialReason, o
   return (
     <div className="boot maintenance survey">
       <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
-      <div className="boot__name">EAFIT</div>
+      <div className="boot__name"><Wordmark /></div>
       <h1 className="maintenance__title">{t('O que fez você parar?')}</h1>
       <p className="maintenance__text" role="status">
         {state === 'saving' && t('Registrando a sua resposta…')}

@@ -50,10 +50,6 @@
   font-weight: 900;
   letter-spacing: -1.5px;
   line-height: 1;
-  background: linear-gradient(135deg, var(--primary) 30%, var(--primary-h));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .auth-logo__tagline {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { hardUpdate } from '../lib/appVersion';
 
 import { t } from '../lib/i18n';
+import Wordmark from './Wordmark';
 
 function UpdateButton({ className }) {
   const [busy, setBusy] = useState(false);
@@ -18,7 +19,7 @@ export function ForceUpdateScreen({ message }) {
   return (
     <div className="boot maintenance" role="alert">
       <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
-      <div className="boot__name">EAFIT</div>
+      <div className="boot__name"><Wordmark /></div>
       <h1 className="maintenance__title">{t('Atualize o app')}</h1>
       <p className="maintenance__text">{message || t('Esta versão do app não é mais compatível. Atualize para continuar.')}</p>
       <UpdateButton className="btn btn--primary btn--sm" />
