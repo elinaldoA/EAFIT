@@ -104,7 +104,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers, leagueResults,
-    proteinLogs, customFoods, nutritionEntries, runs, runShoes, runComments,
+    proteinLogs, customFoods, nutritionEntries, runs, runShoes, runComments, runClubs,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -127,6 +127,7 @@ export async function gatherUserData(userId) {
     safe('runs', () => fetchMyRuns(userId), []),
     safe('runShoes', () => fetchMyRunShoes(userId), []),
     safe('runComments', fetchMyRunComments, []),
+    safe('runClubs', fetchMyRunClubs, []),
   ]);
 
   return {
@@ -134,7 +135,7 @@ export async function gatherUserData(userId) {
     profile,
     workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
-    weightLogs, bodyMeasurements, dailyCheckins, runs, runShoes, runComments,
+    weightLogs, bodyMeasurements, dailyCheckins, runs, runShoes, runComments, runClubs,
     progressPhotos: photos, waterLogs, proteinLogs, customFoods, nutritionEntries,
     discomfortReports, achievements,
     challenges, friendProfile, friends,
@@ -170,6 +171,14 @@ async function fetchMyRunComments() {
   const { data, error } = await db.rpc('my_run_comments');
   if (error) throw error;
   return (data || []).map(c => ({ run_id: c.mc_run, body: c.mc_body, created_at: c.mc_created_at }));
+}
+
+// Clubes de corrida de que a pessoa faz parte (as tabelas são fechadas: vem
+// pela função my_run_clubs). O código de convite só vem para o dono.
+async function fetchMyRunClubs() {
+  const { data, error } = await db.rpc('my_run_clubs');
+  if (error) throw error;
+  return (data || []).map(c => ({ name: c.rc_name, description: c.rc_description, owner: !!c.rc_is_owner, members: c.rc_members }));
 }
 
 // Conta e dados de perfil (nome, peso, altura, meta, preferências). Fica de

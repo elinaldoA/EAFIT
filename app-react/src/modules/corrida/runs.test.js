@@ -195,3 +195,28 @@ describe('comentários', () => {
     expect(commentError(new Error('rede'))).toMatch(/tente de novo/);
   });
 });
+
+describe('clubes', () => {
+  it('rankRows: empate divide a posição e quem ocultou fica sem posição', async () => {
+    const { rankRows } = await import('./runs');
+    const rows = rankRows([
+      { name: 'A', meters: 9000, hidden: false },
+      { name: 'B', meters: 9000, hidden: false },
+      { name: 'C', meters: 4000, hidden: false },
+      { name: 'D', meters: 0, hidden: true },
+    ]);
+    expect(rows.map(r => r.rank)).toEqual([1, 1, 3, null]);
+  });
+
+  it('normalizeClubCode tira espaços e símbolos', async () => {
+    const { normalizeClubCode } = await import('./runs');
+    expect(normalizeClubCode(' ab-12 cd ')).toBe('AB12CD');
+  });
+
+  it('clubError traduz o erro do banco', async () => {
+    const { clubError } = await import('./runs');
+    expect(clubError(new Error('invalid_code'))).toMatch(/não encontrado/);
+    expect(clubError(new Error('blocked_word'))).toMatch(/palavra/);
+    expect(clubError(new Error('algo'))).toMatch(/tente de novo/);
+  });
+});

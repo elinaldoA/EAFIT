@@ -464,3 +464,12 @@
 .run-gpx__summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); text-align: center; }
 .run-gpx__summary span { display: block; font-size: var(--fs-xs); color: var(--text-muted); }
 .run-gpx__summary strong { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+
+/* Clubes de corrida */
+.run-club { border-top: 1px solid var(--border); padding: 10px 0; }
+.run-club:first-child { border-top: 0; padding-top: 0; }
+.run-club__head {
+  width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: none; border: 0; padding: 4px 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.run-club__ranking { margin: 8px 0; }
