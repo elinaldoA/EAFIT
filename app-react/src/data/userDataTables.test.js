@@ -120,6 +120,7 @@ describe('backup cobre as tabelas do usuário', () => {
     trainer_clients: 'o vínculo com o personal vai em trainer',
     trainer_invite_signups: 'registro interno de atribuição (por qual link de personal a conta foi criada)',
     trainer_appointments: 'as aulas do aluno vão em appointments',
+    trainer_charges: 'as cobranças do aluno vão em charges (pela função my_charges); as que o personal registrou também são dele e ficam no modo personal',
     trainer_messages: 'a conversa vai em trainerMessages',
     admin_report_cards: 'cartões do relatório do admin no painel (preferência interna)',
     admin_access: 'permissões de admin no painel (controle interno da equipe)',

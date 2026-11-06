@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { fetchMyThread, markMessagesRead, sendReply, friendlyReplyError } from '../lib/trainerMessages';
 import ChatThread from './ChatThread';
 import MyAppointments from './MyAppointments';
+import MyCharges from './MyCharges';
 import { fetchSharePhotos, setSharePhotos } from '../lib/trainerPhotos';
 import { fetchMyGoals } from '../lib/trainerInsights';
 import {
@@ -96,6 +97,7 @@ export default function ProfileTrainerSection({ toast, onChange }) {
           </div>
         )}
         <MyAppointments />
+        <MyCharges />
         <label className="trainer-consent">
           <input type="checkbox" checked={sharePhotos} onChange={e => handleSharePhotos(e.target.checked)} />
           <span><strong>{t('Compartilhar minhas fotos de evolução')}</strong><br />{t('Seu personal passa a ver as fotos que você já tirou e as próximas. Desligado por padrão; você desliga quando quiser.')}</span>

@@ -25,6 +25,7 @@ vi.mock('../lib/notifications', async orig => ({
 }));
 vi.mock('./ChatThread', () => ({ default: () => <div data-testid="chat" /> }));
 vi.mock('./MyAppointments', () => ({ default: () => <div data-testid="appointments" /> }));
+vi.mock('./MyCharges', () => ({ default: () => <div data-testid="charges" /> }));
 vi.mock('../data/treinoData', async orig => ({ ...(await orig()), todayDate: () => '2026-10-07' }));
 
 import CollapsibleCard from './CollapsibleCard';

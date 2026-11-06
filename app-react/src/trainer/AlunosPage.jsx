@@ -99,6 +99,7 @@ export default function AlunosPage({ onClientsLoaded, openClient, onClientOpened
     return (
       <ClientDetail
         client={selected}
+        initialTab={selected.openTab}
         onBack={() => { setSelected(null); reload(); }}
         onRemoved={() => { setSelected(null); reload(); }}
       />

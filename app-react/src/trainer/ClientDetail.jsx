@@ -16,6 +16,7 @@ import ClientNotes from './ClientNotes';
 import ClientGoals from './ClientGoals';
 import ClientPhotos from './ClientPhotos';
 import ClientAppointments from './ClientAppointments';
+import ClientCharges from './ClientCharges';
 import ClientTags from './ClientTags';
 import ClientPlanHistory from './ClientPlanHistory';
 
@@ -32,6 +33,7 @@ const TABS = [
   { key: 'evolucao', label: t('Evolução') },
   { key: 'plano', label: t('Plano') },
   { key: 'conversa', label: t('Conversa') },
+  { key: 'cobranca', label: t('Cobrança') },
 ];
 const fmt = n => String(n).replace('.', ',');
 
@@ -55,13 +57,13 @@ function WeeklyBars({ weeks, goal }) {
 // anotações), treinos série a série, evolução do corpo, plano e agenda, e a
 // conversa. Os dados vêm de trainer_client_detail, que só responde se o
 // vínculo com o aluno estiver ativo.
-export default function ClientDetail({ client, onBack, onRemoved }) {
+export default function ClientDetail({ client, onBack, onRemoved, initialTab }) {
   const toast = useToast();
   const [detail, setDetail] = useState(null);
   const [failed, setFailed] = useState(false);
   const [building, setBuilding] = useState(false);
   const [version, setVersion] = useState(0);
-  const [tab, setTab] = useState('resumo');
+  const [tab, setTab] = useState(TABS.some(x => x.key === initialTab) ? initialTab : 'resumo');
   const today = todayDate();
 
   useEffect(() => {
@@ -267,6 +269,8 @@ export default function ClientDetail({ client, onBack, onRemoved }) {
           <ClientAppointments client={client} />
         </>
       )}
+
+      {summary && tab === 'cobranca' && <ClientCharges client={client} />}
 
       {summary && tab === 'conversa' && (
         <div className="dash-card">

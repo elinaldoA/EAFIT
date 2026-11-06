@@ -261,3 +261,13 @@ button.kpi:hover { border-color: var(--border-2); }
 .volume-list__bar span { display: block; height: 100%; background: var(--primary); border-radius: var(--r-xs); }
 .tpl-days { list-style: none; margin: var(--sp-1) 0 var(--sp-2); padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); font-size: var(--fs-xs); color: var(--text-muted); }
 .tpl-days strong { color: var(--text); }
+
+/* Cobrança do personal */
+.appt__status--paid { background: rgba(34, 197, 94, .15); color: var(--success-strong); }
+.appt__status--overdue { background: rgba(239, 68, 68, .12); color: var(--error, #ef4444); }
+.appt__status--today { background: rgba(249, 115, 22, .15); color: var(--primary); }
+.charge__amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.charge-row { flex-direction: column; align-items: stretch; gap: 6px; }
+.charge-row .appt__actions { flex-wrap: wrap; }
+.charge-form__row { display: flex; gap: var(--sp-2); }
+.charge-form__row > * { flex: 1; min-width: 0; }

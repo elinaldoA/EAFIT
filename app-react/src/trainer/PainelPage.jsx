@@ -6,6 +6,7 @@ import { fetchTrainerCode } from '../lib/trainer';
 import { fetchRoster, buildActionQueue, rosterKpis, initials } from '../lib/trainerRoster';
 import { fetchUnreadReplies } from '../lib/trainerMessages';
 import { fetchTrainerAppointments, upcomingAppointments } from '../lib/trainerAppointments';
+import { fetchTrainerCharges, chargeSummary, overdueByClient, formatMoney } from '../lib/trainerCharges';
 import { trainerInviteLink, shareTrainerInvite, copyTrainerInviteLink, fetchInviteStats } from '../lib/trainerInvite';
 import Skeleton from '../components/Skeleton';
 import PartnerCampaignsCard from '../components/PartnerCampaignsCard';
@@ -30,6 +31,7 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
   const [roster, setRoster] = useState(null);
   const [replies, setReplies] = useState({});
   const [appts, setAppts] = useState([]);
+  const [charges, setCharges] = useState([]);
   const [code, setCode] = useState('');
   const [inviteStats, setInviteStats] = useState(null);
   const [showAll, setShowAll] = useState(false);
@@ -42,12 +44,15 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
       .catch(err => { console.error('fetchRoster:', err); if (active) setRoster([]); });
     fetchUnreadReplies().then(r => { if (active) setReplies(r); }).catch(() => { /* migration pendente */ });
     fetchTrainerAppointments().then(r => { if (active) setAppts(upcomingAppointments(r)); }).catch(() => { /* migration pendente */ });
+    fetchTrainerCharges().then(r => { if (active) setCharges(r); }).catch(() => { /* migration pendente */ });
     fetchTrainerCode().then(c => { if (active) setCode(c); }).catch(err => console.error('fetchTrainerCode:', err));
     fetchInviteStats(30).then(s => { if (active) setInviteStats(s); }).catch(() => { /* migration pendente */ });
     return () => { active = false; };
   }, []);
 
-  const queue = useMemo(() => (roster ? buildActionQueue(roster, { replies, today }) : []), [roster, replies, today]);
+  const overdue = useMemo(() => overdueByClient(charges, today), [charges, today]);
+  const billing = useMemo(() => chargeSummary(charges, today), [charges, today]);
+  const queue = useMemo(() => (roster ? buildActionQueue(roster, { replies, overdue, today }) : []), [roster, replies, overdue, today]);
   const kpis = useMemo(() => rosterKpis(roster || [], today), [roster, today]);
   const todayCount = appts.filter(a => toDateStr(new Date(a.starts)) === today).length;
 
@@ -107,7 +112,7 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
           </div>
           {queue.length === 0 && <p className="dash-empty">{t('Tudo em dia: ninguém parado, sem dor relatada e planos no prazo. 🎉')}</p>}
           {visibleQueue.map(({ client, reasons, priority }) => (
-            <button type="button" key={client.id} className={`action-row action-row--p${Math.min(priority, 3)}`} onClick={() => onOpenClient(client)}>
+            <button type="button" key={client.id} className={`action-row action-row--p${Math.min(priority, 3)}`} onClick={() => onOpenClient(reasons.length === 1 && reasons[0].kind === 'cobranca' ? { ...client, openTab: 'cobranca' } : client)}>
               <span className="avatar" aria-hidden="true">{initials(client.name)}</span>
               <span className="action-row__body">
                 <strong>{client.name}</strong>
@@ -123,6 +128,22 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
               {showAll ? t('Mostrar menos') : t('Ver todos ({n})', { n: queue.length })}
             </button>
           )}
+        </div>
+      )}
+
+      {roster && roster.length > 0 && (
+        <div className="dash-card">
+          <div className="dash-card__title-row">
+            <div className="dash-card__title">{t('💰 Cobranças')}</div>
+            {billing.overdueClients > 0 && <span className="painel-count">{t('{n} em atraso', { n: billing.overdueClients })}</span>}
+          </div>
+          {charges.length === 0 && <p className="dash-empty">{t('Nenhuma cobrança registrada.')}</p>}
+          {charges.length > 0 && <div className="recap__grid">
+            <div className="recap__stat"><span className={`recap__value${billing.overdue ? ' kpi__value--warn' : ''}`}>{formatMoney(billing.overdue)}</span><span className="recap__label">{t('em atraso')}</span></div>
+            <div className="recap__stat"><span className="recap__value">{formatMoney(billing.upcoming)}</span><span className="recap__label">{t('a receber')}</span></div>
+            <div className="recap__stat"><span className="recap__value">{formatMoney(billing.receivedMonth)}</span><span className="recap__label">{t('recebido no mês')}</span></div>
+          </div>}
+          <p className="profile-field__hint m-0">{t('Registre e dê baixa pela ficha do aluno, na aba Cobrança.')}</p>
         </div>
       )}
 

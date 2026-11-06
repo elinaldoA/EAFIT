@@ -71,7 +71,7 @@ const DIRECT_TABLES = [
   'progress_photos', 'water_logs', 'protein_logs', 'nutrition_foods', 'nutrition_entries', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort',
   'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles',
   'friendships', 'feedback', 'user_notifications', 'notification_log', 'client_errors', 'admin_user_notes',
-  'appointment_reminder_log', 'trainer_appointments', 'trainer_alert_log', 'trainer_messages', 'trainer_notes',
+  'appointment_reminder_log', 'trainer_appointments', 'trainer_charges', 'trainer_alert_log', 'trainer_messages', 'trainer_notes',
   'trainer_goals', 'trainer_clients', 'trainer_templates', 'trainer_settings', 'trainers',
 ];
 
@@ -158,6 +158,7 @@ Deno.test('deleteUserData limpa as duas pontas de quem é aluno e personal (e fr
     'trainer_clients.client_id', 'trainer_clients.trainer_id',
     'trainer_messages.client_id', 'trainer_messages.trainer_id',
     'trainer_appointments.client_id', 'trainer_appointments.trainer_id',
+    'trainer_charges.client_id', 'trainer_charges.trainer_id',
     'friendships.requester_id', 'friendships.addressee_id',
     'appointment_reminder_log.recipient', 'trainers.user_id',
   ]) {

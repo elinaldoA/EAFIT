@@ -29,6 +29,7 @@ const USER_COLUMNS: [table: string, column: string][] = [
   ['trainer_requests', 'user_id'], ['admin_access', 'admin_id'], ['admin_report_cards', 'admin_id'],
   ['appointment_reminder_log', 'recipient'],
   ['trainer_appointments', 'client_id'], ['trainer_appointments', 'trainer_id'],
+  ['trainer_charges', 'client_id'], ['trainer_charges', 'trainer_id'],
   ['trainer_alert_log', 'client_id'], ['trainer_alert_log', 'trainer_id'],
   ['trainer_messages', 'client_id'], ['trainer_messages', 'trainer_id'],
   ['trainer_notes', 'client_id'], ['trainer_notes', 'trainer_id'],

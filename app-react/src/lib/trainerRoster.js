@@ -89,7 +89,10 @@ export function recentStrip(client, today, n = STRIP_DAYS) {
 // O que o personal precisa fazer por cada aluno, do mais urgente ao menos.
 // Cada aluno aparece uma vez, com todos os motivos; `priority` é a do motivo
 // mais urgente (0 = mais urgente).
-export function buildActionQueue(roster, { replies = {}, today }) {
+// R$ 150,00
+const moneyShort = cents => (cents / 100).toLocaleString(locale, { style: 'currency', currency: 'BRL' });
+
+export function buildActionQueue(roster, { replies = {}, overdue = {}, today }) {
   const out = [];
   for (const c of roster) {
     const reasons = [];
@@ -97,6 +100,7 @@ export function buildActionQueue(roster, { replies = {}, today }) {
     const plan = planStatus(c, today);
     if (c.pain7 > 0) reasons.push({ kind: 'dor', priority: 0, icon: '🩹', label: t('Relatou dor forte ou lesão') });
     if (replies[c.id] > 0) reasons.push({ kind: 'resposta', priority: 1, icon: '💬', label: t('{n} resposta(s) sem ler', { n: replies[c.id] }) });
+    if (overdue[c.id]) reasons.push({ kind: 'cobranca', priority: 2, icon: '💰', label: t('Pagamento em atraso: {v1}', { v1: moneyShort(overdue[c.id].cents) }) });
     if (att.level === 'risco') reasons.push({ kind: 'sumido', priority: 1, icon: '🚨', label: att.label });
     if (!c.paused && plan.level === 'expired') reasons.push({ kind: 'plano', priority: 2, icon: '📋', label: t('Plano vencido') });
     if (att.level === 'atencao') reasons.push({ kind: 'parado', priority: 3, icon: '⏳', label: att.label });
