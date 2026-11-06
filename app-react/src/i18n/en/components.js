@@ -274,6 +274,7 @@ export default {
   'Ver histórico de dores': 'See pain history',
   'Ir para o treino': 'Go to workout',
   'Ver minha semana': 'See my week',
+  'Ver minha semana de corrida': 'See my running week',
   'Ver avisos mais antigos': 'See older notices',
   '⚠️ Não foi possível marcar como lido. Tente de novo.': '⚠️ Could not mark as read. Try again.',
   'Avisos ({unread} novo(s))': 'Notices ({unread} new)',

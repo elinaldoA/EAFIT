@@ -8,6 +8,7 @@ import {
   fetchShoes, cachedShoes,
 } from './runs';
 import SplitBars from './SplitBars';
+import { downloadGpx } from './gpx';
 import RunShoes from './Shoes';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
@@ -67,6 +68,9 @@ function RunItem({ run, shoe, onDelete }) {
           {run.effort && <p>{t('Esforço: {v1}/10', { v1: run.effort })}</p>}
           {run.notes && <p className="run-item__notes">{run.notes}</p>}
           {run.pending && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
+          {run.route.length > 0 && (
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => downloadGpx(run)}>{t('📤 Exportar GPX')}</button>
+          )}
           <button type="button" className="btn btn--primary btn--sm" disabled={sharing} onClick={handleShare}>
             {sharing ? t('Gerando imagem…') : t('📤 Compartilhar nos stories')}
           </button>

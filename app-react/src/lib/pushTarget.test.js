@@ -21,6 +21,7 @@ describe('pushTargetKey', () => {
       'engagement-workout_today-2026-10-08': 'treino',
       'engagement-first_workout_late-2026-10-08': 'treino',
       'engagement-invite_friends-2026-10-08': 'amigos',
+      'engagement-run_week-2026-11-09': 'corrida',
       'program-signups-2026-10-20-9': 'programa',
       'influencer-signups-2026-10-20-9': 'programa',
       'program-message': 'programa_recados',
@@ -52,6 +53,7 @@ describe('kindTargetKey', () => {
     expect(kindTargetKey('plan_expiring')).toBe('treino');
     expect(kindTargetKey('protein_today')).toBe('nutricao');
     expect(kindTargetKey('progress_photo')).toBe('peso');
+    expect(kindTargetKey('run_week')).toBe('corrida');
     expect(kindTargetKey('aviso')).toBeNull();
   });
 });

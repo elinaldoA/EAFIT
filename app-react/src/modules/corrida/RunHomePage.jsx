@@ -14,6 +14,7 @@ import {
 import { requestMotionPermission } from './cadence';
 import { ShoePicker } from './Shoes';
 import GuidedSetup from './GuidedSetup';
+import GpxImport from './GpxImport';
 import { newMedals } from './challenges';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported, useGeoTracker } from './useGeoTracker';
@@ -182,6 +183,7 @@ export default function RunHomePage() {
   const [planOpen, setPlanOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [guidedOpen, setGuidedOpen] = useState(false);
+  const [gpxOpen, setGpxOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [gps, setGps] = useState(() => readGpsPref() && geoSupported());
   // Aquece o GPS antes do Começar: o celular leva de segundos a um minuto para
@@ -270,19 +272,25 @@ export default function RunHomePage() {
         {gps && warm.status !== 'idle' && (
           <p className={`run-record__gps run-record__gps--${warm.status}`} role="status">{gpsStatusText(warm.status, warm.accuracy)}</p>
         )}
+        {!gpxOpen && !live && (
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGpxOpen(true); setManualOpen(false); setGuidedOpen(false); }}>
+            {t('📥 Importar corrida de outro app (GPX)')}
+          </button>
+        )}
         {doneToday && <p className="run-today__done">{t('✅ Corrida de hoje registrada')}</p>}
         {!guidedOpen && !live && (
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGuidedOpen(true); setManualOpen(false); }}>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGuidedOpen(true); setManualOpen(false); setGpxOpen(false); }}>
             {t('🎯 Treino guiado: intervalado ou ritmo alvo')}
           </button>
         )}
         {!manualOpen && !live && (
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setManualOpen(true); setGuidedOpen(false); }}>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setManualOpen(true); setGuidedOpen(false); setGpxOpen(false); }}>
             {t('＋ Lançar corrida feita sem o app (esteira, relógio)')}
           </button>
         )}
       </div>
 
+      {gpxOpen && <GpxImport onClose={() => setGpxOpen(false)} />}
       {guidedOpen && <GuidedSetup gps={gps} onStart={s => begin(false, s)} onCancel={() => setGuidedOpen(false)} />}
       {manualOpen && <ManualRunForm userId={user?.id} onClose={() => setManualOpen(false)} />}
 
