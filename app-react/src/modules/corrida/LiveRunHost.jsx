@@ -18,8 +18,12 @@ import { emptyMotion, motionStep } from './autoPause';
 import { elevationGain } from './elevation';
 import { averageCadence } from './cadence';
 import { useStepCounter } from './useStepCounter';
+import { useGuidedWorkout } from './useGuidedWorkout';
+import { STEP_LABEL, formatAmount, describeWorkout, normalizeWorkout, spoken } from './workout';
 import SplitBars from './SplitBars';
 import { ShoePicker } from './Shoes';
+import { newMedals } from './challenges';
+import { todayDate } from '../../data/treinoData';
 import {
   RUN_SAVED_EVENT, decimal, defaultRunTitle, saveRun, fetchRuns, newRecords, describeRecord, paceSeconds, formatPace, formatClock, formatKm,
   fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice,
@@ -55,7 +59,7 @@ function kmAnnouncement(km, totalS, splitS) {
   const m = Math.floor(totalS / 60);
   const s = totalS % 60;
   return t('{v1} quilômetro(s). Tempo {v2} minutos e {v3} segundos. Último quilômetro em {v4}.', {
-    v1: km, v2: m, v3: s, v4: formatPace(splitS).replace(':', ' e '),
+    v1: km, v2: m, v3: s, v4: spoken(formatPace(splitS)),
   });
 }
 
@@ -76,8 +80,8 @@ export default function LiveRunHost() {
   const running = !!run && !isPaused(run);
   const autoPaused = !!run?.autoPaused;
   const motion = useRef(emptyMotion());
-  const prefs = useRef({ autoPauseOn, voiceOn });
-  prefs.current = { autoPauseOn, voiceOn };
+  const prefs = useRef({ autoPauseOn, voiceOn, blockAutoPause: false });
+  prefs.current = { ...prefs.current, autoPauseOn, voiceOn };
 
   // Pausa automática: decide pelas leituras do GPS (autoPause.js).
   function handleSample(sample) {
@@ -85,7 +89,7 @@ export default function LiveRunHost() {
     if (!cur?.gps || (isPaused(cur) && !cur.autoPaused)) return;
     const step = motionStep(motion.current, sample, !!cur.autoPaused, cur.segmentStart ?? 0);
     motion.current = step.motion;
-    if (step.action?.type === 'pause' && prefs.current.autoPauseOn) {
+    if (step.action?.type === 'pause' && prefs.current.autoPauseOn && !prefs.current.blockAutoPause) {
       updateLiveRun(s => autoPauseRun(s, step.action.at));
       if (prefs.current.voiceOn) speak(t('Pausa automática.'));
     } else if (step.action?.type === 'resume') {
@@ -157,6 +161,10 @@ export default function LiveRunHost() {
     lastPhase.current = phaseName;
   }, [phaseName, voiceOn]);
 
+  // Intervalado e ritmo alvo (useGuidedWorkout.js).
+  const guided = useGuidedWorkout(run, now, voiceOn);
+  prefs.current.blockAutoPause = !!guided?.blockAutoPause;
+
   if (!run) return null;
 
   const toggleVoice = () => {
@@ -197,7 +205,7 @@ export default function LiveRunHost() {
         ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={() => setFinishing(false)} />
         : (
           <LiveRunScreen
-            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm}
+            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} guided={guided}
             autoPauseOn={autoPauseOn} onToggleAutoPause={toggleAutoPause}
             onFinish={() => { updateLiveRun(s => pauseRun(s)); setFinishing(true); }}
           />
@@ -233,7 +241,38 @@ function InterruptedRun({ run, since, onKeep, onCut }) {
   );
 }
 
-function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, autoPauseOn, onToggleAutoPause, onFinish }) {
+// Texto do alvo da sessão: treino montado, ritmo alvo ou a sessão do programa.
+function sessionText(s) {
+  if (s?.custom) return describeWorkout(normalizeWorkout(s.custom));
+  if (s?.targetPace && (!s.type || s.type === 'livre')) return t('Ritmo alvo {v1}/km', { v1: formatPace(s.targetPace) });
+  return describeSession(s);
+}
+
+// Etapa atual do intervalado: o que é, quanto falta e o que vem depois.
+function WorkoutStep({ guided }) {
+  if (guided.done) {
+    return <div className="run-live__step run-live__step--done" role="status">{t('✅ Treino concluído: finalize quando quiser')}</div>;
+  }
+  const { step, next, progress, workout } = guided;
+  if (!step || !progress) return null;
+  const left = step.unit === 'm' ? formatAmount('m', Math.ceil(progress.left)) : formatClock(Math.ceil(progress.left));
+  return (
+    <div className={`run-live__step run-live__step--${step.type}`} role="status">
+      <span className="run-live__step-label">
+        {step.type === 'work' || step.type === 'rest'
+          ? t('{v1} · {v2} de {v3}', { v1: STEP_LABEL[step.type], v2: step.rep, v3: workout.reps })
+          : STEP_LABEL[step.type]}
+      </span>
+      <strong className="run-live__step-left">{left}</strong>
+      <span className="run-live__step-next">
+        {next ? t('Depois: {v1} {v2}', { v1: STEP_LABEL[next.type], v2: formatAmount(next.unit, next.value) }) : t('Última etapa')}
+      </span>
+      <button type="button" className="btn btn--ghost btn--sm" onClick={guided.skip}>{t('Pular etapa ⏭')}</button>
+    </div>
+  );
+}
+
+function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, guided, autoPauseOn, onToggleAutoPause, onFinish }) {
   const el = elapsedMs(run, now);
   const totalS = Math.floor(el / 1000);
   const paused = isPaused(run);
@@ -263,7 +302,7 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, auto
       </div>
       <div className="run-live__session">
         <strong>{SESSION_TITLE[s?.type || 'livre']}</strong>
-        {s && <span>{describeSession(s)}</span>}
+        {s && <span>{sessionText(s)}</span>}
       </div>
 
       <div className={`run-live__clock${paused ? ' run-live__clock--paused' : ''}`} aria-live="off">{formatClock(totalS)}</div>
@@ -294,6 +333,15 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, auto
         </div>
       </div>
 
+      {guided?.steps && <WorkoutStep guided={guided} />}
+
+      {guided?.target && (
+        <div className={`run-live__pace run-live__pace--${guided.paceState || 'wait'}`} role="status">
+          <span>{t('Alvo {v1}/km', { v1: formatPace(guided.target) })}</span>
+          <strong>{guided.pace ? t('agora {v1}', { v1: formatPace(guided.pace) }) : t('medindo…')}</strong>
+        </div>
+      )}
+
       {(gain !== null || spm) && (
         <div className="run-live__extra">
           {gain !== null && <span>{t('↗ {v1} m de subida', { v1: gain })}</span>}
@@ -301,7 +349,7 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, auto
         </div>
       )}
 
-      {target && (
+      {target && !guided?.steps && (
         <div className="run-live__target">
           <div className="run-live__bar"><span style={{ width: `${Math.min(100, Math.round((target.done / target.total) * 100))}%` }} /></div>
           <span>{target.label}</span>
@@ -372,13 +420,16 @@ function FinishRun({ run, now, onBack, onDone }) {
     setBusy(true);
     const record = finishRun(run, { meters: edited ? parsed * 1000 : undefined, effort, notes, title, visibility, zones, shoeId });
     let previous = [];
-    try { previous = await fetchRuns(user.id); } catch { /* sem rede: sem recorde agora */ }
+    let loaded = false;
+    try { previous = await fetchRuns(user.id); loaded = true; } catch { /* sem rede: sem recorde agora */ }
     const { pending } = await saveRun(user.id, record);
     rememberShoe(shoeId);
     const others = previous.filter(r => r.client_id !== record.client_id);
     const records = newRecords(others, record);
     const shoe = shoes.find(x => x.id === shoeId);
     const shoeNotice = shoe ? shoeWearNotice(shoe, shoeUsage([shoe], others)[shoe.id], record.distance_m) : null;
+    // Sem a lista (sem internet), toda medalha pareceria nova: só com ela carregada.
+    const medals = loaded ? newMedals(others, [...others, record], todayDate()) : [];
     trackEvent('run', record.kind);
     setLiveRun(null);
     setBusy(false);
@@ -386,6 +437,7 @@ function FinishRun({ run, now, onBack, onDone }) {
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
     if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
     else if (records.length) toast(t('🏆 Novo recorde — {v1}!', { v1: records.map(describeRecord).join(', ') }));
+    else if (medals.length) toast(t('🏅 Medalha: {v1}!', { v1: medals.map(m => m.title).join(', ') }));
     else if (shoeNotice) toast(shoeNotice);
     else toast(t('✅ Corrida salva: {v1} km em {v2}', { v1: formatKm(record.distance_m), v2: formatClock(record.duration_s) }));
   }

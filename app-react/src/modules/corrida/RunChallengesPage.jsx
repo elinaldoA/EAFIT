@@ -7,7 +7,7 @@ import {
   requestFriend, respondFriend, removeFriendship, fetchMyFriends,
 } from '../../lib/friends';
 import { RUN_SAVED_EVENT, fetchRuns, fetchFriendsWeek, formatKm, decimal } from './runs';
-import { monthlyChallenges, challengeProgress } from './challenges';
+import { monthlyChallenges, challengeProgress, monthMedals } from './challenges';
 
 import { t, locale } from '../../lib/i18n';
 const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -37,6 +37,37 @@ function MonthChallenges({ runs, today }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// Medalhas dos níveis de desafio batidos, agrupadas por mês.
+function Medals({ runs, today }) {
+  const medals = monthMedals(runs, today);
+  if (!medals.length) return null;
+  const months = [...new Set(medals.map(m => m.month))];
+  const label = month => {
+    const text = new Date(`${month}-15T12:00:00`).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+  return (
+    <div className="section-group">
+      <div className="section-group__label">{t('Suas medalhas ({v1})', { v1: medals.length })}</div>
+      <div className="dash-card run-medals">
+        {months.map(month => (
+          <div key={month} className="run-medals__month">
+            <span className="run-medals__label">{label(month)}</span>
+            <ul className="run-medals__list">
+              {medals.filter(m => m.month === month).map(m => (
+                <li key={`${m.kind}-${m.goal}`} className="run-medal" title={m.title}>
+                  <span className="run-medal__icon" aria-hidden="true">🏅</span>
+                  <span>{m.title}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -206,6 +237,7 @@ export default function RunChallengesPage() {
   return (
     <section id="page-desafios" className="page active">
       <MonthChallenges runs={runs} today={today} />
+      <Medals runs={runs} today={today} />
       <WeekRanking rows={ranking} />
       <RunFriends onChange={load} />
     </section>

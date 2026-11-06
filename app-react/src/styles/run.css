@@ -263,7 +263,7 @@
 .run-card__stats div { display: flex; flex-direction: column; }
 .run-card__stats span { font-size: var(--fs-xs); color: var(--text-muted); }
 .run-card__stats strong { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
-.run-card__foot { display: flex; justify-content: flex-start; }
+.run-card__foot { display: flex; justify-content: flex-start; gap: var(--sp-2); }
 .run-card__kudos {
   min-height: var(--tap-min);
   padding: 0 var(--sp-4);
@@ -402,3 +402,59 @@
 .run-shoe__warn { margin: 0; font-size: var(--fs-sm); color: var(--warning); }
 .run-shoe--over .run-shoe__warn { color: var(--error); }
 .run-shoe__actions { display: flex; gap: var(--sp-2); }
+
+/* Treino guiado: etapa do intervalado e ritmo alvo (LiveRunHost.jsx) */
+.run-live__step {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg, 16px);
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+}
+.run-live__step-label { grid-column: 1; font-weight: 800; text-transform: uppercase; font-size: var(--fs-sm); letter-spacing: .04em; }
+.run-live__step-left { grid-column: 1; font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.run-live__step-next { grid-column: 1; color: var(--text-muted); font-size: var(--fs-sm); }
+.run-live__step .btn { grid-column: 2; grid-row: 1 / span 3; }
+.run-live__step--work { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 14%, var(--surface)); }
+.run-live__step--work .run-live__step-label { color: var(--primary); }
+.run-live__step--rest .run-live__step-label { color: var(--success); }
+.run-live__step--warmup .run-live__step-label,
+.run-live__step--cooldown .run-live__step-label { color: var(--text-muted); }
+.run-live__step--done { display: block; text-align: center; font-weight: 700; color: var(--success); }
+
+.run-live__pace { display: flex; justify-content: center; align-items: baseline; gap: var(--sp-3); font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.run-live__pace strong { font-size: var(--fs-lg); color: var(--text); }
+.run-live__pace--ok strong { color: var(--success); }
+.run-live__pace--slow strong,
+.run-live__pace--fast strong { color: var(--warning); }
+
+.run-guided__amount { display: grid; grid-template-columns: 7rem 1fr; gap: var(--sp-2); align-items: center; }
+.run-guided__summary { margin: 0; font-weight: 700; color: var(--primary); }
+
+/* Comentários das corridas (RunComments.jsx) */
+.run-comments { display: flex; flex-direction: column; gap: var(--sp-2); padding-top: var(--sp-2); border-top: 1px solid var(--border-2); }
+.run-comments__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-comments__item { display: flex; flex-direction: column; gap: 2px; }
+.run-comments__head { display: flex; gap: var(--sp-2); align-items: baseline; font-size: var(--fs-sm); }
+.run-comments__head span { color: var(--text-dim); font-size: var(--fs-xs); }
+.run-comments__body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.run-comments__actions { display: flex; gap: var(--sp-3); }
+.run-comments__link { padding: 0; border: 0; background: none; color: var(--text-dim); font: inherit; font-size: var(--fs-xs); cursor: pointer; min-height: 28px; }
+.run-comments__form { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); align-items: center; }
+
+/* Resumo da semana passada (aba Início) */
+.run-summary { display: flex; flex-direction: column; gap: 2px; }
+.run-summary__label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--primary); font-weight: 800; }
+.run-summary strong { font-size: var(--fs-lg); }
+.run-summary__meta { color: var(--text-muted); font-size: var(--fs-sm); }
+.run-summary__up { color: var(--success); }
+.run-summary__down { color: var(--text-muted); }
+
+/* Medalhas (aba Desafios) */
+.run-medals { display: flex; flex-direction: column; gap: var(--sp-3); }
+.run-medals__label { font-size: var(--fs-sm); font-weight: 700; }
+.run-medals__list { margin: var(--sp-1) 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.run-medal { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); font-size: var(--fs-sm); }

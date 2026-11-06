@@ -104,7 +104,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers, leagueResults,
-    proteinLogs, customFoods, nutritionEntries, runs, runShoes,
+    proteinLogs, customFoods, nutritionEntries, runs, runShoes, runComments,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -126,6 +126,7 @@ export async function gatherUserData(userId) {
     safe('nutritionEntries', () => fetchEntriesRange(userId, EPOCH), []),
     safe('runs', () => fetchMyRuns(userId), []),
     safe('runShoes', () => fetchMyRunShoes(userId), []),
+    safe('runComments', fetchMyRunComments, []),
   ]);
 
   return {
@@ -133,7 +134,7 @@ export async function gatherUserData(userId) {
     profile,
     workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
-    weightLogs, bodyMeasurements, dailyCheckins, runs, runShoes,
+    weightLogs, bodyMeasurements, dailyCheckins, runs, runShoes, runComments,
     progressPhotos: photos, waterLogs, proteinLogs, customFoods, nutritionEntries,
     discomfortReports, achievements,
     challenges, friendProfile, friends,
@@ -161,6 +162,14 @@ async function fetchMyRunShoes(userId) {
     .order('created_at');
   if (error) throw error;
   return data || [];
+}
+
+// Comentários que a pessoa escreveu em corridas (dela e de amigos). A tabela
+// 'run_comments' é fechada para leitura direta: vem pela função my_run_comments.
+async function fetchMyRunComments() {
+  const { data, error } = await db.rpc('my_run_comments');
+  if (error) throw error;
+  return (data || []).map(c => ({ run_id: c.mc_run, body: c.mc_body, created_at: c.mc_created_at }));
 }
 
 // Conta e dados de perfil (nome, peso, altura, meta, preferências). Fica de

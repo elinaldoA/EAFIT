@@ -18,7 +18,7 @@ vi.mock('../../lib/supabase', () => {
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
   saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun,
-  shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice,
+  shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
 const run = (over = {}) => ({
@@ -183,5 +183,15 @@ describe('tênis', () => {
   it('corrida lançada à mão leva o tênis', () => {
     const { record } = manualRun({ date: '2026-11-06', time: '07:00', minutes: '30', km: '5', shoeId: 'a' }, new Date(2026, 10, 6, 12).getTime());
     expect(record).toMatchObject({ shoe_id: 'a', elev_gain_m: null, cadence: null });
+  });
+});
+
+describe('comentários', () => {
+  it('traduz os erros do banco para a pessoa', () => {
+    expect(commentError({ message: 'blocked_word' })).toMatch(/palavra/);
+    expect(commentError({ message: 'rate_limited' })).toMatch(/espere/);
+    expect(commentError({ message: 'blocked' })).toMatch(/não pode comentar/);
+    expect(commentError({ message: 'not_found' })).toMatch(/não está mais/);
+    expect(commentError(new Error('rede'))).toMatch(/tente de novo/);
   });
 });

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { todayDate } from '../../data/treinoData';
 import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
 import { goTo } from '../../lib/appNav';
@@ -6,7 +7,10 @@ import { timeAgo } from '../../lib/inbox';
 import { trackEvent } from '../../lib/tracking';
 import {
   RUN_SAVED_EVENT, fetchRunFeed, flushPendingRuns, toggleKudos, runTitle, paceSeconds, formatPace, formatClock, formatKm,
+  fetchRuns,
 } from './runs';
+import { lastWeekSummary } from './challenges';
+import RunComments from './RunComments';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
 
@@ -27,8 +31,30 @@ function KudosButton({ run, onToggle }) {
   );
 }
 
+// Resumo da semana passada no topo do Início (só com corrida na semana).
+function WeekSummary({ runs }) {
+  const s = lastWeekSummary(runs, todayDate());
+  if (!s.runs) return null;
+  return (
+    <div className="dash-card run-summary">
+      <span className="run-summary__label">{t('Sua semana passada')}</span>
+      <strong>{t('{v1} km em {v2} corrida(s)', { v1: formatKm(s.meters, 1), v2: s.runs })}</strong>
+      <span className="run-summary__meta">
+        {formatClock(s.seconds)}
+        {s.change !== null && (
+          <span className={s.change >= 0 ? 'run-summary__up' : 'run-summary__down'}>
+            {' · '}{s.change >= 0 ? t('▲ {v1}% sobre a semana anterior', { v1: s.change }) : t('▼ {v1}% sobre a semana anterior', { v1: -s.change })}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
 function RunCard({ run, onToggleKudos }) {
   const pace = paceSeconds(run.duration_s, run.distance_m);
+  const [open, setOpen] = useState(false);
+  const [count, setCount] = useState(run.comments || 0);
   return (
     <li className="run-card">
       <div className="run-card__head">
@@ -47,7 +73,12 @@ function RunCard({ run, onToggleKudos }) {
       <RouteDrawing route={run.route} width={320} height={170} />
       <div className="run-card__foot">
         <KudosButton run={run} onToggle={onToggleKudos} />
+        <button
+          type="button" className={`run-card__kudos run-card__comments${open ? ' run-card__kudos--on' : ''}`}
+          aria-expanded={open} aria-label={t('Comentários ({v1})', { v1: count })} onClick={() => setOpen(o => !o)}
+        >💬 {count}</button>
       </div>
+      {open && <RunComments run={run} onCount={setCount} />}
     </li>
   );
 }
@@ -60,11 +91,13 @@ export default function RunFeedPage() {
   const [error, setError] = useState(false);
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [mine, setMine] = useState([]);
 
   const load = useCallback(async () => {
     if (!user) return;
     try {
       await flushPendingRuns(user.id);
+      fetchRuns(user.id).then(setMine).catch(() => {});
       const list = await fetchRunFeed({ limit: PAGE });
       setFeed(list);
       setMore(list.length === PAGE);
@@ -133,6 +166,7 @@ export default function RunFeedPage() {
   const hasFriendsRuns = feed.some(r => !r.isMe);
   return (
     <section id="page-inicio" className="page active">
+      <WeekSummary runs={mine} />
       {!hasFriendsRuns && (
         <button type="button" className="dash-card run-plan-cta" onClick={() => goTo({ tab: 'desafios' })}>
           <strong>{t('👥 Corra com os amigos')}</strong>

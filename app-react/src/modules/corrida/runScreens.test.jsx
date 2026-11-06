@@ -12,6 +12,10 @@ const h = vi.hoisted(() => ({
   toggleKudos: vi.fn(async () => ({ kudos: 1, kudoed: true })),
   fetchFriendsWeek: vi.fn(async () => []),
   shoes: [],
+  comments: [],
+  addRunComment: vi.fn(async (runId, body) => ({ id: 9, name: 'Ana', isMe: true, body, created_at: new Date().toISOString(), canDelete: true })),
+  deleteRunComment: vi.fn(async () => {}),
+  reportRunComment: vi.fn(async () => {}),
 }));
 
 vi.mock('../../lib/supabase', () => ({ db: {} }));
@@ -30,6 +34,10 @@ vi.mock('./runs', async (orig) => ({
   fetchFriendsWeek: (...a) => h.fetchFriendsWeek(...a),
   flushPendingRuns: async () => 0,
   fetchShoes: async () => h.shoes,
+  fetchRunComments: async () => h.comments,
+  addRunComment: (...a) => h.addRunComment(...a),
+  deleteRunComment: (...a) => h.deleteRunComment(...a),
+  reportRunComment: (...a) => h.reportRunComment(...a),
 }));
 vi.mock('../../lib/friends', () => ({
   friendlyFriendError: e => e.message, normalizeFriendCode: c => c.toUpperCase(), shareFriendCode: vi.fn(),
@@ -49,6 +57,7 @@ beforeEach(() => {
   resetLiveRunCache();
   h.user = { id: 'u1', user_metadata: {} };
   h.shoes = [];
+  h.comments = [];
 });
 afterEach(() => { cleanup(); act(() => { setLiveRun(null); }); });
 
@@ -136,6 +145,50 @@ describe('LiveRunHost: app fechado no meio da corrida', () => {
   });
 });
 
+describe('Treino guiado', () => {
+  it('monta um intervalado na aba Gravar e começa a corrida com ele', () => {
+    render(<RunHomePage />);
+    fireEvent.click(screen.getByRole('button', { name: /Treino guiado: intervalado/ }));
+    fireEvent.change(screen.getByLabelText('Repetições'), { target: { value: '8' } });
+    fireEvent.change(screen.getByLabelText('Ritmo dos tiros (opcional)'), { target: { value: '4:45' } });
+    expect(screen.getByText('8x 400 m forte / 200 m trote · alvo 4:45/km')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Começar treino/ }));
+    expect(getLiveRun().session).toMatchObject({ type: 'intervalado', custom: { reps: 8, targetPace: 285 } });
+  });
+
+  it('ritmo alvo inválido não começa', () => {
+    render(<RunHomePage />);
+    fireEvent.click(screen.getByRole('button', { name: /Treino guiado: intervalado/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ritmo alvo' }));
+    fireEvent.change(screen.getByLabelText('Ritmo alvo (min/km)'), { target: { value: '99' } });
+    fireEvent.click(screen.getByRole('button', { name: /Começar treino/ }));
+    expect(getLiveRun()).toBeNull();
+    expect(h.toast).toHaveBeenCalledWith(expect.stringMatching(/5:30/));
+  });
+
+  it('a corrida ao vivo mostra a etapa, avança e deixa pular', () => {
+    const session = { type: 'intervalado', custom: { warmupMin: 1, reps: 2, work: { unit: 'm', value: 400 }, rest: { unit: 's', value: 60 }, cooldownMin: 0 } };
+    act(() => { setLiveRun(startRun({ gps: true, session }, Date.now() - 5_000)); });
+    render(<LiveRunHost />);
+    expect(screen.getByText('Aquecimento')).toBeTruthy();
+    expect(getLiveRun().workoutPos).toEqual({ index: 0, startS: 0, startM: 0 });
+    fireEvent.click(screen.getByRole('button', { name: /Pular etapa/ }));
+    expect(screen.getByText('Forte · 1 de 2')).toBeTruthy();
+    expect(screen.getByText('400 m')).toBeTruthy();
+    expect(screen.getByText('Depois: Trote 1 min')).toBeTruthy();
+    act(() => { setLiveRun(setDistance(getLiveRun(), 450)); });
+    expect(screen.getByText('Trote · 1 de 2')).toBeTruthy();
+  });
+
+  it('corrida com ritmo alvo mostra o alvo', () => {
+    act(() => { setLiveRun(startRun({ gps: true, session: { type: 'livre', targetPace: 330 } }, Date.now() - 5_000)); });
+    render(<LiveRunHost />);
+    expect(screen.getByText('Ritmo alvo 5:30/km')).toBeTruthy();
+    expect(screen.getByText('Alvo 5:30/km')).toBeTruthy();
+    expect(screen.getByText('medindo…')).toBeTruthy();
+  });
+});
+
 describe('RunHomePage (aba Gravar)', () => {
   it('lança uma corrida de esteira sem gravar', async () => {
     render(<RunHomePage />);
@@ -194,6 +247,35 @@ describe('RunFeedPage (aba Início)', () => {
     render(<RunFeedPage />);
     expect(await screen.findByText(/Nenhuma corrida ainda/)).toBeTruthy();
     expect(screen.getByText(/Corra com os amigos/)).toBeTruthy();
+  });
+
+  it('abre os comentários, comenta e denuncia o de outra pessoa', async () => {
+    h.fetchRunFeed.mockResolvedValueOnce([{ ...friendRun, comments: 1 }]);
+    h.comments = [{ id: 1, name: 'Caio', isMe: false, body: 'Bora!', created_at: new Date().toISOString(), canDelete: false }];
+    render(<RunFeedPage />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Comentários (1)' }));
+    expect(await screen.findByText('Bora!')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Apagar' })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Escrever comentário'), { target: { value: 'Mandou bem' } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Enviar' })); });
+    expect(h.addRunComment).toHaveBeenCalledWith('r1', 'Mandou bem');
+    expect(screen.getByText('Mandou bem')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Comentários (2)' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Denunciar' }));
+    expect(h.reportRunComment).not.toHaveBeenCalled();
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Toque de novo para denunciar' })); });
+    expect(h.reportRunComment).toHaveBeenCalledWith(1);
+  });
+
+  it('mostra o resumo da semana passada', async () => {
+    const d = new Date();
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7) - 3);
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    h.fetchRuns.mockResolvedValue([{ client_id: 'x', run_date: date, distance_m: 8000, duration_s: 2700, splits: [], route: [] }]);
+    render(<RunFeedPage />);
+    expect(await screen.findByText('Sua semana passada')).toBeTruthy();
+    expect(screen.getByText('8,0 km em 1 corrida(s)')).toBeTruthy();
+    h.fetchRuns.mockResolvedValue([]);
   });
 
   it('a própria corrida não tem botão de aplaudir', async () => {

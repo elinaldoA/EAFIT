@@ -13,6 +13,8 @@ import {
 } from './runs';
 import { requestMotionPermission } from './cadence';
 import { ShoePicker } from './Shoes';
+import GuidedSetup from './GuidedSetup';
+import { newMedals } from './challenges';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported, useGeoTracker } from './useGeoTracker';
 import { gpsStatusText } from './gpsStatus';
@@ -105,18 +107,21 @@ export function ManualRunForm({ userId, onClose }) {
     if (error) return toast(error);
     setBusy(true);
     let previous = [];
-    try { previous = await fetchRuns(userId); } catch { /* sem rede: sem recorde agora */ }
+    let loaded = false;
+    try { previous = await fetchRuns(userId); loaded = true; } catch { /* sem rede: sem recorde agora */ }
     const { pending } = await saveRun(userId, record);
     rememberShoe(shoeId);
     const records = newRecords(previous, record);
     const shoe = shoes.find(x => x.id === shoeId);
     const shoeNotice = shoe ? shoeWearNotice(shoe, shoeUsage([shoe], previous)[shoe.id], record.distance_m) : null;
+    const medals = loaded ? newMedals(previous, [...previous, record], todayDate()) : [];
     trackEvent('run', 'manual');
     setBusy(false);
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
     onClose();
     if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
     else if (records.length) toast(t('🏆 Novo recorde — {v1}!', { v1: records.map(describeRecord).join(', ') }));
+    else if (medals.length) toast(t('🏅 Medalha: {v1}!', { v1: medals.map(m => m.title).join(', ') }));
     else if (shoeNotice) toast(shoeNotice);
     else toast(t('✅ Corrida salva: {v1} km em {v2}', { v1: formatKm(record.distance_m), v2: formatClock(record.duration_s) }));
   }
@@ -176,6 +181,7 @@ export default function RunHomePage() {
   const [editing, setEditing] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
+  const [guidedOpen, setGuidedOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [gps, setGps] = useState(() => readGpsPref() && geoSupported());
   // Aquece o GPS antes do Começar: o celular leva de segundos a um minuto para
@@ -228,10 +234,12 @@ export default function RunHomePage() {
   const doneToday = ranOn.has(today);
   const planned = !!session && isRunSession(session);
 
-  function begin(withSession) {
+  // custom: sessão montada no treino guiado (GuidedSetup).
+  function begin(withSession, custom = null) {
     if (getLiveRun()) return;
     try { localStorage.setItem(GPS_KEY, gps ? 'on' : 'off'); } catch { /* sem storage */ }
-    const s = withSession && planned ? { ...session, week: where.week || null, dayIndex: where.dayIndex } : null;
+    const s = custom || (withSession && planned ? { ...session, week: where.week || null, dayIndex: where.dayIndex } : null);
+    setGuidedOpen(false);
     // iPhone: a permissão do acelerômetro (cadência) só pode ser pedida no toque.
     requestMotionPermission();
     setLiveRun(startRun({ gps, session: s }));
@@ -263,13 +271,19 @@ export default function RunHomePage() {
           <p className={`run-record__gps run-record__gps--${warm.status}`} role="status">{gpsStatusText(warm.status, warm.accuracy)}</p>
         )}
         {doneToday && <p className="run-today__done">{t('✅ Corrida de hoje registrada')}</p>}
+        {!guidedOpen && !live && (
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGuidedOpen(true); setManualOpen(false); }}>
+            {t('🎯 Treino guiado: intervalado ou ritmo alvo')}
+          </button>
+        )}
         {!manualOpen && !live && (
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setManualOpen(true)}>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setManualOpen(true); setGuidedOpen(false); }}>
             {t('＋ Lançar corrida feita sem o app (esteira, relógio)')}
           </button>
         )}
       </div>
 
+      {guidedOpen && <GuidedSetup gps={gps} onStart={s => begin(false, s)} onCancel={() => setGuidedOpen(false)} />}
       {manualOpen && <ManualRunForm userId={user?.id} onClose={() => setManualOpen(false)} />}
 
       {editing || (!program && planOpen) ? (
