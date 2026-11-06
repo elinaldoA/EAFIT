@@ -7,6 +7,7 @@ import {
   RUN_GOALS, RUN_LEVELS, GOAL_LABEL, sessionTitle, programFromMetadata, programToday,
   describeSession, isRunSession, mondayOf, goalWeeks,
 } from './program';
+import RunRace from './RunRace';
 import {
   fetchRuns, flushPendingRuns, formatKm, formatClock, RUN_SAVED_EVENT, manualRun, saveRun, newRecords, describeRecord,
   fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice,
@@ -204,9 +205,9 @@ export default function RunHomePage() {
     return () => window.removeEventListener(RUN_SAVED_EVENT, load);
   }, [load]);
 
-  async function saveProgram({ goal, nivel }) {
+  async function saveProgram({ goal, nivel, start }) {
     setBusy(true);
-    const { error } = await updateProfile({ runGoal: goal, runNivel: nivel, runStart: mondayOf(today) });
+    const { error } = await updateProfile({ runGoal: goal, runNivel: nivel, runStart: start || mondayOf(today) });
     setBusy(false);
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     trackEvent('run_program', goal);
@@ -322,6 +323,8 @@ export default function RunHomePage() {
           <span>{t('O app diz qual corrida fazer em cada dia da semana.')}</span>
         </button>
       )}
+
+      <RunRace runs={runs} today={today} onProgram={saveProgram} />
     </section>
   );
 }

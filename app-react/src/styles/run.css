@@ -473,3 +473,8 @@
   background: none; border: 0; padding: 4px 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
 }
 .run-club__ranking { margin: 8px 0; }
+
+/* Meta por prova */
+.run-race { display: grid; gap: 8px; margin-top: 12px; }
+.run-race__count { margin: 0; font-size: var(--fs-lg, 1.1rem); font-weight: 700; }
+.run-race__advice { display: grid; gap: 6px; justify-items: start; }
