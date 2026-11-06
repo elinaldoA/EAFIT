@@ -106,6 +106,8 @@ export default function AuthScreen() {
   return (
     <div id="authScreen" className="auth-screen">
       <div className="auth-inner">
+        {/* No topo: no fim da página ficava abaixo da dobra em celulares menores. */}
+        <LanguageSwitch id="authLang" compact />
         <div className="auth-logo">
           <img className="auth-logo__icon" src={logoMark} alt="" />
           <h1 className="auth-logo__name">EAFIT</h1>
@@ -202,7 +204,6 @@ export default function AuthScreen() {
           )}
         </form>
 
-        <LanguageSwitch id="authLang" />
       </div>
     </div>
   );
