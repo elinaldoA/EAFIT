@@ -22,6 +22,7 @@ describe('pushTargetKey', () => {
       'engagement-first_workout_late-2026-10-08': 'treino',
       'engagement-invite_friends-2026-10-08': 'amigos',
       'engagement-run_week-2026-11-09': 'corrida',
+      'engagement-run_streak-2026-11-08': 'gravar',
       'program-signups-2026-10-20-9': 'programa',
       'influencer-signups-2026-10-20-9': 'programa',
       'program-message': 'programa_recados',
@@ -54,6 +55,8 @@ describe('kindTargetKey', () => {
     expect(kindTargetKey('protein_today')).toBe('nutricao');
     expect(kindTargetKey('progress_photo')).toBe('peso');
     expect(kindTargetKey('run_week')).toBe('corrida');
+    expect(kindTargetKey('run_goal')).toBe('corrida');
+    for (const kind of ['run_first', 'run_streak', 'run_comeback']) expect(kindTargetKey(kind)).toBe('gravar');
     expect(kindTargetKey('aviso')).toBeNull();
   });
 });

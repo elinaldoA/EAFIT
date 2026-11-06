@@ -17,9 +17,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { sendEmailBatch } from '../_shared/email.ts';
 import { type BulkEmailItem, bulkEmailItem, loadEmailUsers } from '../_shared/emailRecipients.ts';
-import { comebackEmail, inactivityEmail, weeklySummaryEmail } from '../_shared/emailTexts.ts';
+import { comebackEmail, inactivityEmail, runWeeklySummaryEmail, weeklySummaryEmail } from '../_shared/emailTexts.ts';
 import { inboxFromEmail, type InboxItem, saveInbox } from '../_shared/inbox.ts';
 import { langOf } from '../_shared/lang.ts';
+import { isRunner, weeklyKmGoal } from '../_shared/sport.ts';
 import { nowInSaoPaulo } from '../_shared/engagement.ts';
 import { surveyLink, surveyToken } from '../_shared/inactivity.ts';
 import {
@@ -49,6 +50,27 @@ type Workout = { id: string; user_id: string; workout_date: string };
 type SetRow = { workout_id: string; carga: string | number | null };
 type StateRow = { st_user: string; st_last_workout: string | null; st_last_seen: string | null; st_last_asked: string | null };
 type State = ActivityState & { lastWorkoutDate: string | null };
+
+type RunWeekRow = { rw_user: string; rw_meters: number | string; rw_runs: number | string; rw_prev_meters: number | string };
+
+// Km e corridas da semana passada (e km da anterior) de cada conta que correu:
+// base do e-mail de quem está no módulo de corrida. Sem a função no banco
+// (migration ainda não aplicada), ninguém de corrida recebe o resumo.
+async function loadRunWeeks(): Promise<Map<string, { meters: number; runs: number; prev: number }>> {
+  const out = new Map<string, { meters: number; runs: number; prev: number }>();
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase.rpc('email_run_week').range(from, from + PAGE - 1);
+    if (error) {
+      console.error('email_run_week error:', error.message);
+      break;
+    }
+    for (const r of (data || []) as RunWeekRow[]) {
+      out.set(r.rw_user, { meters: Number(r.rw_meters) || 0, runs: Number(r.rw_runs) || 0, prev: Number(r.rw_prev_meters) || 0 });
+    }
+    if (!data || data.length < PAGE) break;
+  }
+  return out;
+}
 
 // Último treino, último acesso e última pesquisa de cada conta. Se falhar
 // (ex.: migration ainda não aplicada) devolve null: o envio segue só com
@@ -185,6 +207,7 @@ Deno.serve(async (req) => {
   }
 
   const state = await loadInactivityState();
+  const runWeeks = await loadRunWeeks();
 
   const env = { supabaseUrl: SUPABASE_URL, secret: SERVICE_ROLE_KEY };
   const summaries: BulkEmailItem[] = [];
@@ -195,7 +218,20 @@ Deno.serve(async (req) => {
   const summaryInbox: { userId: string; item: InboxItem }[] = [];
   const comebackInbox: { userId: string; item: InboxItem }[] = [];
   const whys: { userId: string; pick: WhyEmail; item: BulkEmailItem }[] = [];
+  let runSummaries = 0;
   for (const u of users) {
+    // Quem está no módulo de corrida não treina musculação: nada de "volte a
+    // treinar" nem pesquisa de inatividade (baseados em treinos). Recebe o
+    // resumo da semana de corrida, se correu.
+    if (isRunner(u.meta)) {
+      const rw = runWeeks.get(u.id);
+      if (!rw) continue;
+      const goal = weeklyKmGoal(u.meta);
+      summaries.push(await bulkEmailItem(u, (lang, name) => runWeeklySummaryEmail(lang, rw.meters, rw.runs, rw.prev, goal, name), env, 'resumo'));
+      summaryInbox.push({ userId: u.id, item: inboxFromEmail('run_week', runWeeklySummaryEmail(langOf(u.meta), rw.meters, rw.runs, rw.prev, goal)) });
+      runSummaries++;
+      continue;
+    }
     const count = weekCount.get(u.id) || 0;
     const st = state?.get(u.id);
     const pick = weeklyEmailFor({
@@ -237,6 +273,7 @@ Deno.serve(async (req) => {
   const queue = [...summaries, ...comebacks, ...whys.map((w) => w.item)];
   const counts = {
     summary: summaries.length,
+    runSummary: runSummaries,
     comeback: comebacks.length,
     whyAbsent: whys.filter((w) => w.pick.segment === 'absent').length,
     whyIdle: whys.filter((w) => w.pick.segment === 'idle').length,

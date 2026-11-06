@@ -29,6 +29,7 @@ vi.mock('../data/workoutTemplates', () => templates);
 vi.mock('../lib/invite', () => invite);
 vi.mock('../lib/tutorial', () => ({ startTutorial: vi.fn() }));
 vi.mock('../lib/avatar', () => ({ saveAvatar: vi.fn() }));
+vi.mock('../modules/corrida/runs', async orig => ({ ...(await orig()), fetchRuns: vi.fn(async () => []) }));
 vi.mock('../data/treinoData', async (importOriginal) => ({ ...(await importOriginal()), todayDate: () => '2026-10-07' }));
 
 // Seções viram stubs que expõem só o que a página passa a elas (dados e ações).
@@ -37,12 +38,17 @@ vi.mock('../components/CollapsibleCard', () => ({
     <div data-testid={`card-${title}`}><h3>{title}</h3><span data-testid={`summary-${title}`}>{summary}</span>{children}</div>
   ),
 }));
-vi.mock('../components/ProfileHeader', () => ({ default: () => null }));
+vi.mock('../components/ProfileHeader', () => ({ default: ({ runStats }) => <div data-testid="header" data-run={runStats ? JSON.stringify(runStats) : ''} /> }));
 vi.mock('../components/ProfileFeedbackSection', () => ({ default: () => <div data-testid="feedback" /> }));
 vi.mock('../components/ProfilePauseSection', () => ({ default: () => null }));
 vi.mock('../components/ProfileTrainerSection', () => ({ default: () => null }));
 vi.mock('../components/LanguageSwitch', () => ({ default: () => null }));
-vi.mock('../components/ProfilePreferencesSection', () => ({ NotificationsSection: () => null, ExportSection: () => null }));
+vi.mock('../components/ProfilePreferencesSection', () => ({
+  NotificationsSection: ({ running }) => <div data-testid="notifications" data-running={String(!!running)} />,
+  ExportSection: () => null,
+  CoachSection: () => null,
+}));
+vi.mock('../components/ProfileTrainerRequestSection', () => ({ default: () => null }));
 vi.mock('../components/ProfilePersonalSection', () => ({
   default: ({ nome, setNome, onSave }) => (
     <div>
@@ -52,8 +58,8 @@ vi.mock('../components/ProfilePersonalSection', () => ({
   ),
 }));
 vi.mock('../components/ProfileBodySection', () => ({
-  default: ({ peso, setPeso, altura, setAltura, onSave, onRegeneratePlan }) => (
-    <div>
+  default: ({ peso, setPeso, altura, setAltura, onSave, onRegeneratePlan, showTraining }) => (
+    <div data-show-training={String(showTraining)}>
       <input aria-label="peso" value={peso} onChange={e => setPeso(e.target.value)} />
       <input aria-label="altura" value={altura} onChange={e => setAltura(e.target.value)} />
       <button onClick={onSave}>salvar corpo</button>
@@ -371,5 +377,82 @@ describe('PerfilPage', () => {
       expect(screen.queryByText('Convidar amigos')).toBeNull();
       expect(screen.queryByTestId('feedback')).toBeNull();
     });
+  });
+});
+
+// Quem está no módulo de corrida vê um Perfil dedicado: sem os cartões de
+// treino, nutrição e peso, e com os do esporte.
+describe('PerfilPage no módulo de corrida', () => {
+  const RUNNER = {
+    id: 'u1', app_metadata: { beta_modules: ['corrida'] },
+    user_metadata: { nome: 'Ana', peso: '70', altura: '175', esporte: 'corrida', runWeeklyKm: 20, runGoal: '10k', runNivel: 'intermediario', runStart: '2026-09-28' },
+  };
+
+  beforeEach(() => { auth.user = RUNNER; });
+
+  it('troca os cartões de treino pelos de corrida', () => {
+    render(<PerfilPage active />);
+    expect(screen.getByTestId('summary-Metas').textContent).toBe('20 km por semana');
+    expect(screen.getByTestId('card-Preferências de corrida')).toBeTruthy();
+    expect(screen.getByText('Meu programa')).toBeTruthy();
+    expect(screen.getByText('Tênis e zonas de privacidade')).toBeTruthy();
+    expect(screen.queryByTestId('card-Nutrição')).toBeNull();
+    expect(screen.queryByText('Peso e fotos de progresso')).toBeNull();
+    expect(screen.queryByText('Meu personal')).toBeNull();
+    expect(screen.queryByText('Sou personal trainer')).toBeNull();
+    expect(screen.queryByText('Treinador por voz')).toBeNull();
+    expect(screen.queryByText('Ver tutorial')).toBeNull();
+  });
+
+  it('o corpo some com meta, nível, local e plano; o topo mostra as estatísticas da corrida', async () => {
+    render(<PerfilPage active />);
+    expect(document.querySelector('[data-show-training]').getAttribute('data-show-training')).toBe('false');
+    expect(screen.getByTestId('notifications').getAttribute('data-running')).toBe('true');
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('header').getAttribute('data-run'))).toMatchObject({ week: '0,0/20', total: '0,0' }));
+    expect(screen.getByText('Corra junto')).toBeTruthy();
+  });
+
+  it('mudar de faixa de IMC não gera plano de musculação para quem corre', async () => {
+    render(<PerfilPage active />);
+    type('peso', '95');
+    fireEvent.click(screen.getByText('salvar corpo'));
+    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalled());
+    expect(templates.generatePlan).not.toHaveBeenCalled();
+    expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
+  });
+
+  it('salva e remove a meta semanal de km', async () => {
+    render(<PerfilPage active />);
+    const input = screen.getByLabelText('Quilômetros por semana');
+    expect(input.value).toBe('20');
+    fireEvent.change(input, { target: { value: '35.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar meta semanal' }));
+    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith({ runWeeklyKm: 35.5 }));
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar meta semanal' }));
+    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith({ runWeeklyKm: null }));
+    fireEvent.change(input, { target: { value: '500' } });
+    auth.updateProfile.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar meta semanal' }));
+    expect(auth.updateProfile).not.toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith(expect.stringMatching(/1 a 300 km/));
+  });
+
+  it('as preferências de corrida ficam no aparelho', () => {
+    localStorage.setItem('eafit_run_voice', 'off');
+    render(<PerfilPage active />);
+    const voice = screen.getByLabelText(/Voz a cada quilômetro/);
+    expect(voice.checked).toBe(false);
+    expect(screen.getByLabelText(/Pausa automática/).checked).toBe(true);
+    fireEvent.click(voice);
+    expect(localStorage.getItem('eafit_run_voice')).toBe('on');
+    fireEvent.click(screen.getByLabelText(/Medir distância e percurso/));
+    expect(localStorage.getItem('eafit_run_gps')).toBe('off');
+  });
+
+  it('o atalho do programa abre a aba Gravar', () => {
+    render(<PerfilPage active />);
+    fireEvent.click(screen.getByText('Meu programa'));
+    expect(window.location.hash).toBe('#gravar');
   });
 });

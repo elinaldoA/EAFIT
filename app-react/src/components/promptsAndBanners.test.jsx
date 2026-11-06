@@ -187,6 +187,17 @@ describe('PushPrompt', () => {
     expect(screen.getByText('🔔 Quer ser lembrado de treinar?')).toBeTruthy();
   });
 
+  it('no módulo de corrida o convite fala de correr, em cartão, e liga o mesmo fluxo', async () => {
+    const { container } = render(<PushPrompt running />);
+    expect(screen.getByText('🔔 Quer ser avisado para correr?')).toBeTruthy();
+    expect(screen.getByText(/resumo da sua semana e incentivos para correr/)).toBeTruthy();
+    expect(screen.queryByText(/lembrado de treinar/)).toBeNull();
+    expect(container.firstChild.className).toContain('dash-card');
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar lembretes' }));
+    await waitFor(() => expect(screen.queryByText(/avisado para correr/)).toBeNull());
+    expect(h.reminders[1]).toHaveBeenCalledTimes(1);
+  });
+
   it('não oferece sem suporte, com permissão negada ou com lembretes já ativos', () => {
     h.notifSupported = false;
     const a = render(<PushPrompt />);

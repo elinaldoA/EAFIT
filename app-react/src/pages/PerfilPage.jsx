@@ -44,6 +44,9 @@ import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
 import { takeProfileCardToOpen } from '../lib/appNav';
 import { startTutorial } from '../lib/tutorial';
+import { useRunProfileStats, RunGoalSection, RunPrefsSection, RunShortcuts } from '../modules/corrida/RunProfile';
+import { weeklyKmGoal } from '../modules/corrida/runProfileStats';
+import { decimal } from '../modules/corrida/runs';
 
 import { validateBody, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
 import { t, locale, lang } from '../lib/i18n';
@@ -82,6 +85,10 @@ export default function PerfilPage({ active }) {
   const [biometricOn, setBiometricOn] = useState(() => !!getLock(user?.id));
   const season = useSeason();
   const { module: sport, available: sports } = useSportModule();
+  // Módulo sem plano de musculação (corrida): o Perfil troca os cartões de
+  // treino, nutrição e peso pelos do esporte.
+  const usesWorkouts = sport.workoutPlan !== false;
+  const runStats = useRunProfileStats(active && !usesWorkouts, user);
 
   useEffect(() => {
     let alive = true;
@@ -173,7 +180,7 @@ export default function PerfilPage({ active }) {
       }
     }
 
-    if (user && bracketChanged && !planByTrainer && !regenerating) {
+    if (user && usesWorkouts && bracketChanged && !planByTrainer && !regenerating) {
       setRegenerating(true);
       try {
         await generateAndActivatePlan();
@@ -280,6 +287,7 @@ export default function PerfilPage({ active }) {
       <ProfileHeader
         user={user} avatarData={avatarData} uploadingAvatar={uploadingAvatar}
         onAvatarChange={handleAvatarChange} stats={stats} weeklyGoalNum={weeklyGoalNum}
+        runStats={usesWorkouts ? null : runStats}
       />
 
       <div className="section-group">
@@ -306,45 +314,65 @@ export default function PerfilPage({ active }) {
             pesoAlvo={pesoAlvo} setPesoAlvo={setPesoAlvo}
             progress={progress} imc={imc} onSave={handleSave}
             regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}
+            showTraining={usesWorkouts}
           />
         </CollapsibleCard>
 
-        <CollapsibleCard icon="🎯" title={t('Metas')} summary={t('{weekly} treinos/semana · {water}L de água por dia', { weekly: weeklyGoalNum, water: waterGoalLabel })}>
-          <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
-          <div className="collapse__divider" />
-          <MacrosSection
-            macroAgua={macroAgua} setMacroAgua={setMacroAgua}
-            suggestedGoal={suggestedWaterGoal}
-            onSave={handleSaveWaterGoal}
-          />
-        </CollapsibleCard>
+        {usesWorkouts ? (
+          <>
+            <CollapsibleCard icon="🎯" title={t('Metas')} summary={t('{weekly} treinos/semana · {water}L de água por dia', { weekly: weeklyGoalNum, water: waterGoalLabel })}>
+              <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
+              <div className="collapse__divider" />
+              <MacrosSection
+                macroAgua={macroAgua} setMacroAgua={setMacroAgua}
+                suggestedGoal={suggestedWaterGoal}
+                onSave={handleSaveWaterGoal}
+              />
+            </CollapsibleCard>
 
-        <CollapsibleCard icon="🍽️" title={t('Nutrição')} summary={nutritionGoals ? t('{kcal} kcal · {protein} g de proteína por dia', { kcal: nutritionGoals.kcal, protein: nutritionGoals.protein }) : t('Metas diárias de calorias e proteína')}>
-          <ProfileNutritionSection goals={nutritionGoals} />
-        </CollapsibleCard>
+            <CollapsibleCard icon="🍽️" title={t('Nutrição')} summary={nutritionGoals ? t('{kcal} kcal · {protein} g de proteína por dia', { kcal: nutritionGoals.kcal, protein: nutritionGoals.protein }) : t('Metas diárias de calorias e proteína')}>
+              <ProfileNutritionSection goals={nutritionGoals} />
+            </CollapsibleCard>
 
-        <button type="button" className="shortcut-card" onClick={openBodyProgress}>
-          <span className="collapse__icon" aria-hidden="true">📈</span>
-          <span className="collapse__text">
-            <span className="collapse__title">{t('Peso e fotos de progresso')}</span>
-            <span className="collapse__summary">
-              {weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
-            </span>
-          </span>
-          <span className="collapse__chevron" aria-hidden="true">›</span>
-        </button>
+            <button type="button" className="shortcut-card" onClick={openBodyProgress}>
+              <span className="collapse__icon" aria-hidden="true">📈</span>
+              <span className="collapse__text">
+                <span className="collapse__title">{t('Peso e fotos de progresso')}</span>
+                <span className="collapse__summary">
+                  {weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
+                </span>
+              </span>
+              <span className="collapse__chevron" aria-hidden="true">›</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <CollapsibleCard
+              icon="🎯" title={t('Metas')}
+              summary={weeklyKmGoal(md) ? t('{v1} km por semana', { v1: decimal(weeklyKmGoal(md)) }) : t('Defina uma meta de km por semana')}
+            >
+              <RunGoalSection meta={md} updateProfile={updateProfile} toast={toast} />
+            </CollapsibleCard>
+
+            <CollapsibleCard icon="🏃" title={t('Preferências de corrida')} summary={t('Voz, pausa automática e GPS')}>
+              <RunPrefsSection />
+            </CollapsibleCard>
+
+            <RunShortcuts meta={md} />
+          </>
+        )}
       </div>
 
       <ProfileAmbassadorSection />
 
       {isFlagOn(config.flags, 'convite_amigos') && (
         <div className="section-group">
-          <div className="section-group__label">{t('Treine junto')}</div>
+          <div className="section-group__label">{usesWorkouts ? t('Treine junto') : t('Corra junto')}</div>
           <button type="button" className="shortcut-card" onClick={handleInvite}>
             <span className="collapse__icon" aria-hidden="true">🤝</span>
             <span className="collapse__text">
               <span className="collapse__title">{t('Convidar amigos')}</span>
-              <span className="collapse__summary">{t('Mande o link do EAFIT pra quem treina com você')}</span>
+              <span className="collapse__summary">{usesWorkouts ? t('Mande o link do EAFIT pra quem treina com você') : t('Mande o link do EAFIT pra quem corre com você')}</span>
             </span>
             <span className="collapse__chevron" aria-hidden="true">›</span>
           </button>
@@ -374,9 +402,10 @@ export default function PerfilPage({ active }) {
           <NotificationsSection
             user={user} updateProfile={updateProfile} toast={toast}
             remindersEnabled={remindersEnabled} toggleReminders={toggleReminders}
+            running={!usesWorkouts}
           />
         </CollapsibleCard>
-        {isCoachAvailable() && (
+        {usesWorkouts && isCoachAvailable() && (
           <CollapsibleCard
             icon="🎙️" title={t('Treinador por voz')}
             summary={user.user_metadata?.coachEnabled ? t('Ativado') : t('Desativado')}
@@ -386,7 +415,7 @@ export default function PerfilPage({ active }) {
         )}
         <CollapsibleCard
           icon="⏸" title={t('Modo pausa')}
-          summary={activePause(user.user_metadata, todayDate()) ? t('Pausado até {v1}', { v1: formatDayBR(activePause(user.user_metadata, todayDate()).to) }) : t('Viagem ou doença? Pause sem perder a sequência')}
+          summary={activePause(user.user_metadata, todayDate()) ? t('Pausado até {v1}', { v1: formatDayBR(activePause(user.user_metadata, todayDate()).to) }) : usesWorkouts ? t('Viagem ou doença? Pause sem perder a sequência') : t('Viagem ou lesão? Pause sem perder a sequência')}
         >
           <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
         </CollapsibleCard>
@@ -395,28 +424,34 @@ export default function PerfilPage({ active }) {
             <ProfileBiometricSection user={user} toast={toast} onChange={setBiometricOn} />
           </CollapsibleCard>
         )}
-        <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal trainer')}>
-          <ProfileTrainerSection toast={toast} />
-        </CollapsibleCard>
-        <CollapsibleCard icon="🧑‍🏫" title={t('Sou personal trainer')} summary={t('Peça o acesso ao modo Personal')}>
-          <ProfileTrainerRequestSection toast={toast} />
-        </CollapsibleCard>
+        {usesWorkouts && (
+          <>
+            <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal trainer')}>
+              <ProfileTrainerSection toast={toast} />
+            </CollapsibleCard>
+            <CollapsibleCard icon="🧑‍🏫" title={t('Sou personal trainer')} summary={t('Peça o acesso ao modo Personal')}>
+              <ProfileTrainerRequestSection toast={toast} />
+            </CollapsibleCard>
+          </>
+        )}
         <CollapsibleCard icon="💾" title={t('Exportar e backup')} summary={t('CSV, JSON ou relatório para imprimir')}>
           <ExportSection exporting={exporting} onExport={handleExport} />
         </CollapsibleCard>
       </div>
 
-      <div className="section-group">
-        <div className="section-group__label">{t('Ajuda')}</div>
-        <button type="button" className="shortcut-card" onClick={startTutorial}>
-          <span className="collapse__icon" aria-hidden="true">🎓</span>
-          <span className="collapse__text">
-            <span className="collapse__title">{t('Ver tutorial')}</span>
-            <span className="collapse__summary">{t('Passo a passo de todas as funções do app')}</span>
-          </span>
-          <span className="collapse__chevron" aria-hidden="true">›</span>
-        </button>
-      </div>
+      {sport.tutorial && (
+        <div className="section-group">
+          <div className="section-group__label">{t('Ajuda')}</div>
+          <button type="button" className="shortcut-card" onClick={startTutorial}>
+            <span className="collapse__icon" aria-hidden="true">🎓</span>
+            <span className="collapse__text">
+              <span className="collapse__title">{t('Ver tutorial')}</span>
+              <span className="collapse__summary">{t('Passo a passo de todas as funções do app')}</span>
+            </span>
+            <span className="collapse__chevron" aria-hidden="true">›</span>
+          </button>
+        </div>
+      )}
 
       <div className="section-group">
         <div className="section-group__label">{t('Conta')}</div>

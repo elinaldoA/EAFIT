@@ -11,6 +11,7 @@ import {
 } from './runs';
 import { lastWeekSummary } from './challenges';
 import RunComments from './RunComments';
+import PushPrompt from '../../components/PushPrompt';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
 
@@ -167,6 +168,8 @@ export default function RunFeedPage() {
   return (
     <section id="page-inicio" className="page active">
       <WeekSummary runs={mine} />
+      {/* Quem já correu pode ligar os avisos de corrida: o convite só existia no resumo do treino de musculação. */}
+      {feed.some(r => r.isMe) && <PushPrompt running />}
       {!hasFriendsRuns && (
         <button type="button" className="dash-card run-plan-cta" onClick={() => goTo({ tab: 'desafios' })}>
           <strong>{t('👥 Corra com os amigos')}</strong>

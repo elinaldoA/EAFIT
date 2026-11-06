@@ -1,8 +1,8 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { renderEmail } from './emailLayout.ts';
 import {
-  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, firstNameOf, inactivityEmail, shouldSendWelcome, weeklyExtrasLine, weeklySummaryEmail,
-  welcomeEmail,
+  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, firstNameOf, inactivityEmail, runWeeklySummaryEmail, shouldSendWelcome, weeklyExtrasLine,
+  weeklySummaryEmail, welcomeEmail,
 } from './emailTexts.ts';
 
 Deno.test('welcomeEmail: pt e en, com botão pro app', () => {
@@ -29,6 +29,37 @@ Deno.test('weeklySummaryEmail: números da semana e meta batida ou não', () => 
   assertEquals(weeklySummaryEmail('pt', 2, 4, 0).heading, 'Sua semana em números');
   assertEquals(weeklySummaryEmail('en', 2, 4, 0).subject, 'Your week on EAFIT');
   assertEquals(hit.cta?.url, 'https://eafit.com.br/app/#dash');
+});
+
+Deno.test('welcomeEmail: neutro, fala dos dois esportes (o cadastro ainda não escolheu)', () => {
+  const pt = welcomeEmail('pt', 'Ana');
+  assertStringIncludes(pt.paragraphs.join(' '), 'musculação');
+  assertStringIncludes(pt.paragraphs.join(' '), 'corrida');
+  assertStringIncludes(pt.footnote ?? '', 'treinar ou correr');
+  assertStringIncludes(welcomeEmail('en').paragraphs.join(' '), 'running');
+});
+
+Deno.test('runWeeklySummaryEmail: km, corridas, comparação e meta', () => {
+  const up = runWeeklySummaryEmail('pt', 12300, 2, 10000, null);
+  assertEquals(up.subject, 'Sua semana de corrida no EAFIT');
+  assertStringIncludes(up.paragraphs[0], '12,3 km em 2 corridas');
+  assertStringIncludes(up.paragraphs[1], '23% a mais');
+  assertEquals(up.cta?.url, 'https://eafit.com.br/app/#inicio');
+
+  const down = runWeeklySummaryEmail('pt', 5000, 1, 10000, 20);
+  assertStringIncludes(down.paragraphs[0], '5,0 km em 1 corrida.');
+  assertStringIncludes(down.paragraphs[1], '50% a menos');
+  assertStringIncludes(down.paragraphs[2], 'faltaram 15,0 km');
+
+  const hit = runWeeklySummaryEmail('en', 21500, 3, 0, 20);
+  assertEquals(hit.subject, 'Weekly goal hit! Your running week on EAFIT');
+  assertStringIncludes(hit.paragraphs[0], '21.5 km in 3 runs');
+  assertEquals(hit.paragraphs.length, 3); // sem comparação quando não havia semana anterior
+  assertStringIncludes(hit.paragraphs[1], 'You hit your goal of 20.0 km');
+
+  const named = runWeeklySummaryEmail('pt', 3000, 1, 3000, null, 'Bia');
+  assertEquals(named.paragraphs[0], 'Oi, Bia!');
+  assertStringIncludes(named.paragraphs[2], 'mesmo da semana anterior');
 });
 
 Deno.test('comebackEmail: dias parado, ou primeiro treino pra quem nunca treinou', () => {

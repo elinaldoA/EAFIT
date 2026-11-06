@@ -30,6 +30,8 @@ export const NAV_TARGETS = {
   // Resumo da semana de corrida: aba Início do EAFIT Run (em outro módulo o
   // hash não é uma aba e a tela inicial abre normalmente).
   corrida: { mode: 'aluno', tab: 'inicio' },
+  // Avisos que convidam a correr (primeira corrida, sequência, volta): aba Gravar.
+  gravar: { mode: 'aluno', tab: 'gravar' },
   feedback: { mode: 'aluno', tab: 'perfil', profileCard: 'feedback' },
   // Lembrete de aula vai pro aluno e pro personal: mantém o modo em que a
   // pessoa está. No modo Personal 'treino' não é aba e cai no Painel, onde
@@ -49,7 +51,8 @@ export function kindTargetKey(kind) {
   if (kind === 'invite_friends') return 'amigos';
   if (kind === 'weekly_summary') return 'semana'; // cópia no app do e-mail semanal
   if (kind === 'protein_today') return 'nutricao';
-  if (kind === 'run_week') return 'corrida';
+  if (kind === 'run_week' || kind === 'run_goal') return 'corrida';
+  if (kind === 'run_first' || kind === 'run_streak' || kind === 'run_comeback') return 'gravar';
   if (kind === 'progress_photo') return 'peso'; // fotos moram em Perfil → Peso e fotos
   if (kind === 'seguranca') return 'recordes'; // resposta automática a relato de dor: histórico em Dashboard → Recordes
   return WORKOUT_KINDS.includes(kind) ? 'treino' : null;

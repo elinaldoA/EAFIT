@@ -5,6 +5,8 @@ export const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 // Valores de exemplo só pra pré-visualizar o texto no painel.
 export const SAMPLE_VALUES = {
   nome: 'Ana', foco: 'Peito / Ombro', quando: 'em 2 dias', faltam: 2, feitos: 3, meta: 5, dias: 21,
+  // regras de corrida
+  km: '12,3', corridas: 2, semanas: 4,
 };
 
 // Espelha renderTemplate de supabase/functions/_shared/engagement.ts — os dois

@@ -65,6 +65,7 @@ const TARGET_LABELS = {
   treino: t('Ir para o treino'),
   semana: t('Ver minha semana'),
   corrida: t('Ver minha semana de corrida'),
+  gravar: t('Gravar uma corrida'),
 };
 
 // Pra onde o aviso leva (destino de lib/pushTarget.js + o texto do link) ou

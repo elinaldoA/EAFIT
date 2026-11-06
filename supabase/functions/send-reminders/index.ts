@@ -15,6 +15,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { langOf } from '../_shared/lang.ts';
+import { isRunner } from '../_shared/sport.ts';
 import {
   discomfortFollowupText, inactivityText, streakRiskText, waterText, weeklySummaryText, weightUpdateText,
 } from '../_shared/reminderTexts.ts';
@@ -258,6 +259,9 @@ Deno.serve(async (req) => {
 
   for (const userId of userIds) {
     const meta = metaById.get(userId) || {};
+    // Quem está no módulo de corrida não tem água, nutrição nem treino no app:
+    // os avisos dele vêm de send-engagement (regras de corrida) e do e-mail semanal.
+    if (isRunner(meta)) continue;
     const macroAgua = Number(meta.macroAgua) > 0 ? Number(meta.macroAgua) : DEFAULT_MACRO_AGUA;
     const userSubs = subs.filter((s) => s.user_id === userId);
     const lang = langOf(meta);

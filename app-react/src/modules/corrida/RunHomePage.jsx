@@ -20,15 +20,11 @@ import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported, useGeoTracker } from './useGeoTracker';
 import { gpsStatusText } from './gpsStatus';
 import { useLiveRun } from './useLiveRun';
+import { GPS_KEY, readPref, writePref } from './runPrefs';
 
 import { t } from '../../lib/i18n';
 const WEEKDAYS = [t('Seg'), t('Ter'), t('Qua'), t('Qui'), t('Sex'), t('Sáb'), t('Dom')];
 const LEVEL_LABEL = { iniciante: t('Iniciante'), intermediario: t('Intermediário'), avancado: t('Avançado') };
-const GPS_KEY = 'eafit_run_gps';
-
-function readGpsPref() {
-  try { return localStorage.getItem(GPS_KEY) !== 'off'; } catch { return true; }
-}
 
 // Datas (YYYY-MM-DD) de segunda a domingo da semana de `today`.
 function weekDates(today) {
@@ -185,7 +181,7 @@ export default function RunHomePage() {
   const [guidedOpen, setGuidedOpen] = useState(false);
   const [gpxOpen, setGpxOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [gps, setGps] = useState(() => readGpsPref() && geoSupported());
+  const [gps, setGps] = useState(() => readPref(GPS_KEY) && geoSupported());
   // Aquece o GPS antes do Começar: o celular leva de segundos a um minuto para
   // achar os satélites, e assim a corrida já começa com sinal. Para quando a
   // corrida começa (a tela ao vivo tem o próprio rastreio).
@@ -239,7 +235,7 @@ export default function RunHomePage() {
   // custom: sessão montada no treino guiado (GuidedSetup).
   function begin(withSession, custom = null) {
     if (getLiveRun()) return;
-    try { localStorage.setItem(GPS_KEY, gps ? 'on' : 'off'); } catch { /* sem storage */ }
+    writePref(GPS_KEY, gps);
     const s = custom || (withSession && planned ? { ...session, week: where.week || null, dayIndex: where.dayIndex } : null);
     setGuidedOpen(false);
     // iPhone: a permissão do acelerômetro (cadência) só pode ser pedida no toque.

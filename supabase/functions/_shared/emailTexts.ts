@@ -34,12 +34,12 @@ export function welcomeEmail(lang: Lang, name?: string): EmailContent {
       eyebrow: 'Welcome',
       heading: 'Your account is ready',
       paragraphs: [
-        'So glad you are here! With EAFIT you get a training plan made for you, you can log your loads and records, keep track of your water and watch your progress grow.',
+        'So glad you are here! At EAFIT you pick your sport: in strength training you get a plan made for you and log your loads, records and water; in running you record your runs with GPS, see your pace and route and take on challenges with friends. Either way, you watch your progress grow.',
         'Tip: to keep the app one tap away, open eafit.com.br/app on your phone and choose Install (or Add to Home Screen). Once installed, it even works without internet.',
         'Any question along the way? Just reply to this email, a real person reads it.',
       ],
       cta: { label: 'Open the app', url: APP_URL },
-      footnote: 'Turn on notifications in the app and we will remind you of your workouts and your water.',
+      footnote: 'Turn on notifications in the app and we will remind you to train or run.',
     }
     : {
       subject: name ? `Boas-vindas ao EAFIT, ${name}!` : 'Boas-vindas ao EAFIT',
@@ -47,12 +47,12 @@ export function welcomeEmail(lang: Lang, name?: string): EmailContent {
       eyebrow: 'Boas-vindas',
       heading: 'Sua conta está pronta',
       paragraphs: [
-        'Que bom ter você por aqui! No EAFIT você recebe um plano de treino feito pra você, registra suas cargas e recordes, acompanha a água do dia e vê a sua evolução crescer.',
+        'Que bom ter você por aqui! No EAFIT você escolhe o seu esporte: na musculação recebe um plano de treino feito pra você e registra cargas, recordes e a água do dia; na corrida grava seus treinos com GPS, vê ritmo e percurso e entra em desafios com os amigos. Em qualquer um, você vê a sua evolução crescer.',
         'Uma dica: pra deixar o app a um toque de distância, abra eafit.com.br/app no celular e escolha Instalar (ou Adicionar à tela de início). Depois de instalado, ele funciona até sem internet.',
         'Ficou com alguma dúvida? É só responder a este e-mail, tem uma pessoa de verdade lendo.',
       ],
       cta: { label: 'Abrir o app', url: APP_URL },
-      footnote: 'Ative as notificações no app e a gente te lembra dos treinos e da água.',
+      footnote: 'Ative as notificações no app e a gente te lembra de treinar ou correr.',
     });
 }
 
@@ -154,6 +154,53 @@ function weeklySummaryBase(lang: Lang, count: number, goal: number, volume: numb
       ],
       cta: { label: 'Ver minha evolução', url: `${APP_URL}#dash` },
     };
+}
+
+// Km com uma casa decimal no idioma: "12,3" em português, "12.3" em inglês.
+function kmText(lang: Lang, meters: number): string {
+  const text = (Math.round(meters / 100) / 10).toFixed(1);
+  return lang === 'en' ? text : text.replace('.', ',');
+}
+
+// Resumo semanal de quem está no módulo de corrida: km e corridas da semana
+// passada, comparação com a anterior e, se a pessoa definiu, a meta de km.
+export function runWeeklySummaryEmail(
+  lang: Lang, meters: number, runs: number, prevMeters: number, goalKm: number | null, name?: string,
+): EmailContent {
+  const km = kmText(lang, meters);
+  const change = prevMeters > 0 ? Math.round(((meters - prevMeters) / prevMeters) * 100) : null;
+  const hit = goalKm !== null && meters >= goalKm * 1000;
+  const en = lang === 'en';
+
+  const compare = change === null ? null
+    : change > 0 ? (en ? `That is ${change}% more than the week before.` : `Foram ${change}% a mais que na semana anterior.`)
+    : change < 0 ? (en ? `That is ${-change}% less than the week before. No stress, every week is a fresh start.` : `Foram ${-change}% a menos que na semana anterior. Sem pressão, toda semana é um recomeço.`)
+    : (en ? 'Same as the week before: nice consistency.' : 'O mesmo da semana anterior: boa constância.');
+  const goal = goalKm === null ? null
+    : hit ? (en ? `You hit your goal of ${kmText(lang, goalKm * 1000)} km. Congrats!` : `Você bateu a meta de ${kmText(lang, goalKm * 1000)} km. Parabéns!`)
+      : (en ? `Your goal was ${kmText(lang, goalKm * 1000)} km: ${kmText(lang, goalKm * 1000 - meters)} km to go.` : `Sua meta era de ${kmText(lang, goalKm * 1000)} km: faltaram ${kmText(lang, goalKm * 1000 - meters)} km.`);
+
+  const lines = en
+    ? [`Last week you ran ${km} km in ${runs} ${runs === 1 ? 'run' : 'runs'}.`, compare, goal, 'How about scheduling your next run?']
+    : [`Na semana passada você correu ${km} km em ${runs} ${runs === 1 ? 'corrida' : 'corridas'}.`, compare, goal, 'Que tal marcar a sua próxima corrida?'];
+
+  return greet(lang, name, en
+    ? {
+      subject: hit ? 'Weekly goal hit! Your running week on EAFIT' : 'Your running week on EAFIT',
+      preheader: `${km} km in ${runs} ${runs === 1 ? 'run' : 'runs'} last week.`,
+      eyebrow: 'Weekly summary',
+      heading: hit ? 'Weekly goal hit!' : 'Your running week',
+      paragraphs: lines.filter((l): l is string => !!l),
+      cta: { label: 'See my week', url: `${APP_URL}#inicio` },
+    }
+    : {
+      subject: hit ? 'Meta semanal batida! Sua semana de corrida no EAFIT' : 'Sua semana de corrida no EAFIT',
+      preheader: `${km} km em ${runs} ${runs === 1 ? 'corrida' : 'corridas'} na semana passada.`,
+      eyebrow: 'Resumo semanal',
+      heading: hit ? 'Meta semanal batida!' : 'Sua semana de corrida',
+      paragraphs: lines.filter((l): l is string => !!l),
+      cta: { label: 'Ver minha semana', url: `${APP_URL}#inicio` },
+    });
 }
 
 // Convite pra voltar: quem parou há 1 a 4 semanas, ou criou a conta e ainda

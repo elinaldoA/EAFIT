@@ -2,8 +2,9 @@ import { t, locale } from '../lib/i18n';
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
   meta, setMeta, nivel, setNivel, local, setLocal, pesoAlvo, setPesoAlvo,
-  progress, imc, onSave, regenerating, onRegeneratePlan,
+  progress, imc, onSave, regenerating, onRegeneratePlan, showTraining = true,
 }) {
+  // showTraining false (módulo sem plano de musculação): só os dados do corpo.
   return (
     <>
       <div className="profile-section__fields">
@@ -39,6 +40,7 @@ export default function ProfileBodySection({
           />
         </div>
       </div>
+      {showTraining && (
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="profileMeta">{t('Meta principal')}</label>
         <select id="profileMeta" className="input input--sm" value={meta} onChange={e => setMeta(e.target.value)}>
@@ -50,6 +52,8 @@ export default function ProfileBodySection({
           <option value="resistencia">{t('Resistência / Condicionamento')}</option>
         </select>
       </div>
+      )}
+      {showTraining && (
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="profileNivel">{t('Nível de experiência')}</label>
         <select id="profileNivel" className="input input--sm" value={nivel} onChange={e => setNivel(e.target.value)}>
@@ -58,6 +62,8 @@ export default function ProfileBodySection({
           <option value="avancado">{t('Avançado')}</option>
         </select>
       </div>
+      )}
+      {showTraining && (
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="profileLocal">{t('Onde você treina')}</label>
         <select id="profileLocal" className="input input--sm" value={local} onChange={e => setLocal(e.target.value)}>
@@ -66,6 +72,7 @@ export default function ProfileBodySection({
           <option value="casa">{t('Em casa')}</option>
         </select>
       </div>
+      )}
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="profilePesoAlvo">{t('Peso alvo (kg)')}</label>
         <input
@@ -101,9 +108,11 @@ export default function ProfileBodySection({
         </div>
       )}
       <button className="btn btn--primary btn--full" onClick={onSave}>{t('Salvar dados corporais')}</button>
-      <button className="btn btn--outline btn--full" disabled={regenerating} onClick={onRegeneratePlan}>
-        {regenerating ? t('Gerando novo treino…') : t('🔄 Gerar novo treino com esses dados')}
-      </button>
+      {showTraining && (
+        <button className="btn btn--outline btn--full" disabled={regenerating} onClick={onRegeneratePlan}>
+          {regenerating ? t('Gerando novo treino…') : t('🔄 Gerar novo treino com esses dados')}
+        </button>
+      )}
     </>
   );
 }

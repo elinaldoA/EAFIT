@@ -178,7 +178,7 @@ function Shell() {
       {studentView && !needsOnboarding && (
         <AvatarProvider>
           <WorkoutProvider>
-            <ReminderScheduler />
+            {sport.workoutPlan !== false && <ReminderScheduler />}
             {sport.Host && <Suspense fallback={null}><sport.Host /></Suspense>}
             <TrainerInvitePrompt />
             <div className="app-screen" style={{ display: 'flex' }}>

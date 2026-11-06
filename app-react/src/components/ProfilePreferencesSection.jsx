@@ -19,12 +19,20 @@ const NOTIFY_PREFS = [
   { key: 'notifyNutritionSummary', label: t('Resumo semanal da nutrição (segunda de manhã)') },
 ];
 
-export function NotificationsSection({ user, updateProfile, toast, remindersEnabled, toggleReminders }) {
+// Módulo de corrida: sem lembretes de treino, água, refeição, proteína e
+// peso (as telas não existem lá). Fica o incentivo para correr, que traz o
+// resumo semanal da corrida.
+const RUN_NOTIFY_PREFS = [
+  { key: 'notifyEngagement', label: t('Lembretes e incentivos para correr (resumo da semana de corrida e volta aos treinos)') },
+];
+
+export function NotificationsSection({ user, updateProfile, toast, remindersEnabled, toggleReminders, running = false }) {
+  const prefs = running ? RUN_NOTIFY_PREFS : NOTIFY_PREFS;
   return (
     <>
       <div className="profile-field profile-field--row">
         <label className="profile-field__label" htmlFor="remindersToggle">
-          {t('Lembretes de refeição, treino e água (app aberto)')}
+          {running ? t('Receber avisos no aparelho, mesmo com o app fechado') : t('Lembretes de refeição, treino e água (app aberto)')}
         </label>
         <input
           type="checkbox" id="remindersToggle"
@@ -47,6 +55,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
           .catch(err => toast(t('❌ Falhou: {message}', { message: err.message })))}
       >{t('Testar notificação')}</button>
 
+      {!running && (
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="trainingHour">{t('Horário em que costumo treinar')}</label>
         <select
@@ -62,8 +71,9 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
         </select>
         <span className="profile-field__hint">{t('O lembrete de "hoje é dia de treino" chega 1h antes.')}</span>
       </div>
+      )}
 
-      {NOTIFY_PREFS.map(({ key, label }) => (
+      {prefs.map(({ key, label }) => (
         <div className="profile-field profile-field--row" key={key}>
           <label className="profile-field__label" htmlFor={key}>{label}</label>
           <input
@@ -77,6 +87,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
       ))}
 
       {/* Aviso dentro do modo treino: não depende das notificações do aparelho. */}
+      {!running && (
       <div className="profile-field profile-field--row">
         <label className="profile-field__label" htmlFor="notifyWorkoutWater">
           {t('Lembrar de beber água durante o treino (automático a cada 15 min de treino)')}
@@ -88,6 +99,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
             .then(({ error }) => error && toast(`❌ ${error.message}`))}
         />
       </div>
+      )}
 
       {/* E-mail não depende do push: vale mesmo com os lembretes desligados. */}
       <div className="profile-field profile-field--row">

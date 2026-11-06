@@ -33,15 +33,7 @@ import { privateRoute } from './route';
 import RouteDrawing from './RouteDrawing';
 
 import { t } from '../../lib/i18n';
-const VOICE_KEY = 'eafit_run_voice';
-const AUTOPAUSE_KEY = 'eafit_run_autopause';
-
-function readPref(key) {
-  try { return localStorage.getItem(key) !== 'off'; } catch { return true; }
-}
-function writePref(key, on) {
-  try { localStorage.setItem(key, on ? 'on' : 'off'); } catch { /* sem storage */ }
-}
+import { VOICE_KEY, AUTOPAUSE_KEY, readPref, writePref } from './runPrefs';
 
 // "12 min", "1 h 05 min".
 function gapText(ms) {

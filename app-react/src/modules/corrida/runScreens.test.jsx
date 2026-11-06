@@ -278,6 +278,27 @@ describe('RunFeedPage (aba Início)', () => {
     h.fetchRuns.mockResolvedValue([]);
   });
 
+  it('quem já correu vê o convite para ligar os avisos de corrida; quem não correu, não', async () => {
+    Object.defineProperty(globalThis, 'Notification', { configurable: true, value: { permission: 'default' } });
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: {} });
+    Object.defineProperty(globalThis, 'PushManager', { configurable: true, value: function PushManager() {} });
+    try {
+      h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+      const a = render(<RunFeedPage />);
+      await screen.findByText('Corrida da manhã');
+      expect(screen.queryByText('🔔 Quer ser avisado para correr?')).toBeNull();
+      a.unmount();
+
+      h.fetchRunFeed.mockResolvedValueOnce([{ ...friendRun, isMe: true }]);
+      render(<RunFeedPage />);
+      expect(await screen.findByText('🔔 Quer ser avisado para correr?')).toBeTruthy();
+    } finally {
+      delete globalThis.Notification;
+      delete globalThis.PushManager;
+      delete navigator.serviceWorker;
+    }
+  });
+
   it('a própria corrida não tem botão de aplaudir', async () => {
     h.fetchRunFeed.mockResolvedValueOnce([{ ...friendRun, isMe: true, kudos: 3 }]);
     render(<RunFeedPage />);

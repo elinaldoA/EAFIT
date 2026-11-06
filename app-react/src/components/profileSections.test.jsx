@@ -150,6 +150,17 @@ describe('ProfileBodySection', () => {
     regenerating: false, onRegeneratePlan: vi.fn(),
   });
 
+  it('sem plano de musculação (corrida) some meta, nível, local e gerar treino', () => {
+    render(<ProfileBodySection {...base()} showTraining={false} />);
+    expect(screen.getByLabelText('Peso (kg)')).toBeTruthy();
+    expect(screen.getByLabelText('Altura (cm)')).toBeTruthy();
+    expect(screen.getByText('Salvar dados corporais')).toBeTruthy();
+    expect(screen.queryByLabelText('Meta principal')).toBeNull();
+    expect(screen.queryByLabelText('Nível de experiência')).toBeNull();
+    expect(screen.queryByLabelText('Onde você treina')).toBeNull();
+    expect(screen.queryByText(/Gerar novo treino/)).toBeNull();
+  });
+
   it('propaga alterações de cada campo', () => {
     const p = base();
     render(<ProfileBodySection {...p} />);
@@ -227,6 +238,17 @@ describe('ProfileHeader', () => {
     expect(screen.getByText('5')).toBeTruthy();
     expect(screen.getByText('40')).toBeTruthy();
     expect(screen.getByText('A')).toBeTruthy();
+  });
+
+  it('no módulo de corrida mostra km da semana, semanas seguidas e km no total', () => {
+    render(<ProfileHeader user={user} stats={{ week: 3, streak: 5, total: 40 }} weeklyGoalNum={4} runStats={{ week: '12,3/20', streak: '3 sem', total: '85,2' }} />);
+    expect(screen.getByText('12,3/20')).toBeTruthy();
+    expect(screen.getByText('km esta semana')).toBeTruthy();
+    expect(screen.getByText('3 sem')).toBeTruthy();
+    expect(screen.getByText('85,2')).toBeTruthy();
+    expect(screen.getByText('km no total')).toBeTruthy();
+    expect(screen.queryByText('Total treinos')).toBeNull();
+    expect(screen.queryByText('3/4')).toBeNull();
   });
 
   it('semana ainda não numérica aparece sem a meta', () => {
@@ -483,6 +505,20 @@ describe('ProfilePreferencesSection', () => {
     rerender(<NotificationsSection user={user({ notifyRecords: false })} updateProfile={updateProfile} toast={vi.fn()} remindersEnabled toggleReminders={vi.fn()} />);
     fireEvent.click(screen.getByLabelText('Recordes e conquistas'));
     await waitFor(() => expect(updateProfile).toHaveBeenCalledWith({ notifyRecords: true }));
+  });
+
+  it('NotificationsSection (corrida): só o incentivo para correr, sem treino, água e nutrição', async () => {
+    const updateProfile = vi.fn().mockResolvedValue({});
+    render(<NotificationsSection user={user()} updateProfile={updateProfile} toast={vi.fn()} remindersEnabled toggleReminders={vi.fn()} running />);
+    expect(screen.getByLabelText(/Lembretes e incentivos para correr/)).toBeTruthy();
+    expect(screen.queryByLabelText('Horário em que costumo treinar')).toBeNull();
+    expect(screen.queryByLabelText('Beber água (ao longo do dia, até bater a meta)', { exact: false })).toBeNull();
+    expect(screen.queryByLabelText(/Recordes e conquistas/)).toBeNull();
+    expect(screen.queryByLabelText(/Proteína abaixo da meta/)).toBeNull();
+    expect(screen.queryByLabelText(/durante o treino/)).toBeNull();
+    expect(screen.getByLabelText(/E-mails de resumo semanal/)).toBeTruthy();
+    fireEvent.click(screen.getByLabelText(/Lembretes e incentivos para correr/));
+    await waitFor(() => expect(updateProfile).toHaveBeenCalledWith({ notifyEngagement: false }));
   });
 
   it('NotificationsSection: alterna lembretes e envia notificação de teste', async () => {

@@ -10,7 +10,8 @@ import { t } from '../lib/i18n';
 // Convite dentro do resumo do treino: "quer ser lembrado de treinar?". Só
 // aparece se ainda faz sentido (ver shouldOfferPush). Ativar usa o mesmo fluxo
 // do Perfil (permissão do navegador + inscrição push no servidor).
-export default function PushPrompt() {
+// running: versão do módulo de corrida (aba Início), em cartão e com o texto de corrida.
+export default function PushPrompt({ running = false }) {
   const { user } = useAuth();
   const toast = useToast();
   const [remindersEnabled, toggleReminders] = useReminders(toast, user);
@@ -36,10 +37,14 @@ export default function PushPrompt() {
   }
 
   return (
-    <div className="summary-section push-prompt">
-      <div className="summary-section__title">{t('🔔 Quer ser lembrado de treinar?')}</div>
+    <div className={running ? 'dash-card push-prompt' : 'summary-section push-prompt'}>
+      {running
+        ? <strong>{t('🔔 Quer ser avisado para correr?')}</strong>
+        : <div className="summary-section__title">{t('🔔 Quer ser lembrado de treinar?')}</div>}
       <p className="push-prompt__text">
-        {t('Ative os lembretes e receba um empurrãozinho no horário do treino, mesmo com o app fechado.')}
+        {running
+          ? t('Ative os avisos e receba o resumo da sua semana e incentivos para correr, mesmo com o app fechado.')
+          : t('Ative os lembretes e receba um empurrãozinho no horário do treino, mesmo com o app fechado.')}
       </p>
       <div className="push-prompt__actions">
         <button type="button" className="btn btn--primary btn--sm" onClick={handleEnable}>{t('Ativar lembretes')}</button>

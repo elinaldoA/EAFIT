@@ -70,6 +70,8 @@ function RuleCard({ rule, stats, onSaved }) {
           <h2 className="section-title" style={{ margin: 0 }}>
             {rule.label}
             <span className={`badge ${draft.enabled ? 'badge--ok' : 'badge--warning'}`}>{draft.enabled ? 'ativa' : 'pausada'}</span>
+            {/* Cada regra é de um esporte: só chega a quem está naquele módulo do app. */}
+            <span className="badge" title="Só recebe quem usa este esporte no app">{rule.sport === 'corrida' ? '🏃 Corrida' : '🏋️ Musculação'}</span>
           </h2>
           <p className="user-detail__meta" style={{ margin: '4px 0 0' }}>{rule.description}</p>
         </div>
