@@ -19,7 +19,7 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 const USER_COLUMNS: [table: string, column: string][] = [
   ['progress_photos', 'user_id'], ['water_logs', 'user_id'], ['protein_logs', 'user_id'], ['nutrition_foods', 'user_id'], ['nutrition_entries', 'user_id'],
   ['weight_logs', 'user_id'], ['achievements', 'user_id'], ['push_subscriptions', 'user_id'],
-  ['exercise_discomfort', 'user_id'], ['body_measurements', 'user_id'], ['daily_checkins', 'user_id'], ['run_kudos', 'user_id'], ['runs', 'user_id'],
+  ['exercise_discomfort', 'user_id'], ['body_measurements', 'user_id'], ['daily_checkins', 'user_id'], ['run_kudos', 'user_id'], ['runs', 'user_id'], ['run_shoes', 'user_id'],
   ['challenge_members', 'user_id'],
   ['feed_reactions', 'user_id'], ['feed_events', 'user_id'], ['friend_profiles', 'user_id'],
   ['friendships', 'requester_id'], ['friendships', 'addressee_id'],

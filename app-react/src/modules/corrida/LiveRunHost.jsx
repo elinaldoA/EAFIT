@@ -11,21 +11,38 @@ import { gpsStatusText } from './gpsStatus';
 import { useLiveRun, useNow } from './useLiveRun';
 import {
   elapsedMs, isPaused, pauseRun, resumeRun, setDistance, finishRun, splitsOf, addRoutePoint,
-  updateLiveRun, setLiveRun,
+  updateLiveRun, setLiveRun, getLiveRun, autoPauseRun, autoResumeRun,
+  markRunSeen, interruptedSince, SEEN_EVERY_MS, addElevation, addSteps,
 } from './liveRun';
-import { RUN_SAVED_EVENT, decimal, defaultRunTitle, saveRun, fetchRuns, newRecords, describeRecord, paceSeconds, formatPace, formatClock, formatKm } from './runs';
+import { emptyMotion, motionStep } from './autoPause';
+import { elevationGain } from './elevation';
+import { averageCadence } from './cadence';
+import { useStepCounter } from './useStepCounter';
+import SplitBars from './SplitBars';
+import { ShoePicker } from './Shoes';
+import {
+  RUN_SAVED_EVENT, decimal, defaultRunTitle, saveRun, fetchRuns, newRecords, describeRecord, paceSeconds, formatPace, formatClock, formatKm,
+  fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice,
+} from './runs';
 import { SESSION_TITLE, describeSession } from './program';
 import { privateRoute } from './route';
 import RouteDrawing from './RouteDrawing';
 
 import { t } from '../../lib/i18n';
 const VOICE_KEY = 'eafit_run_voice';
+const AUTOPAUSE_KEY = 'eafit_run_autopause';
 
-function readVoicePref() {
-  try { return localStorage.getItem(VOICE_KEY) !== 'off'; } catch { return true; }
+function readPref(key) {
+  try { return localStorage.getItem(key) !== 'off'; } catch { return true; }
 }
-function writeVoicePref(on) {
-  try { localStorage.setItem(VOICE_KEY, on ? 'on' : 'off'); } catch { /* sem storage */ }
+function writePref(key, on) {
+  try { localStorage.setItem(key, on ? 'on' : 'off'); } catch { /* sem storage */ }
+}
+
+// "12 min", "1 h 05 min".
+function gapText(ms) {
+  const min = Math.max(1, Math.round(ms / 60000));
+  return min < 60 ? t('{v1} min', { v1: min }) : t('{v1} h {v2} min', { v1: Math.floor(min / 60), v2: String(min % 60).padStart(2, '0') });
 }
 
 function BackGuard({ onBlocked }) {
@@ -50,18 +67,62 @@ export default function LiveRunHost() {
   const now = useNow(run);
   const toast = useToast();
   const [guardKey, setGuardKey] = useState(0);
-  const [voiceOn, setVoiceOn] = useState(readVoicePref);
+  const [voiceOn, setVoiceOn] = useState(() => readPref(VOICE_KEY));
+  const [autoPauseOn, setAutoPauseOn] = useState(() => readPref(AUTOPAUSE_KEY));
   const [finishing, setFinishing] = useState(false);
+  // Corrida que estava rodando quando o app fechou: desde quando ficou sem o app.
+  const [interrupted, setInterrupted] = useState(() => interruptedSince(getLiveRun()));
 
   const running = !!run && !isPaused(run);
+  const autoPaused = !!run?.autoPaused;
+  const motion = useRef(emptyMotion());
+  const prefs = useRef({ autoPauseOn, voiceOn });
+  prefs.current = { autoPauseOn, voiceOn };
+
+  // Pausa automática: decide pelas leituras do GPS (autoPause.js).
+  function handleSample(sample) {
+    const cur = getLiveRun();
+    if (!cur?.gps || (isPaused(cur) && !cur.autoPaused)) return;
+    const step = motionStep(motion.current, sample, !!cur.autoPaused, cur.segmentStart ?? 0);
+    motion.current = step.motion;
+    if (step.action?.type === 'pause' && prefs.current.autoPauseOn) {
+      updateLiveRun(s => autoPauseRun(s, step.action.at));
+      if (prefs.current.voiceOn) speak(t('Pausa automática.'));
+    } else if (step.action?.type === 'resume') {
+      updateLiveRun(s => autoResumeRun(s));
+      if (prefs.current.voiceOn) speak(t('Corrida retomada.'));
+    }
+  }
+
   const geo = useGeoTracker({
-    active: running && run.gps && geoSupported(),
+    active: (running || autoPaused) && run.gps && geoSupported() && !interrupted,
+    paused: autoPaused,
     baseMeters: run?.meters || 0,
     onMeters: meters => updateLiveRun(s => setDistance(s, meters)),
-    onFix: ({ lat, lon, jump }) => updateLiveRun(s => addRoutePoint(s, lat, lon, { jump })),
+    onFix: ({ lat, lon, jump, altitude, altitudeAccuracy }) => updateLiveRun(s => addElevation(addRoutePoint(s, lat, lon, { jump }), altitude, altitudeAccuracy)),
+    onSample: handleSample,
   });
 
   useWakeLock(!!run);
+
+  // Cadência: o acelerômetro conta os passos só com a corrida rodando.
+  const spm = useStepCounter(running && !interrupted, (steps, ms) => updateLiveRun(s => addSteps(s, steps, ms)));
+
+  // Marca que o app está aberto com a corrida (liveRun.interruptedSince).
+  const runId = run?.id;
+  useEffect(() => {
+    if (!runId || interrupted) return undefined;
+    const mark = () => markRunSeen(getLiveRun());
+    mark();
+    const id = setInterval(mark, SEEN_EVERY_MS);
+    window.addEventListener('pagehide', mark);
+    document.addEventListener('visibilitychange', mark);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('pagehide', mark);
+      document.removeEventListener('visibilitychange', mark);
+    };
+  }, [runId, interrupted]);
 
   useEffect(() => {
     if (!run) return undefined;
@@ -101,9 +162,27 @@ export default function LiveRunHost() {
   const toggleVoice = () => {
     const next = !voiceOn;
     setVoiceOn(next);
-    writeVoicePref(next);
+    writePref(VOICE_KEY, next);
     if (!next) cancelSpeech();
   };
+
+  const toggleAutoPause = () => {
+    const next = !autoPauseOn;
+    setAutoPauseOn(next);
+    writePref(AUTOPAUSE_KEY, next);
+    // Desligou com a corrida parada pela pausa automática: volta a contar.
+    if (!next) updateLiveRun(s => autoResumeRun(s));
+  };
+
+  if (interrupted) {
+    return (
+      <InterruptedRun
+        run={run} since={interrupted}
+        onKeep={() => setInterrupted(null)}
+        onCut={() => { updateLiveRun(s => pauseRun(s, Math.max(interrupted, s.segmentStart ?? interrupted))); setInterrupted(null); }}
+      />
+    );
+  }
 
   return (
     <>
@@ -118,7 +197,8 @@ export default function LiveRunHost() {
         ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={() => setFinishing(false)} />
         : (
           <LiveRunScreen
-            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice}
+            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm}
+            autoPauseOn={autoPauseOn} onToggleAutoPause={toggleAutoPause}
             onFinish={() => { updateLiveRun(s => pauseRun(s)); setFinishing(true); }}
           />
         )}
@@ -126,13 +206,41 @@ export default function LiveRunHost() {
   );
 }
 
-function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, onFinish }) {
+// O app ficou fechado com a corrida rodando: o tempo fora conta ou não?
+function InterruptedRun({ run, since, onKeep, onCut }) {
+  const gap = Date.now() - since;
+  return (
+    <div className="run-live run-live--finish" role="dialog" aria-modal="true" aria-label={t('Corrida interrompida')}>
+      <div className="run-live__top">
+        <span className="run-live__brand">EAFIT · Run</span>
+      </div>
+      <h2 className="run-live__title">{t('O app ficou fechado')}</h2>
+      <p className="run-live__text">
+        {run.gps
+          ? t('Sua corrida ficou {v1} sem o app aberto e sem GPS. O que fazer com esse tempo?', { v1: gapText(gap) })
+          : t('Sua corrida ficou {v1} sem o app aberto. O que fazer com esse tempo?', { v1: gapText(gap) })}
+      </p>
+      <div className="run-live__choices">
+        <button type="button" className="btn btn--primary run-live__btn" onClick={onCut}>
+          {t('⏸ Parar a corrida quando o app fechou')}
+        </button>
+        <button type="button" className="btn btn--ghost run-live__btn" onClick={onKeep}>
+          {t('▶ Continuei correndo: contar esse tempo')}
+        </button>
+      </div>
+      <p className="profile-field__hint">{t('Na dúvida, pare: na tela seguinte dá para continuar a corrida ou finalizar.')}</p>
+    </div>
+  );
+}
+
+function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, autoPauseOn, onToggleAutoPause, onFinish }) {
   const el = elapsedMs(run, now);
   const totalS = Math.floor(el / 1000);
   const paused = isPaused(run);
   const avgPace = paceSeconds(totalS, run.meters);
   const splits = splitsOf(run.kmMarks);
   const lastSplit = splits.length ? splits[splits.length - 1] : null;
+  const gain = run.gps ? elevationGain(run.elev) : null;
   const s = run.session;
   const target = s?.minutes ? { done: el / 60000, total: s.minutes, label: t('{v1} de {v2} min', { v1: Math.floor(el / 60000), v2: s.minutes }) }
     : s?.km ? { done: run.meters / 1000, total: s.km, label: t('{v1} de {v2} km', { v1: formatKm(run.meters, 1), v2: decimal(s.km) }) }
@@ -142,9 +250,16 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, onFinish 
     <div className="run-live" role="dialog" aria-modal="true" aria-label={t('Corrida em andamento')}>
       <div className="run-live__top">
         <span className="run-live__brand">EAFIT · Run</span>
-        <button type="button" className="btn btn--ghost btn--sm" onClick={onToggleVoice} aria-pressed={voiceOn}>
-          {voiceOn ? t('🔊 Voz ligada') : t('🔇 Voz desligada')}
-        </button>
+        <div className="run-live__toggles">
+          {run.gps && (
+            <button type="button" className="btn btn--ghost btn--sm" onClick={onToggleAutoPause} aria-pressed={autoPauseOn}>
+              {autoPauseOn ? t('Pausa auto ligada') : t('Pausa auto desligada')}
+            </button>
+          )}
+          <button type="button" className="btn btn--ghost btn--sm" onClick={onToggleVoice} aria-pressed={voiceOn}>
+            {voiceOn ? t('🔊 Voz ligada') : t('🔇 Voz desligada')}
+          </button>
+        </div>
       </div>
       <div className="run-live__session">
         <strong>{SESSION_TITLE[s?.type || 'livre']}</strong>
@@ -152,7 +267,11 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, onFinish 
       </div>
 
       <div className={`run-live__clock${paused ? ' run-live__clock--paused' : ''}`} aria-live="off">{formatClock(totalS)}</div>
-      {paused && <div className="run-live__paused">{t('Pausada')}</div>}
+      {paused && (
+        <div className={`run-live__paused${run.autoPaused ? ' run-live__paused--auto' : ''}`} role="status">
+          {run.autoPaused ? t('Pausa automática: volta sozinha quando você andar') : t('Pausada')}
+        </div>
+      )}
 
       {phase && phase.phase !== 'done' && (
         <div className={`run-live__phase run-live__phase--${phase.phase}`}>
@@ -175,6 +294,13 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, onFinish 
         </div>
       </div>
 
+      {(gain !== null || spm) && (
+        <div className="run-live__extra">
+          {gain !== null && <span>{t('↗ {v1} m de subida', { v1: gain })}</span>}
+          {spm && <span>{t('👣 {v1} passos/min', { v1: spm })}</span>}
+        </div>
+      )}
+
       {target && (
         <div className="run-live__target">
           <div className="run-live__bar"><span style={{ width: `${Math.min(100, Math.round((target.done / target.total) * 100))}%` }} /></div>
@@ -185,7 +311,9 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, onFinish 
       <RouteDrawing route={run.route} width={320} height={130} className="run-route--live" />
 
       <div className="run-live__gps">
-        {run.gps ? (gpsStatusText(geo.status, geo.accuracy)) : t('Sem GPS: digite a distância no fim')}
+        {!run.gps ? t('Sem GPS: digite a distância no fim')
+          : run.autoPaused ? t('GPS ligado, esperando você voltar a andar')
+            : gpsStatusText(geo.status, geo.accuracy)}
       </div>
 
       {splits.length > 0 && (
@@ -223,16 +351,34 @@ function FinishRun({ run, now, onBack, onDone }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const totalS = Math.floor(elapsedMs(run, now) / 1000);
   const zones = user?.user_metadata?.runZones;
+  const [shoes, setShoes] = useState(() => cachedShoes(user.id));
+  const [shoeId, setShoeId] = useState(() => defaultShoeId(cachedShoes(user.id)));
+  const shoeTouched = useRef(false);
+  useEffect(() => {
+    let alive = true;
+    fetchShoes(user.id).then(list => {
+      if (!alive) return;
+      setShoes(list);
+      if (!shoeTouched.current) setShoeId(defaultShoeId(list));
+    });
+    return () => { alive = false; };
+  }, [user.id]);
+  const gain = run.gps ? elevationGain(run.elev) : null;
+  const cadence = averageCadence(run.steps, run.stepMs);
 
   async function handleSave() {
     const parsed = Number(String(km).replace(',', '.'));
     if (edited && (!Number.isFinite(parsed) || parsed < 0 || parsed > 500)) return toast(t('⚠️ Distância inválida'));
     setBusy(true);
-    const record = finishRun(run, { meters: edited ? parsed * 1000 : undefined, effort, notes, title, visibility, zones });
+    const record = finishRun(run, { meters: edited ? parsed * 1000 : undefined, effort, notes, title, visibility, zones, shoeId });
     let previous = [];
     try { previous = await fetchRuns(user.id); } catch { /* sem rede: sem recorde agora */ }
     const { pending } = await saveRun(user.id, record);
-    const records = newRecords(previous.filter(r => r.client_id !== record.client_id), record);
+    rememberShoe(shoeId);
+    const others = previous.filter(r => r.client_id !== record.client_id);
+    const records = newRecords(others, record);
+    const shoe = shoes.find(x => x.id === shoeId);
+    const shoeNotice = shoe ? shoeWearNotice(shoe, shoeUsage([shoe], others)[shoe.id], record.distance_m) : null;
     trackEvent('run', record.kind);
     setLiveRun(null);
     setBusy(false);
@@ -240,6 +386,7 @@ function FinishRun({ run, now, onBack, onDone }) {
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
     if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
     else if (records.length) toast(t('🏆 Novo recorde — {v1}!', { v1: records.map(describeRecord).join(', ') }));
+    else if (shoeNotice) toast(shoeNotice);
     else toast(t('✅ Corrida salva: {v1} km em {v2}', { v1: formatKm(record.distance_m), v2: formatClock(record.duration_s) }));
   }
 
@@ -257,6 +404,12 @@ function FinishRun({ run, now, onBack, onDone }) {
       </div>
       <h2 className="run-live__title">{t('Fim da corrida')}</h2>
       <div className="run-live__clock run-live__clock--small">{formatClock(totalS)}</div>
+      {(gain !== null || cadence) && (
+        <div className="run-live__extra">
+          {gain !== null && <span>{t('↗ {v1} m de subida', { v1: gain })}</span>}
+          {cadence && <span>{t('👣 {v1} passos/min', { v1: cadence })}</span>}
+        </div>
+      )}
 
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="runTitle">{t('Título')}</label>
@@ -275,6 +428,10 @@ function FinishRun({ run, now, onBack, onDone }) {
           <span className="profile-field__hint">{t('🔒 Por privacidade, os primeiros e os últimos 200 m do percurso não são salvos.')}</span>
         </div>
       )}
+
+      {!edited && <SplitBars splits={splitsOf(run.kmMarks)} />}
+
+      <ShoePicker shoes={shoes} value={shoeId} onChange={id => { shoeTouched.current = true; setShoeId(id); }} />
 
       <div className="profile-field">
         <span className="profile-field__label" id="runEffortLabel">{t('Esforço (1 = leve, 10 = máximo)')}</span>

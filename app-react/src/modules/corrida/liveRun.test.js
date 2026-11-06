@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   startRun, pauseRun, resumeRun, elapsedMs, isPaused, setDistance, splitsOf, finishRun,
   getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS,
+  autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps,
 } from './liveRun';
 
 const T0 = new Date(2026, 10, 5, 7, 0, 0).getTime();
@@ -85,5 +86,81 @@ describe('loja no aparelho', () => {
     const old = { ...startRun({}, 0), updatedAt: Date.now() - STALE_MS - 1 };
     localStorage.setItem('eafit_live_run', JSON.stringify(old));
     expect(getLiveRun()).toBeNull();
+  });
+});
+
+describe('pausa automática', () => {
+  it('para o cronômetro no último movimento e volta sozinha', () => {
+    let s = startRun({ gps: true }, T0);
+    s = setDistance(s, 500, T0 + 150_000);
+    s = autoPauseRun(s, T0 + 150_000, T0 + 162_000);
+    expect(isPaused(s)).toBe(true);
+    expect(s.autoPaused).toBe(true);
+    expect(elapsedMs(s, T0 + 200_000)).toBe(150_000);
+    expect(s.routeBreak).toBe(false);
+    s = autoResumeRun(s, T0 + 200_000);
+    expect(s.autoPaused).toBe(false);
+    expect(elapsedMs(s, T0 + 210_000)).toBe(160_000);
+  });
+
+  it('não para antes do começo do trecho; a pausa manual cancela a automática', () => {
+    let s = startRun({ gps: true }, T0);
+    s = autoPauseRun(s, T0 - 50_000, T0 + 20_000);
+    expect(elapsedMs(s, T0 + 30_000)).toBe(0);
+    s = pauseRun(s, T0 + 30_000);
+    expect(s.autoPaused).toBe(false);
+    expect(autoResumeRun(s, T0 + 40_000)).toBe(s);
+  });
+
+  it('conta como corrida ativa (o app não recarrega)', () => {
+    setLiveRun(autoPauseRun(startRun({ gps: true }, Date.now() - 60_000), Date.now() - 20_000));
+    expect(isRunActive()).toBe(true);
+  });
+});
+
+describe('app fechado no meio da corrida', () => {
+  it('avisa quando a corrida rodando ficou sem o app aberto', () => {
+    const now = Date.now();
+    const s = { ...startRun({}, now - 3_600_000), updatedAt: now - 3_600_000 };
+    markRunSeen(s, now - 1_800_000);
+    expect(interruptedSince(s, now)).toBe(now - 1_800_000);
+    markRunSeen(s, now - INTERRUPTED_MS + 1000);
+    expect(interruptedSince(s, now)).toBeNull();
+  });
+
+  it('corrida pausada ou marca de outra corrida não contam', () => {
+    const now = Date.now();
+    const s = { ...startRun({}, now - 3_600_000), updatedAt: now - 3_600_000 };
+    expect(interruptedSince(pauseRun(s, now - 3_000_000), now)).toBeNull();
+    markRunSeen({ id: 'outra' }, now);
+    expect(interruptedSince(s, now)).toBe(now - 3_600_000);
+  });
+});
+
+describe('subida, cadência e tênis no registro', () => {
+  it('leva a subida do GPS, a cadência média e o tênis', () => {
+    let s = startRun({ gps: true }, T0);
+    s = addElevation(s, 100, 5);
+    for (let i = 1; i <= 120; i++) s = addElevation(s, 100 + i * 0.25, 5);
+    s = addSteps(s, 150, 60_000);
+    s = addSteps(s, 130, 40_000);
+    s = setDistance(s, 1500, T0 + 500_000);
+    const r = finishRun(s, { now: T0 + 500_000, shoeId: 'tenis-1' });
+    expect(r.elev_gain_m).toBeGreaterThan(15);
+    expect(r.cadence).toBe(168);
+    expect(r.shoe_id).toBe('tenis-1');
+  });
+
+  it('sem GPS, sem passos suficientes ou sem tênis: null', () => {
+    let s = startRun({ gps: false }, T0);
+    s = addElevation(s, 100, 5);
+    s = addSteps(s, 20, 10_000);
+    const r = finishRun(s, { now: T0 + 60_000 });
+    expect(r).toMatchObject({ elev_gain_m: null, cadence: null, shoe_id: null });
+  });
+
+  it('pausada não conta altitude', () => {
+    const s = pauseRun(startRun({ gps: true }, T0), T0 + 1000);
+    expect(addElevation(s, 100, 5)).toBe(s);
   });
 });

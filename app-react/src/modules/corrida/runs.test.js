@@ -17,7 +17,8 @@ vi.mock('../../lib/supabase', () => {
 
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
-  saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun,
+  saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun,
+  shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice,
 } from './runs';
 
 const run = (over = {}) => ({
@@ -116,5 +117,71 @@ describe('banco e fila do aparelho', () => {
     await deleteRun('u1', { ...run(), pending: true });
     expect(pendingRuns('u1')).toEqual([]);
     expect(h.calls).toEqual([]);
+  });
+});
+
+describe('manualRun (corrida lançada à mão)', () => {
+  const NOW = new Date(2026, 10, 6, 12, 0).getTime();
+  const base = { date: '2026-11-06', time: '07:30', hours: '', minutes: '32', seconds: '10', km: '5,2' };
+
+  it('monta o registro sem GPS, com título de esteira', () => {
+    const { record, error } = manualRun({ ...base, treadmill: true }, NOW, () => 0.5);
+    expect(error).toBeUndefined();
+    expect(record).toMatchObject({
+      run_date: '2026-11-06', duration_s: 1930, distance_m: 5200, splits: [], route: [],
+      gps: false, kind: 'livre', title: 'Corrida na esteira', visibility: 'amigos',
+    });
+    expect(record.started_at).toBe(new Date(2026, 10, 6, 7, 30).toISOString());
+    expect(record.client_id).toMatch(/^manual-/);
+  });
+
+  it('título digitado vale; na rua usa o título pela hora', () => {
+    expect(manualRun({ ...base, title: '  Parque  ' }, NOW).record.title).toBe('Parque');
+    expect(manualRun(base, NOW).record.title).toBe('Corrida da manhã');
+  });
+
+  it('recusa tempo, distância ou data inválidos e corrida no futuro', () => {
+    expect(manualRun({ ...base, minutes: '', seconds: '' }, NOW).error).toMatch(/tempo/);
+    expect(manualRun({ ...base, km: '0' }, NOW).error).toMatch(/Distância/);
+    expect(manualRun({ ...base, km: 'abc' }, NOW).error).toMatch(/Distância/);
+    expect(manualRun({ ...base, date: '' }, NOW).error).toMatch(/data/);
+    expect(manualRun({ ...base, time: '11:45' }, NOW).error).toMatch(/futuro/);
+  });
+});
+
+describe('tênis', () => {
+  const shoes = [
+    { id: 'a', name: 'Azul', initial_m: 100000, limit_m: 700000, retired: false },
+    { id: 'b', name: 'Velho', initial_m: 0, limit_m: 500000, retired: true },
+  ];
+
+  it('soma os km de cada tênis: o que já tinha rodado mais as corridas', () => {
+    const runs = [{ shoe_id: 'a', distance_m: 5000 }, { shoe_id: 'a', distance_m: 7000 }, { shoe_id: 'b', distance_m: 3000 }, { shoe_id: null, distance_m: 9000 }, { shoe_id: 'x', distance_m: 1 }];
+    expect(shoeUsage(shoes, runs)).toEqual({ a: 112000, b: 3000 });
+  });
+
+  it('avisa perto da vida útil e quando passa', () => {
+    expect(shoeWear(shoes[0], 600000)).toBe('ok');
+    expect(shoeWear(shoes[0], 640000)).toBe('warn');
+    expect(shoeWear(shoes[0], 700000)).toBe('over');
+    expect(shoeWearNotice(shoes[0], 600000, 10000)).toBeNull();
+    expect(shoeWearNotice(shoes[0], 625000, 10000)).toMatch(/perto do fim/);
+    expect(shoeWearNotice(shoes[0], 695000, 10000)).toMatch(/passou de 700 km/);
+    expect(shoeWearNotice(shoes[0], 710000, 10000)).toBeNull();
+  });
+
+  it('sugere o último tênis usado, se ainda ativo; senão o único ativo', () => {
+    localStorage.clear();
+    expect(defaultShoeId(shoes)).toBe('a');
+    rememberShoe('b');
+    expect(defaultShoeId(shoes)).toBe('a');
+    expect(defaultShoeId([...shoes, { id: 'c', retired: false }])).toBeNull();
+    rememberShoe('c');
+    expect(defaultShoeId([...shoes, { id: 'c', retired: false }])).toBe('c');
+  });
+
+  it('corrida lançada à mão leva o tênis', () => {
+    const { record } = manualRun({ date: '2026-11-06', time: '07:00', minutes: '30', km: '5', shoeId: 'a' }, new Date(2026, 10, 6, 12).getTime());
+    expect(record).toMatchObject({ shoe_id: 'a', elev_gain_m: null, cadence: null });
   });
 });

@@ -104,7 +104,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, surveyAnswers, leagueResults,
-    proteinLogs, customFoods, nutritionEntries, runs,
+    proteinLogs, customFoods, nutritionEntries, runs, runShoes,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -125,6 +125,7 @@ export async function gatherUserData(userId) {
     safe('customFoods', () => fetchCustomFoods(userId), []),
     safe('nutritionEntries', () => fetchEntriesRange(userId, EPOCH), []),
     safe('runs', () => fetchMyRuns(userId), []),
+    safe('runShoes', () => fetchMyRunShoes(userId), []),
   ]);
 
   return {
@@ -132,7 +133,7 @@ export async function gatherUserData(userId) {
     profile,
     workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
-    weightLogs, bodyMeasurements, dailyCheckins, runs,
+    weightLogs, bodyMeasurements, dailyCheckins, runs, runShoes,
     progressPhotos: photos, waterLogs, proteinLogs, customFoods, nutritionEntries,
     discomfortReports, achievements,
     challenges, friendProfile, friends,
@@ -145,9 +146,19 @@ export async function gatherUserData(userId) {
 // Corridas do EAFIT Run (modules/corrida/runs.js), com tempo por km.
 async function fetchMyRuns(userId) {
   const { data, error } = await db.from('runs')
-    .select('run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes')
+    .select('run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id')
     .eq('user_id', userId)
     .order('started_at');
+  if (error) throw error;
+  return data || [];
+}
+
+// Tênis de corrida (o id liga com runs.shoe_id).
+async function fetchMyRunShoes(userId) {
+  const { data, error } = await db.from('run_shoes')
+    .select('id, name, initial_m, limit_m, retired, created_at')
+    .eq('user_id', userId)
+    .order('created_at');
   if (error) throw error;
   return data || [];
 }

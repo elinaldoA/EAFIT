@@ -7,7 +7,12 @@ import {
   RUN_GOALS, RUN_LEVELS, GOAL_LABEL, sessionTitle, programFromMetadata, programToday,
   describeSession, isRunSession, mondayOf, goalWeeks,
 } from './program';
-import { fetchRuns, flushPendingRuns, formatKm, RUN_SAVED_EVENT } from './runs';
+import {
+  fetchRuns, flushPendingRuns, formatKm, formatClock, RUN_SAVED_EVENT, manualRun, saveRun, newRecords, describeRecord,
+  fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice,
+} from './runs';
+import { requestMotionPermission } from './cadence';
+import { ShoePicker } from './Shoes';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported, useGeoTracker } from './useGeoTracker';
 import { gpsStatusText } from './gpsStatus';
@@ -65,6 +70,100 @@ export function ProgramSetup({ initialNivel, onSave, onCancel, busy }) {
   );
 }
 
+const pad2 = n => String(n).padStart(2, '0');
+
+// Corrida feita sem gravar pelo app: esteira, relógio, ou o celular ficou em casa.
+export function ManualRunForm({ userId, onClose }) {
+  const toast = useToast();
+  const [form, setForm] = useState(() => {
+    const d = new Date(Date.now() - 45 * 60000);
+    return {
+      date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`,
+      time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
+      hours: '', minutes: '', seconds: '', km: '', title: '', treadmill: true, visibility: 'amigos',
+    };
+  });
+  const [busy, setBusy] = useState(false);
+  const [shoes, setShoes] = useState(() => cachedShoes(userId));
+  const [shoeId, setShoeId] = useState(() => defaultShoeId(cachedShoes(userId)));
+  useEffect(() => {
+    let alive = true;
+    fetchShoes(userId).then(list => { if (alive) setShoes(list); });
+    return () => { alive = false; };
+  }, [userId]);
+  const set = (key, value) => setForm(f => ({ ...f, [key]: value }));
+  const field = (key, label, props = {}) => (
+    <div className="profile-field">
+      <label className="profile-field__label" htmlFor={`runManual-${key}`}>{label}</label>
+      <input id={`runManual-${key}`} className="input" value={form[key]} onChange={e => set(key, e.target.value)} {...props} />
+    </div>
+  );
+
+  async function handleSave(e) {
+    e.preventDefault();
+    const { record, error } = manualRun({ ...form, shoeId });
+    if (error) return toast(error);
+    setBusy(true);
+    let previous = [];
+    try { previous = await fetchRuns(userId); } catch { /* sem rede: sem recorde agora */ }
+    const { pending } = await saveRun(userId, record);
+    rememberShoe(shoeId);
+    const records = newRecords(previous, record);
+    const shoe = shoes.find(x => x.id === shoeId);
+    const shoeNotice = shoe ? shoeWearNotice(shoe, shoeUsage([shoe], previous)[shoe.id], record.distance_m) : null;
+    trackEvent('run', 'manual');
+    setBusy(false);
+    window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
+    onClose();
+    if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
+    else if (records.length) toast(t('🏆 Novo recorde — {v1}!', { v1: records.map(describeRecord).join(', ') }));
+    else if (shoeNotice) toast(shoeNotice);
+    else toast(t('✅ Corrida salva: {v1} km em {v2}', { v1: formatKm(record.distance_m), v2: formatClock(record.duration_s) }));
+  }
+
+  return (
+    <form className="dash-card run-setup" onSubmit={handleSave} aria-label={t('Lançar corrida')}>
+      <h2 className="run-setup__title">{t('Lançar corrida')}</h2>
+      <p className="run-setup__text">{t('Para a corrida que você não gravou pelo app: esteira, relógio ou celular em casa.')}</p>
+      <div className="run-chips" role="group" aria-label={t('Onde')}>
+        {[[true, t('Esteira')], [false, t('Rua')]].map(([v, label]) => (
+          <button key={label} type="button" aria-pressed={form.treadmill === v} className={`run-chip${form.treadmill === v ? ' run-chip--on' : ''}`} onClick={() => set('treadmill', v)}>{label}</button>
+        ))}
+      </div>
+      <div className="run-manual__row">
+        {field('date', t('Data'), { type: 'date', max: todayDate() })}
+        {field('time', t('Início'), { type: 'time' })}
+      </div>
+      {field('km', t('Distância (km)'), { inputMode: 'decimal', placeholder: '5,0' })}
+      <div className="profile-field">
+        <span className="profile-field__label" id="runManualTime">{t('Tempo')}</span>
+        <div className="run-manual__clock" role="group" aria-labelledby="runManualTime">
+          {[['hours', t('h')], ['minutes', t('min')], ['seconds', t('s')]].map(([key, unit]) => (
+            <input
+              key={key} className="input" inputMode="numeric" placeholder={unit} aria-label={unit}
+              value={form[key]} onChange={e => set(key, e.target.value.replace(/\D/g, '').slice(0, 2))}
+            />
+          ))}
+        </div>
+      </div>
+      <ShoePicker id="runManualShoe" shoes={shoes} value={shoeId} onChange={setShoeId} />
+      {field('title', t('Título (opcional)'), { maxLength: 80, placeholder: form.treadmill ? t('Corrida na esteira') : t('Corrida da manhã') })}
+      <div className="profile-field">
+        <span className="profile-field__label" id="runManualVis">{t('Quem vê')}</span>
+        <div className="run-chips" role="group" aria-labelledby="runManualVis">
+          {[['amigos', t('👥 Amigos')], ['privado', t('🔒 Só eu')]].map(([v, label]) => (
+            <button key={v} type="button" aria-pressed={form.visibility === v} className={`run-chip${form.visibility === v ? ' run-chip--on' : ''}`} onClick={() => set('visibility', v)}>{label}</button>
+          ))}
+        </div>
+      </div>
+      <div className="run-setup__actions">
+        <button type="button" className="btn btn--ghost" onClick={onClose} disabled={busy}>{t('Cancelar')}</button>
+        <button type="submit" className="btn btn--primary" disabled={busy}>{busy ? t('Salvando…') : t('Salvar corrida')}</button>
+      </div>
+    </form>
+  );
+}
+
 // Aba Gravar do EAFIT Run: o botão grande de começar a corrida e, opcional,
 // o programa de 5K/10K/meia com a corrida de cada dia.
 export default function RunHomePage() {
@@ -76,6 +175,7 @@ export default function RunHomePage() {
   const [runs, setRuns] = useState([]);
   const [editing, setEditing] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [gps, setGps] = useState(() => readGpsPref() && geoSupported());
   // Aquece o GPS antes do Começar: o celular leva de segundos a um minuto para
@@ -132,6 +232,8 @@ export default function RunHomePage() {
     if (getLiveRun()) return;
     try { localStorage.setItem(GPS_KEY, gps ? 'on' : 'off'); } catch { /* sem storage */ }
     const s = withSession && planned ? { ...session, week: where.week || null, dayIndex: where.dayIndex } : null;
+    // iPhone: a permissão do acelerômetro (cadência) só pode ser pedida no toque.
+    requestMotionPermission();
     setLiveRun(startRun({ gps, session: s }));
     trackEvent('run_start', s ? s.type : 'livre');
   }
@@ -161,7 +263,14 @@ export default function RunHomePage() {
           <p className={`run-record__gps run-record__gps--${warm.status}`} role="status">{gpsStatusText(warm.status, warm.accuracy)}</p>
         )}
         {doneToday && <p className="run-today__done">{t('✅ Corrida de hoje registrada')}</p>}
+        {!manualOpen && !live && (
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setManualOpen(true)}>
+            {t('＋ Lançar corrida feita sem o app (esteira, relógio)')}
+          </button>
+        )}
       </div>
+
+      {manualOpen && <ManualRunForm userId={user?.id} onClose={() => setManualOpen(false)} />}
 
       {editing || (!program && planOpen) ? (
         <ProgramSetup

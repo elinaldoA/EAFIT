@@ -13,7 +13,7 @@ import { t, lang } from '../../lib/i18n';
 export const RUN_SAVED_EVENT = 'eafit:run-saved';
 
 const PENDING_KEY = 'eafit_runs_pending';
-const COLUMNS = 'id, client_id, run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes';
+const COLUMNS = 'id, client_id, run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id';
 
 // Ritmo só vale a partir de 1 km (abaixo disso o número engana).
 const MIN_PACE_M = 1000;
@@ -124,6 +124,49 @@ export function defaultRunTitle(startedAt) {
   return t('Corrida da madrugada');
 }
 
+// Corrida lançada à mão (esteira, relógio, corrida feita sem o app). date
+// "YYYY-MM-DD", time "HH:MM" (hora local do início), km com vírgula ou ponto.
+// Devolve { record } no formato de liveRun.finishRun ou { error } com a
+// mensagem para a pessoa.
+export function manualRun({ date, time, hours = 0, minutes = 0, seconds = 0, km, title = '', treadmill = false, effort = null, notes = '', visibility = 'amigos', shoeId = null }, now = Date.now(), random = Math.random) {
+  const num = v => (v === '' || v == null ? 0 : Number(String(v).replace(',', '.')));
+  const durationS = Math.round(num(hours) * 3600 + num(minutes) * 60 + num(seconds));
+  const dist = num(km);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) return { error: t('⚠️ Escolha a data da corrida') };
+  if (!/^\d{2}:\d{2}$/.test(String(time || ''))) return { error: t('⚠️ Escolha a hora de início') };
+  if (![hours, minutes, seconds].every(v => Number.isFinite(num(v)) && num(v) >= 0)) return { error: t('⚠️ Tempo inválido') };
+  if (!(durationS >= 1 && durationS <= 86400)) return { error: t('⚠️ Digite o tempo da corrida (até 24 h)') };
+  if (!(Number.isFinite(dist) && dist > 0 && dist <= 500)) return { error: t('⚠️ Distância inválida') };
+  const [y, mo, d] = date.split('-').map(Number);
+  const [h, mi] = time.split(':').map(Number);
+  const start = new Date(y, mo - 1, d, h, mi);
+  if (Number.isNaN(start.getTime()) || start.getMonth() !== mo - 1) return { error: t('⚠️ Escolha a data da corrida') };
+  if (start.getTime() + durationS * 1000 > now + 60000) return { error: t('⚠️ A corrida não pode terminar no futuro') };
+  const cleanTitle = String(title || '').trim().slice(0, 80);
+  return {
+    record: {
+      client_id: `manual-${now.toString(36)}-${Math.floor(random() * 1e9).toString(36)}`,
+      run_date: date,
+      started_at: start.toISOString(),
+      duration_s: durationS,
+      distance_m: Math.round(dist * 1000),
+      splits: [],
+      kind: 'livre',
+      program_week: null,
+      program_day: null,
+      gps: false,
+      route: [],
+      effort: Number.isInteger(effort) && effort >= 1 && effort <= 10 ? effort : null,
+      notes: String(notes || '').trim().slice(0, 500) || null,
+      title: cleanTitle || (treadmill ? t('Corrida na esteira') : defaultRunTitle(start.getTime())),
+      visibility: visibility === 'privado' ? 'privado' : 'amigos',
+      elev_gain_m: null,
+      cadence: null,
+      shoe_id: shoeId || null,
+    },
+  };
+}
+
 export const runTitle = run => (run?.title && run.title.trim()) || defaultRunTitle(run?.started_at || Date.now());
 
 // ---- Banco -----------------------------------------------------------------
@@ -135,6 +178,9 @@ function normalizeRow(r) {
     distance_m: Number(r.distance_m) || 0,
     splits: Array.isArray(r.splits) ? r.splits.map(Number).filter(n => n > 0) : [],
     route: cleanRoute(r.route),
+    elev_gain_m: r.elev_gain_m == null ? null : Number(r.elev_gain_m),
+    cadence: r.cadence == null ? null : Number(r.cadence),
+    shoe_id: r.shoe_id || null,
   };
 }
 
@@ -166,6 +212,8 @@ async function insertRun(userId, run) {
     .upsert({ ...run, user_id: userId }, { onConflict: 'user_id,client_id' })
     .select(COLUMNS)
     .single();
+  // Tênis apagado enquanto a corrida esperava internet: sobe sem o tênis.
+  if (error?.code === '23503' && run.shoe_id) return insertRun(userId, { ...run, shoe_id: null });
   if (error) throw error;
   return normalizeRow(data);
 }
@@ -272,4 +320,126 @@ export async function applyZonesToRuns(userId, zones) {
     changed++;
   }
   return changed;
+}
+
+// ---- Tênis (tabela public.run_shoes) ----------------------------------------
+// Os km de cada tênis saem das corridas com aquele shoe_id, mais initial_m (o
+// que já tinha rodado antes do app). A lista fica guardada no aparelho para o
+// fim da corrida sem internet ainda mostrar os tênis.
+
+const SHOE_COLUMNS = 'id, name, initial_m, limit_m, retired, created_at';
+const SHOES_CACHE_KEY = 'eafit_run_shoes';
+const LAST_SHOE_KEY = 'eafit_run_shoe_last';
+// Vida útil padrão de um tênis de corrida (km).
+export const SHOE_LIMIT_KM = 700;
+// A partir dessa fração da vida útil o app avisa.
+export const SHOE_WARN = 0.9;
+
+function readShoeCache(userId) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SHOES_CACHE_KEY) || '{}');
+    return Array.isArray(all?.[userId]) ? all[userId] : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeShoeCache(userId, list) {
+  try {
+    const all = JSON.parse(localStorage.getItem(SHOES_CACHE_KEY) || '{}') || {};
+    all[userId] = list;
+    localStorage.setItem(SHOES_CACHE_KEY, JSON.stringify(all));
+  } catch { /* sem storage */ }
+}
+
+const normalizeShoe = s => ({
+  ...s, initial_m: Number(s.initial_m) || 0, limit_m: Number(s.limit_m) || SHOE_LIMIT_KM * 1000, retired: !!s.retired,
+});
+
+// Tênis da pessoa (do mais antigo ao mais novo). Sem internet, os do aparelho.
+export async function fetchShoes(userId) {
+  try {
+    const { data, error } = await db.from('run_shoes').select(SHOE_COLUMNS).eq('user_id', userId).order('created_at', { ascending: true });
+    if (error) throw error;
+    const list = (data || []).map(normalizeShoe);
+    writeShoeCache(userId, list);
+    return list;
+  } catch (err) {
+    console.error('fetchShoes:', err);
+    return readShoeCache(userId);
+  }
+}
+
+export const cachedShoes = userId => readShoeCache(userId);
+
+const kmToM = v => Math.round((Number(String(v ?? '').replace(',', '.')) || 0) * 1000);
+
+// Novo tênis: nome, km já rodados e vida útil (km). Devolve o tênis salvo.
+export async function addShoe(userId, { name, initialKm = 0, limitKm = SHOE_LIMIT_KM }) {
+  const row = {
+    user_id: userId,
+    name: String(name || '').trim().slice(0, 60),
+    initial_m: Math.min(5000000, Math.max(0, kmToM(initialKm))),
+    limit_m: Math.min(5000000, Math.max(50000, kmToM(limitKm) || SHOE_LIMIT_KM * 1000)),
+  };
+  const { data, error } = await db.from('run_shoes').insert(row).select(SHOE_COLUMNS).single();
+  if (error) throw error;
+  const shoe = normalizeShoe(data);
+  writeShoeCache(userId, [...readShoeCache(userId).filter(s => s.id !== shoe.id), shoe]);
+  return shoe;
+}
+
+export async function updateShoe(userId, id, patch) {
+  const { data, error } = await db.from('run_shoes').update(patch).eq('id', id).eq('user_id', userId).select(SHOE_COLUMNS).single();
+  if (error) throw error;
+  const shoe = normalizeShoe(data);
+  writeShoeCache(userId, readShoeCache(userId).map(s => (s.id === id ? shoe : s)));
+  return shoe;
+}
+
+export async function deleteShoe(userId, id) {
+  const { error } = await db.from('run_shoes').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
+  writeShoeCache(userId, readShoeCache(userId).filter(s => s.id !== id));
+}
+
+// Metros rodados por tênis: { [id]: metros } (initial_m + corridas).
+export function shoeUsage(shoes, runs) {
+  const out = Object.fromEntries(shoes.map(s => [s.id, s.initial_m || 0]));
+  for (const r of runs) if (r.shoe_id && r.shoe_id in out) out[r.shoe_id] += r.distance_m || 0;
+  return out;
+}
+
+// 'ok' | 'warn' (perto da vida útil) | 'over' (passou).
+export function shoeWear(shoe, meters) {
+  if (meters >= shoe.limit_m) return 'over';
+  return meters >= shoe.limit_m * SHOE_WARN ? 'warn' : 'ok';
+}
+
+// Tênis sugerido para a próxima corrida: o último usado, se ainda está ativo;
+// senão o único ativo; senão nenhum.
+export function defaultShoeId(shoes) {
+  const active = shoes.filter(s => !s.retired);
+  let last = null;
+  try { last = localStorage.getItem(LAST_SHOE_KEY); } catch { /* sem storage */ }
+  if (last && active.some(s => s.id === last)) return last;
+  return active.length === 1 ? active[0].id : null;
+}
+
+export function rememberShoe(id) {
+  try {
+    if (id) localStorage.setItem(LAST_SHOE_KEY, id);
+    else localStorage.removeItem(LAST_SHOE_KEY);
+  } catch { /* sem storage */ }
+}
+
+// Aviso depois de salvar a corrida: o tênis acabou de entrar na faixa de troca.
+export function shoeWearNotice(shoe, beforeM, addedM) {
+  if (!shoe) return null;
+  const before = shoeWear(shoe, beforeM);
+  const after = shoeWear(shoe, beforeM + addedM);
+  if (after === before || after === 'ok') return null;
+  return after === 'over'
+    ? t('👟 {v1} passou de {v2} km: hora de trocar de tênis', { v1: shoe.name, v2: Math.round(shoe.limit_m / 1000) })
+    : t('👟 {v1} está perto do fim da vida útil ({v2} de {v3} km)', { v1: shoe.name, v2: Math.round((beforeM + addedM) / 1000), v3: Math.round(shoe.limit_m / 1000) });
 }

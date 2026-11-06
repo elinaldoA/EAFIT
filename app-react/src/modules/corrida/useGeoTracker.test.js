@@ -56,6 +56,23 @@ describe('useGeoTracker', () => {
     expect(result.current.status).toBe('denied');
   });
 
+  it('na pausa automática segue a posição sem somar distância e avisa cada leitura', () => {
+    const onMeters = vi.fn();
+    const onSample = vi.fn();
+    const { rerender } = renderHook(p => useGeoTracker({ active: true, baseMeters: 0, onMeters, onSample, ...p }), { initialProps: { paused: false } });
+    const t0 = Date.now();
+    act(() => onPos(fix(10, t0, -23.5)));
+    act(() => onPos(fix(10, t0 + 5000, -23.5001)));   // ~11 m
+    expect(onMeters).toHaveBeenLastCalledWith(11);
+    rerender({ paused: true });
+    act(() => onPos(fix(10, t0 + 10000, -23.5002)));  // anda ~11 m parado no cronômetro
+    expect(onMeters).toHaveBeenCalledTimes(1);
+    expect(onSample).toHaveBeenLastCalledWith({ t: t0 + 10000, reason: 'moved', meters: expect.closeTo(11.1, 0) });
+    rerender({ paused: false });
+    act(() => onPos(fix(10, t0 + 15000, -23.5003)));  // a soma recomeça da posição nova
+    expect(onMeters).toHaveBeenLastCalledWith(22);
+  });
+
   it('desligado não chama o GPS', () => {
     const { result } = renderHook(() => useGeoTracker({ active: false }));
     expect(result.current.status).toBe('idle');

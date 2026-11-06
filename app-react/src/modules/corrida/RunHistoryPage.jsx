@@ -5,7 +5,10 @@ import { todayDate } from '../../data/treinoData';
 import { fmtDate } from '../../lib/utils';
 import {
   RUN_SAVED_EVENT, runTitle, fetchRuns, flushPendingRuns, deleteRun, computeRunStats, paceSeconds, formatPace, formatClock, formatKm, EFFORT_KM,
+  fetchShoes, cachedShoes,
 } from './runs';
+import SplitBars from './SplitBars';
+import RunShoes from './Shoes';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
@@ -14,7 +17,7 @@ import { renderRunCard, shareRunCard } from './runShareCard';
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
 
-function RunItem({ run, onDelete }) {
+function RunItem({ run, shoe, onDelete }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -52,11 +55,15 @@ function RunItem({ run, onDelete }) {
       {open && (
         <div className="run-item__body">
           <RouteDrawing route={run.route} splits={run.splits} detail width={320} height={190} />
-          {run.splits.length > 0 ? (
-            <ol className="run-item__splits" aria-label={t('Tempo por km')}>
-              {run.splits.map((sec, i) => <li key={i}>{t('Km {v1}', { v1: i + 1 })}: <strong>{formatPace(sec)}</strong></li>)}
-            </ol>
-          ) : <p className="profile-field__hint">{t('Sem tempo por km (distância digitada).')}</p>}
+          {(run.elev_gain_m != null || run.cadence || shoe) && (
+            <div className="run-live__extra run-item__extra">
+              {run.elev_gain_m != null && <span>{t('↗ {v1} m de subida', { v1: run.elev_gain_m })}</span>}
+              {run.cadence && <span>{t('👣 {v1} passos/min', { v1: run.cadence })}</span>}
+              {shoe && <span>👟 {shoe.name}</span>}
+            </div>
+          )}
+          {run.splits.length > 0 ? <SplitBars splits={run.splits} />
+            : <p className="profile-field__hint">{t('Sem tempo por km (distância digitada).')}</p>}
           {run.effort && <p>{t('Esforço: {v1}/10', { v1: run.effort })}</p>}
           {run.notes && <p className="run-item__notes">{run.notes}</p>}
           {run.pending && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
@@ -80,6 +87,11 @@ export default function RunHistoryPage() {
   const toast = useToast();
   const [runs, setRuns] = useState(null);
   const [error, setError] = useState(false);
+  const [shoes, setShoes] = useState(() => (user ? cachedShoes(user.id) : []));
+  const loadShoes = useCallback(async () => {
+    if (user) setShoes(await fetchShoes(user.id));
+  }, [user]);
+  useEffect(() => { loadShoes(); }, [loadShoes]);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -210,9 +222,11 @@ export default function RunHistoryPage() {
       <div className="section-group">
         <div className="section-group__label">{t('Corridas')}</div>
         <ul className="run-list">
-          {runs.map(r => <RunItem key={r.client_id} run={r} onDelete={handleDelete} />)}
+          {runs.map(r => <RunItem key={r.client_id} run={r} shoe={shoes.find(s => s.id === r.shoe_id)} onDelete={handleDelete} />)}
         </ul>
       </div>
+
+      <RunShoes userId={user.id} shoes={shoes} runs={runs} onChange={loadShoes} />
 
       <PrivacyZones />
     </section>

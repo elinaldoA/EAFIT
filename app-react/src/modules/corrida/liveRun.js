@@ -1,4 +1,6 @@
 import { addPoint, privateRoute } from './route';
+import { addAltitude, elevationGain } from './elevation';
+import { averageCadence } from './cadence';
 
 // Corrida ao vivo do EAFIT Run: cronômetro com pausa, distância e a marca de
 // tempo de cada quilômetro (splits). O estado é puro (funções que devolvem um
@@ -11,7 +13,9 @@ import { addPoint, privateRoute } from './route';
 //   meters, kmMarks (tempo de corrida, em ms, ao completar cada km),
 //   sample { meters, elapsedMs } (última leitura, para interpolar o km),
 //   gps (boolean), session (sessão do programa ou null), updatedAt,
-//   route (percurso, route.js), routeBreak (próximo ponto começa trecho novo)
+//   route (percurso, route.js), routeBreak (próximo ponto começa trecho novo),
+//   autoPaused (pausada pela pausa automática; o GPS segue ligado),
+//   elev (elevation.js), steps/stepMs (passos e tempo medido, cadence.js)
 // }
 
 const KEY = 'eafit_live_run';
@@ -37,14 +41,33 @@ export function elapsedMs(s, now = Date.now()) {
   return s.activeMs + (s.segmentStart != null ? Math.max(0, now - s.segmentStart) : 0);
 }
 
+// Pausa manual. Em pausa automática, vira manual (o GPS para de procurar movimento).
 export function pauseRun(s, now = Date.now()) {
-  if (!s || isPaused(s)) return s;
-  return { ...s, activeMs: elapsedMs(s, now), segmentStart: null, routeBreak: true, updatedAt: now };
+  if (!s) return s;
+  if (isPaused(s)) return s.autoPaused ? { ...s, autoPaused: false, updatedAt: now } : s;
+  return { ...s, activeMs: elapsedMs(s, now), segmentStart: null, routeBreak: true, autoPaused: false, updatedAt: now };
 }
 
 export function resumeRun(s, now = Date.now()) {
   if (!s || !isPaused(s)) return s;
-  return { ...s, segmentStart: now, updatedAt: now };
+  return { ...s, segmentStart: now, autoPaused: false, updatedAt: now };
+}
+
+// Pausa automática (autoPause.js): o cronômetro para em `at`, o último
+// movimento, nunca antes do começo do trecho atual nem depois de agora. O GPS
+// segue ligado para notar a volta, e o percurso continua no mesmo trecho
+// (parar no semáforo não abre buraco no desenho).
+export function autoPauseRun(s, at, now = Date.now()) {
+  if (!s || isPaused(s)) return s;
+  const when = Math.min(now, Math.max(Number.isFinite(at) ? at : now, s.segmentStart));
+  const paused = pauseRun(s, when);
+  const sample = s.sample ? { ...s.sample, elapsedMs: Math.min(s.sample.elapsedMs, paused.activeMs) } : s.sample;
+  return { ...paused, sample, routeBreak: s.routeBreak, autoPaused: true, updatedAt: now };
+}
+
+export function autoResumeRun(s, now = Date.now()) {
+  if (!s || !s.autoPaused) return s;
+  return resumeRun(s, now);
 }
 
 // Nova distância total (metros). Cada km cruzado ganha a sua marca de tempo,
@@ -72,6 +95,19 @@ export function addRoutePoint(s, lat, lon, { jump = false, now = Date.now() } = 
   return { ...s, route, routeBreak: false, updatedAt: now };
 }
 
+// Altitude do GPS (elevation.js). Pausada, não conta.
+export function addElevation(s, altitude, altitudeAccuracy) {
+  if (!s || isPaused(s)) return s;
+  const elev = addAltitude(s.elev, altitude, altitudeAccuracy);
+  return elev === s.elev ? s : { ...s, elev };
+}
+
+// Passos contados pelo acelerômetro desde a última vez (cadence.js).
+export function addSteps(s, steps, ms) {
+  if (!s || !(ms > 0)) return s;
+  return { ...s, steps: (s.steps || 0) + Math.max(0, steps || 0), stepMs: (s.stepMs || 0) + ms };
+}
+
 // Segundos de cada km completo.
 export function splitsOf(kmMarks) {
   return kmMarks.map((ms, i) => Math.round((ms - (i ? kmMarks[i - 1] : 0)) / 1000));
@@ -79,7 +115,7 @@ export function splitsOf(kmMarks) {
 
 // Registro para salvar (runs.js). `meters` permite corrigir a distância no fim
 // (corrida sem GPS ou GPS que falhou): sem os splits do GPS, ficam vazios.
-export function finishRun(s, { now = Date.now(), meters, effort = null, notes = '', title = '', visibility = 'amigos', zones = [] } = {}) {
+export function finishRun(s, { now = Date.now(), meters, effort = null, notes = '', title = '', visibility = 'amigos', zones = [], shoeId = null } = {}) {
   const durationS = Math.max(1, Math.round(elapsedMs(s, now) / 1000));
   const manual = meters != null && Math.round(meters) !== Math.round(s.meters);
   const distance = Math.max(0, Math.round(manual ? meters : s.meters));
@@ -103,7 +139,42 @@ export function finishRun(s, { now = Date.now(), meters, effort = null, notes = 
     notes: String(notes || '').trim().slice(0, 500) || null,
     title: String(title || '').trim().slice(0, 80) || null,
     visibility: visibility === 'privado' ? 'privado' : 'amigos',
+    elev_gain_m: s.gps ? elevationGain(s.elev) : null,
+    cadence: averageCadence(s.steps, s.stepMs),
+    shoe_id: shoeId || null,
   };
+}
+
+// ---- App fechado no meio da corrida -----------------------------------------
+// Com a corrida aberta, a tela marca de tempos em tempos que o app está vivo.
+// Se o sistema fechou o app (ou o celular desligou), na volta o cronômetro
+// teria contado o tempo todo fora: a tela pergunta o que fazer com esse tempo.
+
+const SEEN_KEY = 'eafit_live_run_seen';
+export const SEEN_EVERY_MS = 20 * 1000;
+export const INTERRUPTED_MS = 3 * 60 * 1000;
+
+export function markRunSeen(s, now = Date.now()) {
+  if (!s) return;
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify({ id: s.id, at: now })); } catch { /* sem storage */ }
+}
+
+// Última vez que o app estava aberto com esta corrida.
+export function lastSeenAt(s) {
+  if (!s) return 0;
+  let at = s.updatedAt || s.startedAt || 0;
+  try {
+    const v = JSON.parse(localStorage.getItem(SEEN_KEY));
+    if (v && v.id === s.id && Number.isFinite(v.at)) at = Math.max(at, v.at);
+  } catch { /* sem storage */ }
+  return at;
+}
+
+// Desde quando (ms) a corrida rodando ficou sem o app aberto; null se não ficou.
+export function interruptedSince(s, now = Date.now()) {
+  if (!s || isPaused(s)) return null;
+  const seen = lastSeenAt(s);
+  return now - seen > INTERRUPTED_MS ? seen : null;
 }
 
 // ---- Loja: a corrida em andamento no aparelho -----------------------------
@@ -131,7 +202,7 @@ export function setLiveRun(next) {
   cache = next || null;
   try {
     if (cache) localStorage.setItem(KEY, JSON.stringify(cache));
-    else localStorage.removeItem(KEY);
+    else { localStorage.removeItem(KEY); localStorage.removeItem(SEEN_KEY); }
   } catch { /* sem storage: segue só na memória */ }
   listeners.forEach(fn => fn());
   return cache;
@@ -146,10 +217,11 @@ export function subscribeLiveRun(fn) {
   return () => { listeners.delete(fn); window.removeEventListener('storage', onStorage); };
 }
 
-// Corrida rodando (não pausada): o app não recarrega nem troca a tela inteira.
+// Corrida rodando (ou na pausa automática, que volta sozinha): o app não
+// recarrega nem troca a tela inteira.
 export const isRunActive = () => {
   const s = getLiveRun();
-  return !!s && !isPaused(s);
+  return !!s && (!isPaused(s) || !!s.autoPaused);
 };
 
 // Só para testes.

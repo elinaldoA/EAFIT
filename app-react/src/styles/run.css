@@ -39,6 +39,10 @@
 .run-live__clock--paused { color: var(--text-dim); }
 .run-live__clock--small { font-size: 2.5rem; margin: 0; }
 .run-live__paused { text-align: center; color: var(--warning); font-weight: 700; text-transform: uppercase; font-size: var(--fs-sm); }
+.run-live__paused--auto { text-transform: none; }
+.run-live__toggles { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-1); }
+.run-live__text { margin: 0; color: var(--text-muted); }
+.run-live__choices { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: var(--sp-2); }
 
 .run-live__phase {
   align-self: center;
@@ -166,15 +170,6 @@
 .run-item__kind { font-size: var(--fs-xs); color: var(--primary); font-weight: 700; text-align: right; }
 .run-item__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-sm); }
 .run-item__body p { margin: 0; }
-.run-item__splits {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 4px var(--sp-3);
-  font-variant-numeric: tabular-nums;
-}
 .run-item__notes { color: var(--text-muted); white-space: pre-wrap; }
 
 /* ---- Percurso sobre o mapa (blocos do OpenStreetMap, RouteDrawing.jsx) ---- */
@@ -375,3 +370,35 @@
   flex-direction: column;
   gap: 10px;
 }
+
+/* Lançar corrida manual (esteira, relógio, corrida sem o app) */
+.run-manual__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.run-manual__clock { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+
+/* Ritmo por km em barras (SplitBars.jsx) */
+.run-splits { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
+.run-splits__row { display: grid; grid-template-columns: 2ch 1fr 4.5ch; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); }
+.run-splits__km { color: var(--text-dim); text-align: right; }
+.run-splits__track { height: 10px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
+.run-splits__bar { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--primary) 55%, transparent); }
+.run-splits__row--best .run-splits__bar { background: var(--primary); }
+.run-splits__row--best .run-splits__pace { color: var(--primary); font-weight: 700; }
+.run-splits__pace { text-align: right; }
+
+/* Subida e cadência (ao vivo, fim e histórico) */
+.run-live__extra { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-1) var(--sp-4); color: var(--text-muted); font-size: var(--fs-sm); }
+.run-item__extra { justify-content: flex-start; }
+
+/* Tênis (Shoes.jsx) */
+.run-shoes { margin: 0 0 var(--sp-2); padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-shoe { display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-shoe__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-sm); }
+.run-shoe__head span { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.run-shoe__bar { height: 8px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
+.run-shoe__bar span { display: block; height: 100%; background: var(--success); border-radius: inherit; }
+.run-shoe--warn .run-shoe__bar span { background: var(--warning); }
+.run-shoe--over .run-shoe__bar span { background: var(--error); }
+.run-shoe--retired { opacity: .6; }
+.run-shoe__warn { margin: 0; font-size: var(--fs-sm); color: var(--warning); }
+.run-shoe--over .run-shoe__warn { color: var(--error); }
+.run-shoe__actions { display: flex; gap: var(--sp-2); }

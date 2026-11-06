@@ -11,6 +11,7 @@ const h = vi.hoisted(() => ({
   fetchRunFeed: vi.fn(async () => []),
   toggleKudos: vi.fn(async () => ({ kudos: 1, kudoed: true })),
   fetchFriendsWeek: vi.fn(async () => []),
+  shoes: [],
 }));
 
 vi.mock('../../lib/supabase', () => ({ db: {} }));
@@ -28,6 +29,7 @@ vi.mock('./runs', async (orig) => ({
   toggleKudos: (...a) => h.toggleKudos(...a),
   fetchFriendsWeek: (...a) => h.fetchFriendsWeek(...a),
   flushPendingRuns: async () => 0,
+  fetchShoes: async () => h.shoes,
 }));
 vi.mock('../../lib/friends', () => ({
   friendlyFriendError: e => e.message, normalizeFriendCode: c => c.toUpperCase(), shareFriendCode: vi.fn(),
@@ -46,6 +48,7 @@ beforeEach(() => {
   localStorage.clear();
   resetLiveRunCache();
   h.user = { id: 'u1', user_metadata: {} };
+  h.shoes = [];
 });
 afterEach(() => { cleanup(); act(() => { setLiveRun(null); }); });
 
@@ -75,6 +78,20 @@ describe('LiveRunHost', () => {
     expect(getLiveRun()).toBeNull();
   });
 
+  it('o fim da corrida sugere o único tênis ativo e salva com ele', async () => {
+    h.shoes = [{ id: 's1', name: 'Azul', initial_m: 0, limit_m: 700000, retired: false }, { id: 's2', name: 'Velho', initial_m: 0, limit_m: 700000, retired: true }];
+    act(() => { setLiveRun(startRun({ gps: false }, Date.now() - 60_000)); });
+    render(<LiveRunHost />);
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
+    const azul = await screen.findByRole('button', { name: /Azul/ });
+    await waitFor(() => expect(azul.getAttribute('aria-pressed')).toBe('true'));
+    expect(screen.queryByRole('button', { name: /Velho/ })).toBeNull();
+    fireEvent.change(screen.getByLabelText('Distância (km)'), { target: { value: '3' } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Salvar corrida' })); });
+    await waitFor(() => expect(h.saveRun).toHaveBeenCalled());
+    expect(h.saveRun.mock.calls[0][1]).toMatchObject({ shoe_id: 's1', distance_m: 3000 });
+  });
+
   it('distância digitada vale, sem tempo por km', async () => {
     act(() => { setLiveRun(startRun({ gps: false }, Date.now() - 60_000)); });
     render(<LiveRunHost />);
@@ -96,7 +113,41 @@ describe('LiveRunHost', () => {
   });
 });
 
+describe('LiveRunHost: app fechado no meio da corrida', () => {
+  it('pergunta e, ao parar, corta o tempo em que o app ficou fechado', () => {
+    const now = Date.now();
+    act(() => { setLiveRun({ ...startRun({}, now - 3_600_000), updatedAt: now - 3_600_000 }); });
+    localStorage.setItem('eafit_live_run_seen', JSON.stringify({ id: getLiveRun().id, at: now - 1_800_000 }));
+    render(<LiveRunHost />);
+    expect(screen.getByRole('dialog', { name: 'Corrida interrompida' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Parar a corrida quando o app fechou/ }));
+    const run = getLiveRun();
+    expect(run.segmentStart).toBeNull();
+    expect(Math.round(run.activeMs / 60000)).toBe(30);
+    expect(screen.getByRole('dialog', { name: 'Corrida em andamento' })).toBeTruthy();
+  });
+
+  it('continuar mantém o tempo contando', () => {
+    const now = Date.now();
+    act(() => { setLiveRun({ ...startRun({}, now - 3_600_000), updatedAt: now - 3_600_000 }); });
+    render(<LiveRunHost />);
+    fireEvent.click(screen.getByRole('button', { name: /Continuei correndo/ }));
+    expect(getLiveRun().segmentStart).not.toBeNull();
+  });
+});
+
 describe('RunHomePage (aba Gravar)', () => {
+  it('lança uma corrida de esteira sem gravar', async () => {
+    render(<RunHomePage />);
+    fireEvent.click(screen.getByRole('button', { name: /Lançar corrida feita sem o app/ }));
+    fireEvent.change(screen.getByLabelText('Distância (km)'), { target: { value: '4,5' } });
+    fireEvent.change(screen.getByLabelText('min'), { target: { value: '30' } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Salvar corrida' })); });
+    await waitFor(() => expect(h.saveRun).toHaveBeenCalled());
+    expect(h.saveRun.mock.calls[0][1]).toMatchObject({ distance_m: 4500, duration_s: 1800, gps: false, title: 'Corrida na esteira' });
+    expect(screen.queryByRole('form', { name: 'Lançar corrida' })).toBeNull();
+  });
+
   it('o botão grande começa uma corrida livre sem programa', () => {
     render(<RunHomePage />);
     fireEvent.click(screen.getByRole('button', { name: 'Começar corrida' }));

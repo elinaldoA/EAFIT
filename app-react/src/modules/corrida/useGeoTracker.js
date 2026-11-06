@@ -14,21 +14,29 @@ export const geoSupported = () => typeof navigator !== 'undefined' && 'geolocati
 // Acompanha o GPS enquanto `active` (corrida rodando, não pausada) e soma a
 // distância a partir de `baseMeters`, já filtrada por geoTrack.js. Chama
 // onMeters(total) a cada leitura aceita. Ao pausar, para o rastreio e esquece
-// a posição: o trecho parado não vira distância. onFix({ lat, lon, jump })
+// a posição: o trecho parado não vira distância. onFix({ lat, lon, jump, altitude, altitudeAccuracy })
 // recebe cada ponto aceito, para o desenho do percurso (route.js).
+//
+// paused (pausa automática): o rastreio segue e acompanha a posição, mas não
+// soma distância nem manda pontos. onSample({ t, reason, meters }) recebe toda
+// leitura classificada (meters = deslocamento aceito), para autoPause.js.
 //
 // status: 'idle' | 'searching' | 'slow' | 'approx' | 'tracking' | 'weak' | 'denied' | 'insecure' | 'unsupported' | 'error'
 // accuracy é a precisão (m) da última leitura, aceita ou não, para a tela
 // mostrar que o sinal está chegando mesmo antes de ficar bom.
-export function useGeoTracker({ active, baseMeters, onMeters, onFix }) {
+export function useGeoTracker({ active, paused = false, baseMeters, onMeters, onFix, onSample }) {
   const [status, setStatus] = useState('idle');
   const [accuracy, setAccuracy] = useState(null);
   const baseRef = useRef(baseMeters);
   const onMetersRef = useRef(onMeters);
   const onFixRef = useRef(onFix);
+  const onSampleRef = useRef(onSample);
+  const pausedRef = useRef(paused);
   baseRef.current = baseMeters;
   onMetersRef.current = onMeters;
   onFixRef.current = onFix;
+  onSampleRef.current = onSample;
+  pausedRef.current = paused;
 
   useEffect(() => {
     if (!active) { setStatus('idle'); setAccuracy(null); return undefined; }
@@ -47,9 +55,13 @@ export function useGeoTracker({ active, baseMeters, onMeters, onFix }) {
 
     const watchId = geolocation.watchPosition(
       pos => {
-        const { latitude: lat, longitude: lon, accuracy: acc } = pos.coords;
+        const { latitude: lat, longitude: lon, accuracy: acc, altitude, altitudeAccuracy } = pos.coords;
+        const before = track.meters;
         const result = applyFix(track, { lat, lon, accuracy: acc, t: pos.timestamp });
-        track = result.track;
+        const moved = result.reason === 'moved' ? result.track.meters - before : 0;
+        const paused = pausedRef.current;
+        // Pausado: a posição anda (âncora nova), a distância não.
+        track = paused ? { ...result.track, meters: before } : result.track;
         failed = false;
         lastAcc = Number.isFinite(acc) ? Math.round(acc) : null;
         setAccuracy(lastAcc);
@@ -59,9 +71,12 @@ export function useGeoTracker({ active, baseMeters, onMeters, onFix }) {
         if (result.accepted) {
           lastAcceptedAt = Date.now();
           setStatus('tracking');
-          onFixRef.current?.({ lat, lon, jump: result.reason === 'jump' });
-          if (result.reason !== 'first') onMetersRef.current?.(Math.round(track.meters));
+          if (!paused) {
+            onFixRef.current?.({ lat, lon, jump: result.reason === 'jump', altitude, altitudeAccuracy });
+            if (result.reason !== 'first') onMetersRef.current?.(Math.round(track.meters));
+          }
         }
+        onSampleRef.current?.({ t: pos.timestamp, reason: result.reason, meters: moved });
       },
       err => {
         // Timeout (3) só quer dizer que a leitura demorou: o rastreio continua
