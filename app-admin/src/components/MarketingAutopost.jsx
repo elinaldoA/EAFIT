@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PLATFORMS, STATUS_LABEL, autopostSchedule, brtDay, fetchAutopost, laneLabel, setAutopostEnabled, splitCaption } from '../lib/marketing';
+import { PLATFORMS, STATUS_LABEL, NUTRI_SLOTS, autopostSchedule, brtDay, fetchAutopost, laneLabel, setAutopostEnabled, splitCaption } from '../lib/marketing';
 
 const FORMAT_LABEL = { feed: 'Feed', reel: 'Reel', story: 'Story' };
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
@@ -90,7 +90,8 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
   const today = brtDay(now);
   const count = format => state.pending.filter(i => i.format === format && !i.slot).length;
   const countGeneral = () => state.pending.filter(i => i.format === 'story' && !i.slot).length;
-  const countNutri = () => state.pending.filter(i => i.format === 'story' && i.slot).length;
+  const countNutri = () => state.pending.filter(i => i.format === 'story' && NUTRI_SLOTS.includes(i.slot)).length;
+  const countEngage = () => state.pending.filter(i => i.format === 'story' && i.slot && !NUTRI_SLOTS.includes(i.slot)).length;
   const problems = posts.filter(p => p.targets?.some(t => t.status === 'failed' || t.status === 'processing'));
   const accountById = new Map(accounts.map(a => [a.id, a]));
   const postById = new Map(posts.map(p => [p.id, p]));
@@ -182,8 +183,8 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
         <p className="user-detail__meta">
           Publicação automática no Instagram e no Facebook, nos horários de maior alcance (Brasília):
           {' '}de segunda a sexta, feed às 11h30 e Reel às 20h45; no sábado e no domingo, feed às 10h30 e Reel às 18h30.
-          {' '}Stories: café às 6h30 (9h no fim de semana), almoço às 12h30, hidratação às 15h, story geral às 17h30 e jantar às 19h30.
-          {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels, {countGeneral()} em stories e {countNutri()} de nutrição.
+          {' '}Stories: bom dia às 7h30 (8h no fim de semana), café às 6h30 (9h no fim de semana), criar conta às 10h, hidratação às 15h, hora do treino às 16h30 e três stories gerais, às 12h30, 17h30 e 19h30.
+          {' '}Fila: faltam {count('feed')} no feed, {count('reel')} em Reels, {countGeneral()} em stories, {countNutri()} de nutrição e {countEngage()} de bom dia, treino e criar conta.
           {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
           {' '}Peças de temporada só saem enquanto o tema estiver no ar no app e, nesse período, passam na frente.
           {waitingSeason.length > 0 && ` ${waitingSeason.length} esperando uma temporada que não está programada no app.`}

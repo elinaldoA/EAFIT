@@ -496,19 +496,25 @@ export async function setAutopostEnabled(enabled) {
 
 // Faixas da publicação automática: cada uma publica um item por dia no seu horário
 // (cron em UTC; Brasília é UTC-3, sem horário de verão). Story pode ter um horário
-// de refeição (`slot`): café, almoço, hidratação e jantar, com conteúdo de nutrição.
+// de refeição (`slot`): só café e hidratação têm conteúdo de nutrição. Os stories das
+// 12h30 e das 19h30 são gerais, para o fluxo não ficar repetindo comida e água
+// (migration 20270122010000_marketing_stories_diversos.sql).
 // `utc`/`time` valem de segunda a sexta; `weekendUtc`/`weekendTime`, quando há, no
 // sábado e no domingo (migration 20270113010000_marketing_horarios_rendimento.sql).
 // Formatos espaçados para não competirem entre si: feed no pico do almoço, Reel no
 // pico da noite, stories distribuídos pelo dia.
-export const SLOT_LABEL = { cafe: 'Café da manhã', almoco: 'Almoço', agua: 'Hidratação', jantar: 'Jantar' };
+export const SLOT_LABEL = { bomdia: 'Bom dia', cafe: 'Café da manhã', conta: 'Criar conta', agua: 'Hidratação', treino: 'Hora do treino' };
+// Faixas de nutrição (o resto das faixas com `slot` é de engajamento: bom dia, treino e criar conta).
+export const NUTRI_SLOTS = ['cafe', 'agua'];
 export const AUTOPOST_LANES = [
+  { key: 'story:bomdia', format: 'story', slot: 'bomdia', utc: [10, 30], time: '7h30', weekendUtc: [11, 0], weekendTime: '8h', label: 'Story · Bom dia' },
   { key: 'story:cafe', format: 'story', slot: 'cafe', utc: [9, 30], time: '6h30', weekendUtc: [12, 0], weekendTime: '9h', label: 'Story · Café da manhã' },
+  { key: 'story:conta', format: 'story', slot: 'conta', utc: [13, 0], time: '10h', label: 'Story · Criar conta' },
   { key: 'feed', format: 'feed', slot: null, utc: [14, 30], time: '11h30', weekendUtc: [13, 30], weekendTime: '10h30', label: 'Feed' },
-  { key: 'story:almoco', format: 'story', slot: 'almoco', utc: [15, 30], time: '12h30', label: 'Story · Almoço' },
   { key: 'story:agua', format: 'story', slot: 'agua', utc: [18, 0], time: '15h', label: 'Story · Hidratação' },
-  { key: 'story', format: 'story', slot: null, utc: [20, 30], time: '17h30', label: 'Story' },
-  { key: 'story:jantar', format: 'story', slot: 'jantar', utc: [22, 30], time: '19h30', label: 'Story · Jantar' },
+  { key: 'story:treino', format: 'story', slot: 'treino', utc: [19, 30], time: '16h30', label: 'Story · Hora do treino' },
+  // Faixa geral: o cron publica um story às 12h30, às 17h30 e às 19h30, da mesma fila.
+  { key: 'story', format: 'story', slot: null, utc: [15, 30], time: '12h30, 17h30 e 19h30', extra: [[20, 30], [22, 30]], label: 'Story' },
   { key: 'reel', format: 'reel', slot: null, utc: [23, 45], time: '20h45', weekendUtc: [21, 30], weekendTime: '18h30', label: 'Reel' },
 ];
 
@@ -524,6 +530,11 @@ export function laneAt(lane, day) {
   const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
   const [h, min] = (dow === 0 || dow === 6) && lane.weekendUtc ? lane.weekendUtc : lane.utc;
   return new Date(Date.UTC(y, m - 1, d, h, min));
+}
+// Todas as saídas da faixa no dia: o horário principal e os extras (`extra`).
+export function laneRuns(lane, day) {
+  const [y, m, d] = day.split('-').map(Number);
+  return [laneAt(lane, day), ...(lane.extra || []).map(([h, min]) => new Date(Date.UTC(y, m - 1, d, h, min)))];
 }
 const BRT_OFFSET_MS = 3 * 3600 * 1000;
 
@@ -599,7 +610,7 @@ export function autopostSchedule(pending, now = new Date(), season = null, poste
     const left = [...queues.values()].flat();
     if (left.length === 0 || (season?.enabled !== true && !left.some(i => !i.season))) break;
     const day = new Date(Date.UTC(ty, tm - 1, td + d)).toISOString().slice(0, 10);
-    const runs = AUTOPOST_LANES.map(lane => ({ lane, at: laneAt(lane, day) }))
+    const runs = AUTOPOST_LANES.flatMap(lane => laneRuns(lane, day).map(at => ({ lane, at })))
       .filter(r => r.at > now && queues.get(r.lane.key).length > 0)
       .sort((a, b) => a.at - b.at);
     for (const { lane, at } of runs) {

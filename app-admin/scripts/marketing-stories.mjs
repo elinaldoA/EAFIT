@@ -124,6 +124,83 @@ const RECURSOS = [
   ['temporada-ano-novo', 'Comece o ano treinando', 'Treine na primeira semana e ganhe a conquista Ano Novo.', 'temporada-ano-novo'],
 ];
 
+// Sexta leva (migration 20270122010000): diversificar os stories. Roteiros novos
+// (gancho em pergunta, sem repetir o texto das artes do feed) sobre as telas do
+// app, mais as 3 telas do modo Personal que ainda não tinham story.
+// ONLY=novos gera só estes. [chave, título, subtítulo, print, pílula?]
+const NOVOS = [
+  ['v2-treino', 'Hoje é dia de quê?', 'O treino do dia já espera por você no app.', 'treino'],
+  ['v2-ao-vivo', 'Anotou no papel e perdeu?', 'No app, cada série registrada fica salva.', 'ao-vivo'],
+  ['v2-evolucao', 'Treinou, evoluiu, comprovou', 'Veja cada carga virar gráfico.', 'evolucao'],
+  ['v2-historico', 'Quanto você levantou semana passada?', 'O histórico responde em um toque.', 'historico'],
+  ['v2-musculos', 'Treinou peito demais?', 'Veja o volume semanal de cada músculo.', 'musculos'],
+  ['v2-carga', 'O agachamento está subindo?', 'Gráfico da carga, exercício por exercício.', 'carga'],
+  ['v2-consistencia', 'Não quebre a sequência', 'Veja os dias treinados nas últimas semanas.', 'consistencia'],
+  ['v2-recordes', 'Bateu recorde hoje?', 'O app anota a maior carga e o 1RM estimado.', 'recordes'],
+  ['v2-corpo', 'Peso, cintura, braço e coxa', 'Registre as medidas e veja o corpo mudar.', 'corpo'],
+  ['v2-progressao', 'Sobe a carga ou repete?', 'O app sugere com base no último treino.', 'progressao'],
+  ['v2-amigos', 'Treinar acompanhado é melhor', 'Chame os amigos pelo código.', 'amigos'],
+  ['v2-liga', 'Bronze, Prata ou Ouro?', 'Dispute a liga do mês treinando.', 'liga'],
+  ['v2-treinador-voz', 'Fone no ouvido, treinador na voz', 'Animado, zoeira ou calmo: você escolhe.', 'treinador-voz'],
+  ['v2-nutricao-macros', 'Faltou proteína hoje?', 'Veja quanto falta para a meta do dia.', 'nutricao-macros'],
+  ['v2-nutricao-semana', 'Meta de calorias que se ajusta', 'O diário e o peso mostram o seu gasto real.', 'nutricao-semana'],
+  ['v2-personal-alertas', 'Aluno sumiu? O app avisa', 'Também avisa recorde de carga e relato de dor.', 'pt-alertas', 'PARA PERSONAL'],
+  ['v2-personal-recados', 'Um recado para todos os alunos', 'Envie de uma vez e veja quantos já leram.', 'pt-recados', 'PARA PERSONAL'],
+  ['v2-personal-ficha', 'A ficha do aluno num relance', 'Frequência, sequência e último treino.', 'pt-ficha', 'PARA PERSONAL'],
+];
+
+// Café da manhã com telas que os stories de refeição ainda não usavam (itens 5 a 7).
+const CAFE_NOVOS = [
+  ['Proteína já entrou no café?', 'Veja quanto falta para a meta.', 'nutricao-macros'],
+  ['Pesou hoje de manhã?', 'Registre o peso e acompanhe a semana.', 'corpo'],
+  ['Comendo certo e o peso não muda?', 'O app estima o seu gasto real.', 'nutricao-semana'],
+];
+
+// Stories de uso diário (migration 20270123010000), cada um na sua faixa:
+//   bom dia (7h30), hora do treino (16h30) e criar conta (10h), para o usuário abrir
+//   o app todo dia e para atrair gente nova. ONLY=engaja gera só estes.
+// [título, subtítulo, print]
+const BOMDIA = [
+  ['Bom dia! Hoje tem treino?', 'Abra o app e veja o treino do dia.', 'treino'],
+  ['Bom dia, hora de se mexer', 'Registre o treino de hoje no app.', 'ao-vivo'],
+  ['Bom dia! Qual é o foco de hoje?', 'Veja qual músculo precisa de você.', 'musculos'],
+  ['Bom dia! Mais um dia de evolução', 'Cada treino registrado conta.', 'evolucao'],
+  ['Bom dia! Bora bater recorde?', 'O app guarda a sua maior carga.', 'recordes'],
+  ['Bom dia! Mantenha a sequência', 'Treine hoje e não quebre a corrente.', 'consistencia'],
+  ['Bom dia! Já se pesou hoje?', 'Anote o peso e acompanhe o mês.', 'corpo'],
+  ['Bom dia! Chame um amigo para treinar', 'Treinar junto dá mais vontade.', 'amigos'],
+  ['Bom dia! A liga do mês espera você', 'Quem treina mais vence.', 'liga'],
+  ['Bom dia! Treino de fone hoje?', 'Ligue o treinador por voz.', 'treinador-voz'],
+  ['Bom dia! Quanto vai subir hoje?', 'O app sugere a carga do treino.', 'progressao'],
+  ['Bom dia! Lembra do treino de ontem?', 'Confira no histórico antes de começar.', 'historico'],
+  ['Bom dia! Comece o dia com a meta', 'Veja proteína e calorias do dia.', 'nutricao-macros'],
+  ['Bom dia! Hoje é dia de superar ontem', 'Treine e veja a carga subir.', 'carga'],
+];
+const TREINO = [
+  ['Hora do treino!', 'Abra o app e comece agora.', 'treino'],
+  ['Vai treinar hoje?', 'Registre cada série na hora.', 'ao-vivo'],
+  ['Sem desculpa: bora treinar', 'O treino já está montado no app.', 'treino'],
+  ['Treinou? Registre a evolução', 'Cada carga vira gráfico.', 'evolucao'],
+  ['Hoje é dia de bater recorde', 'O app mostra a sua maior carga.', 'recordes'],
+  ['Quanto você pegou na última vez?', 'Veja no histórico antes de começar.', 'historico'],
+  ['Treino de hoje com carga sugerida', 'Com base no seu último treino.', 'progressao'],
+  ['Não pule o treino de hoje', 'Mantenha a sequência em dia.', 'consistencia'],
+  ['Treino acompanhado rende mais', 'Veja o que os amigos estão treinando.', 'amigos-atividade'],
+  ['Aquecimento feito?', 'O app mostra as séries de aquecimento.', 'progressao'],
+  ['Qual músculo ficou para trás?', 'Confira o volume da semana.', 'musculos'],
+  ['Fone no ouvido, bora treinar', 'O treinador por voz conta o descanso.', 'treinador-voz'],
+  ['Manhã, tarde ou noite', 'O melhor horário é o que você consegue.', 'treino'],
+  ['Terminou o treino? Anote tudo', 'Treino fechado, histórico atualizado.', 'historico'],
+];
+const CONTA = [
+  ['Crie sua conta em 1 minuto', 'É grátis e funciona offline. Link na bio.', 'treino'],
+  ['Treino pronto sem pagar nada', 'Crie a conta grátis e comece hoje.', 'ao-vivo'],
+  ['Seu treino, sua evolução', 'Crie a conta grátis. Link na bio.', 'evolucao'],
+  ['Treino e alimentação no mesmo app', 'Comece grátis. Link na bio.', 'nutricao'],
+  ['Entre na liga do mês', 'Crie a conta grátis e dispute.', 'liga'],
+  ['Chame os amigos e treinem juntos', 'Crie a conta grátis. Link na bio.', 'amigos'],
+];
+
 const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por variante
 
 // Trilha licenciada (opcional): app-admin/music/song.mp3, fora do site e do git.
@@ -279,6 +356,34 @@ async function main() {
       await render(file, { title, sub, variant: (i + 1) % 6, songStart: songStart() }, print);
       console.log('ok', file);
     }
+  }
+  // Itens da fila na migration 20270123010000.
+  if (only === 'engaja') {
+    used = 50;
+    const groups = [['bomdia', 'BOM DIA', BOMDIA, 0], ['treino', 'HORA DO TREINO', TREINO, 2], ['conta', 'CRIE SUA CONTA', CONTA, 4]];
+    for (const [name, pill, list, off] of groups) {
+      for (const [i, [title, sub, print]] of list.entries()) {
+        const file = `story-${name}-${i + 1}.mp4`;
+        await render(file, { pill, title, sub, variant: (i + off) % 6, songStart: songStart() }, print);
+        console.log('ok', file);
+      }
+    }
+    return;
+  }
+  // Itens da fila na migration 20270122010000.
+  if (only === 'novos') {
+    used = 40; // trechos ainda não usados pelos stories anteriores
+    for (const [n, [title, sub, print]] of CAFE_NOVOS.entries()) {
+      const file = `story-cafe-${n + 5}.mp4`;
+      await render(file, { pill: MEALS.cafe.pill, title, sub, variant: (n + 1) % 6, songStart: songStart() }, print);
+      console.log('ok', file);
+    }
+    for (const [i, [key, title, sub, print, pill]] of NOVOS.entries()) {
+      const file = `story-${key}.mp4`;
+      await render(file, { pill, title, sub, variant: (i + 3) % 6, songStart: songStart() }, print);
+      console.log('ok', file);
+    }
+    return;
   }
   writeFileSync(
     join(root, 'supabase', 'migrations', '20270104010000_marketing_story_slots.items.sql.txt'),
