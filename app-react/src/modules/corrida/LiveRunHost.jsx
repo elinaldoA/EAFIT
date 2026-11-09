@@ -20,6 +20,7 @@ import { elevationGain } from './elevation';
 import { averageCadence } from './cadence';
 import { useStepCounter } from './useStepCounter';
 import { useGuidedWorkout } from './useGuidedWorkout';
+import IntervalResults from './IntervalResults';
 import { STEP_LABEL, formatAmount, describeWorkout, normalizeWorkout, spoken } from './workout';
 import SplitBars from './SplitBars';
 import { ShoePicker } from './Shoes';
@@ -455,6 +456,13 @@ function FinishRun({ run, now, onBack, onDone }) {
         <div className="run-live__extra">
           {gain !== null && <span>{t('↗ {v1} m de subida', { v1: gain })}</span>}
           {cadence && <span>{t('👣 {v1} passos/min', { v1: cadence })}</span>}
+        </div>
+      )}
+
+      {run.reps?.length > 0 && (
+        <div className="profile-field">
+          <span className="profile-field__label">{t('Seus tiros')}</span>
+          <IntervalResults reps={run.reps} />
         </div>
       )}
 

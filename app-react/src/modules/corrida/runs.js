@@ -2,6 +2,7 @@ import { db } from '../../lib/supabase';
 import { parseLocalDate, toDateStr } from '../../lib/utils';
 import { mondayOf } from './program';
 import { cleanRoute, applyZones } from './route';
+import { cleanReps } from './intervals';
 
 import { t, lang } from '../../lib/i18n';
 // Corridas do EAFIT Run (tabela public.runs): salvar, listar, apagar e as
@@ -14,6 +15,9 @@ export const RUN_SAVED_EVENT = 'eafit:run-saved';
 
 const PENDING_KEY = 'eafit_runs_pending';
 const COLUMNS = 'id, client_id, run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id';
+// intervals vem de uma migration mais nova: sem ela, a coluna falta e o app segue sem os tiros.
+const COLUMNS_WITH_INTERVALS = `${COLUMNS}, intervals`;
+const missingIntervals = error => !!error && /intervals/i.test(`${error.message || ''} ${error.details || ''}`);
 
 // Ritmo só vale a partir de 1 km (abaixo disso o número engana).
 const MIN_PACE_M = 1000;
@@ -181,6 +185,7 @@ function normalizeRow(r) {
     elev_gain_m: r.elev_gain_m == null ? null : Number(r.elev_gain_m),
     cadence: r.cadence == null ? null : Number(r.cadence),
     shoe_id: r.shoe_id || null,
+    intervals: cleanReps(r.intervals),
   };
 }
 
@@ -207,11 +212,15 @@ function setPending(userId, list) {
 }
 
 async function insertRun(userId, run) {
+  // Só manda a coluna nova quando há tiros: corrida comum não depende da migration.
+  const { intervals, ...rest } = run;
+  const hasIntervals = Array.isArray(intervals) && intervals.length > 0;
   const { data, error } = await db
     .from('runs')
-    .upsert({ ...run, user_id: userId }, { onConflict: 'user_id,client_id' })
-    .select(COLUMNS)
+    .upsert({ ...rest, ...(hasIntervals ? { intervals } : {}), user_id: userId }, { onConflict: 'user_id,client_id' })
+    .select(hasIntervals ? COLUMNS_WITH_INTERVALS : COLUMNS)
     .single();
+  if (hasIntervals && missingIntervals(error)) return insertRun(userId, { ...rest, intervals: null });
   // Tênis apagado enquanto a corrida esperava internet: sobe sem o tênis.
   if (error?.code === '23503' && run.shoe_id) return insertRun(userId, { ...run, shoe_id: null });
   if (error) throw error;
@@ -244,12 +253,14 @@ export async function flushPendingRuns(userId) {
 
 // Corridas da pessoa (as da fila do aparelho entram também), mais recentes primeiro.
 export async function fetchRuns(userId) {
-  const { data, error } = await db
+  const query = columns => db
     .from('runs')
-    .select(COLUMNS)
+    .select(columns)
     .eq('user_id', userId)
     .order('run_date', { ascending: false })
     .order('started_at', { ascending: false });
+  let { data, error } = await query(COLUMNS_WITH_INTERVALS);
+  if (missingIntervals(error)) ({ data, error } = await query(COLUMNS));
   if (error) throw error;
   const rows = (data || []).map(normalizeRow);
   const ids = new Set(rows.map(r => r.client_id));

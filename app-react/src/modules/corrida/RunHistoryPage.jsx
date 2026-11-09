@@ -16,6 +16,7 @@ import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
 import RunInsights from './RunInsights';
+import IntervalResults from './IntervalResults';
 
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
@@ -68,6 +69,12 @@ function RunItem({ run, shoe, onDelete }) {
           )}
           {run.splits.length > 0 ? <SplitBars splits={run.splits} />
             : <p className="profile-field__hint">{t('Sem tempo por km (distância digitada).')}</p>}
+          {run.intervals?.length > 0 && (
+            <>
+              <strong>{t('Seus tiros')}</strong>
+              <IntervalResults reps={run.intervals} />
+            </>
+          )}
           {run.effort && <p>{t('Esforço: {v1}/10', { v1: run.effort })}</p>}
           {run.notes && <p className="run-item__notes">{run.notes}</p>}
           {run.pending && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}

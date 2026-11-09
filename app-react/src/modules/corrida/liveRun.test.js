@@ -50,6 +50,13 @@ describe('distância e splits', () => {
 });
 
 describe('finishRun', () => {
+  it('leva os tiros do intervalado; sem tiros, intervals é null', () => {
+    const base = startRun({ gps: false }, T0);
+    expect(finishRun(base, { now: T0 + 450_000 }).intervals).toBeNull();
+    const withReps = { ...base, reps: [{ rep: 1, s: 98, m: 400 }, { rep: 1, s: 90, m: 400 }, { rep: 2, s: 0, m: 5 }] };
+    expect(finishRun(withReps, { now: T0 + 450_000 }).intervals).toEqual([{ rep: 1, s: 98, m: 400 }]);
+  });
+
   it('monta o registro com duração, distância, splits e sessão', () => {
     let s = startRun({ gps: true, session: { type: 'longao', minutes: 40, week: 3, dayIndex: 5 } }, T0);
     s = setDistance(s, 1000, T0 + 300_000);

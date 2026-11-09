@@ -5,6 +5,7 @@ import {
   sessionWorkout, needsGps, withoutGps, buildSteps, startPosition, advanceWorkout, skipStep, stepProgress,
   stepAnnouncement, rollingPace, pushSample, paceAlert, paceStatus,
 } from './workout';
+import { repResult } from './intervals';
 
 // Treino guiado da corrida ao vivo (workout.js): acompanha a etapa do
 // intervalado, avisa por voz cada troca e confere o ritmo alvo. A posição
@@ -38,7 +39,12 @@ export function useGuidedWorkout(run, now, voiceOn) {
     }
     const next = advanceWorkout(cur.workoutPos, steps, elapsedS, meters);
     if (next !== cur.workoutPos) {
-      updateLiveRun(s => (s ? { ...s, workoutPos: next } : s));
+      // O tiro que acabou de terminar entra no resultado da corrida.
+      const result = repResult(steps[cur.workoutPos.index], cur.workoutPos, elapsedS, meters);
+      updateLiveRun(s => (s ? {
+        ...s, workoutPos: next,
+        reps: result && !(s.reps || []).some(r => r.rep === result.rep) ? [...(s.reps || []), result] : s.reps,
+      } : s));
       say(stepAnnouncement(steps[next.index], workout.reps));
     }
     // say só fala; muda a cada render sem mudar o efeito.
