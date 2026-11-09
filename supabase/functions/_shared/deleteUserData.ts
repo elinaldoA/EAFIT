@@ -37,7 +37,7 @@ const USER_COLUMNS: [table: string, column: string][] = [
   ['trainer_client_meta', 'client_id'], ['trainer_client_meta', 'trainer_id'],
   ['trainer_clients', 'client_id'], ['trainer_clients', 'trainer_id'],
   ['trainer_invite_signups', 'user_id'], ['trainer_invite_signups', 'trainer_id'],
-  ['trainer_templates', 'trainer_id'], ['trainer_quick_replies', 'trainer_id'], ['trainer_settings', 'trainer_id'],
+  ['trainer_templates', 'trainer_id'], ['trainer_quick_replies', 'trainer_id'], ['trainer_scheduled_messages', 'trainer_id'], ['trainer_settings', 'trainer_id'],
   ['trainers', 'user_id'],
 ];
 

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 
-const h = vi.hoisted(() => ({ toast: vi.fn(), sendMessage: vi.fn(), qr: {} }));
+const h = vi.hoisted(() => ({ toast: vi.fn(), sendMessage: vi.fn(), qr: {}, schedule: vi.fn() }));
 
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
@@ -17,11 +17,17 @@ vi.mock('../lib/trainerQuickReplies', async (importActual) => ({
   deleteQuickReply: (...a) => h.qr.del(...a),
 }));
 
+vi.mock('../lib/trainerScheduled', async (importActual) => ({
+  ...(await importActual()),
+  scheduleMessage: (...a) => h.schedule(...a),
+}));
+
 import MessageComposer from './MessageComposer';
 
 beforeEach(() => {
   h.toast.mockReset();
   h.sendMessage.mockReset().mockResolvedValue(3);
+  h.schedule.mockReset().mockResolvedValue('s1');
   h.qr = {
     fetch: vi.fn().mockResolvedValue([]),
     add: vi.fn().mockResolvedValue('q1'),
@@ -126,6 +132,74 @@ describe('MessageComposer', () => {
       h.qr.fetch.mockRejectedValue(new Error('PGRST202'));
       render(<MessageComposer clientIds={[]} label="Enviar" />);
       expect(screen.getByRole('button', { name: 'Bom treino hoje! 💪' })).toBeTruthy();
+    });
+  });
+
+  describe('agendar', () => {
+    const future = () => {
+      const d = new Date(Date.now() + 26 * 3600000);
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+    };
+    const openSchedule = () => fireEvent.click(screen.getByRole('button', { name: '🕒 Agendar para depois' }));
+
+    it('abre o campo de horário, troca o botão e volta ao envio imediato', () => {
+      render(<MessageComposer clientIds={['a']} label="Enviar" />);
+      expect(screen.queryByLabelText('Enviar em')).toBeNull();
+      openSchedule();
+      expect(screen.getByLabelText('Enviar em')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Agendar recado' })).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: 'Enviar agora' }));
+      expect(screen.queryByLabelText('Enviar em')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Enviar' })).toBeTruthy();
+    });
+
+    it('o botão só habilita com texto e horário', () => {
+      render(<MessageComposer clientIds={['a']} label="Enviar" />);
+      openSchedule();
+      const go = () => screen.getByRole('button', { name: 'Agendar recado' });
+      expect(go().disabled).toBe(true);
+      fireEvent.change(box(), { target: { value: 'Oi' } });
+      expect(go().disabled).toBe(true);
+      fireEvent.change(screen.getByLabelText('Enviar em'), { target: { value: future() } });
+      expect(go().disabled).toBe(false);
+    });
+
+    it('agenda sem enviar agora, limpa a caixa e avisa', async () => {
+      const onSent = vi.fn();
+      render(<MessageComposer clientIds={['a', 'b']} label="Enviar" onSent={onSent} />);
+      openSchedule();
+      const when = future();
+      fireEvent.change(box(), { target: { value: '  Bom treino amanhã  ' } });
+      fireEvent.change(screen.getByLabelText('Enviar em'), { target: { value: when } });
+      fireEvent.click(screen.getByRole('button', { name: 'Agendar recado' }));
+      await waitFor(() => expect(h.schedule).toHaveBeenCalledWith(['a', 'b'], 'Bom treino amanhã', new Date(when).toISOString()));
+      expect(h.sendMessage).not.toHaveBeenCalled();
+      await waitFor(() => expect(onSent).toHaveBeenCalled());
+      expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('🕒 Recado agendado para'));
+      expect(box().value).toBe('');
+      expect(screen.queryByLabelText('Enviar em')).toBeNull();
+    });
+
+    it('horário no passado não é enviado ao banco', () => {
+      render(<MessageComposer clientIds={['a']} label="Enviar" />);
+      openSchedule();
+      fireEvent.change(box(), { target: { value: 'Oi' } });
+      fireEvent.change(screen.getByLabelText('Enviar em'), { target: { value: '2020-01-01T08:00' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Agendar recado' }));
+      expect(screen.getByRole('alert').textContent).toContain('Escolha um horário');
+      expect(h.schedule).not.toHaveBeenCalled();
+    });
+
+    it('erro do banco mostra o motivo e mantém o texto', async () => {
+      h.schedule.mockRejectedValue(new Error('too_many'));
+      render(<MessageComposer clientIds={['a']} label="Enviar" />);
+      openSchedule();
+      fireEvent.change(box(), { target: { value: 'Oi' } });
+      fireEvent.change(screen.getByLabelText('Enviar em'), { target: { value: future() } });
+      fireEvent.click(screen.getByRole('button', { name: 'Agendar recado' }));
+      expect((await screen.findByRole('alert')).textContent).toContain('20 recados agendados');
+      expect(box().value).toBe('Oi');
     });
   });
 });

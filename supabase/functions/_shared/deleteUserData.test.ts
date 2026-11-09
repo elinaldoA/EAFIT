@@ -72,7 +72,7 @@ const DIRECT_TABLES = [
   'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles',
   'friendships', 'feedback', 'user_notifications', 'notification_log', 'client_errors', 'admin_user_notes',
   'appointment_reminder_log', 'trainer_charge_reminder_log', 'trainer_appointments', 'trainer_charges', 'trainer_alert_log', 'trainer_messages', 'trainer_notes',
-  'trainer_goals', 'trainer_clients', 'trainer_templates', 'trainer_quick_replies', 'trainer_settings', 'trainers',
+  'trainer_goals', 'trainer_clients', 'trainer_templates', 'trainer_quick_replies', 'trainer_scheduled_messages', 'trainer_settings', 'trainers',
 ];
 
 Deno.test('deleteUserData apaga de todas as tabelas diretas, incluindo exercise_discomfort', async () => {

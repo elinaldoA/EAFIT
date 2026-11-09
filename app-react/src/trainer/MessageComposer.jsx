@@ -6,6 +6,10 @@ import {
   quickLabel, insertReply, friendlyQuickReplyError,
 } from '../lib/trainerQuickReplies';
 
+import {
+  scheduleMessage, scheduleToIso, minScheduleValue, maxScheduleValue, whenLabel, friendlyScheduleError,
+} from '../lib/trainerScheduled';
+
 import { t } from '../lib/i18n';
 // Caixa de recado do personal. `clientIds` = destinatários fixos (ficha do
 // aluno) ou a seleção da tela de Recados; vazio/nulo = todos os alunos.
@@ -18,6 +22,8 @@ export default function MessageComposer({ clientIds, label, onSent, initialText 
   const [sending, setSending] = useState(false);
   const [replies, setReplies] = useState([]);
   const [managing, setManaging] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [when, setWhen] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -32,6 +38,7 @@ export default function MessageComposer({ clientIds, label, onSent, initialText 
 
   async function handleSend() {
     if (!body) { setError(t('Escreva a mensagem.')); return; }
+    if (scheduling) { await handleSchedule(); return; }
     setSending(true); setError('');
     try {
       const n = await sendMessage(clientIds, body);
@@ -40,6 +47,22 @@ export default function MessageComposer({ clientIds, label, onSent, initialText 
       onSent?.();
     } catch (err) {
       setError(friendlyMessageError(err));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleSchedule() {
+    const iso = scheduleToIso(when);
+    if (!iso) { setError(friendlyScheduleError(new Error('invalid_when'))); return; }
+    setSending(true); setError('');
+    try {
+      await scheduleMessage(clientIds, body, iso);
+      setText(''); setWhen(''); setScheduling(false);
+      toast(t('🕒 Recado agendado para {v}', { v: whenLabel(iso) }));
+      onSent?.();
+    } catch (err) {
+      setError(friendlyScheduleError(err));
     } finally {
       setSending(false);
     }
@@ -100,9 +123,20 @@ export default function MessageComposer({ clientIds, label, onSent, initialText 
           {t('💾 Salvar como resposta pronta')}
         </button>
       )}
+      <button type="button" className="btn btn--ghost btn--sm" style={{ alignSelf: 'flex-start' }} aria-pressed={scheduling}
+        onClick={() => setScheduling(v => !v)}>
+        {scheduling ? t('Enviar agora') : t('🕒 Agendar para depois')}
+      </button>
+      {scheduling && (
+        <div className="profile-field">
+          <label className="profile-field__label" htmlFor="schedWhen">{t('Enviar em')}</label>
+          <input id="schedWhen" type="datetime-local" className="input input--sm" value={when}
+            min={minScheduleValue()} max={maxScheduleValue()} onChange={e => setWhen(e.target.value)} />
+        </div>
+      )}
       {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
-      <button type="button" className="btn btn--primary btn--full" disabled={sending || !body} onClick={handleSend}>
-        {sending ? t('Enviando…') : label}
+      <button type="button" className="btn btn--primary btn--full" disabled={sending || !body || (scheduling && !when)} onClick={handleSend}>
+        {sending ? t('Enviando…') : scheduling ? t('Agendar recado') : label}
       </button>
     </>
   );

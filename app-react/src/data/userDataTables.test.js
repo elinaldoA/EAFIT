@@ -133,6 +133,7 @@ describe('backup cobre as tabelas do usuário', () => {
     trainer_goals: 'as metas vão em trainerGoals',
     trainer_templates: 'modelos do personal (modo personal)',
     trainer_quick_replies: 'respostas prontas do personal (modo personal)',
+    trainer_scheduled_messages: 'recados agendados pelo personal (modo personal); os enviados ja viram trainer_messages',
     trainer_settings: 'ajustes do personal (modo personal)',
     trainers: 'flag de acesso ao modo personal',
   };
