@@ -100,6 +100,17 @@ describe('contexto do erro', () => {
     }
   });
 
+  it('"Script error." opaco (sem arquivo nem erro) não é gravado; erro com arquivo é', async () => {
+    installErrorReporter();
+    window.dispatchEvent(new ErrorEvent('error', { message: 'Script error.' }));
+    await Promise.resolve();
+    expect(insert).not.toHaveBeenCalled();
+    window.dispatchEvent(new ErrorEvent('error', { message: 'Script error.', filename: 'https://x/a.js', lineno: 3, colno: 4 }));
+    // listeners de testes anteriores seguem na window, então pode haver mais de uma gravação
+    await vi.waitFor(() => expect(insert).toHaveBeenCalled());
+    expect(insert.mock.calls[0][0].context.where).toBe('https://x/a.js:3:4');
+  });
+
   it('console.error entra no rastro e continua indo para o console', async () => {
     const original = console.error;
     const spy = vi.fn();

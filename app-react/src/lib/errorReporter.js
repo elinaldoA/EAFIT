@@ -135,10 +135,24 @@ function eventLocation(e) {
   return `${e.filename}:${e.lineno || 0}:${e.colno || 0}`;
 }
 
+// "Script error." sem objeto de erro nem arquivo é o aviso opaco do navegador
+// para script de outra origem (extensão do Safari, injeção do iOS). Não traz
+// nada acionável e o app não carrega script externo, então não vai para o
+// painel; fica só no rastro das próximas ocorrências.
+export function isOpaqueScriptError(e) {
+  return !e.error && !e.filename && /^script error\.?$/i.test(String(e.message || '').trim());
+}
+
 export function installErrorReporter() {
   if (installed) return;
   installed = true;
   installBreadcrumbs();
-  window.addEventListener('error', e => reportError('error', e.error || e.message, { where: eventLocation(e) }));
+  window.addEventListener('error', e => {
+    if (isOpaqueScriptError(e)) {
+      addBreadcrumb('erro opaco do navegador (Script error.)');
+      return;
+    }
+    reportError('error', e.error || e.message, { where: eventLocation(e) });
+  });
   window.addEventListener('unhandledrejection', e => reportError('unhandledrejection', e.reason));
 }
