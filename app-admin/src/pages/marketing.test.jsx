@@ -440,7 +440,7 @@ describe('cartão da publicação automática', () => {
     expect(await screen.findByText(/1 pulado\(s\) por repetição/)).toBeTruthy();
     expect(screen.getAllByText(/Primeira linha/).length).toBeGreaterThan(0);
     expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
-    expect(screen.getAllByText('Hoje').length + screen.getAllByText(/^Amanhã/).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('Hoje').length + screen.queryAllByText(/^Amanhã/).length).toBeGreaterThan(0);
   });
 });
 
