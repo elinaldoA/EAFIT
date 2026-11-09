@@ -203,6 +203,8 @@ export default {
   'Resumo da semana': 'Weekly summary',
   'Toda segunda, às 8h: quantos alunos treinaram e quem ficou parado.': 'Every Monday at 8am: how many clients trained and who was inactive.',
   'Cobranças': 'Payments',
+  'Energia ou sono baixos nos últimos dias': 'Low energy or sleep in recent days',
+  'Oi, {name}! Vi pelos seus check-ins que os últimos dias foram puxados. Quer que eu alivie o treino esta semana?': 'Hi {name}! I saw from your check-ins that the last few days were rough. Want me to lighten your training this week?',
   'Oi, {name}! Vi que você relatou desconforto no treino. Como você está? Me conta onde incomoda que eu ajusto seu treino.': 'Hi {name}! I saw you reported discomfort during training. How are you? Tell me where it hurts and I’ll adjust your workout.',
   'Oi, {name}! Senti sua falta nos treinos. Está tudo bem? Se a rotina apertou, me avisa que a gente ajusta o plano.': 'Hi {name}! I’ve missed you at training. Is everything okay? If your schedule got tight, let me know and we’ll adjust the plan.',
   'Boas-vindas, {name}! Quando puder, faça seu primeiro treino e me conta o que achou.': 'Welcome, {name}! When you can, do your first workout and tell me what you think.',

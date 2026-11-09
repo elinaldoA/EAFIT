@@ -11,6 +11,10 @@ export const MAX_TAGS = 6;
 export const TAG_MAX_LEN = 20;
 export const PLAN_ENDING_DAYS = 7;
 export const STRIP_DAYS = 14;
+// Check-ins dos últimos 4 dias: com pelo menos 2 respostas, média de energia ou
+// de sono até 2 (de 5) conta como "cansado".
+export const TIRED_MIN_CHECKINS = 2;
+export const TIRED_MAX_AVG = 2;
 
 const ERRORS = {
   not_authorized: t('Você não tem vínculo ativo com este aluno.'),
@@ -103,6 +107,10 @@ export function buildActionQueue(roster, { replies = {}, overdue = {}, today }) 
     if (overdue[c.id]) reasons.push({ kind: 'cobranca', priority: 2, icon: '💰', label: t('Pagamento em atraso: {v1}', { v1: moneyShort(overdue[c.id].cents) }) });
     if (att.level === 'risco') reasons.push({ kind: 'sumido', priority: 1, icon: '🚨', label: att.label });
     if (!c.paused && plan.level === 'expired') reasons.push({ kind: 'plano', priority: 2, icon: '📋', label: t('Plano vencido') });
+    if (!c.paused && c.chkN >= TIRED_MIN_CHECKINS
+        && ((c.chkEnergy != null && c.chkEnergy <= TIRED_MAX_AVG) || (c.chkSleep != null && c.chkSleep <= TIRED_MAX_AVG))) {
+      reasons.push({ kind: 'cansaco', priority: 3, icon: '😴', label: t('Energia ou sono baixos nos últimos dias') });
+    }
     if (att.level === 'atencao') reasons.push({ kind: 'parado', priority: 3, icon: '⏳', label: att.label });
     if (!c.paused && plan.level === 'ending') reasons.push({ kind: 'plano', priority: 4, icon: '📋', label: t('Plano: {v}', { v: plan.label.toLowerCase() }) });
     if (!c.paused && plan.level === 'none') reasons.push({ kind: 'plano', priority: 4, icon: '📋', label: t('Ainda sem plano') });
@@ -126,6 +134,7 @@ export function suggestMessage(client, reasons, overdue) {
     case 'dor': return t('Oi, {name}! Vi que você relatou desconforto no treino. Como você está? Me conta onde incomoda que eu ajusto seu treino.', { name });
     case 'sumido':
     case 'parado': return t('Oi, {name}! Senti sua falta nos treinos. Está tudo bem? Se a rotina apertou, me avisa que a gente ajusta o plano.', { name });
+    case 'cansaco': return t('Oi, {name}! Vi pelos seus check-ins que os últimos dias foram puxados. Quer que eu alivie o treino esta semana?', { name });
     case 'novo': return t('Boas-vindas, {name}! Quando puder, faça seu primeiro treino e me conta o que achou.', { name });
     case 'cobranca': return t('Oi, {name}! Passando para lembrar do pagamento em aberto ({v1}). Qualquer dúvida é só falar.', { name, v1: moneyShort(overdue?.cents || 0) });
     case 'plano': return t('Oi, {name}! Vou atualizar seu plano de treino. Tem algum objetivo novo ou algo que não está funcionando?', { name });
@@ -204,6 +213,9 @@ const mapRoster = r => ({
   days7: r.rs_days_7, days30: r.rs_days_30, paused: !!r.rs_paused, goal: r.rs_goal, level: r.rs_level,
   weeklyGoal: r.rs_weekly_goal, planName: r.rs_plan_name, planDays: r.rs_plan_days, planEnd: r.rs_plan_end,
   planByMe: !!r.rs_plan_by_me, pain7: r.rs_pain_7 || 0, tags: r.rs_tags || [], recent: r.rs_recent || [],
+  chkN: r.rs_chk_n || 0,
+  chkEnergy: r.rs_chk_energy == null ? null : Number(r.rs_chk_energy),
+  chkSleep: r.rs_chk_sleep == null ? null : Number(r.rs_chk_sleep),
 });
 
 const isMissingRpc = error => error?.code === 'PGRST202' || error?.code === '42883';

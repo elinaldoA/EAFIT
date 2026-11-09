@@ -175,3 +175,29 @@ describe('suggestMessage', () => {
     expect(suggestMessage(ana, [])).toBe('');
   });
 });
+
+describe('fila: cansaço pelos check-ins', () => {
+  const kinds = client => buildActionQueue([client], { today: TODAY })[0]?.reasons.map(r => r.kind) || [];
+  const ok = { planName: 'A', last_day: TODAY, days7: 3 };
+
+  it('energia ou sono baixos em 2+ check-ins entram na fila', () => {
+    expect(kinds(c({ ...ok, chkN: 3, chkEnergy: 1.7, chkSleep: 4 }))).toContain('cansaco');
+    expect(kinds(c({ ...ok, chkN: 2, chkEnergy: 4, chkSleep: 2 }))).toContain('cansaco');
+  });
+
+  it('um check-in só, médias boas, sem dados ou aluno pausado não entram', () => {
+    expect(kinds(c({ ...ok, chkN: 1, chkEnergy: 1, chkSleep: 1 }))).not.toContain('cansaco');
+    expect(kinds(c({ ...ok, chkN: 3, chkEnergy: 3, chkSleep: 3.5 }))).not.toContain('cansaco');
+    expect(kinds(c({ ...ok }))).not.toContain('cansaco');
+    expect(kinds(c({ ...ok, paused: true, chkN: 3, chkEnergy: 1, chkSleep: 1 }))).not.toContain('cansaco');
+  });
+
+  it('o texto sugerido fala dos últimos dias puxados', () => {
+    expect(suggestMessage({ name: 'Ana' }, [{ kind: 'cansaco', priority: 3 }])).toContain('alivie o treino');
+  });
+
+  it('mapeia as colunas novas da carteira', async () => {
+    h.rpc.mockResolvedValue({ data: [{ rs_id: 'c1', rs_name: 'Ana', rs_chk_n: 3, rs_chk_energy: '1.7', rs_chk_sleep: null }], error: null });
+    expect(await fetchRoster()).toEqual([expect.objectContaining({ chkN: 3, chkEnergy: 1.7, chkSleep: null })]);
+  });
+});
