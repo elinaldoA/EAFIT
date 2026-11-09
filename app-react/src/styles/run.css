@@ -503,3 +503,6 @@
 .run-goal__head span { color: var(--text-muted); font-size: 13px; }
 .run-goal__bar { height: 8px; border-radius: 4px; background: rgba(128,128,128,.25); overflow: hidden; margin: 6px 0 2px; }
 .run-goal__bar > span { display: block; height: 100%; background: var(--primary); }
+
+/* Fantasma (correr de novo contra uma corrida anterior) */
+.run-live__ghost-result { margin: var(--sp-2) 0; text-align: center; font-weight: 700; }

@@ -47,6 +47,7 @@ vi.mock('../../lib/friends', () => ({
 
 import LiveRunHost from './LiveRunHost';
 import RunHomePage from './RunHomePage';
+import RunHistoryPage from './RunHistoryPage';
 import RunFeedPage from './RunFeedPage';
 import RunChallengesPage from './RunChallengesPage';
 import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache } from './liveRun';
@@ -186,6 +187,43 @@ describe('Treino guiado', () => {
     expect(screen.getByText('Ritmo alvo 5:30/km')).toBeTruthy();
     expect(screen.getByText('Alvo 5:30/km')).toBeTruthy();
     expect(screen.getByText('medindo…')).toBeTruthy();
+  });
+});
+
+describe('correr de novo (fantasma)', () => {
+  const loop = (lat, lon) => [[[lat, lon], [lat + 300, lon], [lat + 300, lon + 300], [lat, lon + 300]]];
+  const past = (client_id, duration_s, lat) => ({
+    client_id, title: client_id === 'slow' ? 'Parque lento' : 'Parque rápido', run_date: '2026-10-01', started_at: '2026-10-01T10:00:00.000Z',
+    duration_s, distance_m: 5000, splits: [duration_s / 5, duration_s / 5, duration_s / 5, duration_s / 5, duration_s / 5],
+    route: loop(lat, -4000000), kind: 'livre', visibility: 'amigos', gps: true, intervals: [],
+  });
+
+  it('a corrida ao vivo mostra quanto falta para o fantasma e mede nos primeiros 100 m', () => {
+    const ghost = { id: 'a', title: 'Parque', date: '2026-10-01', duration_s: 1500, distance_m: 5000, splits: [300, 300, 300, 300, 300] };
+    act(() => { setLiveRun(startRun({ gps: true, ghost }, Date.now() - 5_000)); });
+    render(<LiveRunHost />);
+    expect(screen.getByText(/👻 Parque/)).toBeTruthy();
+    expect(screen.getByText('medindo…')).toBeTruthy();
+    act(() => { setLiveRun(setDistance(getLiveRun(), 1000)); });
+    expect(screen.getByText(/à frente/)).toBeTruthy();
+  });
+
+  it('no histórico: correr de novo contra esta ou contra a melhor da mesma rota', async () => {
+    h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
+    render(<RunHistoryPage />);
+    fireEvent.click(await screen.findByRole('button', { name: /Parque lento/ }));
+    expect(screen.getByRole('button', { name: /Correr contra a minha melhor nessa rota \(25:00/ })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Correr contra a minha melhor/ }));
+    expect(getLiveRun().ghost).toMatchObject({ id: 'fast', duration_s: 1500 });
+  });
+
+  it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
+    h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
+    render(<RunHistoryPage />);
+    fireEvent.click(await screen.findByRole('button', { name: /Parque rápido/ }));
+    expect(screen.queryByRole('button', { name: /minha melhor/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Correr de novo contra esta \(25:00\)/ }));
+    expect(getLiveRun().ghost).toMatchObject({ id: 'fast' });
   });
 });
 

@@ -27,11 +27,13 @@ export function newRunId(now = Date.now(), random = Math.random) {
   return `${now.toString(36)}-${Math.floor(random() * 1e9).toString(36)}`;
 }
 
-export function startRun({ gps = false, session = null } = {}, now = Date.now()) {
+// ghost: a corrida anterior para correr contra (ghost.js), guardada junto.
+export function startRun({ gps = false, session = null, ghost = null } = {}, now = Date.now()) {
   return {
     id: newRunId(now), startedAt: now, activeMs: 0, segmentStart: now,
     meters: 0, kmMarks: [], sample: { meters: 0, elapsedMs: 0 },
     gps: !!gps, session, updatedAt: now, route: [], routeBreak: false,
+    ...(ghost ? { ghost } : {}),
   };
 }
 

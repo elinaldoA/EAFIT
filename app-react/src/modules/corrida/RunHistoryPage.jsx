@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
 import { todayDate } from '../../data/treinoData';
@@ -17,11 +17,17 @@ import { renderRunCard, shareRunCard } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
 import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
+import { ghostFrom, bestOnSameRoute } from './ghost';
+import { startRun, setLiveRun, getLiveRun } from './liveRun';
+import { geoSupported } from './useGeoTracker';
+import { requestMotionPermission } from './cadence';
+import { GPS_KEY, readPref } from './runPrefs';
+import { trackEvent } from '../../lib/tracking';
 
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
 
-function RunItem({ run, shoe, onDelete }) {
+function RunItem({ run, runs, shoe, onDelete }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -46,6 +52,19 @@ function RunItem({ run, shoe, onDelete }) {
     }
   }
   const pace = paceSeconds(run.duration_s, run.distance_m);
+  // A melhor corrida da mesma rota (só calculada com a corrida aberta).
+  const best = useMemo(() => (open && !run.pending ? bestOnSameRoute(runs, run) : run), [open, runs, run]);
+
+  // Começa uma corrida nova contra `target` (o fantasma), pelo mesmo caminho da aba Gravar.
+  function runAgainst(target) {
+    if (getLiveRun()) return toast(t('Já existe uma corrida em andamento'));
+    const ghost = ghostFrom(target);
+    if (!ghost) return;
+    requestMotionPermission();
+    setLiveRun(startRun({ gps: geoSupported() && (!!run.gps || readPref(GPS_KEY)), ghost }));
+    trackEvent('run_start', 'fantasma');
+  }
+  const canRepeat = !run.pending && !!ghostFrom(run);
   return (
     <li className={`run-item${open ? ' run-item--open' : ''}`}>
       <button type="button" className="run-item__head" aria-expanded={open} onClick={() => setOpen(o => !o)}>
@@ -80,6 +99,16 @@ function RunItem({ run, shoe, onDelete }) {
           {run.pending && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
           {run.route.length > 0 && (
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => downloadGpx(run)}>{t('📤 Exportar GPX')}</button>
+          )}
+          {canRepeat && (
+            <button type="button" className="btn btn--primary btn--sm" onClick={() => runAgainst(run)}>
+              {t('🏁 Correr de novo contra esta ({v1})', { v1: formatClock(run.duration_s) })}
+            </button>
+          )}
+          {canRepeat && best.client_id !== run.client_id && (
+            <button type="button" className="btn btn--outline btn--sm" onClick={() => runAgainst(best)}>
+              {t('👑 Correr contra a minha melhor nessa rota ({v1}, {v2})', { v1: formatClock(best.duration_s), v2: fmtDate(best.run_date) })}
+            </button>
           )}
           <button type="button" className="btn btn--primary btn--sm" disabled={sharing} onClick={handleShare}>
             {sharing ? t('Gerando imagem…') : t('📤 Compartilhar nos stories')}
@@ -242,7 +271,7 @@ export default function RunHistoryPage() {
       <div className="section-group">
         <div className="section-group__label">{t('Corridas')}</div>
         <ul className="run-list">
-          {runs.map(r => <RunItem key={r.client_id} run={r} shoe={shoes.find(s => s.id === r.shoe_id)} onDelete={handleDelete} />)}
+          {runs.map(r => <RunItem key={r.client_id} run={r} runs={runs} shoe={shoes.find(s => s.id === r.shoe_id)} onDelete={handleDelete} />)}
         </ul>
       </div>
 

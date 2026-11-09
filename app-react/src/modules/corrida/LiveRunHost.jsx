@@ -21,6 +21,9 @@ import { averageCadence } from './cadence';
 import { useStepCounter } from './useStepCounter';
 import { useGuidedWorkout } from './useGuidedWorkout';
 import IntervalResults from './IntervalResults';
+import GhostBar, { GhostResult } from './GhostBar';
+import { gapSpoken } from './ghostText';
+import { ghostGapS } from './ghost';
 import { STEP_LABEL, formatAmount, describeWorkout, normalizeWorkout, spoken } from './workout';
 import SplitBars from './SplitBars';
 import { ShoePicker } from './Shoes';
@@ -136,7 +139,9 @@ export default function LiveRunHost() {
     if (!run) { spokenKm.current = 0; return; }
     if (kmCount > spokenKm.current && voiceOn) {
       const splits = splitsOf(run.kmMarks);
-      speak(kmAnnouncement(kmCount, Math.round(run.kmMarks[kmCount - 1] / 1000), splits[kmCount - 1]), { queue: true });
+      const totalS = Math.round(run.kmMarks[kmCount - 1] / 1000);
+      const ghostSentence = run.ghost ? ` ${gapSpoken(ghostGapS(run.ghost, totalS, kmCount * 1000))}` : '';
+      speak(kmAnnouncement(kmCount, totalS, splits[kmCount - 1]) + ghostSentence, { queue: true });
     }
     spokenKm.current = kmCount;
   }, [kmCount, run, voiceOn]);
@@ -336,6 +341,8 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, guid
         </div>
       )}
 
+      {run.ghost && <GhostBar ghost={run.ghost} elapsedS={totalS} meters={run.meters} />}
+
       {(gain !== null || spm) && (
         <div className="run-live__extra">
           {gain !== null && <span>{t('↗ {v1} m de subida', { v1: gain })}</span>}
@@ -452,6 +459,7 @@ function FinishRun({ run, now, onBack, onDone }) {
       </div>
       <h2 className="run-live__title">{t('Fim da corrida')}</h2>
       <div className="run-live__clock run-live__clock--small">{formatClock(totalS)}</div>
+      {run.ghost && <GhostResult ghost={run.ghost} totalS={totalS} meters={edited ? (Number(String(km).replace(',', '.')) || 0) * 1000 : run.meters} />}
       {(gain !== null || cadence) && (
         <div className="run-live__extra">
           {gain !== null && <span>{t('↗ {v1} m de subida', { v1: gain })}</span>}
