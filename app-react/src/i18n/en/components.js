@@ -521,7 +521,6 @@ export default {
   'Registre peso e medidas em datas diferentes para ver a variação entre as fotos.': 'Log weight and measurements on different dates to see the change between the photos.',
   '↔ Comparar antes e depois': '↔ Compare before and after',
   '📤 Compartilhar imagem': '📤 Share image',
-  'Gerando imagem…': 'Generating image…',
   'Proteína nos últimos {length} dias': 'Protein over the last {length} days',
   'sem meta': 'no goal',
   'Desfazer +{undoAmount}g': 'Undo +{undoAmount}g',

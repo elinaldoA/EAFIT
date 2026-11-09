@@ -1,42 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { todayDate } from '../../data/treinoData';
 import { goTo } from '../../lib/appNav';
-import { RUN_SAVED_EVENT, fetchRuns, formatKm, decimal } from './runs';
-import { runProfileStats, parseWeeklyKm, weeklyKmGoal, programSummary } from './runProfileStats';
+import { parseWeeklyKm, weeklyKmGoal, programSummary } from './runProfileStats';
 import { VOICE_KEY, AUTOPAUSE_KEY, GPS_KEY, readPref, writePref } from './runPrefs';
 import { t } from '../../lib/i18n';
 
 // Perfil de quem está no módulo de corrida: o que o app mostra no lugar dos
 // cartões de treino, nutrição e peso (PerfilPage.jsx).
-
-// Resumo do topo do Perfil, já em texto: { week, streak, total }. Recarrega
-// quando uma corrida é salva. Sem a lista (carregando ou sem rede), '–'.
-export function useRunProfileStats(active, user) {
-  const [runs, setRuns] = useState(null);
-  const load = useCallback(async () => {
-    if (!user) return;
-    try { setRuns(await fetchRuns(user.id)); } catch (err) { console.error('useRunProfileStats:', err); }
-  }, [user]);
-
-  useEffect(() => {
-    if (!active) return undefined;
-    load();
-    window.addEventListener(RUN_SAVED_EVENT, load);
-    return () => window.removeEventListener(RUN_SAVED_EVENT, load);
-  }, [active, load]);
-
-  const meta = user?.user_metadata;
-  return useMemo(() => {
-    if (!runs) return { week: '–', streak: '–', total: '–' };
-    const s = runProfileStats(runs, todayDate(), meta?.pauses);
-    const goal = weeklyKmGoal(meta);
-    return {
-      week: goal ? `${formatKm(s.weekMeters, 1)}/${decimal(goal)}` : formatKm(s.weekMeters, 1),
-      streak: t('{v1} sem', { v1: s.streakWeeks }),
-      total: formatKm(s.totalMeters, 1),
-    };
-  }, [runs, meta]);
-}
 
 // Meta de km por semana (aparece no topo do Perfil como "12,3/20").
 export function RunGoalSection({ meta, updateProfile, toast }) {

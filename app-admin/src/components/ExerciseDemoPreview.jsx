@@ -1,24 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getExerciseMedia } from '../../../app-react/src/data/exerciseMedia.js';
 import { youtubeEmbedUrl } from '../../../app-react/src/data/exerciseYoutube.js';
-import { loadCustomMediaMap } from '../lib/exerciseMedia';
 
 // Os vídeos e quadros do app ficam em /app/ (mesmo domínio do painel).
 const APP_BASE = '/app/';
 
-// Mapa de mídias próprias, compartilhado pelos botões da tela.
-export function useCustomMedia() {
-  const [custom, setCustom] = useState(null);
-  useEffect(() => {
-    let alive = true;
-    loadCustomMediaMap().then(m => { if (alive) setCustom(m); }).catch(() => {});
-    return () => { alive = false; };
-  }, []);
-  return custom;
-}
-
 // Mídia do exercício como o usuário vê no "Ver execução" do app, ou null.
-export function demoFor(nome, custom) {
+function demoFor(nome, custom) {
   return getExerciseMedia(nome, APP_BASE, custom);
 }
 

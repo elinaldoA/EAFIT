@@ -44,7 +44,8 @@ import LanguageSwitch from '../components/LanguageSwitch';
 import { shareInvite } from '../lib/invite';
 import { takeProfileCardToOpen } from '../lib/appNav';
 import { startTutorial } from '../lib/tutorial';
-import { useRunProfileStats, RunGoalSection, RunPrefsSection, RunShortcuts } from '../modules/corrida/RunProfile';
+import { useRunProfileStats } from '../modules/corrida/useRunProfileStats';
+import { RunGoalSection, RunPrefsSection, RunShortcuts } from '../modules/corrida/RunProfile';
 import { weeklyKmGoal } from '../modules/corrida/runProfileStats';
 import { decimal } from '../modules/corrida/runs';
 

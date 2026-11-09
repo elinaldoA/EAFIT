@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 // Paginação "ver mais" no cliente: só desenha `size` itens por vez, para listas
 // longas de mídia/posts não pesarem a tela. Volta à primeira página quando
 // `resetKey` muda (filtro, busca, ordem).
-export function usePaged(items, size = 24, resetKey = '') {
+function usePaged(items, size = 24, resetKey = '') {
   const [shown, setShown] = useState(size);
   useEffect(() => { setShown(size); }, [resetKey, size]);
   return {

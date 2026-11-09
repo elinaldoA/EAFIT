@@ -1,6 +1,7 @@
 import { Fragment, useRef, useState } from 'react';
 import { PLAN_FILE_ACCEPT, hasDemo, readPlanFile, summarizePlan } from '../lib/workoutPlanFile';
-import ExerciseDemoPreview, { useCustomMedia } from '../components/ExerciseDemoPreview';
+import ExerciseDemoPreview from '../components/ExerciseDemoPreview';
+import { useCustomMedia } from '../lib/useCustomMedia';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { SEVERITY_BADGE, SEVERITY_LABEL, parseSetNumber } from '../lib/userDetailHelpers';

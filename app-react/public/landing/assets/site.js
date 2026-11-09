@@ -781,7 +781,7 @@
   (function recordPageview() {
     try { if (localStorage.getItem('eafit_staff_device') === '1') return; } catch { /* sem armazenamento */ }
     var path = window.location.pathname.toLowerCase().replace(/index\.html$/, '').replace(/^\/+|\/+$/g, '') || 'home';
-    if (!/^[a-z0-9_\/-]{1,60}$/.test(path)) return;
+    if (!/^[a-z0-9_/-]{1,60}$/.test(path)) return;
     try {
       var key = 'eafit_pv_' + path;
       if (sessionStorage.getItem(key)) return;
