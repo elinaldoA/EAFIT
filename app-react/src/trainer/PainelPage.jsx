@@ -3,13 +3,14 @@ import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
 import { toDateStr } from '../lib/utils';
 import { fetchTrainerCode } from '../lib/trainer';
-import { fetchRoster, buildActionQueue, rosterKpis, initials } from '../lib/trainerRoster';
+import { fetchRoster, buildActionQueue, rosterKpis, initials, suggestMessage } from '../lib/trainerRoster';
 import { fetchUnreadReplies } from '../lib/trainerMessages';
 import { fetchTrainerAppointments, upcomingAppointments } from '../lib/trainerAppointments';
 import { fetchTrainerCharges, chargeSummary, overdueByClient, formatMoney } from '../lib/trainerCharges';
 import { trainerInviteLink, shareTrainerInvite, copyTrainerInviteLink, fetchInviteStats } from '../lib/trainerInvite';
 import Skeleton from '../components/Skeleton';
 import PartnerCampaignsCard from '../components/PartnerCampaignsCard';
+import MessageComposer from './MessageComposer';
 
 import { t, locale } from '../lib/i18n';
 const QUEUE_PREVIEW = 6;
@@ -35,6 +36,7 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
   const [code, setCode] = useState('');
   const [inviteStats, setInviteStats] = useState(null);
   const [showAll, setShowAll] = useState(false);
+  const [composing, setComposing] = useState(null); // id do aluno com a caixa de recado aberta
   const today = todayDate();
 
   useEffect(() => {
@@ -112,16 +114,29 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
           </div>
           {queue.length === 0 && <p className="dash-empty">{t('Tudo em dia: ninguém parado, sem dor relatada e planos no prazo. 🎉')}</p>}
           {visibleQueue.map(({ client, reasons, priority }) => (
-            <button type="button" key={client.id} className={`action-row action-row--p${Math.min(priority, 3)}`} onClick={() => onOpenClient(reasons.length === 1 && reasons[0].kind === 'cobranca' ? { ...client, openTab: 'cobranca' } : client)}>
-              <span className="avatar" aria-hidden="true">{initials(client.name)}</span>
-              <span className="action-row__body">
-                <strong>{client.name}</strong>
-                <span className="action-row__reasons">
-                  {reasons.map(r => <span key={r.kind + r.label} className="reason-chip">{r.icon} {r.label}</span>)}
+            <div key={client.id} className="action-item">
+              <button type="button" className={`action-row action-row--p${Math.min(priority, 3)}`} onClick={() => onOpenClient(reasons.length === 1 && reasons[0].kind === 'cobranca' ? { ...client, openTab: 'cobranca' } : client)}>
+                <span className="avatar" aria-hidden="true">{initials(client.name)}</span>
+                <span className="action-row__body">
+                  <strong>{client.name}</strong>
+                  <span className="action-row__reasons">
+                    {reasons.map(r => <span key={r.kind + r.label} className="reason-chip">{r.icon} {r.label}</span>)}
+                  </span>
                 </span>
-              </span>
-              <span className="action-row__go" aria-hidden="true">›</span>
-            </button>
+                <span className="action-row__go" aria-hidden="true">›</span>
+              </button>
+              <button type="button" className="btn btn--ghost btn--sm action-item__msg" aria-expanded={composing === client.id}
+                aria-label={t('Mandar recado para {name}', { name: client.name })}
+                onClick={() => setComposing(v => (v === client.id ? null : client.id))}>
+                {composing === client.id ? t('Fechar') : t('💬 Mandar recado')}
+              </button>
+              {composing === client.id && (
+                <div className="action-item__composer">
+                  <MessageComposer clientIds={[client.id]} label={t('Enviar recado')}
+                    initialText={suggestMessage(client, reasons, overdue[client.id])} onSent={() => setComposing(null)} />
+                </div>
+              )}
+            </div>
           ))}
           {queue.length > QUEUE_PREVIEW && (
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowAll(v => !v)}>

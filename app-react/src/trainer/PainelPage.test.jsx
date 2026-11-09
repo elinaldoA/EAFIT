@@ -19,6 +19,7 @@ vi.mock('../lib/trainerRoster', async (importActual) => ({
 vi.mock('../lib/trainerMessages', async (importActual) => ({
   ...(await importActual()),
   fetchUnreadReplies: (...a) => h.api.fetchUnreadReplies(...a),
+  sendMessage: (...a) => h.api.sendMessage(...a),
 }));
 vi.mock('../lib/trainerAppointments', async (importActual) => ({
   ...(await importActual()),
@@ -83,6 +84,20 @@ describe('PainelPage', () => {
     await waitFor(() => expect(onQueueLoaded).toHaveBeenCalledWith(2));
     fireEvent.click(screen.getByText('Rafa'));
     expect(onOpenClient).toHaveBeenCalledWith(expect.objectContaining({ id: 'c3' }));
+  });
+
+  it('recado: abre a caixa já com o texto sugerido do motivo e envia', async () => {
+    const send = vi.fn().mockResolvedValue(1);
+    h.api.sendMessage = send;
+    setup();
+    await screen.findByText('⚡ Precisam de você');
+    fireEvent.click(screen.getByRole('button', { name: 'Mandar recado para Rafa' }));
+    const box = await screen.findByLabelText('Mensagem');
+    expect(box.value).toContain('Oi, Rafa!');
+    expect(box.value).toContain('desconforto');
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar recado' }));
+    await waitFor(() => expect(send).toHaveBeenCalledWith(['c3'], expect.stringContaining('Oi, Rafa!')));
+    await waitFor(() => expect(screen.queryByLabelText('Mensagem')).toBeNull());
   });
 
   it('resposta sem ler entra na fila', async () => {

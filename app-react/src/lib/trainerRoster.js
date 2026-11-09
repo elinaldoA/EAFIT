@@ -115,6 +115,24 @@ export function buildActionQueue(roster, { replies = {}, overdue = {}, today }) 
     || String(a.client.name).localeCompare(String(b.client.name), locale));
 }
 
+// Texto sugerido para o recado ao aluno, conforme o motivo mais urgente da
+// fila. O personal revisa e envia; nada sai sozinho. Motivo 'resposta' não tem
+// sugestão (o aluno já escreveu: o caminho é ler e responder na conversa).
+export function suggestMessage(client, reasons, overdue) {
+  const name = String(client?.name || '').trim().split(/\s+/)[0] || '';
+  const top = [...(reasons || [])].sort((a, b) => a.priority - b.priority)[0];
+  if (!top) return '';
+  switch (top.kind) {
+    case 'dor': return t('Oi, {name}! Vi que você relatou desconforto no treino. Como você está? Me conta onde incomoda que eu ajusto seu treino.', { name });
+    case 'sumido':
+    case 'parado': return t('Oi, {name}! Senti sua falta nos treinos. Está tudo bem? Se a rotina apertou, me avisa que a gente ajusta o plano.', { name });
+    case 'novo': return t('Boas-vindas, {name}! Quando puder, faça seu primeiro treino e me conta o que achou.', { name });
+    case 'cobranca': return t('Oi, {name}! Passando para lembrar do pagamento em aberto ({v1}). Qualquer dúvida é só falar.', { name, v1: moneyShort(overdue?.cents || 0) });
+    case 'plano': return t('Oi, {name}! Vou atualizar seu plano de treino. Tem algum objetivo novo ou algo que não está funcionando?', { name });
+    default: return '';
+  }
+}
+
 // Números do topo do Painel.
 export function rosterKpis(roster, today) {
   const total = roster.length;

@@ -5,9 +5,9 @@ import { MAX_MESSAGE, sendMessage, friendlyMessageError } from '../lib/trainerMe
 import { t } from '../lib/i18n';
 // Caixa de recado do personal. `clientIds` = destinatários fixos (ficha do
 // aluno) ou a seleção da tela de Recados; vazio/nulo = todos os alunos.
-export default function MessageComposer({ clientIds, label, onSent }) {
+export default function MessageComposer({ clientIds, label, onSent, initialText = '' }) {
   const toast = useToast();
-  const [text, setText] = useState('');
+  const [text, setText] = useState(initialText);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
 

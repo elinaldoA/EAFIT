@@ -6,7 +6,7 @@ vi.mock('./trainer', async (importActual) => ({ ...(await importActual()), fetch
 
 import {
   initials, normalizeTags, planStatus, adherence, weeklyTarget, recentStrip, buildActionQueue, rosterKpis, allTags,
-  sortRoster, filterRoster, weeklyCounts, fetchRoster, setClientTags, fetchClientPlans, friendlyRosterError,
+  sortRoster, filterRoster, weeklyCounts, fetchRoster, setClientTags, fetchClientPlans, friendlyRosterError, suggestMessage,
 } from './trainerRoster';
 
 const TODAY = '2026-10-07';
@@ -145,5 +145,33 @@ describe('trainerRoster', () => {
     h.rpc.mockResolvedValue({ data: [{ pl_id: 'p1', pl_name: 'A', pl_active: true, pl_by_me: true, pl_days: 3, pl_start: '2026-10-01' }], error: null });
     expect(await fetchClientPlans('c1')).toEqual([expect.objectContaining({ id: 'p1', active: true, byMe: true, days: 3, start: '2026-10-01' })]);
     expect(h.rpc).toHaveBeenCalledWith('trainer_client_plans', { p_client: 'c1' });
+  });
+});
+
+describe('suggestMessage', () => {
+  const ana = { name: 'Ana Paula Souza' };
+  const r = (kind, priority) => ({ kind, priority });
+
+  it('usa o primeiro nome e o motivo mais urgente', () => {
+    const msg = suggestMessage(ana, [r('plano', 4), r('dor', 0)]);
+    expect(msg).toContain('Oi, Ana!');
+    expect(msg).toContain('desconforto');
+  });
+
+  it('sumido e parado pedem para voltar a treinar', () => {
+    expect(suggestMessage(ana, [r('sumido', 1)])).toContain('Senti sua falta');
+    expect(suggestMessage(ana, [r('parado', 3)])).toContain('Senti sua falta');
+  });
+
+  it('cobrança cita o valor em aberto', () => {
+    const msg = suggestMessage(ana, [r('cobranca', 2)], { cents: 15050 });
+    expect(msg).toContain('150,50');
+  });
+
+  it('novo, plano e sem motivo ou resposta', () => {
+    expect(suggestMessage(ana, [r('novo', 5)])).toContain('Boas-vindas, Ana');
+    expect(suggestMessage(ana, [r('plano', 4)])).toContain('plano de treino');
+    expect(suggestMessage(ana, [r('resposta', 1)])).toBe('');
+    expect(suggestMessage(ana, [])).toBe('');
   });
 });
