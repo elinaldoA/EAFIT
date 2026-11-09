@@ -525,20 +525,31 @@ export const SLOT_LABEL = { bomdia: 'Bom dia', cafe: 'Café da manhã', conta: '
 // Faixas de nutrição (o resto das faixas com `slot` é de engajamento: bom dia, treino e criar conta).
 export const NUTRI_SLOTS = ['cafe', 'agua'];
 export const AUTOPOST_LANES = [
+  // Volume reduzido (migration 20270201010000): pouco retorno com 9 stories + feed + Reel por dia.
+  // `days` = dias da semana (0 = dom) em que a faixa sai; sem `days`, todo dia.
   { key: 'story:bomdia', format: 'story', slot: 'bomdia', utc: [10, 30], time: '7h30', weekendUtc: [11, 0], weekendTime: '8h', label: 'Story · Bom dia' },
-  { key: 'story:cafe', format: 'story', slot: 'cafe', utc: [9, 30], time: '6h30', weekendUtc: [12, 0], weekendTime: '9h', label: 'Story · Café da manhã' },
   { key: 'story:conta', format: 'story', slot: 'conta', utc: [13, 0], time: '10h', label: 'Story · Criar conta' },
-  { key: 'feed', format: 'feed', slot: null, utc: [14, 30], time: '11h30', weekendUtc: [13, 30], weekendTime: '10h30', label: 'Feed' },
-  { key: 'story:agua', format: 'story', slot: 'agua', utc: [18, 0], time: '15h', label: 'Story · Hidratação' },
+  { key: 'feed', format: 'feed', slot: null, utc: [14, 30], time: '11h30', days: [1, 3, 5], label: 'Feed' },
   { key: 'story:treino', format: 'story', slot: 'treino', utc: [19, 30], time: '16h30', label: 'Story · Hora do treino' },
-  // Faixa geral: o cron publica um story às 12h30, às 17h30 e às 19h30, da mesma fila.
-  { key: 'story', format: 'story', slot: null, utc: [15, 30], time: '12h30, 17h30 e 19h30', extra: [[20, 30], [22, 30]], label: 'Story' },
-  { key: 'reel', format: 'reel', slot: null, utc: [23, 45], time: '20h45', weekendUtc: [21, 30], weekendTime: '18h30', label: 'Reel' },
+  // Faixa geral: o cron publica um story às 12h30, da mesma fila.
+  { key: 'story', format: 'story', slot: null, utc: [15, 30], time: '12h30', label: 'Story' },
+  { key: 'reel', format: 'reel', slot: null, utc: [23, 45], time: '20h45', weekendUtc: [21, 30], weekendTime: '18h30', days: [2, 4, 6], label: 'Reel' },
+  // Faixas desligadas (sem cron): itens que sobraram nelas ficam parados na fila.
+  { key: 'story:cafe', format: 'story', slot: 'cafe', off: true, utc: [9, 30], time: '6h30', label: 'Story · Café da manhã (desligado)' },
+  { key: 'story:agua', format: 'story', slot: 'agua', off: true, utc: [18, 0], time: '15h', label: 'Story · Hidratação (desligado)' },
 ];
+
+const DAY_NAMES = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 // Quando a faixa sai, para mostrar no painel: "todo dia às 15h" ou
 // "seg a sex às 6h30, sáb e dom às 9h".
 export function laneWhen(lane) {
+  if (lane.off) return 'desligado';
+  if (lane.days) {
+    const names = lane.days.map(d => DAY_NAMES[d]);
+    const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} e ${names.at(-1)}` : names[0];
+    return lane.weekendTime ? `${list} (sáb às ${lane.weekendTime}, demais às ${lane.time})` : `${list} às ${lane.time}`;
+  }
   return lane.weekendTime ? `seg a sex às ${lane.time}, sáb e dom às ${lane.weekendTime}` : `todo dia às ${lane.time}`;
 }
 
@@ -552,6 +563,7 @@ export function laneAt(lane, day) {
 // Todas as saídas da faixa no dia: o horário principal e os extras (`extra`).
 export function laneRuns(lane, day) {
   const [y, m, d] = day.split('-').map(Number);
+  if (lane.off || (lane.days && !lane.days.includes(new Date(Date.UTC(y, m - 1, d)).getUTCDay()))) return [];
   return [laneAt(lane, day), ...(lane.extra || []).map(([h, min]) => new Date(Date.UTC(y, m - 1, d, h, min)))];
 }
 const BRT_OFFSET_MS = 3 * 3600 * 1000;

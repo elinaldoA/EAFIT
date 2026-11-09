@@ -368,13 +368,13 @@ describe('Publicação automática', () => {
 describe('nextAutopostSlots', () => {
   const pending = [{ id: 'f', format: 'feed' }, { id: 's', format: 'story' }];
 
-  it('antes das 11h30 de Brasília: feed e story saem hoje', () => {
-    const slots = nextAutopostSlots(pending, new Date('2026-11-05T13:00:00Z')); // qui 10h BRT
+  it('antes das 11h30 de Brasília num dia de feed: feed e story saem hoje', () => {
+    const slots = nextAutopostSlots(pending, new Date('2026-11-04T13:00:00Z')); // qua 10h BRT
     expect(slots.map(s => [s.format, s.today])).toEqual([['feed', true], ['story', true]]);
   });
 
-  it('depois do feed das 11h30: só o story sai hoje, o feed fica para amanhã', () => {
-    const slots = nextAutopostSlots(pending, new Date('2026-11-05T18:00:00Z')); // qui 15h BRT
+  it('depois do feed das 11h30: só o story sai hoje, o feed fica para sexta', () => {
+    const slots = nextAutopostSlots(pending, new Date('2026-11-04T15:00:00Z')); // qua 12h BRT
     expect(slots.map(s => [s.format, s.today])).toEqual([['story', true], ['feed', false]]);
   });
 
@@ -389,13 +389,13 @@ describe('nextAutopostSlots', () => {
 });
 
 describe('agenda da fila automática', () => {
-  it('um item por dia em cada formato, na ordem da fila', () => {
+  it('um item por saída em cada formato, na ordem da fila', () => {
     const pending = [
       { id: 'f1', format: 'feed' }, { id: 's1', format: 'story' }, { id: 'f2', format: 'feed' }, { id: 'f3', format: 'feed' },
     ];
-    const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'));
+    const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z')); // quinta: sem feed
     expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 13)}`)).toEqual([
-      'f1@2026-11-05T14', 's1@2026-11-05T15', 'f2@2026-11-06T14', 'f3@2026-11-07T13', // sábado: feed às 10h30
+      's1@2026-11-05T15', 'f1@2026-11-06T14', 'f2@2026-11-09T14', 'f3@2026-11-11T14', // feed só seg, qua e sex
     ]);
   });
 
@@ -411,7 +411,7 @@ describe('agenda da fila automática', () => {
     ];
     const sched = autopostSchedule(pending, new Date('2026-11-29T13:00:00Z'), SEASON);
     expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 10)}`)).toEqual([
-      'azul@2026-11-29', 'f1@2026-11-30', 'natal@2026-12-01', 'f2@2026-12-02',
+      'azul@2026-11-30', 'natal@2026-12-02', 'f1@2026-12-04', 'f2@2026-12-07', // feed só seg, qua e sex
     ]);
   });
 
@@ -462,9 +462,9 @@ describe('sem o mesmo roteiro em dias seguidos', () => {
     ];
     const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'), null, posted); // qui 10h BRT
     const today = sched.filter(x => x.today).map(x => x.item.key);
-    // story 12h30: treino e evolução saíram ontem → ao vivo; os stories de 17h30 e 19h30 só
-    // têm temas recentes e saem na ordem da fila; Reel 20h45: evolução recente, ao vivo acabou de sair → nutrição.
-    expect(today).toEqual(['ao-vivo-story', 'treino-story', 'evolucao-story', 'nutricao-reel']);
+    // story 12h30: treino e evolução saíram ontem → ao vivo; Reel 20h45 (quinta é dia de Reel):
+    // evolução recente, ao vivo acabou de sair → nutrição.
+    expect(today).toEqual(['ao-vivo-story', 'nutricao-reel']);
     // Sem outra opção, o tema recente sai mesmo assim (não trava a faixa).
     expect(sched.map(x => x.item.key)).toEqual(expect.arrayContaining(['treino-story', 'evolucao-story', 'evolucao-reel', 'ao-vivo-reel']));
   });
@@ -476,24 +476,24 @@ describe('sem o mesmo roteiro em dias seguidos', () => {
       { id: 's1', key: 'carga-story', format: 'story' }, { id: 's2', key: 'corpo-story', format: 'story' },
       { id: 's3', key: 'liga-story', format: 'story' },
     ];
-    const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z'), SEASON);
-    expect(sched.map(x => `${x.item.id}@${brtDay(x.at)}`)).toEqual(['fa@2026-11-05', 's1@2026-11-05', 's2@2026-11-05', 's3@2026-11-05', 'sa@2026-11-06']);
+    const sched = autopostSchedule(pending, new Date('2026-11-04T13:00:00Z'), SEASON); // quarta: dia de feed
+    expect(sched.map(x => `${x.item.id}@${brtDay(x.at)}`)).toEqual(['fa@2026-11-04', 's1@2026-11-04', 's2@2026-11-05', 's3@2026-11-06', 'sa@2026-11-07']);
   });
 });
 
 describe('Reels na agenda', () => {
-  it('de segunda a sexta: feed 11h30, story 12h30 e Reel 20h45', () => {
+  it('quinta: story 12h30 e Reel 20h45; o feed só volta na sexta', () => {
     const pending = [{ id: 'f', format: 'feed' }, { id: 'r', format: 'reel' }, { id: 's', format: 'story' }];
     const sched = autopostSchedule(pending, new Date('2026-11-05T13:00:00Z')); // quinta
-    expect(sched.map(s => `${s.format}@${s.at.toISOString().slice(11, 16)}`)).toEqual(['feed@14:30', 'story@15:30', 'reel@23:45']);
+    expect(sched.map(s => `${s.format}@${s.at.toISOString().slice(11, 16)}`)).toEqual(['story@15:30', 'reel@23:45', 'feed@14:30']);
   });
 
-  it('no sábado e no domingo: café 9h, feed 10h30 e Reel 18h30', () => {
-    const pending = [{ id: 'f', format: 'feed' }, { id: 'r', format: 'reel' }, { id: 'c', format: 'story', slot: 'cafe' }];
+  it('no sábado: bom dia 8h e Reel 18h30; o feed fica para segunda', () => {
+    const pending = [{ id: 'f', format: 'feed' }, { id: 'r', format: 'reel' }, { id: 'b', format: 'story', slot: 'bomdia' }];
     const sched = autopostSchedule(pending, new Date('2026-11-07T05:00:00Z')); // sábado 2h BRT
-    expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 16)}`)).toEqual(['c@2026-11-07T12:00', 'f@2026-11-07T13:30', 'r@2026-11-07T21:30']);
-    expect(laneWhen(AUTOPOST_LANES.find(l => l.key === 'reel'))).toBe('seg a sex às 20h45, sáb e dom às 18h30');
-    expect(laneWhen(AUTOPOST_LANES.find(l => l.key === 'story:agua'))).toBe('todo dia às 15h');
+    expect(sched.map(s => `${s.item.id}@${s.at.toISOString().slice(0, 16)}`)).toEqual(['b@2026-11-07T11:00', 'r@2026-11-07T21:30', 'f@2026-11-09T14:30']);
+    expect(laneWhen(AUTOPOST_LANES.find(l => l.key === 'reel'))).toBe('ter, qui e sáb (sáb às 18h30, demais às 20h45)');
+    expect(laneWhen(AUTOPOST_LANES.find(l => l.key === 'story:treino'))).toBe('todo dia às 16h30');
   });
 });
 
@@ -610,7 +610,7 @@ describe('Fila: editor', () => {
 
   it('lista a fila por formato e desliga subir no primeiro e descer no último', async () => {
     wrap(<MarketingPublish />, '/?aba=fila');
-    expect(await screen.findByText(/Feed · seg a sex às 11h30, sáb e dom às 10h30 \(2 na fila\)/)).toBeTruthy();
+    expect(await screen.findByText(/Feed · seg, qua e sex às 11h30 \(2 na fila\)/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Subir item 1 de feed' }).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Descer item 2 de feed' }).disabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Descer item 1 de feed' }).disabled).toBe(false);
@@ -923,14 +923,14 @@ describe('Agenda: editar e excluir o que já saiu', () => {
 });
 
 describe('stories de nutrição por refeição', () => {
-  it('só café (6h30) e água (15h) são de nutrição; o story geral sai 3 vezes por dia: 12h30, 17h30 e 19h30', () => {
+  it('café e água estão desligados; o story geral sai uma vez por dia, às 12h30', () => {
     const pending = [
       { id: 'c', format: 'story', slot: 'cafe' }, { id: 'w', format: 'story', slot: 'agua' },
       { id: 'g1', format: 'story' }, { id: 'g2', format: 'story' }, { id: 'g3', format: 'story' }, { id: 'g4', format: 'story' },
     ];
     const sched = autopostSchedule(pending, new Date('2026-11-05T05:00:00Z')); // 2h BRT
     expect(sched.map(x => `${x.item.id}@${x.at.toISOString().slice(0, 16)}`)).toEqual([
-      'c@2026-11-05T09:30', 'g1@2026-11-05T15:30', 'w@2026-11-05T18:00', 'g2@2026-11-05T20:30', 'g3@2026-11-05T22:30', 'g4@2026-11-06T15:30',
+      'g1@2026-11-05T15:30', 'g2@2026-11-06T15:30', 'g3@2026-11-07T15:30', 'g4@2026-11-08T15:30',
     ]);
   });
 
@@ -951,7 +951,7 @@ describe('stories de nutrição por refeição', () => {
     expect(laneKey({ format: 'story', slot: null })).toBe('story');
     expect(laneKey({ format: 'reel' })).toBe('reel');
     const sched = autopostSchedule([{ id: 'g', format: 'story' }, { id: 'c', format: 'story', slot: 'cafe' }], new Date('2026-11-05T05:00:00Z'));
-    expect(sched.map(x => x.lane).sort()).toEqual(['story', 'story:cafe']);
+    expect(sched.map(x => x.lane).sort()).toEqual(['story']); // faixa de café desligada
   });
 
   it('na Fila, o story de nutrição é adicionado com o horário escolhido', async () => {
@@ -974,7 +974,7 @@ describe('stories de nutrição por refeição', () => {
       pending: [{ id: 's1', format: 'story', slot: null, position: 1, caption: '', media: [{ type: 'video', url: 'https://x/s.mp4' }] }],
     });
     wrap(<MarketingPublish />, '/?aba=fila');
-    expect(await screen.findByText(/Story · todo dia às 12h30, 17h30 e 19h30 \(1 na fila\)/)).toBeTruthy();
-    expect(screen.getByText(/Story · Café da manhã · seg a sex às 6h30, sáb e dom às 9h \(0 na fila\)/)).toBeTruthy();
+    expect(await screen.findByText(/Story · todo dia às 12h30 \(1 na fila\)/)).toBeTruthy();
+    expect(screen.getByText(/Story · Café da manhã \(desligado\) · desligado \(0 na fila\)/)).toBeTruthy();
   });
 });
