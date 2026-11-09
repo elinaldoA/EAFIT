@@ -85,7 +85,7 @@ export default function UserDetail() {
       if (!row) throw new Error('Usuário não encontrado.');
       setDetail(row);
       const md = row.user_metadata || {};
-      setForm(profileFormFromMetadata(md));
+      setForm({ ...profileFormFromMetadata(md), email: row.email || '' });
       const rawPlan = plan.data;
       setActivePlan(rawPlan ? {
         ...rawPlan,
@@ -157,7 +157,8 @@ export default function UserDetail() {
 
   async function handleSaveProfile(e) {
     e.preventDefault();
-    await runAction('updateProfile', { fields: profileFieldsToSave(form) });
+    const { email, ...rest } = profileFieldsToSave(form);
+    await runAction('updateProfile', { fields: rest, email: (email || '').trim() });
   }
 
   // Vai direto em public.profiles (permitido pela policy "admin full access"

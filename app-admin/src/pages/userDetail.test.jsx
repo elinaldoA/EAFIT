@@ -404,6 +404,16 @@ describe('UserDetail', () => {
     expect(await screen.findByText('Ação concluída.')).toBeTruthy();
   });
 
+  it('salvar perfil envia o e-mail novo fora dos campos do metadata', async () => {
+    renderPage();
+    await screen.findByRole('heading', { name: 'u@x.com' });
+    fireEvent.change(screen.getByDisplayValue('u@x.com'), { target: { value: ' novo@x.com ' } });
+    fireEvent.click(screen.getByText('Salvar perfil'));
+    await waitFor(() => expect(mockInvoke).toHaveBeenCalledWith('admin-users', expect.objectContaining({
+      body: expect.objectContaining({ action: 'updateProfile', email: 'novo@x.com', fields: expect.not.objectContaining({ email: expect.anything() }) }),
+    })));
+  });
+
   it('aba Treinos: carrega séries sob demanda e exporta CSV', async () => {
     renderPage();
     await screen.findByRole('heading', { name: 'u@x.com' });

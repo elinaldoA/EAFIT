@@ -112,9 +112,19 @@ Deno.serve(async (req) => {
         const { data: target, error: getErr } = await admin.auth.admin.getUserById(targetUserId);
         if (getErr || !target?.user) throw getErr || new Error('Usuário não encontrado.');
         const mergedMetadata = { ...(target.user.user_metadata || {}), ...fields };
-        const { error: updErr } = await admin.auth.admin.updateUserById(targetUserId, { user_metadata: mergedMetadata });
+        const attrs: { user_metadata: Record<string, unknown>; email?: string; email_confirm?: boolean } = { user_metadata: mergedMetadata };
+        // E-mail de login: troca direto (sem confirmação), a senha continua a mesma.
+        const newEmail = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+        const emailChanged = !!newEmail && newEmail !== (target.user.email || '').toLowerCase();
+        if (emailChanged) {
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(newEmail)) return json({ error: 'E-mail inválido.' }, 400);
+          attrs.email = newEmail;
+          attrs.email_confirm = true;
+        }
+        const { error: updErr } = await admin.auth.admin.updateUserById(targetUserId, attrs);
         if (updErr) throw updErr;
-        await logAudit(admin, callerId, targetUserId, 'updateProfile', fields);
+        if (emailChanged) await admin.from('profiles').update({ email: newEmail }).eq('id', targetUserId);
+        await logAudit(admin, callerId, targetUserId, 'updateProfile', emailChanged ? { ...fields, email: newEmail } : fields);
         return json({ ok: true });
       }
 

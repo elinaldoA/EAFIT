@@ -17,6 +17,10 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
           <input className="input" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
         </label>
         <label className="field">
+          <span className="field__label">E-mail (login)</span>
+          <input className="input" type="email" autoComplete="off" value={form.email ?? ''} onChange={e => setForm({ ...form, email: e.target.value })} />
+        </label>
+        <label className="field">
           <span className="field__label">Sobrenome</span>
           <input className="input" value={form.sobrenome} onChange={e => setForm({ ...form, sobrenome: e.target.value })} />
         </label>
