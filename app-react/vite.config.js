@@ -8,6 +8,15 @@ export default defineConfig({
     setupFiles: ['./src/test/setupTests.js'],
     // Runner do CI lento com ~200 arquivos em paralelo: 5s (padrão) estoura em testes com cadeias de await.
     testTimeout: 20000,
+    // Os testes nunca falam com o Supabase de verdade (tudo é simulado), mas
+    // vários arquivos importam o cliente real, e createClient exige URL e chave
+    // no momento do import. Valores fixos de teste: a suíte roda igual sem .env
+    // e no CI, e uma chamada que escapasse da simulação iria para o localhost em
+    // vez de bater no banco de produção com os segredos do deploy.
+    env: {
+      VITE_SUPABASE_URL: 'http://localhost:54321',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+    },
   },
   plugins: [
     react(),

@@ -26,7 +26,7 @@ const signed = v => `${v > 0 ? '+' : ''}${num(v)}`;
 // (As fontes padrão do PDF cobrem Latin-1: ã, ç, é... passam sem problema.)
 export function pdfText(value) {
   return String(value ?? '')
-    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '')
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]|\u{FE0F}/gu, '')
     .replace(/[→➔]/g, '->')
     .replace(/[–—]/g, '-')
     .replace(/[‘’]/g, "'")
@@ -38,7 +38,7 @@ export function pdfText(value) {
 // Nome do arquivo: relatorio-ana-paula-2026-10-15.pdf
 export function reportFileName(name, today) {
   const slug = String(name || 'aluno')
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'aluno';
   return `relatorio-${slug}-${today}.pdf`;
 }
