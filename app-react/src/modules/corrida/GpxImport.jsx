@@ -1,3 +1,4 @@
+import { newAchievements } from './runReadings';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
@@ -49,13 +50,16 @@ export default function GpxImport({ onClose }) {
     try { previous = await fetchRuns(user.id); loaded = true; } catch { /* sem rede: sem recorde agora */ }
     const { pending } = await saveRun(user.id, final);
     rememberShoe(shoeId);
-    const records = loaded ? newRecords(previous.filter(r => r.client_id !== final.client_id), final) : [];
+    const others = previous.filter(r => r.client_id !== final.client_id);
+    const records = loaded ? newRecords(others, final) : [];
+    const achieved = loaded ? newAchievements(others, [...others, final]) : [];
     trackEvent('run', 'gpx');
     setBusy(false);
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
     onClose();
     if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
     else if (records.length) toast(t('🏆 Novo recorde — {v1}!', { v1: records.map(describeRecord).join(', ') }));
+    else if (achieved.length) toast(t('🎖️ Conquista: {v1}!', { v1: achieved.map(a => a.title).join(', ') }));
     else toast(t('✅ Corrida salva: {v1} km em {v2}', { v1: formatKm(final.distance_m), v2: formatClock(final.duration_s) }));
   }
 

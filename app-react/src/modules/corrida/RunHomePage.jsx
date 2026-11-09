@@ -1,3 +1,4 @@
+import { newAchievements } from './runReadings';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
@@ -113,6 +114,7 @@ export function ManualRunForm({ userId, onClose }) {
     const shoe = shoes.find(x => x.id === shoeId);
     const shoeNotice = shoe ? shoeWearNotice(shoe, shoeUsage([shoe], previous)[shoe.id], record.distance_m) : null;
     const medals = loaded ? newMedals(previous, [...previous, record], todayDate()) : [];
+    const achieved = loaded ? newAchievements(previous, [...previous, record]) : [];
     trackEvent('run', 'manual');
     setBusy(false);
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
@@ -120,6 +122,7 @@ export function ManualRunForm({ userId, onClose }) {
     if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
     else if (records.length) toast(t('🏆 Novo recorde — {v1}!', { v1: records.map(describeRecord).join(', ') }));
     else if (medals.length) toast(t('🏅 Medalha: {v1}!', { v1: medals.map(m => m.title).join(', ') }));
+    else if (achieved.length) toast(t('🎖️ Conquista: {v1}!', { v1: achieved.map(a => a.title).join(', ') }));
     else if (shoeNotice) toast(shoeNotice);
     else toast(t('✅ Corrida salva: {v1} km em {v2}', { v1: formatKm(record.distance_m), v2: formatClock(record.duration_s) }));
   }

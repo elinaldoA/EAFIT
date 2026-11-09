@@ -94,3 +94,14 @@ describe('tendência de ritmo', () => {
     expect(paceTrend([run('2026-11-03'), run('2026-10-27')], TODAY)).toBeNull();
   });
 });
+
+describe('conquistas novas', () => {
+  it('só devolve o que a corrida nova desbloqueou', async () => {
+    const { newAchievements } = await import('./runReadings');
+    const first = newAchievements([], [run('2026-11-02', 5200)]).map(a => a.id);
+    expect(first).toEqual(['count-1', 'dist-5']);
+    const before = [run('2026-11-02', 5200)];
+    expect(newAchievements(before, [...before, run('2026-11-04', 10100)]).map(a => a.id)).toEqual(['dist-10']);
+    expect(newAchievements(before, [...before, run('2026-11-04', 3000)])).toEqual([]);
+  });
+});

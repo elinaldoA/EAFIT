@@ -51,6 +51,12 @@ export function achievements(runs) {
   return list;
 }
 
+// Conquistas que `afterRuns` desbloqueou e `beforeRuns` ainda não tinha.
+export function newAchievements(beforeRuns, afterRuns) {
+  const had = new Set(achievements(beforeRuns).filter(a => a.unlocked).map(a => a.id));
+  return achievements(afterRuns).filter(a => a.unlocked && !had.has(a.id));
+}
+
 // ---- Carga da semana -------------------------------------------------------
 
 // A regra dos 10%: subir mais que isso de uma semana para a outra pesa no corpo.
