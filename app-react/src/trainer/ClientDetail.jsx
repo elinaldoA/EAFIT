@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
-import { fmtDate } from '../lib/utils';
+import { fmtDate, getDisplayName } from '../lib/utils';
+import { useAuth } from '../context/useAuth';
 import { MEASURE_FIELDS } from '../lib/bodyMeasurements';
 import { CHECKIN_FIELDS } from '../lib/checkin';
 import { clientAttention, summarizeClient, fetchClientDetail, removeClient, friendlyTrainerError } from '../lib/trainer';
@@ -9,9 +10,11 @@ import { initials, planStatus, weeklyCounts } from '../lib/trainerRoster';
 import LineChart from '../components/LineChart';
 import Skeleton from '../components/Skeleton';
 import { renewPlan, friendlyPlanError } from '../lib/trainerPlan';
-import { buildReportModel, renderReportPdf, shareOrDownloadPdf, reportFileName } from '../lib/trainerReport';
+import { buildReportModel, renderReportPdf, shareOrDownloadPdf, reportFileName, REPORT_PERIODS, DEFAULT_PERIOD } from '../lib/trainerReport';
 import PlanBuilder from './PlanBuilder';
 import ChatThread from '../components/ChatThread';
+import QuickReplyTools from './QuickReplyTools';
+import { scheduleMessage, whenLabel } from '../lib/trainerScheduled';
 import { fetchTrainerThread, markThreadRead, sendMessage, friendlyMessageError } from '../lib/trainerMessages';
 import ClientSessions from './ClientSessions';
 import ClientNotes from './ClientNotes';
@@ -63,6 +66,8 @@ function WeeklyBars({ weeks, goal }) {
 // vínculo com o aluno estiver ativo.
 export default function ClientDetail({ client, onBack, onRemoved, initialTab }) {
   const toast = useToast();
+  const trainerName = getDisplayName(useAuth()?.user);
+  const [reportDays, setReportDays] = useState(DEFAULT_PERIOD);
   const [detail, setDetail] = useState(null);
   const [failed, setFailed] = useState(false);
   const [building, setBuilding] = useState(false);
@@ -89,6 +94,10 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
 
   const loadThread = useCallback(() => fetchTrainerThread(client.id), [client.id]);
   const sendToClient = useCallback(body => sendMessage([client.id], body), [client.id]);
+  const scheduleToClient = useMemo(() => ({
+    send: (body, iso) => scheduleMessage([client.id], body, iso),
+    onDone: iso => toast(t('🕒 Recado agendado para {v}', { v: whenLabel(iso) })),
+  }), [client.id, toast]);
 
   async function handleRemove() {
     if (!window.confirm(t('Encerrar o acompanhamento de {name}? Você deixa de ver os dados dele.', { name: client.name }))) return;
@@ -113,7 +122,7 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
   async function handleReport() {
     setReporting(true);
     try {
-      const model = buildReportModel({ client, detail, summary, weeks, today, goal });
+      const model = buildReportModel({ client, detail, summary, today, goal, days: reportDays, trainerName });
       const blob = await renderReportPdf(model);
       const result = await shareOrDownloadPdf(blob, reportFileName(model.name, today), t('Relatório de {name}', { name: model.name }));
       if (result === 'downloaded') toast(t('📄 Relatório baixado'));
@@ -175,6 +184,10 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
           <button type="button" className="btn btn--primary btn--sm" disabled={!detail} onClick={() => setBuilding(true)}>{t('📋 Treino')}</button>
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setTab('conversa')}>{t('💬 Recado')}</button>
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setTab('plano')}>{t('📅 Aula')}</button>
+          <select className="input input--sm client-head__period" aria-label={t('Período do relatório')} value={reportDays}
+            disabled={reporting} onChange={e => setReportDays(Number(e.target.value))}>
+            {REPORT_PERIODS.map(d => <option key={d} value={d}>{t('{n} dias', { n: d })}</option>)}
+          </select>
           <button type="button" className="btn btn--outline btn--sm" disabled={!summary || reporting} onClick={handleReport}>
             {reporting ? t('Gerando…') : t('📄 Relatório')}
           </button>
@@ -337,7 +350,8 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
           <ChatThread
             me="trainer" sendLabel={t('Enviar recado')} onError={friendlyMessageError}
             placeholder={t('Escreva um recado, incentivo ou orientação… (o aluno recebe uma notificação)')}
-            load={loadThread} send={sendToClient}
+            load={loadThread} send={sendToClient} schedule={scheduleToClient}
+            tools={props => <QuickReplyTools {...props} />}
             onLoaded={() => { markThreadRead(client.id).catch(() => { /* sem respostas / migration pendente */ }); }}
           />
         </div>

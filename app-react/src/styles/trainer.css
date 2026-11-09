@@ -227,7 +227,8 @@ button.kpi:hover { border-color: var(--border-2); }
   margin: 0; padding: 6px 10px; border-radius: var(--r-md); font-size: var(--fs-sm); font-weight: 600;
   background: rgba(239, 68, 68, .12); color: var(--error);
 }
-.client-head__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.client-head__actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.client-head__period { width: auto; }
 .client-tabs { overflow-x: auto; scrollbar-width: none; }
 .client-tabs::-webkit-scrollbar { display: none; }
 .client-tabs .seg__btn { flex: 1 0 auto; padding: 9px 10px; white-space: nowrap; }

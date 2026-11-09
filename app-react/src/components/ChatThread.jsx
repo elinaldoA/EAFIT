@@ -2,17 +2,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { MAX_MESSAGE } from '../lib/trainerMessages';
 import { fmtDate } from '../lib/utils';
 import Loading from './Loading';
+import SchedulePicker from '../trainer/SchedulePicker';
+import { scheduleToIso, friendlyScheduleError } from '../lib/trainerScheduled';
 
 import { t } from '../lib/i18n';
 // Conversa entre personal e aluno. `me` = 'trainer' ou 'client' (de que lado
 // está quem vê); `load` busca as mensagens e `send(texto)` grava a resposta.
 // O personal usa o MessageComposer da ficha para recados com push; aqui o
 // campo de resposta é o mesmo nos dois lados.
-export default function ChatThread({ me, onError, load, send, onLoaded, sendLabel = t('Responder'), placeholder = t('Escreva uma mensagem…') }) {
+//
+// Opcionais (só o personal usa; o aluno não passa nenhum):
+//  - tools({ text, setText }): ferramentas acima da caixa (respostas prontas);
+//  - schedule = { send(body, iso), onDone(iso) }: habilita "Agendar para depois".
+export default function ChatThread({ me, onError, load, send, onLoaded, sendLabel = t('Responder'), placeholder = t('Escreva uma mensagem…'), tools, schedule }) {
   const [items, setItems] = useState(null);
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
+  const [when, setWhen] = useState('');
   const endRef = useRef(null);
 
   const refresh = useCallback(() => {
@@ -27,6 +35,7 @@ export default function ChatThread({ me, onError, load, send, onLoaded, sendLabe
   async function handleSend() {
     const body = text.trim();
     if (!body) return;
+    if (scheduling) { await handleSchedule(body); return; }
     setSending(true); setError('');
     try {
       await send(body);
@@ -34,6 +43,21 @@ export default function ChatThread({ me, onError, load, send, onLoaded, sendLabe
       refresh();
     } catch (err) {
       setError(onError ? onError(err) : t('Não foi possível enviar. Tente de novo.'));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleSchedule(body) {
+    const iso = scheduleToIso(when);
+    if (!iso) { setError(friendlyScheduleError(new Error('invalid_when'))); return; }
+    setSending(true); setError('');
+    try {
+      await schedule.send(body, iso);
+      setText(''); setWhen(''); setScheduling(false);
+      schedule.onDone?.(iso);
+    } catch (err) {
+      setError(friendlyScheduleError(err));
     } finally {
       setSending(false);
     }
@@ -52,13 +76,15 @@ export default function ChatThread({ me, onError, load, send, onLoaded, sendLabe
         ))}
         <div ref={endRef} />
       </div>
+      {tools?.({ text, setText })}
       <textarea
         className="input input--sm" rows={2} maxLength={MAX_MESSAGE} aria-label={t('Resposta')}
         placeholder={placeholder} value={text} onChange={e => setText(e.target.value)}
       />
+      {schedule && <SchedulePicker open={scheduling} onToggle={() => setScheduling(v => !v)} when={when} onChange={setWhen} />}
       {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
-      <button type="button" className="btn btn--primary btn--full" disabled={sending || !text.trim()} onClick={handleSend}>
-        {sending ? t('Enviando…') : sendLabel}
+      <button type="button" className="btn btn--primary btn--full" disabled={sending || !text.trim() || (scheduling && !when)} onClick={handleSend}>
+        {sending ? t('Enviando…') : scheduling ? t('Agendar recado') : sendLabel}
       </button>
     </div>
   );

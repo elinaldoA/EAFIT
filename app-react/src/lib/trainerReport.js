@@ -1,5 +1,7 @@
-import { MEASURE_FIELDS } from './bodyMeasurements';
+import { MEASURE_FIELDS, measurementDeltas } from './bodyMeasurements';
 import { CHECKIN_FIELDS } from './checkin';
+import { addDays } from './pause';
+import { weeklyCounts } from './trainerRoster';
 import { fmtDate } from './utils';
 
 import { t, tEx, locale } from './i18n';
@@ -41,14 +43,35 @@ export function reportFileName(name, today) {
   return `relatorio-${slug}-${today}.pdf`;
 }
 
+// Períodos do relatório, em dias. A ficha carrega 120 dias de treino, 180 de
+// peso e 365 de medidas, então todos cabem.
+export const REPORT_PERIODS = [30, 60, 90];
+export const DEFAULT_PERIOD = 30;
+
+const cleanDays = v => (REPORT_PERIODS.includes(Number(v)) ? Number(v) : DEFAULT_PERIOD);
+
 // Monta o que vai no PDF a partir dos dados que a ficha já carregou.
-// `weeks`: weeklyCounts (8 semanas). `summary`: summarizeClient.
-export function buildReportModel({ client, detail, summary, weeks, today, goal }) {
+// `summary`: summarizeClient. `days`: período (30, 60 ou 90). `trainerName`: quem
+// acompanha o aluno (aparece no cabeçalho e no rodapé). Frequência, peso e
+// medidas respeitam o período; cargas (90 dias) e check-ins (30 dias) seguem
+// fixos, e o título de cada seção diz isso.
+export function buildReportModel({ client, detail, summary, today, goal, days = DEFAULT_PERIOD, trainerName = '' }) {
+  const period = cleanDays(days);
+  const since = addDays(today, -(period - 1));
   const profile = detail?.profile || {};
-  const weights = summary?.weights || [];
+  const trainingDays = (detail?.training_days || []).filter(d => d >= since);
+  const weights = (summary?.weights || []).filter(w => w.date >= since);
+  const weightDelta = weights.length >= 2 ? Math.round((weights[weights.length - 1].value - weights[0].value) * 10) / 10 : null;
+  const measureRows = (detail?.measurements || [])
+    .filter(m => m.d >= since)
+    .map(m => ({
+      measured_on: m.d,
+      ...Object.fromEntries(MEASURE_FIELDS.map(({ key }) => [key, m[key] === null || m[key] === undefined ? null : Number(m[key])])),
+    }));
+  const deltas = measurementDeltas(measureRows);
   const measures = MEASURE_FIELDS
-    .filter(({ key }) => summary?.measureDeltas?.[key])
-    .map(({ key, label }) => ({ label, ...summary.measureDeltas[key] }));
+    .filter(({ key }) => deltas[key])
+    .map(({ key, label }) => ({ label, ...deltas[key] }));
   const loads = (detail?.loads || []).slice(0, REPORT_LOADS).map(l => ({
     exercise: tEx(l.exercise), max: Number(l.max), sessions: Number(l.sessions) || 0,
   }));
@@ -57,6 +80,9 @@ export function buildReportModel({ client, detail, summary, weeks, today, goal }
     name: client?.name || profile.name || '',
     dateLabel: new Date(`${today}T12:00:00`).toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }),
     today,
+    period,
+    periodLabel: t('Período: últimos {n} dias', { n: period }),
+    trainerName: String(trainerName || '').trim(),
     info: [
       profile.idade && t('{n} anos', { n: profile.idade }),
       profile.peso && `${num(profile.peso)} kg`,
@@ -64,18 +90,18 @@ export function buildReportModel({ client, detail, summary, weeks, today, goal }
     ].filter(Boolean).join(' · '),
     kpis: [
       { label: t('treinos em 7 dias'), value: String(summary?.last7 ?? 0) },
-      { label: t('treinos em 30 dias'), value: String(summary?.last30 ?? 0) },
+      { label: t('treinos em {n} dias', { n: period }), value: String(trainingDays.length) },
       { label: t('dias de sequência'), value: summary?.streak ? String(summary.streak) : '-' },
       { label: t('último treino'), value: summary?.lastDay ? fmtDate(summary.lastDay) : '-' },
     ],
     goal: goal || null,
-    weeks: (weeks || []).map(w => ({ label: fmtDate(w.end), count: w.count })),
+    weeks: weeklyCounts(detail?.training_days, today, Math.ceil(period / 7)).map(w => ({ label: fmtDate(w.end), count: w.count })),
     plan: detail?.plan ? { name: detail.plan.name, days: detail.plan.days } : null,
     weight: weights.length
       ? {
           first: weights[0].value,
           last: weights[weights.length - 1].value,
-          delta: summary.weightDelta,
+          delta: weightDelta,
           points: weights.slice(-REPORT_WEIGHTS).map(w => ({ label: fmtDate(w.date), value: w.value })),
         }
       : null,
@@ -137,6 +163,8 @@ export async function renderReportPdf(model) {
   y += 7;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); color(MUTED);
   text(t('Relatório de acompanhamento · {d}', { d: model.dateLabel }), M, y);
+  y += 5;
+  text(model.trainerName ? `${model.periodLabel} · ${t('Acompanhamento: {name}', { name: model.trainerName })}` : model.periodLabel, M, y);
   if (model.info) { y += 5; text(model.info, M, y); }
   y += 4;
 
@@ -221,7 +249,9 @@ export async function renderReportPdf(model) {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(MUTED);
-    text(t('Gerado pelo EAFIT · {d}', { d: model.dateLabel }), M, 291);
+    text(model.trainerName
+      ? t('Gerado pelo EAFIT · {d} · {name}', { d: model.dateLabel, name: model.trainerName })
+      : t('Gerado pelo EAFIT · {d}', { d: model.dateLabel }), M, 291);
     text(`${p}/${pages}`, W - M, 291, { align: 'right' });
   }
 

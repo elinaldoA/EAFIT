@@ -2,17 +2,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 
-const h = vi.hoisted(() => ({ toast: vi.fn(), api: {}, builder: vi.fn() }));
+const h = vi.hoisted(() => ({ toast: vi.fn(), api: {}, builder: vi.fn(), chat: vi.fn(), schedule: vi.fn() }));
 
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../data/treinoData', () => ({ todayDate: () => '2026-10-07' }));
 vi.mock('../components/LineChart', () => ({ default: ({ points, emptyMsg }) => <div data-testid="chart">{points.length ? points.map(p => p.value).join(',') : emptyMsg}</div> }));
 vi.mock('../components/Skeleton', () => ({ default: () => <div data-testid="skeleton" /> }));
-vi.mock('../components/ChatThread', () => ({ default: ({ sendLabel, load, onLoaded }) => {
-  load().then(() => onLoaded());
-  return <div data-testid="chat">{sendLabel}</div>;
+vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: { email: 'carlos@x.com', user_metadata: { nome: 'Carlos Lima' } } }) }));
+vi.mock('../components/ChatThread', () => ({ default: (props) => {
+  h.chat(props);
+  props.load().then(() => props.onLoaded());
+  return <><div data-testid="chat">{props.sendLabel}</div>{props.tools?.({ text: 'rascunho', setText: () => {} })}</>;
 } }));
+vi.mock('./QuickReplyTools', () => ({ default: ({ text }) => <div data-testid="quick-tools">{text}</div> }));
 vi.mock('./ClientSessions', () => ({ default: () => <div data-testid="sessions" /> }));
 vi.mock('./ClientNotes', () => ({ default: () => <div data-testid="notes" /> }));
 vi.mock('./ClientGoals', () => ({ default: () => <div data-testid="goals" /> }));
@@ -40,6 +43,10 @@ vi.mock('../lib/trainerReport', async (importActual) => ({
   ...(await importActual()),
   renderReportPdf: (...a) => h.api.renderReportPdf(...a),
   shareOrDownloadPdf: (...a) => h.api.shareOrDownloadPdf(...a),
+}));
+vi.mock('../lib/trainerScheduled', async (importActual) => ({
+  ...(await importActual()),
+  scheduleMessage: (...a) => h.schedule(...a),
 }));
 vi.mock('../lib/trainerPlan', async (importActual) => ({
   ...(await importActual()),
@@ -69,6 +76,8 @@ const DETAIL = {
 beforeEach(() => {
   h.toast.mockReset();
   h.builder.mockReset();
+  h.chat.mockReset();
+  h.schedule.mockReset().mockResolvedValue('s1');
   h.api = {
     fetchClientDetail: vi.fn().mockResolvedValue(DETAIL),
     removeClient: vi.fn().mockResolvedValue(undefined),
@@ -214,11 +223,40 @@ describe('ClientDetail', () => {
     await waitFor(() => expect(h.api.renderReportPdf).toHaveBeenCalledTimes(1));
     const model = h.api.renderReportPdf.mock.calls[0][0];
     expect(model.name).toBe('Ana');
+    expect(model.trainerName).toBe('Carlos Lima');
+    expect(model.period).toBe(30);
     expect(model.plan).toEqual({ name: 'Hipertrofia', days: 5 });
     expect(model.kpis[0].value).toBe('5'); // treinos nos últimos 7 dias (01 a 07/10)
     expect(JSON.stringify(model)).not.toContain('ana@x.com');
     await waitFor(() => expect(h.api.shareOrDownloadPdf).toHaveBeenCalledWith(expect.any(Blob), 'relatorio-ana-2026-10-07.pdf', expect.stringContaining('Ana')));
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('📄 Relatório baixado'));
+  });
+
+  it('relatório: o seletor de período muda o que vai no PDF', async () => {
+    setup();
+    await screen.findByText('Frequência');
+    const select = screen.getByLabelText('Período do relatório');
+    expect([...select.options].map(o => o.value)).toEqual(['30', '60', '90']);
+    expect(select.value).toBe('30');
+    fireEvent.change(select, { target: { value: '90' } });
+    fireEvent.click(screen.getByRole('button', { name: '📄 Relatório' }));
+    await waitFor(() => expect(h.api.renderReportPdf).toHaveBeenCalledTimes(1));
+    expect(h.api.renderReportPdf.mock.calls[0][0].period).toBe(90);
+    expect(h.api.renderReportPdf.mock.calls[0][0].weeks).toHaveLength(13);
+  });
+
+  it('conversa: o personal ganha respostas prontas e agendamento para o aluno', async () => {
+    setup();
+    await screen.findByText('Frequência');
+    tab('Conversa');
+    await waitFor(() => expect(h.chat).toHaveBeenCalled());
+    const props = h.chat.mock.calls.at(-1)[0];
+    expect(screen.getByTestId('quick-tools').textContent).toBe('rascunho');
+    // agendar vai só para este aluno
+    await props.schedule.send('Bom treino amanhã', '2026-10-08T11:00:00.000Z');
+    expect(h.schedule).toHaveBeenCalledWith(['c1'], 'Bom treino amanhã', '2026-10-08T11:00:00.000Z');
+    props.schedule.onDone('2026-10-08T11:00:00.000Z');
+    expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('🕒 Recado agendado para'));
   });
 
   it('relatório: compartilhar no celular não mostra aviso de download', async () => {
