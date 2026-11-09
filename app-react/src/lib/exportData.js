@@ -5,6 +5,7 @@ import { fetchWaterLogsRange } from './waterLog';
 import { fetchProteinLogsRange } from './proteinLog';
 import { fetchCustomFoods } from './nutritionFoods';
 import { fetchEntriesRange } from './nutritionEntries';
+import { fetchPlan } from './nutritionPlan';
 import { fetchAllDiscomfort } from './discomfort';
 import { fetchUnlockedAchievements } from './achievements';
 import { fetchMeasurements } from './bodyMeasurements';
@@ -105,7 +106,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, charges, surveyAnswers, leagueResults,
-    proteinLogs, customFoods, nutritionEntries, runs, runShoes, runComments, runClubs,
+    proteinLogs, customFoods, nutritionEntries, nutritionPlan, runs, runShoes, runComments, runClubs,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -126,6 +127,7 @@ export async function gatherUserData(userId) {
     safe('proteinLogs', () => fetchProteinLogsRange(userId, EPOCH), []),
     safe('customFoods', () => fetchCustomFoods(userId), []),
     safe('nutritionEntries', () => fetchEntriesRange(userId, EPOCH), []),
+    safe('nutritionPlan', () => fetchPlan(userId), []),
     safe('runs', () => fetchMyRuns(userId), []),
     safe('runShoes', () => fetchMyRunShoes(userId), []),
     safe('runComments', fetchMyRunComments, []),
@@ -138,7 +140,7 @@ export async function gatherUserData(userId) {
     workouts, exerciseSets, workoutExercises,
     workoutPlans: plans, planDays, planExercises,
     weightLogs, bodyMeasurements, dailyCheckins, runs, runShoes, runComments, runClubs,
-    progressPhotos: photos, waterLogs, proteinLogs, customFoods, nutritionEntries,
+    progressPhotos: photos, waterLogs, proteinLogs, customFoods, nutritionEntries, nutritionPlan,
     discomfortReports, achievements,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments, charges,
