@@ -478,3 +478,21 @@
 .run-race { display: grid; gap: 8px; margin-top: 12px; }
 .run-race__count { margin: 0; font-size: var(--fs-lg, 1.1rem); font-weight: 700; }
 .run-race__advice { display: grid; gap: 6px; justify-items: start; }
+
+/* Aba Você: carga da semana, tendência e conquistas */
+.run-load__numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); text-align: center; }
+.run-load__numbers strong { display: block; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.run-load__numbers small { color: var(--text-muted); font-size: 11px; }
+.run-load__msg { margin: var(--sp-2) 0 0; font-weight: 600; }
+.run-load--high { border-color: var(--warning, #e0a100); }
+.run-trend { margin: var(--sp-2) 0 0; font-size: 13px; }
+.run-badges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-2); }
+.run-badge { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--border, rgba(128,128,128,.25)); border-radius: 12px; opacity: .6; }
+.run-badge--on { opacity: 1; border-color: var(--primary); }
+.run-badge__icon { grid-row: span 2; font-size: 1.5rem; filter: grayscale(1); }
+.run-badge--on .run-badge__icon { filter: none; }
+.run-badge__title { font-size: 13px; font-weight: 700; line-height: 1.2; }
+.run-badge__state { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.run-badge--on .run-badge__state { color: var(--primary); font-weight: 600; }
+.run-badge__bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: rgba(128,128,128,.25); margin-top: 6px; overflow: hidden; }
+.run-badge__bar > span { display: block; height: 100%; background: var(--primary); }

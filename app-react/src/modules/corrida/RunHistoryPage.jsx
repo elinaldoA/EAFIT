@@ -15,6 +15,7 @@ import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
+import RunInsights from './RunInsights';
 
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
@@ -215,6 +216,8 @@ export default function RunHistoryPage() {
         </div>
         <p className="profile-field__hint">{t('Melhor tempo em cada distância, medido pelo GPS dentro de qualquer corrida.')}</p>
       </div>
+
+      <RunInsights runs={runs} />
 
       <div className="section-group">
         <div className="section-group__label">{t('Quilômetros por semana')}</div>
