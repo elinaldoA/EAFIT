@@ -12,6 +12,7 @@ import MarketingAutopost from '../components/MarketingAutopost';
 import MarketingQueue from '../components/MarketingQueue';
 
 const NO_STORIES = ['tiktok'];
+const POSTS_PAGE = 30; // posts por vez no histórico
 
 const TABS = [
   { key: 'agenda', label: 'Agenda' },
@@ -40,11 +41,12 @@ function toLocalInputValue(date) {
 export default function MarketingPublish() {
   const [params, setParams] = useSearchParams();
   const tab = TABS.some(t => t.key === params.get('aba')) ? params.get('aba') : 'agenda';
-  const setTab = key => setParams(key === 'agenda' ? {} : { aba: key }, { replace: true });
+  const setTab = key => { setMsg(''); setParams(key === 'agenda' ? {} : { aba: key }, { replace: true }); };
   const [historyFilter, setHistoryFilter] = useState('todos');
   const [accounts, setAccounts] = useState(null);
   const [library, setLibrary] = useState([]);
   const [posts, setPosts] = useState(null);
+  const [postLimit, setPostLimit] = useState(POSTS_PAGE);
   const [selectedAccounts, setSelectedAccounts] = useState(() => new Set());
   const [format, setFormat] = useState('feed');
   const [caption, setCaption] = useState('');
@@ -66,12 +68,12 @@ export default function MarketingPublish() {
 
   const loadPosts = useCallback(async () => {
     try {
-      setPosts(await fetchPosts());
+      setPosts(await fetchPosts(postLimit));
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
       setPosts([]);
     }
-  }, []);
+  }, [postLimit]);
 
   useEffect(() => {
     fetchAccounts().then(list => {
@@ -80,8 +82,9 @@ export default function MarketingPublish() {
       setSelectedAccounts(new Set(list.filter(a => a.status === 'ok' && a.platform !== 'tiktok').map(a => a.id)));
     }).catch(err => { setMsg(`Erro: ${err.message}`); setAccounts([]); });
     fetchMedia().then(setLibrary).catch(() => setLibrary([]));
-    loadPosts();
-  }, [loadPosts]);
+  }, []);
+
+  useEffect(() => { loadPosts(); }, [loadPosts]);
 
   const byId = useMemo(() => new Map((accounts || []).map(a => [a.id, a])), [accounts]);
   const chosenAccounts = (accounts || []).filter(a => selectedAccounts.has(a.id));
@@ -536,6 +539,11 @@ export default function MarketingPublish() {
               </ul>
             </article>
           ))}
+          {posts && posts.length >= postLimit && (
+            <div className="actions-row">
+              <button type="button" className="btn btn--ghost btn--small" onClick={() => setPostLimit(n => n + POSTS_PAGE)}>Ver posts mais antigos</button>
+            </div>
+          )}
         </section>
       )}
     </div>

@@ -113,10 +113,11 @@ export async function uploadMedia({ file, title, credit = null, width = null, he
 }
 
 export async function removeMedia(item) {
-  const { error } = await db.storage.from(BUCKET).remove([item.storage_path]);
-  if (error) throw error;
+  // Linha primeiro: se o arquivo falhar depois, sobra um arquivo solto, e não um item quebrado na biblioteca.
   const { error: rowErr } = await db.from('marketing_media').delete().eq('id', item.id);
   if (rowErr) throw rowErr;
+  const { error } = await db.storage.from(BUCKET).remove([item.storage_path]);
+  if (error) throw error;
 }
 
 // ---------- arte a partir de um print ----------
@@ -257,8 +258,9 @@ export async function disconnectAccount(id) {
 
 // Legenda final: texto + créditos de mídia de terceiros (exigidos pela licença).
 export function finalCaption(caption, media = []) {
-  const credits = [...new Set(media.map(m => m.credit).filter(Boolean))];
   const text = String(caption || '').trim();
+  // Crédito que já está na legenda (post republicado a partir do texto final) não se repete.
+  const credits = [...new Set(media.map(m => m.credit).filter(Boolean))].filter(c => !text.includes(c));
   return credits.length ? `${text}${text ? '\n\n' : ''}${credits.join('\n')}` : text;
 }
 
@@ -461,7 +463,7 @@ export function hideComment(commentId, hidden) {
 // ---------- publicação automática ----------
 // Fila de conteúdo pronto que o cron publica sozinho (migration
 // 20261230010000_marketing_autopost.sql; horários ajustados em
-// 20270106010000_marketing_horarios_pico.sql): story geral 13h, feed 18h, Reel 20h30 (Brasília).
+// 20270106010000_marketing_horarios_pico.sql): horários por faixa em AUTOPOST_LANES (Brasília).
 
 export async function fetchAutopost() {
   const columns = 'id, position, key, format, caption, media, posted_at, skipped_at';

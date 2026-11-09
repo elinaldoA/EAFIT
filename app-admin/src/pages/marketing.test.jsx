@@ -63,6 +63,8 @@ describe('lib/marketing', () => {
     expect(finalCaption(' Bora ', media)).toBe('Bora\n\nVídeo: X · CC BY');
     expect(finalCaption('Só texto', [])).toBe('Só texto');
     expect(finalCaption('', [{ type: 'video', url: 'https://v', credit: 'C' }])).toBe('C');
+    // Republicar: crédito que já está na legenda não duplica.
+    expect(finalCaption('Bora\n\nC', [{ type: 'video', url: 'https://v', credit: 'C' }])).toBe('Bora\n\nC');
   });
 
   it('valida o post como as redes', () => {

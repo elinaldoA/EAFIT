@@ -22,8 +22,10 @@ export default function MarketingComments() {
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState('');
 
-  const load = useCallback(async () => {
-    setComments(null);
+  // `reset` mostra o carregando só ao trocar de filtro; depois de responder ou
+  // ocultar a lista atualiza no lugar, sem pular a tela para o topo.
+  const load = useCallback(async (reset = false) => {
+    if (reset) setComments(null);
     try {
       setComments(await fetchComments({ filter, platform }));
     } catch (err) {
@@ -31,7 +33,7 @@ export default function MarketingComments() {
       setComments([]);
     }
   }, [filter, platform]);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(true); }, [load]);
 
   async function handleSync() {
     setBusy('sync');
@@ -135,7 +137,7 @@ export default function MarketingComments() {
           <div className="mkt-chips">
             {QUICK_REPLIES.map(t => (
               <button key={t} type="button" className="mkt-chip" onClick={() => setDrafts(d => ({ ...d, [c.id]: fillReply(t, c.author) }))}>
-                {fillReply(t, c.author).slice(0, 40)}…
+                {(r => (r.length > 40 ? `${r.slice(0, 40)}…` : r))(fillReply(t, c.author))}
               </button>
             ))}
           </div>

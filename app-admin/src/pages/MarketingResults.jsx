@@ -118,7 +118,8 @@ export default function MarketingResults() {
   }, [metrics, platform, sort, days, accountById]);
   const byKind = useMemo(() => averageByKind(rows), [rows]);
   const withInsights = rows.some(m => m.insights_ok);
-  const best = rows[0];
+  // O melhor post não depende da ordem escolhida na lista.
+  const best = useMemo(() => rows.reduce((top, m) => (!top || postScore(m) > postScore(top) ? m : top), null), [rows]);
 
   const totals = (conversion || []).reduce((t, r) => ({
     visits: t.visits + r.visits, signups: t.signups + r.signups, activated: t.activated + r.activated,
@@ -268,11 +269,11 @@ export default function MarketingResults() {
             <div className="mkt-stat">
               <span className="mkt-stat__l">Melhor post do período</span>
               <span>{firstLine(best.caption)}</span>
-              <span className="user-detail__meta">{KIND_LABEL[best.kind]} · {withInsights ? `alcance ${fmt(best.reach)}` : `${fmt(postScore(best))} interações`}</span>
+              <span className="user-detail__meta">{KIND_LABEL[best.kind] || best.kind} · {withInsights ? `alcance ${fmt(best.reach)}` : `${fmt(postScore(best))} interações`}</span>
             </div>
             {byKind.map(g => (
               <div key={g.kind} className="mkt-stat">
-                <span className="mkt-stat__l">{KIND_LABEL[g.kind]} · média por post</span>
+                <span className="mkt-stat__l">{KIND_LABEL[g.kind] || g.kind} · média por post</span>
                 <span className="mkt-stat__n">{fmt(g.average)}</span>
                 <span className="user-detail__meta">{g.posts} post(s) · {withInsights ? 'alcance' : 'interações'}</span>
               </div>
@@ -296,7 +297,7 @@ export default function MarketingResults() {
                         {m.thumb_url ? <img className="mkt-row__thumb" src={m.thumb_url} alt="" loading="lazy" /> : <span className="mkt-row__thumb mkt-row__thumb--empty" aria-hidden="true" />}
                         <div className="mkt-row__main">
                           <div className="mkt-row__title">
-                            <span className="badge">{KIND_LABEL[m.kind]}</span>
+                            <span className="badge">{KIND_LABEL[m.kind] || m.kind}</span>
                             <span className="user-detail__meta">{m.posted_at ? formatDate(m.posted_at) : ''}</span>
                           </div>
                           <div className="mkt-row__caption">{firstLine(m.caption)}</div>

@@ -121,7 +121,7 @@ export default function MarketingAccounts() {
                   <td data-label="">
                     <div className="actions-row">
                       {a.status !== 'ok' && (
-                        <button type="button" className="btn btn--small" onClick={() => connect(PROVIDER[a.platform] || 'meta')}>
+                        <button type="button" className="btn btn--small" disabled={!!busy} onClick={() => connect(PROVIDER[a.platform] || 'meta')}>
                           Reconectar
                         </button>
                       )}

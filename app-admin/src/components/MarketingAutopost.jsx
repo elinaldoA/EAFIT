@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Loading from './Loading';
 import { PLATFORMS, STATUS_LABEL, NUTRI_SLOTS, autopostSchedule, brtDay, fetchAutopost, laneLabel, setAutopostEnabled, splitCaption } from '../lib/marketing';
 
 const FORMAT_LABEL = { feed: 'Feed', reel: 'Reel', story: 'Story' };
@@ -84,7 +85,8 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
     return () => { alive = false; };
   }, []);
 
-  if (!state) return null; // sem migration ou sem permissão: a agenda some
+  if (state === null) return <Loading />;
+  if (state === false) return <p className="user-detail__meta">A agenda automática ainda não está disponível neste ambiente (migration ou permissão).</p>;
 
   const now = new Date();
   const today = brtDay(now);

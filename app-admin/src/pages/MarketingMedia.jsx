@@ -91,6 +91,9 @@ export default function MarketingMedia() {
   }
   useEffect(() => { load(); }, [load]);
 
+  // Libera a prévia do story da memória.
+  useEffect(() => () => { if (story?.preview) URL.revokeObjectURL(story.preview.url); }, [story?.preview]);
+
   // Libera a prévia do Reel da memória.
   useEffect(() => () => { if (reel?.preview) URL.revokeObjectURL(reel.preview.url); }, [reel?.preview]);
 
@@ -345,7 +348,13 @@ export default function MarketingMedia() {
           <h2 className="section-title">Prints do app</h2>
           <label className="field">
             <span className="field__label">Idioma do print</span>
-            <select className="input" value={lang} onChange={e => { setLang(e.target.value); setArt(a => (a ? { ...a, preview: null } : a)); }}>
+            <select className="input" value={lang} onChange={e => {
+              setLang(e.target.value);
+              // Prévia pronta está no idioma antigo: some, para não salvar o print errado.
+              setArt(a => (a ? { ...a, preview: null } : a));
+              setStory(s => (s ? { ...s, preview: null, saved: false } : s));
+              setReel(r => (r ? { ...r, preview: null, saved: false } : r));
+            }}>
               <option value="pt">Português</option>
               <option value="en">Inglês</option>
             </select>
