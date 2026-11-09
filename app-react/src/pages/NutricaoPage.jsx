@@ -20,6 +20,8 @@ import FoodSearch from '../components/FoodSearch';
 import MealLog from '../components/MealLog';
 import ProteinBars from '../components/ProteinBars';
 import NutritionDayCard from '../components/NutritionDayCard';
+import DietPlan from '../components/DietPlan';
+import { fetchPlan, savePlan, readCachedPlan } from '../lib/nutritionPlan';
 import GoalMeals from '../components/GoalMeals';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import Skeleton from '../components/Skeleton';
@@ -95,6 +97,7 @@ export default function NutricaoPage({ active }) {
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [manage, setManage] = useState(false);
   const [chart, setChart] = useState('kcal');
+  const [plan, setPlan] = useState(() => (user ? readCachedPlan(user.id) : []));
 
   const totals = readLocalTotals();
   const protein = totals.protein;
@@ -132,6 +135,7 @@ export default function NutricaoPage({ active }) {
     const habitSince = parseLocalDate(todayDate());
     habitSince.setDate(habitSince.getDate() - HISTORY_DAYS);
     fetchEntriesRange(user.id, toDateStr(habitSince)).then(setPastEntries).catch(err => console.error('fetchEntriesRange:', err));
+    fetchPlan(user.id).then(setPlan).catch(err => console.error('fetchPlan:', err));
     fetchCustomFoods(user.id).then(setMyFoods).catch(err => console.error('fetchCustomFoods:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, user]);
@@ -171,7 +175,7 @@ export default function NutricaoPage({ active }) {
 
   // Vários de uma vez (a refeição de sempre) somam sobre o mesmo total, num
   // só salvamento; cada um vira um registro e um passo do "Desfazer".
-  function handleAddMany(foods) {
+  function handleAddMany(foods, mealKey = meal) {
     let next = totals;
     const added = [];
     for (const food of foods) {
@@ -180,7 +184,7 @@ export default function NutricaoPage({ active }) {
       if (food.id) bumpUseCount(food.id);
       next = applyFood(next, food);
       const entryId = crypto.randomUUID();
-      if (user) addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat, fiber: food.fiber, sodium: food.sodium }, meal, entryId);
+      if (user) addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat, fiber: food.fiber, sodium: food.sodium }, mealKey, entryId);
       added.push({ ...food, entryId });
     }
     if (user) setEntries(readCachedEntries(todayDate()));
@@ -189,6 +193,22 @@ export default function NutricaoPage({ active }) {
     saveTotals(next);
   }
   const handleAdd = food => handleAddMany([food]);
+
+  async function handleSavePlan(meals) {
+    if (!user) return;
+    setPlan(await savePlan(user.id, meals));
+    toast(t('Dieta salva'));
+  }
+
+  async function handleClearPlan() {
+    if (!window.confirm(t('Remover a dieta importada?'))) return;
+    setPlan(await savePlan(user.id, []));
+  }
+
+  function handleRegisterPlanMeal(m) {
+    handleAddMany(m.items, m.meal);
+    toast(t('{meal} registrado', { meal: m.name }));
+  }
 
   function handleUndo() {
     const last = undoStack[undoStack.length - 1];
@@ -418,6 +438,11 @@ export default function NutricaoPage({ active }) {
           />
         </div>
       )}
+
+      <div className="section-group">
+        <div className="section-group__label">{t('Sua dieta')}</div>
+        <DietPlan plan={plan} onSave={handleSavePlan} onClear={handleClearPlan} onRegister={handleRegisterPlanMeal} />
+      </div>
 
       <div className="section-group">
         {/* Com metas, a refeição se escolhe no card da próxima refeição; aqui só se mostra onde vai entrar. */}

@@ -7,6 +7,7 @@ import { upsertWaterLog } from '../lib/waterLog';
 import { upsertProteinLog, upsertNutritionLog } from '../lib/proteinLog';
 import { saveCustomFoodRow, deleteCustomFoodRow } from '../lib/nutritionFoods';
 import { saveEntryRow, deleteEntryRow } from '../lib/nutritionEntries';
+import { writePlanRow } from '../lib/nutritionPlan';
 import { upsertWeightLog } from '../lib/weightLog';
 import { useAuth } from './useAuth';
 import { useToast } from './useToast';
@@ -91,6 +92,9 @@ const SYNC_EXECUTORS = {
   },
   food_delete: async ({ userId, id }) => {
     await deleteCustomFoodRow(userId, id);
+  },
+  plan_save: async ({ userId, meals }) => {
+    await writePlanRow(userId, meals);
   },
   weight_log: async ({ userId, date, peso }) => {
     await upsertWeightLog(userId, date, peso);

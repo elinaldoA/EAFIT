@@ -55,6 +55,8 @@ function coalesceKey(type, p) {
       return `${type}:${p.userId}:${p.id}`;
     case 'food_delete':
       return `${type}:${p.userId}:${p.id}`;
+    case 'plan_save':
+      return `${type}:${p.userId}`;
     case 'water_log':
     case 'protein_log':
     case 'nutrition_log':

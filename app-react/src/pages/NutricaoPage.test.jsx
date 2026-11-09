@@ -36,6 +36,7 @@ vi.mock('../lib/supabase', () => ({
   },
 }));
 vi.mock('../lib/weightLog', () => weight);
+vi.mock('../lib/nutritionPlan', () => ({ fetchPlan: vi.fn().mockResolvedValue([]), savePlan: vi.fn(async (_u, m) => m), readCachedPlan: () => [] }));
 let pastRows = [];
 
 import NutricaoPage from './NutricaoPage';
