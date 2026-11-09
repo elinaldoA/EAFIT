@@ -5,6 +5,7 @@ import {
   splitCaption, updateQueueCaption,
 } from '../lib/marketing';
 import Loading from './Loading';
+import { Paged } from './ShowMore';
 
 const FORMAT_CHOICES = [
   { key: 'feed', label: 'Feed' },
@@ -213,7 +214,7 @@ export default function MarketingQueue({ library = [] }) {
           <section key={f.key} className="card stack" aria-label={f.label}>
             <h3 className="section-title">{f.label} · {laneWhen(f)} ({items.length} na fila)</h3>
             {items.length === 0 && <p className="user-detail__meta">Fila vazia: nada mais sai deste formato.</p>}
-            <ul className="mkt-list">{items.map(itemRow)}</ul>
+            <Paged items={items} size={10}>{visible => <ul className="mkt-list">{visible.map(itemRow)}</ul>}</Paged>
           </section>
         );
       })}
@@ -222,8 +223,9 @@ export default function MarketingQueue({ library = [] }) {
         <section className="card stack" aria-label="Pulados por repetição">
           <h3 className="section-title">Pulados por repetição ({state.skipped.length})</h3>
           <p className="user-detail__meta">Esses itens tinham a mesma mídia ou legenda de um post já feito. Mude a legenda antes de repor.</p>
+          <Paged items={state.skipped.filter(i => !i.posted_at)} size={10}>{visible => (
           <ul className="mkt-list">
-            {state.skipped.filter(i => !i.posted_at).map(item => (
+            {visible.map(item => (
               <li key={item.id} className="mkt-row mkt-row--queue">
                 <div className="mkt-row__time">pulado</div>
                 <Thumb media={item.media} />
@@ -253,6 +255,7 @@ export default function MarketingQueue({ library = [] }) {
               </li>
             ))}
           </ul>
+          )}</Paged>
         </section>
       )}
     </div>

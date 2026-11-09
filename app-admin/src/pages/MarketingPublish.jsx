@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
 import MarketingAutopost from '../components/MarketingAutopost';
 import MarketingQueue from '../components/MarketingQueue';
+import { Paged } from '../components/ShowMore';
 
 const NO_STORIES = ['tiktok'];
 const POSTS_PAGE = 30; // posts por vez no histórico
@@ -430,8 +431,9 @@ export default function MarketingPublish() {
             {pickerItems.length === 0
               ? <p className="user-detail__meta">Nada na biblioteca ainda. Crie artes com os prints em Biblioteca de mídia.</p>
               : (
+                <Paged items={pickerItems} size={24} resetKey={`${pickerTab}|${videoQuery}`}>{visible => (
                 <div className="mkt-grid mkt-grid--picker">
-                  {pickerItems.map(item => {
+                  {visible.map(item => {
                     const on = media.some(m => m.url === item.url);
                     return (
                       <button key={item.key} type="button" className={`mkt-tile mkt-pick${on ? ' mkt-tile--active' : ''}`} onClick={() => toggleMedia(item)} aria-pressed={on}>
@@ -443,6 +445,7 @@ export default function MarketingPublish() {
                     );
                   })}
                 </div>
+                )}</Paged>
               )}
           </div>
 
@@ -506,7 +509,7 @@ export default function MarketingPublish() {
           {!posts && <Loading />}
           {posts && posts.length === 0 && <EmptyState icon="📣" label="Nenhum post ainda." />}
           {posts && posts.length > 0 && shownPosts.length === 0 && <p className="user-detail__meta">Nenhum post nesta situação.</p>}
-          {posts && shownPosts.map(p => (
+          {posts && <Paged items={shownPosts} size={15} resetKey={historyFilter}>{visible => visible.map(p => (
             <article key={p.id} className="mkt-post">
               <div className="mkt-post__head">
                 <span className="user-detail__meta">
@@ -538,7 +541,7 @@ export default function MarketingPublish() {
                 })}
               </ul>
             </article>
-          ))}
+          ))}</Paged>}
           {posts && posts.length >= postLimit && (
             <div className="actions-row">
               <button type="button" className="btn btn--ghost btn--small" onClick={() => setPostLimit(n => n + POSTS_PAGE)}>Ver posts mais antigos</button>

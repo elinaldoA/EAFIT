@@ -6,6 +6,7 @@ import {
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -282,6 +283,7 @@ export default function MarketingResults() {
         )}
 
         {rows.length > 0 && (
+          <Paged items={rows} size={20} resetKey={`${platform}|${sort}|${days}`}>{visible => (
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
@@ -290,7 +292,7 @@ export default function MarketingResults() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map(m => (
+                {visible.map(m => (
                   <tr key={`${m.account_id}-${m.external_id}`}>
                     <td data-label="Post">
                       <div className="mkt-row mkt-row--metric">
@@ -336,6 +338,7 @@ export default function MarketingResults() {
               </tbody>
             </table>
           </div>
+          )}</Paged>
         )}
       </section>
     </div>

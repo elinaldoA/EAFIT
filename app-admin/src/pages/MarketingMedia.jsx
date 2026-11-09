@@ -11,6 +11,7 @@ import {
 } from '../lib/promoMaterials';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 
 // Marketing → Biblioteca de mídia: o que pode ir para as redes. Arquivos
 // próprios e artes feitas dos prints do app ficam no bucket público
@@ -280,8 +281,9 @@ export default function MarketingMedia() {
         {!items && <Loading />}
         {items && items.length === 0 && <EmptyState icon="🖼️" label="Nada aqui ainda: envie um arquivo ou crie uma arte com um print." />}
         {items && items.length > 0 && (
+          <Paged items={items} size={24}>{visible => (
           <div className="mkt-grid">
-            {items.map(m => (
+            {visible.map(m => (
               <figure key={m.id} className="mkt-tile">
                 {m.kind === 'video'
                   ? <video src={m.url} muted playsInline preload="metadata" className="mkt-tile__media" />
@@ -300,6 +302,7 @@ export default function MarketingMedia() {
               </figure>
             ))}
           </div>
+          )}</Paged>
         )}
 
         {share && (
@@ -512,8 +515,9 @@ export default function MarketingMedia() {
           Vídeos de terceiros (wger, Wikimedia Commons, Pixabay). Ao usar num post, o crédito vai na legenda. Os marcados
           “CC BY-SA” exigem que a peça derivada saia na mesma licença: use em posts, não em anúncios pagos.
         </p>
+        <Paged items={shownVideos} size={24} resetKey={videoQuery}>{visible => (
         <div className="mkt-grid">
-          {shownVideos.map(v => (
+          {visible.map(v => (
             <figure key={v.slug} className="mkt-tile">
               <video src={v.url} muted loop playsInline preload="none" className="mkt-tile__media"
                 onMouseEnter={e => e.currentTarget.play().catch(() => {})} onMouseLeave={e => e.currentTarget.pause()} />
@@ -525,6 +529,7 @@ export default function MarketingMedia() {
             </figure>
           ))}
         </div>
+        )}</Paged>
       </section>
     </div>
   );

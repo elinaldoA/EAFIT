@@ -5,6 +5,7 @@ import {
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 
 const FILTERS = [
   { key: 'open', label: 'Sem resposta' },
@@ -115,7 +116,7 @@ export default function MarketingComments() {
         <EmptyState icon="💬" label={filter === 'open' ? 'Tudo respondido por aqui.' : 'Nenhum comentário.'} />
       )}
 
-      {comments && comments.map(c => (
+      {comments && <Paged items={comments} size={15} resetKey={`${filter}|${platform}`}>{visible => visible.map(c => (
         <article key={c.id} className="card stack mkt-comment">
           <div className="mkt-post__head">
             <span>
@@ -152,7 +153,7 @@ export default function MarketingComments() {
             </button>
           </div>
         </article>
-      ))}
+      ))}</Paged>}
     </div>
   );
 }
