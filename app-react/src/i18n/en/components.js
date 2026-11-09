@@ -704,7 +704,7 @@ export default {
   'Encerrar vínculo': 'End link',
   'Tem um personal trainer? Digite o código que ele te passou para ele acompanhar a sua evolução.': 'Have a personal trainer? Enter the code they gave you so they can follow your progress.',
   'Código do personal': 'Trainer code',
-  'Autorizo meu personal a ver meus treinos, peso, medidas, check-ins e desconfortos. Posso encerrar quando quiser.': 'I authorize my trainer to see my workouts, weight, measurements, check-ins and discomfort reports. I can end this whenever I want.',
+  'Autorizo meu personal a ver meus treinos, peso, medidas, check-ins, desconfortos, lesões, restrições e contato de emergência. Posso encerrar quando quiser.': 'I authorize my trainer to see my workouts, weight, measurements, check-ins, discomfort reports, injuries, restrictions and emergency contact. I can end this whenever I want.',
   'Vinculando…': 'Linking…',
   'Vincular ao personal': 'Link to trainer',
 

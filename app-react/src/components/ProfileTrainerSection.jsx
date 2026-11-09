@@ -123,7 +123,7 @@ export default function ProfileTrainerSection({ toast, onChange }) {
       </div>
       <label className="trainer-consent">
         <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
-        <span>{t('Autorizo meu personal a ver meus treinos, peso, medidas, check-ins e desconfortos. Posso encerrar quando quiser.')}</span>
+        <span>{t('Autorizo meu personal a ver meus treinos, peso, medidas, check-ins, desconfortos, lesões, restrições e contato de emergência. Posso encerrar quando quiser.')}</span>
       </label>
       {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--primary btn--full" disabled={busy || !agree || !code.trim()} onClick={handleLink}>
