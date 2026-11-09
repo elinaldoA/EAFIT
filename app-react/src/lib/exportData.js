@@ -152,7 +152,7 @@ export async function gatherUserData(userId) {
 // Corridas do EAFIT Run (modules/corrida/runs.js), com tempo por km.
 async function fetchMyRuns(userId) {
   const { data, error } = await db.from('runs')
-    .select('run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id, intervals')
+    .select('run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id, intervals, km_elev')
     .eq('user_id', userId)
     .order('started_at');
   if (error) throw error;
