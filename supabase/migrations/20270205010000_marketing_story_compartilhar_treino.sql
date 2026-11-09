@@ -1,4 +1,4 @@
--- Tutorial "como compartilhar seu treino" (story-v3-compartilhar-treino.mp4, 31,5 s, 9:16):
+-- Tutorial "como compartilhar seu treino" (story-v3-compartilhar-treino.mp4, 30 s, 9:16):
 -- terminar o treino, Resumo, Compartilhar com foto (foto ilustrativa com os dados por cima), postar marcando @eafitapp.
 -- Entra na frente da fila geral de stories: sai no proximo horario geral (19:30 de hoje).
 insert into public.marketing_autopost_queue (position, key, format, slot, caption, media)
