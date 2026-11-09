@@ -10,7 +10,7 @@ import { runTitle, paceSeconds, formatPace, formatClock, formatKm } from './runs
 // (já sem as pontas e as zonas de privacidade, como foi salvo), distância,
 // ritmo e tempo, com a marca EAFIT · Run e o rodapé de sempre.
 const {
-  CARD_WIDTH, CARD_HEIGHT, PAD_X, CONTENT_W, FONT, ORANGE_LIGHT, MUTED,
+  CARD_WIDTH, CARD_HEIGHT, PAD_X, CONTENT_W, FONT, ORANGE, ORANGE_LIGHT, MUTED,
   drawBackground, drawPanel, drawStatBox, drawFooter, drawLogo, setTracking, fitFont, roundedRectPath,
   shareImageBlob, cardUrl, formatCardDate,
 } = cardKit;
@@ -50,10 +50,21 @@ async function drawMap(ctx, run) {
     loaded++;
     ctx.drawImage(img, tile.left, tile.top, TILE_SIZE, TILE_SIZE);
   }
-  // Escurece o mapa claro, como no Strava, para o traçado saltar aos olhos.
+  // Mapa escuro, como no Strava: inverte o mapa claro, tira a cor e dá um
+  // toque a mais de escuro. Feito com modos de composição (e não ctx.filter)
+  // para funcionar também no Safari.
   if (loaded) {
-    ctx.fillStyle = 'rgba(9,9,13,0.45)';
-    ctx.fillRect(0, 0, w / MAP_SCALE, MAP_H / MAP_SCALE);
+    const mw = w / MAP_SCALE;
+    const mh = MAP_H / MAP_SCALE;
+    ctx.globalCompositeOperation = 'difference';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, mw, mh);
+    ctx.globalCompositeOperation = 'saturation';
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(0, 0, mw, mh);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(9,9,13,0.25)';
+    ctx.fillRect(0, 0, mw, mh);
   }
 
   const line = (pts, color, width) => {
@@ -115,6 +126,42 @@ function drawBigDistance(ctx, run) {
   setTracking(ctx, 0);
 }
 
+// Ritmo de cada km (barras): quanto mais alta, mais rápido; o km mais rápido
+// vai em laranja cheio. Ocupa o espaço entre os quadros e o rodapé.
+function drawSplits(ctx, splits, y) {
+  const secs = splits.filter(v => Number.isFinite(v) && v > 0);
+  if (secs.length < 2) return;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = MUTED;
+  ctx.font = `800 22px ${FONT}`;
+  setTracking(ctx, 4);
+  ctx.fillText(t('RITMO POR KM'), PAD_X, y);
+  setTracking(ctx, 0);
+
+  const top = y + 24;
+  const bottom = top + 96;
+  const fastest = Math.min(...secs);
+  const slowest = Math.max(...secs);
+  const gap = secs.length > 24 ? 3 : 8;
+  const bw = (CONTENT_W - gap * (secs.length - 1)) / secs.length;
+  const labels = secs.length <= 16;
+  secs.forEach((v, i) => {
+    // 40% a 100% da altura, para o mais lento ainda aparecer.
+    const k = slowest === fastest ? 1 : 1 - (v - fastest) / (slowest - fastest) * 0.6;
+    const h = 96 * k;
+    const x = PAD_X + i * (bw + gap);
+    ctx.fillStyle = v === fastest ? ORANGE : 'rgba(251,146,60,0.38)';
+    roundedRectPath(ctx, x, bottom - h, bw, h, Math.min(8, bw / 2));
+    ctx.fill();
+    if (labels) {
+      ctx.textAlign = 'center';
+      ctx.fillStyle = MUTED;
+      ctx.font = `700 20px ${FONT}`;
+      ctx.fillText(String(i + 1), x + bw / 2, bottom + 26);
+    }
+  });
+}
+
 export async function renderRunCard(run, refCode = myRefCode()) {
   const canvas = document.createElement('canvas');
   canvas.width = CARD_WIDTH;
@@ -172,6 +219,8 @@ export async function renderRunCard(run, refCode = myRefCode()) {
     [formatClock(run.duration_s), t('tempo')],
   ];
   stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 200, value, label));
+
+  if (Array.isArray(run.splits)) drawSplits(ctx, run.splits, boxY + 200 + 48);
 
   await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
