@@ -9,6 +9,7 @@ import { initials, planStatus, weeklyCounts } from '../lib/trainerRoster';
 import LineChart from '../components/LineChart';
 import Skeleton from '../components/Skeleton';
 import { renewPlan, friendlyPlanError } from '../lib/trainerPlan';
+import { buildReportModel, renderReportPdf, shareOrDownloadPdf, reportFileName } from '../lib/trainerReport';
 import PlanBuilder from './PlanBuilder';
 import ChatThread from '../components/ChatThread';
 import { fetchTrainerThread, markThreadRead, sendMessage, friendlyMessageError } from '../lib/trainerMessages';
@@ -67,6 +68,7 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
   const [building, setBuilding] = useState(false);
   const [version, setVersion] = useState(0);
   const [renewing, setRenewing] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const [tab, setTab] = useState(TABS.some(x => x.key === initialTab) ? initialTab : 'resumo');
   const today = todayDate();
 
@@ -105,6 +107,21 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
       toast(`❌ ${friendlyPlanError(err)}`);
     } finally {
       setRenewing(false);
+    }
+  }
+
+  async function handleReport() {
+    setReporting(true);
+    try {
+      const model = buildReportModel({ client, detail, summary, weeks, today, goal });
+      const blob = await renderReportPdf(model);
+      const result = await shareOrDownloadPdf(blob, reportFileName(model.name, today), t('Relatório de {name}', { name: model.name }));
+      if (result === 'downloaded') toast(t('📄 Relatório baixado'));
+    } catch (err) {
+      console.error('relatório:', err);
+      toast(t('❌ Não foi possível gerar o relatório'));
+    } finally {
+      setReporting(false);
     }
   }
 
@@ -158,6 +175,9 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
           <button type="button" className="btn btn--primary btn--sm" disabled={!detail} onClick={() => setBuilding(true)}>{t('📋 Treino')}</button>
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setTab('conversa')}>{t('💬 Recado')}</button>
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setTab('plano')}>{t('📅 Aula')}</button>
+          <button type="button" className="btn btn--outline btn--sm" disabled={!summary || reporting} onClick={handleReport}>
+            {reporting ? t('Gerando…') : t('📄 Relatório')}
+          </button>
         </div>
       </div>
 

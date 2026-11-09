@@ -36,6 +36,11 @@ vi.mock('../lib/trainer', async (importActual) => ({
   fetchClientDetail: (...a) => h.api.fetchClientDetail(...a),
   removeClient: (...a) => h.api.removeClient(...a),
 }));
+vi.mock('../lib/trainerReport', async (importActual) => ({
+  ...(await importActual()),
+  renderReportPdf: (...a) => h.api.renderReportPdf(...a),
+  shareOrDownloadPdf: (...a) => h.api.shareOrDownloadPdf(...a),
+}));
 vi.mock('../lib/trainerPlan', async (importActual) => ({
   ...(await importActual()),
   renewPlan: (...a) => h.api.renewPlan(...a),
@@ -71,6 +76,8 @@ beforeEach(() => {
     markThreadRead: vi.fn().mockResolvedValue(undefined),
     sendMessage: vi.fn().mockResolvedValue(1),
     renewPlan: vi.fn().mockResolvedValue({ name: 'Hipertrofia', weeks: 8 }),
+    renderReportPdf: vi.fn().mockResolvedValue(new Blob(['%PDF-x'], { type: 'application/pdf' })),
+    shareOrDownloadPdf: vi.fn().mockResolvedValue('downloaded'),
   };
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -197,6 +204,40 @@ describe('ClientDetail', () => {
     await screen.findByText('Frequência');
     expect(screen.queryByText(/Lesões:/)).toBeNull();
     expect(screen.queryByText(/Emergência:/)).toBeNull();
+  });
+
+  it('relatório: o botão só habilita com a ficha carregada, gera o PDF e baixa', async () => {
+    setup();
+    expect(screen.getByRole('button', { name: '📄 Relatório' }).disabled).toBe(true);
+    await screen.findByText('Frequência');
+    fireEvent.click(screen.getByRole('button', { name: '📄 Relatório' }));
+    await waitFor(() => expect(h.api.renderReportPdf).toHaveBeenCalledTimes(1));
+    const model = h.api.renderReportPdf.mock.calls[0][0];
+    expect(model.name).toBe('Ana');
+    expect(model.plan).toEqual({ name: 'Hipertrofia', days: 5 });
+    expect(model.kpis[0].value).toBe('5'); // treinos nos últimos 7 dias (01 a 07/10)
+    expect(JSON.stringify(model)).not.toContain('ana@x.com');
+    await waitFor(() => expect(h.api.shareOrDownloadPdf).toHaveBeenCalledWith(expect.any(Blob), 'relatorio-ana-2026-10-07.pdf', expect.stringContaining('Ana')));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('📄 Relatório baixado'));
+  });
+
+  it('relatório: compartilhar no celular não mostra aviso de download', async () => {
+    h.api.shareOrDownloadPdf.mockResolvedValue('shared');
+    setup();
+    await screen.findByText('Frequência');
+    fireEvent.click(screen.getByRole('button', { name: '📄 Relatório' }));
+    await waitFor(() => expect(h.api.shareOrDownloadPdf).toHaveBeenCalled());
+    expect(h.toast).not.toHaveBeenCalled();
+  });
+
+  it('relatório: erro ao gerar avisa e libera o botão de novo', async () => {
+    h.api.renderReportPdf.mockRejectedValue(new Error('boom'));
+    setup();
+    await screen.findByText('Frequência');
+    fireEvent.click(screen.getByRole('button', { name: '📄 Relatório' }));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível gerar o relatório'));
+    await waitFor(() => expect(screen.getByRole('button', { name: '📄 Relatório' }).disabled).toBe(false));
+    expect(h.api.shareOrDownloadPdf).not.toHaveBeenCalled();
   });
 
   it('plano atual: com plano oferece editar e mostra o prazo; sem plano oferece montar', async () => {
