@@ -28,5 +28,38 @@ export function addAltitude(elev, altitude, altitudeAccuracy) {
   return { ...cur, smooth };
 }
 
+// Foto da subida e descida acumuladas (m) neste momento; null sem altitude.
+export const elevMark = elev => (elev && elev.smooth != null ? { g: elev.gain, l: elev.loss } : null);
+
+// Subida e descida de cada km, a partir das fotos tiradas ao completar cada um
+// (cumulativas): [[subida, descida], ...] em metros inteiros. Foto vazia (sem
+// altitude naquele km) vale 0. null se nenhum km teve altitude.
+export function kmElevOf(marks, count) {
+  const list = Array.isArray(marks) ? marks : [];
+  if (!list.slice(0, count).some(Boolean)) return null;
+  const out = [];
+  let prev = { g: 0, l: 0 };
+  for (let i = 0; i < count; i++) {
+    const cur = list[i];
+    if (!cur) { out.push([0, 0]); continue; }
+    out.push([Math.max(0, Math.round(cur.g) - Math.round(prev.g)), Math.max(0, Math.round(cur.l) - Math.round(prev.l))]);
+    prev = cur;
+  }
+  return out;
+}
+
+// Lista vinda do aparelho ou do banco: só pares [subida, descida] válidos, até 600 km.
+export function cleanKmElev(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const pair of list.slice(0, 600)) {
+    const g = Math.round(Number(pair?.[0]));
+    const l = Math.round(Number(pair?.[1]));
+    if (!(g >= 0 && g <= 9999 && l >= 0 && l <= 9999)) return [];
+    out.push([g, l]);
+  }
+  return out;
+}
+
 // Subida (m) para salvar; null se o GPS nunca deu altitude.
 export const elevationGain = elev => (elev && elev.smooth != null ? Math.min(20000, Math.round(elev.gain)) : null);

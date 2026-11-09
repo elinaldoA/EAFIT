@@ -506,3 +506,8 @@
 
 /* Fantasma (correr de novo contra uma corrida anterior) */
 .run-live__ghost-result { margin: var(--sp-2) 0; text-align: center; font-weight: 700; }
+
+/* Colunas largas do ritmo por km: resultado dos tiros e subida/descida por km */
+.run-splits--wide .run-splits__row { grid-template-columns: 2ch 1fr auto; }
+.run-splits--elev .run-splits__row { grid-template-columns: 2ch 1fr 4.5ch auto; }
+.run-splits__elev { min-width: 9ch; text-align: right; color: var(--text-muted); font-size: 12px; white-space: nowrap; }

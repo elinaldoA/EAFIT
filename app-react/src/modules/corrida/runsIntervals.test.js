@@ -72,4 +72,45 @@ describe('tiros do intervalado no banco', () => {
     h.results = [{ data: null, error: { message: 'boom' } }];
     await expect(fetchRuns('u1')).rejects.toBeTruthy();
   });
+
+  it('subida por km: manda e lê a coluna km_elev quando há dado', async () => {
+    const kmElev = [[10, 2], [4, 6]];
+    h.results = [{ data: { ...run(), km_elev: kmElev }, error: null }];
+    const { run: saved } = await saveRun('u1', run({ km_elev: kmElev }));
+    expect(h.calls.find(c => c[0] === 'upsert')[1]).toMatchObject({ km_elev: kmElev });
+    expect(selects()[0]).toContain('km_elev');
+    expect(saved.km_elev).toEqual(kmElev);
+  });
+
+  it('só a coluna que falta sai: sem km_elev, os tiros continuam sendo salvos', async () => {
+    const missingKmElev = { message: 'column runs.km_elev does not exist', code: '42703' };
+    h.results = [{ data: null, error: missingKmElev }, { data: { ...run(), intervals: reps }, error: null }];
+    const { run: saved, pending } = await saveRun('u1', run({ intervals: reps, km_elev: [[1, 1]] }));
+    expect(pending).toBe(false);
+    const upserts = h.calls.filter(c => c[0] === 'upsert');
+    expect(upserts).toHaveLength(2);
+    expect(upserts[1][1]).toHaveProperty('intervals');
+    expect(upserts[1][1]).not.toHaveProperty('km_elev');
+    expect(saved.intervals).toEqual(reps);
+  });
+
+  it('lista: sem km_elev na tabela lê de novo sem ela e mantém intervals', async () => {
+    h.results = [{ data: null, error: { message: 'column runs.km_elev does not exist' } }, { data: [{ ...run(), intervals: reps }], error: null }];
+    const list = await fetchRuns('u1');
+    expect(list[0].intervals).toEqual(reps);
+    expect(list[0].km_elev).toEqual([]);
+    expect(selects()[1]).toContain('intervals');
+    expect(selects()[1]).not.toContain('km_elev');
+  });
+
+  it('lista: sem as duas colunas lê só as antigas', async () => {
+    h.results = [
+      { data: null, error: { message: 'column runs.km_elev does not exist' } },
+      { data: null, error: { message: 'column runs.intervals does not exist' } },
+      { data: [run()], error: null },
+    ];
+    expect(await fetchRuns('u1')).toHaveLength(1);
+    expect(selects()).toHaveLength(3);
+    expect(selects()[2]).not.toMatch(/intervals|km_elev/);
+  });
 });

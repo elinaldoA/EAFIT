@@ -16,7 +16,7 @@ import {
   markRunSeen, interruptedSince, SEEN_EVERY_MS, addElevation, addSteps,
 } from './liveRun';
 import { emptyMotion, motionStep } from './autoPause';
-import { elevationGain } from './elevation';
+import { elevationGain, kmElevOf } from './elevation';
 import { averageCadence } from './cadence';
 import { useStepCounter } from './useStepCounter';
 import { useGuidedWorkout } from './useGuidedWorkout';
@@ -492,7 +492,7 @@ function FinishRun({ run, now, onBack, onDone }) {
         </div>
       )}
 
-      {!edited && <SplitBars splits={splitsOf(run.kmMarks)} />}
+      {!edited && <SplitBars splits={splitsOf(run.kmMarks)} elev={run.gps ? kmElevOf(run.kmElev, run.kmMarks.length) : null} />}
 
       <ShoePicker shoes={shoes} value={shoeId} onChange={id => { shoeTouched.current = true; setShoeId(id); }} />
 

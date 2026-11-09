@@ -15,7 +15,7 @@ export default function IntervalResults({ reps }) {
   const width = pace => (pace === null ? 0 : slowest === fastest ? 100 : Math.round(35 + 65 * ((slowest - pace) / (slowest - fastest))));
   return (
     <div className="run-intervals">
-      <ol className="run-splits" aria-label={t('Tempo de cada tiro')}>
+      <ol className="run-splits run-splits--wide" aria-label={t('Tempo de cada tiro')}>
         {list.map(r => {
           const pace = repPace(r);
           const best = summary && summary.count > 1 && r.rep === summary.bestRep;

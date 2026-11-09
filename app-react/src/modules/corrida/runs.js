@@ -3,6 +3,7 @@ import { parseLocalDate, toDateStr } from '../../lib/utils';
 import { mondayOf } from './program';
 import { cleanRoute, applyZones } from './route';
 import { cleanReps } from './intervals';
+import { cleanKmElev } from './elevation';
 
 import { t, lang } from '../../lib/i18n';
 // Corridas do EAFIT Run (tabela public.runs): salvar, listar, apagar e as
@@ -15,9 +16,12 @@ export const RUN_SAVED_EVENT = 'eafit:run-saved';
 
 const PENDING_KEY = 'eafit_runs_pending';
 const COLUMNS = 'id, client_id, run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id';
-// intervals vem de uma migration mais nova: sem ela, a coluna falta e o app segue sem os tiros.
-const COLUMNS_WITH_INTERVALS = `${COLUMNS}, intervals`;
-const missingIntervals = error => !!error && /intervals/i.test(`${error.message || ''} ${error.details || ''}`);
+// Colunas de migrations mais novas (tiros do intervalado, subida por km): sem
+// a migration a coluna falta e o app segue sem esse dado, só aquela coluna sai.
+const OPTIONAL_COLUMNS = ['intervals', 'km_elev'];
+const columnsWith = extras => [COLUMNS, ...extras].join(', ');
+const hasValue = v => Array.isArray(v) && v.length > 0;
+const missingColumn = (error, columns) => (error ? columns.find(c => new RegExp(c, 'i').test(`${error.message || ''} ${error.details || ''}`)) : undefined);
 
 // Ritmo só vale a partir de 1 km (abaixo disso o número engana).
 const MIN_PACE_M = 1000;
@@ -186,6 +190,7 @@ function normalizeRow(r) {
     cadence: r.cadence == null ? null : Number(r.cadence),
     shoe_id: r.shoe_id || null,
     intervals: cleanReps(r.intervals),
+    km_elev: cleanKmElev(r.km_elev),
   };
 }
 
@@ -211,16 +216,17 @@ function setPending(userId, list) {
   writePending(all);
 }
 
-async function insertRun(userId, run) {
-  // Só manda a coluna nova quando há tiros: corrida comum não depende da migration.
-  const { intervals, ...rest } = run;
-  const hasIntervals = Array.isArray(intervals) && intervals.length > 0;
+async function insertRun(userId, run, extras = OPTIONAL_COLUMNS.filter(c => hasValue(run[c]))) {
+  // Só manda as colunas novas quando há dado: corrida comum não depende das migrations.
+  const rest = Object.fromEntries(Object.entries(run).filter(([key]) => !OPTIONAL_COLUMNS.includes(key)));
+  const optional = Object.fromEntries(extras.map(c => [c, run[c]]));
   const { data, error } = await db
     .from('runs')
-    .upsert({ ...rest, ...(hasIntervals ? { intervals } : {}), user_id: userId }, { onConflict: 'user_id,client_id' })
-    .select(hasIntervals ? COLUMNS_WITH_INTERVALS : COLUMNS)
+    .upsert({ ...rest, ...optional, user_id: userId }, { onConflict: 'user_id,client_id' })
+    .select(columnsWith(extras))
     .single();
-  if (hasIntervals && missingIntervals(error)) return insertRun(userId, { ...rest, intervals: null });
+  const missing = missingColumn(error, extras);
+  if (missing) return insertRun(userId, { ...run, [missing]: null }, extras.filter(c => c !== missing));
   // Tênis apagado enquanto a corrida esperava internet: sobe sem o tênis.
   if (error?.code === '23503' && run.shoe_id) return insertRun(userId, { ...run, shoe_id: null });
   if (error) throw error;
@@ -259,8 +265,12 @@ export async function fetchRuns(userId) {
     .eq('user_id', userId)
     .order('run_date', { ascending: false })
     .order('started_at', { ascending: false });
-  let { data, error } = await query(COLUMNS_WITH_INTERVALS);
-  if (missingIntervals(error)) ({ data, error } = await query(COLUMNS));
+  let columns = OPTIONAL_COLUMNS;
+  let { data, error } = await query(columnsWith(columns));
+  for (let missing = missingColumn(error, columns); missing; missing = missingColumn(error, columns)) {
+    columns = columns.filter(c => c !== missing);
+    ({ data, error } = await query(columnsWith(columns)));
+  }
   if (error) throw error;
   const rows = (data || []).map(normalizeRow);
   const ids = new Set(rows.map(r => r.client_id));

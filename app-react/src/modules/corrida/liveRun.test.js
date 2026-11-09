@@ -171,3 +171,31 @@ describe('subida, cadência e tênis no registro', () => {
     expect(addElevation(s, 100, 5)).toBe(s);
   });
 });
+
+describe('subida por km na corrida ao vivo', () => {
+  it('tira uma foto da subida a cada km completo e salva a diferença de cada um', () => {
+    let s = startRun({ gps: true }, T0);
+    s = { ...s, elev: { smooth: 100, ref: 100, gain: 12, loss: 2 } };
+    s = setDistance(s, 1100, T0 + 300_000);
+    s = { ...s, elev: { smooth: 110, ref: 110, gain: 20, loss: 2 } };
+    s = setDistance(s, 2100, T0 + 600_000);
+    expect(s.kmElev).toEqual([{ g: 12, l: 2 }, { g: 20, l: 2 }]);
+    expect(finishRun(s, { now: T0 + 650_000 }).km_elev).toEqual([[12, 2], [8, 0]]);
+  });
+
+  it('sem altitude ou sem GPS ou com distância corrigida: km_elev é null', () => {
+    let s = setDistance(startRun({ gps: true }, T0), 2100, T0 + 600_000);
+    expect(finishRun(s, { now: T0 + 650_000 }).km_elev).toBeNull();
+    s = { ...setDistance(startRun({ gps: false }, T0), 2100, T0 + 600_000), elev: { smooth: 1, ref: 1, gain: 9, loss: 0 } };
+    expect(finishRun(s, { now: T0 + 650_000 }).km_elev).toBeNull();
+    const withElev = { ...startRun({ gps: true }, T0), elev: { smooth: 1, ref: 1, gain: 9, loss: 0 } };
+    s = setDistance(withElev, 2100, T0 + 600_000);
+    expect(finishRun(s, { now: T0 + 650_000, meters: 1500 }).km_elev).toBeNull();
+  });
+
+  it('corrida guardada antes da mudança (sem kmElev) segue funcionando', () => {
+    const old = { ...startRun({ gps: true }, T0), kmMarks: [300_000], meters: 1100 };
+    const s = setDistance(old, 2100, T0 + 600_000);
+    expect(s.kmElev).toHaveLength(2);
+  });
+});

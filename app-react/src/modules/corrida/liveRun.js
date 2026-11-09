@@ -1,5 +1,5 @@
 import { addPoint, privateRoute } from './route';
-import { addAltitude, elevationGain } from './elevation';
+import { addAltitude, elevationGain, elevMark, kmElevOf } from './elevation';
 import { averageCadence } from './cadence';
 import { cleanReps } from './intervals';
 
@@ -81,12 +81,16 @@ export function setDistance(s, meters, now = Date.now()) {
   const el = elapsedMs(s, now);
   const prev = s.sample || { meters: s.meters, elapsedMs: el };
   const kmMarks = [...s.kmMarks];
+  // Foto da subida e descida a cada km completo (elevation.js), alinhada com kmMarks.
+  const kmElev = [...(s.kmElev || [])];
+  while (kmElev.length < kmMarks.length) kmElev.push(null);
   for (let k = kmMarks.length + 1; k * 1000 <= meters; k++) {
+    kmElev.push(elevMark(s.elev));
     const span = meters - prev.meters;
     const frac = span > 0 ? (k * 1000 - prev.meters) / span : 1;
     kmMarks.push(Math.round(prev.elapsedMs + Math.max(0, Math.min(1, frac)) * (el - prev.elapsedMs)));
   }
-  return { ...s, meters, kmMarks, sample: { meters, elapsedMs: el }, updatedAt: now };
+  return { ...s, meters, kmMarks, kmElev, sample: { meters, elapsedMs: el }, updatedAt: now };
 }
 
 // Ponto do GPS (graus) para o desenho do percurso. `jump`: o GPS saltou
@@ -143,6 +147,7 @@ export function finishRun(s, { now = Date.now(), meters, effort = null, notes = 
     title: String(title || '').trim().slice(0, 80) || null,
     visibility: visibility === 'privado' ? 'privado' : 'amigos',
     elev_gain_m: s.gps ? elevationGain(s.elev) : null,
+    km_elev: s.gps && !manual ? kmElevOf(s.kmElev, s.kmMarks.length) : null,
     cadence: averageCadence(s.steps, s.stepMs),
     shoe_id: shoeId || null,
     intervals: cleanReps(s.reps).length ? cleanReps(s.reps) : null,

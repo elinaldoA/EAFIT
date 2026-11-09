@@ -470,6 +470,7 @@ export default {
   '📉 Ritmo médio de {v1}/km, {v2} s mais lento que nas 4 semanas anteriores.': '📉 Average pace of {v1}/km, {v2} s slower than in the previous 4 weeks.',
   'Conquistas': 'Achievements',
   'Conquistada': 'Unlocked',
+  'Subida {v1} m, descida {v2} m': 'Climb {v1} m, descent {v2} m',
   'corrida anterior': 'previous run',
   'no mesmo ponto': 'at the same spot',
   '{v1} à frente': '{v1} ahead',

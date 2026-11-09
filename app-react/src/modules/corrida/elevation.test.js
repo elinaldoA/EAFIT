@@ -41,3 +41,40 @@ describe('elevação', () => {
     expect(e.smooth).toBe(100);
   });
 });
+
+describe('subida por km', () => {
+  it('foto vazia sem altitude e cumulativa com altitude', async () => {
+    const { elevMark } = await import('./elevation');
+    expect(elevMark(null)).toBeNull();
+    expect(elevMark({ smooth: null, ref: null, gain: 0, loss: 0 })).toBeNull();
+    expect(elevMark({ smooth: 100, ref: 100, gain: 12.4, loss: 3 })).toEqual({ g: 12.4, l: 3 });
+  });
+
+  it('diferença entre as fotos de cada km', async () => {
+    const { kmElevOf } = await import('./elevation');
+    const marks = [{ g: 10, l: 0 }, { g: 10, l: 6 }, { g: 25, l: 6 }];
+    expect(kmElevOf(marks, 3)).toEqual([[10, 0], [0, 6], [15, 0]]);
+  });
+
+  it('km sem altitude vale 0 e não atrapalha o seguinte; tudo sem altitude é null', async () => {
+    const { kmElevOf } = await import('./elevation');
+    expect(kmElevOf([{ g: 8, l: 0 }, null, { g: 20, l: 4 }], 3)).toEqual([[8, 0], [0, 0], [12, 4]]);
+    expect(kmElevOf([null, null], 2)).toBeNull();
+    expect(kmElevOf(undefined, 2)).toBeNull();
+    expect(kmElevOf([], 0)).toBeNull();
+  });
+
+  it('só conta os km completos', async () => {
+    const { kmElevOf } = await import('./elevation');
+    expect(kmElevOf([{ g: 5, l: 0 }, { g: 9, l: 0 }], 1)).toEqual([[5, 0]]);
+  });
+
+  it('lista do banco: só pares válidos; qualquer lixo descarta tudo', async () => {
+    const { cleanKmElev } = await import('./elevation');
+    expect(cleanKmElev(null)).toEqual([]);
+    expect(cleanKmElev([[10, 2], [0, 7.4]])).toEqual([[10, 2], [0, 7]]);
+    expect(cleanKmElev([[10, 2], ['x', 1]])).toEqual([]);
+    expect(cleanKmElev([[-1, 2]])).toEqual([]);
+    expect(cleanKmElev(Array.from({ length: 700 }, () => [1, 1]))).toHaveLength(600);
+  });
+});

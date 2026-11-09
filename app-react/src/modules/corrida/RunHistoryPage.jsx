@@ -86,7 +86,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
               {shoe && <span>👟 {shoe.name}</span>}
             </div>
           )}
-          {run.splits.length > 0 ? <SplitBars splits={run.splits} />
+          {run.splits.length > 0 ? <SplitBars splits={run.splits} elev={run.km_elev} />
             : <p className="profile-field__hint">{t('Sem tempo por km (distância digitada).')}</p>}
           {run.intervals?.length > 0 && (
             <>
