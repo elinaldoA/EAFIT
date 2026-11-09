@@ -132,6 +132,10 @@ button.kpi:hover { border-color: var(--border-2); }
   background: var(--surface-2); color: inherit; font: inherit; text-align: left; cursor: pointer;
 }
 .action-row:hover { border-color: var(--border-2); }
+.quick-replies { display: flex; flex-wrap: wrap; gap: var(--sp-1); align-items: center; }
+.quick-reply { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-2); }
+.quick-reply__use, .quick-reply__del { border: 0; background: transparent; color: inherit; font: inherit; font-size: var(--fs-sm); padding: 6px 10px; cursor: pointer; }
+.quick-reply__del { color: var(--error); padding-left: 4px; border-left: 1px solid var(--border); }
 .action-item { display: flex; flex-direction: column; gap: var(--sp-1); }
 .action-item__msg { align-self: flex-end; }
 .action-item { position: relative; }
