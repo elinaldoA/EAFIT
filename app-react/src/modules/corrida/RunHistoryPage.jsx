@@ -217,7 +217,7 @@ export default function RunHistoryPage() {
         <p className="profile-field__hint">{t('Melhor tempo em cada distância, medido pelo GPS dentro de qualquer corrida.')}</p>
       </div>
 
-      <RunInsights runs={runs} />
+      <RunInsights runs={runs} meta={user.user_metadata} />
 
       <div className="section-group">
         <div className="section-group__label">{t('Quilômetros por semana')}</div>

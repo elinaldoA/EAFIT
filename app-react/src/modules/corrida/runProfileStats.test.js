@@ -61,3 +61,15 @@ describe('resumo do programa', () => {
     expect(programSummary({ runGoal: '5k', runNivel: 'intermediario', runStart: '2026-08-03' }, TODAY)).toMatch(/concluído/);
   });
 });
+
+describe('metas de mês e ano', () => {
+  it('mesmas regras da semanal, com limites próprios', async () => {
+    const { parseKmGoal, kmGoals } = await import('./runProfileStats');
+    expect(parseKmGoal('', 1500)).toEqual({ km: null });
+    expect(parseKmGoal('80,5', 1500)).toEqual({ km: 80.5 });
+    expect(parseKmGoal('1501', 1500)).toEqual({ error: true });
+    expect(parseKmGoal('0', 1500)).toEqual({ error: true });
+    expect(kmGoals({ runWeeklyKm: 20, runMonthlyKm: '90', runYearlyKm: 'x' })).toEqual({ week: 20, month: 90, year: null });
+    expect(kmGoals(undefined)).toEqual({ week: null, month: null, year: null });
+  });
+});

@@ -88,6 +88,47 @@ export function weekEffort(runs, today) {
   return Math.round((rated.reduce((s, r) => s + r.effort, 0) / rated.length) * 10) / 10;
 }
 
+// ---- Metas de km -----------------------------------------------------------
+
+const pad = n => String(n).padStart(2, '0');
+
+// Último dia (YYYY-MM-DD) do mês de `today`.
+function monthEnd(today) {
+  const [y, m] = today.split('-').map(Number);
+  return `${y}-${pad(m)}-${pad(new Date(y, m, 0).getDate())}`;
+}
+
+const daysBetween = (from, to) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000);
+
+// Progresso de cada meta definida: [{ key, goalKm, doneM, pct, leftKm, perWeekKm }].
+// perWeekKm = quanto correr por semana, de hoje até o fim do período, para
+// fechar a meta (null na semana, que já é por semana, e quando a meta foi batida).
+export function goalProgress(runs, today, goals) {
+  const periods = {
+    week: [mondayOf(today), addDays(mondayOf(today), 6)],
+    month: [`${today.slice(0, 7)}-01`, monthEnd(today)],
+    year: [`${today.slice(0, 4)}-01-01`, `${today.slice(0, 4)}-12-31`],
+  };
+  const out = [];
+  for (const key of ['week', 'month', 'year']) {
+    const goalKm = goals?.[key];
+    if (!goalKm) continue;
+    const [from, to] = periods[key];
+    const doneM = sumBetween(runs, from, today);
+    const leftKm = Math.max(0, goalKm - doneM / 1000);
+    const weeksLeft = (daysBetween(today, to) + 1) / 7;
+    out.push({
+      key,
+      goalKm,
+      doneM,
+      pct: Math.min(100, Math.floor((doneM / 1000 / goalKm) * 100)),
+      leftKm,
+      perWeekKm: key === 'week' || leftKm === 0 ? null : leftKm / Math.max(1, weeksLeft),
+    });
+  }
+  return out;
+}
+
 // ---- Previsão de prova -----------------------------------------------------
 
 export const RACES = [

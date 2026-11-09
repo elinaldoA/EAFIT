@@ -105,3 +105,28 @@ describe('conquistas novas', () => {
     expect(newAchievements(before, [...before, run('2026-11-04', 3000)])).toEqual([]);
   });
 });
+
+describe('metas de km', () => {
+  it('só mostra as metas definidas e calcula o progresso', async () => {
+    const { goalProgress } = await import('./runReadings');
+    const runs = [run('2026-11-02', 10000), run('2026-11-05', 5000), run('2026-10-20', 20000)];
+    expect(goalProgress(runs, TODAY, {})).toEqual([]);
+    const [week, month] = goalProgress(runs, TODAY, { week: 30, month: 60 });
+    expect(week).toMatchObject({ key: 'week', doneM: 15000, pct: 50, leftKm: 15, perWeekKm: null });
+    // Mês: 15 km feitos de 60; de 6 a 30/11 sobram 25 dias (~3,57 semanas).
+    expect(month).toMatchObject({ key: 'month', doneM: 15000, pct: 25, leftKm: 45 });
+    expect(month.perWeekKm).toBeCloseTo(45 / (25 / 7), 5);
+  });
+
+  it('meta batida zera o que falta e limita em 100%', async () => {
+    const { goalProgress } = await import('./runReadings');
+    const [year] = goalProgress([run('2026-03-01', 120000)], TODAY, { year: 100 });
+    expect(year).toMatchObject({ key: 'year', pct: 100, leftKm: 0, perWeekKm: null });
+  });
+
+  it('no último dia do período a conta não explode', async () => {
+    const { goalProgress } = await import('./runReadings');
+    const [month] = goalProgress([], '2026-11-30', { month: 10 });
+    expect(month.perWeekKm).toBe(10);
+  });
+});

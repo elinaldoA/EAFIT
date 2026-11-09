@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { todayDate } from '../../data/treinoData';
 import { goTo } from '../../lib/appNav';
-import { parseWeeklyKm, weeklyKmGoal, programSummary } from './runProfileStats';
+import { parseWeeklyKm, parseKmGoal, kmGoals, MAX_MONTHLY_KM, MAX_YEARLY_KM, programSummary } from './runProfileStats';
 import { VOICE_KEY, AUTOPAUSE_KEY, GPS_KEY, readPref, writePref } from './runPrefs';
 import { t } from '../../lib/i18n';
 
@@ -10,14 +10,21 @@ import { t } from '../../lib/i18n';
 
 // Meta de km por semana (aparece no topo do Perfil como "12,3/20").
 export function RunGoalSection({ meta, updateProfile, toast }) {
-  const [value, setValue] = useState(() => (weeklyKmGoal(meta) ?? ''));
+  const goals = kmGoals(meta);
+  const [value, setValue] = useState(() => goals.week ?? '');
+  const [month, setMonth] = useState(() => goals.month ?? '');
+  const [year, setYear] = useState(() => goals.year ?? '');
 
   async function handleSave() {
     const parsed = parseWeeklyKm(value);
     if (parsed.error) return toast(t('⚠️ Escolha uma meta de 1 a 300 km por semana, ou deixe em branco.'));
-    const { error } = await updateProfile({ runWeeklyKm: parsed.km });
+    const monthly = parseKmGoal(month, MAX_MONTHLY_KM);
+    if (monthly.error) return toast(t('⚠️ Escolha uma meta de 1 a 1500 km por mês, ou deixe em branco.'));
+    const yearly = parseKmGoal(year, MAX_YEARLY_KM);
+    if (yearly.error) return toast(t('⚠️ Escolha uma meta de 1 a 20000 km por ano, ou deixe em branco.'));
+    const { error } = await updateProfile({ runWeeklyKm: parsed.km, runMonthlyKm: monthly.km, runYearlyKm: yearly.km });
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
-    toast(parsed.km ? t('📅 Meta semanal salva!') : t('Meta semanal removida'));
+    toast(parsed.km || monthly.km || yearly.km ? t('📅 Metas salvas!') : t('Metas removidas'));
   }
 
   return (
@@ -31,7 +38,22 @@ export function RunGoalSection({ meta, updateProfile, toast }) {
         />
         <p className="profile-field__hint" id="runWeeklyKmHint">{t('Deixe em branco para correr sem meta. O progresso aparece no topo do Perfil.')}</p>
       </div>
-      <button type="button" className="btn btn--primary btn--full" onClick={handleSave}>{t('Salvar meta semanal')}</button>
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="runMonthlyKm">{t('Quilômetros por mês')}</label>
+        <input
+          type="number" id="runMonthlyKm" className="input input--sm" placeholder="80"
+          min="1" max={MAX_MONTHLY_KM} step="0.5" value={month} onChange={e => setMonth(e.target.value)}
+        />
+      </div>
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="runYearlyKm">{t('Quilômetros por ano')}</label>
+        <input
+          type="number" id="runYearlyKm" className="input input--sm" placeholder="1000"
+          min="1" max={MAX_YEARLY_KM} step="1" value={year} onChange={e => setYear(e.target.value)}
+        />
+        <p className="profile-field__hint">{t('O progresso das metas de mês e ano aparece na aba Você.')}</p>
+      </div>
+      <button type="button" className="btn btn--primary btn--full" onClick={handleSave}>{t('Salvar metas')}</button>
     </>
   );
 }

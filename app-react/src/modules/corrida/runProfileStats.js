@@ -17,6 +17,27 @@ export function parseWeeklyKm(value) {
   return { km: Math.round(km * 10) / 10 };
 }
 
+// Metas de km do mês e do ano, mesmo formato da semanal (vazio = sem meta).
+export const MAX_MONTHLY_KM = 1500;
+export const MAX_YEARLY_KM = 20000;
+
+export function parseKmGoal(value, max) {
+  const text = String(value ?? '').trim();
+  if (!text) return { km: null };
+  const km = Number(text.replace(',', '.'));
+  if (!Number.isFinite(km) || km < 1 || km > max) return { error: true };
+  return { km: Math.round(km * 10) / 10 };
+}
+
+// As três metas guardadas na conta: { week, month, year } (número ou null).
+export function kmGoals(meta) {
+  return {
+    week: parseKmGoal(meta?.runWeeklyKm, MAX_WEEKLY_KM).km ?? null,
+    month: parseKmGoal(meta?.runMonthlyKm, MAX_MONTHLY_KM).km ?? null,
+    year: parseKmGoal(meta?.runYearlyKm, MAX_YEARLY_KM).km ?? null,
+  };
+}
+
 // A meta guardada na conta (número ou null).
 export function weeklyKmGoal(meta) {
   const { km } = parseWeeklyKm(meta?.runWeeklyKm);

@@ -496,3 +496,10 @@
 .run-badge--on .run-badge__state { color: var(--primary); font-weight: 600; }
 .run-badge__bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: rgba(128,128,128,.25); margin-top: 6px; overflow: hidden; }
 .run-badge__bar > span { display: block; height: 100%; background: var(--primary); }
+
+/* Metas de km (semana, mês, ano) */
+.run-goals { gap: var(--sp-3); }
+.run-goal__head { display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
+.run-goal__head span { color: var(--text-muted); font-size: 13px; }
+.run-goal__bar { height: 8px; border-radius: 4px; background: rgba(128,128,128,.25); overflow: hidden; margin: 6px 0 2px; }
+.run-goal__bar > span { display: block; height: 100%; background: var(--primary); }

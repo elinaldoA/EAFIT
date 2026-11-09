@@ -1,10 +1,43 @@
 import { todayDate } from '../../data/treinoData';
 import { formatKm, formatClock, formatPace } from './runs';
-import { achievements, weeklyLoad, weekEffort, racePredictions, paceTrend } from './runReadings';
+import { achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, goalProgress } from './runReadings';
+import { kmGoals } from './runProfileStats';
 import { t } from '../../lib/i18n';
 
 // Leituras da aba Você do EAFIT Run: carga da semana, previsão de prova,
 // tendência de ritmo e conquistas. Recebe as corridas já carregadas.
+
+const GOAL_LABEL = { week: () => t('Semana'), month: () => t('Mês'), year: () => t('Ano') };
+
+function Goals({ runs, today, meta }) {
+  const list = goalProgress(runs, today, kmGoals(meta));
+  if (!list.length) return null;
+  return (
+    <div className="section-group">
+      <div className="section-group__label">{t('Metas de km')}</div>
+      <div className="dash-card run-goals">
+        {list.map(g => (
+          <div key={g.key} className="run-goal">
+            <div className="run-goal__head">
+              <strong>{GOAL_LABEL[g.key]()}</strong>
+              <span>{formatKm(g.doneM, 1)} / {formatKm(g.goalKm * 1000, 1)} km · {g.pct}%</span>
+            </div>
+            <div className="run-goal__bar" role="img" aria-label={`${GOAL_LABEL[g.key]()}: ${g.pct}%`}>
+              <span style={{ width: `${g.pct}%` }} />
+            </div>
+            <p className="profile-field__hint">
+              {g.leftKm === 0
+                ? t('🎉 Meta batida!')
+                : g.perWeekKm === null
+                  ? t('Faltam {v1} km', { v1: formatKm(g.leftKm * 1000, 1) })
+                  : t('Faltam {v1} km · cerca de {v2} km por semana até o fim', { v1: formatKm(g.leftKm * 1000, 1), v2: formatKm(g.perWeekKm * 1000, 1) })}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function WeekLoad({ runs, today }) {
   const load = weeklyLoad(runs, today);
@@ -83,10 +116,11 @@ function Achievements({ runs }) {
   );
 }
 
-export default function RunInsights({ runs }) {
+export default function RunInsights({ runs, meta }) {
   const today = todayDate();
   return (
     <>
+      <Goals runs={runs} today={today} meta={meta} />
       <WeekLoad runs={runs} today={today} />
       <Predictions runs={runs} today={today} />
       <Achievements runs={runs} />
