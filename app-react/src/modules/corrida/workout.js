@@ -89,6 +89,25 @@ export function sessionWorkout(session) {
   return null;
 }
 
+// Treinos prontos para escolher em um toque (só tiros e trote; aquecimento,
+// desaquecimento e ritmo continuam os da tela).
+export const PRESETS = [
+  { id: '6x400', reps: 6, work: { unit: 'm', value: 400 }, rest: { unit: 'm', value: 200 } },
+  { id: '8x400', reps: 8, work: { unit: 'm', value: 400 }, rest: { unit: 'm', value: 200 } },
+  { id: '5x1000', reps: 5, work: { unit: 'm', value: 1000 }, rest: { unit: 'm', value: 400 } },
+  { id: '3x2000', reps: 3, work: { unit: 'm', value: 2000 }, rest: { unit: 's', value: 120 } },
+  { id: '10x1min', reps: 10, work: { unit: 's', value: 60 }, rest: { unit: 's', value: 60 } },
+  { id: '20x30s', reps: 20, work: { unit: 's', value: 30 }, rest: { unit: 's', value: 30 } },
+];
+
+// "6x 400 m", "10x 1 min": o rótulo curto do botão.
+export const presetLabel = p => `${p.reps}x ${formatAmount(p.work.unit, p.work.value)}`;
+
+// O treino da tela é este preset?
+export const isPreset = (p, w) => w.reps === p.reps
+  && w.work.unit === p.work.unit && w.work.value === p.work.value
+  && w.rest.unit === p.rest.unit && w.rest.value === p.rest.value;
+
 export const startPosition = () => ({ index: 0, startS: 0, startM: 0 });
 
 // Quanto falta na etapa atual: { done, left } (left em m ou s, conforme a etapa).

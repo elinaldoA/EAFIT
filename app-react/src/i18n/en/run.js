@@ -470,6 +470,7 @@ export default {
   '📉 Ritmo médio de {v1}/km, {v2} s mais lento que nas 4 semanas anteriores.': '📉 Average pace of {v1}/km, {v2} s slower than in the previous 4 weeks.',
   'Conquistas': 'Achievements',
   'Conquistada': 'Unlocked',
+  'Treinos prontos': 'Ready-made workouts',
   '⚠️ Escolha uma meta de 1 a 1500 km por mês, ou deixe em branco.': '⚠️ Pick a goal from 1 to 1500 km per month, or leave it blank.',
   '⚠️ Escolha uma meta de 1 a 20000 km por ano, ou deixe em branco.': '⚠️ Pick a goal from 1 to 20000 km per year, or leave it blank.',
   '📅 Metas salvas!': '📅 Goals saved!',

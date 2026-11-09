@@ -103,3 +103,23 @@ describe('ritmo alvo', () => {
     expect(paceStatus(null, 300)).toBeNull();
   });
 });
+
+describe('treinos prontos', () => {
+  it('todo preset é um treino válido e tem rótulo curto', async () => {
+    const { PRESETS, presetLabel, isPreset, normalizeWorkout: norm } = await import('./workout');
+    for (const p of PRESETS) {
+      const w = norm({ reps: p.reps, work: p.work, rest: p.rest });
+      expect(isPreset(p, w)).toBe(true);
+      expect(w.reps).toBe(p.reps);
+      expect(w.work).toEqual(p.work);
+    }
+    expect(PRESETS.map(presetLabel)).toEqual(['6x 400 m', '8x 400 m', '5x 1 km', '3x 2 km', '10x 1 min', '20x 30 s']);
+  });
+
+  it('isPreset só vale quando tiro e trote batem', async () => {
+    const { PRESETS, isPreset, normalizeWorkout: norm } = await import('./workout');
+    const six = PRESETS[0];
+    expect(isPreset(six, norm({ reps: 6, work: { unit: 'm', value: 400 }, rest: { unit: 'm', value: 300 } }))).toBe(false);
+    expect(isPreset(six, norm({ reps: 7, work: six.work, rest: six.rest }))).toBe(false);
+  });
+});

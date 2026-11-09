@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useToast } from '../../context/useToast';
 import { formatPace } from './runs';
-import { parsePace, normalizeWorkout, describeWorkout, needsGps } from './workout';
+import { parsePace, normalizeWorkout, describeWorkout, needsGps, PRESETS, presetLabel, isPreset } from './workout';
 import { t } from '../../lib/i18n';
 
 const KEY = 'eafit_run_guided';
@@ -61,6 +61,14 @@ export default function GuidedSetup({ gps, onStart, onCancel }) {
     onStart(session);
   }
 
+  function applyPreset(p) {
+    setF(prev => ({
+      ...prev, reps: String(p.reps),
+      workValue: String(p.work.value), workUnit: p.work.unit,
+      restValue: String(p.rest.value), restUnit: p.rest.unit,
+    }));
+  }
+
   const unitChips = (key, label) => (
     <div className="run-chips run-chips--sm" role="group" aria-label={label}>
       {[['m', t('metros')], ['s', t('segundos')]].map(([u, text]) => (
@@ -86,6 +94,14 @@ export default function GuidedSetup({ gps, onStart, onCancel }) {
         </div>
       ) : (
         <>
+          <div className="run-chips run-chips--sm" role="group" aria-label={t('Treinos prontos')}>
+            {PRESETS.map(p => {
+              const on = isPreset(p, workout);
+              return (
+                <button key={p.id} type="button" aria-pressed={on} className={`run-chip${on ? ' run-chip--on' : ''}`} onClick={() => applyPreset(p)}>{presetLabel(p)}</button>
+              );
+            })}
+          </div>
           <div className="run-manual__row">
             <div className="profile-field">
               <label className="profile-field__label" htmlFor="guidedReps">{t('Repetições')}</label>
