@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Loading from './Loading';
+import { Paged } from './ShowMore';
 import { PLATFORMS, STATUS_LABEL, NUTRI_SLOTS, autopostSchedule, brtDay, fetchAutopost, laneLabel, setAutopostEnabled, splitCaption } from '../lib/marketing';
 
 const FORMAT_LABEL = { feed: 'Feed', reel: 'Reel', story: 'Story' };
@@ -29,6 +30,18 @@ function networksFor(format, accounts) {
     .filter(a => a.status === 'ok' && ['facebook', 'instagram'].includes(a.platform))
     .map(a => PLATFORMS[a.platform].label);
   return [...new Set(names)];
+}
+
+// <details> que só monta o conteúdo depois de aberto: as listas "ver mais" têm
+// dezenas de linhas com miniaturas de vídeo, e fechadas não devem carregar nada.
+function LazyDetails({ summary, children }) {
+  const [opened, setOpened] = useState(false);
+  return (
+    <details className="mkt-more">
+      <summary onClick={() => setOpened(true)}>{summary}</summary>
+      {opened && children}
+    </details>
+  );
 }
 
 function Thumb({ media = [] }) {
@@ -85,10 +98,16 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
     return () => { alive = false; };
   }, []);
 
+  const now = useMemo(() => new Date(), [state]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Simular a agenda varre dias à frente: só refaz quando a fila ou os posts mudam.
+  const schedule = useMemo(
+    () => (state ? autopostSchedule(state.pending, now, state.season, (state.items || []).filter(i => i.posted_at)) : []),
+    [state, now],
+  );
+
   if (state === null) return <Loading />;
   if (state === false) return <p className="user-detail__meta">A agenda automática ainda não está disponível neste ambiente (migration ou permissão).</p>;
 
-  const now = new Date();
   const today = brtDay(now);
   const count = format => state.pending.filter(i => i.format === format && !i.slot).length;
   const countGeneral = () => state.pending.filter(i => i.format === 'story' && !i.slot).length;
@@ -100,7 +119,6 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
 
   // Fila automática (se ligada) + posts agendados à mão e ainda não publicados.
   // Itens de temporada só entram nos dias em que o tema está no ar no app.
-  const schedule = autopostSchedule(state.pending, now, state.season, (state.items || []).filter(i => i.posted_at));
   const scheduledIds = new Set(schedule.map(s => s.item.id));
   const waitingSeason = state.pending.filter(i => i.season && !scheduledIds.has(i.id));
   const planned = [
@@ -232,10 +250,11 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
         {nextDays.length === 0 && <p className="user-detail__meta">Nada programado.</p>}
         {nextDays.slice(0, UPCOMING_OPEN_DAYS).map(dayBlock)}
         {nextDays.length > UPCOMING_OPEN_DAYS && (
-          <details className="mkt-more">
-            <summary>Ver mais {nextDays.length - UPCOMING_OPEN_DAYS} dia(s)</summary>
-            <div className="stack">{nextDays.slice(UPCOMING_OPEN_DAYS).map(dayBlock)}</div>
-          </details>
+          <LazyDetails summary={`Ver mais ${nextDays.length - UPCOMING_OPEN_DAYS} dia(s)`}>
+            <Paged items={nextDays.slice(UPCOMING_OPEN_DAYS)} size={5} label="Ver mais dias">
+              {visible => <div className="stack">{visible.map(dayBlock)}</div>}
+            </Paged>
+          </LazyDetails>
         )}
       </section>
 
@@ -244,10 +263,11 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
         {published.length === 0 && <p className="user-detail__meta">Nada publicado ainda pela fila automática.</p>}
         <ul className="mkt-list">{published.slice(0, PUBLISHED_SHOWN).map(publishedRow)}</ul>
         {published.length > PUBLISHED_SHOWN && (
-          <details className="mkt-more">
-            <summary>Ver mais {published.length - PUBLISHED_SHOWN}</summary>
-            <ul className="mkt-list">{published.slice(PUBLISHED_SHOWN).map(publishedRow)}</ul>
-          </details>
+          <LazyDetails summary={`Ver mais ${published.length - PUBLISHED_SHOWN}`}>
+            <Paged items={published.slice(PUBLISHED_SHOWN)} size={10}>
+              {visible => <ul className="mkt-list">{visible.map(publishedRow)}</ul>}
+            </Paged>
+          </LazyDetails>
         )}
       </section>
     </div>

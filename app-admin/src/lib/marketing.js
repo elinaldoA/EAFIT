@@ -465,27 +465,43 @@ export function hideComment(commentId, hidden) {
 // 20261230010000_marketing_autopost.sql; horários ajustados em
 // 20270106010000_marketing_horarios_pico.sql): horários por faixa em AUTOPOST_LANES (Brasília).
 
+// Quantos já publicados vêm para a tela: a lista cresce todo dia e só os mais
+// recentes aparecem (o total sai de uma contagem à parte). Para o intervalo
+// mínimo entre temas bastam os últimos dias.
+export const POSTED_SHOWN = 60;
+
 export async function fetchAutopost() {
-  const columns = 'id, position, key, format, caption, media, posted_at, skipped_at';
-  const [settings, full, seasonRow] = await Promise.all([
+  const columns = 'id, position, key, format, caption, media, posted_at, skipped_at, post_id';
+  // Sem as migrations dos horários de refeição (`slot`) ou da temporada
+  // (`season`, 20270111010000) a coluna não existe: tenta com ela e cai para menos.
+  const attempts = [`${columns}, slot, season`, `${columns}, slot`, columns];
+  const base = cols => db.from('marketing_autopost_queue').select(cols);
+  let open = null;
+  let recent = null;
+  for (const cols of attempts) {
+    [open, recent] = await Promise.all([
+      base(cols).is('posted_at', null).order('position'),
+      base(cols).not('posted_at', 'is', null).order('posted_at', { ascending: false }).limit(POSTED_SHOWN),
+    ]);
+    if (!open.error && !recent.error) break;
+  }
+  const [settings, count, seasonRow] = await Promise.all([
     db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
-    db.from('marketing_autopost_queue').select(`${columns}, slot, season`).order('position'),
+    db.from('marketing_autopost_queue').select('id', { count: 'exact', head: true }).not('posted_at', 'is', null),
     db.from('app_settings').select('value').eq('key', 'season').maybeSingle(),
   ]);
-  // Sem as migrations dos horários de refeição (`slot`) ou da temporada
-  // (`season`, 20270111010000) a coluna não existe: lê sem ela.
-  let queue = full;
-  if (queue.error) queue = await db.from('marketing_autopost_queue').select(`${columns}, slot`).order('position');
-  if (queue.error) queue = await db.from('marketing_autopost_queue').select(columns).order('position');
   if (settings.error) throw settings.error;
-  if (queue.error) throw queue.error;
-  const items = queue.data || [];
+  if (open.error) throw open.error;
+  if (recent.error) throw recent.error;
+  const pendingAndSkipped = open.data || [];
+  const posted = recent.data || [];
+  const items = [...pendingAndSkipped, ...posted];
   return {
     enabled: settings.data?.enabled !== false,
     items,
-    pending: items.filter(i => !i.posted_at && !i.skipped_at),
-    skipped: items.filter(i => i.skipped_at),
-    posted: items.filter(i => i.posted_at).length,
+    pending: pendingAndSkipped.filter(i => !i.skipped_at),
+    skipped: pendingAndSkipped.filter(i => i.skipped_at),
+    posted: count.error ? posted.length : (count.count ?? posted.length),
     // Temporadas do app (app_settings "season"): decidem quando sai cada item de temporada.
     season: seasonRow?.error ? null : (seasonRow?.data?.value || null),
   };

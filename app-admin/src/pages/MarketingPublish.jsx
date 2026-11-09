@@ -82,8 +82,16 @@ export default function MarketingPublish() {
       // O TikTok não vem marcado: só posta com a conta privada até a auditoria do app.
       setSelectedAccounts(new Set(list.filter(a => a.status === 'ok' && a.platform !== 'tiktok').map(a => a.id)));
     }).catch(err => { setMsg(`Erro: ${err.message}`); setAccounts([]); });
-    fetchMedia().then(setLibrary).catch(() => setLibrary([]));
   }, []);
+
+  // A biblioteca é a busca mais pesada e só serve a Novo post e à Fila: não carrega na Agenda.
+  const needsLibrary = tab === 'novo' || tab === 'fila';
+  const [libraryLoaded, setLibraryLoaded] = useState(false);
+  useEffect(() => {
+    if (!needsLibrary || libraryLoaded) return;
+    setLibraryLoaded(true);
+    fetchMedia().then(setLibrary).catch(() => setLibrary([]));
+  }, [needsLibrary, libraryLoaded]);
 
   useEffect(() => { loadPosts(); }, [loadPosts]);
 
