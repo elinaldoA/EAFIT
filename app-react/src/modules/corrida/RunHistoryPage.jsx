@@ -14,6 +14,7 @@ import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard } from './runShareCard';
+import RunPhotoShare from './RunPhotoShare';
 
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
@@ -23,6 +24,7 @@ function RunItem({ run, shoe, onDelete }) {
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   // O card é desenhado ao abrir a corrida: no toque em Compartilhar ele já
   // está pronto e o share nativo não perde o gesto (lib/shareCard.js).
   const prepared = useRef(null);
@@ -74,12 +76,16 @@ function RunItem({ run, shoe, onDelete }) {
           <button type="button" className="btn btn--primary btn--sm" disabled={sharing} onClick={handleShare}>
             {sharing ? t('Gerando imagem…') : t('📤 Compartilhar nos stories')}
           </button>
+          <button type="button" className="btn btn--outline btn--sm" onClick={() => setPhotoOpen(true)}>
+            {t('📸 Compartilhar com foto')}
+          </button>
           <button
             type="button" className="btn btn--ghost btn--sm"
             onClick={() => { if (confirm) onDelete(run); else setConfirm(true); }}
           >{confirm ? t('Toque de novo para apagar') : t('Apagar corrida')}</button>
         </div>
       )}
+      {photoOpen && <RunPhotoShare run={run} onClose={() => setPhotoOpen(false)} />}
     </li>
   );
 }

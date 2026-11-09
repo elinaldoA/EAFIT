@@ -1,4 +1,4 @@
-import { cardKit } from '../../lib/shareCard';
+import { cardKit, coverRect } from '../../lib/shareCard';
 import { myRefCode } from '../../lib/myRef';
 import { trackFeature } from '../../lib/tracking';
 import { t } from '../../lib/i18n';
@@ -115,14 +115,8 @@ function drawBigDistance(ctx, run) {
   setTracking(ctx, 0);
 }
 
-export async function renderRunCard(run, refCode = myRefCode()) {
-  const canvas = document.createElement('canvas');
-  canvas.width = CARD_WIDTH;
-  canvas.height = CARD_HEIGHT;
-  const ctx = canvas.getContext('2d');
-  drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
-
-  // Topo: marca + data.
+// Topo: marca + data.
+async function drawBrandBar(ctx, run) {
   const size = 84;
   const y = 70;
   const hasLogo = await drawLogo(ctx, PAD_X, y, size);
@@ -145,6 +139,16 @@ export async function renderRunCard(run, refCode = myRefCode()) {
   setTracking(ctx, 2);
   ctx.fillText(formatCardDate(when).toUpperCase(), CARD_WIDTH - PAD_X, y + 52);
   setTracking(ctx, 0);
+}
+
+export async function renderRunCard(run, refCode = myRefCode()) {
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+  drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
+
+  await drawBrandBar(ctx, run);
 
   ctx.textAlign = 'left';
   ctx.fillStyle = ORANGE_LIGHT;
@@ -185,4 +189,133 @@ export async function shareRunCard(run, prepared) {
   const blob = (await prepared) || await renderRunCard(run, refCode);
   const text = t('{v1} km de corrida no EAFIT Run 🏃 Corra com a gente: {v2}', { v1: formatKm(run.distance_m), v2: cardUrl(refCode) });
   return shareImageBlob(blob, 'minha-corrida.png', t('Minha corrida'), text);
+}
+
+export const RUN_PHOTO_STATS = ['percurso', 'distancia', 'ritmo', 'tempo'];
+
+// Traçado sozinho (sem mapa), para ir por cima da foto: linha laranja com
+// contorno branco e sombra, início verde e fim vermelho.
+function drawTrace(ctx, run, x0, y0, w, h) {
+  const view = mapView(run.route, w, h, 36);
+  if (!view) return;
+  ctx.save();
+  ctx.translate(x0, y0);
+  const line = (pts, color, width) => {
+    ctx.beginPath();
+    pts.forEach((p, i) => {
+      const [px, py] = view.place(p);
+      if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+    });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  };
+  const segs = run.route.filter(seg => Array.isArray(seg) && seg.length >= 2);
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = 16;
+  segs.forEach(seg => line(seg, 'rgba(255,255,255,0.95)', 13));
+  ctx.shadowBlur = 0;
+  segs.forEach(seg => line(seg, '#fc4c02', 8));
+  const dot = ([px, py], color) => {
+    ctx.beginPath();
+    ctx.arc(px, py, 11, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+  };
+  dot(view.start, '#22c55e');
+  dot(view.end, '#ef4444');
+  ctx.restore();
+}
+
+// Card 9:16 com a foto da pessoa de fundo, o traçado da corrida e os números
+// por cima (mesmo estilo do card de musculação com foto). `img` já carregada;
+// `show` escolhe o que aparece: percurso, distancia, ritmo, tempo.
+export async function renderRunPhotoCard(run, img, show = {}) {
+  const on = k => show[k] !== false;
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#09090d';
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  const r = coverRect(img.naturalWidth || img.width, img.naturalHeight || img.height, CARD_WIDTH, CARD_HEIGHT);
+  ctx.drawImage(img, r.x, r.y, r.w, r.h);
+
+  const topShade = ctx.createLinearGradient(0, 0, 0, 340);
+  topShade.addColorStop(0, 'rgba(0,0,0,0.65)');
+  topShade.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = topShade;
+  ctx.fillRect(0, 0, CARD_WIDTH, 340);
+  await drawBrandBar(ctx, run);
+
+  const stats = [
+    on('distancia') && [formatKm(run.distance_m), t('km')],
+    on('ritmo') && [formatPace(paceSeconds(run.duration_s, run.distance_m)), t('ritmo /km')],
+    on('tempo') && [formatClock(run.duration_s), t('tempo')],
+  ].filter(Boolean);
+  const hasTrace = on('percurso') && Array.isArray(run.route) && run.route.length > 0;
+
+  const rowH = 140;
+  const gridTop = CARD_HEIGHT - 170 - 3 * rowH;
+  const shadeTop = gridTop - 420;
+  const bottom = ctx.createLinearGradient(0, shadeTop, 0, CARD_HEIGHT);
+  bottom.addColorStop(0, 'rgba(0,0,0,0)');
+  bottom.addColorStop(0.5, 'rgba(0,0,0,0.7)');
+  bottom.addColorStop(1, 'rgba(0,0,0,0.9)');
+  ctx.fillStyle = bottom;
+  ctx.fillRect(0, shadeTop, CARD_WIDTH, CARD_HEIGHT - shadeTop);
+
+  const traceW = 470;
+  const colW = hasTrace ? CONTENT_W - traceW - 20 : CONTENT_W;
+  ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `800 30px ${FONT}`;
+  setTracking(ctx, 4);
+  ctx.fillText(t('MINHA CORRIDA'), PAD_X, gridTop - 130);
+  setTracking(ctx, 0);
+  ctx.fillStyle = '#ffffff';
+  const title = runTitle(run);
+  fitFont(ctx, title, CONTENT_W, 76, 900, 44);
+  ctx.fillText(title, PAD_X, gridTop - 44);
+
+  stats.forEach(([value, label], i) => {
+    const y = gridTop + i * rowH;
+    ctx.fillStyle = '#ffffff';
+    fitFont(ctx, value, colW - 10, 84, 900, 40);
+    ctx.fillText(value, PAD_X, y + 74);
+    ctx.font = `700 24px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    setTracking(ctx, 2.5);
+    ctx.fillText(String(label).toUpperCase(), PAD_X, y + 112);
+    setTracking(ctx, 0);
+  });
+  if (hasTrace) drawTrace(ctx, run, CARD_WIDTH - PAD_X - traceW, gridTop - 20, traceW, traceW);
+  ctx.shadowBlur = 0;
+
+  const brandY = CARD_HEIGHT - 110;
+  const hasLogo = await drawLogo(ctx, PAD_X, brandY, 64);
+  const bx = PAD_X + (hasLogo ? 82 : 0);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `900 38px ${FONT}`;
+  ctx.fillText('EAFIT', bx, brandY + 30);
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `600 24px ${FONT}`;
+  ctx.fillText('eafit.com.br', bx, brandY + 58);
+
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+}
+
+// Compartilha o card com a foto (renderRunPhotoCard).
+export async function shareRunPhoto(run, blob) {
+  trackFeature('share_run_photo');
+  const text = t('{v1} km de corrida no EAFIT Run 🏃 Corra com a gente: {v2}', { v1: formatKm(run.distance_m), v2: cardUrl(myRefCode()) });
+  return shareImageBlob(blob, 'minha-corrida.jpg', t('Minha corrida'), text);
 }
