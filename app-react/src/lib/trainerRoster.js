@@ -106,13 +106,13 @@ export function buildActionQueue(roster, { replies = {}, overdue = {}, today }) 
     if (replies[c.id] > 0) reasons.push({ kind: 'resposta', priority: 1, icon: '💬', label: t('{n} resposta(s) sem ler', { n: replies[c.id] }) });
     if (overdue[c.id]) reasons.push({ kind: 'cobranca', priority: 2, icon: '💰', label: t('Pagamento em atraso: {v1}', { v1: moneyShort(overdue[c.id].cents) }) });
     if (att.level === 'risco') reasons.push({ kind: 'sumido', priority: 1, icon: '🚨', label: att.label });
-    if (!c.paused && plan.level === 'expired') reasons.push({ kind: 'plano', priority: 2, icon: '📋', label: t('Plano vencido') });
+    if (!c.paused && plan.level === 'expired') reasons.push({ kind: 'plano', priority: 2, icon: '📋', label: t('Plano vencido'), renew: !!c.planByMe });
     if (!c.paused && c.chkN >= TIRED_MIN_CHECKINS
         && ((c.chkEnergy != null && c.chkEnergy <= TIRED_MAX_AVG) || (c.chkSleep != null && c.chkSleep <= TIRED_MAX_AVG))) {
       reasons.push({ kind: 'cansaco', priority: 3, icon: '😴', label: t('Energia ou sono baixos nos últimos dias') });
     }
     if (att.level === 'atencao') reasons.push({ kind: 'parado', priority: 3, icon: '⏳', label: att.label });
-    if (!c.paused && plan.level === 'ending') reasons.push({ kind: 'plano', priority: 4, icon: '📋', label: t('Plano: {v}', { v: plan.label.toLowerCase() }) });
+    if (!c.paused && plan.level === 'ending') reasons.push({ kind: 'plano', priority: 4, icon: '📋', label: t('Plano: {v}', { v: plan.label.toLowerCase() }), renew: !!c.planByMe });
     if (!c.paused && plan.level === 'none') reasons.push({ kind: 'plano', priority: 4, icon: '📋', label: t('Ainda sem plano') });
     if (att.level === 'novo' && c.since && daysBetween(String(c.since).slice(0, 10), today) >= 3) {
       reasons.push({ kind: 'novo', priority: 5, icon: '👋', label: t('Ainda não treinou') });

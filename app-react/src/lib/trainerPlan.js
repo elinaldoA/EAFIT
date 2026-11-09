@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { sendMessage } from './trainerMessages';
 
 import { t } from './i18n';
 export const WEEK_DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -17,6 +18,8 @@ const ERRORS = {
   invalid_days: t('O plano precisa de 1 a 7 dias.'),
   invalid_exercises: t('Cada dia precisa de 1 a 20 exercícios, todos com nome.'),
   invalid_duration: t('Duração inválida.'),
+  no_duration: t('Este plano não tem duração definida. Use "Editar / enviar novo treino".'),
+  no_plan: t('O aluno não tem plano ativo para renovar.'),
 };
 
 export function friendlyPlanError(err) {
@@ -112,6 +115,21 @@ export async function assignPlan(clientId, payload) {
   });
   if (error) throw error;
   return data;
+}
+
+// Renova o plano ativo do aluno: mesmo nome, dias e exercícios, mesma duração,
+// recomeçando hoje. O plano anterior fica salvo no histórico (só inativo). O
+// aviso ao aluno é melhor esforço: a renovação já valeu.
+export async function renewPlan(clientId) {
+  const plan = await fetchClientPlan(clientId);
+  if (!plan) throw new Error('no_plan');
+  if (!plan.duration_weeks) throw new Error('no_duration');
+  const payload = buildPlanPayload(draftFromPlan(plan));
+  if (!payload.ok) throw new Error(payload.error);
+  await assignPlan(clientId, payload);
+  sendMessage([clientId], t('Seu personal renovou seu plano "{name}" por mais {n} semanas. Bons treinos!', { name: payload.name, n: payload.weeks }), 'treino')
+    .catch(err => console.warn('aviso de plano renovado:', err));
+  return payload;
 }
 
 // Copia foco e exercícios de um dia para outro (cria o dia se não existir e

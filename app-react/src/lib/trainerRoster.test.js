@@ -201,3 +201,17 @@ describe('fila: cansaço pelos check-ins', () => {
     expect(await fetchRoster()).toEqual([expect.objectContaining({ chkN: 3, chkEnergy: 1.7, chkSleep: null })]);
   });
 });
+
+describe('fila: renovar plano', () => {
+  const plano = client => buildActionQueue([client], { today: TODAY })[0].reasons.find(r => r.kind === 'plano');
+  const ok = { planName: 'A', last_day: TODAY, days7: 3 };
+
+  it('plano vencido ou vencendo, montado pelo personal, oferece renovar', () => {
+    expect(plano(c({ ...ok, planByMe: true, planEnd: '2026-10-01' })).renew).toBe(true);
+    expect(plano(c({ ...ok, planByMe: true, planEnd: '2026-10-10' })).renew).toBe(true);
+  });
+
+  it('plano do aluno ou do app não oferece renovar', () => {
+    expect(plano(c({ ...ok, planByMe: false, planEnd: '2026-10-01' })).renew).toBe(false);
+  });
+});

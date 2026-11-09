@@ -36,6 +36,10 @@ vi.mock('../lib/trainer', async (importActual) => ({
   fetchClientDetail: (...a) => h.api.fetchClientDetail(...a),
   removeClient: (...a) => h.api.removeClient(...a),
 }));
+vi.mock('../lib/trainerPlan', async (importActual) => ({
+  ...(await importActual()),
+  renewPlan: (...a) => h.api.renewPlan(...a),
+}));
 vi.mock('../lib/trainerMessages', async (importActual) => ({
   ...(await importActual()),
   fetchTrainerThread: (...a) => h.api.fetchTrainerThread(...a),
@@ -66,6 +70,7 @@ beforeEach(() => {
     fetchTrainerThread: vi.fn().mockResolvedValue([]),
     markThreadRead: vi.fn().mockResolvedValue(undefined),
     sendMessage: vi.fn().mockResolvedValue(1),
+    renewPlan: vi.fn().mockResolvedValue({ name: 'Hipertrofia', weeks: 8 }),
   };
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -189,6 +194,30 @@ describe('ClientDetail', () => {
     tab('Plano');
     expect(screen.getByText('O aluno ainda não tem plano ativo.')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Montar treino/ })).toBeTruthy();
+  });
+
+  it('renovar plano: aparece com plano vencendo montado por mim, confirma, renova e recarrega a ficha', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    setup();
+    await screen.findByText('Frequência');
+    tab('Plano');
+    fireEvent.click(screen.getByRole('button', { name: /Renovar plano/ }));
+    await waitFor(() => expect(h.api.renewPlan).toHaveBeenCalledWith('c1'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('✅ Plano renovado'));
+    await waitFor(() => expect(h.api.fetchClientDetail).toHaveBeenCalledTimes(2));
+  });
+
+  it('renovar plano: não aparece para plano em dia nem para plano que não é meu', async () => {
+    h.api.fetchClientDetail.mockResolvedValue(DETAIL);
+    render(<ClientDetail client={{ ...CLIENT, planEnd: '2026-12-31' }} onBack={() => {}} onRemoved={() => {}} />);
+    await screen.findByText('Frequência');
+    tab('Plano');
+    expect(screen.queryByRole('button', { name: /Renovar plano/ })).toBeNull();
+    cleanup();
+    render(<ClientDetail client={{ ...CLIENT, planByMe: false }} onBack={() => {}} onRemoved={() => {}} />);
+    await screen.findByText('Frequência');
+    tab('Plano');
+    expect(screen.queryByRole('button', { name: /Renovar plano/ })).toBeNull();
   });
 
   it('montar o treino abre o editor; ao enviar volta à ficha e recarrega os dados', async () => {

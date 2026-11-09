@@ -8,6 +8,7 @@ import { clientAttention, summarizeClient, fetchClientDetail, removeClient, frie
 import { initials, planStatus, weeklyCounts } from '../lib/trainerRoster';
 import LineChart from '../components/LineChart';
 import Skeleton from '../components/Skeleton';
+import { renewPlan, friendlyPlanError } from '../lib/trainerPlan';
 import PlanBuilder from './PlanBuilder';
 import ChatThread from '../components/ChatThread';
 import { fetchTrainerThread, markThreadRead, sendMessage, friendlyMessageError } from '../lib/trainerMessages';
@@ -65,6 +66,7 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
   const [failed, setFailed] = useState(false);
   const [building, setBuilding] = useState(false);
   const [version, setVersion] = useState(0);
+  const [renewing, setRenewing] = useState(false);
   const [tab, setTab] = useState(TABS.some(x => x.key === initialTab) ? initialTab : 'resumo');
   const today = todayDate();
 
@@ -90,6 +92,20 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
     if (!window.confirm(t('Encerrar o acompanhamento de {name}? Você deixa de ver os dados dele.', { name: client.name }))) return;
     try { await removeClient(client.id); toast(t('Vínculo encerrado')); onRemoved(); }
     catch (err) { toast(`❌ ${friendlyTrainerError(err)}`); }
+  }
+
+  async function handleRenew() {
+    if (!window.confirm(t('Renovar o plano de {name}? O mesmo treino recomeça hoje, pelo mesmo prazo, e o aluno é avisado.', { name: client.name }))) return;
+    setRenewing(true);
+    try {
+      await renewPlan(client.id);
+      toast(t('✅ Plano renovado'));
+      setVersion(v => v + 1);
+    } catch (err) {
+      toast(`❌ ${friendlyPlanError(err)}`);
+    } finally {
+      setRenewing(false);
+    }
   }
 
   if (building) {
@@ -265,6 +281,11 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
             <button type="button" className="btn btn--primary btn--sm" style={{ alignSelf: 'flex-start' }} onClick={() => setBuilding(true)}>
               📋 {detail.plan ? t('Editar / enviar novo treino') : t('Montar treino')}
             </button>
+            {detail.plan && client.planByMe && !client.legacy && version === 0 && ['ending', 'expired'].includes(plan.level) && (
+              <button type="button" className="btn btn--outline btn--sm" style={{ alignSelf: 'flex-start' }} disabled={renewing} onClick={handleRenew}>
+                {renewing ? t('Renovando…') : t('🔄 Renovar plano (mesmo treino, recomeça hoje)')}
+              </button>
+            )}
           </div>
 
           <ClientPlanHistory clientId={client.id} version={version} />

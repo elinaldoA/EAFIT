@@ -30,6 +30,11 @@ vi.mock('../lib/trainerInvite', async (importActual) => ({
   fetchInviteStats: (...a) => h.api.fetchInviteStats(...a),
 }));
 
+vi.mock('../lib/trainerPlan', async (importActual) => ({
+  ...(await importActual()),
+  renewPlan: (...a) => h.api.renewPlan(...a),
+}));
+
 import PainelPage from './PainelPage';
 
 const base = { paused: false, weeklyGoal: null, planName: 'P', planDays: 3, planEnd: null, planByMe: true, pain7: 0, tags: [], recent: [], since: '2026-09-01' };
@@ -47,6 +52,7 @@ beforeEach(() => {
     fetchUnreadReplies: vi.fn().mockResolvedValue({}),
     fetchTrainerAppointments: vi.fn().mockResolvedValue([]),
     fetchInviteStats: vi.fn().mockResolvedValue({ visits: 10, signups: 3, clients: 2 }),
+    renewPlan: vi.fn().mockResolvedValue({ name: 'P', weeks: 8 }),
   };
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -98,6 +104,36 @@ describe('PainelPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Enviar recado' }));
     await waitFor(() => expect(send).toHaveBeenCalledWith(['c3'], expect.stringContaining('Oi, Rafa!')));
     await waitFor(() => expect(screen.queryByLabelText('Mensagem')).toBeNull());
+  });
+
+  it('renovar plano: só quem tem plano vencendo/vencido, pede confirmação, renova e recarrega', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    setup();
+    await screen.findByText('⚡ Precisam de você');
+    // Rafa (dor) não tem plano vencendo; Bruno (plano vencido, montado por mim) tem
+    expect(screen.queryByRole('button', { name: 'Renovar plano de Rafa' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Renovar plano de Bruno' }));
+    await waitFor(() => expect(h.api.renewPlan).toHaveBeenCalledWith('c2'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('✅ Plano renovado'));
+    await waitFor(() => expect(h.api.fetchRoster).toHaveBeenCalledTimes(2));
+  });
+
+  it('renovar plano: recusar a confirmação não envia nada', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    setup();
+    await screen.findByText('⚡ Precisam de você');
+    fireEvent.click(screen.getByRole('button', { name: 'Renovar plano de Bruno' }));
+    expect(h.api.renewPlan).not.toHaveBeenCalled();
+  });
+
+  it('renovar plano: erro mostra o motivo e não recarrega', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    h.api.renewPlan.mockRejectedValue(new Error('no_duration'));
+    setup();
+    await screen.findByText('⚡ Precisam de você');
+    fireEvent.click(screen.getByRole('button', { name: 'Renovar plano de Bruno' }));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('duração')));
+    expect(h.api.fetchRoster).toHaveBeenCalledTimes(1);
   });
 
   it('resposta sem ler entra na fila', async () => {

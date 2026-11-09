@@ -3,6 +3,7 @@ import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
 import { toDateStr } from '../lib/utils';
 import { fetchTrainerCode } from '../lib/trainer';
+import { renewPlan, friendlyPlanError } from '../lib/trainerPlan';
 import { fetchRoster, buildActionQueue, rosterKpis, initials, suggestMessage } from '../lib/trainerRoster';
 import { fetchUnreadReplies } from '../lib/trainerMessages';
 import { fetchTrainerAppointments, upcomingAppointments } from '../lib/trainerAppointments';
@@ -37,6 +38,8 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
   const [inviteStats, setInviteStats] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [composing, setComposing] = useState(null); // id do aluno com a caixa de recado aberta
+  const [reload, setReload] = useState(0);
+  const [renewing, setRenewing] = useState(null);
   const today = todayDate();
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
     fetchTrainerCode().then(c => { if (active) setCode(c); }).catch(err => console.error('fetchTrainerCode:', err));
     fetchInviteStats(30).then(s => { if (active) setInviteStats(s); }).catch(() => { /* migration pendente */ });
     return () => { active = false; };
-  }, []);
+  }, [reload]);
 
   const overdue = useMemo(() => overdueByClient(charges, today), [charges, today]);
   const billing = useMemo(() => chargeSummary(charges, today), [charges, today]);
@@ -59,6 +62,20 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
   const todayCount = appts.filter(a => toDateStr(new Date(a.starts)) === today).length;
 
   useEffect(() => { if (roster) onQueueLoaded?.(queue.filter(q => q.priority <= 2).length); }, [roster, queue, onQueueLoaded]);
+
+  async function handleRenew(client) {
+    if (!window.confirm(t('Renovar o plano de {name}? O mesmo treino recomeça hoje, pelo mesmo prazo, e o aluno é avisado.', { name: client.name }))) return;
+    setRenewing(client.id);
+    try {
+      await renewPlan(client.id);
+      toast(t('✅ Plano renovado'));
+      setReload(v => v + 1);
+    } catch (err) {
+      toast(`❌ ${friendlyPlanError(err)}`);
+    } finally {
+      setRenewing(null);
+    }
+  }
 
   async function handleShare() {
     const result = await shareTrainerInvite(code);
@@ -125,6 +142,12 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
                 </span>
                 <span className="action-row__go" aria-hidden="true">›</span>
               </button>
+              {reasons.some(r => r.renew) && (
+                <button type="button" className="btn btn--outline btn--sm action-item__msg" disabled={renewing === client.id}
+                  aria-label={t('Renovar plano de {name}', { name: client.name })} onClick={() => handleRenew(client)}>
+                  {renewing === client.id ? t('Renovando…') : t('🔄 Renovar plano')}
+                </button>
+              )}
               <button type="button" className="btn btn--ghost btn--sm action-item__msg" aria-expanded={composing === client.id}
                 aria-label={t('Mandar recado para {name}', { name: client.name })}
                 onClick={() => setComposing(v => (v === client.id ? null : client.id))}>
