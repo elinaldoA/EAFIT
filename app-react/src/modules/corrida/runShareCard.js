@@ -2,15 +2,15 @@ import { cardKit } from '../../lib/shareCard';
 import { myRefCode } from '../../lib/myRef';
 import { trackFeature } from '../../lib/tracking';
 import { t } from '../../lib/i18n';
-import { mapView, kmPoints, paceRuns, TILE_SIZE } from './route';
-import { tileSrc, PACE_COLORS, kmStep } from './mapStyle';
+import { mapView, TILE_SIZE } from './route';
+import { tileSrc } from './mapStyle';
 import { runTitle, paceSeconds, formatPace, formatClock, formatKm } from './runs';
 
 // Card 9:16 de uma corrida para os stories e o status: mapa com o percurso
 // (já sem as pontas e as zonas de privacidade, como foi salvo), distância,
 // ritmo e tempo, com a marca EAFIT · Run e o rodapé de sempre.
 const {
-  CARD_WIDTH, CARD_HEIGHT, PAD_X, CONTENT_W, FONT, ORANGE, ORANGE_LIGHT, MUTED,
+  CARD_WIDTH, CARD_HEIGHT, PAD_X, CONTENT_W, FONT, ORANGE_LIGHT, MUTED,
   drawBackground, drawPanel, drawStatBox, drawFooter, drawLogo, setTracking, fitFont, roundedRectPath,
   shareImageBlob, cardUrl, formatCardDate,
 } = cardKit;
@@ -50,9 +50,9 @@ async function drawMap(ctx, run) {
     loaded++;
     ctx.drawImage(img, tile.left, tile.top, TILE_SIZE, TILE_SIZE);
   }
-  // Escurece um pouco o mapa claro para o percurso saltar aos olhos.
+  // Escurece o mapa claro, como no Strava, para o traçado saltar aos olhos.
   if (loaded) {
-    ctx.fillStyle = 'rgba(9,9,13,0.18)';
+    ctx.fillStyle = 'rgba(9,9,13,0.45)';
     ctx.fillRect(0, 0, w / MAP_SCALE, MAP_H / MAP_SCALE);
   }
 
@@ -68,11 +68,15 @@ async function drawMap(ctx, run) {
     ctx.lineJoin = 'round';
     ctx.stroke();
   };
+  // Traçado numa cor só: brilho, contorno branco e a linha laranja por cima.
   const segs = run.route.filter(seg => Array.isArray(seg) && seg.length >= 2);
-  segs.forEach(seg => line(seg, 'rgba(255,255,255,0.9)', 9));
-  const pace = paceRuns(run.route);
-  if (pace.length) pace.forEach(piece => line(piece.pts, PACE_COLORS[piece.level], 5.5));
-  else segs.forEach(seg => line(seg, ORANGE, 5.5));
+  ctx.save();
+  ctx.shadowColor = 'rgba(252,76,2,0.85)';
+  ctx.shadowBlur = 14;
+  segs.forEach(seg => line(seg, 'rgba(252,76,2,0.55)', 9));
+  ctx.restore();
+  segs.forEach(seg => line(seg, 'rgba(255,255,255,0.95)', 8));
+  segs.forEach(seg => line(seg, '#fc4c02', 5));
 
   const dot = ([px, py], color) => {
     ctx.beginPath();
@@ -84,25 +88,7 @@ async function drawMap(ctx, run) {
     ctx.stroke();
   };
   dot(view.start, '#22c55e');
-  dot(view.end, ORANGE);
-
-  const kms = kmPoints(run.route, run.splits);
-  const step = kmStep(kms.length);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  for (const k of kms.filter(item => item.km % step === 0)) {
-    const [px, py] = view.place(k.p);
-    ctx.beginPath();
-    ctx.arc(px, py, 11, 0, Math.PI * 2);
-    ctx.fillStyle = '#18181b';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `800 12px ${FONT}`;
-    ctx.fillText(String(k.km), px, py + 0.5);
-  }
+  dot(view.end, '#ef4444');
   ctx.textBaseline = 'alphabetic';
   ctx.restore();
 
@@ -113,7 +99,7 @@ async function drawMap(ctx, run) {
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.fillText('© OpenStreetMap', x0 + w - 24, MAP_Y + MAP_H - 22);
   }
-  return pace.length > 0;
+  return true;
 }
 
 // Sem percurso (corrida sem GPS ou curta demais): a distância no lugar do mapa.
@@ -127,29 +113,6 @@ function drawBigDistance(ctx, run) {
   setTracking(ctx, 6);
   ctx.fillText('KM', CARD_WIDTH / 2, MAP_Y + MAP_H / 2 + 130);
   setTracking(ctx, 0);
-}
-
-function drawLegend(ctx, y) {
-  const sw = 46;
-  const gap = 8;
-  ctx.font = `700 24px ${FONT}`;
-  const slow = t('lento');
-  const fast = t('rápido');
-  const wSlow = ctx.measureText(slow).width;
-  const total = wSlow + 18 + PACE_COLORS.length * (sw + gap) - gap + 18 + ctx.measureText(fast).width;
-  let x = (CARD_WIDTH - total) / 2;
-  ctx.textAlign = 'left';
-  ctx.fillStyle = MUTED;
-  ctx.fillText(slow, x, y + 9);
-  x += wSlow + 18;
-  for (const c of PACE_COLORS) {
-    ctx.fillStyle = c;
-    roundedRectPath(ctx, x, y - 6, sw, 12, 6);
-    ctx.fill();
-    x += sw + gap;
-  }
-  ctx.fillStyle = MUTED;
-  ctx.fillText(fast, x - gap + 18, y + 9);
 }
 
 export async function renderRunCard(run, refCode = myRefCode()) {
@@ -194,8 +157,7 @@ export async function renderRunCard(run, refCode = myRefCode()) {
   fitFont(ctx, title, CONTENT_W, 76, 900, 44);
   ctx.fillText(title, PAD_X, 345);
 
-  let colored = false;
-  if (Array.isArray(run.route) && run.route.length) colored = await drawMap(ctx, run);
+  if (Array.isArray(run.route) && run.route.length) await drawMap(ctx, run);
   else {
     drawPanel(ctx, PAD_X, MAP_Y, CONTENT_W, MAP_H, 36);
     drawBigDistance(ctx, run);
@@ -210,8 +172,6 @@ export async function renderRunCard(run, refCode = myRefCode()) {
     [formatClock(run.duration_s), t('tempo')],
   ];
   stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 200, value, label));
-
-  if (colored) drawLegend(ctx, boxY + 200 + 60);
 
   await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
