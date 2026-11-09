@@ -15,7 +15,7 @@ const num = v => (v === undefined || v === null ? '' : String(v).replace('.', ',
 export default function ClientProfileEdit({ clientId, profile, onSaved }) {
   const toast = useToast();
   const [f, setF] = useState(() => ({
-    nome: profile.name || '', email: profile.email || '', peso: num(profile.peso), pesoAlvo: num(profile.pesoAlvo),
+    nome: profile.name || '', email: profile.email || '', sexo: profile.sexo || '', peso: num(profile.peso), pesoAlvo: num(profile.pesoAlvo),
     altura: num(profile.altura), idade: num(profile.idade), meta: profile.meta || '', nivel: profile.nivel || '',
     weeklyGoal: profile.weeklyGoal ? String(profile.weeklyGoal) : '',
   }));
@@ -59,6 +59,7 @@ export default function ClientProfileEdit({ clientId, profile, onSaved }) {
       <p className="profile-field__hint m-0">{t('Você pode corrigir o cadastro do aluno. Trocar o e-mail muda o login dele (a senha continua a mesma).')}</p>
       {text('nome', t('Nome'), { maxLength: 80 })}
       {text('email', t('E-mail'), { type: 'email', inputMode: 'email', autoComplete: 'off' })}
+      {select('sexo', t('Sexo biológico'), [['M', t('Masculino')], ['F', t('Feminino')]])}
       {text('peso', t('Peso (kg)'), { inputMode: 'decimal' })}
       {text('pesoAlvo', t('Peso alvo (kg)'), { inputMode: 'decimal' })}
       {text('altura', t('Altura (cm)'), { inputMode: 'decimal' })}

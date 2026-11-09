@@ -43,4 +43,12 @@ describe('ClientProfileEdit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar dados' }));
     expect((await screen.findByRole('alert')).textContent).toBe('Este e-mail já está em uso por outra conta.');
   });
+
+  it('mostra e salva o sexo biológico do aluno', async () => {
+    render(<ClientProfileEdit clientId="c1" profile={{ ...profile, sexo: 'F' }} />);
+    expect(screen.getByLabelText('Sexo biológico').value).toBe('F');
+    fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: 'M' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar dados' }));
+    await waitFor(() => expect(h.update).toHaveBeenCalledWith('c1', expect.objectContaining({ sexo: 'M' })));
+  });
 });
