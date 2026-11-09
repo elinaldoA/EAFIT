@@ -10,6 +10,9 @@ const ERRORS = {
   self_link: t('Você não pode se vincular a si mesmo.'),
   already_linked: t('Você já está vinculado a um personal. Encerre o vínculo atual antes de entrar em outro.'),
   not_authorized: t('Sem permissão para essa ação.'),
+  invalid_email: t('E-mail inválido.'),
+  email_in_use: t('Este e-mail já está em uso por outra conta.'),
+  invalid_data: t('Confira os dados: algum campo está inválido.'),
 };
 
 export function friendlyTrainerError(err) {
@@ -100,6 +103,12 @@ export async function fetchClientDetail(clientId) {
   const { data, error } = await db.rpc('trainer_client_detail', { p_client: clientId });
   if (error) throw error;
   return data;
+}
+
+// O personal altera o cadastro do aluno vinculado (inclui o e-mail de login).
+export async function updateClientProfile(clientId, data) {
+  const { error } = await db.rpc('trainer_update_client', { p_client: clientId, p_data: data });
+  if (error) throw error;
 }
 
 export async function removeClient(clientId) {

@@ -1,5 +1,18 @@
 // Painel do personal (trainer/*).
 export default {
+  // ClientProfileEdit
+  'E-mail inválido.': 'Invalid email.',
+  'Este e-mail já está em uso por outra conta.': 'This email is already used by another account.',
+  'Confira os dados: algum campo está inválido.': 'Check the data: a field is invalid.',
+  'Dados': 'Details',
+  '✏️ Dados do aluno': '✏️ Client details',
+  'Você pode corrigir o cadastro do aluno. Trocar o e-mail muda o login dele (a senha continua a mesma).': "You can fix the client's registration. Changing the email changes their login (the password stays the same).",
+  'Nível': 'Level',
+  'Treinos por semana (meta)': 'Workouts per week (goal)',
+  'Não informado': 'Not set',
+  'Informe o nome do aluno.': "Enter the client's name.",
+  'Salvar dados': 'Save details',
+  '✅ Dados do aluno atualizados': '✅ Client details updated',
   // AlunosPage / TrainerShell / TrainerNav
   'Todos': 'All',
   'Precisam de atenção': 'Need attention',

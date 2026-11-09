@@ -18,6 +18,7 @@ import ClientPhotos from './ClientPhotos';
 import ClientAppointments from './ClientAppointments';
 import ClientCharges from './ClientCharges';
 import ClientTags from './ClientTags';
+import ClientProfileEdit from './ClientProfileEdit';
 import ClientPlanHistory from './ClientPlanHistory';
 
 import { t, tEx } from '../lib/i18n';
@@ -34,6 +35,7 @@ const TABS = [
   { key: 'plano', label: t('Plano') },
   { key: 'conversa', label: t('Conversa') },
   { key: 'cobranca', label: t('Cobrança') },
+  { key: 'dados', label: t('Dados') },
 ];
 const fmt = n => String(n).replace('.', ',');
 
@@ -271,6 +273,10 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
       )}
 
       {summary && tab === 'cobranca' && <ClientCharges client={client} />}
+
+      {summary && tab === 'dados' && (
+        <ClientProfileEdit clientId={client.id} profile={profile} onSaved={() => setVersion(v => v + 1)} />
+      )}
 
       {summary && tab === 'conversa' && (
         <div className="dash-card">
