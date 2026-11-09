@@ -136,6 +136,18 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
             {[profile.idade && t('{n} anos', { n: profile.idade }), profile.peso && `${fmt(profile.peso)} kg`, profile.altura && `${profile.altura} cm`, profile.pesoAlvo && t('meta {kg} kg', { kg: fmt(profile.pesoAlvo) })].filter(Boolean).join(' · ')}
           </p>
         )}
+        {(profile.lesoes || profile.restricoes) && (
+          <p className="client-head__alert">
+            {[profile.lesoes && t('🦴 Lesões: {v}', { v: profile.lesoes }), profile.restricoes && t('⚠️ Restrições: {v}', { v: profile.restricoes })].filter(Boolean).join(' · ')}
+          </p>
+        )}
+        {(profile.emergenciaNome || profile.emergenciaTel) && (
+          <p className="profile-field__hint m-0">
+            {t('🚑 Emergência:')} {[profile.emergenciaNome, profile.emergenciaTel && (
+              <a key="tel" href={`tel:${String(profile.emergenciaTel).replace(/[^0-9+]/g, '')}`}>{profile.emergenciaTel}</a>
+            )].filter(Boolean).reduce((acc, x, i) => (i ? [...acc, ' · ', x] : [x]), [])}
+          </p>
+        )}
         {client.since && <p className="profile-field__hint m-0">{t('Seu aluno desde {d}', { d: fmtDate(String(client.since).slice(0, 10)) })}</p>}
         {profile.pausedUntil && profile.pausedUntil >= today && (
           <p className="pause-status">{t('⏸ Em pausa até {v1}', { v1: profile.pausedUntil.split('-').reverse().slice(0, 2).join('/') })}</p>

@@ -9,6 +9,7 @@ const GOALS = {
 };
 const LEVELS = { iniciante: t('Iniciante'), intermediario: t('Intermediário'), avancado: t('Avançado') };
 const WEEKLY = [1, 2, 3, 4, 5, 6, 7];
+const PHONE_OK = /^[0-9+() .-]{0,20}$/;
 const num = v => (v === undefined || v === null ? '' : String(v).replace('.', ','));
 
 // O personal corrige o cadastro do aluno vinculado, e-mail de login incluído.
@@ -18,6 +19,8 @@ export default function ClientProfileEdit({ clientId, profile, onSaved }) {
     nome: profile.name || '', email: profile.email || '', sexo: profile.sexo || '', peso: num(profile.peso), pesoAlvo: num(profile.pesoAlvo),
     altura: num(profile.altura), idade: num(profile.idade), meta: profile.meta || '', nivel: profile.nivel || '',
     weeklyGoal: profile.weeklyGoal ? String(profile.weeklyGoal) : '',
+    lesoes: profile.lesoes || '', restricoes: profile.restricoes || '',
+    emergenciaNome: profile.emergenciaNome || '', emergenciaTel: profile.emergenciaTel || '',
   }));
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -25,9 +28,14 @@ export default function ClientProfileEdit({ clientId, profile, onSaved }) {
 
   async function handleSave() {
     if (!f.nome.trim()) { setError(t('Informe o nome do aluno.')); return; }
+    if (!PHONE_OK.test(f.emergenciaTel.trim())) { setError(t('Telefone de emergência: use só números, +, parênteses, espaço, ponto ou traço (até 20).')); return; }
     setBusy(true); setError('');
     try {
-      await updateClientProfile(clientId, { ...f, nome: f.nome.trim(), email: f.email.trim() });
+      await updateClientProfile(clientId, {
+        ...f, nome: f.nome.trim(), email: f.email.trim(),
+        lesoes: f.lesoes.trim(), restricoes: f.restricoes.trim(),
+        emergenciaNome: f.emergenciaNome.trim(), emergenciaTel: f.emergenciaTel.trim(),
+      });
       toast(t('✅ Dados do aluno atualizados'));
       onSaved?.();
     } catch (err) {
@@ -41,6 +49,12 @@ export default function ClientProfileEdit({ clientId, profile, onSaved }) {
     <div className="profile-field">
       <label className="profile-field__label" htmlFor={`cp-${k}`}>{label}</label>
       <input id={`cp-${k}`} className="input input--sm" value={f[k]} onChange={set(k)} {...props} />
+    </div>
+  );
+  const area = (k, label, props = {}) => (
+    <div className="profile-field">
+      <label className="profile-field__label" htmlFor={`cp-${k}`}>{label}</label>
+      <textarea id={`cp-${k}`} className="input input--sm" rows={2} value={f[k]} onChange={set(k)} {...props} />
     </div>
   );
   const select = (k, label, options) => (
@@ -67,6 +81,11 @@ export default function ClientProfileEdit({ clientId, profile, onSaved }) {
       {select('meta', t('Objetivo'), Object.entries(GOALS))}
       {select('nivel', t('Nível'), Object.entries(LEVELS))}
       {select('weeklyGoal', t('Treinos por semana (meta)'), WEEKLY.map(n => [String(n), String(n)]))}
+      <p className="profile-field__label m-0">{t('Saúde e emergência')}</p>
+      {area('lesoes', t('Lesões'), { maxLength: 200, placeholder: t('Ex.: joelho direito (menisco)') })}
+      {area('restricoes', t('Restrições'), { maxLength: 200, placeholder: t('Ex.: evitar impacto, hipertensão') })}
+      {text('emergenciaNome', t('Contato de emergência'), { maxLength: 80 })}
+      {text('emergenciaTel', t('Telefone do contato'), { type: 'tel', inputMode: 'tel', maxLength: 20 })}
       {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
       <button type="button" className="btn btn--primary btn--sm" disabled={busy} onClick={handleSave}>{busy ? t('Salvando…') : t('Salvar dados')}</button>
     </div>

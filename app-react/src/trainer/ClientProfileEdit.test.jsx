@@ -51,4 +51,24 @@ describe('ClientProfileEdit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Salvar dados' }));
     await waitFor(() => expect(h.update).toHaveBeenCalledWith('c1', expect.objectContaining({ sexo: 'M' })));
   });
+
+  it('mostra e salva lesões, restrições e contato de emergência', async () => {
+    render(<ClientProfileEdit clientId="c1" profile={{ ...profile, lesoes: 'Joelho direito', emergenciaNome: 'Maria' }} />);
+    expect(screen.getByLabelText('Lesões').value).toBe('Joelho direito');
+    expect(screen.getByLabelText('Contato de emergência').value).toBe('Maria');
+    fireEvent.change(screen.getByLabelText('Restrições'), { target: { value: '  Sem impacto ' } });
+    fireEvent.change(screen.getByLabelText('Telefone do contato'), { target: { value: '(11) 98888-7777' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar dados' }));
+    await waitFor(() => expect(h.update).toHaveBeenCalledWith('c1', expect.objectContaining({
+      lesoes: 'Joelho direito', restricoes: 'Sem impacto', emergenciaNome: 'Maria', emergenciaTel: '(11) 98888-7777',
+    })));
+  });
+
+  it('telefone de emergência inválido não é enviado', () => {
+    render(<ClientProfileEdit clientId="c1" profile={profile} />);
+    fireEvent.change(screen.getByLabelText('Telefone do contato'), { target: { value: 'abc' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar dados' }));
+    expect(screen.getByRole('alert').textContent).toContain('Telefone de emergência');
+    expect(h.update).not.toHaveBeenCalled();
+  });
 });

@@ -180,6 +180,25 @@ describe('ClientDetail', () => {
     expect(h.api.fetchTrainerThread).toHaveBeenCalledWith('c1');
   });
 
+  it('cabeçalho mostra lesões, restrições e o telefone de emergência como link', async () => {
+    h.api.fetchClientDetail.mockResolvedValue({
+      ...DETAIL, profile: { ...DETAIL.profile, lesoes: 'Joelho direito', restricoes: 'Sem impacto', emergenciaNome: 'Maria', emergenciaTel: '(11) 98888-7777' },
+    });
+    setup();
+    await screen.findByText('Frequência');
+    expect(screen.getByText(/Lesões: Joelho direito/)).toBeTruthy();
+    expect(screen.getByText(/Restrições: Sem impacto/)).toBeTruthy();
+    expect(screen.getByText(/Emergência:/).textContent).toContain('Maria');
+    expect(screen.getByRole('link', { name: '(11) 98888-7777' }).getAttribute('href')).toBe('tel:11988887777');
+  });
+
+  it('cabeçalho não mostra saúde nem emergência quando não há dados', async () => {
+    setup();
+    await screen.findByText('Frequência');
+    expect(screen.queryByText(/Lesões:/)).toBeNull();
+    expect(screen.queryByText(/Emergência:/)).toBeNull();
+  });
+
   it('plano atual: com plano oferece editar e mostra o prazo; sem plano oferece montar', async () => {
     setup();
     await screen.findByText('Frequência');
