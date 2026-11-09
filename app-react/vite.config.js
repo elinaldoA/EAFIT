@@ -32,6 +32,8 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.js',
       injectManifest: {
+        // iife: o formato padrão (es) faz o plugin passar inlineDynamicImports ao Rolldown, opção obsoleta que gera aviso a cada build
+        rollupFormat: 'iife',
         // jpg: só a anatomia.jpg (≈70KB), usada no avatar corporal do resumo do
         // treino e da Evolução — sem ela no precache a figura falha offline.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,jpg}'],
