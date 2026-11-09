@@ -18,6 +18,12 @@ export default defineConfig({
       VITE_SUPABASE_ANON_KEY: 'test-anon-key',
     },
   },
+  build: {
+    // Os maiores pacotes (cliente do Supabase e o núcleo do app, ≈600 KB antes do gzip)
+    // são carregados uma vez e vão para o precache; os pesados (PDF, OCR, jsPDF)
+    // já são separados e baixados só sob demanda. O aviso padrão de 500 KB só fazia ruído.
+    chunkSizeWarningLimit: 700,
+  },
   plugins: [
     react(),
     VitePWA({
