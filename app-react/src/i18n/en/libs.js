@@ -202,6 +202,8 @@ export default {
   'Avisa quando um aluno registra desconforto forte ou lesão.': 'Alerts you when a client logs strong discomfort or an injury.',
   'Resumo da semana': 'Weekly summary',
   'Toda segunda, às 8h: quantos alunos treinaram e quem ficou parado.': 'Every Monday at 8am: how many clients trained and who was inactive.',
+  'Cobranças': 'Payments',
+  'Avisa quando um pagamento passa 3 dias do vencimento. O aluno também recebe lembrete na véspera e no dia.': 'Alerts you when a payment is 3 days past due. Clients also get a reminder the day before and on the due date.',
   'Dê um nome ao modelo (2 a 60 letras).': 'Name the template (2 to 60 letters).',
   'O treino precisa de 1 a 7 dias.': 'The workout needs 1 to 7 days.',
   'Você atingiu o limite de 50 modelos. Apague algum para salvar outro.': 'You reached the limit of 50 templates. Delete one to save another.',

@@ -18,6 +18,6 @@ describe('configuração padrão', () => {
   it('prazo padrão está entre as opções e todo alerta tem texto', () => {
     expect(INACTIVE_DAY_CHOICES).toContain(DEFAULT_SETTINGS.days);
     for (const o of ALERT_OPTIONS) expect(o.label && o.hint).toBeTruthy();
-    expect(ALERT_OPTIONS.map(o => o.key).sort()).toEqual(['inactive', 'pain', 'pr', 'weekly']);
+    expect(ALERT_OPTIONS.map(o => o.key).sort()).toEqual(['charge', 'inactive', 'pain', 'pr', 'weekly']);
   });
 });

@@ -116,6 +116,7 @@ describe('backup cobre as tabelas do usuário', () => {
     friend_profiles: 'código e compartilhamento vão em friendProfile',
     challenge_members: 'participação vai em challenges',
     appointment_reminder_log: 'controle interno de lembretes enviados',
+    trainer_charge_reminder_log: 'controle interno de lembretes de cobranca enviados',
     trainer_alert_log: 'controle interno de alertas do personal',
     trainer_clients: 'o vínculo com o personal vai em trainer',
     trainer_invite_signups: 'registro interno de atribuição (por qual link de personal a conta foi criada)',
