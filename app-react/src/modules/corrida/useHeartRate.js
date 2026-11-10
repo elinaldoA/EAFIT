@@ -8,6 +8,15 @@ const SERVICE = 'heart_rate';
 const CHARACTERISTIC = 'heart_rate_measurement';
 const emptyAcc = () => ({ sum: 0, n: 0, max: 0, zones: Array(ZONE_COUNT).fill(0), last: null });
 
+// Tira os ouvintes e solta a cinta (a conexão aberta prenderia a cinta, e um ouvinte
+// esquecido contaria cada leitura duas vezes ao ligar de novo no mesmo aparelho).
+const drop = c => {
+  if (!c) return;
+  c.ch?.removeEventListener('characteristicvaluechanged', c.onValue);
+  c.device?.removeEventListener('gattserverdisconnected', c.onDrop);
+  if (c.device?.gatt?.connected) c.device.gatt.disconnect();
+};
+
 // Cinta cardíaca por Bluetooth. `connect()` precisa vir de um toque (regra do
 // navegador). Enquanto `recording` (corrida rodando), junta as leituras e, a
 // cada FLUSH_MS, chama onFlush(soma, quantas, máxima, segundosPorZona), com as
@@ -17,7 +26,8 @@ const emptyAcc = () => ({ sum: 0, n: 0, max: 0, zones: Array(ZONE_COUNT).fill(0)
 export function useHeartRate(recording, onFlush, hrMax = null) {
   const [status, setStatus] = useState('off');
   const [bpm, setBpm] = useState(null);
-  const device = useRef(null);
+  const link = useRef(null);
+  const alive = useRef(true);
   const acc = useRef(emptyAcc());
   const recordingRef = useRef(recording);
   recordingRef.current = recording;
@@ -32,26 +42,37 @@ export function useHeartRate(recording, onFlush, hrMax = null) {
     if (n > 0) onFlushRef.current?.(sum, n, max, hrMaxRef.current ? zones : null);
   }, []);
 
-  const disconnect = useCallback(() => {
-    const d = device.current;
-    device.current = null;
-    if (d?.gatt?.connected) d.gatt.disconnect();
-    setStatus('off');
-    setBpm(null);
+  const release = useCallback(() => {
+    const c = link.current;
+    link.current = null;
+    drop(c);
   }, []);
 
+  const disconnect = useCallback(() => {
+    release();
+    setStatus('off');
+    setBpm(null);
+  }, [release]);
+
   const connect = useCallback(async () => {
-    if (!hrSupported()) return;
+    if (!hrSupported() || link.current) return;
+    const mine = {};
+    link.current = mine;
     setStatus('connecting');
     try {
       const d = await navigator.bluetooth.requestDevice({ filters: [{ services: [SERVICE] }] });
-      d.addEventListener('gattserverdisconnected', () => {
-        if (device.current === d) { device.current = null; setStatus('error'); setBpm(null); }
-      });
+      mine.device = d;
+      mine.onDrop = () => {
+        if (link.current !== mine) return;
+        release();
+        if (alive.current) { setStatus('error'); setBpm(null); }
+      };
+      d.addEventListener('gattserverdisconnected', mine.onDrop);
       const server = await d.gatt.connect();
       const service = await server.getPrimaryService(SERVICE);
       const ch = await service.getCharacteristic(CHARACTERISTIC);
-      ch.addEventListener('characteristicvaluechanged', e => {
+      mine.ch = ch;
+      mine.onValue = e => {
         const v = parseHeartRate(e.target.value);
         if (v == null) return;
         setBpm(v);
@@ -63,15 +84,18 @@ export function useHeartRate(recording, onFlush, hrMax = null) {
         const zones = [...a.zones];
         if (hrMaxRef.current) zones[zoneOf(v, hrMaxRef.current)] += dt;
         acc.current = { sum: a.sum + v, n: a.n + 1, max: Math.max(a.max, v), zones, last: at };
-      });
+      };
+      ch.addEventListener('characteristicvaluechanged', mine.onValue);
       await ch.startNotifications();
-      device.current = d;
+      // A tela saiu ou a pessoa desconectou enquanto a conexão abria: solta a cinta.
+      if (!alive.current || link.current !== mine) { drop(mine); return; }
       setStatus('on');
     } catch (err) {
-      // Escolher "cancelar" na lista de aparelhos não é erro.
-      setStatus(err?.name === 'NotFoundError' ? 'off' : 'error');
+      if (link.current === mine) link.current = null;
+      drop(mine);
+      if (alive.current) setStatus(err?.name === 'NotFoundError' ? 'off' : 'error');
     }
-  }, []);
+  }, [release]);
 
   useEffect(() => {
     if (status !== 'on') return undefined;
@@ -79,11 +103,10 @@ export function useHeartRate(recording, onFlush, hrMax = null) {
     return () => { clearInterval(id); flush(); };
   }, [status, flush]);
 
-  useEffect(() => () => {
-    const d = device.current;
-    device.current = null;
-    if (d?.gatt?.connected) d.gatt.disconnect();
-  }, []);
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; release(); };
+  }, [release]);
 
   return { status, bpm, connect, disconnect };
 }

@@ -1,6 +1,7 @@
 import { t, lang } from '../../lib/i18n';
 // Clima da corrida (Open-Meteo, sem chave): temperatura, vento, umidade e
-// condição no fim da corrida, guardados em runs.weather = { t, w, h, c }
+// condição do tempo na hora de salvar a corrida (logo depois de ela acabar),
+// para o começo do percurso, guardados em runs.weather = { t, w, h, c }
 //   t = °C inteiro, w = vento km/h inteiro, h = umidade %, c = código WMO.
 // Privacidade: só vai ao serviço a posição do começo da corrida arredondada a
 // 0,1° (~11 km) e nenhum identificador. Falhou ou sem internet: a corrida

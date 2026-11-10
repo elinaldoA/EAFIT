@@ -23,7 +23,13 @@ const COLUMNS = 'id, client_id, run_date, started_at, title, visibility, duratio
 const OPTIONAL_COLUMNS = ['intervals', 'km_elev', 'weather', 'hr'];
 const columnsWith = extras => [COLUMNS, ...extras].join(', ');
 const hasValue = v => (Array.isArray(v) ? v.length > 0 : !!v && typeof v === 'object' && Object.keys(v).length > 0);
-const missingColumn = (error, columns) => (error ? columns.find(c => new RegExp(c, 'i').test(`${error.message || ''} ${error.details || ''}`)) : undefined);
+// Só vale erro de coluna inexistente que cite o nome inteiro da coluna: 'hr' não pode casar com 'through'
+// nem com o nome de uma constraint como runs_hr_shape.
+export const missingColumn = (error, columns) => {
+  const text = error ? `${error.message || ''} ${error.details || ''}` : '';
+  if (!/column|schema cache/i.test(text)) return undefined;
+  return columns.find(c => new RegExp(`(^|[^a-z0-9_])${c}($|[^a-z0-9_])`, 'i').test(text));
+};
 
 // Ritmo só vale a partir de 1 km (abaixo disso o número engana).
 const MIN_PACE_M = 1000;
@@ -216,7 +222,11 @@ export function editRun(run, form, now = Date.now()) {
     const measured = manualRun({ ...form, title: '' }, now);
     if (measured.error) return { error: measured.error };
     const { run_date, started_at, duration_s, distance_m } = measured.record;
-    Object.assign(patch, { run_date, started_at, duration_s, distance_m });
+    // Data e hora só mudam se a pessoa mexeu: refazê-las do relógio local do aparelho moveria
+    // uma corrida perto da meia-noite (ou com outro fuso) sem ninguém pedir.
+    const initial = editFormFrom(run);
+    const sameStart = form.date === initial.date && form.time === initial.time;
+    Object.assign(patch, { duration_s, distance_m }, sameStart ? {} : { run_date, started_at });
   }
   return { patch };
 }

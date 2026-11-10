@@ -17,7 +17,7 @@ vi.mock('../../lib/supabase', () => {
 
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
-  saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun,
+  saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
   shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
@@ -244,7 +244,24 @@ describe('editar corrida', () => {
     const { patch } = editRun(manual, form, NOW);
     expect(patch.distance_m).toBe(5500);
     expect(patch.duration_s).toBe(1930);
-    expect(patch.run_date).toBe('2026-11-01');
+    // Data e hora que a pessoa não mexeu não são reescritas.
+    expect(patch).not.toHaveProperty('run_date');
+    expect(patch).not.toHaveProperty('started_at');
+  });
+
+  it('muda data e hora só quando a pessoa mexe nelas', () => {
+    const { patch } = editRun(manual, { ...editFormFrom(manual), date: '2026-10-30', time: '06:15' }, NOW);
+    expect(patch.run_date).toBe('2026-10-30');
+    expect(new Date(patch.started_at).getHours()).toBe(6);
+  });
+
+  it('só trata como coluna ausente o erro que cita a coluna inteira', () => {
+    const cols = ['intervals', 'km_elev', 'weather', 'hr'];
+    expect(missingColumn({ message: 'column runs.hr does not exist' }, cols)).toBe('hr');
+    expect(missingColumn({ message: "Could not find the 'weather' column of 'runs' in the schema cache" }, cols)).toBe('weather');
+    expect(missingColumn({ message: 'connection throttled through proxy' }, cols)).toBeUndefined();
+    expect(missingColumn({ message: 'new row violates check constraint "runs_hr_shape"' }, cols)).toBeUndefined();
+    expect(missingColumn(null, cols)).toBeUndefined();
   });
 
   it('corrida do GPS ignora distância e tempo do formulário', () => {

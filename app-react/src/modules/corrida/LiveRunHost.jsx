@@ -445,9 +445,10 @@ function FinishRun({ run, now, onBack, onDone }) {
     const record = finishRun(run, { meters: edited ? parsed * 1000 : undefined, effort, notes, title, visibility, zones, shoeId });
     let previous = [];
     let loaded = false;
+    // O clima do começo do percurso (até 4 s; sem internet salva sem ele) busca junto com a lista, sem somar espera.
+    const weatherPromise = record.gps ? fetchWeather(run.route) : Promise.resolve(null);
     try { previous = await fetchRuns(user.id); loaded = true; } catch { /* sem rede: sem recorde agora */ }
-    // Clima do começo do percurso (até 4 s; sem internet a corrida salva sem ele).
-    if (record.gps) record.weather = await fetchWeather(run.route);
+    record.weather = await weatherPromise;
     const { pending } = await saveRun(user.id, record);
     rememberShoe(shoeId);
     const others = previous.filter(r => r.client_id !== record.client_id);
