@@ -65,7 +65,6 @@ window.LANDING_EN = {
     'Pular para o conteúdo': 'Skip to content',
     'Recursos': 'Features',
     'Para personais': 'For trainers',
-    'Para quem corre': 'For runners',
     'Abrir app': 'Open app',
     'Grátis · sem anúncios · funciona offline': 'Free · no ads · works offline',
     'Pare de treinar no improviso.': 'Stop winging your workouts.',
