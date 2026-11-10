@@ -92,3 +92,27 @@ export function bestOnSameRoute(runs, run) {
   }
   return best;
 }
+
+// Agrupa as corridas por rota (a mesma estimativa de sameRoute) para a lista
+// "Minhas rotas". Só entram rotas feitas pelo menos `min` vezes; a mais feita
+// primeiro, e a mais recente entre as empatadas. Cada grupo traz a corrida mais
+// recente (`last`, que dá nome e desenho) e a mais rápida (`best`).
+export function groupRoutes(runs, min = 2) {
+  const groups = [];
+  const sorted = (Array.isArray(runs) ? runs : [])
+    .filter(r => !r.pending && r.duration_s > 0 && r.distance_m >= 1000 && centroid(r.route))
+    .sort((a, b) => String(b.started_at).localeCompare(String(a.started_at)));
+  for (const run of sorted) {
+    const group = groups.find(g => sameRoute(g.last, run));
+    if (group) {
+      group.runs.push(run);
+      if (run.duration_s < group.best.duration_s) group.best = run;
+    } else {
+      groups.push({ last: run, best: run, runs: [run] });
+    }
+  }
+  return groups
+    .filter(g => g.runs.length >= min)
+    .sort((a, b) => b.runs.length - a.runs.length || String(b.last.started_at).localeCompare(String(a.last.started_at)))
+    .map(g => ({ ...g, count: g.runs.length }));
+}

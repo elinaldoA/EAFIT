@@ -75,3 +75,23 @@ describe('textos das sessões', () => {
     expect(isRunSession({ type: 'longao' })).toBe(true);
   });
 });
+
+describe('dias de corrida (espelho de run_day_planned no banco)', () => {
+  // supabase/migrations/20270206010000_eafit_run_today_push.sql: se estes dias
+  // mudarem aqui, a função SQL e o lembrete de "hoje é dia de correr" mudam junto.
+  const mask = days => days.map(d => (isRunSession(d) ? '1' : '0')).join('');
+  const EXPECTED = { iniciante: '1010010', intermediario: '1010110', avancado: '1101110' };
+
+  it('todas as semanas de cada nível têm os mesmos dias de corrida', () => {
+    for (const goal of ['5k', '10k', 'meia']) {
+      for (const nivel of Object.keys(EXPECTED)) {
+        const { weeks } = buildRunProgram({ goal, nivel });
+        for (const w of weeks) expect(mask(w.days)).toBe(EXPECTED[nivel]);
+      }
+    }
+  });
+
+  it('a semana de manutenção corre seg, qua e sáb em qualquer nível', () => {
+    for (const nivel of Object.keys(EXPECTED)) expect(mask(maintenanceWeek(nivel))).toBe('1010010');
+  });
+});

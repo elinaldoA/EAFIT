@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ghostFrom, ghostTimeAt, ghostGapS, sameRoute, bestOnSameRoute } from './ghost';
+import { ghostFrom, ghostTimeAt, ghostGapS, sameRoute, bestOnSameRoute, groupRoutes } from './ghost';
 
 // 5 km em 25:00, km 1 a 5 em 300 s cada.
 const five = { client_id: 'a', title: 'Parque', run_date: '2026-10-01', duration_s: 1500, distance_m: 5000, splits: [300, 300, 300, 300, 300] };
@@ -77,5 +77,28 @@ describe('mesma rota', () => {
     const pending = { ...r('d', loop(-2300000, -4000000), 5000, 900), pending: true };
     expect(bestOnSameRoute([a, faster, fasterOther, pending], a).client_id).toBe('b');
     expect(bestOnSameRoute([a], a).client_id).toBe('a');
+  });
+});
+
+describe('groupRoutes', () => {
+  const mk = (id, started, lat, dist, dur) => ({
+    client_id: id, started_at: started, distance_m: dist, duration_s: dur,
+    route: [[[Math.round(lat * 1e5), -4600000, 0], [Math.round(lat * 1e5) + 50, -4600000 + 50, 100]]],
+  });
+  it('junta as corridas da mesma rota e acha a melhor', () => {
+    const runs = [
+      mk('a', '2026-11-01T08:00:00Z', -23.5, 5000, 1700),
+      mk('b', '2026-11-05T08:00:00Z', -23.5, 5050, 1600),
+      mk('c', '2026-11-08T08:00:00Z', -23.5, 4980, 1650),
+      mk('far', '2026-11-09T08:00:00Z', -22.0, 5000, 1500),
+    ];
+    const groups = groupRoutes(runs);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].count).toBe(3);
+    expect(groups[0].best.client_id).toBe('b');
+    expect(groups[0].last.client_id).toBe('c');
+  });
+  it('ignora corrida sem percurso e rota feita uma vez só', () => {
+    expect(groupRoutes([mk('a', '2026-11-01T08:00:00Z', -23.5, 5000, 1700), { client_id: 'x', distance_m: 5000, duration_s: 1500, route: [] }])).toEqual([]);
   });
 });

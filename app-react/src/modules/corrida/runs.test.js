@@ -17,7 +17,7 @@ vi.mock('../../lib/supabase', () => {
 
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
-  saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun,
+  saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun,
   shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
@@ -218,5 +218,44 @@ describe('clubes', () => {
     expect(clubError(new Error('invalid_code'))).toMatch(/não encontrado/);
     expect(clubError(new Error('blocked_word'))).toMatch(/palavra/);
     expect(clubError(new Error('algo'))).toMatch(/tente de novo/);
+  });
+});
+
+describe('editar corrida', () => {
+  const manual = {
+    client_id: 'm1', run_date: '2026-11-01', started_at: new Date(2026, 10, 1, 7, 30).toISOString(),
+    duration_s: 1800, distance_m: 5000, splits: [], route: [], gps: false, intervals: [], effort: 5, notes: 'ok', title: 'Esteira', visibility: 'amigos', shoe_id: null,
+  };
+  const gps = { ...manual, gps: true, splits: [350, 340, 360, 350, 355] };
+  const NOW = new Date(2026, 10, 10, 12).getTime();
+
+  it('só a corrida lançada à mão edita distância e tempo', () => {
+    expect(canEditMeasures(manual)).toBe(true);
+    expect(canEditMeasures(gps)).toBe(false);
+  });
+
+  it('o formulário nasce com os valores da corrida', () => {
+    const f = editFormFrom(manual);
+    expect(f).toMatchObject({ date: '2026-11-01', time: '07:30', hours: '0', minutes: '30', seconds: '0', effort: 5, notes: 'ok' });
+  });
+
+  it('corrige distância e tempo da corrida à mão', () => {
+    const form = { ...editFormFrom(manual), km: '5,5', minutes: '32', seconds: '10' };
+    const { patch } = editRun(manual, form, NOW);
+    expect(patch.distance_m).toBe(5500);
+    expect(patch.duration_s).toBe(1930);
+    expect(patch.run_date).toBe('2026-11-01');
+  });
+
+  it('corrida do GPS ignora distância e tempo do formulário', () => {
+    const form = { ...editFormFrom(gps), km: '9', minutes: '5', title: '  Longão ', effort: 8, visibility: 'privado' };
+    const { patch } = editRun(gps, form, NOW);
+    expect(patch).toEqual({ title: 'Longão', notes: 'ok', effort: 8, visibility: 'privado', shoe_id: null });
+  });
+
+  it('recusa distância inválida e limpa campos vazios', () => {
+    expect(editRun(manual, { ...editFormFrom(manual), km: '0' }, NOW).error).toBeTruthy();
+    const { patch } = editRun(gps, { ...editFormFrom(gps), title: '', notes: '', effort: 99 }, NOW);
+    expect(patch).toMatchObject({ title: null, notes: null, effort: null });
   });
 });

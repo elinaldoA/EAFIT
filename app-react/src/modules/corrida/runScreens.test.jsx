@@ -259,7 +259,10 @@ describe('RunHomePage (aba Gravar)', () => {
     h.user = { id: 'u1', user_metadata: { runGoal: '5k', runNivel: 'intermediario', runStart: '2026-11-02' } };
     render(<RunHomePage />);
     await act(async () => {});
-    expect(screen.getAllByRole('listitem')).toHaveLength(7);
+    expect(document.querySelectorAll('.run-week__day')).toHaveLength(7);
+    fireEvent.click(screen.getByRole('button', { name: /Ver o programa completo/ }));
+    expect(document.querySelectorAll('.run-calendar__week')).toHaveLength(8);
+    expect(document.querySelectorAll('.run-calendar__week--now')).toHaveLength(1);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Encerrar programa' })); });
     expect(h.updateProfile).toHaveBeenCalledWith({ runGoal: null, runStart: null });
   });
@@ -356,5 +359,21 @@ describe('RunChallengesPage (aba Desafios)', () => {
     expect(screen.getByText(/🥇 Bia/)).toBeTruthy();
     expect(screen.getByText(/Corra 25 km no mês/)).toBeTruthy();
     expect(await screen.findByText('ANA7K2')).toBeTruthy();
+  });
+});
+
+describe('Minhas rotas (aba Gravar)', () => {
+  it('lista a rota repetida e começa a corrida contra a melhor', async () => {
+    const loop = (lat, dur, id) => ({
+      client_id: id, run_date: '2026-11-0' + (id === 'a' ? 1 : 2), started_at: `2026-11-0${id === 'a' ? 1 : 2}T08:00:00Z`, duration_s: dur, distance_m: 5000,
+      splits: [], gps: true, kind: 'livre', title: 'Volta do parque', visibility: 'amigos', intervals: [],
+      route: [[[lat, -4600000, 0], [lat + 50, -4600000 + 50, 100]]],
+    });
+    h.fetchRuns.mockResolvedValue([loop(-2350000, 1700, 'a'), loop(-2350000, 1600, 'b')]);
+    render(<RunHomePage />);
+    await act(async () => {});
+    expect(screen.getByText('Minhas rotas')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Correr de novo contra a melhor/ }));
+    expect(getLiveRun()?.ghost).toMatchObject({ id: 'b', duration_s: 1600 });
   });
 });

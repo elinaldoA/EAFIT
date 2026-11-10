@@ -15,8 +15,11 @@ import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
+import EditRunForm from './EditRunForm';
 import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
+import { weatherText } from './weather';
+import { hrText } from './heartRate';
 import { ghostFrom, bestOnSameRoute } from './ghost';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported } from './useGeoTracker';
@@ -33,6 +36,8 @@ function RunItem({ run, runs, shoe, onDelete }) {
   const [confirm, setConfirm] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const { user } = useAuth();
   // O card é desenhado ao abrir a corrida: no toque em Compartilhar ele já
   // está pronto e o share nativo não perde o gesto (lib/shareCard.js).
   const prepared = useRef(null);
@@ -76,7 +81,12 @@ function RunItem({ run, runs, shoe, onDelete }) {
         </span>
         <span className="run-item__kind">{SESSION_TITLE[run.kind] || SESSION_TITLE.livre}{run.pending ? ' · 📶' : ''}</span>
       </button>
-      {open && (
+      {open && editing && (
+        <div className="run-item__body">
+          <EditRunForm userId={user.id} run={run} onClose={() => setEditing(false)} />
+        </div>
+      )}
+      {open && !editing && (
         <div className="run-item__body">
           <RouteDrawing route={run.route} splits={run.splits} detail width={320} height={190} />
           {(run.elev_gain_m != null || run.cadence || shoe) && (
@@ -86,6 +96,8 @@ function RunItem({ run, runs, shoe, onDelete }) {
               {shoe && <span>👟 {shoe.name}</span>}
             </div>
           )}
+          {run.hr && <p className="run-item__weather">{hrText(run.hr)}</p>}
+          {run.weather && <p className="run-item__weather">{weatherText(run.weather)}</p>}
           {run.splits.length > 0 ? <SplitBars splits={run.splits} elev={run.km_elev} />
             : <p className="profile-field__hint">{t('Sem tempo por km (distância digitada).')}</p>}
           {run.intervals?.length > 0 && (
@@ -116,6 +128,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setPhotoOpen(true)}>
             {t('📸 Compartilhar com foto')}
           </button>
+          <button type="button" className="btn btn--outline btn--sm" onClick={() => setEditing(true)}>{t('✏️ Editar corrida')}</button>
           <button
             type="button" className="btn btn--ghost btn--sm"
             onClick={() => { if (confirm) onDelete(run); else setConfirm(true); }}

@@ -1,6 +1,7 @@
 import { addPoint, privateRoute } from './route';
 import { addAltitude, elevationGain, elevMark, kmElevOf } from './elevation';
 import { averageCadence } from './cadence';
+import { heartOf } from './heartRate';
 import { cleanReps } from './intervals';
 
 // Corrida ao vivo do EAFIT Run: cronômetro com pausa, distância e a marca de
@@ -149,6 +150,7 @@ export function finishRun(s, { now = Date.now(), meters, effort = null, notes = 
     elev_gain_m: s.gps ? elevationGain(s.elev) : null,
     km_elev: s.gps && !manual ? kmElevOf(s.kmElev, s.kmMarks.length) : null,
     cadence: averageCadence(s.steps, s.stepMs),
+    hr: heartOf(s),
     shoe_id: shoeId || null,
     intervals: cleanReps(s.reps).length ? cleanReps(s.reps) : null,
   };

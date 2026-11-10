@@ -170,6 +170,7 @@
 .run-item__kind { font-size: var(--fs-xs); color: var(--primary); font-weight: 700; text-align: right; }
 .run-item__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-sm); }
 .run-item__body p { margin: 0; }
+.run-item__edit { display: flex; flex-direction: column; gap: var(--sp-2); }
 .run-item__notes { color: var(--text-muted); white-space: pre-wrap; }
 
 /* ---- Percurso sobre o mapa (blocos do OpenStreetMap, RouteDrawing.jsx) ---- */
@@ -511,3 +512,14 @@
 .run-splits--wide .run-splits__row { grid-template-columns: 2ch 1fr auto; }
 .run-splits--elev .run-splits__row { grid-template-columns: 2ch 1fr 4.5ch auto; }
 .run-splits__elev { min-width: 9ch; text-align: right; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.run-route { display: flex; gap: var(--sp-3); align-items: center; }
+.run-route__map { flex: 0 0 96px; }
+.run-route__info { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); min-width: 0; }
+.run-route__info .btn { margin-top: var(--sp-1); align-self: flex-start; }
+.run-calendar { display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-calendar__head, .run-calendar__week { display: grid; grid-template-columns: 1.5rem repeat(7, 1fr); align-items: center; text-align: center; gap: 2px; }
+.run-calendar__head { font-size: var(--fs-xs); opacity: .7; }
+.run-calendar__weeks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.run-calendar__week { padding: 4px 0; border-radius: var(--radius-sm, 8px); }
+.run-calendar__week--now { background: color-mix(in srgb, var(--accent, #ff6a00) 18%, transparent); font-weight: 600; }
+.run-calendar__num { font-size: var(--fs-xs); opacity: .7; }

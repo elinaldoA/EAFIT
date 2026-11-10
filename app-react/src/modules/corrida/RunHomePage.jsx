@@ -9,6 +9,8 @@ import {
   describeSession, isRunSession, mondayOf, goalWeeks,
 } from './program';
 import RunRace from './RunRace';
+import MyRoutes from './MyRoutes';
+import ProgramCalendar from './ProgramCalendar';
 import {
   fetchRuns, flushPendingRuns, formatKm, formatClock, RUN_SAVED_EVENT, manualRun, saveRun, newRecords, describeRecord,
   fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice,
@@ -236,6 +238,15 @@ export default function RunHomePage() {
   const doneToday = ranOn.has(today);
   const planned = !!session && isRunSession(session);
 
+  // Correr de novo numa rota já feita: o fantasma é a melhor corrida dela.
+  function runAgainst(ghost) {
+    if (getLiveRun()) return toast(t('Já existe uma corrida em andamento'));
+    writePref(GPS_KEY, gps);
+    requestMotionPermission();
+    setLiveRun(startRun({ gps, ghost }));
+    trackEvent('run_start', 'fantasma');
+  }
+
   // custom: sessão montada no treino guiado (GuidedSetup).
   function begin(withSession, custom = null) {
     if (getLiveRun()) return;
@@ -319,6 +330,7 @@ export default function RunHomePage() {
             <button type="button" className="btn btn--ghost btn--sm" onClick={stopProgram} disabled={busy}>{t('Encerrar programa')}</button>
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setEditing(true)}>{t('Trocar de programa')}</button>
           </div>
+          <ProgramCalendar program={program} currentWeek={where.week} />
         </div>
       ) : (
         <button type="button" className="dash-card run-plan-cta" onClick={() => setPlanOpen(true)}>
@@ -328,6 +340,7 @@ export default function RunHomePage() {
       )}
 
       <RunRace runs={runs} today={today} onProgram={saveProgram} />
+      <MyRoutes runs={runs} onRunAgainst={runAgainst} />
     </section>
   );
 }

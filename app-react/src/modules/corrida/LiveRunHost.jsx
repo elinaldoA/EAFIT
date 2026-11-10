@@ -17,8 +17,11 @@ import {
 } from './liveRun';
 import { emptyMotion, motionStep } from './autoPause';
 import { elevationGain, kmElevOf } from './elevation';
+import { fetchWeather } from './weather';
 import { averageCadence } from './cadence';
 import { useStepCounter } from './useStepCounter';
+import { useHeartRate } from './useHeartRate';
+import { addHeart, heartOf, hrSupported, hrText } from './heartRate';
 import { useGuidedWorkout } from './useGuidedWorkout';
 import IntervalResults from './IntervalResults';
 import GhostBar, { GhostResult } from './GhostBar';
@@ -108,6 +111,9 @@ export default function LiveRunHost() {
 
   // Cadência: o acelerômetro conta os passos só com a corrida rodando.
   const spm = useStepCounter(running && !interrupted, (steps, ms) => updateLiveRun(s => addSteps(s, steps, ms)));
+
+  // Cinta cardíaca (Bluetooth): conecta no toque; só a corrida rodando conta.
+  const heart = useHeartRate(running && !interrupted, (sum, n, max) => updateLiveRun(s => addHeart(s, sum, n, max)));
 
   // Marca que o app está aberto com a corrida (liveRun.interruptedSince).
   const runId = run?.id;
@@ -204,7 +210,7 @@ export default function LiveRunHost() {
         ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={() => setFinishing(false)} />
         : (
           <LiveRunScreen
-            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} guided={guided}
+            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided}
             autoPauseOn={autoPauseOn} onToggleAutoPause={toggleAutoPause}
             onFinish={() => { updateLiveRun(s => pauseRun(s)); setFinishing(true); }}
           />
@@ -271,7 +277,7 @@ function WorkoutStep({ guided }) {
   );
 }
 
-function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, guided, autoPauseOn, onToggleAutoPause, onFinish }) {
+function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, heart, guided, autoPauseOn, onToggleAutoPause, onFinish }) {
   const el = elapsedMs(run, now);
   const totalS = Math.floor(el / 1000);
   const paused = isPaused(run);
@@ -342,6 +348,21 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, guid
       )}
 
       {run.ghost && <GhostBar ghost={run.ghost} elapsedS={totalS} meters={run.meters} />}
+
+      {hrSupported() && (
+        <div className="run-live__extra">
+          {heart.status === 'on' ? (
+            <>
+              <span>{heart.bpm ? t('❤️ {v1} bpm', { v1: heart.bpm }) : t('❤️ Procurando batimentos…')}</span>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={heart.disconnect}>{t('Desconectar cinta')}</button>
+            </>
+          ) : (
+            <button type="button" className="btn btn--ghost btn--sm" disabled={heart.status === 'connecting'} onClick={heart.connect}>
+              {heart.status === 'connecting' ? t('Conectando…') : heart.status === 'error' ? t('❤️ Cinta desconectou: conectar de novo') : t('❤️ Conectar cinta cardíaca')}
+            </button>
+          )}
+        </div>
+      )}
 
       {(gain !== null || spm) && (
         <div className="run-live__extra">
@@ -423,6 +444,8 @@ function FinishRun({ run, now, onBack, onDone }) {
     let previous = [];
     let loaded = false;
     try { previous = await fetchRuns(user.id); loaded = true; } catch { /* sem rede: sem recorde agora */ }
+    // Clima do começo do percurso (até 4 s; sem internet a corrida salva sem ele).
+    if (record.gps) record.weather = await fetchWeather(run.route);
     const { pending } = await saveRun(user.id, record);
     rememberShoe(shoeId);
     const others = previous.filter(r => r.client_id !== record.client_id);
@@ -466,6 +489,8 @@ function FinishRun({ run, now, onBack, onDone }) {
           {cadence && <span>{t('👣 {v1} passos/min', { v1: cadence })}</span>}
         </div>
       )}
+
+      {heartOf(run) && <p className="run-live__extra">{hrText(heartOf(run))}</p>}
 
       {run.reps?.length > 0 && (
         <div className="profile-field">

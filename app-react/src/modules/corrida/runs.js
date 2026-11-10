@@ -4,6 +4,8 @@ import { mondayOf } from './program';
 import { cleanRoute, applyZones } from './route';
 import { cleanReps } from './intervals';
 import { cleanKmElev } from './elevation';
+import { cleanWeather } from './weather';
+import { cleanHr } from './heartRate';
 
 import { t, lang } from '../../lib/i18n';
 // Corridas do EAFIT Run (tabela public.runs): salvar, listar, apagar e as
@@ -18,9 +20,9 @@ const PENDING_KEY = 'eafit_runs_pending';
 const COLUMNS = 'id, client_id, run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id';
 // Colunas de migrations mais novas (tiros do intervalado, subida por km): sem
 // a migration a coluna falta e o app segue sem esse dado, só aquela coluna sai.
-const OPTIONAL_COLUMNS = ['intervals', 'km_elev'];
+const OPTIONAL_COLUMNS = ['intervals', 'km_elev', 'weather', 'hr'];
 const columnsWith = extras => [COLUMNS, ...extras].join(', ');
-const hasValue = v => Array.isArray(v) && v.length > 0;
+const hasValue = v => (Array.isArray(v) ? v.length > 0 : !!v && typeof v === 'object' && Object.keys(v).length > 0);
 const missingColumn = (error, columns) => (error ? columns.find(c => new RegExp(c, 'i').test(`${error.message || ''} ${error.details || ''}`)) : undefined);
 
 // Ritmo só vale a partir de 1 km (abaixo disso o número engana).
@@ -175,7 +177,51 @@ export function manualRun({ date, time, hours = 0, minutes = 0, seconds = 0, km,
   };
 }
 
-export const runTitle = run => (run?.title && run.title.trim()) || defaultRunTitle(run?.started_at || Date.now());
+// Corrida com tempo por km ou percurso veio do GPS: distância e tempo não se
+// editam (os parciais, o mapa e os recordes deixariam de bater). Só a lançada
+// à mão pode ter data, distância e tempo corrigidos.
+export const canEditMeasures = run => !(run?.splits?.length || run?.route?.length || run?.gps || run?.intervals?.length);
+
+// Valores iniciais do formulário de edição, no formato dos campos.
+export function editFormFrom(run) {
+  const s = Math.max(0, Number(run.duration_s) || 0);
+  const start = new Date(run.started_at);
+  const pad = n => String(n).padStart(2, '0');
+  return {
+    title: run.title || '',
+    notes: run.notes || '',
+    effort: run.effort || null,
+    visibility: run.visibility === 'privado' ? 'privado' : 'amigos',
+    shoeId: run.shoe_id || null,
+    date: run.run_date,
+    time: Number.isNaN(start.getTime()) ? '00:00' : `${pad(start.getHours())}:${pad(start.getMinutes())}`,
+    hours: String(Math.floor(s / 3600)),
+    minutes: String(Math.floor((s % 3600) / 60)),
+    seconds: String(s % 60),
+    km: decimal((run.distance_m / 1000).toFixed(2).replace(/\.?0+$/, '')),
+  };
+}
+
+// Confere o formulário de edição e devolve { patch } (só as colunas que mudam
+// no banco) ou { error } com a mensagem para a pessoa.
+export function editRun(run, form, now = Date.now()) {
+  const patch = {
+    title: String(form.title || '').trim().slice(0, 80) || null,
+    notes: String(form.notes || '').trim().slice(0, 500) || null,
+    effort: Number.isInteger(form.effort) && form.effort >= 1 && form.effort <= 10 ? form.effort : null,
+    visibility: form.visibility === 'privado' ? 'privado' : 'amigos',
+    shoe_id: form.shoeId || null,
+  };
+  if (canEditMeasures(run)) {
+    const measured = manualRun({ ...form, title: '' }, now);
+    if (measured.error) return { error: measured.error };
+    const { run_date, started_at, duration_s, distance_m } = measured.record;
+    Object.assign(patch, { run_date, started_at, duration_s, distance_m });
+  }
+  return { patch };
+}
+
+export const runTitle = run =>(run?.title && run.title.trim()) || defaultRunTitle(run?.started_at || Date.now());
 
 // ---- Banco -----------------------------------------------------------------
 
@@ -191,6 +237,8 @@ function normalizeRow(r) {
     shoe_id: r.shoe_id || null,
     intervals: cleanReps(r.intervals),
     km_elev: cleanKmElev(r.km_elev),
+    weather: cleanWeather(r.weather),
+    hr: cleanHr(r.hr),
   };
 }
 
@@ -319,6 +367,17 @@ export async function deleteRun(userId, run) {
   }
   const { error } = await db.from('runs').delete().eq('id', run.id).eq('user_id', userId);
   if (error) throw error;
+}
+
+// Grava a edição. Corrida que ainda espera internet muda só na fila do aparelho.
+export async function updateRun(userId, run, patch) {
+  if (run.pending) {
+    setPending(userId, pendingRuns(userId).map(r => (r.client_id === run.client_id ? { ...r, ...patch } : r)));
+    return { ...run, ...patch };
+  }
+  const { error } = await db.from('runs').update(patch).eq('id', run.id).eq('user_id', userId);
+  if (error) throw error;
+  return { ...run, ...patch };
 }
 
 // Zona de privacidade nova: tira a zona também das corridas já salvas (e das
