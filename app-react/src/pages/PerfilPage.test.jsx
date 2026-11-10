@@ -421,6 +421,19 @@ describe('PerfilPage no módulo de corrida', () => {
     expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
   });
 
+  it('salva a frequência cardíaca máxima e recusa valor fora de 120 a 230', async () => {
+    render(<PerfilPage active />);
+    const input = screen.getByLabelText('Frequência cardíaca máxima (bpm)');
+    fireEvent.change(input, { target: { value: '188' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar metas' }));
+    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ hrMax: 188 })));
+    auth.updateProfile.mockClear();
+    fireEvent.change(input, { target: { value: '300' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar metas' }));
+    expect(auth.updateProfile).not.toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith(expect.stringMatching(/120 a 230/));
+  });
+
   it('salva e remove as metas de km (semana, mês e ano)', async () => {
     render(<PerfilPage active />);
     const input = screen.getByLabelText('Quilômetros por semana');
@@ -429,12 +442,12 @@ describe('PerfilPage no módulo de corrida', () => {
     fireEvent.change(screen.getByLabelText('Quilômetros por mês'), { target: { value: '120' } });
     fireEvent.change(screen.getByLabelText('Quilômetros por ano'), { target: { value: '1500' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar metas' }));
-    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith({ runWeeklyKm: 35.5, runMonthlyKm: 120, runYearlyKm: 1500 }));
+    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith({ runWeeklyKm: 35.5, runMonthlyKm: 120, runYearlyKm: 1500, hrMax: null }));
     fireEvent.change(input, { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('Quilômetros por mês'), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('Quilômetros por ano'), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar metas' }));
-    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith({ runWeeklyKm: null, runMonthlyKm: null, runYearlyKm: null }));
+    await waitFor(() => expect(auth.updateProfile).toHaveBeenCalledWith({ runWeeklyKm: null, runMonthlyKm: null, runYearlyKm: null, hrMax: null }));
     fireEvent.change(input, { target: { value: '500' } });
     auth.updateProfile.mockClear();
     fireEvent.click(screen.getByRole('button', { name: 'Salvar metas' }));
