@@ -3,6 +3,7 @@ import { todayDate } from '../../data/treinoData';
 import { goTo } from '../../lib/appNav';
 import { parseWeeklyKm, parseKmGoal, kmGoals, MAX_MONTHLY_KM, MAX_YEARLY_KM, programSummary } from './runProfileStats';
 import { VOICE_KEY, AUTOPAUSE_KEY, GPS_KEY, readPref, writePref } from './runPrefs';
+import { maxHeartRate } from './heartRate';
 import { t } from '../../lib/i18n';
 
 // Perfil de quem está no módulo de corrida: o que o app mostra no lugar dos
@@ -14,6 +15,7 @@ export function RunGoalSection({ meta, updateProfile, toast }) {
   const [value, setValue] = useState(() => goals.week ?? '');
   const [month, setMonth] = useState(() => goals.month ?? '');
   const [year, setYear] = useState(() => goals.year ?? '');
+  const [hrMax, setHrMax] = useState(() => (meta?.hrMax ? String(meta.hrMax) : ''));
 
   async function handleSave() {
     const parsed = parseWeeklyKm(value);
@@ -22,7 +24,9 @@ export function RunGoalSection({ meta, updateProfile, toast }) {
     if (monthly.error) return toast(t('⚠️ Escolha uma meta de 1 a 1500 km por mês, ou deixe em branco.'));
     const yearly = parseKmGoal(year, MAX_YEARLY_KM);
     if (yearly.error) return toast(t('⚠️ Escolha uma meta de 1 a 20000 km por ano, ou deixe em branco.'));
-    const { error } = await updateProfile({ runWeeklyKm: parsed.km, runMonthlyKm: monthly.km, runYearlyKm: yearly.km });
+    const typedMax = hrMax.trim() === '' ? null : Math.round(Number(hrMax));
+    if (typedMax !== null && !(typedMax >= 120 && typedMax <= 230)) return toast(t('⚠️ A frequência máxima vai de 120 a 230 bpm, ou deixe em branco.'));
+    const { error } = await updateProfile({ runWeeklyKm: parsed.km, runMonthlyKm: monthly.km, runYearlyKm: yearly.km, hrMax: typedMax });
     if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
     toast(parsed.km || monthly.km || yearly.km ? t('📅 Metas salvas!') : t('Metas removidas'));
   }
@@ -52,6 +56,14 @@ export function RunGoalSection({ meta, updateProfile, toast }) {
           min="1" max={MAX_YEARLY_KM} step="1" value={year} onChange={e => setYear(e.target.value)}
         />
         <p className="profile-field__hint">{t('O progresso das metas de mês e ano aparece na aba Você.')}</p>
+      </div>
+      <div className="profile-field">
+        <label className="profile-field__label" htmlFor="runHrMax">{t('Frequência cardíaca máxima (bpm)')}</label>
+        <input
+          type="number" id="runHrMax" className="input input--sm" placeholder={String(maxHeartRate({ idade: meta?.idade }) ?? 190)}
+          min="120" max="230" step="1" value={hrMax} onChange={e => setHrMax(e.target.value)}
+        />
+        <p className="profile-field__hint">{t('Usada nas zonas de esforço com a cinta cardíaca. Em branco, o app usa 220 menos a sua idade.')}</p>
       </div>
       <button type="button" className="btn btn--primary btn--full" onClick={handleSave}>{t('Salvar metas')}</button>
     </>

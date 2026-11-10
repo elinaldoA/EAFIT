@@ -13,6 +13,27 @@ const MAX_BPM = 250;
 // Leituras mínimas para a corrida guardar média (cinta conectada tarde demais não vale).
 export const MIN_SAMPLES = 10;
 
+// Zonas de esforço pela porcentagem da frequência máxima: Z1 até 60%, Z2 até
+// 70%, Z3 até 80%, Z4 até 90%, Z5 acima. A máxima é a que a pessoa digitou no
+// Perfil (user_metadata.hrMax) ou, sem ela, 220 menos a idade.
+export const ZONE_COUNT = 5;
+export const ZONE_LIMITS = [0.6, 0.7, 0.8, 0.9];
+const toInt = v => (v === '' || v == null ? NaN : Math.round(Number(v)));
+
+export function maxHeartRate(meta) {
+  const typed = toInt(meta?.hrMax);
+  if (typed >= 120 && typed <= 230) return typed;
+  const age = toInt(meta?.idade);
+  return age >= 10 && age <= 100 ? 220 - age : null;
+}
+
+// Zona (0 a 4) de uma leitura; 0 se não há máxima.
+export function zoneOf(bpm, max) {
+  if (!(max > 0)) return 0;
+  const i = ZONE_LIMITS.findIndex(limit => bpm / max < limit);
+  return i === -1 ? ZONE_COUNT - 1 : i;
+}
+
 // Característica "heart_rate_measurement" (GATT 0x2A37): o bit 0 dos flags diz
 // se o valor tem 8 ou 16 bits. Devolve bpm ou null se estiver fora do normal.
 export function parseHeartRate(view) {
@@ -23,16 +44,22 @@ export function parseHeartRate(view) {
   return bpm >= MIN_BPM && bpm <= MAX_BPM ? bpm : null;
 }
 
-// Soma de leituras guardada na corrida em andamento: { hrSum, hrN, hrMax }.
-export function addHeart(s, sum, n, max) {
+// Soma de leituras guardada na corrida em andamento: { hrSum, hrN, hrMax, hrZones }.
+// zones: segundos em cada zona desde a última vez (opcional).
+export function addHeart(s, sum, n, max, zones = null) {
   if (!s || !(n > 0) || !(sum > 0)) return s;
-  return { ...s, hrSum: (s.hrSum || 0) + sum, hrN: (s.hrN || 0) + n, hrMax: Math.max(s.hrMax || 0, max || 0) };
+  const next = { ...s, hrSum: (s.hrSum || 0) + sum, hrN: (s.hrN || 0) + n, hrMax: Math.max(s.hrMax || 0, max || 0) };
+  if (Array.isArray(zones) && zones.length === ZONE_COUNT) {
+    next.hrZones = Array.from({ length: ZONE_COUNT }, (_, i) => (s.hrZones?.[i] || 0) + (Number(zones[i]) || 0));
+  }
+  return next;
 }
 
-// { avg, max } da corrida, ou null sem leituras suficientes.
+// { avg, max, z? } da corrida, ou null sem leituras suficientes.
 export function heartOf(s) {
   if (!s || !(s.hrN >= MIN_SAMPLES)) return null;
-  return cleanHr({ avg: s.hrSum / s.hrN, max: s.hrMax });
+  const hr = cleanHr({ avg: s.hrSum / s.hrN, max: s.hrMax, z: s.hrZones });
+  return hr;
 }
 
 export function cleanHr(hr) {
@@ -40,7 +67,9 @@ export function cleanHr(hr) {
   const avg = Math.round(Number(hr.avg));
   const max = Math.round(Number(hr.max));
   if (![avg, max].every(v => Number.isFinite(v) && v >= MIN_BPM && v <= MAX_BPM) || avg > max) return null;
-  return { avg, max };
+  const z = Array.isArray(hr.z) && hr.z.length === ZONE_COUNT ? hr.z.map(v => Math.round(Number(v))) : null;
+  const validZones = z && z.every(v => Number.isFinite(v) && v >= 0 && v <= 86400) && z.some(v => v > 0);
+  return validZones ? { avg, max, z } : { avg, max };
 }
 
 export const hrText = hr => {

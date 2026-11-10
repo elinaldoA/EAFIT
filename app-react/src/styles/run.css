@@ -523,3 +523,15 @@
 .run-calendar__week { padding: 4px 0; border-radius: var(--radius-sm, 8px); }
 .run-calendar__week--now { background: color-mix(in srgb, var(--accent, #ff6a00) 18%, transparent); font-weight: 600; }
 .run-calendar__num { font-size: var(--fs-xs); opacity: .7; }
+.run-zones { display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-zones__bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 1px; }
+.run-zones__seg { min-width: 2px; }
+.run-zones__seg--1 { background: #8fb8de; }
+.run-zones__seg--2 { background: #5cb85c; }
+.run-zones__seg--3 { background: #f0c030; }
+.run-zones__seg--4 { background: #f08a24; }
+.run-zones__seg--5 { background: #d9453b; }
+.run-zones__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); }
+.run-zones__list li { display: grid; grid-template-columns: 12px 1fr auto 4.5rem; gap: var(--sp-2); align-items: center; }
+.run-zones__list small { text-align: right; opacity: .7; }
+.run-zones__dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }

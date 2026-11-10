@@ -20,6 +20,7 @@ import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
 import { weatherText } from './weather';
 import { hrText } from './heartRate';
+import HrZones from './HrZones';
 import { ghostFrom, bestOnSameRoute } from './ghost';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported } from './useGeoTracker';
@@ -97,6 +98,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
             </div>
           )}
           {run.hr && <p className="run-item__weather">{hrText(run.hr)}</p>}
+          {run.hr?.z && <HrZones zones={run.hr.z} />}
           {run.weather && <p className="run-item__weather">{weatherText(run.weather)}</p>}
           {run.splits.length > 0 ? <SplitBars splits={run.splits} elev={run.km_elev} />
             : <p className="profile-field__hint">{t('Sem tempo por km (distância digitada).')}</p>}

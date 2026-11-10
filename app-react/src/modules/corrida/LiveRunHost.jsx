@@ -21,7 +21,8 @@ import { fetchWeather } from './weather';
 import { averageCadence } from './cadence';
 import { useStepCounter } from './useStepCounter';
 import { useHeartRate } from './useHeartRate';
-import { addHeart, heartOf, hrSupported, hrText } from './heartRate';
+import { addHeart, heartOf, hrSupported, hrText, maxHeartRate } from './heartRate';
+import HrZones from './HrZones';
 import { useGuidedWorkout } from './useGuidedWorkout';
 import IntervalResults from './IntervalResults';
 import GhostBar, { GhostResult } from './GhostBar';
@@ -67,6 +68,7 @@ function kmAnnouncement(km, totalS, splitS) {
 // que não pode parar (GPS, tela acesa, voz a cada km, corre/caminha, proteção
 // contra sair ou recarregar) e mostra a tela da corrida por cima do app.
 export default function LiveRunHost() {
+  const { user } = useAuth();
   const run = useLiveRun();
   const now = useNow(run);
   const toast = useToast();
@@ -113,7 +115,7 @@ export default function LiveRunHost() {
   const spm = useStepCounter(running && !interrupted, (steps, ms) => updateLiveRun(s => addSteps(s, steps, ms)));
 
   // Cinta cardíaca (Bluetooth): conecta no toque; só a corrida rodando conta.
-  const heart = useHeartRate(running && !interrupted, (sum, n, max) => updateLiveRun(s => addHeart(s, sum, n, max)));
+  const heart = useHeartRate(running && !interrupted, (sum, n, max, zones) => updateLiveRun(s => addHeart(s, sum, n, max, zones)), maxHeartRate(user?.user_metadata));
 
   // Marca que o app está aberto com a corrida (liveRun.interruptedSince).
   const runId = run?.id;
@@ -490,7 +492,12 @@ function FinishRun({ run, now, onBack, onDone }) {
         </div>
       )}
 
-      {heartOf(run) && <p className="run-live__extra">{hrText(heartOf(run))}</p>}
+      {heartOf(run) && (
+        <>
+          <p className="run-live__extra">{hrText(heartOf(run))}</p>
+          <HrZones zones={heartOf(run).z} />
+        </>
+      )}
 
       {run.reps?.length > 0 && (
         <div className="profile-field">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseHeartRate, addHeart, heartOf, cleanHr, hrText } from './heartRate';
+import { parseHeartRate, addHeart, heartOf, cleanHr, hrText, maxHeartRate, zoneOf } from './heartRate';
 import { startRun, finishRun } from './liveRun';
 
 const view = bytes => new DataView(new Uint8Array(bytes).buffer);
@@ -41,5 +41,42 @@ describe('frequência cardíaca', () => {
     s = addHeart(s, 155 * 20, 20, 168);
     expect(finishRun(s).hr).toEqual({ avg: 155, max: 168 });
     expect(finishRun(startRun()).hr).toBeNull();
+  });
+});
+
+describe('zonas de esforço', () => {
+  it('a frequência máxima vem do Perfil ou de 220 menos a idade', () => {
+    expect(maxHeartRate({ hrMax: 188, idade: 30 })).toBe(188);
+    expect(maxHeartRate({ idade: '30' })).toBe(190);
+    expect(maxHeartRate({ hrMax: 500, idade: 40 })).toBe(180);
+    expect(maxHeartRate({ hrMax: '', idade: '' })).toBeNull();
+    expect(maxHeartRate(null)).toBeNull();
+  });
+
+  it('classifica a leitura em Z1 a Z5 pela porcentagem da máxima', () => {
+    const z = bpm => zoneOf(bpm, 200);
+    expect([100, 119, 120, 139, 140, 159, 160, 179, 180, 200].map(z)).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]);
+    expect(zoneOf(150, null)).toBe(0);
+  });
+
+  it('soma segundos por zona e guarda na corrida', () => {
+    let s = startRun();
+    s = addHeart(s, 150 * 10, 10, 160, [0, 4, 6, 0, 0]);
+    s = addHeart(s, 170 * 10, 10, 180, [0, 0, 2.4, 7.6, 0]);
+    expect(heartOf(s)).toEqual({ avg: 160, max: 180, z: [0, 4, 8, 8, 0] });
+    expect(finishRun(s).hr.z).toEqual([0, 4, 8, 8, 0]);
+  });
+
+  it('sem zonas (sem frequência máxima) guarda só média e máxima', () => {
+    let s = startRun();
+    s = addHeart(s, 150 * 12, 12, 160, null);
+    expect(heartOf(s)).toEqual({ avg: 150, max: 160 });
+  });
+
+  it('zona inválida vinda do banco é ignorada', () => {
+    expect(cleanHr({ avg: 150, max: 170, z: [1, 2, 3] })).toEqual({ avg: 150, max: 170 });
+    expect(cleanHr({ avg: 150, max: 170, z: [0, 0, 0, 0, 0] })).toEqual({ avg: 150, max: 170 });
+    expect(cleanHr({ avg: 150, max: 170, z: [1, -2, 3, 4, 5] })).toEqual({ avg: 150, max: 170 });
+    expect(cleanHr({ avg: 150, max: 170, z: [10, 20, 30, 40, 50] }).z).toEqual([10, 20, 30, 40, 50]);
   });
 });
