@@ -45,13 +45,26 @@ async function sendWelcomeEmail() {
 // usuário como veio e tenta de novo na próxima abertura (a conta é recente).
 async function finishGoogleSignup(user) {
   if (!needsGoogleSignupFinish(user)) return user;
+  // Mesmos dados do signup() por e-mail. Os gatilhos do banco que vinculam
+  // embaixador e personal rodam também neste UPDATE (conta de menos de 1 dia).
+  const ref = pendingRef();
+  const personal = pendingPersonalInvite();
   const utm = pendingAttribution();
+  const partnerCampaign = pendingPartnerCampaign();
   const { data, error } = await db.auth.updateUser({
-    data: { termsAcceptedAt: new Date().toISOString(), lang, ...(utm ? { utm } : {}) },
+    data: {
+      termsAcceptedAt: new Date().toISOString(), lang,
+      ...(ref ? { ref: ref.code, refSource: ref.source } : {}),
+      ...(personal ? { personal } : {}),
+      ...(utm ? { utm } : {}),
+      ...(partnerCampaign ? { partnerCampaign } : {}),
+    },
   });
   if (error) return user;
   trackAuthEvent('signup_ok');
+  clearRef();
   clearAttribution();
+  clearPartnerCampaign();
   sendWelcomeEmail();
   return data?.user || user;
 }

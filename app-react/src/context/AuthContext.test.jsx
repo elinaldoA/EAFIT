@@ -24,6 +24,8 @@ vi.mock('../lib/supabase', () => ({
 
 import * as adminGuard from '../lib/adminGuard';
 import * as accountStatus from '../lib/accountStatus';
+import * as ambassadorRef from '../lib/ambassadorRef';
+import * as trainerInvite from '../lib/trainerInvite';
 import { AuthProvider } from './AuthContext';
 import { useAuth } from './useAuth';
 
@@ -127,6 +129,31 @@ describe('AuthProvider', () => {
     expect(mockAuth.updateUser).toHaveBeenCalledWith({ data: expect.objectContaining({ termsAcceptedAt: expect.any(String) }) });
     expect(mockFunctions.invoke).toHaveBeenCalledWith('send-welcome');
     expect(result.current.user).toEqual(updated);
+  });
+
+  it('volta do Google com link de embaixador/personal: manda ref e personal e limpa o que ficou guardado', async () => {
+    vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(false);
+    vi.spyOn(accountStatus, 'isAccountDeactivated').mockResolvedValue(false);
+    const pendingRef = vi.spyOn(ambassadorRef, 'pendingRef').mockReturnValue({ code: 'ana', source: 'insta' });
+    const clearRef = vi.spyOn(ambassadorRef, 'clearRef').mockImplementation(() => {});
+    const pendingPersonal = vi.spyOn(trainerInvite, 'pendingPersonalInvite').mockReturnValue('ABC123');
+    const fresh = {
+      id: 'g4', created_at: new Date().toISOString(),
+      app_metadata: { provider: 'google', providers: ['google'] }, user_metadata: {},
+    };
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: fresh } } });
+    mockAuth.updateUser.mockResolvedValue({ data: { user: fresh }, error: null });
+    mockFunctions.invoke.mockResolvedValue({});
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    expect(mockAuth.updateUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({ ref: 'ana', refSource: 'insta', personal: 'ABC123' }),
+    });
+    expect(clearRef).toHaveBeenCalled();
+    // Sem restaurar, os valores falsos vazam para os testes seguintes.
+    pendingRef.mockRestore(); clearRef.mockRestore(); pendingPersonal.mockRestore();
   });
 
   it('volta do Google com conta que já aceitou os termos: não grava de novo', async () => {
