@@ -157,9 +157,9 @@ export function drawReelFrame(ctx, reel, img, t) {
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
     const dy = (1 - easeOut((t - 9.7) / 0.6)) * 50;
-    text(ctx, 'Comece agora grátis', { x: W / 2, y: 640 + dy, size: 96, align: 'center', alpha: a3 });
-    text(ctx, 'Link na bio', { x: W / 2, y: 840 + dy, size: 64, weight: 600, color: '#a1a1aa', align: 'center', alpha: a3 });
-    text(ctx, 'eafit.com.br', { x: W / 2, y: 1000 + dy, size: 72, weight: 700, color: '#f97316', align: 'center', alpha: a3 });
+    text(ctx, 'Comece agora grátis', { x: W / 2, y: 540 + dy, size: 96, align: 'center', alpha: a3 });
+    text(ctx, 'Link na bio', { x: W / 2, y: 920 + dy, size: 64, weight: 600, color: '#a1a1aa', align: 'center', alpha: a3 });
+    text(ctx, 'eafit.com.br', { x: W / 2, y: 1080 + dy, size: 72, weight: 700, color: '#f97316', align: 'center', alpha: a3 });
   }
 }
 
