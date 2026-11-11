@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
-const auth = vi.hoisted(() => ({ login: vi.fn(), signup: vi.fn(), requestPasswordReset: vi.fn(), resendConfirmation: vi.fn() }));
+const auth = vi.hoisted(() => ({ login: vi.fn(), loginWithGoogle: vi.fn(), signup: vi.fn(), requestPasswordReset: vi.fn(), resendConfirmation: vi.fn() }));
 vi.mock('../context/useAuth', () => ({ useAuth: () => auth }));
 
 vi.mock('../lib/pageVisits', () => ({ recordVisit: vi.fn() }));
@@ -14,6 +14,7 @@ afterEach(cleanup);
 
 beforeEach(() => {
   localStorage.clear();
+  auth.loginWithGoogle.mockReset().mockResolvedValue({});
 });
 
 describe('AuthScreen', () => {
@@ -40,5 +41,41 @@ describe('AuthScreen', () => {
     expect(screen.getByRole('tab', { name: 'Entrar' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.queryByText(/Plano de treino pro seu objetivo/)).toBeNull();
     expect(screen.getByRole('link', { name: /Conheça o app/ })).toBeTruthy();
+  });
+
+  it('o botão do Google fica abaixo do botão principal, nas duas abas', () => {
+    const below = () => {
+      const main = screen.getByRole('button', { name: /^(Criar conta|Entrar)$/, hidden: false, selector: '[type="submit"]' });
+      const google = screen.getByRole('button', { name: /Continuar com o Google/ });
+      return !!(main.compareDocumentPosition(google) & Node.DOCUMENT_POSITION_FOLLOWING);
+    };
+    render(<AuthScreen />);
+    expect(below()).toBe(true);
+    fireEvent.click(screen.getByRole('tab', { name: 'Entrar' }));
+    expect(below()).toBe(true);
+  });
+
+  it('cadastro: um só aceite dos Termos, que o Google também exige', () => {
+    render(<AuthScreen />);
+    expect(screen.getAllByText(/Termos de Uso/)).toHaveLength(1);
+    expect(screen.queryByText(/Ao continuar com o Google/)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Continuar com o Google/ }));
+    expect(screen.getByText('Aceite os Termos de Uso para criar a conta.')).toBeTruthy();
+    expect(auth.loginWithGoogle).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.queryByText('Aceite os Termos de Uso para criar a conta.')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Continuar com o Google/ }));
+    expect(auth.loginWithGoogle).toHaveBeenCalledTimes(1);
+  });
+
+  it('entrar: o Google abre direto, com o aviso de aceite sob o botão e sem checkbox', () => {
+    markKnownUser();
+    render(<AuthScreen />);
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(screen.getByText(/Ao continuar com o Google, você aceita os/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Continuar com o Google/ }));
+    expect(auth.loginWithGoogle).toHaveBeenCalledTimes(1);
   });
 });
