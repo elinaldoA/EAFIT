@@ -237,6 +237,21 @@ Comece agora. Link na bio 👇
 
 ${TAGS}`,
   },
+  {
+    key: 'treino-parado', later: true, kind: 'slides', headline: 'Seu treino está parado? 3 sinais',
+    slides: [
+      ['1', 'A carga não sobe há semanas.'],
+      ['2', 'Você não lembra o que fez no último treino.'],
+      ['3', 'Treina sem registrar e não vê a evolução.'],
+    ],
+    closing: 'O app sugere a carga e guarda o histórico.',
+    caption: `Treinar sem evoluir cansa. 😮‍💨
+Se você se viu em algum destes sinais, salve este post e mude isso hoje.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {
