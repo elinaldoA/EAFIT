@@ -69,6 +69,11 @@ async function finishGoogleSignup(user) {
   return data?.user || user;
 }
 
+function isExistingAccountError(error) {
+  return error.code === 'user_already_exists' || error.code === 'email_exists'
+    || /already registered|already exists/i.test(error.message || '');
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -235,13 +240,14 @@ export function AuthProvider({ children }) {
     });
     if (error) {
       trackAuthEvent('signup_error', error.code || 'outro');
-      return { error: translateAuthError(error) };
+      // existingAccount: a tela leva a pessoa de volta ao login com o e-mail preenchido.
+      return { error: translateAuthError(error), existingAccount: isExistingAccountError(error) };
     }
     // Com proteção contra enumeração de e-mail ligada, cadastrar um e-mail que
     // já tem conta confirmada não dá erro — volta um usuário sem identities.
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
       trackAuthEvent('signup_error', 'user_already_exists');
-      return { error: translateAuthError({ code: 'user_already_exists' }) };
+      return { error: translateAuthError({ code: 'user_already_exists' }), existingAccount: true };
     }
     trackAuthEvent('signup_ok');
     clearRef();

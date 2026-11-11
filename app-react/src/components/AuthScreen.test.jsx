@@ -15,9 +15,37 @@ afterEach(cleanup);
 beforeEach(() => {
   localStorage.clear();
   auth.loginWithGoogle.mockReset().mockResolvedValue({});
+  auth.signup.mockReset();
 });
 
 describe('AuthScreen', () => {
+  it('cadastro com e-mail que já tem conta volta para o login, com o e-mail e o aviso', async () => {
+    auth.signup.mockResolvedValue({ error: 'Já existe uma conta com este e-mail. Entre ou redefina a senha.', existingAccount: true });
+    render(<AuthScreen />);
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'ana@gmail.com' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'segredo123' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }));
+
+    expect(await screen.findByText(/Já existe uma conta com este e-mail/)).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Entrar' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByLabelText('E-mail').value).toBe('ana@gmail.com');
+    expect(screen.getByLabelText('Senha').value).toBe('');
+    expect(screen.queryByRole('checkbox')).toBeNull();
+  });
+
+  it('cadastro com outro erro continua na tela de cadastro', async () => {
+    auth.signup.mockResolvedValue({ error: 'Muitas tentativas. Aguarde um pouco.', existingAccount: false });
+    render(<AuthScreen />);
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'ana@gmail.com' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'segredo123' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }));
+
+    expect(await screen.findByText(/Muitas tentativas/)).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Criar conta' }).getAttribute('aria-selected')).toBe('true');
+  });
+
   it('visitante novo cai em "Criar conta", com o convite e o link pra landing', () => {
     render(<AuthScreen />);
     expect(screen.getByRole('tab', { name: 'Criar conta' }).getAttribute('aria-selected')).toBe('true');

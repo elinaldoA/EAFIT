@@ -287,6 +287,34 @@ describe('AuthProvider', () => {
     });
 
     expect(response.error).toMatch(/Já existe uma conta/);
+    expect(response.existingAccount).toBe(true);
+  });
+
+  it('signup recusado pelo servidor porque o e-mail já existe também pede a volta ao login', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signUp.mockResolvedValue({ data: null, error: { code: 'user_already_exists', message: 'User already registered' } });
+    let response;
+    await act(async () => {
+      response = await result.current.signup('a@b.com', 'segredo123');
+    });
+
+    expect(response.existingAccount).toBe(true);
+    expect(response.error).toMatch(/Já existe uma conta/);
+  });
+
+  it('signup com outro erro (ex.: rede) não manda a pessoa para o login', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signUp.mockResolvedValue({ data: null, error: { code: 'over_email_send_rate_limit', message: 'rate limit' } });
+    let response;
+    await act(async () => {
+      response = await result.current.signup('a@b.com', 'segredo123');
+    });
+
+    expect(response.existingAccount).toBe(false);
   });
 
   it('login com e-mail não confirmado sinaliza needsConfirmation', async () => {

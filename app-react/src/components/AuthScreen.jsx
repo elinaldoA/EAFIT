@@ -90,7 +90,15 @@ export default function AuthScreen() {
     else result = await requestPasswordReset(cleanEmail);
     setBusy(false);
 
-    if (result.error) {
+    if (result.existingAccount) {
+      // E-mail que já tem conta: volta para o login (e-mail mantido, senha limpa)
+      // com o aviso, em vez de deixar a pessoa na tela de cadastro.
+      setMode('login');
+      setPassword('');
+      setNeedsConfirmation(false);
+      setGoogleError('');
+      setMsg({ text: result.error, type: 'error' });
+    } else if (result.error) {
       setMsg({ text: result.error, type: 'error' });
       setNeedsConfirmation(!!result.needsConfirmation);
     } else if (result.success) {
