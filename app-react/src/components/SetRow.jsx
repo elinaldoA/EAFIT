@@ -20,6 +20,8 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   const [reps, setReps] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_reps`) || '');
   const [done, setDone] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true');
   const [saved, setSaved] = useState(false);
+  // RIR opcional: '' = não respondeu. A pergunta só aparece com a série feita.
+  const [rir, setRir] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_rir`) || '');
   const cargaSaveTimer = useRef(null);
   const repsSaveTimer = useRef(null);
 
@@ -107,6 +109,15 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
     };
   });
 
+  // Tocar no valor já escolhido limpa a resposta.
+  function handleRir(value) {
+    const next = rir === String(value) ? '' : String(value);
+    setRir(next);
+    localStorage.setItem(`set_${ex.nome}_${n}_rir`, next);
+    bump();
+    if (user) saveSetState(day.dia, ex.nome, n, { rir: next === '' ? null : Number(next) });
+  }
+
   async function handleCheck() {
     const next = !done;
     setDone(next);
@@ -171,6 +182,20 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
           disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
         >✓</button>
       </div>
+      {done && (
+        <div className="set-row__rir" role="group" aria-label={t('Quantas reps ainda sobravam?')}>
+          <span className="set-row__rir-label">{t('Sobraram?')}</span>
+          {[0, 1, 2, 3, 4].map(v => (
+            <button
+              key={v} type="button"
+              className={`set-row__rir-btn${rir === String(v) ? ' set-row__rir-btn--on' : ''}`}
+              aria-pressed={rir === String(v)}
+              title={v === 0 ? t('Foi até a falha') : t('{n} reps sobrando', { n: v === 4 ? '4+' : v })}
+              onClick={() => handleRir(v)}
+            >{v === 4 ? '4+' : v}</button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

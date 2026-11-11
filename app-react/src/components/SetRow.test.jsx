@@ -218,3 +218,22 @@ describe('SetRow — recordes', () => {
     err.mockRestore();
   });
 });
+
+describe('SetRow — RIR opcional', () => {
+  it('só pergunta quando a série está feita', () => {
+    setup();
+    expect(screen.queryByRole('group', { name: 'Quantas reps ainda sobravam?' })).toBeNull();
+    fireEvent.click(check());
+    expect(screen.getByRole('group', { name: 'Quantas reps ainda sobravam?' })).toBeTruthy();
+  });
+
+  it('salva o RIR escolhido e limpa ao tocar de novo', () => {
+    setup();
+    fireEvent.click(check());
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(h.saveSetState).toHaveBeenLastCalledWith('Segunda', 'Supino Reto', 1, { rir: 2 });
+    expect(localStorage.getItem('set_Supino Reto_1_rir')).toBe('2');
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(h.saveSetState).toHaveBeenLastCalledWith('Segunda', 'Supino Reto', 1, { rir: null });
+  });
+});
