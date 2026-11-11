@@ -271,15 +271,15 @@ function wrap(ctx, text, maxWidth, maxLines) {
   return lines;
 }
 
-function footer(ctx, w, h) {
+function footer(ctx, w, h, label = 'eafit.com.br') {
   ctx.fillStyle = '#f97316';
   ctx.font = `700 40px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('Comece agora · eafit.com.br', w / 2, h - 80);
+  ctx.fillText(label, w / 2, h - 80);
 }
 
-async function printArt(item, format) {
+async function printArt(item, format, footerLabel = 'Comece agora · eafit.com.br') {
   const [w, h] = SIZES[format];
   const canvas = createCanvas(w, h);
   const ctx = canvas.getContext('2d');
@@ -303,7 +303,7 @@ async function printArt(item, format) {
   const ih = img.height * scale;
   const ix = (w - iw) / 2;
   drawPhone(ctx, img, ix, top + bezel, iw, ih, { bezel });
-  footer(ctx, w, h);
+  footer(ctx, w, h, footerLabel);
   return canvas.toBuffer('image/jpeg', 90);
 }
 
