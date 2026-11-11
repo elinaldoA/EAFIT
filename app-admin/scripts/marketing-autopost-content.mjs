@@ -276,7 +276,7 @@ function footer(ctx, w, h) {
   ctx.font = `700 40px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('eafit.com.br', w / 2, h - 80);
+  ctx.fillText('Comece agora · eafit.com.br', w / 2, h - 80);
 }
 
 async function printArt(item, format) {
