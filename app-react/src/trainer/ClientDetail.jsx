@@ -1,3 +1,4 @@
+import { yesQuestions } from '../lib/parq';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
@@ -165,6 +166,15 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
         {(profile.lesoes || profile.restricoes) && (
           <p className="client-head__alert">
             {[profile.lesoes && t('🦴 Lesões: {v}', { v: profile.lesoes }), profile.restricoes && t('⚠️ Restrições: {v}', { v: profile.restricoes })].filter(Boolean).join(' · ')}
+          </p>
+        )}
+        {profile.medicamentos && <p className="profile-field__hint m-0">{t('🩺 Medicamentos: {v}', { v: profile.medicamentos })}</p>}
+        {profile.parqAt && (
+          <p className={profile.parqAlert === true || profile.parqAlert === 'true' ? 'client-head__alert' : 'profile-field__hint m-0'}>
+            {profile.parqAlert === true || profile.parqAlert === 'true'
+              ? t('⚠️ PAR-Q com alerta ({d})', { d: fmtDate(String(profile.parqAt).slice(0, 10)) })
+              : t('PAR-Q sem alertas ({d})', { d: fmtDate(String(profile.parqAt).slice(0, 10)) })}
+            {yesQuestions(profile.parqAnswers).map(q => <small key={q} style={{ display: "block" }}>• {q}</small>)}
           </p>
         )}
         {(profile.emergenciaNome || profile.emergenciaTel) && (

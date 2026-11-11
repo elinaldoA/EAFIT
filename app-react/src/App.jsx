@@ -38,6 +38,7 @@ import { cameFromOldAddress } from './lib/installPrompt';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import SeasonBanner, { SeasonDecor } from './components/SeasonBanner';
 import TermsUpdateScreen from './components/TermsUpdateScreen';
+import HealthScreen from './components/HealthScreen';
 import InstallScreen from './components/InstallScreen';
 import TrainerInvitePrompt from './components/TrainerInvitePrompt';
 import TrainerShell from './trainer/TrainerShell';
@@ -168,6 +169,7 @@ function Shell() {
       <AnnouncementBanner />
       {studentView && !needsOnboarding && <SeasonBanner />}
       {user && <TermsUpdateScreen />}
+      {studentView && !needsOnboarding && <HealthScreen />}
       {(user || fromOldAddress) && <InstallScreen />}
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}

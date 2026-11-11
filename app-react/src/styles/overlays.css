@@ -309,3 +309,21 @@ body.modal-open { overflow: hidden; }
   font-size: var(--fs-md);
   line-height: 1.45;
 }
+
+/* PAR-Q / saúde: tela cheia rolável, não bloqueia (tem "Pular por agora"). */
+.health-screen {
+  position: fixed; inset: 0; z-index: 2000; overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4); background: var(--bg); text-align: center;
+}
+.health-form { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: var(--sp-2); text-align: left; }
+.health-form__questions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+.health-q__text { margin: 0 0 var(--sp-1); font-size: var(--fs-sm); line-height: 1.4; }
+.health-q__opts { display: flex; gap: var(--sp-2); }
+.health-q__opt {
+  flex: 1; height: 36px; border-radius: var(--r-sm); border: 1px solid var(--border-2);
+  background: var(--bg); color: var(--text-dim); cursor: pointer;
+}
+.health-q__opt--on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.health-form__consent { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-xs); line-height: 1.4; }
+.health-alert { margin: 0; max-width: 40ch; font-size: var(--fs-sm); line-height: 1.45; color: var(--warning, var(--primary)); }

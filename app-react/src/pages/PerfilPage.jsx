@@ -3,6 +3,7 @@ import { useAuth } from '../context/useAuth';
 import { useAppConfig } from '../context/useAppConfig';
 import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
 import ProfilePauseSection from '../components/ProfilePauseSection';
+import ProfileHealthSection from '../components/ProfileHealthSection';
 import ProfileTrainerSection from '../components/ProfileTrainerSection';
 import ProfileTrainerRequestSection from '../components/ProfileTrainerRequestSection';
 import ProfileAmbassadorSection from '../components/ProfileAmbassadorSection';
@@ -421,6 +422,12 @@ export default function PerfilPage({ active }) {
           summary={activePause(user.user_metadata, todayDate()) ? t('Pausado até {v1}', { v1: formatDayBR(activePause(user.user_metadata, todayDate()).to) }) : usesWorkouts ? t('Viagem ou doença? Pause sem perder a sequência') : t('Viagem ou lesão? Pause sem perder a sequência')}
         >
           <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
+        </CollapsibleCard>
+        <CollapsibleCard
+          icon="🩺" title={t('Saúde (PAR-Q)')}
+          summary={user.user_metadata?.parqAt ? (user.user_metadata?.parqAlert ? t('Respondido · vale ver um médico') : t('Respondido')) : t('7 perguntas rápidas sobre prontidão')}
+        >
+          <ProfileHealthSection user={user} updateProfile={updateProfile} toast={toast} />
         </CollapsibleCard>
         {biometricAvailable && (
           <CollapsibleCard icon="🔒" title={t('Bloqueio com biometria')} summary={biometricOn ? t('Ativado neste aparelho') : t('Desativado')}>
