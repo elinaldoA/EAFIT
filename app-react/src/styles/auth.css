@@ -124,6 +124,7 @@
 }
 .auth-divider::before,
 .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.auth-google-block { display: flex; flex-direction: column; gap: var(--sp-2); }
 .auth-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
 .auth-google__icon { width: 18px; height: 18px; flex-shrink: 0; }
 .auth-form__legal { margin: 0; font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.4; text-align: center; }
