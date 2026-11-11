@@ -361,7 +361,7 @@ async function main() {
         files.push(f);
       });
       const last = `${item.key}-${item.slides.length + 2}.jpg`;
-      writeFileSync(join(OUT, last), slideArt(item.closing, { big: true, small: 'Link na bio.' }));
+      writeFileSync(join(OUT, last), await printArt({ headline: item.closing, sub: 'Comece agora grátis. Link na bio.', print: 'criar-conta' }, 'feed'));
       files.push(last);
       laterPosition += 1;
       const media = files.map((f) => ({ type: 'image', url: `${SITE}/img/marketing/${f}` }));
@@ -386,7 +386,7 @@ async function main() {
         files.push(f);
       });
       const last = `${item.key}-${item.slides.length + 2}.jpg`;
-      writeFileSync(join(OUT, last), slideArt(item.closing, { big: true, small: 'Link na bio.' }));
+      writeFileSync(join(OUT, last), await printArt({ headline: item.closing, sub: 'Comece agora grátis. Link na bio.', print: 'criar-conta' }, 'feed'));
       files.push(last);
       add('feed', item, files);
     }
