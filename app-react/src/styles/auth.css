@@ -139,16 +139,47 @@
 
 h1.auth-logo__name { margin: 0; }
 
-/* Telas baixas (iPhone SE/8, Android compacto): compacta o topo pra o botão
-   de enviar aparecer sem precisar rolar. */
-@media (max-height: 720px) {
-  .auth-screen { padding-top: var(--sp-4); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
-  .auth-inner { gap: 20px; }
-  .auth-logo { gap: var(--sp-1); }
-  .auth-logo__icon { width: 64px; height: 64px; margin-bottom: var(--sp-1); border-radius: 18px; }
-  .auth-logo__name { font-size: 2rem; }
-  .auth-logo__pitch { margin-top: 6px; }
-  .auth-logo__more { margin-top: 2px; padding: var(--sp-1); }
+/* Tela de acesso sem rolagem: até 1040px de altura (quase todo celular e
+   notebook) o topo vira uma linha (ícone + nome, idioma no canto), some o que
+   é só divulgação (frase, "Conheça o app", texto de venda) e os campos ficam
+   mais baixos. Cadastro, o formulário mais comprido, cabe em ~600px; abaixo
+   disso (paisagem no celular) a rolagem própria da tela continua valendo. */
+@media (max-height: 1040px) {
+  .auth-screen { padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)); }
+  .auth-inner { position: relative; gap: 12px; }
+  .lang-compact { position: absolute; top: 2px; right: 0; margin: 0; z-index: 1; }
+  /* Só para leitor de tela: o rótulo "Idioma" sai da vista, não da página. */
+  .lang-compact__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .lang-compact__select { min-width: 0; padding: 8px 10px; font-size: var(--fs-sm); }
+  .auth-logo { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 12px; padding-right: 120px; min-height: 48px; }
+  .auth-logo__icon { width: 48px; height: 48px; margin: 0; border-radius: 14px; box-shadow: 0 0 0 1px var(--border); }
+  .auth-logo__name { font-size: 1.9rem; letter-spacing: -1px; }
+  .auth-logo__tagline,
+  .auth-logo__pitch,
+  .auth-logo__more { display: none; }
+  .auth-invite { flex-basis: 100%; margin-top: 0; padding: 8px var(--sp-3); font-size: var(--fs-sm); }
+  .auth-form { gap: 8px; }
+  .auth-tabs { margin-bottom: 0; }
+  .auth-tabs__tab { padding: 8px 0; }
+  .auth-form .input { padding: 10px 14px; }
+  .auth-form .btn { padding: 11px var(--sp-5); }
+  .auth-form .field { gap: 4px; }
+  .auth-google-block { gap: 6px; }
+  .auth-form__legal { font-size: 0.7rem; line-height: 1.3; }
+  .auth-form__link--right { margin-top: -2px; padding: 2px var(--sp-1); }
+  .auth-form__msg { min-height: 0; padding-top: 0; }
+  .auth-form__msg:empty { display: none; }
+}
+
+@media (max-height: 660px) {
+  .auth-screen { padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .auth-inner { gap: 8px; }
+  .auth-form { gap: 6px; }
+  .auth-form .field__hint { display: none; }
+  .auth-tabs__tab { padding: 6px 0; }
+  .auth-form .input { padding: 8px 12px; }
+  .auth-form .btn { padding: 9px var(--sp-4); }
+  .auth-form__terms { font-size: var(--fs-xs); }
 }
 
 .auth-form__intro { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--sp-1); }
