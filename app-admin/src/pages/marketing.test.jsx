@@ -329,9 +329,9 @@ describe('MarketingComments', () => {
     expect(await screen.findByText('Como baixo o app?')).toBeTruthy();
     expect(lib.fetchComments).toHaveBeenCalledWith({ filter: 'open', platform: '' });
     fireEvent.click(screen.getByRole('button', { name: /^Valeu, bia!/ }));
-    expect(screen.getByLabelText('Resposta para @bia').value).toBe('Valeu, bia! 💪 O app é gratuito: eafit.com.br/app');
+    expect(screen.getByLabelText('Resposta para @bia').value).toBe('Valeu, bia! 💪 Comece agora grátis: eafit.com.br/app');
     fireEvent.click(screen.getByRole('button', { name: 'Responder' }));
-    await waitFor(() => expect(lib.replyComment).toHaveBeenCalledWith('c1', 'Valeu, bia! 💪 O app é gratuito: eafit.com.br/app'));
+    await waitFor(() => expect(lib.replyComment).toHaveBeenCalledWith('c1', 'Valeu, bia! 💪 Comece agora grátis: eafit.com.br/app'));
     expect(await screen.findByText('Resposta publicada para @bia.')).toBeTruthy();
   });
 

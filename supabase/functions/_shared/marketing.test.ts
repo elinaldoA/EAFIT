@@ -266,7 +266,7 @@ Deno.test('trackedCaption: Facebook leva link com o id do post; Instagram, story
   const post = { id: 'AB12CD34-0000-4000-8000-000000000000', caption: 'Treino de hoje', format: 'feed' as const };
   assertEquals(
     trackedCaption('facebook', post),
-    'Treino de hoje\n\nComece grátis: https://eafit.com.br/app/?utm_source=facebook&utm_medium=post&utm_content=ab12cd34',
+    'Treino de hoje\n\nComece agora grátis: https://eafit.com.br/app/?utm_source=facebook&utm_medium=post&utm_content=ab12cd34',
   );
   assertEquals(trackedCaption('instagram', post), 'Treino de hoje');
   assertEquals(trackedCaption('tiktok', post), 'Treino de hoje');

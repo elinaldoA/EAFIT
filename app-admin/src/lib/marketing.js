@@ -24,7 +24,7 @@ export const STATUS_LABEL = {
 
 // Respostas prontas da caixa de comentários ({nome} vira o nome de quem comentou).
 export const QUICK_REPLIES = [
-  'Valeu, {nome}! 💪 O app é gratuito: eafit.com.br/app',
+  'Valeu, {nome}! 💪 Comece agora grátis: eafit.com.br/app',
   'Oi, {nome}! Dá para baixar direto pelo navegador, no celular ou no computador: eafit.com.br/app',
   'Obrigado pelo carinho, {nome}! Bons treinos 🔥',
   '{nome}, chama a gente no direct que te ajudamos com isso 😉',

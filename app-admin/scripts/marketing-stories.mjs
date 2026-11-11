@@ -193,12 +193,12 @@ const TREINO = [
   ['Terminou o treino? Anote tudo', 'Treino fechado, histórico atualizado.', 'historico'],
 ];
 const CONTA = [
-  ['Crie sua conta em 1 minuto', 'É grátis e funciona offline. Link na bio.', 'treino'],
-  ['Treino pronto sem pagar nada', 'Crie a conta grátis e comece hoje.', 'ao-vivo'],
-  ['Seu treino, sua evolução', 'Crie a conta grátis. Link na bio.', 'evolucao'],
-  ['Treino e alimentação no mesmo app', 'Comece grátis. Link na bio.', 'nutricao'],
-  ['Entre na liga do mês', 'Crie a conta grátis e dispute.', 'liga'],
-  ['Chame os amigos e treinem juntos', 'Crie a conta grátis. Link na bio.', 'amigos'],
+  ['Crie sua conta em 1 minuto', 'Comece agora grátis. Funciona offline. Link na bio.', 'treino'],
+  ['Treino pronto sem pagar nada', 'Comece agora grátis: crie a conta e treine hoje.', 'ao-vivo'],
+  ['Seu treino, sua evolução', 'Comece agora grátis. Link na bio.', 'evolucao'],
+  ['Treino e alimentação no mesmo app', 'Comece agora grátis. Link na bio.', 'nutricao'],
+  ['Entre na liga do mês', 'Comece agora grátis e dispute.', 'liga'],
+  ['Chame os amigos e treinem juntos', 'Comece agora grátis. Link na bio.', 'amigos'],
 ];
 
 const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por variante

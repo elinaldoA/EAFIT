@@ -202,7 +202,7 @@ export function trackedCaption(platform: Platform, post: Pick<Post, 'id' | 'capt
   const content = post.id.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 8);
   if (!content) return post.caption;
   const link = `https://eafit.com.br/app/?utm_source=${platform}&utm_medium=post&utm_content=${content}`;
-  const text = `${post.caption.trimEnd()}\n\nComece grátis: ${link}`.trimStart();
+  const text = `${post.caption.trimEnd()}\n\nComece agora grátis: ${link}`.trimStart();
   return text.length > CAPTION_LIMITS[platform] ? post.caption : text;
 }
 
