@@ -252,6 +252,22 @@ Comece agora. Link na bio 👇
 
 ${TAGS}`,
   },
+  {
+    key: 'voce-sabia', later: true, kind: 'slides', headline: 'Você sabia? 4 recursos do EAFIT',
+    slides: [
+      ['', 'Registra sem internet e sincroniza quando a conexão volta.'],
+      ['', 'Lembretes de treino e de água, que você liga e desliga quando quiser.'],
+      ['', 'Digital, Face ID ou bloqueio de tela para abrir o app.'],
+      ['', 'Medalhas por constância e marcos de 10, 25, 50, 100 e 200 treinos.'],
+    ],
+    closing: 'Veja tudo isso no app.',
+    caption: `Quatro coisas que o EAFIT faz e muita gente ainda não sabe. 👀
+Salve este post e mande para quem treina com você.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {
