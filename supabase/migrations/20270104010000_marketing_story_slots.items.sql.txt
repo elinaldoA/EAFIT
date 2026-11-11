@@ -1,0 +1,19 @@
+insert into public.marketing_autopost_queue (position, key, format, slot, caption, media) values
+  (23, 'nutri-cafe-1', 'story', 'cafe', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-cafe-1.mp4"}]'::jsonb),
+  (24, 'nutri-almoco-1', 'story', 'almoco', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-almoco-1.mp4"}]'::jsonb),
+  (25, 'nutri-jantar-1', 'story', 'jantar', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-jantar-1.mp4"}]'::jsonb),
+  (26, 'nutri-cafe-2', 'story', 'cafe', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-cafe-2.mp4"}]'::jsonb),
+  (27, 'nutri-almoco-2', 'story', 'almoco', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-almoco-2.mp4"}]'::jsonb),
+  (28, 'nutri-jantar-2', 'story', 'jantar', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-jantar-2.mp4"}]'::jsonb),
+  (29, 'nutri-cafe-3', 'story', 'cafe', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-cafe-3.mp4"}]'::jsonb),
+  (30, 'nutri-almoco-3', 'story', 'almoco', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-almoco-3.mp4"}]'::jsonb),
+  (31, 'nutri-jantar-3', 'story', 'jantar', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-jantar-3.mp4"}]'::jsonb),
+  (32, 'nutri-cafe-4', 'story', 'cafe', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-cafe-4.mp4"}]'::jsonb),
+  (33, 'nutri-almoco-4', 'story', 'almoco', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-almoco-4.mp4"}]'::jsonb),
+  (34, 'nutri-jantar-4', 'story', 'jantar', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-jantar-4.mp4"}]'::jsonb);
+update public.marketing_autopost_queue set media = '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-treino.mp4"}]'::jsonb where key = 'treino-story' and posted_at is null;
+update public.marketing_autopost_queue set media = '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-evolucao.mp4"}]'::jsonb where key = 'evolucao-story' and posted_at is null;
+update public.marketing_autopost_queue set media = '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-ao-vivo.mp4"}]'::jsonb where key = 'ao-vivo-story' and posted_at is null;
+update public.marketing_autopost_queue set media = '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-historico.mp4"}]'::jsonb where key = 'historico-story' and posted_at is null;
+update public.marketing_autopost_queue set media = '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-nutricao.mp4"}]'::jsonb where key = 'nutricao-story' and posted_at is null;
+update public.marketing_autopost_queue set media = '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-agua.mp4"}]'::jsonb where key = 'agua-story' and posted_at is null;

@@ -24,19 +24,19 @@ const TAGS = '#personaltrainer #treino #appdetreino #academia #musculacao';
 const REELS = [
   {
     key: 'treino', print: 'treino', hook: 'Ainda monta treino em planilha?', title: 'Treino pronto em segundos', sub: 'Monte, envie e acompanhe.',
-    caption: `Planilha, PDF, WhatsApp… dá para parar. 📲\nMonte o treino no app e ele chega direto no celular do aluno.\n\nLink na bio 👇\n\n${TAGS}`,
+    caption: `Planilha, PDF, WhatsApp… dá para parar. 📲\nMonte o treino no app e ele chega direto no celular do aluno.\n\nComece agora grátis. Link na bio 👇\n\n${TAGS}`,
   },
   {
     key: 'evolucao', print: 'evolucao', hook: 'Seu aluno enxerga a própria evolução?', title: 'Quem vê a evolução não desiste', sub: 'Cada carga vira progresso.',
-    caption: `Aluno que não vê resultado, desiste. 💔\nNo app, cada carga e cada série viram evolução visível.\n\nLink na bio 👇\n\n${TAGS}`,
+    caption: `Aluno que não vê resultado, desiste. 💔\nNo app, cada carga e cada série viram evolução visível.\n\nComece agora grátis. Link na bio 👇\n\n${TAGS}`,
   },
   {
     key: 'ao-vivo', print: 'ao-vivo', hook: 'Chega de anotar série no papel', title: 'Registre cada série na hora', sub: 'Treino ao vivo, sem papel.',
-    caption: `Registrou, está no histórico. 💪\nO treino ao vivo guarda carga e repetição de cada série.\n\nLink na bio 👇\n\n${TAGS}`,
+    caption: `Registrou, está no histórico. 💪\nO treino ao vivo guarda carga e repetição de cada série.\n\nComece agora grátis. Link na bio 👇\n\n${TAGS}`,
   },
   {
     key: 'nutricao', print: 'nutricao', hook: 'Treino e dieta em apps diferentes?', title: 'Tudo no mesmo app', sub: 'Treino, calorias e macros juntos.',
-    caption: `Resultado vem do treino e da comida. 🍽️\nO aluno acompanha as duas coisas num só lugar.\n\nLink na bio 👇\n\n${TAGS}`,
+    caption: `Resultado vem do treino e da comida. 🍽️\nO aluno acompanha as duas coisas num só lugar.\n\nComece agora grátis. Link na bio 👇\n\n${TAGS}`,
   },
   // Segunda leva (migration 20270101010000): temas novos, legendas diferentes das do feed.
   {
@@ -44,7 +44,7 @@ const REELS = [
     caption: `Esqueceu a carga do último treino? 🧠
 No histórico do app, cada treino fica salvo com data, carga e repetições.
 
-Link na bio 👇
+Comece agora grátis. Link na bio 👇
 
 ${TAGS}`,
   },
@@ -53,7 +53,7 @@ ${TAGS}`,
     caption: `Treinar desidratado rende menos. 💧
 O app registra a meta diária de água do aluno.
 
-Link na bio 👇
+Comece agora grátis. Link na bio 👇
 
 ${TAGS}`,
   },
