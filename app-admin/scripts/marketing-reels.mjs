@@ -85,6 +85,15 @@ Comece agora. Link na bio 👇
 ${TAGS}`,
   },
   {
+    key: 'tempo-curto', later: true, print: 'treino', hook: 'Só tem 20 minutos hoje?', title: 'Enxugue o treino do dia', sub: 'Escolha 20, 30 ou 45 min. O plano não muda.',
+    caption: `Sem tempo não precisa ser sem treino. ⏱️
+Escolha 20, 30 ou 45 minutos e o app enxuga só o treino de hoje, mantendo os exercícios principais. Amanhã o plano volta inteiro.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
+  {
     key: 'agua', later: true, print: 'agua', hook: 'Seu aluno bebe água o suficiente?', title: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
     caption: `Treinar desidratado rende menos. 💧
 O app registra a meta diária de água do aluno.
