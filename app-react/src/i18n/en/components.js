@@ -150,6 +150,8 @@ export default {
   '✅ Check-in registrado': '✅ Check-in saved',
   '❌ Não foi possível salvar o check-in': '❌ Could not save the check-in',
   'Refazer': 'Redo',
+  '🙂 Check-in de hoje': "🙂 Today's check-in",
+  'Fazer check-in': 'Check in',
   'Como você está hoje?': 'How are you today?',
   'Registrar': 'Save',
 
