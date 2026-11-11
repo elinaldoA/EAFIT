@@ -1043,7 +1043,13 @@ export const exerciseNames: Record<string, string> = {
   "Volante com Anilha": "Plate Steering Wheel",
   "Vácuo Abdominal": "Stomach Vacuum",
   "Wall Ball": "Wall Ball",
-  "Z Press": "Z Press"
+  "Z Press": "Z Press",
+  "Rosca Martelo com Kettlebell": "Kettlebell Hammer Curl",
+  "Rosca Martelo Cruzada com Halteres": "Cross-Body Hammer Curl",
+  "Afundo com Kettlebell": "Kettlebell Lunge",
+  "Afundo Búlgaro com Kettlebell": "Kettlebell Bulgarian Split Squat",
+  "Clean e Press com Halteres": "Dumbbell Clean and Press",
+  "Clean e Press com Kettlebell": "Kettlebell Clean and Press"
 };
 
 export const focoNames: Record<string, string> = {

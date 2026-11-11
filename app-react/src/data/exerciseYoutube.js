@@ -889,6 +889,12 @@ export const EXERCISE_YOUTUBE = {
   'Pular Corda Intervalado': { id: 'uuaCvki7iQc', canal: 'Tabata Songs' },
   'Tiros de 400m': { id: 'snfcp94Ro8M', canal: 'Canadian Track and Field League' },
   'Tiros em Subida': { id: 't62tRpLCBaA', canal: 'Run Elite' },
+  'Rosca Martelo com Kettlebell': { id: 'AM8FaFKEbBo', canal: 'Elite Edge Transformation Center' },
+  'Rosca Martelo Cruzada com Halteres': { id: '7MrzVaPM0Uw', canal: 'Horton Barbell' },
+  'Afundo com Kettlebell': { id: 'mEKnw3Kmu7o', canal: 'Rehab My Patient' },
+  'Afundo Búlgaro com Kettlebell': { id: 'lIkrkXuWjJE', canal: 'Live Lean TV' },
+  'Clean e Press com Halteres': { id: 'sZ4XMWn8bAU', canal: 'J2FIT Strength & Conditioning' },
+  'Clean e Press com Kettlebell': { id: 'km3f8_rpDdg', canal: 'NASM' },
 };
 
 export function youtubeEmbedUrl({ id, start = 0, end }, { autoplay = true } = {}) {

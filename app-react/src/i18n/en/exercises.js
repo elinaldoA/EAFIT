@@ -1046,6 +1046,12 @@ export const names = {
   'Vácuo Abdominal': 'Stomach Vacuum',
   'Wall Ball': 'Wall Ball',
   'Z Press': 'Z Press',
+  'Rosca Martelo com Kettlebell': 'Kettlebell Hammer Curl',
+  'Rosca Martelo Cruzada com Halteres': 'Cross-Body Hammer Curl',
+  'Afundo com Kettlebell': 'Kettlebell Lunge',
+  'Afundo Búlgaro com Kettlebell': 'Kettlebell Bulgarian Split Squat',
+  'Clean e Press com Halteres': 'Dumbbell Clean and Press',
+  'Clean e Press com Kettlebell': 'Kettlebell Clean and Press',
 };
 
 export const techniques = {
@@ -2090,6 +2096,12 @@ export const techniques = {
   'Ângulo de baixo pra cima': 'Low-to-high angle',
   'Ângulo de cima, foco pico do bíceps': 'High angle, biceps peak focus',
   'Ênfase potência': 'Power emphasis',
+  'Segura as laterais da alça, punhos neutros, cotovelos colados': 'Hold the sides of the handle, neutral wrists, elbows tucked',
+  'Leva o halter em direção ao ombro oposto, sem balançar o tronco': 'Bring the dumbbell toward the opposite shoulder, no torso swing',
+  'Passo largo, tronco ereto, joelho de trás quase no chão': 'Long step, upright torso, back knee almost touching the floor',
+  'Pé de trás no banco, tronco ereto, desce até a coxa ficar paralela': 'Rear foot on the bench, upright torso, lower until the thigh is parallel',
+  'Impulso dos quadris leva os halteres aos ombros, depois empurra acima da cabeça': 'Hip drive brings the dumbbells to the shoulders, then press overhead',
+  'Impulso dos quadris leva o kettlebell ao ombro, depois empurra acima da cabeça': 'Hip drive brings the kettlebell to the shoulder, then press overhead',
 };
 
 // Focos: traduzidos por inteiro quando listados; senão, parte por parte
