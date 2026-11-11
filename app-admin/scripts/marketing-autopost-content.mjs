@@ -268,6 +268,22 @@ Comece agora. Link na bio 👇
 
 ${TAGS}`,
   },
+  {
+    key: 'erros-iniciante', later: true, kind: 'slides', headline: 'Erros de quem está começando na academia',
+    slides: [
+      ['1', 'Colocar carga demais antes de dominar o movimento.'],
+      ['2', 'Treinar sem plano: cada dia um exercício diferente.'],
+      ['3', 'Não registrar carga e repetições e nunca saber se evoluiu.'],
+      ['4', 'Pular o aquecimento e o descanso entre as séries.'],
+    ],
+    closing: 'Plano pronto e cada série registrada no app.',
+    caption: `Começar errado atrasa o resultado. ⚠️
+Salve este post e mande para quem acabou de entrar na academia.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {
