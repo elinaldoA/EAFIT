@@ -87,7 +87,7 @@ export async function fetchInviteStats(days = 30) {
 }
 
 export function trainerInviteText(code) {
-  return t('Quer treinar comigo pelo EAFIT? Crie sua conta grátis por este link e autorize o acompanhamento: {url} (se já tem conta, vá em Perfil → Meu personal e digite o código {code})', {
+  return t('Quer treinar comigo pelo EAFIT? Crie sua conta por este link e autorize o acompanhamento: {url} (se já tem conta, vá em Perfil → Meu personal e digite o código {code})', {
     url: trainerInviteLink(code), code,
   });
 }

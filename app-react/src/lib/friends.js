@@ -24,7 +24,7 @@ export function normalizeFriendCode(raw) {
 }
 
 export function friendInviteText(code) {
-  return t('Bora treinar juntos? 💪 Me adiciona no EAFIT com o código {code} (Dashboard → Amigos) e a gente disputa o ranking da semana. Ainda não tem o app? É grátis: {url}', { code, url: FRIEND_INVITE_URL });
+  return t('Bora treinar juntos? 💪 Me adiciona no EAFIT com o código {code} (Dashboard → Amigos) e a gente disputa o ranking da semana. Ainda não tem o app? Baixe: {url}', { code, url: FRIEND_INVITE_URL });
 }
 
 // Manda o convite com o código pelo compartilhar do sistema ou, sem ele, copia.

@@ -34,7 +34,7 @@ export default {
   'Informe sua senha.': 'Enter your password.',
   'Aceite os Termos de Uso para criar a conta.': 'Accept the Terms of Use to create your account.',
   'Seu treino, sempre com você': 'Your workout, always with you',
-  'Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Grátis e funciona offline.': 'A workout plan for your goal, a log of every set and charts of your progress. Free and works offline.',
+  'Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Funciona offline.': 'A workout plan for your goal, a log of every set and charts of your progress. Works offline.',
   'Conheça o app →': 'Meet the app →',
   'Informe o e-mail da sua conta e enviaremos um link para criar uma nova senha.': 'Enter your account email and we will send you a link to create a new password.',
   'Acesso': 'Access',

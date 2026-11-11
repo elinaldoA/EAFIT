@@ -109,7 +109,7 @@ export default function PromoMaterialsAdmin() {
         </label>
         <label className="field">
           <span className="field__label">Texto pronto (opcional; o link do parceiro entra no fim)</span>
-          <textarea className="input" rows={3} value={caption} maxLength={1000} placeholder="Ex.: Treino pronto em 1 minuto 💪 Comece agora grátis:"
+          <textarea className="input" rows={3} value={caption} maxLength={1000} placeholder="Ex.: Treino pronto em 1 minuto 💪 Comece agora:"
             onChange={e => setCaption(e.target.value)} />
         </label>
         <label className="field">

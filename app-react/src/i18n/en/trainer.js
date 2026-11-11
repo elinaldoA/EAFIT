@@ -257,7 +257,7 @@ export default {
   'visitas pelo link (30 dias)': 'link visits (30 days)',
   'contas criadas (30 dias)': 'accounts created (30 days)',
   'alunos que entraram pelo link': 'clients who joined via the link',
-  'Quer treinar comigo pelo EAFIT? Crie sua conta grátis por este link e autorize o acompanhamento: {url} (se já tem conta, vá em Perfil → Meu personal e digite o código {code})': 'Want to train with me on EAFIT? Create your free account through this link and authorize me to follow your training: {url} (already have an account? Go to Profile → My trainer and enter the code {code})',
+  'Quer treinar comigo pelo EAFIT? Crie sua conta por este link e autorize o acompanhamento: {url} (se já tem conta, vá em Perfil → Meu personal e digite o código {code})': 'Want to train with me on EAFIT? Create your account through this link and authorize me to follow your training: {url} (already have an account? Go to Profile → My trainer and enter the code {code})',
   '🤝 {name} quer acompanhar seu treino': '🤝 {name} wants to follow your training',
   'Você chegou pelo convite do seu personal. Autorizando, ele passa a ver seus treinos, peso, medidas, check-ins e desconfortos, e pode enviar treinos e recados. Você pode encerrar o vínculo quando quiser em Perfil → Meu personal.': 'You came through your trainer’s invite. If you authorize, they will see your workouts, weight, measurements, check-ins and discomforts, and can send you workouts and messages. You can end the link anytime in Profile → My trainer.',
   'Autorizar': 'Authorize',

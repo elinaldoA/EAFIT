@@ -101,7 +101,7 @@ function CampaignForm({ initial, onSaved, onCancel }) {
       <label className="field">
         <span className="field__label">Texto sugerido para o post</span>
         <textarea className="input" rows={3} value={d.caption} maxLength={TEXT_MAX}
-          placeholder="Ex.: Ano novo, treino novo! Comece agora grátis no EAFIT 👉 {link}"
+          placeholder="Ex.: Ano novo, treino novo! Comece agora no EAFIT 👉 {link}"
           onChange={e => set({ caption: e.target.value })} />
         <span className="card-note" style={{ margin: 0 }}>
           Escreva <code>{'{link}'}</code> onde o link de cada parceiro deve entrar (sem isso, o link vai no fim).

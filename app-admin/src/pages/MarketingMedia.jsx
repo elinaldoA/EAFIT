@@ -122,7 +122,7 @@ export default function MarketingMedia() {
   }
 
   function openArt(p) {
-    setArt({ slug: p.slug, label: p.label, headline: p.label, subline: 'Treino, nutrição e evolução num app só. Comece agora grátis.', format: 'feed', preview: null });
+    setArt({ slug: p.slug, label: p.label, headline: p.label, subline: 'Treino, nutrição e evolução num app só. Comece agora.', format: 'feed', preview: null });
   }
 
   async function previewArt() {
@@ -330,7 +330,7 @@ export default function MarketingMedia() {
               <label className="field">
                 <span className="field__label">Texto pronto (opcional; o link do parceiro entra no fim)</span>
                 <textarea className="input" rows={4} value={share.caption} maxLength={1000}
-                  placeholder="Ex.: Meu treino agora fala comigo 🎧 Comece agora grátis:"
+                  placeholder="Ex.: Meu treino agora fala comigo 🎧 Comece agora:"
                   onChange={e => setShare({ ...share, caption: e.target.value })} />
               </label>
               {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}

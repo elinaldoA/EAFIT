@@ -148,7 +148,7 @@ export default function AuthScreen() {
           )}
           {mode === 'signup' && !inviter && (
             <p className="auth-logo__pitch">
-              {t('Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Grátis e funciona offline.')}
+              {t('Plano de treino pro seu objetivo, registro de cada série e gráficos da sua evolução. Funciona offline.')}
             </p>
           )}
           <a className="auth-logo__more" href="../">{t('Conheça o app →')}</a>

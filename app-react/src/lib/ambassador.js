@@ -67,7 +67,7 @@ export async function fetchMyAmbassadorDaily(days = 30) {
 // 'shared' | 'copied' | 'cancelled' | 'failed' — mesmo contrato de shareInvite (lib/invite.js).
 export async function shareAmbassadorLink(code, channel = '') {
   const url = ambassadorLink(code, channel);
-  const text = t('Tô usando o EAFIT pra montar e registrar meus treinos. É grátis e funciona offline — bora treinar junto? 💪');
+  const text = t('Tô usando o EAFIT pra montar e registrar meus treinos. Funciona offline — bora treinar junto? 💪');
   if (navigator.share) {
     try {
       await navigator.share({ title: 'EAFIT', text, url });
@@ -98,15 +98,15 @@ export async function copyAmbassadorLink(code, channel = '') {
 export const INFLUENCER_CAPTIONS = [
   {
     key: 'bio', label: () => t('Bio'), channel: 'instagram',
-    text: link => t('Meu treino é montado e registrado no EAFIT. Grátis: {link}', { link }),
+    text: link => t('Meu treino é montado e registrado no EAFIT. Acesse: {link}', { link }),
   },
   {
     key: 'stories', label: () => t('Stories e posts'), channel: 'instagram',
-    text: link => t('Meu app de treino é o EAFIT: monta a semana, marca as séries e mostra a evolução. É grátis e funciona offline 👉 {link}', { link }),
+    text: link => t('Meu app de treino é o EAFIT: monta a semana, marca as séries e mostra a evolução. Funciona offline 👉 {link}', { link }),
   },
   {
     key: 'whatsapp', label: () => t('WhatsApp'), channel: 'whatsapp',
-    text: link => t('Bora treinar junto? Tô usando o EAFIT pra montar e registrar meus treinos. É grátis: {link}', { link }),
+    text: link => t('Bora treinar junto? Tô usando o EAFIT pra montar e registrar meus treinos. Acesse: {link}', { link }),
   },
 ];
 

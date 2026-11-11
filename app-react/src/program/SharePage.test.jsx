@@ -32,7 +32,7 @@ describe('SharePage', () => {
     render(<SharePage amb={AMB} />);
     fireEvent.click(screen.getAllByText('Copiar texto')[0]);
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('📋 Texto copiado'));
-    expect(h.writeText).toHaveBeenCalledWith('Meu treino é montado e registrado no EAFIT. Grátis: https://eafit.com.br/app/?ref=anafit&origem=instagram');
+    expect(h.writeText).toHaveBeenCalledWith('Meu treino é montado e registrado no EAFIT. Acesse: https://eafit.com.br/app/?ref=anafit&origem=instagram');
   });
 
   it('mostra o QR do link e baixa a imagem', async () => {

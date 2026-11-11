@@ -65,8 +65,8 @@ export const CAMPAIGN_TEMPLATES = [
     title: 'Traga um amigo para treinar',
     description: 'Durante 30 dias, convide quem você conhece para treinar com o EAFIT. Poste o seu link nos stories, '
       + 'deixe na bio e mande no WhatsApp para quem vive dizendo que vai começar a treinar.',
-    caption: 'Treinar junto é mais fácil! Eu monto e registro meus treinos no EAFIT e funciona até sem internet. '
-      + 'Comece agora grátis e bora comigo 👉 {link}',
+    caption: 'Treinar junto é mais fácil! Eu monto e registro meus treinos no EAFIT, que funciona até sem internet. '
+      + 'Comece agora e bora comigo 👉 {link}',
     goal: '',
   },
   {
@@ -76,7 +76,7 @@ export const CAMPAIGN_TEMPLATES = [
     description: 'Janeiro é quando mais gente decide voltar a treinar. Mostre como você organiza a sua semana no app '
       + 'e convide seu público a começar o ano com um plano de treino pronto.',
     caption: 'A meta deste ano é não parar 💪 Meu treino está todo no EAFIT: monta a semana, marca as séries e mostra a evolução. '
-      + 'Comece agora grátis 👉 {link}',
+      + 'Comece agora 👉 {link}',
     goal: '',
   },
   {
@@ -85,7 +85,7 @@ export const CAMPAIGN_TEMPLATES = [
     title: 'Desafio 30 dias com o EAFIT',
     description: 'Chame seu público para treinar com você por 30 dias. Poste o seu treino marcado no app (o card de treino '
       + 'já sai com o seu link) e lembre o desafio pelo menos uma vez por semana nos stories.',
-    caption: 'Topa treinar comigo pelos próximos 30 dias? Eu registro tudo no EAFIT e você pode fazer o mesmo. Comece agora grátis 👉 {link}',
+    caption: 'Topa treinar comigo pelos próximos 30 dias? Eu registro tudo no EAFIT e você pode fazer o mesmo. Comece agora 👉 {link}',
     goal: '',
   },
   {
@@ -104,7 +104,7 @@ export const CAMPAIGN_TEMPLATES = [
     title: 'Conheça o EAFIT',
     description: 'Faça um post ou vídeo mostrando o app em uso: montar a semana, marcar uma série e ver a evolução convence mais '
       + 'que um print. Deixe o link na bio enquanto a campanha estiver no ar.',
-    caption: 'Achei o app de treino que faltava: o EAFIT monta a semana, registra cada série e mostra a evolução. Comece agora grátis 👉 {link}',
+    caption: 'Achei o app de treino que faltava: o EAFIT monta a semana, registra cada série e mostra a evolução. Comece agora 👉 {link}',
     goal: '',
   },
 ];

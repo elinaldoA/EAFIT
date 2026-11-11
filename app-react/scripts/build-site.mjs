@@ -93,9 +93,9 @@ const UI_EN = {
   'Nível a partir do qual o exercício entra no plano.': 'The level from which the exercise can be part of the plan.',
   'Compostos trabalham vários músculos de uma vez; isolados focam em um.': 'Compound moves work several muscles at once; isolation moves focus on one.',
   'Monte seu treino com esses exercícios': 'Build your workout with these exercises',
-  'O EAFIT escolhe os exercícios pelo seu objetivo e nível, mostra a execução de cada um e registra a sua evolução. Comece agora grátis e sem anúncios.':
-    'EAFIT picks the exercises for your goal and level, shows how to do each one and tracks your progress. Start free now and ad-free.',
-  'Começar agora grátis': 'Start free now',
+  'O EAFIT escolhe os exercícios pelo seu objetivo e nível, mostra a execução de cada um e registra a sua evolução. Comece agora, sem anúncios.':
+    'EAFIT picks the exercises for your goal and level, shows how to do each one and tracks your progress. Start now, ad-free.',
+  'Começar agora': 'Start now',
 };
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -273,8 +273,8 @@ ${s.groups.map(g => `          <li class="group-card reveal" id="${g.id}"><span 
       <div class="wrap">
         <div class="cta-band reveal">
           <h2>Monte seu treino com esses exercícios</h2>
-          <p>O EAFIT escolhe os exercícios pelo seu objetivo e nível, mostra a execução de cada um e registra a sua evolução. Comece agora grátis e sem anúncios.</p>
-          <a class="btn btn-primary" href="/app/">Começar agora grátis</a>
+          <p>O EAFIT escolhe os exercícios pelo seu objetivo e nível, mostra a execução de cada um e registra a sua evolução. Comece agora, sem anúncios.</p>
+          <a class="btn btn-primary" href="/app/">Começar agora</a>
         </div>
       </div>
     </section>

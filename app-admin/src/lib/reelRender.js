@@ -157,7 +157,7 @@ export function drawReelFrame(ctx, reel, img, t) {
     ctx.fillRect(0, 0, W, H);
     ctx.restore();
     const dy = (1 - easeOut((t - 9.7) / 0.6)) * 50;
-    text(ctx, 'Comece agora grátis', { x: W / 2, y: 540 + dy, size: 96, align: 'center', alpha: a3 });
+    text(ctx, 'Comece agora', { x: W / 2, y: 540 + dy, size: 96, align: 'center', alpha: a3 });
     text(ctx, 'Link na bio', { x: W / 2, y: 920 + dy, size: 64, weight: 600, color: '#a1a1aa', align: 'center', alpha: a3 });
     text(ctx, 'eafit.com.br', { x: W / 2, y: 1080 + dy, size: 72, weight: 700, color: '#f97316', align: 'center', alpha: a3 });
   }
@@ -412,7 +412,7 @@ export function drawStoryFrame(ctx, story, img, t) {
     ctx.font = `800 40px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('COMECE AGORA GRÁTIS · LINK NA BIO', 0, 3);
+    ctx.fillText('COMECE AGORA · LINK NA BIO', 0, 3);
     ctx.restore();
     text(ctx, 'eafit.com.br', { x: W / 2, y: by + bh + 26, size: 44, weight: 700, color: '#fff', align: 'center', alpha: cta });
   }
