@@ -13,6 +13,7 @@ import { clearPartnerCampaign, pendingPartnerCampaign } from '../lib/partnerCamp
 import { pendingPersonalInvite } from '../lib/trainerInvite';
 import { syncLocalProfile } from '../lib/profileSync';
 import { noteFreshLogin } from '../lib/biometricLock';
+import { needsGoogleSignupFinish } from '../lib/googleAuth';
 
 import { t, lang } from '../lib/i18n';
 const MIN_PASSWORD = 8;
@@ -37,6 +38,22 @@ function appUrl() {
 // conta recém-criada e uma vez só, então chamar de novo não duplica.
 async function sendWelcomeEmail() {
   try { await db.functions.invoke('send-welcome'); } catch { /* sem e-mail, o cadastro segue */ }
+}
+
+// Primeira volta do Google: grava o que o cadastro por e-mail grava (aceite dos
+// termos, idioma, origem) e manda o e-mail de boas-vindas. Falhando, devolve o
+// usuário como veio e tenta de novo na próxima abertura (a conta é recente).
+async function finishGoogleSignup(user) {
+  if (!needsGoogleSignupFinish(user)) return user;
+  const utm = pendingAttribution();
+  const { data, error } = await db.auth.updateUser({
+    data: { termsAcceptedAt: new Date().toISOString(), lang, ...(utm ? { utm } : {}) },
+  });
+  if (error) return user;
+  trackAuthEvent('signup_ok');
+  clearAttribution();
+  sendWelcomeEmail();
+  return data?.user || user;
 }
 
 export function AuthProvider({ children }) {
@@ -69,7 +86,9 @@ export function AuthProvider({ children }) {
       }
       if (!active) return;
       if (session) claimLocalData(session.user.id);
-      setUser(session ? session.user : null);
+      const accepted = session ? await finishGoogleSignup(session.user) : null;
+      if (!active) return;
+      setUser(accepted);
       setAuthLoading(false);
     }
 
@@ -161,6 +180,21 @@ export function AuthProvider({ children }) {
     claimLocalData(data.user.id);
     noteFreshLogin(data.user.id);
     setUser(data.user);
+    return {};
+  }
+
+  // Sai da página para o Google e volta para o app (appUrl). Entrar e criar
+  // conta são o mesmo clique: conta nova é criada pelo Supabase e fechada em
+  // finishGoogleSignup na volta.
+  async function loginWithGoogle() {
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: appUrl() },
+    });
+    if (error) {
+      trackAuthEvent('login_error', 'google');
+      return { error: t('Não foi possível entrar com o Google. Tente de novo.') };
+    }
     return {};
   }
 
@@ -263,7 +297,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, authLoading, recoveryMode, linkError,
-      login, signup, logout, requestPasswordReset, resendConfirmation, finishRecovery,
+      login, loginWithGoogle, signup, logout, requestPasswordReset, resendConfirmation, finishRecovery,
       updateProfile, updateEmail, updatePassword, deleteAccount,
     }}>
       {children}

@@ -7,6 +7,7 @@ const { mockAuth, mockFunctions } = vi.hoisted(() => ({
     getSession: vi.fn(),
     onAuthStateChange: vi.fn(),
     signInWithPassword: vi.fn(),
+    signInWithOAuth: vi.fn(),
     signUp: vi.fn(),
     signOut: vi.fn(),
     updateUser: vi.fn(),
@@ -80,6 +81,86 @@ describe('AuthProvider', () => {
 
     expect(response).toEqual({ error: 'E-mail ou senha inválidos.' });
     expect(result.current.user).toBeNull();
+  });
+
+  it('loginWithGoogle manda para o Google e volta para o app', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signInWithOAuth.mockResolvedValue({ data: {}, error: null });
+    let response;
+    await act(async () => { response = await result.current.loginWithGoogle(); });
+
+    expect(response).toEqual({});
+    expect(mockAuth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + window.location.pathname },
+    });
+  });
+
+  it('loginWithGoogle devolve erro em português quando o Supabase recusa', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    mockAuth.signInWithOAuth.mockResolvedValue({ data: null, error: { message: 'provider is not enabled' } });
+    let response;
+    await act(async () => { response = await result.current.loginWithGoogle(); });
+
+    expect(response).toEqual({ error: 'Não foi possível entrar com o Google. Tente de novo.' });
+  });
+
+  it('volta do Google com conta nova: grava aceite dos termos e manda boas-vindas', async () => {
+    vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(false);
+    vi.spyOn(accountStatus, 'isAccountDeactivated').mockResolvedValue(false);
+    const fresh = {
+      id: 'g1', created_at: new Date().toISOString(),
+      app_metadata: { provider: 'google', providers: ['google'] }, user_metadata: {},
+    };
+    const updated = { ...fresh, user_metadata: { termsAcceptedAt: 'agora' } };
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: fresh } } });
+    mockAuth.updateUser.mockResolvedValue({ data: { user: updated }, error: null });
+    mockFunctions.invoke.mockResolvedValue({});
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    expect(mockAuth.updateUser).toHaveBeenCalledWith({ data: expect.objectContaining({ termsAcceptedAt: expect.any(String) }) });
+    expect(mockFunctions.invoke).toHaveBeenCalledWith('send-welcome');
+    expect(result.current.user).toEqual(updated);
+  });
+
+  it('volta do Google com conta que já aceitou os termos: não grava de novo', async () => {
+    vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(false);
+    vi.spyOn(accountStatus, 'isAccountDeactivated').mockResolvedValue(false);
+    const known = {
+      id: 'g2', created_at: new Date().toISOString(),
+      app_metadata: { provider: 'google', providers: ['google'] }, user_metadata: { termsAcceptedAt: '2026-01-01T00:00:00Z' },
+    };
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: known } } });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    expect(mockAuth.updateUser).not.toHaveBeenCalled();
+    expect(mockFunctions.invoke).not.toHaveBeenCalled();
+    expect(result.current.user).toEqual(known);
+  });
+
+  it('volta do Google e a gravação falha: entra mesmo assim e tenta de novo depois', async () => {
+    vi.spyOn(adminGuard, 'isAdminAccount').mockResolvedValue(false);
+    vi.spyOn(accountStatus, 'isAccountDeactivated').mockResolvedValue(false);
+    const fresh = {
+      id: 'g3', created_at: new Date().toISOString(),
+      app_metadata: { provider: 'google', providers: ['google'] }, user_metadata: {},
+    };
+    mockAuth.getSession.mockResolvedValue({ data: { session: { user: fresh } } });
+    mockAuth.updateUser.mockResolvedValue({ data: null, error: { message: 'network' } });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.authLoading).toBe(false));
+
+    expect(result.current.user).toEqual(fresh);
+    expect(mockFunctions.invoke).not.toHaveBeenCalled();
   });
 
   it('signup recusa senha curta antes de chamar o backend', async () => {

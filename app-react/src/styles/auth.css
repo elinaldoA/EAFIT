@@ -114,6 +114,21 @@
 /* 20px em vez dos 13px padrão: alvo de toque maior no celular. */
 .auth-form__terms input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--primary); }
 
+/* "ou" + botão do Google */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+.auth-divider::before,
+.auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.auth-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.auth-google__icon { width: 18px; height: 18px; flex-shrink: 0; }
+.auth-form__legal { margin: 0; font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.4; text-align: center; }
+.auth-form__legal a { color: var(--primary); }
+
 .app-version {
   text-align: center;
   font-size: var(--fs-xs);
