@@ -129,7 +129,7 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = 
           onChange={e => setLocal(l => ({ ...l, tecnica: e.target.value }))} onBlur={() => save('tecnica')} />
         {extras && (
           <ExerciseExtras
-            grupo={local.grupo} aquecimento={local.aquecimento}
+            grupo={local.grupo} aquecimento={local.aquecimento} intensidade={local.intensidade}
             onChange={patch => { setLocal(l => ({ ...l, ...patch })); onChange(ex.id, patch); }}
           />
         )}

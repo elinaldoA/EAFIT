@@ -5,6 +5,7 @@ import { evaluateCycleEvolution } from './planEvolution';
 import { generatePlan, NIVEIS } from '../data/workoutTemplates';
 
 import { t } from './i18n';
+import { normalizeIntensity } from './intensity';
 // Ciclo positivo antecipa o próximo (mais 1 semana livre pra "subir de nível"
 // mais rápido); negativo estende (mais tempo pra consolidar antes de avançar).
 const DURATION_ADJUST_WEEKS = { positivo: -1, neutro: 0, negativo: 2 };
@@ -36,8 +37,8 @@ function toRpcDays(days) {
   return days.map(d => ({
     dia: d.dia,
     foco: d.foco ?? '',
-    exercicios: (d.exercicios || []).map(({ nome, series, reps, descanso, tecnica, grupo, aquecimento }) => ({
-      nome, series, reps, descanso, tecnica, grupo: grupo || null, aquecimento: aquecimento ?? null,
+    exercicios: (d.exercicios || []).map(({ nome, series, reps, descanso, tecnica, grupo, aquecimento, intensidade }) => ({
+      nome, series, reps, descanso, tecnica, grupo: grupo || null, aquecimento: aquecimento ?? null, intensidade: normalizeIntensity(intensidade),
     })),
     pos: (d.pos || []).map(({ nome, series, reps, descanso, tecnica }) => ({ nome, series, reps, descanso, tecnica })),
   }));
@@ -55,7 +56,7 @@ function exercisesToRows(planDayId, day) {
   const row = post => (ex, idx) => ({
     plan_day_id: planDayId, nome: ex.nome, series: ex.series ?? '', reps: ex.reps ?? '',
     descanso: ex.descanso ?? '', tecnica: ex.tecnica ?? '', is_post_workout: post, order_index: idx,
-    ...(!post && { grupo: ex.grupo || null, aquecimento: ex.aquecimento ?? null }),
+    ...(!post && { grupo: ex.grupo || null, aquecimento: ex.aquecimento ?? null, intensidade: normalizeIntensity(ex.intensidade) }),
   });
   return [...(day.exercicios || []).map(row(false)), ...(day.pos || []).map(row(true))];
 }
@@ -174,9 +175,11 @@ export async function fetchPlanDays(planId) {
       .select(cols)
       .in('plan_day_id', dayIds)
       .order('order_index', { ascending: true });
-    let { data: ex, error: exErr } = await query(`${EXERCISE_COLS}, grupo, aquecimento`);
-    // 42703: banco ainda sem a migration 20261115010000 (grupo/aquecimento) —
-    // carrega o plano sem os campos novos em vez de deixar o app sem treino.
+    let { data: ex, error: exErr } = await query(`${EXERCISE_COLS}, grupo, aquecimento, intensidade`);
+    // 42703: banco ainda sem a migration de intensidade (20270219020000) ou de
+    // grupo/aquecimento (20261115010000) — carrega o plano sem os campos novos
+    // em vez de deixar o app sem treino.
+    if (exErr?.code === '42703') ({ data: ex, error: exErr } = await query(`${EXERCISE_COLS}, grupo, aquecimento`));
     if (exErr?.code === '42703') ({ data: ex, error: exErr } = await query(EXERCISE_COLS));
     if (exErr) throw exErr;
     exercises = ex || [];
@@ -190,7 +193,7 @@ export async function fetchPlanDays(planId) {
       .filter(e => e.plan_day_id === d.id && !e.is_post_workout)
       .map(e => ({
         id: e.id, nome: e.nome, series: e.series, reps: e.reps, descanso: e.descanso, tecnica: e.tecnica,
-        grupo: e.grupo ?? null, aquecimento: e.aquecimento ?? null,
+        grupo: e.grupo ?? null, aquecimento: e.aquecimento ?? null, intensidade: normalizeIntensity(e.intensidade),
       })),
     pos: exercises
       .filter(e => e.plan_day_id === d.id && e.is_post_workout)

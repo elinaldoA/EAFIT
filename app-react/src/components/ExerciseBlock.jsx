@@ -12,6 +12,7 @@ import { DiscomfortPanel } from './DiscomfortWidgets';
 import { isCardioItem } from '../lib/cardio';
 import { coachSuggest } from '../lib/coach';
 import SetRow from './SetRow';
+import { isIntensity, intensityLabel, intensityHint } from '../lib/intensity';
 import TimedSetRow from './TimedSetRow';
 import { isTimedItem } from '../lib/timedSets';
 import WarmupSets from './WarmupSets';
@@ -119,6 +120,9 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
               <span className="ex-block__meta">{timed ? t('{reps} · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso }) : t('{reps} reps · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso })}</span>
               <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
+          )}
+          {isIntensity(ex.intensidade) && (
+            <p className="ex-block__intensity" title={intensityHint(ex.intensidade)}>⚡ {intensityLabel(ex.intensidade)} — {intensityHint(ex.intensidade)}</p>
           )}
           {goal && (
             <p className="ex-block__goal">{t('🎯 Meta: {target} kg até {data}', { target: goal.target, data: fmtDate(goal.by) })}</p>

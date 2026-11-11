@@ -178,7 +178,7 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
                 </div>
                 <input className="input input--sm" placeholder={t('Técnica / observação (opcional)')} value={ex.tecnica}
                   onChange={e => setEx(di, ei, { tecnica: e.target.value })} />
-                <ExerciseExtras grupo={ex.grupo} aquecimento={ex.aquecimento} onChange={patch => setEx(di, ei, patch)} />
+                <ExerciseExtras grupo={ex.grupo} aquecimento={ex.aquecimento} intensidade={ex.intensidade} onChange={patch => setEx(di, ei, patch)} />
               </div>
               <button type="button" className="plan-row__dup" aria-label={t('Duplicar exercício')} disabled={day.exercicios.length >= MAX_EXERCISES}
                 onClick={() => setDay(di, d => ({ ...d, exercicios: duplicateItem(d.exercicios, ei) }))}>⧉</button>

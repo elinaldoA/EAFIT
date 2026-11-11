@@ -2,6 +2,7 @@ import { db } from './supabase';
 import { sendMessage } from './trainerMessages';
 
 import { t } from './i18n';
+import { normalizeIntensity } from './intensity';
 export const WEEK_DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 export const DURATION_CHOICES = [
   { value: '', label: t('Sem prazo') },
@@ -29,7 +30,7 @@ export function friendlyPlanError(err) {
 }
 
 export function emptyExercise() {
-  return { nome: '', series: '3', reps: '10-12', descanso: '60s', tecnica: '' };
+  return { nome: '', series: '3', reps: '10-12', descanso: '60s', tecnica: '', intensidade: '' };
 }
 
 export function emptyDay(dia) {
@@ -70,7 +71,7 @@ export function draftFromPlan(plan) {
       foco: d.foco || '',
       exercicios: (d.exercicios || []).map(e => ({
         nome: e.nome || '', series: e.series || '', reps: e.reps || '', descanso: e.descanso || '', tecnica: e.tecnica || '',
-        grupo: e.grupo || '', aquecimento: e.aquecimento ?? '',
+        grupo: e.grupo || '', aquecimento: e.aquecimento ?? '', intensidade: e.intensidade || '',
       })),
     }))),
   };
@@ -92,6 +93,7 @@ export function buildPlanPayload(draft) {
         descanso: String(e.descanso || '').trim(),
         tecnica: String(e.tecnica || '').trim(),
         grupo: /^[A-Z]$/.test(e.grupo || '') ? e.grupo : null,
+        intensidade: normalizeIntensity(e.intensidade),
         aquecimento: e.aquecimento === '' || e.aquecimento == null ? null : Number(e.aquecimento),
       }))
       .filter(e => e.nome);

@@ -10,6 +10,7 @@ import { postActivity } from '../lib/friends';
 import { sendPushToSelf } from '../lib/pushSubscriptions';
 
 import { t, tEx } from '../lib/i18n';
+import { INTENSITY_KEYS, normalizeIntensity, intensityLabel } from '../lib/intensity';
 // onSetDone: só nos exercícios de bi-set/circuito — quem decide o descanso e o
 // próximo exercício é o grupo (WorkoutDayCard), não o descanso desta série.
 export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFillOthers, started }) {
@@ -22,6 +23,11 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   const [saved, setSaved] = useState(false);
   // RIR opcional: '' = não respondeu. A pergunta só aparece com a série feita.
   const [rir, setRir] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_rir`) || '');
+  // Tipo da série ('' = normal). Sem escolha própria, vale a técnica prescrita
+  // no exercício, gravada ao marcar a série como feita.
+  const prescribed = normalizeIntensity(ex.intensidade) || '';
+  const [tipo, setTipo] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_tipo`) ?? '');
+  const tipoShown = tipo || prescribed;
   const cargaSaveTimer = useRef(null);
   const repsSaveTimer = useRef(null);
 
@@ -118,6 +124,13 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
     if (user) saveSetState(day.dia, ex.nome, n, { rir: next === '' ? null : Number(next) });
   }
 
+  function handleTipo(value) {
+    setTipo(value);
+    localStorage.setItem(`set_${ex.nome}_${n}_tipo`, value);
+    bump();
+    if (user) saveSetState(day.dia, ex.nome, n, { tipo: value || null });
+  }
+
   async function handleCheck() {
     const next = !done;
     setDone(next);
@@ -129,7 +142,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
       else if (restSeconds > 0) onRestStart(ex.nome, restSeconds);
     }
     if (user) {
-      const wId = await saveSetState(day.dia, ex.nome, n, { completed: next });
+      const wId = await saveSetState(day.dia, ex.nome, n, { completed: next, ...(next && tipoShown && { tipo: tipoShown }) });
       if (next) {
         const cargaNum = parseFloat(carga);
         if (Number.isFinite(cargaNum)) {
@@ -194,6 +207,13 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
               onClick={() => handleRir(v)}
             >{v === 4 ? '4+' : v}</button>
           ))}
+          <select
+            className="set-row__tipo" value={tipoShown} onChange={e => handleTipo(e.target.value)}
+            aria-label={t('Tipo da série')}
+          >
+            <option value="">{t('Normal')}</option>
+            {INTENSITY_KEYS.map(k => <option key={k} value={k}>{intensityLabel(k)}</option>)}
+          </select>
         </div>
       )}
     </div>

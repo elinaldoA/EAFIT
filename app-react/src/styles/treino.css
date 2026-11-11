@@ -425,6 +425,23 @@
   color: var(--on-primary);
 }
 
+.set-row__tipo {
+  margin-left: auto;
+  height: 24px;
+  max-width: 110px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-2);
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+}
+
+.ex-block__intensity {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--primary);
+}
+
 .set-row-wrap {
   display: flex;
   flex-direction: column;

@@ -255,7 +255,7 @@ export function WorkoutProvider({ children }) {
       if (wIds.length) {
         const { data: sets, error: sErr } = await db
           .from('exercise_sets')
-          .select('workout_id, exercise_name, set_number, carga, completed, reps, duracao_min, distancia_km, duracao_s, rir')
+          .select('workout_id, exercise_name, set_number, carga, completed, reps, duracao_min, distancia_km, duracao_s, rir, tipo')
           .in('workout_id', wIds);
         if (sErr) throw sErr;
         allSets = sets || [];
@@ -282,6 +282,7 @@ export function WorkoutProvider({ children }) {
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_distancia`, s.distancia_km ?? '');
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_duracao_s`, s.duracao_s ?? '');
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_rir`, s.rir ?? '');
+          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_tipo`, s.tipo ?? '');
         });
         if (w.rating != null) localStorage.setItem(`treino_${dayName}_rating`, w.rating);
         if (w.notes) localStorage.setItem(`treino_${dayName}_notes`, w.notes);

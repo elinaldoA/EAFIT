@@ -16,6 +16,7 @@ import { findGroup, groupKindLabel } from '../lib/supersets';
 import ExerciseDemo from './ExerciseDemo';
 import CoachPrompt from './CoachPrompt';
 import HydrationAlert from './HydrationAlert';
+import { isIntensity, intensityLabel, intensityHint } from '../lib/intensity';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
 function isExerciseDone(ex) {
@@ -280,6 +281,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
             {ex.descanso && ex.descanso !== '-' && <span className="live__chip">⏱ {ex.descanso}</span>}
             <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} variant="chip" />
           </div>
+          {isIntensity(ex.intensidade) && <p className="live__tecnica">⚡ {intensityLabel(ex.intensidade)} — {intensityHint(ex.intensidade)}</p>}
           {ex.tecnica && <p className="live__tecnica">💡 {tTec(ex.tecnica)}</p>}
         </div>
 
