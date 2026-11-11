@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
 import { getLock, verifyLock, isCancelled } from '../lib/biometricLock';
 import PasswordInput from './PasswordInput';
+import { useAuth } from '../context/useAuth';
+import { isGoogleOnly } from '../lib/googleAuth';
 
 import { t } from '../lib/i18n';
 import Wordmark from './Wordmark';
@@ -11,6 +13,9 @@ import Wordmark from './Wordmark';
 // Sem biometria (sensor sujo, credencial apagada no aparelho), a senha da
 // conta também desbloqueia — sem sair da conta nem perder o que não sincronizou.
 export default function BiometricLockScreen({ user, onUnlock }) {
+  const { logout } = useAuth();
+  // Entrou só pelo Google: não há senha para desbloquear (ver lib/googleAuth.js).
+  const googleOnly = isGoogleOnly(user);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [usePassword, setUsePassword] = useState(false);
@@ -64,9 +69,16 @@ export default function BiometricLockScreen({ user, onUnlock }) {
           <button ref={buttonRef} type="button" className="btn btn--primary" onClick={unlockWithBiometric} disabled={busy}>
             {t('🔓 Desbloquear')}
           </button>
-          <button type="button" className="link-btn" onClick={() => { setUsePassword(true); setError(''); }}>
-            {t('Usar a senha')}
-          </button>
+          {googleOnly ? (
+            <>
+              <p className="bio-lock__text">{t('Sem biometria? Saia da conta e entre de novo com o Google. O que não foi sincronizado neste aparelho pode se perder.')}</p>
+              <button type="button" className="link-btn" onClick={logout}>{t('Sair da conta')}</button>
+            </>
+          ) : (
+            <button type="button" className="link-btn" onClick={() => { setUsePassword(true); setError(''); }}>
+              {t('Usar a senha')}
+            </button>
+          )}
         </>
       ) : (
         <form className="bio-lock__form" onSubmit={unlockWithPassword}>

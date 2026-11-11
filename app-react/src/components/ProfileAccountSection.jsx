@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { version as APP_VERSION } from '../../package.json';
 import CollapsibleCard from './CollapsibleCard';
+import { isGoogleOnly } from '../lib/googleAuth';
 
 import { t } from '../lib/i18n';
 const DELETE_CONFIRM_WORD = t('EXCLUIR');
@@ -11,6 +12,7 @@ export default function ProfileAccountSection({
   newPassword, setNewPassword, onUpdatePassword,
   onLogout, onDeleteAccount,
 }) {
+  const googleOnly = isGoogleOnly(user);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
@@ -24,21 +26,37 @@ export default function ProfileAccountSection({
   return (
     <>
       <CollapsibleCard icon="🔐" title={t('E-mail e senha')} summary={user?.email}>
+            {googleOnly ? (
+              <p className="profile-field__hint">
+                {t('Você entra com o Google, então o e-mail da conta é o do Google e não é trocado por aqui.')}
+              </p>
+            ) : (
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor="newEmail">{t('Novo e-mail')}</label>
+                <input
+                  type="email" id="newEmail" className="input input--sm" placeholder={user?.email}
+                  value={newEmail} onChange={e => setNewEmail(e.target.value)}
+                />
+                <button className="btn btn--outline btn--sm" onClick={onUpdateEmail}>{t('Atualizar e-mail')}</button>
+              </div>
+            )}
             <div className="profile-field">
-              <label className="profile-field__label" htmlFor="newEmail">{t('Novo e-mail')}</label>
-              <input
-                type="email" id="newEmail" className="input input--sm" placeholder={user?.email}
-                value={newEmail} onChange={e => setNewEmail(e.target.value)}
-              />
-              <button className="btn btn--outline btn--sm" onClick={onUpdateEmail}>{t('Atualizar e-mail')}</button>
-            </div>
-            <div className="profile-field">
-              <label className="profile-field__label" htmlFor="newPassword">{t('Nova senha')}</label>
+              <label className="profile-field__label" htmlFor="newPassword">
+                {googleOnly ? t('Criar senha (opcional)') : t('Nova senha')}
+              </label>
+              {googleOnly && (
+                <p className="profile-field__hint">
+                  {t('Você entra com o Google. Se quiser, crie uma senha para também entrar com e-mail e senha.')}
+                </p>
+              )}
               <input
                 type="password" id="newPassword" className="input input--sm" placeholder={t('Mínimo 8 caracteres')}
+                autoComplete="new-password"
                 value={newPassword} onChange={e => setNewPassword(e.target.value)}
               />
-              <button className="btn btn--outline btn--sm" onClick={onUpdatePassword}>{t('Atualizar senha')}</button>
+              <button className="btn btn--outline btn--sm" onClick={onUpdatePassword}>
+                {googleOnly ? t('Criar senha') : t('Atualizar senha')}
+              </button>
             </div>
       </CollapsibleCard>
 

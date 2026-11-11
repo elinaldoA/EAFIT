@@ -20,3 +20,11 @@ export function needsGoogleSignupFinish(user, now = Date.now()) {
   const created = new Date(user.created_at).getTime();
   return Number.isFinite(created) && now - created < FRESH_MS;
 }
+
+// Conta que só entra pelo Google: não tem senha (o Supabase só lista "email"
+// em providers depois que a pessoa cria uma). Sem a lista, não presume nada.
+export function isGoogleOnly(user) {
+  const providers = user?.app_metadata?.providers;
+  if (!Array.isArray(providers)) return user?.app_metadata?.provider === 'google';
+  return providers.includes('google') && !providers.includes('email');
+}

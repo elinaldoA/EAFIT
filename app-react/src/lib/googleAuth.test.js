@@ -1,5 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { hasGoogleIdentity, needsGoogleSignupFinish } from './googleAuth';
+import { hasGoogleIdentity, needsGoogleSignupFinish, isGoogleOnly } from './googleAuth';
+
+describe('isGoogleOnly', () => {
+  it('só Google = sem senha', () => {
+    expect(isGoogleOnly({ app_metadata: { provider: 'google', providers: ['google'] } })).toBe(true);
+    expect(isGoogleOnly({ app_metadata: { provider: 'google' } })).toBe(true);
+  });
+  it('com e-mail e senha (sozinho ou junto com o Google) tem senha', () => {
+    expect(isGoogleOnly({ app_metadata: { provider: 'email', providers: ['email'] } })).toBe(false);
+    expect(isGoogleOnly({ app_metadata: { provider: 'google', providers: ['google', 'email'] } })).toBe(false);
+  });
+  it('sem dados do provedor, não presume nada', () => {
+    expect(isGoogleOnly({})).toBe(false);
+    expect(isGoogleOnly(null)).toBe(false);
+  });
+});
 
 const NOW = new Date('2026-11-11T12:00:00Z').getTime();
 const hoursAgo = h => new Date(NOW - h * 3600 * 1000).toISOString();

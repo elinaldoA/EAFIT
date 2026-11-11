@@ -293,7 +293,9 @@ export function AuthProvider({ children }) {
   async function updatePassword(password) {
     const problem = passwordProblem(password);
     if (problem) return { error: problem };
-    const { error } = await db.auth.updateUser({ password });
+    const { data, error } = await db.auth.updateUser({ password });
+    // Quem entrava só pelo Google passa a ter e-mail e senha: a tela precisa saber.
+    if (!error && data?.user) setUser(data.user);
     return { error: error ? translateAuthError(error) : undefined };
   }
 

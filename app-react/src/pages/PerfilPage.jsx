@@ -31,6 +31,7 @@ import { computeNutritionGoals } from '../lib/nutritionGoals';
 import { isCoachAvailable } from '../lib/coach';
 import { NotificationsSection, ExportSection, CoachSection } from '../components/ProfilePreferencesSection';
 import ProfileAccountSection from '../components/ProfileAccountSection';
+import { isGoogleOnly } from '../lib/googleAuth';
 import ProfileBiometricSection from '../components/ProfileBiometricSection';
 import ProfileSeasonSection from '../components/ProfileSeasonSection';
 import ProfileSportSection from '../components/ProfileSportSection';
@@ -246,9 +247,10 @@ export default function PerfilPage({ active }) {
 
   async function handleUpdatePassword() {
     if (!newPassword) return;
+    const firstPassword = isGoogleOnly(user);
     const { error } = await updatePassword(newPassword);
     if (error) return toast(`⚠️ ${error}`);
-    toast(t('✅ Senha atualizada'));
+    toast(firstPassword ? t('✅ Senha criada. Agora você também entra com e-mail e senha.') : t('✅ Senha atualizada'));
     setNewPassword('');
   }
 
