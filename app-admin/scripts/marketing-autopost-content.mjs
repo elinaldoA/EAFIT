@@ -17,7 +17,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PRINTS = join(root, 'app-react', 'public', 'landing', 'img', 'app');
 const OUT = join(root, 'app-react', 'public', 'landing', 'img', 'marketing');
 const SITE = 'https://eafit.com.br';
-const TAGS = '#personaltrainer #treino #appdetreino #academia #musculacao';
+const TAGS = '#fitnessbrasil #treino #academia #appfitness #EAFIT';
 
 const SIZES = { feed: [1080, 1350], story: [1080, 1920] };
 
