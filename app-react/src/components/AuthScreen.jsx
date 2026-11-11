@@ -7,14 +7,18 @@ import { isKnownUser } from '../lib/knownUser';
 import { recordVisit } from '../lib/pageVisits';
 import { visibleInvite, fetchInviteName } from '../lib/trainerInvite';
 import { trackAuthEvent } from '../lib/tracking';
-import { t } from '../lib/i18n';
+import { t, lang } from '../lib/i18n';
 import Wordmark from './Wordmark';
 
 // Só o formato básico (algo@algo.algo); o resto o Supabase confere.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const MODES = {
-  login: { title: t('Entrar'), submit: t('Entrar'), busy: t('Entrando…') },
+  // "Entrar" também é "participar" nos clubes/desafios (en/run.js traduz como
+  // "Join"), então aqui o inglês vem direto em vez de passar pelo dicionário.
+  login: lang === 'en'
+    ? { title: 'Log in', submit: 'Log in', busy: 'Logging in…' }
+    : { title: 'Entrar', submit: 'Entrar', busy: 'Entrando…' },
   signup: { title: t('Criar conta'), submit: t('Criar conta'), busy: t('Criando conta…') },
   forgot: { title: t('Recuperar senha'), submit: t('Enviar link'), busy: t('Enviando…') },
 };
