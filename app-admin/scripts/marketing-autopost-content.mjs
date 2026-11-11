@@ -284,6 +284,22 @@ Comece agora. Link na bio 👇
 
 ${TAGS}`,
   },
+  {
+    key: 'meta-janeiro', later: true, kind: 'slides', headline: 'Monte já o seu treino de janeiro',
+    slides: [
+      ['1', 'Diga o seu objetivo, o seu nível e onde você treina.'],
+      ['2', 'O treino da semana sai pronto, sem planilha.'],
+      ['3', 'Registre cada série e veja a carga subir.'],
+      ['4', 'No fim do mês, a retrospectiva mostra o quanto você evoluiu.'],
+    ],
+    closing: 'Comece janeiro com o plano pronto.',
+    caption: `Ano novo, treino novo, e desta vez com plano. 🎆
+Salve este post e comece janeiro sem improviso.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {
