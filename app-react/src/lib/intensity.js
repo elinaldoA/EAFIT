@@ -35,3 +35,12 @@ export function intensityHint(key) {
     default: return '';
   }
 }
+
+// Detalhes de uma série registrada, para o histórico: ["RIR 2", "Drop-set"].
+export function setExtras(rir, tipo) {
+  const out = [];
+  if (Number.isFinite(Number(rir)) && rir !== null && rir !== '') out.push(`RIR ${rir}`);
+  const k = normalizeIntensity(tipo);
+  if (k) out.push(intensityLabel(k));
+  return out;
+}

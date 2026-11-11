@@ -9,6 +9,7 @@ import { formatCardioSummary } from '../lib/cardio';
 import { formatSeconds } from '../lib/timedSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 
+import { setExtras } from '../lib/intensity';
 import { t, locale, tEx } from '../lib/i18n';
 function fmtKg(n) {
   return `${n.toLocaleString(locale, { maximumFractionDigits: 1 })}kg`;
@@ -112,7 +113,7 @@ export default function SessionDetailModal({ session, onClose }) {
                     <div className="summary-table__sets">
                       {ex.sets.map(s => (
                         <span key={s.n} className={`summary-table__chip${s.done ? ' summary-table__chip--done' : ''}`}>
-                          {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : ex.timed ? (formatSeconds(s.duracaoS) || '–') + (s.carga === null ? '' : ` · ${fmtKg(s.carga)}`) : <>{s.reps ?? '–'}× {s.carga === null ? '–kg' : fmtKg(s.carga)}</>}
+                          {ex.cardio ? (formatCardioSummary(s.duracao, s.distancia) || '–') : ex.timed ? (formatSeconds(s.duracaoS) || '–') + (s.carga === null ? '' : ` · ${fmtKg(s.carga)}`) : <>{s.reps ?? '–'}× {s.carga === null ? '–kg' : fmtKg(s.carga)}{setExtras(s.rir, s.tipo).map(x => ` · ${x}`).join('')}</>}
                         </span>
                       ))}
                     </div>

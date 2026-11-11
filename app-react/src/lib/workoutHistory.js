@@ -75,6 +75,7 @@ export function buildSessions(workouts, sets) {
           byExercise.get(s.exercise_name).push({
             n: s.set_number, carga: toNum(s.carga), reps: toNum(s.reps), done: !!s.completed,
             duracao: toNum(s.duracao_min), distancia: toNum(s.distancia_km), duracaoS: toNum(s.duracao_s),
+            rir: toNum(s.rir), tipo: s.tipo || null,
           });
         });
 
@@ -171,7 +172,7 @@ export async function fetchMonthSessions(userId, year, month) {
 
   const { data: sets, error: sErr } = await db
     .from('exercise_sets')
-    .select('workout_id, exercise_name, set_number, carga, reps, completed, duracao_min, distancia_km, duracao_s')
+    .select('workout_id, exercise_name, set_number, carga, reps, completed, duracao_min, distancia_km, duracao_s, rir, tipo')
     .in('workout_id', ids);
   if (sErr) throw sErr;
 

@@ -1,6 +1,7 @@
 import { db } from './supabase';
 
 import { t } from './i18n';
+import { setExtras } from './intensity';
 const ERRORS = {
   not_authorized: t('Você não tem vínculo ativo com este aluno.'),
   invalid_body: t('Escreva a anotação (até 1000 caracteres).'),
@@ -26,7 +27,7 @@ export function buildSessions(sessions) {
     const byEx = new Map();
     for (const set of s.sets || []) {
       if (!byEx.has(set.exercise)) byEx.set(set.exercise, []);
-      byEx.get(set.exercise).push({ n: set.n, carga: num(set.carga), reps: num(set.reps) });
+      byEx.get(set.exercise).push({ n: set.n, carga: num(set.carga), reps: num(set.reps), rir: num(set.rir), tipo: set.tipo || null });
     }
     const exercises = [...byEx.entries()].map(([name, sets]) => {
       const loads = sets.map(x => x.carga).filter(v => Number.isFinite(v) && v > 0);
@@ -53,7 +54,9 @@ export function formatSets(sets) {
   return sets
     .map(x => {
       const reps = Number.isFinite(x.reps) ? x.reps : '?';
-      return Number.isFinite(x.carga) && x.carga > 0 ? `${String(x.carga).replace('.', ',')}×${reps}` : `${reps} reps`;
+      const base = Number.isFinite(x.carga) && x.carga > 0 ? `${String(x.carga).replace('.', ',')}×${reps}` : `${reps} reps`;
+      const extras = setExtras(x.rir, x.tipo);
+      return extras.length ? `${base} (${extras.join(', ')})` : base;
     })
     .join(' · ');
 }
