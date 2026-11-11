@@ -1052,6 +1052,13 @@ export const names = {
   'Afundo Búlgaro com Kettlebell': 'Kettlebell Bulgarian Split Squat',
   'Clean e Press com Halteres': 'Dumbbell Clean and Press',
   'Clean e Press com Kettlebell': 'Kettlebell Clean and Press',
+  'Concha Lateral (Clamshell)': 'Clamshell',
+  'Concha com Elástico': 'Banded Clamshell',
+  'Crucifixo no Chão com Halteres': 'Dumbbell Floor Fly',
+  'Remada Apoiada no Banco Inclinado com Halteres': 'Chest-Supported Incline Dumbbell Row',
+  'Flexão Larga': 'Wide Push-Up',
+  'Agachamento Goblet com Pausa': 'Paused Goblet Squat',
+  'Moinho com Halter': 'Dumbbell Windmill',
 };
 
 export const techniques = {
@@ -2102,6 +2109,13 @@ export const techniques = {
   'Pé de trás no banco, tronco ereto, desce até a coxa ficar paralela': 'Rear foot on the bench, upright torso, lower until the thigh is parallel',
   'Impulso dos quadris leva os halteres aos ombros, depois empurra acima da cabeça': 'Hip drive brings the dumbbells to the shoulders, then press overhead',
   'Impulso dos quadris leva o kettlebell ao ombro, depois empurra acima da cabeça': 'Hip drive brings the kettlebell to the shoulder, then press overhead',
+  'Deitado de lado, joelhos dobrados, abre o joelho de cima sem girar o quadril': 'Lying on your side, knees bent, open the top knee without rolling the hips',
+  'Elástico acima dos joelhos, abre o joelho de cima contra a resistência': 'Band above the knees, open the top knee against the resistance',
+  'Cotovelos levemente flexionados, desce até tocar o chão e fecha em arco': 'Elbows slightly bent, lower until they touch the floor and close in an arc',
+  'Peito apoiado no banco, puxa os cotovelos para trás sem tirar o peito': 'Chest on the bench, pull the elbows back without lifting the chest',
+  'Mãos mais afastadas que os ombros, corpo reto, peito quase no chão': 'Hands wider than the shoulders, body straight, chest almost to the floor',
+  'Kettlebell junto ao peito, pausa de 2s embaixo e sobe com o peito aberto': 'Kettlebell at the chest, 2s pause at the bottom, rise with the chest up',
+  'Halter acima da cabeça, desliza a mão pela perna mantendo o braço estendido': 'Dumbbell overhead, slide the hand down the leg keeping the arm extended',
 };
 
 // Focos: traduzidos por inteiro quando listados; senão, parte por parte

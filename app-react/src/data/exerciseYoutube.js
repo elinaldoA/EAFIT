@@ -895,6 +895,13 @@ export const EXERCISE_YOUTUBE = {
   'Afundo Búlgaro com Kettlebell': { id: 'lIkrkXuWjJE', canal: 'Live Lean TV' },
   'Clean e Press com Halteres': { id: 'sZ4XMWn8bAU', canal: 'J2FIT Strength & Conditioning' },
   'Clean e Press com Kettlebell': { id: 'km3f8_rpDdg', canal: 'NASM' },
+  'Concha Lateral (Clamshell)': { id: 'TT__6i6hS5w', canal: 'The Durable Body' },
+  'Concha com Elástico': { id: 'LR-yjDk2Iis', canal: 'Ariana Fotinakis Personal Training' },
+  'Crucifixo no Chão com Halteres': { id: 'bgC53-J-6gA', canal: 'PureGym' },
+  'Remada Apoiada no Banco Inclinado com Halteres': { id: '0-DXJiceG-0', canal: 'OPEX Fitness' },
+  'Flexão Larga': { id: 'Z8nUVpSZAhE', canal: 'Live Lean TV' },
+  'Agachamento Goblet com Pausa': { id: 'C-VGw2iOcHU', canal: 'Rehab My Patient' },
+  'Moinho com Halter': { id: '07O9TudA3Z8', canal: 'SATS Nordic' },
 };
 
 export function youtubeEmbedUrl({ id, start = 0, end }, { autoplay = true } = {}) {

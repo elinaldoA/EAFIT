@@ -1049,7 +1049,14 @@ export const exerciseNames: Record<string, string> = {
   "Afundo com Kettlebell": "Kettlebell Lunge",
   "Afundo Búlgaro com Kettlebell": "Kettlebell Bulgarian Split Squat",
   "Clean e Press com Halteres": "Dumbbell Clean and Press",
-  "Clean e Press com Kettlebell": "Kettlebell Clean and Press"
+  "Clean e Press com Kettlebell": "Kettlebell Clean and Press",
+  "Concha Lateral (Clamshell)": "Clamshell",
+  "Concha com Elástico": "Banded Clamshell",
+  "Crucifixo no Chão com Halteres": "Dumbbell Floor Fly",
+  "Remada Apoiada no Banco Inclinado com Halteres": "Chest-Supported Incline Dumbbell Row",
+  "Flexão Larga": "Wide Push-Up",
+  "Agachamento Goblet com Pausa": "Paused Goblet Squat",
+  "Moinho com Halter": "Dumbbell Windmill"
 };
 
 export const focoNames: Record<string, string> = {
