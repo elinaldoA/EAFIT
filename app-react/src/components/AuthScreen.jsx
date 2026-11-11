@@ -56,7 +56,6 @@ export default function AuthScreen() {
   function switchMode(next) {
     setMode(next);
     setMsg({ text: '', type: '' });
-    setGoogleError('');
     setNeedsConfirmation(false);
   }
 
@@ -101,13 +100,8 @@ export default function AuthScreen() {
   }
 
   // Entrar e criar conta são o mesmo clique no Google; conta nova é criada lá.
-  // Aceite dos Termos: na aba de cadastro, o checkbox (vale para e-mail e Google);
-  // na de entrada, o aviso sob o botão. Gravado na primeira volta do Google.
+  // O aceite dos Termos é o aviso sob o botão (gravado na primeira volta).
   async function handleGoogle() {
-    if (mode === 'signup' && !acceptedTerms) {
-      trackAuthEvent('signup_error', 'termos');
-      setGoogleError(t('Aceite os Termos de Uso para criar a conta.')); return;
-    }
     setBusy(true);
     setGoogleError('');
     const result = await loginWithGoogle();
@@ -169,16 +163,6 @@ export default function AuthScreen() {
             </div>
           )}
 
-          {mode === 'signup' && (
-            <label className="auth-form__terms">
-              <input type="checkbox" checked={acceptedTerms} onChange={e => { setAcceptedTerms(e.target.checked); setGoogleError(''); }} />
-              <span>
-                {t('Li e aceito os')} <a href="legal/termos.html" target="_blank" rel="noopener noreferrer">{t('Termos de Uso')}</a> {t('e a')}{' '}
-                <a href="legal/privacidade.html" target="_blank" rel="noopener noreferrer">{t('Política de Privacidade')}</a>
-              </span>
-            </label>
-          )}
-
           {mode !== 'forgot' && (
             <div className="auth-google-block">
               <button type="button" className="btn btn--outline btn--full auth-google" disabled={busy} onClick={handleGoogle}>
@@ -190,12 +174,10 @@ export default function AuthScreen() {
                 </svg>
                 {t('Continuar com o Google')}
               </button>
-              {mode === 'login' && (
-                <p className="auth-form__legal">
-                  {t('Ao continuar com o Google, você aceita os')} <a href="legal/termos.html" target="_blank" rel="noopener noreferrer">{t('Termos de Uso')}</a> {t('e a')}{' '}
-                  <a href="legal/privacidade.html" target="_blank" rel="noopener noreferrer">{t('Política de Privacidade')}</a>.
-                </p>
-              )}
+              <p className="auth-form__legal">
+                {t('Ao continuar com o Google, você aceita os')} <a href="legal/termos.html" target="_blank" rel="noopener noreferrer">{t('Termos de Uso')}</a> {t('e a')}{' '}
+                <a href="legal/privacidade.html" target="_blank" rel="noopener noreferrer">{t('Política de Privacidade')}</a>.
+              </p>
               {googleError && <p className="auth-form__msg auth-form__msg--error" role="alert">{googleError}</p>}
               <div className="auth-divider" role="separator"><span>{t('ou')}</span></div>
             </div>
@@ -226,6 +208,16 @@ export default function AuthScreen() {
             <button type="button" className="auth-form__link auth-form__link--right" onClick={() => switchMode('forgot')}>
               {t('Esqueci minha senha')}
             </button>
+          )}
+
+          {mode === 'signup' && (
+            <label className="auth-form__terms">
+              <input type="checkbox" checked={acceptedTerms} onChange={e => setAcceptedTerms(e.target.checked)} />
+              <span>
+                {t('Li e aceito os')} <a href="legal/termos.html" target="_blank" rel="noopener noreferrer">{t('Termos de Uso')}</a> {t('e a')}{' '}
+                <a href="legal/privacidade.html" target="_blank" rel="noopener noreferrer">{t('Política de Privacidade')}</a>
+              </span>
+            </label>
           )}
 
           <button type="submit" className="btn btn--primary btn--full" disabled={busy}>
