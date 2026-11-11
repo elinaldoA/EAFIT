@@ -173,6 +173,22 @@ export const ITEMS = [
     closing: 'Comece com o modo Personal do EAFIT.',
     caption: `A primeira semana decide se o aluno fica. 👋\nUm roteiro simples para o aluno novo começar bem.\n\nComece agora. Link na bio 👇\n\n${TAGS}`,
   },
+  {
+    key: 'mitos', later: true, kind: 'slides', headline: 'Mito ou verdade no treino',
+    slides: [
+      ['1', 'Mito: treinar todo dia rende mais. Verdade: o músculo cresce no descanso.'],
+      ['2', 'Mito: suar muito é treino bom. Verdade: o que conta é a carga subindo.'],
+      ['3', 'Mito: sem dor no dia seguinte não funcionou. Verdade: a dor não mede resultado.'],
+      ['4', 'Mito: abdominal queima a barriga. Verdade: não dá para escolher onde emagrecer.'],
+    ],
+    closing: 'Acompanhe a sua carga no app.',
+    caption: `Você acredita em algum destes? 🤔
+Salve este post e mande para quem ainda cai nessas.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {

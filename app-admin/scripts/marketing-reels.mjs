@@ -49,6 +49,15 @@ Comece agora. Link na bio 👇
 ${TAGS}`,
   },
   {
+    key: 'iniciante', later: true, print: 'treino', hook: 'Primeira vez na academia?', title: 'Treino pronto, sem improviso', sub: 'Veja o treino do dia e registre cada série.',
+    caption: `Primeira vez na academia e sem saber por onde começar? 😅
+No app o treino do dia já está montado e você registra cada série.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
+  {
     key: 'agua', later: true, print: 'agua', hook: 'Seu aluno bebe água o suficiente?', title: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
     caption: `Treinar desidratado rende menos. 💧
 O app registra a meta diária de água do aluno.
@@ -98,6 +107,7 @@ async function main() {
   let laterPosition = 20; // depois dos 14 itens de feed/story já na fila
   for (const reel of REELS) {
     if (only === 'later' && !reel.later) continue;
+    if (process.env.KEY && process.env.KEY !== reel.key) continue;
     await render(reel);
     const media = [{ type: 'video', url: `${SITE}/img/marketing/reel-${reel.key}.mp4` }];
     if (reel.later) {
