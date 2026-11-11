@@ -76,6 +76,15 @@ Comece agora. Link na bio 👇
 ${TAGS}`,
   },
   {
+    key: 'retrospectiva', later: true, print: 'evolucao', hook: 'Como foi o seu mês de treino?', title: 'A retrospectiva do seu mês', sub: 'Treinos, volume, recordes e sequência.',
+    caption: `Quantos treinos você fez este mês? 📅
+O app mostra o total de treinos, o volume, os recordes e a melhor sequência, e compara com o mês anterior.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
+  {
     key: 'agua', later: true, print: 'agua', hook: 'Seu aluno bebe água o suficiente?', title: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
     caption: `Treinar desidratado rende menos. 💧
 O app registra a meta diária de água do aluno.

@@ -221,6 +221,22 @@ Comece agora. Link na bio 👇
 
 ${TAGS}`,
   },
+  {
+    key: 'desafio-7-dias', later: true, kind: 'slides', headline: 'Desafio de 7 dias: treine e registre',
+    slides: [
+      ['', 'Dia 1: abra o treino do dia e comece.'],
+      ['', 'Dias 2 a 6: registre cada série na hora.'],
+      ['', 'Cada dia treinado entra na sua sequência.'],
+      ['', 'Dia 7: veja os dias treinados e os recordes que você bateu.'],
+    ],
+    closing: 'Aceite o desafio no app.',
+    caption: `Sete dias para criar o hábito. 🔥
+Salve este post, marque quem vai topar e comece hoje.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {
