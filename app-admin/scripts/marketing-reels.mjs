@@ -67,6 +67,15 @@ Comece agora. Link na bio 👇
 ${TAGS}`,
   },
   {
+    key: 'liga-mes', later: true, print: 'liga', hook: 'Quem leva a medalha do mês?', title: 'Liga do mês: quem treina mais vence', sub: 'Ouro, Prata ou Bronze, com medalha.',
+    caption: `Todo mês uma liga nova e uma disputa justa. 🏅
+Você compete com quem treina no seu ritmo e os 3 primeiros de cada divisão ganham medalha.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
+  {
     key: 'agua', later: true, print: 'agua', hook: 'Seu aluno bebe água o suficiente?', title: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
     caption: `Treinar desidratado rende menos. 💧
 O app registra a meta diária de água do aluno.

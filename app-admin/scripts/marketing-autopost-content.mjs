@@ -205,6 +205,22 @@ Comece agora. Link na bio 👇
 
 ${TAGS}`,
   },
+  {
+    key: 'treino-casa', later: true, kind: 'slides', headline: 'Sem academia? Dá para treinar em casa',
+    slides: [
+      ['1', 'Escolha onde você treina: academia, condomínio ou casa.'],
+      ['2', 'O treino só traz exercícios que cabem no equipamento do local.'],
+      ['3', 'Em casa entram peso corporal, elástico, halteres e kettlebell.'],
+      ['4', 'Trocar um exercício também respeita o seu local.'],
+    ],
+    closing: 'Monte o treino do seu jeito no app.',
+    caption: `Não precisa de academia completa para treinar direito. 🏠
+Escolha o local no app e o treino se ajusta ao equipamento que você tem.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {
