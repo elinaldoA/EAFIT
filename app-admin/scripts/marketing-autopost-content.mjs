@@ -189,6 +189,22 @@ Comece agora. Link na bio 👇
 
 ${TAGS}`,
   },
+  {
+    key: 'tempo-personal', later: true, kind: 'slides', headline: 'Quanto tempo você perde com a rotina dos alunos?',
+    slides: [
+      ['1', 'Antes: refazer o treino do zero. Agora: modelo salvo e enviado para vários alunos.'],
+      ['2', 'Antes: mandar recado um a um. Agora: um recado para todos e quantos leram.'],
+      ['3', 'Antes: notar tarde que o aluno sumiu. Agora: o painel mostra quem não treinou.'],
+      ['4', 'Antes: pedir foto do treino. Agora: cada carga e série registradas pelo aluno.'],
+    ],
+    closing: 'Mais tempo para os seus alunos.',
+    caption: `Seu tempo vale mais do que planilha e mensagem repetida. ⏱️
+Salve este post e veja o que dá para tirar da sua rotina.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
   // Quinta leva (migration 20270110010000): amigos, liga do mês, treinador por voz
   // e temporada. Stories em vídeo no marketing-stories.mjs (RECURSOS).
   {

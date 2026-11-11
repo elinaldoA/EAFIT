@@ -58,6 +58,15 @@ Comece agora. Link na bio 👇
 ${TAGS}`,
   },
   {
+    key: 'retorno', later: true, print: 'historico', hook: 'Parou de treinar e quer voltar?', title: 'Volte de onde parou', sub: 'O histórico mostra a última carga de cada exercício.',
+    caption: `Passou um tempo sem treinar? Sem culpa, o importante é voltar. 💪
+No histórico do app você vê o que fez no último treino e retoma dali.
+
+Comece agora. Link na bio 👇
+
+${TAGS}`,
+  },
+  {
     key: 'agua', later: true, print: 'agua', hook: 'Seu aluno bebe água o suficiente?', title: 'Meta de água em dia', sub: 'Um hábito simples que muda o treino.',
     caption: `Treinar desidratado rende menos. 💧
 O app registra a meta diária de água do aluno.
