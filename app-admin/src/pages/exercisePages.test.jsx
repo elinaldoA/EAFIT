@@ -238,6 +238,25 @@ describe('ExerciseMedia', () => {
     expect(screen.getByText('Nenhum exercício com esse filtro.')).toBeTruthy();
   });
 
+  it('pagina a lista (25 por página) e volta à primeira página ao filtrar', async () => {
+    const many = Array.from({ length: 30 }, (_, i) => ({ nome: `Exercício ${String(i + 1).padStart(2, '0')}`, grupo: 'peito', media: null, padrao: null }));
+    med.fetchMediaScreen.mockResolvedValue(many);
+    wrap(<ExerciseMedia />);
+    await screen.findByText('Exercício 01');
+    expect(screen.getAllByText(/1–25 de 30 exercício\(s\) · página 1 de 2/).length).toBe(2);
+    expect(screen.queryByText('Exercício 26')).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Anterior' })[0].disabled).toBe(true);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Próxima' })[0]);
+    expect(await screen.findByText('Exercício 26')).toBeTruthy();
+    expect(screen.queryByText('Exercício 01')).toBeNull();
+    expect(screen.getAllByText(/26–30 de 30 exercício\(s\) · página 2 de 2/).length).toBe(2);
+    expect(screen.getAllByRole('button', { name: 'Próxima' })[0].disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('Buscar exercício'), { target: { value: 'Exercício 0' } });
+    expect(await screen.findByText('Exercício 01')).toBeTruthy();
+    expect(screen.getByText(/1–9 de 9 exercício\(s\) · página 1 de 1/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Próxima' })).toBeNull();
+  });
+
   it('envia a mídia escolhida para a linha correta', async () => {
     wrap(<ExerciseMedia />);
     await screen.findByText('Agachamento');

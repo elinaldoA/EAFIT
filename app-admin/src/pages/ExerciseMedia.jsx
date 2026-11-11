@@ -7,6 +7,9 @@ import {
   removeExerciseMedia, uploadExerciseMedia, validateMediaFile,
 } from '../lib/exerciseMedia';
 
+// Exercícios por página: a lista tem mais de mil linhas e cada uma pode ter vídeo em autoplay.
+const PAGE_SIZE = 25;
+
 const FILTERS = [
   { value: 'todos', label: 'Todos' },
   { value: 'com', label: 'Com mídia própria' },
@@ -47,6 +50,7 @@ export default function ExerciseMedia() {
   const [busy, setBusy] = useState(null); // nome em envio/remoção
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('todos');
+  const [page, setPage] = useState(0);
   const [confirmRemove, setConfirmRemove] = useState(null);
   const [customName, setCustomName] = useState('');
   const fileRef = useRef(null);
@@ -74,6 +78,13 @@ export default function ExerciseMedia() {
         || (filter === 'sem' && !r.media)
         || (filter === 'sem-video' && !hasVideo(r))));
   }, [rows, search, filter]);
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const current = Math.min(page, totalPages - 1);
+  const pageRows = visible.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
+
+  // Busca ou filtro novo volta para a primeira página.
+  useEffect(() => { setPage(0); }, [search, filter]);
 
   const withMedia = rows.filter(r => r.media).length;
   const withoutVideo = rows.filter(r => !hasVideo(r)).length;
@@ -126,6 +137,20 @@ export default function ExerciseMedia() {
     pickFile(rows.find(r => r.nome === nome) || { nome, grupo: null, media: null });
   }
 
+  const pager = visible.length > 0 && (
+    <div className="page-header">
+      <p className="user-detail__meta">
+        {current * PAGE_SIZE + 1}–{current * PAGE_SIZE + pageRows.length} de {visible.length} exercício(s) · página {current + 1} de {totalPages}
+      </p>
+      {totalPages > 1 && (
+        <div className="actions-row">
+          <button type="button" className="btn btn--small" disabled={current === 0} onClick={() => setPage(current - 1)}>Anterior</button>
+          <button type="button" className="btn btn--small" disabled={current + 1 >= totalPages} onClick={() => setPage(current + 1)}>Próxima</button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="stack">
       <div className="page-header">
@@ -167,11 +192,12 @@ export default function ExerciseMedia() {
       {loading && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
 
+      {!loading && !error && pager}
       {!loading && !error && (
         <table className="resp-table">
           <thead><tr><th>Exercício</th><th>Grupo</th><th>Demonstração</th><th>Ações</th></tr></thead>
           <tbody>
-            {visible.map(r => (
+            {pageRows.map(r => (
               <tr key={r.nome}>
                 <td data-label="Exercício">{r.nome}</td>
                 <td data-label="Grupo">{r.grupo ? r.grupo.replace('_', ' ') : <span className="badge">fora da biblioteca</span>}</td>
@@ -203,6 +229,7 @@ export default function ExerciseMedia() {
           </tbody>
         </table>
       )}
+      {!loading && !error && totalPages > 1 && pager}
     </div>
   );
 }
