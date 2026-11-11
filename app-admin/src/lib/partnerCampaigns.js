@@ -95,13 +95,13 @@ export const CAMPAIGN_TEMPLATES = [
     description: 'Mande o seu link para os alunos: quem cria a conta por ele pede para você acompanhar o treino e já entra na '
       + 'sua lista, com ficha, treinos, recados e agenda no modo Personal.',
     caption: 'Agora o seu treino comigo fica no app EAFIT: você vê a ficha da semana, marca as séries e eu acompanho a sua evolução. '
-      + 'Crie a sua conta por aqui 👉 {link}',
+      + 'Comece agora 👉 {link}',
     goal: '',
   },
   {
     key: 'lancamento', label: 'Apresente o EAFIT (influenciadores)', days: 15,
     audiences: ['influenciador'],
-    title: 'Conheça o EAFIT',
+    title: 'Comece agora com o EAFIT',
     description: 'Faça um post ou vídeo mostrando o app em uso: montar a semana, marcar uma série e ver a evolução convence mais '
       + 'que um print. Deixe o link na bio enquanto a campanha estiver no ar.',
     caption: 'Achei o app de treino que faltava: o EAFIT monta a semana, registra cada série e mostra a evolução. Comece agora 👉 {link}',

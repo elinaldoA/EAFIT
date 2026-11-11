@@ -25,9 +25,9 @@ export const STATUS_LABEL = {
 // Respostas prontas da caixa de comentários ({nome} vira o nome de quem comentou).
 export const QUICK_REPLIES = [
   'Valeu, {nome}! 💪 Comece agora: eafit.com.br/app',
-  'Oi, {nome}! Dá para baixar direto pelo navegador, no celular ou no computador: eafit.com.br/app',
-  'Obrigado pelo carinho, {nome}! Bons treinos 🔥',
-  '{nome}, chama a gente no direct que te ajudamos com isso 😉',
+  'Oi, {nome}! Dá para baixar direto pelo navegador, no celular ou no computador. Comece agora: eafit.com.br/app',
+  'Obrigado pelo carinho, {nome}! Bons treinos 🔥 Comece agora: eafit.com.br/app',
+  '{nome}, chama a gente no direct que te ajudamos com isso 😉 Comece agora: eafit.com.br/app',
 ];
 
 // ---------- biblioteca ----------
