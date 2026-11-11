@@ -201,7 +201,7 @@ export async function fetchPlanDays(planId) {
   }));
 }
 
-const PLAN_CYCLE_FIELDS = 'id, name, created_at, start_date, end_date, duration_weeks, next_plan_id, regression_plan_id';
+const PLAN_CYCLE_FIELDS = 'id, name, created_at, start_date, end_date, duration_weeks, next_plan_id, regression_plan_id, progressao_passo, deload_a_cada';
 
 const VERDICT_LABEL = { positivo: t('Progressão'), negativo: t('Recuperação'), neutro: t('Continuidade') };
 
@@ -270,6 +270,22 @@ async function fetchIsTrainerPlan(planId) {
   }
 }
 
+function progressionOf(plan) {
+  return {
+    durationWeeks: plan.duration_weeks ?? null,
+    progressionStep: plan.progressao_passo != null ? Number(plan.progressao_passo) : null,
+    deloadEvery: plan.deload_a_cada ?? null,
+  };
+}
+
+// Passo semanal (kg) e deload programado do próprio plano; null limpa.
+export async function updatePlanProgression(planId, { step, deloadEvery }) {
+  const { error } = await db.from('workout_plans')
+    .update({ progressao_passo: step || null, deload_a_cada: deloadEvery || null })
+    .eq('id', planId);
+  if (error) throw error;
+}
+
 export async function fetchActivePlan(userId, meta = {}) {
   const { data: actives, error } = await db
     .from('workout_plans')
@@ -327,7 +343,7 @@ export async function fetchActivePlan(userId, meta = {}) {
 
   if (byTrainer) {
     const expired = !!plan.end_date && plan.end_date <= todayDate();
-    return { id: plan.id, name: plan.name, days, startDate: plan.start_date, endDate: plan.end_date, byTrainer: true, ...(expired ? { expiredNoSuccessor: true } : {}) };
+    return { id: plan.id, name: plan.name, days, startDate: plan.start_date, endDate: plan.end_date, ...progressionOf(plan), byTrainer: true, ...(expired ? { expiredNoSuccessor: true } : {}) };
   }
 
   if (plan.end_date && plan.end_date <= todayDate()) {
@@ -336,16 +352,16 @@ export async function fetchActivePlan(userId, meta = {}) {
       const next = await fetchActivePlan(userId, meta);
       return { ...next, switchInfo: { toName: successorName, verdict: evaluation.verdict } };
     }
-    return { id: plan.id, name: plan.name, days, startDate: plan.start_date, endDate: plan.end_date, expiredNoSuccessor: true };
+    return { id: plan.id, name: plan.name, days, startDate: plan.start_date, endDate: plan.end_date, ...progressionOf(plan), expiredNoSuccessor: true };
   }
 
-  return { id: plan.id, name: plan.name, days, startDate: plan.start_date, endDate: plan.end_date };
+  return { id: plan.id, name: plan.name, days, startDate: plan.start_date, endDate: plan.end_date, ...progressionOf(plan) };
 }
 
 export async function listPlans(userId) {
   const { data, error } = await db
     .from('workout_plans')
-    .select('id, name, is_active, created_at, start_date, end_date, duration_weeks, next_plan_id, regression_plan_id')
+    .select('id, name, is_active, created_at, start_date, end_date, duration_weeks, next_plan_id, regression_plan_id, progressao_passo, deload_a_cada')
     .eq('user_id', userId)
     .order('created_at', { ascending: true });
   if (error) throw error;

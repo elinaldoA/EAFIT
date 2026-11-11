@@ -8,6 +8,7 @@ import {
   copyDay, duplicateItem, parseSeries, volumeByGroup, buildPlanPayload, fetchClientPlan, assignPlan, friendlyPlanError,
 } from '../lib/trainerPlan';
 import Loading from '../components/Loading';
+import PlanProgressionFields from '../components/PlanProgressionFields';
 import ExerciseExtras from '../components/ExerciseExtras';
 
 import { t } from '../lib/i18n';
@@ -129,6 +130,7 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
           </select>
           <span className="profile-field__hint">{t('Ao fim do prazo o app avisa o aluno para falar com você. O plano não é trocado sozinho.')}</span>
         </div>
+        <PlanProgressionFields step={draft.step} deloadEvery={draft.deloadEvery} onChange={patch => setDraft(d => ({ ...d, ...patch }))} />
         <span className="profile-field__label">{t('Dias de treino')}</span>
         <div className="measure-chips" role="group" aria-label={t('Dias de treino')}>
           {WEEK_DAYS.map(dia => (

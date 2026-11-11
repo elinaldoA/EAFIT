@@ -22,13 +22,14 @@ import HydrationAlert from './HydrationAlert';
 import { isFlagOn } from '../lib/appConfig';
 import { dayMuscles } from '../lib/muscleVolume';
 
+import { weekLabel } from '../lib/periodization';
 import { t, locale, tFoco } from '../lib/i18n';
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
 // TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
 // que é quem tem o cronômetro e as ações de série do dia.
 export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
-  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays, markPending } = useWorkout();
+  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays, markPending, periodization } = useWorkout();
   const toast = useToast();
   const { config } = useAppConfig();
   const [open, setOpen] = useState(isToday);
@@ -294,7 +295,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
           />
           <div className="day-card__info">
             <div className="day-card__name">{t(day.dia)}</div>
-            <div className="day-card__focus">{tFoco(day.foco)}</div>
+            <div className="day-card__focus">{tFoco(day.foco)}{periodization ? ` · ${weekLabel(periodization)}${periodization.deload ? ' 🌿' : ''}` : ''}</div>
           </div>
         </div>
         <div className="day-card__right">

@@ -38,7 +38,7 @@ export function emptyDay(dia) {
 }
 
 export function emptyDraft() {
-  return { name: '', weeks: '', days: [] };
+  return { name: '', weeks: '', step: null, deloadEvery: null, days: [] };
 }
 
 // Ordem da semana, independente da ordem em que o personal marcou os dias.
@@ -66,6 +66,8 @@ export function draftFromPlan(plan) {
   return {
     name: plan.name || '',
     weeks: plan.duration_weeks ? String(plan.duration_weeks) : '',
+    step: plan.progressao_passo != null ? Number(plan.progressao_passo) : null,
+    deloadEvery: plan.deload_a_cada ?? null,
     days: sortDays((plan.days || []).map(d => ({
       dia: d.dia,
       foco: d.foco || '',
@@ -102,7 +104,7 @@ export function buildPlanPayload(draft) {
     days.push({ dia: d.dia, foco: String(d.foco || '').trim(), exercicios });
   }
   const weeks = draft.weeks === '' ? null : Number(draft.weeks);
-  return { ok: true, name, days, weeks };
+  return { ok: true, name, days, weeks, step: draft.step || null, deloadEvery: draft.deloadEvery || null };
 }
 
 export async function fetchClientPlan(clientId) {
@@ -116,6 +118,13 @@ export async function assignPlan(clientId, payload) {
     p_client: clientId, p_name: payload.name, p_days: payload.days, p_duration_weeks: payload.weeks,
   });
   if (error) throw error;
+  // Periodização é opcional e vai depois: se falhar, o plano já foi enviado.
+  if (payload.step || payload.deloadEvery) {
+    const { error: progErr } = await db.rpc('trainer_set_plan_progression', {
+      p_client: clientId, p_step: payload.step || null, p_deload: payload.deloadEvery || null,
+    });
+    if (progErr) console.warn('trainer_set_plan_progression:', progErr);
+  }
   return data;
 }
 

@@ -31,7 +31,7 @@ import { t, tEx, tReps } from '../lib/i18n';
 // destaque no próprio cabeçalho, então o bloco omite os dele.
 export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, open, version, onToggleAll, onFillOthers, onApplySuggestion, started, hideName = false }) {
   const { user } = useAuth();
-  const { refreshPlan } = useWorkout();
+  const { refreshPlan, periodization } = useWorkout();
   const { config } = useAppConfig();
   const toast = useToast();
   const [suggestion, setSuggestion] = useState(null);
@@ -120,6 +120,13 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
               <span className="ex-block__meta">{timed ? t('{reps} · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso }) : t('{reps} reps · desc. {descanso}', { reps: tReps(ex.reps), descanso: ex.descanso })}</span>
               <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
+          )}
+          {periodization && !timed && setCount > 0 && (
+            ex.deload ? (
+              <p className="ex-block__intensity">{t('🌿 Semana leve: {n} séries (eram {m}), mesma carga e sem ir à falha', { n: ex.series, m: ex.seriesPlanned })}</p>
+            ) : periodization.step && suggestion?.lastCarga ? (
+              <p className="ex-block__intensity">{t('📈 Meta da semana {week}: {target} kg', { week: periodization.week, target: String(suggestion.lastCarga + periodization.step).replace('.', ',') })}</p>
+            ) : null
           )}
           {isIntensity(ex.intensidade) && (
             <p className="ex-block__intensity" title={intensityHint(ex.intensidade)}>⚡ {intensityLabel(ex.intensidade)} — {intensityHint(ex.intensidade)}</p>

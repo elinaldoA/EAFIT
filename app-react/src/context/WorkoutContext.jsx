@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { db } from '../lib/supabase';
 import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
@@ -14,6 +14,7 @@ import { useToast } from './useToast';
 import { WorkoutContext } from './useWorkout';
 
 import { t } from '../lib/i18n';
+import { periodizationInfo, applyPeriodization } from '../lib/periodization';
 // Reexecuta uma escrita que falhou (ex.: sem internet no momento) quando a fila é esvaziada.
 const SYNC_EXECUTORS = {
   workout_status: async ({ id, completed }) => {
@@ -175,8 +176,11 @@ export function WorkoutProvider({ children }) {
   const [planByTrainer, setPlanByTrainer] = useState(false);
   const [planStartDate, setPlanStartDate] = useState(null);
   const [planEndDate, setPlanEndDate] = useState(null);
+  const [planProgression, setPlanProgression] = useState(null);
   const [syncStatus, setSyncStatus] = useState(() => (queueSize() > 0 ? 'pending' : 'ok'));
   const [dataVersion, setDataVersion] = useState(0);
+  const periodization = useMemo(() => periodizationInfo(planProgression || {}), [planProgression]);
+  const periodizedDays = useMemo(() => applyPeriodization(activePlanDays, periodization), [activePlanDays, periodization]);
 
   const flushPending = useCallback(async () => {
     const { remaining } = await flushQueue(SYNC_EXECUTORS);
@@ -200,6 +204,7 @@ export function WorkoutProvider({ children }) {
     setPlanByTrainer(!!plan.byTrainer);
     setPlanStartDate(plan.startDate || null);
     setPlanEndDate(plan.endDate || null);
+    setPlanProgression({ startDate: plan.startDate || null, durationWeeks: plan.durationWeeks ?? null, step: plan.progressionStep ?? null, deloadEvery: plan.deloadEvery ?? null });
   }, []);
 
   const loadUserData = useCallback(async () => {
@@ -312,7 +317,7 @@ export function WorkoutProvider({ children }) {
 
   useEffect(() => {
     if (user) loadUserData();
-    else { setWorkoutIds({}); setActivePlanDays([]); setPlanExpired(false); setPlanStartDate(null); setPlanEndDate(null); }
+    else { setWorkoutIds({}); setActivePlanDays([]); setPlanExpired(false); setPlanStartDate(null); setPlanEndDate(null); setPlanProgression(null); }
     // Depende só do id: o Supabase emite um objeto `user` novo em eventos como
     // TOKEN_REFRESHED/SIGNED_IN (ex.: ao voltar o foco pra aba). Com [user], cada um
     // recarregava tudo e o dataVersion remontava o treino, matando o descanso em andamento.
@@ -437,7 +442,7 @@ export function WorkoutProvider({ children }) {
   }
 
   return (
-    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, markPending, refreshPlan: loadUserData }}>
+    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays: periodizedDays, periodization, planExpired, planByTrainer, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, markPending, refreshPlan: loadUserData }}>
       {children}
     </WorkoutContext.Provider>
   );

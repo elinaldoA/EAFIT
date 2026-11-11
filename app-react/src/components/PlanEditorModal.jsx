@@ -7,17 +7,18 @@ import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { fmtDate, daysUntil } from '../lib/utils';
 import {
-  listPlans, createPlan, setActivePlan, renamePlan, deletePlan, updatePlanSuccessors,
+  listPlans, updatePlanProgression, createPlan, setActivePlan, renamePlan, deletePlan, updatePlanSuccessors,
   fetchPlanDays, updatePlanDay, addExercise, updateExercise, deleteExercise, reorderExercises,
 } from '../lib/workoutPlans';
 import { useBackToClose } from '../hooks/useBackToClose';
 import Loading from './Loading';
 import ExerciseExtras from './ExerciseExtras';
+import PlanProgressionFields from './PlanProgressionFields';
 
 import { t } from '../lib/i18n';
 const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
-function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSuccessors }) {
+function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSuccessors, onUpdateProgression }) {
   const [name, setName] = useState(plan.name);
   useEffect(() => { setName(plan.name); }, [plan.name]);
 
@@ -46,6 +47,11 @@ function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSucc
           {daysLeft >= 0 ? t('Ciclo termina em {v1} (faltam {daysLeft}d)', { v1: fmtDate(plan.end_date), daysLeft }) : t('Ciclo vencido em {v1}', { v1: fmtDate(plan.end_date) })}
         </p>
       )}
+
+      <PlanProgressionFields
+        step={plan.progressao_passo != null ? Number(plan.progressao_passo) : null} deloadEvery={plan.deload_a_cada}
+        onChange={onUpdateProgression}
+      />
 
       <div className="plan-row__successors">
         <label className="plan-row__successor-field">
@@ -250,6 +256,17 @@ export default function PlanEditorModal({ onClose }) {
     }
   }
 
+  async function handleUpdateProgression(planId, patch) {
+    try {
+      await updatePlanProgression(planId, patch);
+      await loadPlans(selectedPlanId);
+      await refreshPlan();
+    } catch (err) {
+      console.error('updatePlanProgression:', err);
+      toast(t('⚠️ Erro ao salvar a periodização do plano'));
+    }
+  }
+
   async function handleUpdateSuccessors(planId, patch) {
     try {
       await updatePlanSuccessors(planId, patch);
@@ -375,6 +392,7 @@ export default function PlanEditorModal({ onClose }) {
                   onRename={name => handleRename(p.id, name)}
                   onDelete={() => handleDeletePlan(p.id)}
                   onUpdateSuccessors={patch => handleUpdateSuccessors(p.id, patch)}
+                  onUpdateProgression={patch => handleUpdateProgression(p.id, patch)}
                 />
               ))}
 
