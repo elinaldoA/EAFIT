@@ -141,3 +141,16 @@ describe('generatePlan', () => {
     expect(plan).toHaveLength(7);
   });
 });
+
+describe('equipamento do local no ajuste de nível', () => {
+  it('iniciante no condomínio não troca por exercício de máquina/Smith', async () => {
+    const { applyLevelAdjustment, getSaferAlternative } = await import('./workoutAdjustments');
+    const day = { dia: 'Segunda', foco: 'Peito / Tríceps', exercicios: [{ nome: 'Supino Reto com Barra', series: '4', reps: '8', descanso: '90s', tecnica: '' }, { nome: 'Agachamento Livre', series: '4', reps: '8', descanso: '90s', tecnica: '' }], pos: [] };
+    const [r] = applyLevelAdjustment([day], 'iniciante', 'condominio');
+    expect(r.exercicios.map(e => e.nome)).toEqual(['Supino Reto com Barra', 'Agachamento Livre']);
+    const [a] = applyLevelAdjustment([day], 'iniciante', 'academia');
+    expect(a.exercicios[0].nome).toBe('Supino Reto na Máquina');
+    expect(getSaferAlternative('Supino Reto com Barra', 'condominio')).toBeNull();
+    expect(getSaferAlternative('Supino Reto com Barra', 'academia')).not.toBeNull();
+  });
+});

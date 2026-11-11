@@ -1,4 +1,5 @@
 import { db } from '../lib/supabase';
+import { exerciseFitsLocal, isRestOrCardioDay } from './workoutAdjustments';
 
 // Isso é espelhado (copiado à mão) em supabase/functions/_shared/exerciseLibrary.ts,
 // usado por admin-generate-plan — a Edge Function roda em Deno e não
@@ -132,6 +133,34 @@ export function pickExercisesForFoco(candidates, { count = TARGET_COUNT, compost
   return picked.map(toExerciseShape);
 }
 
+// Dia que ficou com os exercícios do template (foco sem mapeamento, pool
+// pequeno demais ou biblioteca fora do ar): tira o que o local não comporta
+// (barra, máquina, esteira...) e repõe, quando há biblioteca, com exercícios
+// do mesmo grupo já filtrados pelo equipamento. O pós-treino do template
+// nunca vem da biblioteca, então é filtrado sempre. Se nada sobrar, mantém os
+// exercícios originais (dia vazio seria pior).
+function fitDayToLocal(day, local, rows, fromLibrary) {
+  if (isRestOrCardioDay(day)) return day;
+  const pos = day.pos.filter(p => exerciseFitsLocal(p.nome, local));
+  if (fromLibrary) return { ...day, pos };
+  const keep = day.exercicios.filter(e => exerciseFitsLocal(e.nome, local));
+  const removed = day.exercicios.length - keep.length;
+  if (!removed) return { ...day, pos };
+  let exercicios = keep;
+  const grupos = FOCO_TO_GRUPOS[day.foco];
+  if (grupos) {
+    const names = new Set(keep.map(e => e.nome));
+    const candidates = rows.filter(r => grupos.includes(r.grupo_muscular) && !names.has(r.nome));
+    exercicios = [...keep, ...pickExercisesForFoco(candidates, { count: removed, grupos })];
+  }
+  return { ...day, exercicios: exercicios.length ? exercicios : day.exercicios, pos };
+}
+
+function fitDaysToLocal(days, local, rows, fromLibrary = new Set()) {
+  if (local !== 'condominio' && local !== 'casa') return days;
+  return days.map((d, i) => fitDayToLocal(d, local, rows, fromLibrary.has(i)));
+}
+
 async function fetchLibraryRows(grupos, nivel, local) {
   const { data, error } = await db
     .from('exercise_library')
@@ -155,21 +184,24 @@ async function fetchLibraryRows(grupos, nivel, local) {
 // variedade).
 export async function withLibraryExercises(days, nivel, local) {
   const allGrupos = [...new Set(days.flatMap(d => FOCO_TO_GRUPOS[d.foco] || []))];
-  if (!allGrupos.length) return days;
+  if (!allGrupos.length) return fitDaysToLocal(days, local, []);
 
   let rows;
   try {
     rows = await fetchLibraryRows(allGrupos, nivel, local);
   } catch (err) {
     console.warn('withLibraryExercises:', err);
-    return days;
+    return fitDaysToLocal(days, local, []);
   }
 
-  return days.map(day => {
+  const fromLibrary = new Set();
+  const picked = days.map((day, i) => {
     const grupos = FOCO_TO_GRUPOS[day.foco];
     if (!grupos) return day;
     const candidates = rows.filter(r => grupos.includes(r.grupo_muscular));
     if (candidates.length < MIN_POOL_SIZE) return day;
+    fromLibrary.add(i);
     return { ...day, exercicios: pickExercisesForFoco(candidates, { grupos }) };
   });
+  return fitDaysToLocal(picked, local, rows, fromLibrary);
 }

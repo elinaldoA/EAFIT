@@ -4,7 +4,7 @@
 // exerciseLibrary.js mudar — sobretudo FOCO_TO_GRUPOS, allowedNiveis, EQUIPAMENTOS_POR_LOCAL,
 // pickExercisesForFoco ou as constantes — espelhar aqui também.
 // exerciseLibrary.test.ts cobre este arquivo isoladamente.
-import type { Day, Exercise } from './workoutAdjustments.ts';
+import { exerciseFitsLocal, isRestOrCardioDay, type Day, type Exercise } from './workoutAdjustments.ts';
 
 export type LibraryRow = Exercise & { grupo_muscular?: string; tipo: string };
 
@@ -114,9 +114,31 @@ export function pickExercisesForFoco(
   return picked.map(toExerciseShape);
 }
 
+function fitDayToLocal(day: Day, local: string | undefined, rows: LibraryRow[], fromLibrary: boolean): Day {
+  if (isRestOrCardioDay(day)) return day;
+  const pos = day.pos.filter(p => exerciseFitsLocal(p.nome, local));
+  if (fromLibrary) return { ...day, pos };
+  const keep = day.exercicios.filter(e => exerciseFitsLocal(e.nome, local));
+  const removed = day.exercicios.length - keep.length;
+  if (!removed) return { ...day, pos };
+  let exercicios = keep;
+  const grupos = FOCO_TO_GRUPOS[day.foco];
+  if (grupos) {
+    const names = new Set(keep.map(e => e.nome));
+    const candidates = rows.filter(r => grupos.includes(r.grupo_muscular ?? '') && !names.has(r.nome));
+    exercicios = [...keep, ...pickExercisesForFoco(candidates, { count: removed, grupos })];
+  }
+  return { ...day, exercicios: exercicios.length ? exercicios : day.exercicios, pos };
+}
+
+function fitDaysToLocal(days: Day[], local: string | undefined, rows: LibraryRow[], fromLibrary: Set<number> = new Set()): Day[] {
+  if (local !== 'condominio' && local !== 'casa') return days;
+  return days.map((d, i) => fitDayToLocal(d, local, rows, fromLibrary.has(i)));
+}
+
 export async function withLibraryExercises(client: LibraryClient, days: Day[], nivel: string | undefined, local?: string): Promise<Day[]> {
   const allGrupos = [...new Set(days.flatMap(d => FOCO_TO_GRUPOS[d.foco] || []))];
-  if (!allGrupos.length) return days;
+  if (!allGrupos.length) return fitDaysToLocal(days, local, []);
 
   let rows: LibraryRow[];
   try {
@@ -131,14 +153,17 @@ export async function withLibraryExercises(client: LibraryClient, days: Day[], n
     rows = data || [];
   } catch (err) {
     console.warn('withLibraryExercises:', err);
-    return days;
+    return fitDaysToLocal(days, local, []);
   }
 
-  return days.map(day => {
+  const fromLibrary = new Set<number>();
+  const picked = days.map((day, i) => {
     const grupos = FOCO_TO_GRUPOS[day.foco];
     if (!grupos) return day;
     const candidates = rows.filter(r => grupos.includes(r.grupo_muscular ?? ''));
     if (candidates.length < MIN_POOL_SIZE) return day;
+    fromLibrary.add(i);
     return { ...day, exercicios: pickExercisesForFoco(candidates, { grupos }) };
   });
+  return fitDaysToLocal(picked, local, rows, fromLibrary);
 }

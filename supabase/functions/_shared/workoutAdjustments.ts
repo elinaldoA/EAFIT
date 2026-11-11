@@ -21,8 +21,23 @@ export function computeImcBracket(peso: number, altura: number): string {
   return 'obesidade';
 }
 
-function isRestOrCardioDay(day: Day) {
+export function isRestOrCardioDay(day: Day) {
   return day.foco.includes('Cardio Leve') || day.foco.includes('Descanso');
+}
+
+// Equipamento que cada exercício exige, deduzido do nome (os exercícios dos
+// templates não carregam o campo `equipamento` da biblioteca). Fora da
+// academia não existe barra livre, máquina guiada, esteira, escada etc.; em
+// casa também não há estação de polia (no condomínio há). Academia (ou local
+// desconhecido) não restringe nada.
+const FORA_DA_ACADEMIA = /\bbarra\b(?!\s*fixa)|máquina|maquina|smith|leg press|hack|cadeira (flexora|extensora|adutora|abdutora)|mesa flexora|esteira|escada|el[ií]ptico|ergom|peck deck|crossover|^\W*levantamento terra(?!\s+com halter)|^\W*agachamento livre|panturrilha em p[ée]|desenvolvimento militar|assistida|trenó/i;
+const SO_COM_POLIA = /polia|puxada|pulley/i;
+
+export function exerciseFitsLocal(nome: string, local?: string): boolean {
+  if (local !== 'condominio' && local !== 'casa') return true;
+  if (FORA_DA_ACADEMIA.test(nome)) return false;
+  if (local === 'casa' && SO_COM_POLIA.test(nome)) return false;
+  return true;
 }
 
 function cloneDay(day: Day): Day {
@@ -149,8 +164,9 @@ function adjustDescanso(descanso: string, deltaSeconds: number): string {
   return formatDescansoSeconds(Math.max(30, s + deltaSeconds));
 }
 
-function applyLevelToExercise(ex: Exercise, nivel: string, allowSub: boolean): Exercise {
-  const sub = allowSub ? LEVEL_EXERCISE_SUBS[ex.nome]?.[nivel] : null;
+function applyLevelToExercise(ex: Exercise, nivel: string, allowSub: boolean, local?: string): Exercise {
+  const wanted = allowSub ? LEVEL_EXERCISE_SUBS[ex.nome]?.[nivel] : null;
+  const sub = wanted && exerciseFitsLocal(wanted.nome, local) ? wanted : null;
   const seriesDelta = SERIES_DELTA[nivel] ?? 0;
   const descansoDelta = DESCANSO_DELTA_S[nivel] ?? 0;
   return {
@@ -162,15 +178,15 @@ function applyLevelToExercise(ex: Exercise, nivel: string, allowSub: boolean): E
   };
 }
 
-export function applyLevelAdjustment(templateDays: Day[], nivel?: string): Day[] {
+export function applyLevelAdjustment(templateDays: Day[], nivel?: string, local?: string): Day[] {
   if (!nivel || nivel === 'intermediario') return templateDays.map(cloneDay);
   return templateDays.map(day => {
     if (isRestOrCardioDay(day)) return cloneDay(day);
     return {
       dia: day.dia,
       foco: day.foco,
-      exercicios: day.exercicios.map(ex => applyLevelToExercise(ex, nivel, true)),
-      pos: day.pos.map(ex => (ex.nome.startsWith('🏃') ? { ...ex } : applyLevelToExercise(ex, nivel, false))),
+      exercicios: day.exercicios.map(ex => applyLevelToExercise(ex, nivel, true, local)),
+      pos: day.pos.map(ex => (ex.nome.startsWith('🏃') ? { ...ex } : applyLevelToExercise(ex, nivel, false, local))),
     };
   });
 }

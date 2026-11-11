@@ -21,8 +21,23 @@ export function computeImcBracket(peso, altura) {
     return 'obesidade';
 }
 
-function isRestOrCardioDay(day) {
+export function isRestOrCardioDay(day) {
     return day.foco.includes('Cardio Leve') || day.foco.includes('Descanso');
+}
+
+// Equipamento que cada exercício exige, deduzido do nome (os exercícios dos
+// templates não carregam o campo `equipamento` da biblioteca). Fora da
+// academia não existe barra livre, máquina guiada, esteira, escada etc.; em
+// casa também não há estação de polia (no condomínio há). Academia (ou local
+// desconhecido) não restringe nada.
+const FORA_DA_ACADEMIA = /\bbarra\b(?!\s*fixa)|máquina|maquina|smith|leg press|hack|cadeira (flexora|extensora|adutora|abdutora)|mesa flexora|esteira|escada|el[ií]ptico|ergom|peck deck|crossover|^\W*levantamento terra(?!\s+com halter)|^\W*agachamento livre|panturrilha em p[ée]|desenvolvimento militar|assistida|trenó/i;
+const SO_COM_POLIA = /polia|puxada|pulley/i;
+
+export function exerciseFitsLocal(nome, local) {
+    if (local !== 'condominio' && local !== 'casa') return true;
+    if (FORA_DA_ACADEMIA.test(nome)) return false;
+    if (local === 'casa' && SO_COM_POLIA.test(nome)) return false;
+    return true;
 }
 
 function cloneDay(day) {
@@ -134,8 +149,9 @@ export const LEVEL_EXERCISE_SUBS = {
 // relata dor/desconforto forte nesse exercício — mesma variante, motivo
 // diferente (reduzir demanda técnica/articular, não nível de experiência).
 // Retorna null se o exercício não tiver uma variante mais simples curada.
-export function getSaferAlternative(nome) {
-    return LEVEL_EXERCISE_SUBS[nome]?.iniciante ?? null;
+export function getSaferAlternative(nome, local) {
+    const alt = LEVEL_EXERCISE_SUBS[nome]?.iniciante ?? null;
+    return alt && exerciseFitsLocal(alt.nome, local) ? alt : null;
 }
 
 export const SERIES_DELTA = { iniciante: -1, intermediario: 0, avancado: 1 };
@@ -166,8 +182,9 @@ function adjustDescanso(descanso, deltaSeconds) {
     return formatDescansoSeconds(Math.max(30, s + deltaSeconds));
 }
 
-function applyLevelToExercise(ex, nivel, allowSub) {
-    const sub = allowSub ? LEVEL_EXERCISE_SUBS[ex.nome]?.[nivel] : null;
+function applyLevelToExercise(ex, nivel, allowSub, local) {
+    const wanted = allowSub ? LEVEL_EXERCISE_SUBS[ex.nome]?.[nivel] : null;
+    const sub = wanted && exerciseFitsLocal(wanted.nome, local) ? wanted : null;
     const seriesDelta = SERIES_DELTA[nivel] ?? 0;
     const descansoDelta = DESCANSO_DELTA_S[nivel] ?? 0;
     return {
@@ -183,15 +200,15 @@ function applyLevelToExercise(ex, nivel, allowSub) {
 // experiência: iniciante troca lifts complexos por variações guiadas e
 // reduz volume; avançado troca por variações mais exigentes e aumenta
 // volume. Dias de descanso/cardio leve e itens de cardio (🏃) não mudam.
-export function applyLevelAdjustment(templateDays, nivel) {
+export function applyLevelAdjustment(templateDays, nivel, local) {
     if (!nivel || nivel === 'intermediario') return templateDays.map(cloneDay);
     return templateDays.map(day => {
         if (isRestOrCardioDay(day)) return cloneDay(day);
         return {
             dia: day.dia,
             foco: day.foco,
-            exercicios: day.exercicios.map(ex => applyLevelToExercise(ex, nivel, true)),
-            pos: day.pos.map(ex => (ex.nome.startsWith('🏃') ? { ...ex } : applyLevelToExercise(ex, nivel, false))),
+            exercicios: day.exercicios.map(ex => applyLevelToExercise(ex, nivel, true, local)),
+            pos: day.pos.map(ex => (ex.nome.startsWith('🏃') ? { ...ex } : applyLevelToExercise(ex, nivel, false, local))),
         };
     });
 }

@@ -80,7 +80,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
     );
   }
 
-  const alternative = getSaferAlternative(ex.nome);
+  const alternative = getSaferAlternative(ex.nome, user?.user_metadata?.local);
   const showSwap = discomfort && ['forte', 'lesao'].includes(discomfort.severity) && alternative;
 
   async function handleSubstitute() {

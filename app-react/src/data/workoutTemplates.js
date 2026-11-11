@@ -234,7 +234,7 @@ async function fetchBaseTemplate(meta) {
 export async function generatePlan({ peso, altura, meta, nivel, local }) {
     const base = await fetchBaseTemplate(meta);
     const withLibrary = await withLibraryExercises(base, nivel, local);
-    const leveled = applyLevelAdjustment(withLibrary, nivel);
+    const leveled = applyLevelAdjustment(withLibrary, nivel, local);
     const bracket = computeImcBracket(peso, altura);
     return applyImcAdjustment(leveled, bracket);
 }

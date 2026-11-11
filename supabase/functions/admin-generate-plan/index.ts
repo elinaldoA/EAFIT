@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     if (tplErr || !tpl?.days) throw tplErr || new Error('Template não encontrado.');
 
     const withLibrary = await withLibraryExercises(admin as unknown as LibraryClient, tpl.days as Day[], nivel, local);
-    const leveled = applyLevelAdjustment(withLibrary, nivel);
+    const leveled = applyLevelAdjustment(withLibrary, nivel, local);
     const bracket = computeImcBracket(peso, altura);
     const generatedDays = applyImcAdjustment(leveled, bracket);
 

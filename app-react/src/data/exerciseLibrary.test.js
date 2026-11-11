@@ -216,3 +216,47 @@ describe('withLibraryExercises', () => {
     esperados.forEach(foco => expect(FOCO_TO_GRUPOS[foco]).toBeDefined());
   });
 });
+
+describe('withLibraryExercises — equipamento do local', () => {
+  beforeEach(() => { mockDb.from.mockReset(); });
+  const ex = nome => ({ nome, series: '3', reps: '10', descanso: '60s', tecnica: '' });
+  const pool = [row('H1', 'composto', 'quadriceps'), row('H2', 'composto', 'quadriceps'), row('H3', 'isolado', 'quadriceps')];
+
+  it('condomínio: tira barra/máquina/esteira do dia que ficou com o template e repõe da biblioteca', async () => {
+    mockDb.from.mockImplementation(() => chainResolving({ data: [row('Afundo', 'composto', 'quadriceps')], error: null }));
+    const days = [{ dia: 'Quarta', foco: 'Pernas / Quadríceps',
+      exercicios: [ex('Agachamento Livre'), ex('Leg Press 45°'), ex('Afundo Búlgaro')],
+      pos: [ex('🏃 Cardio — Esteira'), ex('🔷 Prancha Frontal Estática')] }];
+    const [r] = await withLibraryExercises(days, 'intermediario', 'condominio');
+    expect(r.exercicios.map(e => e.nome).sort()).toEqual(['Afundo', 'Afundo Búlgaro']);
+    expect(r.pos.map(e => e.nome)).toEqual(['🔷 Prancha Frontal Estática']);
+  });
+
+  it('condomínio: biblioteca fora do ar ainda remove o que o local não tem', async () => {
+    mockDb.from.mockImplementation(() => chainResolving({ data: null, error: new Error('rede') }));
+    const days = [{ dia: 'Terça', foco: 'Costas / Bíceps', exercicios: [ex('Remada Curvada com Barra'), ex('Puxada Aberta Frente')], pos: [] }];
+    const [r] = await withLibraryExercises(days, 'intermediario', 'condominio');
+    expect(r.exercicios.map(e => e.nome)).toEqual(['Puxada Aberta Frente']); // polia existe no condomínio
+  });
+
+  it('casa: sem polia nem puxada', async () => {
+    mockDb.from.mockImplementation(() => chainResolving({ data: null, error: new Error('rede') }));
+    const days = [{ dia: 'Terça', foco: 'Costas / Bíceps', exercicios: [ex('Puxada Aberta Frente'), ex('Remada Unilateral com Halter')], pos: [] }];
+    const [r] = await withLibraryExercises(days, 'intermediario', 'casa');
+    expect(r.exercicios.map(e => e.nome)).toEqual(['Remada Unilateral com Halter']);
+  });
+
+  it('academia não é alterada', async () => {
+    mockDb.from.mockImplementation(() => chainResolving({ data: null, error: new Error('rede') }));
+    const days = [{ dia: 'Quarta', foco: 'Pernas / Quadríceps', exercicios: [ex('Leg Press 45°')], pos: [ex('🏃 Cardio — Esteira')] }];
+    const [r] = await withLibraryExercises(days, 'intermediario', 'academia');
+    expect(r).toEqual(days[0]);
+  });
+
+  it('se nada do template cabe e não há biblioteca, mantém o dia (não deixa vazio)', async () => {
+    mockDb.from.mockImplementation(() => chainResolving({ data: null, error: new Error('rede') }));
+    const days = [{ dia: 'Quarta', foco: 'Pernas / Quadríceps', exercicios: [ex('Leg Press 45°')], pos: [] }];
+    const [r] = await withLibraryExercises(days, 'intermediario', 'casa');
+    expect(r.exercicios.length).toBe(1);
+  });
+});
