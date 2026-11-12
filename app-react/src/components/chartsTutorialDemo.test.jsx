@@ -211,10 +211,24 @@ describe('Tutorial', () => {
     localStorage.clear();
     h.trackEvent.mockClear();
     await open();
-    const total = visibleSteps('student', {}).length;
+    const total = visibleSteps('student', {}, { quick: true }).length; // a abertura automática é o tour curto
     for (let i = 1; i < total; i++) fireEvent.click(screen.getByText('Próximo'));
     fireEvent.click(screen.getByText('Concluir'));
     expect(h.trackEvent).toHaveBeenCalledWith('tutorial', 'student_fim');
+  });
+
+  it('a abertura automática é o tour curto (4 passos); "Ver tutorial" abre o guia completo', async () => {
+    const dots = () => document.querySelectorAll('.tutorial__dot').length;
+    await open();
+    expect(dots()).toBe(visibleSteps('student', {}, { quick: true }).length);
+    expect(dots()).toBe(4);
+    fireEvent.click(screen.getByText('Pular'));
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    act(() => { startTutorial(); });
+    expect(dots()).toBe(visibleSteps('student', {}).length);
+    expect(dots()).toBeGreaterThan(10);
+    expect(screen.getByText(STUDENT_STEPS[0].title)).toBeTruthy();
   });
 
   it('pular fecha e marca como visto', async () => {
@@ -234,7 +248,7 @@ describe('Tutorial', () => {
 
   it('último passo mostra Concluir (sem Pular) e fecha', async () => {
     await open();
-    for (let i = 0; i < visibleSteps('student', {}).length - 1; i++) fireEvent.click(screen.getByText('Próximo'));
+    for (let i = 0; i < visibleSteps('student', {}, { quick: true }).length - 1; i++) fireEvent.click(screen.getByText('Próximo'));
     expect(screen.queryByText('Pular')).toBeNull();
     fireEvent.click(screen.getByText('Concluir'));
     expect(screen.queryByRole('dialog')).toBeNull();

@@ -1,4 +1,5 @@
 import { t, locale } from '../lib/i18n';
+import { heightToCm } from '../lib/profileValidation';
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
   meta, setMeta, nivel, setNivel, local, setLocal, pesoAlvo, setPesoAlvo,
@@ -37,6 +38,7 @@ export default function ProfileBodySection({
           <input
             type="number" id="profileAltura" className="input input--sm" placeholder={t('Ex: 178')}
             min="100" max="250" value={altura} onChange={e => setAltura(e.target.value)}
+            onBlur={e => setAltura(heightToCm(e.target.value))}
           />
         </div>
       </div>

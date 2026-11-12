@@ -70,6 +70,38 @@ describe('passos visíveis', () => {
   });
 });
 
+describe('tour curto da abertura automática', () => {
+  it('leva ao primeiro treino em 4 passos: boas-vindas, treino da semana, ao vivo e fecho', () => {
+    const quick = visibleSteps('aluno', {}, { quick: true });
+    expect(quick).toHaveLength(4);
+    expect(quick[0]).toBe(STUDENT_STEPS[0]);
+    expect(quick.at(-1)).toBe(STUDENT_STEPS.at(-1));
+    expect(quick.every(s => s.quick)).toBe(true);
+    expect(quick.map(s => s.title)).toContain(STUDENT_STEPS.find(s => s.title.includes('ao vivo')).title);
+  });
+
+  it('o guia completo continua com todos os passos (Ver tutorial)', () => {
+    expect(visibleSteps('aluno', {}).length).toBeGreaterThan(10);
+    expect(visibleSteps('aluno', {}, { quick: false })).toEqual(visibleSteps('aluno', {}));
+  });
+
+  it('o tour curto não passeia pelas outras abas', () => {
+    const tabs = new Set(visibleSteps('aluno', {}, { quick: true }).map(s => s.tab).filter(Boolean));
+    expect([...tabs]).toEqual(['treino']);
+  });
+
+  it('a numeração do funil do painel não muda: vem da lista completa', () => {
+    const quick = visibleSteps('aluno', {}, { quick: true });
+    expect(quick.map(s => stepsFor('aluno').indexOf(s) + 1)).toEqual([1, 2, 4, stepsFor('aluno').length]);
+  });
+
+  it('papéis sem passos marcados (personal, parceiros) seguem com o guia inteiro', () => {
+    expect(visibleSteps('trainer', {}, { quick: true })).toEqual(TRAINER_STEPS);
+    expect(visibleSteps('influencer', {}, { quick: true })).toEqual(INFLUENCER_STEPS);
+    expect(visibleSteps('ambassador', {}, { quick: true })).toEqual(AMBASSADOR_STEPS);
+  });
+});
+
 describe('já visto', () => {
   beforeEach(() => localStorage.clear());
 

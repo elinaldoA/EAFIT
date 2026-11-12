@@ -35,6 +35,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
   const { config } = useAppConfig();
   const toast = useToast();
   const [suggestion, setSuggestion] = useState(null);
+  // A busca do histórico terminou (sem isso a dica de "primeira vez" piscaria durante o carregamento).
+  const [suggestionDone, setSuggestionDone] = useState(false);
   const [plateau, setPlateau] = useState(null);
   const [discomfort, setDiscomfort] = useState(null);
   const [substituting, setSubstituting] = useState(false);
@@ -45,7 +47,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
     if (!user || !open || !setCount || timed) return;
     let cancelled = false;
     const suggested = fetchProgressionSuggestion(user.id, ex.nome, ex.reps)
-      .then(s => { if (!cancelled) setSuggestion(s); return s; })
+      .then(s => { if (!cancelled) { setSuggestion(s); setSuggestionDone(true); } return s; })
       .catch(err => { console.error('fetchProgressionSuggestion:', err); return null; });
     const stuck = fetchPlateauStatus(user.id, ex.nome, ex.reps)
       .then(p => { if (!cancelled) setPlateau(p); return p; })
@@ -140,6 +142,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
               {' '}<span className="ex-block__suggestion-hint">{t('— tente um deload pra {suggestedDeload}kg ou troque o exercício', { suggestedDeload: plateau.suggestedDeload })}</span>
               {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(plateau.suggestedDeload, null)}>{t('🎯 Usar sugestão')}</button>
             </p>
+          ) : !suggestion && suggestionDone && !workKg ? (
+            <p className="ex-block__suggestion ex-block__suggestion--first">{t('💡 Primeira vez neste exercício: comece com uma carga leve e anote o que usou. Se sobrarem 2 ou 3 repetições na última série, a carga está boa.')}</p>
           ) : suggestion && (
             <p className="ex-block__suggestion">
               {suggestion.suggestedReps

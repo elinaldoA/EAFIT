@@ -14,6 +14,14 @@ const filled = v => v !== undefined && v !== null && String(v).trim() !== '';
 const num = v => Number(String(v ?? '').trim().replace(',', '.'));
 const inRange = (v, [min, max]) => { const n = num(v); return Number.isFinite(n) && n >= min && n <= max; };
 
+// Altura digitada em metros (1,78 ou 1.78) vira centímetros (178). Só converte o que não pode ser
+// centímetro (de 1 a 2,5); o resto volta como veio, para a validação acusar o erro de verdade.
+export function heightToCm(value) {
+  const n = num(value);
+  if (!filled(value) || !Number.isFinite(n) || n < 1 || n > 2.5) return value;
+  return String(Math.round(n * 100));
+}
+
 // Devolve { field, message } do primeiro problema, ou null. `onboarding`
 // exige sexo e idade; no Perfil eles podem ficar vazios (contas antigas), mas
 // se preenchidos precisam valer. Peso e altura são sempre obrigatórios.

@@ -109,6 +109,47 @@ describe('ExerciseBlock', () => {
     expect(onApplySuggestion).toHaveBeenCalledWith(72, null);
   });
 
+  describe('dica de primeira vez (sem histórico no exercício)', () => {
+    const HINT = /Primeira vez neste exercício: comece com uma carga leve/;
+
+    it('aparece quando a busca termina sem sugestão', async () => {
+      setup();
+      expect(await screen.findByText(HINT)).toBeTruthy();
+    });
+
+    it('não pisca enquanto o histórico ainda carrega', async () => {
+      h.fetchProgressionSuggestion.mockReturnValue(new Promise(() => {}));
+      setup();
+      await waitFor(() => expect(h.fetchProgressionSuggestion).toHaveBeenCalled());
+      expect(screen.queryByText(HINT)).toBeNull();
+    });
+
+    it('some quando existe sugestão de progressão', async () => {
+      h.fetchProgressionSuggestion.mockResolvedValue({ suggestedCarga: 82.5, suggestedReps: 9, lastCarga: 80, lastReps: 8 });
+      setup();
+      await screen.findByText(/Sugestão: repita 82.5kg/);
+      expect(screen.queryByText(HINT)).toBeNull();
+    });
+
+    it('não aparece se a busca falhar (não dá para saber se é a primeira vez)', async () => {
+      const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+      h.fetchProgressionSuggestion.mockRejectedValue(new Error('rede'));
+      setup();
+      await waitFor(() => expect(err).toHaveBeenCalled());
+      expect(screen.queryByText(HINT)).toBeNull();
+      err.mockRestore();
+    });
+
+    it('não aparece depois que a pessoa já digitou a carga da 1ª série', async () => {
+      localStorage.setItem(`set_${EX.nome}_1_carga`, '40');
+      setup();
+      await waitFor(() => expect(h.fetchProgressionSuggestion).toHaveBeenCalled());
+      await new Promise(r => setTimeout(r, 0));
+      expect(screen.queryByText(HINT)).toBeNull();
+      localStorage.removeItem(`set_${EX.nome}_1_carga`);
+    });
+  });
+
   it('bloco fechado ou sem usuário não consulta sugestões', () => {
     setup({ open: false });
     expect(h.fetchProgressionSuggestion).not.toHaveBeenCalled();

@@ -14,15 +14,17 @@ const PAD = 6;
 // elemento do passo quando ele existe na tela.
 export default function Tutorial({ role, userId, onNavigate }) {
   const { config } = useAppConfig();
-  const steps = useMemo(() => visibleSteps(role, config.flags), [role, config.flags]);
+  // Abertura automática = tour curto (rumo ao primeiro treino); "Ver tutorial" = guia completo.
+  const [quick, setQuick] = useState(true);
+  const steps = useMemo(() => visibleSteps(role, config.flags, { quick }), [role, config.flags, quick]);
   const [index, setIndex] = useState(null); // null = fechado
   const [rect, setRect] = useState(null);
 
   useEffect(() => {
     if (!userId) return undefined;
     let timer;
-    if (!hasSeenTutorial(role, userId)) timer = setTimeout(() => setIndex(0), 700);
-    const reopen = () => setIndex(0);
+    if (!hasSeenTutorial(role, userId)) timer = setTimeout(() => { setQuick(true); setIndex(0); }, 700);
+    const reopen = () => { setQuick(false); setIndex(0); };
     window.addEventListener(TUTORIAL_EVENT, reopen);
     return () => { clearTimeout(timer); window.removeEventListener(TUTORIAL_EVENT, reopen); };
   }, [role, userId]);

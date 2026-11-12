@@ -1016,4 +1016,5 @@ export default {
   "Menu ({v1} aviso(s) novo(s))": "Menu ({v1} new notice(s))",
   "Tema escuro": "Dark theme",
   "Tema claro": "Light theme",
+  '💡 Primeira vez neste exercício: comece com uma carga leve e anote o que usou. Se sobrarem 2 ou 3 repetições na última série, a carga está boa.': '💡 First time on this exercise: start light and note what you used. If you have 2 or 3 reps left on the last set, the weight is right.',
 };

@@ -378,6 +378,26 @@ describe('OnboardingScreen', () => {
     expect(h.tpl.generatePlan).not.toHaveBeenCalled();
   });
 
+  it('altura digitada em metros vira centímetros ao sair do campo', () => {
+    render(<OnboardingScreen />);
+    const field = screen.getByLabelText('Altura (cm)');
+    // o campo é type=number: o navegador entrega a vírgula como ponto
+    fireEvent.change(field, { target: { value: '1.78' } });
+    fireEvent.blur(field);
+    expect(field.value).toBe('178');
+  });
+
+  it('enviar com a altura em metros não trava: gera o plano com os centímetros', async () => {
+    h.tpl.generatePlan.mockResolvedValue([{ dia: 'Seg' }]);
+    h.auth.updateProfile.mockResolvedValue({});
+    render(<OnboardingScreen />);
+    fill({ altura: '1.80' });
+    submit();
+    await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ altura: 180 })));
+    expect(h.tpl.generatePlan).toHaveBeenCalledWith(expect.objectContaining({ altura: 180 }));
+    expect(screen.queryByText('Informe uma altura válida (cm).')).toBeNull();
+  });
+
   it('gera e semeia o plano ANTES de salvar o perfil', async () => {
     const order = [];
     h.tpl.generatePlan.mockImplementation(async () => { order.push('generate'); return [{ dia: 'Seg' }]; });

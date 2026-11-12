@@ -14,11 +14,11 @@ const nav = n => `.bottom-nav .nav-item:nth-child(${n})`;
 
 export const STUDENT_STEPS = [
   {
-    icon: '👋', title: t('Bem-vindo ao EAFIT'),
-    text: t('Em poucos passos você conhece tudo o que o app faz. Dá pra pular a qualquer momento e rever depois em Perfil → Ajuda.'),
+    quick: true, icon: '👋', title: t('Bem-vindo ao EAFIT'),
+    text: t('Vamos direto ao que importa: o seu primeiro treino. Dá pra pular a qualquer momento. Para conhecer todas as abas, abra o guia completo em Perfil → Ajuda.'),
   },
   {
-    tab: 'treino', target: '#page-treino .progress-card', icon: '🏋️', title: t('Seu treino da semana'),
+    quick: true, tab: 'treino', target: '#page-treino .progress-card', icon: '🏋️', title: t('Seu treino da semana'),
     text: t('Aqui ficam o card "Treino de hoje" e a semana atual. Cada dia abre com os exercícios, séries, repetições e descanso. Marque as séries concluídas e anote a carga usada.'),
   },
   {
@@ -26,7 +26,7 @@ export const STUDENT_STEPS = [
     text: t('Antes de treinar, responda em 3 toques como estão sua energia, seu sono e seu humor. O app devolve uma dica do dia, e em Evolução você vê como isso muda ao longo das semanas.'),
   },
   {
-    tab: 'treino', icon: '⚡', title: t('Modo treino ao vivo'),
+    quick: true, tab: 'treino', icon: '⚡', title: t('Modo treino ao vivo'),
     text: t('Toque em "Treino de hoje" (ou no ⚡ de um dia) para treinar em tela cheia: um exercício por vez, descanso com cronômetro e alarme, e a tela sempre acesa. Use "▶ Ver execução" para ver o movimento. No cardio, o cronômetro marca a duração e você anota distância e ritmo.'),
   },
   {
@@ -82,8 +82,8 @@ export const STUDENT_STEPS = [
     text: t('Em Perfil → "Meu personal", digite o código que ele te passou (ou abra o link de convite dele e autorize). Ele passa a montar seu treino e acompanhar sua evolução; os recados e as aulas marcadas por ele aparecem no Perfil e no topo do Treino.'),
   },
   {
-    tab: 'treino', icon: '🚀', title: t('Tudo pronto!'),
-    text: t('Agora é só treinar. Instale o app na tela inicial para abrir rápido e usar sem internet. Tem uma ideia ou achou um problema? Mande em Perfil → Enviar feedback. Para rever este guia: Perfil → Ajuda.'),
+    quick: true, tab: 'treino', icon: '🚀', title: t('Tudo pronto!'),
+    text: t('Agora é só treinar: toque em "Começar treino". Instale o app na tela inicial para abrir rápido e usar sem internet. Quer conhecer as outras abas? Abra o guia completo em Perfil → Ajuda. Tem uma ideia ou achou um problema? Mande em Perfil → Enviar feedback.'),
   },
 ];
 
@@ -186,8 +186,13 @@ export function stepsFor(role) {
 
 // Passos que valem para quem está vendo: sem os recursos desligados no painel
 // admin (`flag`) nem os que o aparelho não suporta (`when`).
-export function visibleSteps(role, flags) {
-  return stepsFor(role).filter(s => (!s.flag || isFlagOn(flags, s.flag)) && (!s.when || s.when()));
+// `quick`: tour curto da abertura automática (só os passos marcados com `quick`, quando o papel
+// tem algum): leva ao primeiro treino em vez de passear por todas as abas. O guia completo
+// continua em Perfil → Ajuda. A numeração dos passos (e o funil do painel) vem da lista completa.
+export function visibleSteps(role, flags, { quick = false } = {}) {
+  const all = stepsFor(role);
+  const list = quick && all.some(s => s.quick) ? all.filter(s => s.quick) : all;
+  return list.filter(s => (!s.flag || isFlagOn(flags, s.flag)) && (!s.when || s.when()));
 }
 
 function key(role, userId) {

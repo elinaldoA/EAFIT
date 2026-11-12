@@ -5,7 +5,7 @@ import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
-import { validateBody } from '../lib/profileValidation';
+import { heightToCm, validateBody } from '../lib/profileValidation';
 import SportPicker from './SportPicker';
 import { useSportModule } from '../hooks/useSportModule';
 
@@ -44,9 +44,12 @@ export default function OnboardingScreen() {
     trackEvent('onboarding', 'submit');
     const idadeNum = parseInt(idade, 10);
     const pesoNum = parseFloat(peso);
-    const alturaNum = parseFloat(altura);
+    // Quem digita em metros (1,78) não deve travar: vira centímetros.
+    const alturaCm = heightToCm(altura);
+    if (alturaCm !== altura) setAltura(alturaCm);
+    const alturaNum = parseFloat(alturaCm);
 
-    const invalid = validateBody({ sexo, idade, peso, altura }, { onboarding: true });
+    const invalid = validateBody({ sexo, idade, peso, altura: alturaCm }, { onboarding: true });
     if (invalid) {
       trackEvent('onboarding', `erro_${invalid.field}`);
       setMsg(invalid.message);
@@ -118,6 +121,7 @@ export default function OnboardingScreen() {
             <input
               type="number" id="onbAltura" className="input" placeholder={t('Ex: 178')}
               min="100" max="250" value={altura} onChange={e => setAltura(e.target.value)}
+              onBlur={e => setAltura(heightToCm(e.target.value))}
             />
           </div>
           {usesPlan && (

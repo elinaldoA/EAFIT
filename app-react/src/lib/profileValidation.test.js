@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateBody, cleanName, validWeeklyGoal, validWaterGoal } from './profileValidation';
+import { heightToCm, validateBody, cleanName, validWeeklyGoal, validWaterGoal } from './profileValidation';
 
 const ok = { sexo: 'M', idade: '30', peso: '80', altura: '180' };
 
@@ -42,5 +42,29 @@ describe('demais campos', () => {
     expect(['0', '8', '', '2.5'].some(validWeeklyGoal)).toBe(false);
     expect(['', '3', '0,5', '10'].every(validWaterGoal)).toBe(true);
     expect(['0', '-1', '50', 'x'].some(validWaterGoal)).toBe(false);
+  });
+});
+
+describe('heightToCm', () => {
+  it('converte metros (com vírgula ou ponto) em centímetros', () => {
+    expect(heightToCm('1,78')).toBe('178');
+    expect(heightToCm('1.78')).toBe('178');
+    expect(heightToCm('2')).toBe('200');
+    expect(heightToCm(1.65)).toBe('165');
+    expect(heightToCm('1,785')).toBe('179');
+  });
+
+  it('não mexe no que já está em centímetros nem no que não é altura', () => {
+    expect(heightToCm('178')).toBe('178');
+    expect(heightToCm('100')).toBe('100');
+    expect(heightToCm('')).toBe('');
+    expect(heightToCm('abc')).toBe('abc');
+    expect(heightToCm('0.5')).toBe('0.5'); // abaixo de 1 m: segue inválido
+    expect(heightToCm('3')).toBe('3'); // acima de 2,5: não é metro nem centímetro válido
+    expect(heightToCm(undefined)).toBeUndefined();
+  });
+
+  it('o resultado passa na validação do cadastro', () => {
+    expect(validateBody({ sexo: 'M', idade: '30', peso: '80', altura: heightToCm('1,78') }, { onboarding: true })).toBeNull();
   });
 });
