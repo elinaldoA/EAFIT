@@ -350,3 +350,24 @@ Deno.test('métricas: com alcance chegando, diag fica vazio', async () => {
   assertEquals(rows[0].reach, 50);
   assertEquals(diag.insightsError, undefined);
 });
+
+Deno.test('métricas do Facebook: usa as métricas novas de views e cai na antiga se a Meta recusar', async () => {
+  const post = { id: 'P1_9', message: 'x', permalink_url: 'https://fb/9', created_time: '2026-11-10T10:00:00+0000' };
+  const novo = fakeFetch({
+    'GET /P1/published_posts': { data: [post] },
+    'GET /P1_9/insights': (p) => (p.metric.includes('post_total_media_view_unique')
+      ? { data: [{ name: 'post_total_media_view_unique', values: [{ value: 120 }] }, { name: 'post_media_view', values: [{ value: 200 }] }] }
+      : { data: [] }),
+  });
+  const a = await fetchMetrics(makeApi(novo.fn, 'https://graph.facebook.com/v23.0', 'tok'), PAGE);
+  assertEquals([a[0].reach, a[0].views, a[0].insights_ok], [120, 200, true]);
+
+  const velho = fakeFetch({
+    'GET /P1/published_posts': { data: [post] },
+    'GET /P1_9/insights': (p) => (p.metric === 'post_impressions_unique'
+      ? { data: [{ name: 'post_impressions_unique', values: [{ value: 80 }] }] }
+      : { error: { message: '(#100) The value must be a valid insights metric', code: 100 } }),
+  });
+  const b = await fetchMetrics(makeApi(velho.fn, 'https://graph.facebook.com/v23.0', 'tok'), PAGE);
+  assertEquals([b[0].reach, b[0].insights_ok], [80, true]);
+});

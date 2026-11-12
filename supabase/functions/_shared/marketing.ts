@@ -496,12 +496,13 @@ export async function fetchMetrics(api: Api, account: Account, diag: { insightsE
     for (const p of list(posts)) {
       const att = list(p.attachments)[0]?.media_type;
       const kind = att === 'video' ? 'video' : att === 'album' ? 'carousel' : att === 'photo' ? 'image' : 'text';
-      const ins = await tryInsights(String(p.id), ['post_impressions_unique']);
+      // Meta trocou as métricas de impressões por "views" em 2025; a antiga fica de reserva.
+      const ins = (await tryInsights(String(p.id), ['post_total_media_view_unique', 'post_media_view'])) ?? (await tryInsights(String(p.id), ['post_impressions_unique']));
       rows.push({
         external_id: String(p.id), permalink: (p.permalink_url as string) || null, caption: String(p.message || ''), kind,
         thumb_url: (p.full_picture as string) || null, posted_at: (p.created_time as string) || null,
         likes: total(p.reactions), comments: total(p.comments), shares: num((p.shares as Obj | undefined)?.count),
-        saves: null, reach: ins?.post_impressions_unique ?? null, views: null, insights_ok: ins !== null,
+        saves: null, reach: ins?.post_total_media_view_unique ?? ins?.post_impressions_unique ?? null, views: ins?.post_media_view ?? null, insights_ok: ins !== null,
       });
     }
   }

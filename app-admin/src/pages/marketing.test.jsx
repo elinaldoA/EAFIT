@@ -28,7 +28,7 @@ import MarketingMedia from './MarketingMedia';
 import { synthTrack } from '../lib/reelAudio';
 import { DURATION, FPS, STORY_DROP, STORY_DURATION, STORY_VARIANTS, drawReelFrame, drawStoryFrame } from '../lib/reelRender';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES, autopostTheme, adSignups, bestTimes, hashtagStats, trendingPosts, weeklySummary,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES, autopostTheme, adSignups, bestTimes, hashtagStats, promoCandidates, trendingPosts, weeklySummary,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -1116,6 +1116,12 @@ describe('lib: análises de marketing', () => {
     const list = [post('old1', 20, 10, 2), post('old2', 25, 10, 2), post('old3', 18, 10, 2), { ...post('hot', 0, 9, 30), posted_at: new Date(now - 10 * 3_600_000).toISOString() }];
     expect(trendingPosts(list, [], { now }).map(m => m.external_id)).toEqual(['hot']);
     expect(trendingPosts(list, [{ post_id: 'hot', permalink: null }], { now })).toEqual([]);
+  });
+
+  it('em alta/sugestões: anúncio de Reel (/p/CODIGO) exclui o post (/reel/CODIGO)', () => {
+    const list = [{ ...post('a', 3, 10, 12), permalink: 'https://www.instagram.com/reel/AbC123/' }, post('b', 4, 10, 2), post('c', 5, 10, 2)];
+    const sug = promoCandidates(list, [{ post_id: null, permalink: 'https://www.instagram.com/p/AbC123/' }], { now });
+    expect(sug.map(m => m.external_id)).not.toContain('a');
   });
 
   it('adSignups liga o cadastro ao anúncio por id ou nome e soma o total', () => {

@@ -809,7 +809,8 @@ export function adTotals(ads) {
   return { ...t, cpc: t.clicks ? t.spend / t.clicks : null, cpm: t.impressions ? (t.spend / t.impressions) * 1000 : null, cpr: t.results ? t.spend / t.results : null };
 }
 
-const normLink = u => String(u || '').split('?')[0].replace(/\/+$/, '').toLowerCase();
+// O anúncio de um Reel devolve /p/CODIGO e o post tem /reel/CODIGO: o que vale é o código (e o id no Facebook).
+const normLink = u => String(u || '').split('?')[0].replace(/\/+$/, '').split('/').pop().toLowerCase();
 const isStory = m => m.kind === 'story';
 // Story não tem curtida: o que pesa é conversa (respostas) e compartilhamento.
 const weighted = m => (isStory(m)
