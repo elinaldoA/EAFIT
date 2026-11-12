@@ -10,7 +10,7 @@
 // A saída não é versionada (ver .gitignore).
 //
 // Fontes: a biblioteca semeada em supabase/migrations/*exercise_library*.sql
-// e as demonstrações de src/data/exerciseMedia.js e exerciseVideos.js.
+// e as demonstrações de src/data/exerciseMedia.js, exerciseVideos.js e exerciseYoutube.js.
 // Cabeçalho, rodapé e <head> comuns são copiados da home (blocos site-head,
 // site-header e site-footer de public/landing/index.html).
 import fs from 'node:fs';
@@ -18,6 +18,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { EXERCISE_VIDEOS } from '../src/data/exerciseVideos.js';
+import { EXERCISE_YOUTUBE } from '../src/data/exerciseYoutube.js';
 
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = path.resolve(APP, '..');
@@ -143,7 +144,7 @@ export function loadExercises() {
   return readLibrary().map(row => {
     if (!GROUPS.some(g => g.id === row.grupo)) throw new Error(`grupo sem rótulo em GROUPS: ${row.grupo} (${row.nome})`);
     if (row.equipamento && !EQUIPAMENTOS[row.equipamento]) throw new Error(`equipamento sem rótulo: ${row.equipamento} (${row.nome})`);
-    const video = Boolean(EXERCISE_VIDEOS[row.nome]);
+    const video = Boolean(EXERCISE_VIDEOS[row.nome] || EXERCISE_YOUTUBE[row.nome]);
     return { ...row, video, demo: video || frames.has(row.nome) };
   });
 }
