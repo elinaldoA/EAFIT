@@ -5,6 +5,7 @@ import {
 } from '../lib/marketing';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
+import MarketingAds from '../components/MarketingAds';
 import EmptyState from '../components/EmptyState';
 import { Paged } from '../components/ShowMore';
 
@@ -233,6 +234,8 @@ export default function MarketingResults() {
           </p>
         </section>
       )}
+
+      <MarketingAds days={days} />
 
       <section className="card stack" aria-label="Desempenho dos posts">
         <h2 className="section-title">Desempenho dos posts</h2>

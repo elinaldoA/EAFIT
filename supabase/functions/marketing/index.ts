@@ -16,6 +16,7 @@
 //     { action: 'edit', postId, caption }       muda a legenda do post publicado (só o Facebook deixa)
 //     { action: 'deleteExternal', accountId, externalId }  apaga um post feito direto na rede (lista de Resultados)
 //     { action: 'editExternal', accountId, externalId, caption }  muda a legenda de um post do Facebook feito direto na rede
+//     { action: 'ads', days }                   anúncios (posts promovidos), só leitura
 //     { action: 'tiktokCreator', accountId }    dados da conta TikTok para a tela de publicar (regra do TikTok)
 //
 // Verify JWT desligado por causa do cron; o admin é conferido aqui (JWT + admin_can).
@@ -23,7 +24,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import { CRON_SECRET_HEADER, isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import {
-  type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, editPublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
+  type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, editPublished, encryptToken, fetchAds, fetchComments, fetchMetrics, GraphError, makeApi,
   type Media, type Post, replyToComment, setCommentHidden, startPublish, type Step, trackedCaption,
 } from '../_shared/marketing.ts';
 import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
@@ -291,6 +292,27 @@ async function syncMetrics() {
   return out;
 }
 
+// Posts promovidos: lê os anúncios de cada conta de anúncios conectada (token de usuário
+// com ads_read). Falha numa conta não derruba as outras.
+async function loadAds(days: number) {
+  const { data } = await db.from('marketing_ad_accounts').select('id, name, currency, token_enc').order('name');
+  const accounts: { id: string; name: string; currency: string; error?: string }[] = [];
+  const ads: (Awaited<ReturnType<typeof fetchAds>>[number] & { account: string })[] = [];
+  for (const a of data || []) {
+    try {
+      const rows = await fetchAds(makeApi(fetch, baseFor('facebook'), await decryptToken(TOKEN_KEY, a.token_enc)), a.id, days);
+      accounts.push({ id: a.id, name: a.name, currency: a.currency });
+      for (const r of rows) ads.push({ ...r, account: a.id });
+    } catch (err) {
+      const msg = err instanceof GraphError && err.needsReconnect
+        ? 'Acesso vencido: reconecte o Facebook em Marketing -> Contas.'
+        : errMsg(err);
+      accounts.push({ id: a.id, name: a.name, currency: a.currency, error: msg });
+    }
+  }
+  return { accounts, ads };
+}
+
 async function loadComment(commentId: string) {
   const { data, error } = await db.from('marketing_comments').select('id, account_id, external_id').eq('id', commentId).single();
   if (error || !data) throw new Error('Comentário não encontrado.');
@@ -363,6 +385,10 @@ Deno.serve(async (req) => {
         return json({ results: await syncComments() });
       case 'metrics':
         return json({ results: await syncMetrics() });
+      case 'ads': {
+        const days = [7, 30, 90].includes(Number(body.days)) ? Number(body.days) : 30;
+        return json(await loadAds(days));
+      }
       case 'edit': {
         if (typeof body.postId !== 'string') return json({ error: 'Falta postId.' }, 400);
         const caption = String(body.caption ?? '').trim();

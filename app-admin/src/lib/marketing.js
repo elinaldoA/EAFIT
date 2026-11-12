@@ -788,3 +788,23 @@ export function queuePosition(pending, item) {
   const idx = same.findIndex(i => i.id === item.id);
   return { first: idx === 0, last: idx === same.length - 1, number: idx + 1, total: same.length };
 }
+
+// Posts promovidos: anúncios das contas de anúncios conectadas (só leitura, ads_read).
+export function fetchAds(days = 30) {
+  return invoke('marketing', { action: 'ads', days });
+}
+
+export const AD_STATUS_LABEL = {
+  ACTIVE: 'No ar', PAUSED: 'Pausado', CAMPAIGN_PAUSED: 'Campanha pausada', ADSET_PAUSED: 'Conjunto pausado',
+  PENDING_REVIEW: 'Em análise', IN_PROCESS: 'Em análise', DISAPPROVED: 'Reprovado', WITH_ISSUES: 'Com problema',
+  ARCHIVED: 'Arquivado', DELETED: 'Excluído',
+};
+
+// Gasto, alcance, cliques e custos de uma lista de anúncios (custos nulos quando não há base).
+export function adTotals(ads) {
+  const t = (ads || []).reduce((a, r) => ({
+    spend: a.spend + r.spend, reach: a.reach + r.reach, impressions: a.impressions + r.impressions,
+    clicks: a.clicks + r.clicks, results: a.results + r.results,
+  }), { spend: 0, reach: 0, impressions: 0, clicks: 0, results: 0 });
+  return { ...t, cpc: t.clicks ? t.spend / t.clicks : null, cpm: t.impressions ? (t.spend / t.impressions) * 1000 : null, cpr: t.results ? t.spend / t.results : null };
+}

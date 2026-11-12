@@ -28,7 +28,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import {
-  encryptToken, GRAPH_BASE, GRAPH_VERSION, makeApi, META_SCOPES, type OAuthState, request, signState, verifyState,
+  encryptToken, fetchAdAccounts, GRAPH_BASE, GRAPH_VERSION, makeApi, META_SCOPES, type OAuthState, request, signState, verifyState,
 } from '../_shared/marketing.ts';
 import { makeTikTokApi, oauthToken, TIKTOK_AUTHORIZE, TIKTOK_SCOPES, tokenFromOAuth } from '../_shared/tiktok.ts';
 
@@ -73,6 +73,22 @@ async function saveAccount(account: SavedAccount, token: string, adminId: string
   return data.id as string;
 }
 
+// Contas de anúncios (só leitura, para Marketing -> Resultados -> Posts promovidos).
+// Sem a permissão ads_read, ou sem conta de anúncios, a conexão segue normalmente.
+async function saveAdAccounts(userToken: string, adminId: string) {
+  try {
+    const accounts = await fetchAdAccounts(makeApi(fetch, GRAPH_BASE, userToken));
+    if (!accounts.length) return;
+    const token_enc = await encryptToken(TOKEN_KEY, userToken);
+    const { error } = await admin.from('marketing_ad_accounts').upsert(accounts.map((a) => ({
+      ...a, token_enc, connected_by: adminId, connected_at: new Date().toISOString(),
+    })));
+    if (error) throw error;
+  } catch (err) {
+    console.warn('marketing-oauth: contas de anúncios não salvas (falta ads_read?):', err);
+  }
+}
+
 // Páginas que a pessoa administra + o Instagram profissional ligado a cada
 // uma. Token de Página tirado de um token de usuário de longa duração não expira.
 async function connectMeta(code: string, adminId: string): Promise<string[]> {
@@ -90,6 +106,7 @@ async function connectMeta(code: string, adminId: string): Promise<string[]> {
   } catch (err) {
     console.warn('marketing-oauth: troca por token longo recusada, usando o original:', err);
   }
+  await saveAdAccounts(userToken, adminId);
   const pages = await makeApi(fetch, GRAPH_BASE, userToken).get('/me/accounts', {
     fields: 'id,name,access_token,picture{url},instagram_business_account{id,username,name,profile_picture_url}',
     limit: 100,

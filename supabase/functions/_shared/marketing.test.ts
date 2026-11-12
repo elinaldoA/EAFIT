@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import {
-  type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchComments, fetchMetrics, GraphError, makeApi,
+  type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchAdAccounts, fetchAds, fetchComments, fetchMetrics, GraphError, makeApi,
   replyToComment, setCommentHidden, signState, startPublish, trackedCaption, verifyState,
 } from './marketing.ts';
 
@@ -278,4 +278,29 @@ Deno.test('trackedCaption: nao duplica o link nem estoura o limite da rede', () 
   assertEquals(trackedCaption('facebook', tagged), tagged.caption);
   const full = { id: 'ab12cd34', caption: 'a'.repeat(62_980), format: 'feed' as const };
   assertEquals(trackedCaption('facebook', full), full.caption);
+});
+
+Deno.test('anúncios: lista as contas e soma gasto, alcance e cliques por anúncio', async () => {
+  const { fn, calls } = fakeFetch({
+    'GET /me/adaccounts': { data: [{ id: 'act_99', account_id: '99', name: 'EAFIT', currency: 'BRL', account_status: 1 }] },
+    'GET /act_99/ads': {
+      data: [
+        { id: 'ad1', name: 'Reel promovido', effective_status: 'ACTIVE', creative: { thumbnail_url: 'https://t/1.jpg', instagram_permalink_url: 'https://instagram.com/p/x/' },
+          insights: { data: [{ spend: '12.50', impressions: '4000', reach: '3000', clicks: '90', inline_link_clicks: '40', actions: [{ action_type: 'link_click', value: '40' }, { action_type: 'lead', value: '3' }] }] } },
+        { id: 'ad2', name: 'Parado', effective_status: 'PAUSED', creative: {} },
+        { id: 'ad3', name: 'Post do Facebook', effective_status: 'ACTIVE', creative: { effective_object_story_id: 'P1_55' },
+          insights: { data: [{ spend: '30', impressions: '9000', reach: '7000', clicks: '120' }] } },
+      ],
+    },
+  });
+  const api = makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok');
+  assertEquals(await fetchAdAccounts(api), [{ id: '99', name: 'EAFIT', currency: 'BRL', account_status: 1 }]);
+  const ads = await fetchAds(api, '99', 30, new Date('2026-11-12T12:00:00Z'));
+  assertEquals(ads.map((a) => a.id), ['ad3', 'ad1']); // sem entrega some; maior gasto primeiro
+  assertEquals(ads[1].clicks, 40); // cliques no link, não os totais
+  assertEquals(ads[1].results, 3);
+  assertEquals(ads[1].permalink, 'https://instagram.com/p/x/');
+  assertEquals(ads[0].clicks, 120); // sem inline_link_clicks cai nos cliques totais
+  assertEquals(ads[0].permalink, 'https://www.facebook.com/P1_55');
+  assertEquals(calls[1].params.fields.includes('"since":"2026-10-13"'), true);
 });

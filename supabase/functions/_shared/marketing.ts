@@ -29,6 +29,8 @@ export const META_SCOPES = [
   'instagram_basic', 'instagram_content_publish', 'instagram_manage_comments', 'instagram_manage_contents',
   // Resultados (alcance e salvamentos). Sem elas o painel mostra só curtidas e comentários.
   'read_insights', 'instagram_manage_insights',
+  // Posts promovidos (Marketing → Resultados): só leitura de gasto e alcance dos anúncios.
+  'ads_read',
 ];
 
 export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, tiktok: 2200 };
@@ -498,4 +500,62 @@ export async function editPublished(api: Api, account: Account, externalId: stri
   }
   if (account.platform !== 'facebook') throw new Error('Esta rede não permite editar pela API.');
   await api.post(`/${externalId}`, isVideo ? { description: caption } : { message: caption });
+}
+
+// ---------- posts promovidos (anúncios) ----------
+
+export type AdAccountInfo = { id: string; name: string; currency: string; account_status: number | null };
+
+// Contas de anúncios do usuário que fez o login (precisa de ads_read).
+export async function fetchAdAccounts(api: Api): Promise<AdAccountInfo[]> {
+  const res = await api.get('/me/adaccounts', { fields: 'account_id,name,currency,account_status', limit: 50 });
+  return list(res).map((a) => ({
+    id: String(a.account_id || String(a.id || '').replace(/^act_/, '')),
+    name: String(a.name || ''), currency: String(a.currency || 'BRL'), account_status: num(a.account_status),
+  })).filter((a) => a.id);
+}
+
+export type AdRow = {
+  id: string;
+  name: string;
+  status: string; // effective_status da Meta (ACTIVE, PAUSED, ...)
+  thumb_url: string | null;
+  permalink: string | null; // post promovido (Instagram direto; Facebook pelo id do post)
+  spend: number; // na moeda da conta
+  impressions: number;
+  reach: number;
+  clicks: number; // cliques no link (sem eles, os cliques totais)
+  results: number; // cadastros/conversões que a Meta atribuiu ao anúncio
+};
+
+const toDay = (d: Date) => d.toISOString().slice(0, 10);
+
+// Anúncios com entrega nos últimos `days` dias (até 100), do que mais gastou ao que menos.
+export async function fetchAds(api: Api, adAccountId: string, days: number, now = new Date()): Promise<AdRow[]> {
+  const until = toDay(now);
+  const since = toDay(new Date(now.getTime() - Math.max(1, days) * 86_400_000));
+  const range = JSON.stringify({ since, until });
+  const res = await api.get(`/act_${adAccountId}/ads`, {
+    fields: `id,name,effective_status,creative{thumbnail_url,instagram_permalink_url,effective_object_story_id},insights.time_range(${range}){spend,impressions,reach,clicks,inline_link_clicks,actions}`,
+    limit: 100,
+  });
+  const rows: AdRow[] = [];
+  for (const ad of list(res)) {
+    const ins = list(ad.insights)[0];
+    if (!ins) continue; // sem entrega no período
+    const creative = (ad.creative || {}) as Obj;
+    const story = String(creative.effective_object_story_id || '');
+    const actions = Array.isArray(ins.actions) ? (ins.actions as Obj[]) : [];
+    const results = actions
+      .filter((a) => /lead|complete_registration|offsite_conversion/.test(String(a.action_type)))
+      .reduce((n, a) => n + (num(a.value) || 0), 0);
+    rows.push({
+      id: String(ad.id), name: String(ad.name || ''), status: String(ad.effective_status || ''),
+      thumb_url: (creative.thumbnail_url as string) || null,
+      permalink: (creative.instagram_permalink_url as string) || (story ? `https://www.facebook.com/${story}` : null),
+      spend: num(ins.spend) || 0, impressions: num(ins.impressions) || 0, reach: num(ins.reach) || 0,
+      clicks: num(ins.inline_link_clicks) ?? num(ins.clicks) ?? 0, results,
+    });
+  }
+  return rows.sort((a, b) => b.spend - a.spend);
 }

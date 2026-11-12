@@ -9,7 +9,7 @@ const { lib } = vi.hoisted(() => ({
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
-    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
+    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchAds: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
     uploadMedia: vi.fn(), editPost: vi.fn(), deleteExternalPost: vi.fn(), editExternalPost: vi.fn(),
     updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
@@ -533,6 +533,7 @@ describe('Resultados', () => {
   beforeEach(() => {
     lib.fetchMetrics.mockResolvedValue(METRICS);
     lib.refreshMetrics.mockResolvedValue({ results: [{ account: 'a2', posts: 2 }] });
+    lib.fetchAds.mockResolvedValue({ accounts: [], ads: [] });
     lib.fetchContentConversion.mockResolvedValue([
       { source: 'facebook', content: 'ab12cd34', caption: 'Erros que travam o ganho de massa', visits: 30, signups: 4, activated: 2, mature: 3, retained: 1 },
     ]);
@@ -554,6 +555,31 @@ describe('Resultados', () => {
     expect(posts.length).toBe(3);
     expect(screen.getAllByText('Reel de treino').length).toBeGreaterThan(0);
     expect(screen.getByText(/Melhor post do período/)).toBeTruthy();
+  });
+
+  it('posts promovidos: totais, anúncios e aviso quando a conta de anúncios falha', async () => {
+    lib.fetchAds.mockResolvedValue({
+      accounts: [{ id: '99', name: 'EAFIT', currency: 'BRL' }],
+      ads: [
+        { id: 'ad1', account: '99', name: 'Reel promovido', status: 'ACTIVE', thumb_url: null, permalink: 'https://ig/p', spend: 30, impressions: 5000, reach: 4000, clicks: 60, results: 0 },
+        { id: 'ad2', account: '99', name: 'Foto promovida', status: 'PAUSED', thumb_url: null, permalink: null, spend: 10, impressions: 1000, reach: 900, clicks: 0, results: 0 },
+      ],
+    });
+    wrap(<MarketingResults />);
+    expect(await screen.findByText('Reel promovido')).toBeTruthy();
+    expect(screen.getByText('No ar')).toBeTruthy();
+    expect(screen.getByText('Pausado')).toBeTruthy();
+    expect(screen.getByText(/R\$\s?40,00/)).toBeTruthy(); // gasto total
+    expect(screen.getByText(/R\$\s?0,50/)).toBeTruthy(); // 30 / 60 cliques
+  });
+
+  it('posts promovidos: sem conta de anúncios orienta a reconectar; erro da conta aparece', async () => {
+    wrap(<MarketingResults />);
+    expect(await screen.findByText(/Reconecte o Facebook em Marketing → Contas/)).toBeTruthy();
+    cleanup();
+    lib.fetchAds.mockResolvedValue({ accounts: [{ id: '99', name: 'EAFIT', currency: 'BRL', error: 'Acesso vencido' }], ads: [] });
+    wrap(<MarketingResults />);
+    expect(await screen.findByText(/Acesso vencido/)).toBeTruthy();
   });
 
   it('filtra por rede e atualiza as métricas na hora', async () => {
