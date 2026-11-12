@@ -4,6 +4,7 @@ import { REASON_LABELS, SEGMENT_LABELS, fetchInactivityAnswers, fetchInactivityS
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 
 // Respostas da pesquisa "por que você parou?", enviada pelo e-mail semanal a
 // quem passou de 4 semanas sem treinar (uma vez por período parado).
@@ -14,7 +15,7 @@ export default function Inactivity() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchInactivitySummary(), fetchInactivityAnswers()])
+    Promise.all([fetchInactivitySummary(), fetchInactivityAnswers(500)])
       .then(([summary, answers]) => { if (active) setData({ summary, answers }); })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
@@ -82,11 +83,13 @@ export default function Inactivity() {
           </div>
 
           {data.answers.length > 0 && (
+            <Paged items={data.answers} size={25} label="Ver mais respostas">
+              {visible => (
             <div className="table-wrap">
               <table className="resp-table">
                 <thead><tr><th>Quando</th><th>Quem</th><th>Situação</th><th>Motivo</th><th>Comentário</th></tr></thead>
                 <tbody>
-                  {data.answers.map(a => (
+                  {visible.map(a => (
                     <tr key={a.id}>
                       <td data-label="Quando">{formatDate(a.answeredAt)}</td>
                       <td data-label="Quem"><Link to={`/users/${a.userId}`}>{a.name || a.email}</Link></td>
@@ -100,6 +103,8 @@ export default function Inactivity() {
                 </tbody>
               </table>
             </div>
+              )}
+            </Paged>
           )}
         </>
       )}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 import { REPLY_MAX } from '../lib/feedback';
 import {
   LATE_HOURS, SOURCE_LABELS, STATUS_BADGE, STATUS_LABELS, VIEWS,
@@ -101,11 +102,13 @@ export default function Support() {
       {data && items.length === 0 && <EmptyState icon="📭" label="Nada nesta fila." />}
 
       {data && items.length > 0 && (
+        <Paged items={items} size={30} resetKey={view} label="Ver mais">
+          {visible => (
         <div className="table-wrap">
           <table className="resp-table">
             <thead><tr><th>Há</th><th>De</th><th>Assunto</th><th>Mensagem</th><th>Situação</th><th>Responsável</th><th /></tr></thead>
             <tbody>
-              {items.map(i => {
+              {visible.map(i => {
                 const age = ageHours(i);
                 const key = `${i.source}-${i.id}`;
                 return (
@@ -159,6 +162,8 @@ export default function Support() {
             </tbody>
           </table>
         </div>
+          )}
+        </Paged>
       )}
       <p className="user-detail__meta">
         Mensagem do site: a conta do app é encontrada pelo e-mail. As telas <Link to="/feedback">Feedback</Link> e{' '}

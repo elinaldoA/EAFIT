@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 import { closeLeagueMonth, currentMonth, fetchLeague, groupStandings, setLeagueEnabled } from '../lib/leagues';
 
 const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -84,11 +85,13 @@ export default function Leagues() {
           {data.rows.length === 0 ? <EmptyState icon="🏅" label="Ninguém na liga neste mês." /> : groups.filter(g => g.members).map(g => (
             <div className="card" key={g.key}>
               <h2 className="section-title">{g.emoji} {g.label} <span className="user-detail__meta">({g.rule})</span></h2>
+              <Paged items={g.rows} size={50} resetKey={month} label="Ver mais participantes">
+                {visible => (
               <div className="table-wrap">
                 <table className="resp-table">
                   <thead><tr><th>Posição</th><th>Participante</th><th>Dias no mês</th></tr></thead>
                   <tbody>
-                    {g.rows.slice(0, 50).map(r => (
+                    {visible.map(r => (
                       <tr key={r.userId}>
                         <td data-label="Posição">{r.days > 0 && MEDAL[r.position] ? `${MEDAL[r.position]} ` : ''}{r.position}º</td>
                         <td data-label="Participante"><Link to={`/users/${r.userId}`}>{r.name}</Link><div className="user-detail__meta">{r.email}</div></td>
@@ -98,7 +101,8 @@ export default function Leagues() {
                   </tbody>
                 </table>
               </div>
-              {g.rows.length > 50 && <p className="card-note">Mostrando os 50 primeiros de {g.rows.length}.</p>}
+                )}
+              </Paged>
             </div>
           ))}
           <p className="card-note">Admins não entram na classificação. No app aparece só o apelido ou o primeiro nome.</p>

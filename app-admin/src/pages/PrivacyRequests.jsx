@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 import { todayStr } from '../lib/community';
 import {
   CHANNEL_LABELS, DUE_DAYS, KIND_LABELS, STATUS_BADGE, STATUS_LABELS,
@@ -154,12 +155,16 @@ export default function PrivacyRequests() {
       {!items && !error && <Loading />}
       {items && items.length === 0 && !creating && <EmptyState icon="🔐" label="Nenhum pedido registrado." />}
       {items && items.length > 0 && (
+        <Paged items={items} size={40} label="Ver mais pedidos">
+          {visible => (
         <div className="table-wrap">
           <table className="resp-table">
             <thead><tr><th>Recebido</th><th>Quem</th><th>Pedido</th><th>Prazo</th><th>Situação</th><th>Notas</th><th /></tr></thead>
-            <tbody>{items.map(r => <RequestRow key={`${r.id}-${r.status}-${r.notes}`} req={r} onChanged={load} />)}</tbody>
+            <tbody>{visible.map(r => <RequestRow key={`${r.id}-${r.status}-${r.notes}`} req={r} onChanged={load} />)}</tbody>
           </table>
         </div>
+          )}
+        </Paged>
       )}
     </div>
   );

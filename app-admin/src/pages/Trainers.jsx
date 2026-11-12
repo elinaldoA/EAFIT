@@ -10,6 +10,7 @@ import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import TrainerResultsCard from '../components/TrainerResultsCard';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 import PersonStat from '../components/PersonStat';
 
 const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('pt-BR') : '—');
@@ -44,11 +45,13 @@ function TrainerInviteSignups({ trainerId, code }) {
       {rows.length === 0 ? (
         <p className="user-detail__meta">Ninguém criou conta pelo link ainda.</p>
       ) : (
+        <Paged items={rows} size={25} label="Ver mais cadastros">
+          {visible => (
         <div className="table-wrap">
           <table className="resp-table">
             <thead><tr><th>Usuário</th><th>Cadastro</th><th>E-mail confirmado</th><th>Último acesso</th><th>Treinos</th><th>Virou aluno</th></tr></thead>
             <tbody>
-              {rows.map(r => (
+              {visible.map(r => (
                 <tr key={r.userId}>
                   <td data-label="Usuário">
                     <Link to={`/users/${r.userId}`}>{r.email}</Link>
@@ -68,6 +71,8 @@ function TrainerInviteSignups({ trainerId, code }) {
             </tbody>
           </table>
         </div>
+          )}
+        </Paged>
       )}
     </div>
   );
@@ -106,11 +111,13 @@ function TrainerClients({ trainerId }) {
   if (rows.length === 0) return <p className="user-detail__meta">Nenhum aluno ativo.</p>;
 
   return (
+    <Paged items={rows} size={25} label="Ver mais alunos">
+      {visible => (
     <div className="table-wrap">
       <table className="resp-table">
         <thead><tr><th>Aluno</th><th>Vinculado em</th><th>Dias treinados (30d)</th><th>Último treino</th><th>Meta semanal</th><th>Último contato</th><th /></tr></thead>
         <tbody>
-          {rows.map(r => {
+          {visible.map(r => {
             const rate = goalRate(r.goalWeeks, r.goalHit);
             return (
               <tr key={r.userId}>
@@ -138,6 +145,8 @@ function TrainerClients({ trainerId }) {
         </tbody>
       </table>
     </div>
+      )}
+    </Paged>
   );
 }
 
@@ -294,8 +303,10 @@ export default function Trainers() {
       {ready && rows.length > 0 && (
         <>
           <h2 className="section-label" style={{ margin: '0 0 12px' }}>Personais liberados</h2>
+          <Paged items={rows} size={20} resetKey={String(days)} label="Ver mais personais">
+            {visible => (
           <ul className="pcard-list">
-            {rows.map(r => {
+            {visible.map(r => {
               const a = activity[r.tc_user];
               const rate = confirmRate(a);
               const inv = invites[r.tc_user];
@@ -365,6 +376,8 @@ export default function Trainers() {
               );
             })}
           </ul>
+            )}
+          </Paged>
         </>
       )}
 

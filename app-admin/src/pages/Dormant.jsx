@@ -11,6 +11,7 @@ import { useAdminAccess } from '../context/useAdminAccess';
 import MessageEditor from '../components/MessageEditor';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 
 const fmtDay = d => (d ? new Date(`${d}T12:00:00`).toLocaleDateString('pt-BR') : 'nunca');
 
@@ -161,6 +162,8 @@ export default function Dormant() {
       {people && !error && people.length === 0 && <EmptyState icon="🎉" label="Ninguém sumido nesse período." />}
 
       {people && people.length > 0 && (
+        <Paged items={people} size={50} resetKey={String(days)} label="Ver mais pessoas">
+          {visible => (
         <div className="table-wrap">
           <table className="resp-table">
             <thead>
@@ -176,7 +179,7 @@ export default function Dormant() {
               </tr>
             </thead>
             <tbody>
-              {people.map(p => (
+              {visible.map(p => (
                 <tr key={p.id}>
                   <td data-label="">
                     <input type="checkbox" aria-label={`Selecionar ${p.email}`} checked={selected.has(p.id)} onChange={() => toggle(p.id)} />
@@ -196,6 +199,8 @@ export default function Dormant() {
             </tbody>
           </table>
         </div>
+          )}
+        </Paged>
       )}
     </div>
   );

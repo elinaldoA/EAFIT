@@ -101,3 +101,32 @@ describe('Dormant', () => {
     expect(await screen.findByText('not_authorized')).toBeTruthy();
   });
 });
+
+describe('Dormant com lista longa', () => {
+  const MANY = Array.from({ length: 60 }, (_, i) => ({
+    ...PEOPLE[0], id: `m${i}`, email: `p${i}@x.com`, name: `Pessoa ${i}`,
+  }));
+
+  it('mostra 50 por vez e libera o resto em "Ver mais", sem perder o "selecionar todos"', async () => {
+    lib.fetchDormant.mockResolvedValue(MANY);
+    wrap(<Dormant />);
+    expect(await screen.findByText('Pessoa 0')).toBeTruthy();
+    expect(screen.queryByText('Pessoa 59')).toBeNull();
+    expect(screen.getAllByRole('checkbox', { name: /^Selecionar p/ })).toHaveLength(50);
+
+    // a seleção vale para as 60, não só para as 50 que estão na tela:
+    // por padrão todos vêm marcados; desmarcar e marcar de novo age sobre a lista inteira
+    const all = screen.getByRole('checkbox', { name: 'Selecionar todos' });
+    expect(all.checked).toBe(true);
+    fireEvent.click(all);
+    expect(all.checked).toBe(false);
+    fireEvent.click(all);
+    expect(all.checked).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: /Ver mais pessoas \(10 restantes\)/ }));
+    expect(screen.getByText('Pessoa 59')).toBeTruthy();
+    expect(screen.getAllByRole('checkbox', { name: /^Selecionar p/ })).toHaveLength(60);
+    expect(screen.getByRole('checkbox', { name: 'Selecionar p59@x.com' }).checked).toBe(true);
+    expect(screen.queryByRole('button', { name: /Ver mais pessoas/ })).toBeNull();
+  });
+});

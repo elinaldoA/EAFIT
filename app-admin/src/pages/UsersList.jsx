@@ -8,6 +8,8 @@ import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { METAS, NIVEIS } from '../lib/userDetailHelpers';
+
+const PAGE_SIZES = [25, 50, 100];
 import { toggleId, toggleAll, bulkAction, bulkNotify, summarize } from '../lib/bulkActions';
 
 const CSV_COLUMNS = [
@@ -85,6 +87,7 @@ export default function UsersList() {
   const [nivel, setNivel] = useState('');
   const [meta, setMeta] = useState('');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [segments, setSegments] = useState([]);
   const [segmentMsg, setSegmentMsg] = useState('');
   const [selected, setSelected] = useState(() => new Set());
@@ -141,14 +144,35 @@ export default function UsersList() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    fetchPage({ search, status, sort, nivel, meta, page })
+    fetchPage({ search, status, sort, nivel, meta, page, pageSize })
       .then(({ rows, total }) => { if (active) { rows.forEach(r => seenRows.current.set(r.id, r)); setUsers(rows); setTotal(total); } })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [search, status, sort, nivel, meta, page]);
+  }, [search, status, sort, nivel, meta, page, pageSize]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  // Mesma barra no topo e no fim da tabela: com 50+ linhas, só no fim ninguém a encontra.
+  const pager = total > 0 && (
+    <div className="page-header">
+      <p className="user-detail__meta">
+        {total} usuário(s) · página {page + 1} de {totalPages}
+      </p>
+      <div className="actions-row">
+        <select
+          className="input" value={pageSize} aria-label="Usuários por página"
+          onChange={e => { setPageSize(Number(e.target.value)); setPage(0); }}
+        >
+          {PAGE_SIZES.map(n => <option key={n} value={n}>{n} por página</option>)}
+        </select>
+        <button className="btn btn--small" disabled={page === 0} onClick={() => setPage(0)} aria-label="Primeira página">«</button>
+        <button className="btn btn--small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</button>
+        <button className="btn btn--small" disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)}>Próxima</button>
+        <button className="btn btn--small" disabled={page + 1 >= totalPages} onClick={() => setPage(totalPages - 1)} aria-label="Última página">»</button>
+      </div>
+    </div>
+  );
 
   async function handleExport() {
     // Exporta a base filtrada inteira (não só a página atual), com o mesmo
@@ -182,7 +206,7 @@ export default function UsersList() {
   const handleBulkBan = (action, verb, confirmText) => handleBulk(verb, confirmText, async () => {
     const res = await bulkAction(action, bannable);
     setSelected(new Set());
-    setUsers(await fetchPage({ search, status, sort, nivel, meta, page }).then(r => r.rows));
+    setUsers(await fetchPage({ search, status, sort, nivel, meta, page, pageSize }).then(r => r.rows));
     return summarize(res, verb);
   });
 
@@ -269,6 +293,7 @@ export default function UsersList() {
 
       {!loading && !error && (
         <>
+          {pager}
           <div className="table-wrap"><table className="resp-table users-table">
             <thead>
               <tr>
@@ -323,17 +348,7 @@ export default function UsersList() {
             </tbody>
           </table></div>
 
-          {total > 0 && (
-            <div className="page-header">
-              <p className="user-detail__meta">
-                {total} usuário(s) · página {page + 1} de {totalPages}
-              </p>
-              <div className="actions-row">
-                <button className="btn btn--small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</button>
-                <button className="btn btn--small" disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)}>Próxima</button>
-              </div>
-            </div>
-          )}
+          {pager}
         </>
       )}
     </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 import { setFeedBlock } from '../lib/community';
 import {
   REASON_LABELS, STATUS_LABELS, blockUser, fetchModeration, ignoreReport, parseWords, removePost, reopenReport, saveWords,
@@ -86,11 +87,13 @@ export default function Moderation() {
       {!data && !error && <Loading />}
 
       {data && view !== 'sinalizados' && (reports.length === 0 ? <EmptyState icon="🛡️" label={view === 'aberta' ? 'Nenhuma denúncia aberta.' : 'Nenhuma denúncia resolvida.'} /> : (
+        <Paged items={reports} size={30} resetKey={view} label="Ver mais denúncias">
+          {visible => (
         <div className="table-wrap">
           <table className="resp-table">
             <thead><tr><th>Publicação</th><th>Quem publicou</th><th>Motivos</th><th>Denúncias</th><th>Quando</th><th /></tr></thead>
             <tbody>
-              {reports.map(r => {
+              {visible.map(r => {
                 const key = `${r.eventId}-${r.userId}`;
                 return (
                   <tr key={key}>
@@ -131,6 +134,8 @@ export default function Moderation() {
             </tbody>
           </table>
         </div>
+          )}
+        </Paged>
       ))}
 
       {data && view === 'sinalizados' && (

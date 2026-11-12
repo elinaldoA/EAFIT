@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 import { fetchUsers } from '../lib/users';
 import {
   HISTORY_FILTERS, fetchBroadcastHistory, filterHistory, mergeHistory,
@@ -21,7 +22,7 @@ export default function BroadcastHistory() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchBroadcastHistory(), fetchUsers().catch(() => [])])
+    Promise.all([fetchBroadcastHistory(300), fetchUsers().catch(() => [])])
       .then(([{ audit, auto }, users]) => {
         if (!active) return;
         const emailById = Object.fromEntries(users.map(u => [u.id, u.email]));
@@ -56,12 +57,14 @@ export default function BroadcastHistory() {
       {!loading && !error && visible.length === 0 && <EmptyState icon="🔔" label="Nenhum envio por aqui ainda." />}
 
       {!loading && !error && visible.length > 0 && (
+        <Paged items={visible} size={30} resetKey={filter} label="Ver mais envios">
+          {shown => (
         <table className="resp-table">
           <thead>
             <tr><th>Quando</th><th>Origem</th><th>Título</th><th>Mensagem</th><th>Destino</th><th>Entregues</th></tr>
           </thead>
           <tbody>
-            {visible.map(i => (
+            {shown.map(i => (
               <tr key={i.id}>
                 <td data-label="Quando">{formatDate(i.at)}</td>
                 <td data-label="Origem">{ORIGIN_LABEL[i.origin]}{i.kind ? ` · ${i.kind}` : ''}</td>
@@ -73,8 +76,10 @@ export default function BroadcastHistory() {
             ))}
           </tbody>
         </table>
+          )}
+        </Paged>
       )}
-      <p className="user-detail__meta">Mostra os últimos 100 de cada tipo. "Entregues" conta o que o serviço de push aceitou; quem leu, abriu o app e treinou depois está em Comunicação → Resultados.</p>
+      <p className="user-detail__meta">Mostra os últimos 300 de cada tipo. "Entregues" conta o que o serviço de push aceitou; quem leu, abriu o app e treinou depois está em Comunicação → Resultados.</p>
     </div>
   );
 }

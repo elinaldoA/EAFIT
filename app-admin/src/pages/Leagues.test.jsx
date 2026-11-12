@@ -50,3 +50,16 @@ describe('Leagues', () => {
     expect(await screen.findByText('Mês fechado. 1 medalha(s) entregue(s).')).toBeTruthy();
   });
 });
+
+describe('Leagues com divisão grande', () => {
+  it('mostra 50 participantes e libera o resto em "Ver mais" (sem o aviso fixo de "50 primeiros")', async () => {
+    const rows = Array.from({ length: 60 }, (_, i) => row(`u${i}`, 'ouro', 20 - Math.floor(i / 5), i + 1));
+    lib.fetchLeague.mockResolvedValue({ rows, closed: false, enabled: true });
+    render(<MemoryRouter><Leagues /></MemoryRouter>);
+    expect(await screen.findByText('U0')).toBeTruthy();
+    expect(screen.queryByText('U59')).toBeNull();
+    expect(screen.queryByText(/Mostrando os 50 primeiros/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Ver mais participantes \(10 restantes\)/ }));
+    expect(screen.getByText('U59')).toBeTruthy();
+  });
+});

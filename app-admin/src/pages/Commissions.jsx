@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { Paged } from '../components/ShowMore';
 import { downloadCsv, toCsv } from '../lib/csv';
 import {
   KIND_LABELS, PAYOUT_BADGE, PAYOUT_LABELS,
@@ -131,11 +132,13 @@ export default function Commissions() {
           {data.rows.length === 0 ? <EmptyState icon="🤝" label="Nenhum parceiro ativo ou com indicação no mês." /> : (
             <>
               <div className="actions-row"><button type="button" className="btn btn--ghost btn--small" onClick={exportCsv}>Exportar CSV do mês</button></div>
+              <Paged items={data.rows} size={30} resetKey={month} label="Ver mais parceiros">
+                {visible => (
               <div className="table-wrap">
                 <table className="resp-table">
                   <thead><tr><th>Parceiro</th><th>Indicações</th><th>Ativados</th><th>Por ativado</th><th>Calculado</th><th>Fechamento</th><th>Notas</th></tr></thead>
                   <tbody>
-                    {data.rows.map(r => (
+                    {visible.map(r => (
                       <tr key={r.id}>
                         <td data-label="Parceiro">
                           {r.userId ? <Link to={`/users/${r.userId}`}>{r.name}</Link> : r.name}
@@ -173,6 +176,8 @@ export default function Commissions() {
                   </tbody>
                 </table>
               </div>
+                )}
+              </Paged>
               <p className="card-note">* valor diferente do tipo para este parceiro. Indicações contam pelo mês do vínculo da conta (horário de Brasília).</p>
             </>
           )}
