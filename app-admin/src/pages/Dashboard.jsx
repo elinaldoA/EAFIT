@@ -9,6 +9,7 @@ import { fetchRadar } from '../lib/radar';
 import AudienceInsights from '../components/AudienceInsights';
 import GeoPanel from '../components/GeoPanel';
 import InstallPanel from '../components/InstallPanel';
+import NoveltyPanel from '../components/NoveltyPanel';
 
 function pctOf(part, total) {
   const p = Number(part);
@@ -91,6 +92,7 @@ const DASH_TABS = [
   { key: 'instalacoes', label: 'Instalações' },
   { key: 'ativacao', label: 'Ativação' },
   { key: 'retencao', label: 'Retenção' },
+  { key: 'novidades', label: 'Novidades' },
 ];
 
 export default function Dashboard() {
@@ -177,6 +179,7 @@ export default function Dashboard() {
       {tab === 'instalacoes' && <InstallPanel />}
       {tab === 'ativacao' && <ActivationFunnel />}
       {tab === 'retencao' && <RetentionCohorts />}
+      {tab === 'novidades' && <NoveltyPanel />}
     </div>
   );
 }
