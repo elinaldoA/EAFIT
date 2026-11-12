@@ -40,17 +40,20 @@ export const HIGHLIGHT_SCRIPTS = {
     { print: 'pt-alertas', headline: 'Alertas de quem sumiu', subline: 'Aja antes de perder o aluno' },
     { print: 'pt-agenda', headline: 'Agenda e conversa com o aluno', subline: 'Tudo no app' },
   ],
+  // Telas do modo do programa no app (prints de demonstração: usuária fictícia "Ana").
   embaixador: [
-    { print: null, headline: 'Seja embaixador EAFIT', subline: 'Indique o app e acompanhe quem entra pelo seu código' },
-    { print: null, headline: 'Seu código, seu link', subline: 'Cada cadastro pelo seu link fica ligado a você' },
-    { print: null, headline: 'Painel no Perfil', subline: 'Veja quantas pessoas se cadastraram' },
+    { print: 'emb-painel', headline: 'Seja embaixador EAFIT', subline: 'Indique o app e acompanhe seus resultados' },
+    { print: 'emb-link', headline: 'Seu código, seu link', subline: 'Cada cadastro pelo seu link fica ligado a você' },
+    { print: 'emb-numeros', headline: 'Painel de resultados', subline: 'Visitas, cadastros e canais, dia a dia' },
+    { print: 'emb-recados', headline: 'Recados da equipe', subline: 'Novidades e metas direto no app' },
     { print: null, headline: 'Quer participar?', subline: 'Fale com a gente pelo link da bio' },
   ],
   influenciador: [
-    { print: null, headline: 'Programa de influenciadores', subline: 'Divulgue o EAFIT com seu link e QR Code' },
-    { print: null, headline: 'Seu link e seu QR Code', subline: 'Cada cadastro entra nos seus resultados' },
-    { print: null, headline: 'Metas e marcos', subline: 'De 1 a 1.000 cadastros, acompanhe cada marco' },
-    { print: null, headline: 'Material pronto para divulgar', subline: 'Textos e artes na aba Divulgar' },
+    { print: 'infl-painel', headline: 'Seu painel de influenciador', subline: 'Cadastros, metas e ranking, tudo no app' },
+    { print: 'infl-link', headline: 'Seu link e seu QR Code', subline: 'Cada cadastro entra nos seus resultados' },
+    { print: 'infl-textos', headline: 'Textos prontos para postar', subline: 'Bio, stories e WhatsApp, já com o seu link' },
+    { print: 'infl-material', headline: 'Material da equipe', subline: 'Logos, prints e vídeos prontos para divulgar' },
+    { print: 'infl-numeros', headline: 'Seus números', subline: 'Visitas, cadastros e canais, dia a dia' },
     { print: null, headline: 'Quer participar?', subline: 'Link na bio: eafit.com.br' },
   ],
 };
