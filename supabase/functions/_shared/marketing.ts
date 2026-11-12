@@ -521,6 +521,7 @@ export type AdRow = {
   status: string; // effective_status da Meta (ACTIVE, PAUSED, ...)
   thumb_url: string | null;
   permalink: string | null; // post promovido (Instagram direto; Facebook pelo id do post)
+  post_id: string | null; // id do post promovido (Facebook: Página_post; Instagram: id da mídia)
   spend: number; // na moeda da conta
   impressions: number;
   reach: number;
@@ -536,7 +537,7 @@ export async function fetchAds(api: Api, adAccountId: string, days: number, now 
   const since = toDay(new Date(now.getTime() - Math.max(1, days) * 86_400_000));
   const range = JSON.stringify({ since, until });
   const res = await api.get(`/act_${adAccountId}/ads`, {
-    fields: `id,name,effective_status,creative{thumbnail_url,instagram_permalink_url,effective_object_story_id},insights.time_range(${range}){spend,impressions,reach,clicks,inline_link_clicks,actions}`,
+    fields: `id,name,effective_status,creative{thumbnail_url,instagram_permalink_url,effective_object_story_id,source_instagram_media_id},insights.time_range(${range}){spend,impressions,reach,clicks,inline_link_clicks,actions}`,
     limit: 100,
   });
   const rows: AdRow[] = [];
@@ -552,6 +553,7 @@ export async function fetchAds(api: Api, adAccountId: string, days: number, now 
     rows.push({
       id: String(ad.id), name: String(ad.name || ''), status: String(ad.effective_status || ''),
       thumb_url: (creative.thumbnail_url as string) || null,
+      post_id: story || (creative.source_instagram_media_id as string) || null,
       permalink: (creative.instagram_permalink_url as string) || (story ? `https://www.facebook.com/${story}` : null),
       spend: num(ins.spend) || 0, impressions: num(ins.impressions) || 0, reach: num(ins.reach) || 0,
       clicks: num(ins.inline_link_clicks) ?? num(ins.clicks) ?? 0, results,

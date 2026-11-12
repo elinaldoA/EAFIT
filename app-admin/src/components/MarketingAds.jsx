@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AD_STATUS_LABEL, adTotals, fetchAds } from '../lib/marketing';
+import { AD_STATUS_LABEL, KIND_LABEL, PLATFORMS, adTotals, fetchAds, promoCandidates } from '../lib/marketing';
 import Loading from './Loading';
 import EmptyState from './EmptyState';
 import { Paged } from './ShowMore';
@@ -18,7 +18,7 @@ function money(value, currency = 'BRL') {
 // Marketing → Resultados → Posts promovidos: o que cada anúncio da Meta gastou e rendeu.
 // Só leitura (permissão ads_read); a campanha continua sendo criada no Instagram ou no
 // Gerenciador de Anúncios.
-export default function MarketingAds({ days }) {
+export default function MarketingAds({ days, metrics = [], accounts: networkAccounts = [] }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
@@ -38,6 +38,8 @@ export default function MarketingAds({ days }) {
   const single = currencies.length === 1 ? currencies[0] : null;
   const totals = useMemo(() => adTotals(ads), [ads]);
   const failed = accounts.filter(a => a.error);
+  const suggestions = useMemo(() => (data ? promoCandidates(metrics, ads) : []), [data, metrics, ads]);
+  const networkOf = m => networkAccounts.find(a => a.id === m.account_id)?.platform;
 
   return (
     <section className="card stack" aria-label="Posts promovidos">
@@ -101,6 +103,40 @@ export default function MarketingAds({ days }) {
             compare com “Cadastros vindos das redes” acima.
           </p>
         </>
+      )}
+
+      {data && (
+        <div className="stack" aria-label="Posts com potencial de promoção">
+          <h3 className="section-title">Próximos para promover</h3>
+          {suggestions.length === 0 && (
+            <p className="user-detail__meta">Nenhum post dos últimos 30 dias engajou o bastante para sugerir (ou os que engajaram já estão promovidos).</p>
+          )}
+          {suggestions.map(m => (
+            <div key={`${m.account_id}-${m.external_id}`} className="mkt-row mkt-row--metric">
+              {m.thumb_url ? <img className="mkt-row__thumb" src={m.thumb_url} alt="" loading="lazy" /> : <span className="mkt-row__thumb mkt-row__thumb--empty" aria-hidden="true" />}
+              <div className="mkt-row__main">
+                <div className="mkt-row__title">
+                  <span className="badge">{KIND_LABEL[m.kind] || m.kind}</span>
+                  <span className="badge">{PLATFORMS[networkOf(m)]?.label || '–'}</span>
+                  {m.confidence === 'baixa' && <span className="badge">poucos dados</span>}
+                </div>
+                <div className="mkt-row__caption">{(String(m.caption || '').split('\n')[0] || '(sem legenda)').slice(0, 90)}</div>
+                <div className="user-detail__meta">
+                  {fmt(m.likes)} curtidas · {fmt(m.comments)} comentários{m.saves ? ` · ${fmt(m.saves)} salvos` : ''}{m.shares ? ` · ${fmt(m.shares)} compart.` : ''}
+                  {m.rate !== null ? ` · ${m.rate.toLocaleString('pt-BR')}% de engajamento sobre o alcance` : ''}
+                  {m.vsAverage ? ` · ${m.vsAverage.toLocaleString('pt-BR')}× a média da conta` : ''}
+                </div>
+                {m.permalink && <a href={m.permalink} target="_blank" rel="noreferrer">ver post</a>}
+              </div>
+            </div>
+          ))}
+          {suggestions.length > 0 && (
+            <p className="user-detail__meta">
+              Ordem por engajamento em relação à média da própria conta, sem os posts que já têm anúncio. Para promover, abra o post
+              no Instagram ou no Facebook e toque em “Impulsionar”. Com poucas curtidas o ranking é só uma pista: o alcance ajuda a decidir.
+            </p>
+          )}
+        </div>
       )}
     </section>
   );

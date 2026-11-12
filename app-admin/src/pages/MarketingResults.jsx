@@ -235,7 +235,7 @@ export default function MarketingResults() {
         </section>
       )}
 
-      <MarketingAds days={days} />
+      <MarketingAds days={days} metrics={metrics || []} accounts={accounts} />
 
       <section className="card stack" aria-label="Desempenho dos posts">
         <h2 className="section-title">Desempenho dos posts</h2>

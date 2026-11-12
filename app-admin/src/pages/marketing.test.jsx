@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 const { lib } = vi.hoisted(() => ({
@@ -580,6 +580,28 @@ describe('Resultados', () => {
     lib.fetchAds.mockResolvedValue({ accounts: [{ id: '99', name: 'EAFIT', currency: 'BRL', error: 'Acesso vencido' }], ads: [] });
     wrap(<MarketingResults />);
     expect(await screen.findByText(/Acesso vencido/)).toBeTruthy();
+  });
+
+  it('sugere o próximo post para promover, sem os que já têm anúncio', async () => {
+    const old = h => new Date(Date.now() - h * 3_600_000).toISOString();
+    lib.fetchMetrics.mockResolvedValue([
+      { account_id: 'a2', external_id: 'm1', permalink: 'https://ig/p/1/', caption: 'Já promovido', kind: 'reel', thumb_url: null, posted_at: old(72), likes: 40, comments: 5, shares: 3, saves: 8, reach: 900, views: 2000, insights_ok: true },
+      { account_id: 'a2', external_id: 'm2', permalink: 'https://ig/p/2/', caption: 'Candidato forte', kind: 'carousel', thumb_url: null, posted_at: old(96), likes: 30, comments: 4, shares: 2, saves: 12, reach: 500, views: null, insights_ok: true },
+      { account_id: 'a2', external_id: 'm3', permalink: 'https://ig/p/3/', caption: 'Fraco', kind: 'image', thumb_url: null, posted_at: old(100), likes: 1, comments: 0, shares: 0, saves: 0, reach: 800, views: null, insights_ok: true },
+      { account_id: 'a2', external_id: 'm4', permalink: 'https://ig/p/4/', caption: 'Recém-postado', kind: 'image', thumb_url: null, posted_at: old(2), likes: 50, comments: 9, shares: 0, saves: 0, reach: 100, views: null, insights_ok: true },
+    ]);
+    lib.fetchAccounts.mockResolvedValue([{ id: 'a2', platform: 'instagram', name: 'EAFIT' }]);
+    lib.fetchAds.mockResolvedValue({
+      accounts: [{ id: '99', name: 'EAFIT', currency: 'BRL' }],
+      ads: [{ id: 'ad1', account: '99', name: 'Anúncio', status: 'ACTIVE', thumb_url: null, permalink: 'https://ig/p/1', post_id: null, spend: 5, impressions: 100, reach: 90, clicks: 3, results: 0 }],
+    });
+    wrap(<MarketingResults />);
+    expect(await screen.findByText('Próximos para promover')).toBeTruthy();
+    const box = within(screen.getByLabelText('Posts com potencial de promoção'));
+    expect(box.getByText('Candidato forte')).toBeTruthy();
+    expect(box.queryByText('Já promovido')).toBeNull(); // tem anúncio (mesmo link, com barra no fim)
+    expect(box.queryByText('Recém-postado')).toBeNull(); // menos de 24 h: métrica ainda não assentou
+    expect(box.queryByText('Fraco')).toBeNull(); // quase sem engajamento
   });
 
   it('filtra por rede e atualiza as métricas na hora', async () => {

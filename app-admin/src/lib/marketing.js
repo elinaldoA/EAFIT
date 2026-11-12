@@ -808,3 +808,40 @@ export function adTotals(ads) {
   }), { spend: 0, reach: 0, impressions: 0, clicks: 0, results: 0 });
   return { ...t, cpc: t.clicks ? t.spend / t.clicks : null, cpm: t.impressions ? (t.spend / t.impressions) * 1000 : null, cpr: t.results ? t.spend / t.results : null };
 }
+
+const normLink = u => String(u || '').split('?')[0].replace(/\/+$/, '').toLowerCase();
+const weighted = m => (m.likes || 0) + 2 * (m.comments || 0) + 3 * (m.saves || 0) + 3 * (m.shares || 0);
+
+// Posts orgânicos recentes com mais chance de render bem se forem promovidos: os que mais
+// engajaram em relação à média da própria conta (curtidas, comentários x2, salvos e
+// compartilhamentos x3; com alcance, a taxa sobre o alcance), sem os que já têm anúncio.
+// `confidence` fica 'baixa' quando a base é pequena (sem alcance ou poucas interações).
+export function promoCandidates(metrics, ads, { now = Date.now(), days = 30, limit = 5 } = {}) {
+  const promotedIds = new Set((ads || []).map(a => a.post_id).filter(Boolean));
+  const promotedLinks = new Set((ads || []).map(a => normLink(a.permalink)).filter(Boolean));
+  const recent = (metrics || []).filter(m => {
+    if (!m.posted_at) return false;
+    const age = now - new Date(m.posted_at).getTime();
+    return age >= 86_400_000 && age <= days * 86_400_000;
+  });
+  const byAccount = new Map();
+  for (const m of recent) {
+    const g = byAccount.get(m.account_id) || { sum: 0, n: 0 };
+    g.sum += m.reach > 0 ? weighted(m) / m.reach : weighted(m);
+    g.n += 1;
+    byAccount.set(m.account_id, g);
+  }
+  return recent
+    .filter(m => !promotedIds.has(m.external_id) && !promotedLinks.has(normLink(m.permalink)))
+    .map(m => {
+      const w = weighted(m);
+      const rate = m.reach > 0 ? w / m.reach : null;
+      const g = byAccount.get(m.account_id);
+      const avg = g.sum / g.n;
+      const own = rate ?? w;
+      return { ...m, weighted: w, rate: rate === null ? null : Math.round(rate * 1000) / 10, vsAverage: avg > 0 ? Math.round((own / avg) * 10) / 10 : null, confidence: m.reach > 0 && w >= 10 ? 'ok' : 'baixa' };
+    })
+    .filter(m => m.weighted >= 2)
+    .sort((a, b) => (b.vsAverage ?? 0) - (a.vsAverage ?? 0) || b.weighted - a.weighted)
+    .slice(0, limit);
+}

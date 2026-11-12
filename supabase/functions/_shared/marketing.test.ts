@@ -302,5 +302,6 @@ Deno.test('anúncios: lista as contas e soma gasto, alcance e cliques por anúnc
   assertEquals(ads[1].permalink, 'https://instagram.com/p/x/');
   assertEquals(ads[0].clicks, 120); // sem inline_link_clicks cai nos cliques totais
   assertEquals(ads[0].permalink, 'https://www.facebook.com/P1_55');
+  assertEquals(ads[0].post_id, 'P1_55');
   assertEquals(calls[1].params.fields.includes('"since":"2026-10-13"'), true);
 });
