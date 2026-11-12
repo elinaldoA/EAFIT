@@ -130,3 +130,17 @@ describe('Dormant com lista longa', () => {
     expect(screen.queryByRole('button', { name: /Ver mais pessoas/ })).toBeNull();
   });
 });
+
+describe('Dormant no limite do servidor', () => {
+  it('avisa quando a lista chega a 1.000 pessoas (pode haver mais)', async () => {
+    lib.fetchDormant.mockResolvedValue(Array.from({ length: 1000 }, (_, i) => ({ ...PEOPLE[0], id: `c${i}`, email: `c${i}@x.com`, name: `Cap ${i}` })));
+    wrap(<Dormant />);
+    expect(await screen.findByText(/chegou ao limite de 1\.000 pessoas/)).toBeTruthy();
+  });
+
+  it('não avisa com uma lista normal', async () => {
+    wrap(<Dormant />);
+    await screen.findByText('Ana');
+    expect(screen.queryByText(/chegou ao limite/)).toBeNull();
+  });
+});

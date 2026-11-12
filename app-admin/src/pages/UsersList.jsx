@@ -4,6 +4,7 @@ import { useAdminAuth } from '../context/useAdminAuth';
 import { useAdminAccess } from '../context/useAdminAccess';
 import { fetchSegments, createSegment, hasFilters } from '../lib/segments';
 import { fetchUsersPage, fetchDeactivatedIds, PAGE_SIZE } from '../lib/users';
+import { exportCutNotice } from '../lib/listLimits';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
@@ -88,6 +89,7 @@ export default function UsersList() {
   const [meta, setMeta] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const [exportMsg, setExportMsg] = useState('');
   const [segments, setSegments] = useState([]);
   const [segmentMsg, setSegmentMsg] = useState('');
   const [selected, setSelected] = useState(() => new Set());
@@ -178,8 +180,10 @@ export default function UsersList() {
     // Exporta a base filtrada inteira (não só a página atual), com o mesmo
     // filtro em vigor — pra isso vale a pena um limite bem alto em vez de
     // paginar N vezes.
-    const { rows } = await fetchPage({ search, status, sort, nivel, meta, page: 0, pageSize: 10000 });
+    const { rows, total: all } = await fetchPage({ search, status, sort, nivel, meta, page: 0, pageSize: 10000 });
     downloadCsv('usuarios.csv', toCsv(rows, CSV_COLUMNS));
+    // O servidor pode cortar a resposta: avisa em vez de entregar um CSV incompleto sem dizer.
+    setExportMsg(exportCutNotice(rows.length, all));
   }
 
   const selectedRows = [...selected].map(id => seenRows.current.get(id)).filter(Boolean);
@@ -286,6 +290,7 @@ export default function UsersList() {
           <button className="btn btn--ghost btn--small" disabled={bulkBusy} onClick={() => setSelected(new Set())}>Limpar seleção</button>
         </div>
       )}
+      {exportMsg && <p className="form-msg form-msg--error" role="alert">{exportMsg}</p>}
       {bulkMsg && <p className={`form-msg ${bulkMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{bulkMsg}</p>}
       {segmentMsg && <p className={`form-msg ${segmentMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{segmentMsg}</p>}
       {loading && <Loading />}

@@ -12,6 +12,7 @@ import MessageEditor from '../components/MessageEditor';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { Paged } from '../components/ShowMore';
+import { capNotice } from '../lib/listLimits';
 
 const fmtDay = d => (d ? new Date(`${d}T12:00:00`).toLocaleDateString('pt-BR') : 'nunca');
 
@@ -159,6 +160,7 @@ export default function Dormant() {
 
       {!people && <Loading />}
       {error && <p className="form-msg form-msg--error">{error}</p>}
+      {people && !error && capNotice(people.length, 'pessoas') && <p className="form-msg form-msg--error" role="alert">{capNotice(people.length, 'pessoas')}</p>}
       {people && !error && people.length === 0 && <EmptyState icon="🎉" label="Ninguém sumido nesse período." />}
 
       {people && people.length > 0 && (

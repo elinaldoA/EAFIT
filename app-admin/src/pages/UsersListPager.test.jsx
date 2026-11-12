@@ -10,6 +10,7 @@ vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../context/useAdminAuth', () => ({ useAdminAuth: () => ({ adminUser: { id: 'adm1' } }) }));
 vi.mock('../context/useAdminAccess', () => ({ useAdminAccess: () => ({ can: () => true }) }));
 vi.mock('../lib/users', async orig => ({ ...(await orig()), fetchUsersPage: lib.fetchUsersPage, fetchDeactivatedIds: lib.fetchDeactivatedIds }));
+vi.mock('../lib/csv', async orig => ({ ...(await orig()), downloadCsv: vi.fn() }));
 vi.mock('../lib/segments', async orig => ({ ...(await orig()), fetchSegments: lib.fetchSegments }));
 
 import UsersList from './UsersList';
@@ -57,5 +58,24 @@ describe('UsersList — paginação', () => {
     fireEvent.change(screen.getAllByLabelText('Usuários por página')[0], { target: { value: '25' } });
     await waitFor(() => expect(lib.fetchUsersPage).toHaveBeenLastCalledWith(expect.objectContaining({ page: 0, pageSize: 25 })));
     expect((await screen.findAllByText(/120 usuário\(s\) · página 1 de 5/)).length).toBe(2);
+  });
+});
+
+describe('UsersList — exportação cortada', () => {
+  it('avisa quando o servidor devolve menos usuários do que existem', async () => {
+    wrap();
+    await screen.findByText('u1@x.com');
+    // a exportação pede 10.000 linhas, mas só chegam 2 de 120
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar CSV' }));
+    expect(await screen.findByText(/Exportei só 2 de 120/)).toBeTruthy();
+  });
+
+  it('não avisa quando a exportação veio completa', async () => {
+    lib.fetchUsersPage.mockResolvedValue({ rows: [user(1), user(2)], total: 2 });
+    wrap();
+    await screen.findByText('u1@x.com');
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar CSV' }));
+    await waitFor(() => expect(lib.fetchUsersPage).toHaveBeenCalledWith(expect.objectContaining({ pageSize: 10000 })));
+    expect(screen.queryByText(/Exportei só/)).toBeNull();
   });
 });
