@@ -74,18 +74,44 @@ async function saveAccount(account: SavedAccount, token: string, adminId: string
 }
 
 // Contas de anúncios (só leitura, para Marketing -> Resultados -> Posts promovidos).
-// Sem a permissão ads_read, ou sem conta de anúncios, a conexão segue normalmente.
-async function saveAdAccounts(userToken: string, adminId: string) {
+// Nunca derruba a conexão: devolve uma linha para o aviso de "conectado" dizendo o que
+// aconteceu (e por que, quando não achou nenhuma conta).
+async function saveAdAccounts(userToken: string, adminId: string): Promise<string> {
   try {
-    const accounts = await fetchAdAccounts(makeApi(fetch, GRAPH_BASE, userToken));
-    if (!accounts.length) return;
+    const api = makeApi(fetch, GRAPH_BASE, userToken);
+    const perms = await api.get('/me/permissions').catch(() => null);
+    const list = ((perms?.data as { permission: string; status: string }[]) || []);
+    if (list.length && !list.some((p) => p.permission === 'ads_read' && p.status === 'granted')) {
+      return 'Anúncios: a Meta não concedeu ads_read (acrescente a permissão na configuração do login e reconecte)';
+    }
+    const accounts = await fetchAdAccounts(api);
+    // Contas que ficam dentro da empresa (Business Manager) não aparecem em /me/adaccounts.
+    try {
+      const biz = await api.get('/me/businesses', { fields: 'id', limit: 20 });
+      for (const b of (biz.data as { id: string }[]) || []) {
+        for (const edge of ['owned_ad_accounts', 'client_ad_accounts']) {
+          const r = await api.get(`/${b.id}/${edge}`, { fields: 'account_id,name,currency,account_status', limit: 50 }).catch(() => null);
+          for (const a of ((r?.data as Record<string, unknown>[]) || [])) {
+            const id = String(a.account_id || '');
+            if (id && !accounts.some((x) => x.id === id)) {
+              accounts.push({ id, name: String(a.name || ''), currency: String(a.currency || 'BRL'), account_status: Number(a.account_status) || null });
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('marketing-oauth: contas de anúncios da empresa não lidas:', err);
+    }
+    if (!accounts.length) return 'Anúncios: nenhuma conta de anúncios encontrada para este login';
     const token_enc = await encryptToken(TOKEN_KEY, userToken);
     const { error } = await admin.from('marketing_ad_accounts').upsert(accounts.map((a) => ({
       ...a, token_enc, connected_by: adminId, connected_at: new Date().toISOString(),
     })));
     if (error) throw error;
+    return `Anúncios: ${accounts.length} conta(s)`;
   } catch (err) {
-    console.warn('marketing-oauth: contas de anúncios não salvas (falta ads_read?):', err);
+    console.warn('marketing-oauth: contas de anúncios não salvas:', err);
+    return `Anúncios: não ligados (${(err instanceof Error ? err.message : String(err)).slice(0, 150)})`;
   }
 }
 
@@ -106,7 +132,7 @@ async function connectMeta(code: string, adminId: string): Promise<string[]> {
   } catch (err) {
     console.warn('marketing-oauth: troca por token longo recusada, usando o original:', err);
   }
-  await saveAdAccounts(userToken, adminId);
+  const adsNote = await saveAdAccounts(userToken, adminId);
   const pages = await makeApi(fetch, GRAPH_BASE, userToken).get('/me/accounts', {
     fields: 'id,name,access_token,picture{url},instagram_business_account{id,username,name,profile_picture_url}',
     limit: 100,
@@ -126,6 +152,7 @@ async function connectMeta(code: string, adminId: string): Promise<string[]> {
       names.push(`Instagram: @${ig.username}`);
     }
   }
+  if (names.length) names.push(adsNote);
   return names;
 }
 
