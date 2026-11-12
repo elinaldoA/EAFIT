@@ -53,7 +53,6 @@ export const EXERCISE_VIDEOS = {
   'Afundo Estático com Barra': 'afundo-estatico-barra',
   'Afundo Caminhando': 'afundo-caminhando',
   'Passada com Barra': 'passada-barra',
-  'Leg Press 45°': 'leg-press-45',
   'Rosca Direta com Halteres': 'rosca-direta-halteres',
   'Rosca Scott Unilateral com Halter': 'rosca-scott-unilateral',
   'Encolhimento no Smith': 'encolhimento-smith',

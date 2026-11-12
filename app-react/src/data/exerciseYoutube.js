@@ -66,6 +66,7 @@ export const EXERCISE_YOUTUBE = {
   'Tríceps Pulley Pegada Invertida': { id: 'GqK6WrZEyEk', canal: 'Sergi Vids' },
   'Tríceps no Banco Declinado': { id: '25aRaLE2CkI', canal: 'Troy Brown' },
   'Agachamento Sumô com Kettlebell': { id: 'WepILpVDm4Y', canal: 'OPEX Fitness' },
+  'Leg Press 45°': { id: 'NY5fw4Zaofg', vertical: true, canal: 'Adrenalit' },
   'Leg Press 45° (unilateral)': { id: 'BsOg0iBKs6A', canal: 'josh cowan' },
   'Leg Press Unilateral': { id: 'BsOg0iBKs6A', canal: 'josh cowan' },
   'Afundo Búlgaro no Smith': { id: 'KNVO43Tyu7U', canal: 'Aaron Schiavone' },
