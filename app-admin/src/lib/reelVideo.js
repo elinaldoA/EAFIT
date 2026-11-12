@@ -1,5 +1,6 @@
 import { ArrayBufferTarget, Muxer } from 'mp4-muxer';
 import { DURATION, FPS, H, STORY_DROP, STORY_DURATION, W, drawReelFrame, drawStoryFrame } from './reelRender';
+import { drawHighlightFrame, highlightSeconds } from './highlightVideo';
 import { SAMPLE_RATE, synthTrack } from './reelAudio';
 
 // Gerador de Reel do painel: desenha os quadros (reelRender), sintetiza a trilha
@@ -31,14 +32,17 @@ async function drain(encoder, limit) {
 }
 
 // Codifica um vídeo vertical: `draw(ctx, img, t)` pinta cada quadro e a trilha
-// vem de `synthTrack(seconds, audio)`.
+// vem de `synthTrack(seconds, audio)`. `imageUrl` pode ser uma lista (vídeo com várias
+// cenas): `img` chega ao `draw` como lista, com null nas cenas sem print.
 async function renderVideo({ imageUrl, seconds, draw, audio: audioOptions, onProgress = () => {} }) {
   if (!canRenderReels()) throw new Error('Este navegador não gera vídeo. Use o Chrome ou o Edge atualizado.');
   const [video, audio] = await Promise.all([VideoEncoder.isConfigSupported(VIDEO), AudioEncoder.isConfigSupported(AUDIO)]);
   if (!video.supported) throw new Error('Este navegador não codifica vídeo H.264 em 1080×1920. Use o Chrome ou o Edge no computador.');
   if (!audio.supported) throw new Error('Este navegador não codifica áudio AAC, que o Instagram exige. Use o Chrome ou o Edge no computador.');
 
-  const img = await loadImage(imageUrl);
+  const img = Array.isArray(imageUrl)
+    ? await Promise.all(imageUrl.map(u => (u ? loadImage(u) : null)))
+    : await loadImage(imageUrl);
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -104,5 +108,18 @@ export function renderStory({ imageUrl, pill, title, sub, variant = 0, style = '
   return renderVideo({
     imageUrl, seconds: STORY_DURATION, draw: (ctx, img, t) => drawStoryFrame(ctx, story, img, t),
     audio: { style, sweeps: [STORY_DROP], shift: [0, 2, 3, 5, 7, -2][variant % 6] }, onProgress,
+  });
+}
+
+// Vídeo de um destaque: uma cena por item de `scenes` ([{ headline, subline, print: url ou null }]),
+// 4,5 s cada, com trilha leve. { scenes, onProgress(0..1) } → { blob, width, height, seconds }
+export function renderHighlight({ scenes, onProgress }) {
+  const seconds = highlightSeconds(scenes.length);
+  return renderVideo({
+    imageUrl: scenes.map(sc => sc.print || null),
+    seconds,
+    draw: (ctx, imgs, t) => drawHighlightFrame(ctx, scenes, imgs, t),
+    audio: { style: 'bright', sweeps: [] },
+    onProgress,
   });
 }

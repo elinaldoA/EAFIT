@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { COVER_H, COVER_W, HIGHLIGHTS, drawCover } from '../lib/highlightCovers';
-import { HIGHLIGHT_SCRIPTS, highlightSchedule } from '../lib/highlightScripts';
-import { PLATFORMS, createArt, createPost, createTextArt, fetchAccounts, printUrl, uploadMedia, validatePost } from '../lib/marketing';
+import { HIGHLIGHT_SCRIPTS } from '../lib/highlightScripts';
+import { highlightSeconds } from '../lib/highlightVideo';
+import { PLATFORMS, createPost, fetchAccounts, printUrl, uploadMedia, validatePost } from '../lib/marketing';
+import { canRenderReels, renderHighlight } from '../lib/reelVideo';
 import logoMark from '../assets/logo-mark.png';
 
 // Pré-visualização pequena (a imagem final é 1080×1920); o círculo tracejado mostra o que
@@ -39,12 +41,11 @@ function download(canvas, name) {
 // Marketing → Destaques: capas prontas (1080×1920) para os destaques do Instagram. O
 // Instagram não deixa criar destaque por API: baixe a imagem e, no app, adicione-a como
 // capa do destaque (Editar destaque → Editar capa → escolher da galeria).
-const GAPS = [{ min: 30, label: '30 min' }, { min: 60, label: '1 hora' }, { min: 120, label: '2 horas' }];
 const fmtWhen = iso => new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
-// Amanhã às 9h no horário local, no formato do campo datetime-local.
-function defaultStart() {
-  const d = new Date(Date.now() + 86_400_000);
+// Horário no formato do campo datetime-local: `daysAhead` dias depois de hoje, às 9h.
+function startAt(daysAhead) {
+  const d = new Date(Date.now() + daysAhead * 86_400_000);
   d.setHours(9, 0, 0, 0);
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
@@ -57,10 +58,12 @@ export default function MarketingHighlights() {
   const [msg, setMsg] = useState('');
   const [accounts, setAccounts] = useState([]);
   const [picked, setPicked] = useState([]);
-  const [start, setStart] = useState(defaultStart);
-  const [gap, setGap] = useState(60);
+  const [when, setWhen] = useState({}); // key -> datetime-local
+  const [videos, setVideos] = useState({}); // key -> { blob, url, seconds, width, height }
   const [busy, setBusy] = useState('');
   const [progress, setProgress] = useState('');
+  const videosRef = useRef({});
+  videosRef.current = videos;
 
   useEffect(() => {
     let alive = true;
@@ -77,6 +80,10 @@ export default function MarketingHighlights() {
     let alive = true;
     loadLogo().then(img => { if (alive) setLogo(img); });
     return () => { alive = false; };
+  }, []);
+
+  useEffect(() => () => {
+    Object.values(videosRef.current).forEach(v => URL.revokeObjectURL(v.url));
   }, []);
 
   useEffect(() => {
@@ -108,33 +115,52 @@ export default function MarketingHighlights() {
     }
   }
 
-  async function schedule(h) {
+  const keys = HIGHLIGHTS.filter(h => HIGHLIGHT_SCRIPTS[h.key]).map(h => h.key);
+  const whenOf = key => when[key] || startAt(1 + keys.indexOf(key));
+
+  async function generate(h) {
     const script = HIGHLIGHT_SCRIPTS[h.key] || [];
-    const chosen = accounts.filter(a => picked.includes(a.id));
-    const times = highlightSchedule(new Date(start).toISOString(), script.length, gap);
-    const errors = validatePost({ format: 'story', media: [{ type: 'image', url: 'x' }], accounts: chosen, scheduledAt: times[0] });
-    if (errors.length) { setMsg(`Erro: ${errors[0]}`); return; }
-    const where = chosen.map(a => `${PLATFORMS[a.platform].label}${a.username ? ` @${a.username}` : ''}`).join(' e ');
-    if (!window.confirm(`Agendar ${script.length} stories do destaque “${h.label}” em ${where}, de ${fmtWhen(times[0])} a ${fmtWhen(times[times.length - 1])}? Eles saem sozinhos nesses horários.`)) return;
     setBusy(h.key);
     setMsg('');
-    let done = 0;
     try {
-      for (const [i, item] of script.entries()) {
-        setProgress(`Criando story ${i + 1} de ${script.length}…`);
-        const art = item.print
-          ? await createArt({ imageUrl: printUrl(item.print), headline: item.headline, subline: item.subline, format: 'story' })
-          : await createTextArt({ headline: item.headline, subline: item.subline, format: 'story' });
-        const { url } = await uploadMedia({
-          file: new File([art.blob], `destaque-${h.key}-${i + 1}.jpg`, { type: 'image/jpeg' }),
-          title: `Destaque · ${h.label} · ${i + 1}`, width: art.width, height: art.height, adminId: adminUser?.id,
-        });
-        await createPost({ caption: '', media: [{ type: 'image', url }], accountIds: chosen.map(a => a.id), scheduledAt: times[i], format: 'story' });
-        done += 1;
-      }
-      setMsg(`${done} stories de “${h.label}” agendados. Acompanhe e cancele, se precisar, em Marketing → Publicar.`);
+      const out = await renderHighlight({
+        scenes: script.map(item => ({ ...item, print: item.print ? printUrl(item.print) : null })),
+        onProgress: v => setProgress(`Gerando o vídeo de “${h.label}”… ${Math.round(v * 100)}%`),
+      });
+      const url = URL.createObjectURL(out.blob);
+      setVideos(prev => {
+        if (prev[h.key]) URL.revokeObjectURL(prev[h.key].url);
+        return { ...prev, [h.key]: { ...out, url } };
+      });
+      setMsg(`Vídeo de “${h.label}” pronto (${out.seconds} s). Confira a prévia e agende.`);
     } catch (err) {
-      setMsg(`Erro: ${err.message}${done ? ` (${done} de ${script.length} já foram agendados: veja Marketing → Publicar)` : ''}`);
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy('');
+      setProgress('');
+    }
+  }
+
+  async function schedule(h) {
+    const video = videos[h.key];
+    const chosen = accounts.filter(a => picked.includes(a.id));
+    const at = new Date(whenOf(h.key)).toISOString();
+    const errors = validatePost({ format: 'story', media: [{ type: 'video', url: 'x' }], accounts: chosen, scheduledAt: at });
+    if (errors.length) { setMsg(`Erro: ${errors[0]}`); return; }
+    const where = chosen.map(a => `${PLATFORMS[a.platform].label}${a.username ? ` @${a.username}` : ''}`).join(' e ');
+    if (!window.confirm(`Agendar o vídeo do destaque “${h.label}” (${video.seconds} s) em ${where} para ${fmtWhen(at)}? Ele sai sozinho nesse horário.`)) return;
+    setBusy(h.key);
+    setMsg('');
+    try {
+      setProgress('Enviando o vídeo…');
+      const { url } = await uploadMedia({
+        file: new File([video.blob], `destaque-${h.key}.mp4`, { type: 'video/mp4' }),
+        title: `Destaque · ${h.label}`, width: video.width, height: video.height, adminId: adminUser?.id,
+      });
+      await createPost({ caption: '', media: [{ type: 'video', url }], accountIds: chosen.map(a => a.id), scheduledAt: at, format: 'story' });
+      setMsg(`Vídeo de “${h.label}” agendado para ${fmtWhen(at)}. Acompanhe e cancele, se precisar, em Marketing → Publicar.`);
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
     } finally {
       setBusy('');
       setProgress('');
@@ -186,21 +212,14 @@ export default function MarketingHighlights() {
       <section className="card stack" aria-label="Roteiro dos destaques">
         <h2 className="section-title">Roteiro e agendamento dos stories</h2>
         <p className="user-detail__meta">
-          Cada destaque tem uma sequência de stories pronta (print do app com texto, ou só texto). “Agendar” cria a arte, guarda na biblioteca
-          e agenda os stories nos horários escolhidos; eles saem sozinhos. Depois de publicados, adicione-os ao destaque pelo Arquivo do Instagram.
-          Depoimentos fica de fora: só vale com relato real e autorizado.
+          Cada destaque vira um vídeo só (story vertical): as telas do app, uma a uma, com título e música. “Gerar vídeo” monta no navegador
+          (leva cerca de um minuto; use o Chrome ou o Edge no computador), você confere a prévia e agenda. Depois de publicado, adicione o story ao
+          destaque pelo Arquivo do Instagram. Depoimentos fica de fora: só vale com relato real e autorizado.
         </p>
+        {!canRenderReels() && (
+          <p className="form-msg form-msg--error">Este navegador não gera vídeo. Abra o painel no Chrome ou no Edge, no computador.</p>
+        )}
         <div className="actions-row" style={{ flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
-          <label className="stack" style={{ gap: 4 }}>
-            <span className="user-detail__meta">Primeiro story</span>
-            <input className="input" type="datetime-local" value={start} onChange={e => setStart(e.target.value)} aria-label="Primeiro story" />
-          </label>
-          <label className="stack" style={{ gap: 4 }}>
-            <span className="user-detail__meta">Intervalo</span>
-            <select className="input" value={gap} onChange={e => setGap(Number(e.target.value))} aria-label="Intervalo entre stories">
-              {GAPS.map(g => <option key={g.min} value={g.min}>{g.label}</option>)}
-            </select>
-          </label>
           <div className="stack" style={{ gap: 4 }} role="group" aria-label="Contas">
             <span className="user-detail__meta">Publicar em</span>
             <div className="actions-row">
@@ -228,11 +247,27 @@ export default function MarketingHighlights() {
                 </li>
               ))}
             </ol>
-            <div className="actions-row">
-              <button type="button" className="btn btn--primary btn--small" disabled={!!busy || !picked.length} onClick={() => schedule(h)}>
-                {busy === h.key ? 'Agendando…' : `Agendar ${HIGHLIGHT_SCRIPTS[h.key].length} stories`}
+            <div className="actions-row" style={{ flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+              <button type="button" className="btn btn--small" disabled={!!busy || !canRenderReels()} onClick={() => generate(h)}>
+                {busy === h.key && progress.startsWith('Gerando') ? 'Gerando…' : videos[h.key] ? 'Gerar de novo' : `Gerar vídeo (${highlightSeconds(HIGHLIGHT_SCRIPTS[h.key].length)} s)`}
               </button>
             </div>
+            {videos[h.key] && (
+              <div className="stack">
+                <video src={videos[h.key].url} controls playsInline style={{ maxWidth: 220, borderRadius: 8 }} aria-label={`Prévia ${h.label}`} />
+                <div className="actions-row" style={{ flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+                  <label className="stack" style={{ gap: 4 }}>
+                    <span className="user-detail__meta">Sai em</span>
+                    <input className="input" type="datetime-local" value={whenOf(h.key)} aria-label={`Horário ${h.label}`}
+                      onChange={e => setWhen(w => ({ ...w, [h.key]: e.target.value }))} />
+                  </label>
+                  <a className="btn btn--ghost btn--small" href={videos[h.key].url} download={`destaque-${h.key}.mp4`}>Baixar vídeo</a>
+                  <button type="button" className="btn btn--primary btn--small" disabled={!!busy || !picked.length} onClick={() => schedule(h)}>
+                    Agendar vídeo
+                  </button>
+                </div>
+              </div>
+            )}
           </details>
         ))}
       </section>
