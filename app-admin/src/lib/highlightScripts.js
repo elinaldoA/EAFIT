@@ -3,12 +3,19 @@
 // arte só com texto. Depoimentos não entra aqui: só vale com relato real e autorizado.
 // Corrida fica de fora até o módulo ser liberado (nenhum print `run-*`).
 export const HIGHLIGHT_SCRIPTS = {
+  // Gravação do fluxo real de um aluno novo (lib/highlightFlows.js): dados sendo preenchidos no
+  // onboarding, ficha de saúde e o treino gerado. `at` = segundo da gravação em que a legenda troca.
   comecar: [
-    { print: 'criar-conta', headline: 'Seu treino no celular em 1 minuto', subline: 'Crie sua conta e comece hoje' },
-    { print: null, headline: 'Sem baixar da loja', subline: 'Abra eafit.com.br no celular e adicione à tela inicial' },
-    { print: 'treino', headline: 'Treino do dia na palma da mão', subline: 'Veja o que fazer e registre cada série' },
-    { print: null, headline: 'Ficha de saúde em 7 perguntas', subline: 'O app orienta, sem bloquear o seu treino' },
-    { print: null, headline: 'Pronto para começar?', subline: 'Link na bio: eafit.com.br' },
+    { print: 'criar-conta', headline: 'Seu treino no celular em 1 minuto', subline: 'Crie sua conta e comece hoje', seconds: 3.5 },
+    {
+      flow: 'comecar',
+      chapters: [
+        { at: 0, headline: 'Conte um pouco sobre você', subline: 'Sexo, idade, peso, altura, objetivo e nível' },
+        { at: 10.8, headline: 'Ficha de saúde em 7 perguntas', subline: 'O app orienta, sem bloquear o seu treino' },
+        { at: 19.9, headline: 'Seu treino já montado', subline: 'Dias, exercícios e cargas sugeridas' },
+      ],
+    },
+    { print: null, headline: 'Pronto para começar?', subline: 'Link na bio: eafit.com.br', seconds: 3.5 },
   ],
   treinos: [
     { print: 'treino', headline: 'Treino pronto em segundos', subline: 'Monte, envie e acompanhe' },

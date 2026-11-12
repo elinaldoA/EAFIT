@@ -112,11 +112,11 @@ export function renderStory({ imageUrl, pill, title, sub, variant = 0, style = '
 }
 
 // Vídeo de um destaque: uma cena por item de `scenes` ([{ headline, subline, print: url ou null }]),
-// 4,5 s cada, com trilha leve. { scenes, onProgress(0..1) } → { blob, width, height, seconds }
+// 4,5 s cada (ou a duração própria da cena/gravação), com trilha leve. { scenes, onProgress(0..1) } → { blob, width, height, seconds }
 export function renderHighlight({ scenes, onProgress }) {
-  const seconds = highlightSeconds(scenes.length);
+  const seconds = highlightSeconds(scenes);
   return renderVideo({
-    imageUrl: scenes.map(sc => sc.print || null),
+    imageUrl: scenes.map(sc => sc.atlas || sc.print || null),
     seconds,
     draw: (ctx, imgs, t) => drawHighlightFrame(ctx, scenes, imgs, t),
     audio: { style: 'bright', sweeps: [] },
