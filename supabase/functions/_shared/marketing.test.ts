@@ -328,3 +328,25 @@ Deno.test('métricas do Instagram: conta sem stories não derruba as métricas d
   const rows = await fetchMetrics(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), IG);
   assertEquals(rows.map((r) => r.external_id), ['m1']);
 });
+
+Deno.test('métricas: sem permissão de insights, devolve o motivo da Meta em diag', async () => {
+  const { fn } = fakeFetch({
+    'GET /IG1/media': { data: [{ id: 'm1', caption: 'x', media_type: 'IMAGE', like_count: 3, comments_count: 1 }] },
+    'GET /m1/insights': { error: { message: '(#10) Application does not have permission for this action', code: 10 } },
+  });
+  const diag: { insightsError?: string } = {};
+  const rows = await fetchMetrics(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), IG, diag);
+  assertEquals(rows[0].insights_ok, false);
+  assertEquals(diag.insightsError, '(#10) Application does not have permission for this action (código 10)');
+});
+
+Deno.test('métricas: com alcance chegando, diag fica vazio', async () => {
+  const { fn } = fakeFetch({
+    'GET /IG1/media': { data: [{ id: 'm1', caption: 'x', media_type: 'IMAGE' }] },
+    'GET /m1/insights': { data: [{ name: 'reach', values: [{ value: 50 }] }] },
+  });
+  const diag: { insightsError?: string } = {};
+  const rows = await fetchMetrics(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), IG, diag);
+  assertEquals(rows[0].reach, 50);
+  assertEquals(diag.insightsError, undefined);
+});

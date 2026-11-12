@@ -6,6 +6,8 @@ import {
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import MarketingAds from '../components/MarketingAds';
+import MarketingTiming from '../components/MarketingTiming';
+import MarketingWeekly from '../components/MarketingWeekly';
 import EmptyState from '../components/EmptyState';
 import { Paged } from '../components/ShowMore';
 
@@ -71,7 +73,8 @@ export default function MarketingResults() {
       const { results = [] } = await refreshMetrics();
       const failed = results.filter(r => r.error);
       await loadMetrics();
-      setMsg(failed.length ? `Erro: ${failed.length} conta(s) não atualizaram (${failed[0].error}).` : 'Métricas atualizadas.');
+      const noReach = results.find(r => r.insightsError);
+      setMsg(failed.length ? `Erro: ${failed.length} conta(s) não atualizaram (${failed[0].error}).` : noReach ? `Métricas atualizadas, mas sem alcance: ${noReach.insightsError}` : 'Métricas atualizadas.');
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
     } finally {
@@ -153,6 +156,8 @@ export default function MarketingResults() {
         ))}
       </div>
       {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+
+      <MarketingWeekly metrics={metrics || []} accounts={accounts} />
 
       <section className="card stack" aria-label="Cadastros vindos das redes">
         <h2 className="section-title">Cadastros vindos das redes</h2>
@@ -237,6 +242,8 @@ export default function MarketingResults() {
 
       <MarketingAds days={days} metrics={metrics || []} accounts={accounts} />
 
+      <MarketingTiming metrics={metrics || []} />
+
       <section className="card stack" aria-label="Desempenho dos posts">
         <h2 className="section-title">Desempenho dos posts</h2>
         <div className="actions-row">
@@ -265,6 +272,9 @@ export default function MarketingResults() {
           <p className="form-msg">
             Alcance e salvamentos ainda não vieram: a rede só libera com a permissão de insights. Reconecte a conta em
             “Contas conectadas” e aceite as permissões novas. Por enquanto valem curtidas, comentários e compartilhamentos.
+            {accounts.filter(a => a.metrics_note).map(a => (
+              <span key={a.id}><br />Motivo informado pela Meta ({a.name || a.platform}): {a.metrics_note}</span>
+            ))}
           </p>
         )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AD_STATUS_LABEL, KIND_LABEL, PLATFORMS, adTotals, fetchAds, promoCandidates } from '../lib/marketing';
+import { AD_STATUS_LABEL, KIND_LABEL, PLATFORMS, adSignups, adTotals, fetchAds, fetchAdsConversion, promoCandidates } from '../lib/marketing';
 import Loading from './Loading';
 import EmptyState from './EmptyState';
 import { Paged } from './ShowMore';
@@ -24,12 +24,15 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [kind, setKind] = useState('');
+  const [conv, setConv] = useState([]);
 
   useEffect(() => {
     let alive = true;
     setData(null);
     setError('');
     fetchAds(days).then(r => { if (alive) setData(r); }).catch(err => { if (alive) setError(err.message); });
+    // Sem a migration ou sem links de anúncio a coluna de cadastros só fica vazia.
+    fetchAdsConversion(days).then(r => { if (alive) setConv(r); }).catch(() => { if (alive) setConv([]); });
     return () => { alive = false; };
   }, [days]);
 
@@ -41,6 +44,7 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
   const single = currencies.length === 1 ? currencies[0] : null;
   const totals = useMemo(() => adTotals(ads), [ads]);
   const failed = accounts.filter(a => a.error);
+  const signups = useMemo(() => adSignups(ads, conv), [ads, conv]);
   const suggestions = useMemo(() => (data ? promoCandidates(metrics, ads, { kind }) : []), [data, metrics, ads, kind]);
   const networkOf = m => networkAccounts.find(a => a.id === m.account_id)?.platform;
 
@@ -69,13 +73,22 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
               <div className="mkt-stat"><span className="mkt-stat__n">{fmt(totals.clicks)}</span><span className="mkt-stat__l">cliques no link</span></div>
               <div className="mkt-stat"><span className="mkt-stat__n">{money(totals.cpc, single)}</span><span className="mkt-stat__l">custo por clique</span></div>
               <div className="mkt-stat"><span className="mkt-stat__n">{money(totals.cpm, single)}</span><span className="mkt-stat__l">custo por mil impressões</span></div>
+              <div className="mkt-stat"><span className="mkt-stat__n">{fmt(signups.totals.signups)}</span><span className="mkt-stat__l">cadastros pelos links de anúncio</span></div>
+              <div className="mkt-stat">
+                <span className="mkt-stat__n">{signups.totals.signups ? money(totals.spend / signups.totals.signups, single) : '–'}</span>
+                <span className="mkt-stat__l">custo por cadastro</span>
+              </div>
+              <div className="mkt-stat">
+                <span className="mkt-stat__n">{signups.totals.activated ? money(totals.spend / signups.totals.activated, single) : '–'}</span>
+                <span className="mkt-stat__l">custo por quem treinou na 1ª semana</span>
+              </div>
             </div>
           )}
           <Paged items={ads} size={20} resetKey={String(days)}>{visible => (
             <div className="table-wrap">
               <table className="resp-table">
                 <thead>
-                  <tr><th>Anúncio</th><th>Situação</th><th>Gasto</th><th>Alcance</th><th>Impressões</th><th>Cliques</th><th>Custo/clique</th></tr>
+                  <tr><th>Anúncio</th><th>Situação</th><th>Gasto</th><th>Alcance</th><th>Impressões</th><th>Cliques</th><th>Custo/clique</th><th>Cadastros</th><th>Custo/cadastro</th></tr>
                 </thead>
                 <tbody>
                   {visible.map(a => (
@@ -95,6 +108,8 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
                       <td data-label="Impressões">{fmt(a.impressions)}</td>
                       <td data-label="Cliques">{fmt(a.clicks)}</td>
                       <td data-label="Custo/clique">{a.clicks ? money(a.spend / a.clicks, currencyOf(a.account)) : '–'}</td>
+                      <td data-label="Cadastros">{signups.perAd.get(a.id) ? fmt(signups.perAd.get(a.id).signups) : '–'}</td>
+                      <td data-label="Custo/cadastro">{signups.perAd.get(a.id)?.signups ? money(a.spend / signups.perAd.get(a.id).signups, currencyOf(a.account)) : '–'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -102,8 +117,9 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
             </div>
           )}</Paged>
           <p className="user-detail__meta">
-            Dados da Meta, só leitura. Para saber quantos cadastros cada anúncio trouxe, use links com <code>utm_medium=ads</code> e
-            compare com “Cadastros vindos das redes” acima.
+            Dados da Meta, só leitura. Para ligar cada cadastro ao anúncio, ponha no link do anúncio (Parâmetros de URL):{' '}
+            <code>utm_source=instagram&amp;utm_medium=ads&amp;utm_content={'{{ad.id}}'}</code>. A Meta troca o <code>{'{{ad.id}}'}</code> pelo número do
+            anúncio. Sem o <code>utm_content</code>, só vale o custo médio por cadastro de todos os anúncios.
           </p>
         </>
       )}

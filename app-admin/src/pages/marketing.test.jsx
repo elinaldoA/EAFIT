@@ -9,7 +9,7 @@ const { lib } = vi.hoisted(() => ({
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
-    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchAds: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
+    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchAds: vi.fn(), fetchAdsConversion: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
     uploadMedia: vi.fn(), editPost: vi.fn(), deleteExternalPost: vi.fn(), editExternalPost: vi.fn(),
     updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
@@ -28,7 +28,7 @@ import MarketingMedia from './MarketingMedia';
 import { synthTrack } from '../lib/reelAudio';
 import { DURATION, FPS, STORY_DROP, STORY_DURATION, STORY_VARIANTS, drawReelFrame, drawStoryFrame } from '../lib/reelRender';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES, autopostTheme,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES, autopostTheme, adSignups, bestTimes, hashtagStats, trendingPosts, weeklySummary,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -534,6 +534,7 @@ describe('Resultados', () => {
     lib.fetchMetrics.mockResolvedValue(METRICS);
     lib.refreshMetrics.mockResolvedValue({ results: [{ account: 'a2', posts: 2 }] });
     lib.fetchAds.mockResolvedValue({ accounts: [], ads: [] });
+    lib.fetchAdsConversion.mockResolvedValue([]);
     lib.fetchContentConversion.mockResolvedValue([
       { source: 'facebook', content: 'ab12cd34', caption: 'Erros que travam o ganho de massa', visits: 30, signups: 4, activated: 2, mature: 3, retained: 1 },
     ]);
@@ -569,8 +570,8 @@ describe('Resultados', () => {
     expect(await screen.findByText('Reel promovido')).toBeTruthy();
     expect(screen.getByText('No ar')).toBeTruthy();
     expect(screen.getByText('Pausado')).toBeTruthy();
-    expect(screen.getByText(/R\$\s?40,00/)).toBeTruthy(); // gasto total
-    expect(screen.getByText(/R\$\s?0,50/)).toBeTruthy(); // 30 / 60 cliques
+    expect(screen.getAllByText(/R\$\s?40,00/).length).toBeGreaterThan(0); // gasto total
+    expect(screen.getAllByText(/R\$\s?0,50/).length).toBeGreaterThan(0); // 30 / 60 cliques
   });
 
   it('posts promovidos: sem conta de anúncios orienta a reconectar; erro da conta aparece', async () => {
@@ -625,11 +626,52 @@ describe('Resultados', () => {
     expect(box.getByText(/^6 respostas/)).toBeTruthy();
   });
 
+  it('anúncios: custo por cadastro geral e por anúncio (utm_content = id ou nome)', async () => {
+    lib.fetchAds.mockResolvedValue({
+      accounts: [{ id: '99', name: 'EAFIT', currency: 'BRL' }],
+      ads: [
+        { id: 'ad1', account: '99', name: 'Reel promovido', status: 'ACTIVE', thumb_url: null, permalink: null, post_id: null, spend: 30, impressions: 5000, reach: 4000, clicks: 60, results: 0 },
+        { id: 'ad2', account: '99', name: 'Foto promovida', status: 'ACTIVE', thumb_url: null, permalink: null, post_id: null, spend: 10, impressions: 1000, reach: 900, clicks: 20, results: 0 },
+      ],
+    });
+    lib.fetchAdsConversion.mockResolvedValue([
+      { source: 'instagram', content: 'ad1', visits: 50, signups: 5, activated: 2 },
+      { source: 'instagram', content: '', visits: 10, signups: 3, activated: 0 },
+    ]);
+    wrap(<MarketingResults />);
+    expect(await screen.findByText('Reel promovido')).toBeTruthy();
+    const box = within(screen.getByLabelText('Posts promovidos'));
+    expect(await box.findByText('cadastros pelos links de anúncio')).toBeTruthy();
+    expect(box.getByText(/R\$\s?5,00/)).toBeTruthy(); // 40 de gasto / 8 cadastros
+    expect(box.getByText(/R\$\s?6,00/)).toBeTruthy(); // anúncio 1: 30 / 5
+  });
+
+  it('resumo da semana e melhor horário aparecem; resumo tem texto para copiar', async () => {
+    const at = (daysAgo, hour) => { const d = new Date(Date.now() - daysAgo * 86_400_000); d.setUTCHours(hour + 3, 0, 0, 0); return d.toISOString(); };
+    const mk = (id, daysAgo, hour, likes) => ({ account_id: 'a2', external_id: id, permalink: `https://ig/${id}`, caption: `Post ${id} #treino #dieta`, kind: 'image', thumb_url: null, posted_at: at(daysAgo, hour), likes, comments: 0, shares: 0, saves: 0, reach: null, views: null, insights_ok: false });
+    lib.fetchMetrics.mockResolvedValue([mk('a', 2, 20, 12), mk('b', 3, 20, 10), mk('c', 4, 11, 2), mk('d', 5, 11, 3), mk('e', 6, 7, 1), mk('f', 8, 7, 2)]);
+    lib.fetchAccounts.mockResolvedValue([{ id: 'a2', platform: 'instagram', name: 'EAFIT' }]);
+    wrap(<MarketingResults />);
+    const week = within(await screen.findByLabelText('Resumo da semana'));
+    expect(await week.findByText(/Resumo da semana · EAFIT/)).toBeTruthy();
+    expect(week.getByRole('button', { name: 'Copiar resumo' })).toBeTruthy();
+    const timing = within(screen.getByLabelText('Melhor horário e hashtags'));
+    expect(timing.getAllByText(/Noite/).length).toBeGreaterThan(0); // os de 20h engajam mais
+    expect(timing.getAllByText(/#treino/).length).toBeGreaterThan(0);
+  });
+
+  it('sem alcance mostra o motivo que a Meta informou', async () => {
+    lib.fetchMetrics.mockResolvedValue([{ ...METRICS[2] }]);
+    lib.fetchAccounts.mockResolvedValue([{ id: 'a1', platform: 'facebook', name: 'EAFIT', metrics_note: '(#10) Application does not have permission (código 10)' }]);
+    wrap(<MarketingResults />);
+    expect(await screen.findByText(/Application does not have permission/)).toBeTruthy();
+  });
+
   it('filtra por rede e atualiza as métricas na hora', async () => {
     wrap(<MarketingResults />);
     await screen.findAllByText('Reel de treino');
     fireEvent.click(screen.getByRole('button', { name: 'Facebook' }));
-    expect(screen.queryByText('Reel de treino')).toBeNull();
+    expect(within(screen.getByLabelText('Desempenho dos posts')).queryByText('Reel de treino')).toBeNull();
     expect(screen.getAllByText('Post no Facebook').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Atualizar métricas' }));
     await waitFor(() => expect(lib.refreshMetrics).toHaveBeenCalled());
@@ -1045,5 +1087,53 @@ describe('stories de nutrição por refeição', () => {
     wrap(<MarketingPublish />, '/?aba=fila');
     expect(await screen.findByText(/Story · todo dia às 12h30 \(1 na fila\)/)).toBeTruthy();
     expect(screen.getByText(/Story · Café da manhã \(desligado\) · desligado \(0 na fila\)/)).toBeTruthy();
+  });
+});
+
+describe('lib: análises de marketing', () => {
+  const now = new Date('2026-11-12T15:00:00Z').getTime();
+  const at = (daysAgo, hourSp) => new Date(Date.UTC(2026, 10, 12 - daysAgo, hourSp + 3, 0, 0)).toISOString();
+  const post = (id, daysAgo, hourSp, likes, extra = {}) => ({ account_id: 'a', external_id: id, permalink: `https://ig/${id}/`, caption: '', kind: 'image', posted_at: at(daysAgo, hourSp), likes, comments: 0, shares: 0, saves: 0, reach: null, ...extra });
+
+  it('melhor horário: dia e período com maior engajamento vs a média, só com 2+ posts', () => {
+    const t = bestTimes([post('1', 2, 20, 10), post('2', 9, 20, 12), post('3', 3, 8, 1), post('4', 10, 8, 1), post('5', 4, 12, 4)], { now });
+    expect(t.bestPeriod.key).toBe('noite');
+    expect(t.byPeriod.find(p => p.key === 'manha').ratio).toBeLessThan(1);
+    expect(t.byPeriod.find(p => p.key === 'almoco').posts).toBe(1); // 1 post não vira "melhor"
+  });
+
+  it('hashtags: média do engajamento dos posts que usaram, só hashtag em 2+ posts', () => {
+    const tags = hashtagStats([
+      post('1', 2, 20, 10, { caption: 'a #Treino #dieta' }), post('2', 5, 20, 12, { caption: 'b #treino' }),
+      post('3', 6, 20, 1, { caption: 'c #dieta #raro' }), post('4', 7, 20, 1, { caption: 'd #dieta' }),
+    ], { now });
+    expect(tags.best[0].tag).toBe('#treino'); // sem diferenciar maiúscula
+    expect(tags.best[0].posts).toBe(2);
+    expect(tags.best.some(t => t.tag === '#raro')).toBe(false);
+  });
+
+  it('em alta: post de menos de 72 h bem acima da média e sem anúncio', () => {
+    const list = [post('old1', 20, 10, 2), post('old2', 25, 10, 2), post('old3', 18, 10, 2), { ...post('hot', 0, 9, 30), posted_at: new Date(now - 10 * 3_600_000).toISOString() }];
+    expect(trendingPosts(list, [], { now }).map(m => m.external_id)).toEqual(['hot']);
+    expect(trendingPosts(list, [{ post_id: 'hot', permalink: null }], { now })).toEqual([]);
+  });
+
+  it('adSignups liga o cadastro ao anúncio por id ou nome e soma o total', () => {
+    const ads = [{ id: 'ad1', name: 'Reel A' }, { id: 'ad2', name: 'Foto B' }, { id: 'ad3', name: 'Sem link' }];
+    const r = adSignups(ads, [
+      { content: 'AD1', visits: 10, signups: 2, activated: 1 }, { content: 'foto b', visits: 5, signups: 3, activated: 0 }, { content: '', visits: 1, signups: 1, activated: 0 },
+    ]);
+    expect(r.perAd.get('ad1').signups).toBe(2);
+    expect(r.perAd.get('ad2').signups).toBe(3);
+    expect(r.perAd.get('ad3')).toBeNull();
+    expect(r.totals.signups).toBe(6);
+  });
+
+  it('resumo semanal soma só a última semana', () => {
+    const s = weeklySummary({
+      metrics: [post('1', 2, 10, 5), post('2', 3, 10, 7), post('3', 12, 10, 100), post('s', 1, 10, 0, { kind: 'story', comments: 2 })],
+      ads: [{ spend: 20, reach: 500, clicks: 10, impressions: 800, results: 0 }], conversion: [{ visits: 30, signups: 4 }], now,
+    });
+    expect([s.posts, s.stories, s.interactions, s.spend, s.signups]).toEqual([2, 1, 12, 20, 4]);
   });
 });

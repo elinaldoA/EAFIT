@@ -276,14 +276,16 @@ async function syncComments() {
 // Desempenho dos últimos posts de cada conta. Falha numa conta não derruba as outras.
 async function syncMetrics() {
   const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok').neq('platform', 'tiktok');
-  const out: { account: string; posts?: number; error?: string }[] = [];
+  const out: { account: string; posts?: number; error?: string; insightsError?: string }[] = [];
   for (const { id } of accounts || []) {
     try {
       const { account, token } = await loadAccount(id);
-      const rows = await fetchMetrics(makeApi(fetch, baseFor(account.platform), token), account);
+      const diag: { insightsError?: string } = {};
+      const rows = await fetchMetrics(makeApi(fetch, baseFor(account.platform), token), account, diag);
       const { data: n, error } = await db.rpc('marketing_upsert_metrics', { p_account: id, p_rows: rows });
       if (error) throw error;
-      out.push({ account: id, posts: Number(n) || 0 });
+      await db.from('marketing_accounts').update({ metrics_note: diag.insightsError?.slice(0, 300) ?? null }).eq('id', id);
+      out.push({ account: id, posts: Number(n) || 0, ...(diag.insightsError ? { insightsError: diag.insightsError } : {}) });
     } catch (err) {
       await handleGraphError(id, err);
       out.push({ account: id, error: errMsg(err) });
@@ -422,7 +424,7 @@ Deno.serve(async (req) => {
           await handleGraphError(account.id, err);
           throw err;
         }
-        await db.from('marketing_post_metrics').update({ caption: caption.slice(0, 300) })
+        await db.from('marketing_post_metrics').update({ caption: caption.slice(0, 2200) })
           .eq('account_id', account.id).eq('external_id', body.externalId);
         await audit('marketingEditExternal', { account: account.id, post: body.externalId });
         return json({ changed: true });

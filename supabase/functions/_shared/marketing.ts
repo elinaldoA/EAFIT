@@ -433,7 +433,9 @@ async function readInsights(api: Api, id: string, metrics: string): Promise<Reco
 
 // Últimos 25 posts de cada conta com as métricas que a rede der. Roda também para
 // posts feitos direto no app da rede (não só os do painel).
-export async function fetchMetrics(api: Api, account: Account): Promise<MetricRow[]> {
+// `diag.insightsError` recebe a mensagem da Meta quando nenhum post trouxe alcance (para o painel
+// explicar o motivo em vez de só mostrar a coluna vazia).
+export async function fetchMetrics(api: Api, account: Account, diag: { insightsError?: string } = {}): Promise<MetricRow[]> {
   const rows: MetricRow[] = [];
   let insightsOn = true;
   // Uma tentativa de insights por post; permissão negada desliga o resto da conta.
@@ -445,6 +447,7 @@ export async function fetchMetrics(api: Api, account: Account): Promise<MetricRo
         return await readInsights(api, id, wanted.join(','));
       } catch (err) {
         if (!(err instanceof GraphError)) throw err;
+        diag.insightsError ??= `${err.message} (código ${err.code})`;
         if (NO_PERMISSION.has(err.code)) { insightsOn = false; return null; }
         if (err.needsReconnect) throw err;
         wanted = wanted.slice(0, -1); // métrica que o tipo de mídia não tem: tenta com menos
@@ -502,6 +505,7 @@ export async function fetchMetrics(api: Api, account: Account): Promise<MetricRo
       });
     }
   }
+  if (rows.some((r) => r.insights_ok)) delete diag.insightsError;
   return rows;
 }
 
