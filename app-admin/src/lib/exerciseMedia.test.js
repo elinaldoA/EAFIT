@@ -45,7 +45,7 @@ describe('mediaKindFor / normalizeName', () => {
 
 describe('defaultDemoFor', () => {
   it('diz o que o app mostra sem mídia própria', () => {
-    expect(defaultDemoFor('Supino Reto com Barra')).toBe('video');
+    expect(defaultDemoFor('Afundo Estático')).toBe('video');
     expect(defaultDemoFor('🔷 Burpee')).toBe('video');
     expect(defaultDemoFor('Crucifixo Reto com Halteres')).toBe('youtube');
     expect(defaultDemoFor('Esteira — Caminhada Inclinada')).toBe('youtube');
@@ -62,7 +62,7 @@ describe('buildRows', () => {
     expect(rows.map(r => [r.nome, r.grupo, r.media?.storage_path ?? null, r.padrao])).toEqual([
       ['Afundo Búlgaro (foco glúteo)', null, 'a.gif', 'video'],
       ['Crucifixo Reto com Halteres', 'peito', null, 'youtube'],
-      ['Supino Reto com Barra', 'peito', 's.mp4', 'video'],
+      ['Supino Reto com Barra', 'peito', 's.mp4', 'youtube'],
     ]);
   });
 });
