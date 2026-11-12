@@ -9,7 +9,7 @@ const { lib } = vi.hoisted(() => ({
     cancelPost: vi.fn(), retryTarget: vi.fn(), startConnect: vi.fn(), disconnectAccount: vi.fn(),
     fetchComments: vi.fn(), syncComments: vi.fn(), replyComment: vi.fn(), hideComment: vi.fn(), fetchTikTokCreator: vi.fn(),
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
-    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchAds: vi.fn(), fetchAdsConversion: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
+    fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchAds: vi.fn(), fetchAdsConversion: vi.fn(), fetchScheduledPosts: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
     uploadMedia: vi.fn(), editPost: vi.fn(), deleteExternalPost: vi.fn(), editExternalPost: vi.fn(),
     updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
@@ -43,6 +43,7 @@ beforeEach(() => {
   lib.fetchAccounts.mockResolvedValue([FB, IG, TT]);
   lib.fetchMedia.mockResolvedValue([ART]);
   lib.fetchPosts.mockResolvedValue([]);
+  lib.fetchScheduledPosts.mockResolvedValue([]);
   lib.createPost.mockResolvedValue('p1');
   lib.runPost.mockResolvedValue({ results: [{ id: 't1', status: 'published' }, { id: 't2', status: 'processing' }] });
   lib.fetchComments.mockResolvedValue([]);
@@ -1141,5 +1142,27 @@ describe('lib: análises de marketing', () => {
       ads: [{ spend: 20, reach: 500, clicks: 10, impressions: 800, results: 0 }], conversion: [{ visits: 30, signups: 4 }], now,
     });
     expect([s.posts, s.stories, s.interactions, s.spend, s.signups]).toEqual([2, 1, 12, 20, 4]);
+  });
+});
+
+describe('Agenda: posts agendados à mão', () => {
+  it('um agendamento fora dos 30 posts mais recentes continua aparecendo na agenda', async () => {
+    const future = new Date(Date.now() + 2 * 86_400_000);
+    future.setHours(9, 0, 0, 0);
+    const old = {
+      id: 'velho', caption: '', media: [{ type: 'image', url: 'https://x/1.jpg' }], format: 'story', scheduled_at: future.toISOString(),
+      created_at: '2026-11-01T10:00:00Z', targets: [{ id: 't9', account_id: 'a2', status: 'pending' }],
+    };
+    lib.fetchPosts.mockResolvedValue([]); // o corte dos mais recentes não trouxe o post
+    lib.fetchScheduledPosts.mockResolvedValue([old]);
+    wrap(<MarketingPublish />);
+    expect(await screen.findByText('agendado à mão')).toBeTruthy();
+  });
+
+  it('se a busca dos agendados falhar, a tela abre normal com o histórico', async () => {
+    lib.fetchPosts.mockResolvedValue([{ id: 'p1', caption: 'ok', media: [], format: 'feed', scheduled_at: null, created_at: '2026-11-01T10:00:00Z', targets: [] }]);
+    lib.fetchScheduledPosts.mockRejectedValue(new Error('boom'));
+    wrap(<MarketingPublish />, '/?aba=historico');
+    expect(await screen.findByText('ok')).toBeTruthy();
   });
 });

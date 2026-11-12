@@ -428,6 +428,19 @@ export async function fetchPosts(limit = 30) {
   return (data || []).map(p => ({ ...p, targets: p.marketing_post_targets || [] }));
 }
 
+// Posts agendados para o futuro com alvo ainda pendente, sem o corte dos mais recentes de
+// fetchPosts: quem agenda muitos de uma vez (ex.: roteiro de destaques) não pode sumir da agenda.
+export async function fetchScheduledPosts(limit = 300) {
+  const { data, error } = await db.from('marketing_posts')
+    .select('id, caption, media, format, scheduled_at, created_at, marketing_post_targets!inner(id, account_id, status, permalink, error, published_at)')
+    .gt('scheduled_at', new Date().toISOString())
+    .eq('marketing_post_targets.status', 'pending')
+    .order('scheduled_at')
+    .limit(limit);
+  if (error) throw error;
+  return (data || []).map(p => ({ ...p, targets: p.marketing_post_targets || [] }));
+}
+
 export async function cancelPost(postId) {
   const { error } = await db.rpc('marketing_cancel_post', { p_post: postId });
   if (error) throw error;

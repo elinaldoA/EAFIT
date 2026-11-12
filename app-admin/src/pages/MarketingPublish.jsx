@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   EMPTY_TIKTOK, PLATFORMS, STATUS_LABEL, accountLabel, cancelPost, countHashtags, createPost, deletePost, editPost, editSummary, exerciseVideoList, fetchAccounts,
-  fetchMedia, fetchPosts, fetchTikTokCreator, finalCaption, retryTarget, runPost, validatePost,
+  fetchMedia, fetchPosts, fetchScheduledPosts, fetchTikTokCreator, finalCaption, retryTarget, runPost, validatePost,
 } from '../lib/marketing';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
@@ -69,7 +69,11 @@ export default function MarketingPublish() {
 
   const loadPosts = useCallback(async () => {
     try {
-      setPosts(await fetchPosts(postLimit));
+      // Os mais recentes (histórico) + todos os agendados ainda por sair: a agenda não pode
+      // perder um agendamento só porque depois dele foram criados muitos outros posts.
+      const [recent, scheduled] = await Promise.all([fetchPosts(postLimit), fetchScheduledPosts().catch(() => [])]);
+      const seen = new Set(recent.map(p => p.id));
+      setPosts([...recent, ...scheduled.filter(p => !seen.has(p.id))].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
     } catch (err) {
       setMsg(`Erro: ${err.message}`);
       setPosts([]);
