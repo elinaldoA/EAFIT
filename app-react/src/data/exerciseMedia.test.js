@@ -42,8 +42,8 @@ describe('getExerciseMedia', () => {
   });
 
   it('vídeo curto tem prioridade sobre os quadros', () => {
-    expect(getExerciseMedia('🔷 Supino Reto com Barra', '/EAFIT/')).toEqual({
-      stock: true, type: 'video', url: '/EAFIT/videos/supino-reto-barra.mp4',
+    expect(getExerciseMedia('🔷 Afundo Estático', '/EAFIT/')).toEqual({
+      stock: true, type: 'video', url: '/EAFIT/videos/afundo-estatico.mp4',
       credit: 'Vídeo: Goulart · wger.de · CC BY-SA 4.0',
     });
   });
