@@ -81,6 +81,7 @@ export const NAV_GROUPS = [
           { to: '/marketing-resultados', label: 'Resultados' },
           { to: '/marketing-comentarios', label: 'Comentários' },
           { to: '/marketing-midia', label: 'Biblioteca de mídia' },
+          { to: '/marketing-destaques', label: 'Destaques' },
           { to: '/marketing-contas', label: 'Contas conectadas' },
         ],
       },

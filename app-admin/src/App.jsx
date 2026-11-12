@@ -62,6 +62,7 @@ const MarketingPublish = lazy(() => import('./pages/MarketingPublish'));
 const MarketingComments = lazy(() => import('./pages/MarketingComments'));
 const MarketingResults = lazy(() => import('./pages/MarketingResults'));
 const MarketingMedia = lazy(() => import('./pages/MarketingMedia'));
+const MarketingHighlights = lazy(() => import('./pages/MarketingHighlights'));
 const MarketingAccounts = lazy(() => import('./pages/MarketingAccounts'));
 
 // Fora do HashRouter de propósito: o link de "esqueci minha senha" volta com
@@ -107,6 +108,7 @@ function AppShell() {
             <Route path="/marketing-resultados" element={<RequireArea area="marketing"><MarketingResults /></RequireArea>} />
             <Route path="/marketing-comentarios" element={<RequireArea area="marketing"><MarketingComments /></RequireArea>} />
             <Route path="/marketing-midia" element={<RequireArea area="marketing"><MarketingMedia /></RequireArea>} />
+            <Route path="/marketing-destaques" element={<RequireArea area="marketing"><MarketingHighlights /></RequireArea>} />
             <Route path="/marketing-contas" element={<RequireArea area="marketing"><MarketingAccounts /></RequireArea>} />
             <Route path="/conteudo" element={<RequireArea area="content"><Templates /></RequireArea>} />
             <Route path="/auditoria" element={<AuditLog />} />
