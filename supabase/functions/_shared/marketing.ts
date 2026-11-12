@@ -400,7 +400,7 @@ export type MetricRow = {
   external_id: string;
   permalink: string | null;
   caption: string;
-  kind: string; // reel | carousel | image | video | text
+  kind: string; // reel | carousel | image | video | text | story
   thumb_url: string | null;
   posted_at: string | null;
   likes: number | null;
@@ -467,6 +467,22 @@ export async function fetchMetrics(api: Api, account: Account): Promise<MetricRo
         likes: num(m.like_count), comments: num(m.comments_count), shares: ins?.shares ?? null, saves: ins?.saved ?? null,
         reach: ins?.reach ?? null, views: ins?.views ?? null, insights_ok: ins !== null,
       });
+    }
+    // Stories no ar (24 h): o último retrato fica guardado quando o story sai da API.
+    // Falha aqui (conta sem stories, permissão) não derruba as métricas do feed.
+    try {
+      const stories = await api.get(`/${account.external_id}/stories`, { fields: 'id,permalink,timestamp,thumbnail_url,media_url', limit: 25 });
+      for (const st of list(stories)) {
+        const ins = await tryInsights(String(st.id), ['reach', 'replies', 'shares', 'views']);
+        rows.push({
+          external_id: String(st.id), permalink: (st.permalink as string) || null, caption: '', kind: 'story',
+          thumb_url: ((st.thumbnail_url || st.media_url) as string) || null, posted_at: (st.timestamp as string) || null,
+          likes: null, comments: ins?.replies ?? null, shares: ins?.shares ?? null, saves: null,
+          reach: ins?.reach ?? null, views: ins?.views ?? null, insights_ok: ins !== null,
+        });
+      }
+    } catch (err) {
+      if (err instanceof GraphError && err.needsReconnect) throw err;
     }
   } else if (account.platform === 'facebook') {
     const page = account.external_id;

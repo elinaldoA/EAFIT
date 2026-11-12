@@ -604,6 +604,27 @@ describe('Resultados', () => {
     expect(box.queryByText('Fraco')).toBeNull(); // quase sem engajamento
   });
 
+  it('sugestões por formato: carrossel e story (no ar mostra até quando)', async () => {
+    const old = h => new Date(Date.now() - h * 3_600_000).toISOString();
+    lib.fetchMetrics.mockResolvedValue([
+      { account_id: 'a2', external_id: 'c1', permalink: 'https://ig/p/c1/', caption: 'Carrossel campeão', kind: 'carousel', thumb_url: null, posted_at: old(100), likes: 20, comments: 3, shares: 4, saves: 15, reach: 600, views: null, insights_ok: true },
+      { account_id: 'a2', external_id: 'c2', permalink: 'https://ig/p/c2/', caption: 'Carrossel morno', kind: 'carousel', thumb_url: null, posted_at: old(120), likes: 3, comments: 0, shares: 0, saves: 0, reach: 600, views: null, insights_ok: true },
+      { account_id: 'a2', external_id: 's1', permalink: 'https://ig/s/1/', caption: '', kind: 'story', thumb_url: null, posted_at: old(5), likes: null, comments: 6, shares: 2, saves: null, reach: 300, views: 400, insights_ok: true },
+      { account_id: 'a2', external_id: 's2', permalink: 'https://ig/s/2/', caption: '', kind: 'story', thumb_url: null, posted_at: old(60), likes: null, comments: 1, shares: 0, saves: null, reach: 280, views: 350, insights_ok: true },
+    ]);
+    lib.fetchAccounts.mockResolvedValue([{ id: 'a2', platform: 'instagram', name: 'EAFIT' }]);
+    lib.fetchAds.mockResolvedValue({ accounts: [{ id: '99', name: 'EAFIT', currency: 'BRL' }], ads: [] });
+    wrap(<MarketingResults />);
+    const box = within(await screen.findByLabelText('Posts com potencial de promoção'));
+    fireEvent.click(box.getByRole('button', { name: 'Carrosséis' }));
+    expect(box.getByText('Carrossel campeão')).toBeTruthy();
+    expect(box.queryByText(/respostas/)).toBeNull();
+    fireEvent.click(box.getByRole('button', { name: 'Stories' }));
+    expect(box.getByText(/no ar até/)).toBeTruthy(); // o de 5 h ainda dá para impulsionar
+    expect(box.getAllByText(/respostas/).length).toBe(2);
+    expect(box.getByText(/^6 respostas/)).toBeTruthy();
+  });
+
   it('filtra por rede e atualiza as métricas na hora', async () => {
     wrap(<MarketingResults />);
     await screen.findAllByText('Reel de treino');

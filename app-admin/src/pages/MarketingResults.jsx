@@ -314,7 +314,7 @@ export default function MarketingResults() {
                                 Editar legenda
                               </button>
                             )}
-                            <button type="button" className="btn btn--danger btn--small" disabled={rowBusy === `${m.account_id}-${m.external_id}`} onClick={() => handleDelete(m)}>Excluir</button>
+                            {m.kind !== 'story' && <button type="button" className="btn btn--danger btn--small" disabled={rowBusy === `${m.account_id}-${m.external_id}`} onClick={() => handleDelete(m)}>Excluir</button>}
                           </div>
                           {editing?.key === `${m.account_id}-${m.external_id}` && (
                             <div className="stack">

@@ -685,7 +685,7 @@ export function splitCaption(caption) {
 // e cadastros que vieram das redes (admin_marketing_conversion). Migration
 // 20270102010000_marketing_results.sql.
 
-export const KIND_LABEL = { reel: 'Reel', carousel: 'Carrossel', image: 'Foto', video: 'Vídeo', text: 'Texto' };
+export const KIND_LABEL = { reel: 'Reel', carousel: 'Carrossel', image: 'Foto', video: 'Vídeo', text: 'Texto', story: 'Story' };
 
 export const MEDIUM_LABEL = {
   bio: 'Link da bio', story: 'Story', post: 'Legenda ou comentário', ads: 'Anúncio', parceiro: 'Parceiro', '': 'Sem tipo no link',
@@ -810,38 +810,51 @@ export function adTotals(ads) {
 }
 
 const normLink = u => String(u || '').split('?')[0].replace(/\/+$/, '').toLowerCase();
-const weighted = m => (m.likes || 0) + 2 * (m.comments || 0) + 3 * (m.saves || 0) + 3 * (m.shares || 0);
+const isStory = m => m.kind === 'story';
+// Story não tem curtida: o que pesa é conversa (respostas) e compartilhamento.
+const weighted = m => (isStory(m)
+  ? 3 * (m.comments || 0) + 3 * (m.shares || 0)
+  : (m.likes || 0) + 2 * (m.comments || 0) + 3 * (m.saves || 0) + 3 * (m.shares || 0));
 
 // Posts orgânicos recentes com mais chance de render bem se forem promovidos: os que mais
 // engajaram em relação à média da própria conta (curtidas, comentários x2, salvos e
 // compartilhamentos x3; com alcance, a taxa sobre o alcance), sem os que já têm anúncio.
+// Stories entram à parte (comparados só com outros stories) e, se ainda estão no ar
+// (menos de 24 h), vêm com `live` e o horário em que saem: só dá para impulsionar até lá.
 // `confidence` fica 'baixa' quando a base é pequena (sem alcance ou poucas interações).
-export function promoCandidates(metrics, ads, { now = Date.now(), days = 30, limit = 5 } = {}) {
+// `kind` ('' = todos) filtra o formato.
+export function promoCandidates(metrics, ads, { now = Date.now(), days = 30, limit = 5, kind = '' } = {}) {
   const promotedIds = new Set((ads || []).map(a => a.post_id).filter(Boolean));
   const promotedLinks = new Set((ads || []).map(a => normLink(a.permalink)).filter(Boolean));
   const recent = (metrics || []).filter(m => {
     if (!m.posted_at) return false;
     const age = now - new Date(m.posted_at).getTime();
-    return age >= 86_400_000 && age <= days * 86_400_000;
+    return age >= (isStory(m) ? 0 : 86_400_000) && age <= days * 86_400_000;
   });
-  const byAccount = new Map();
+  const groupKey = m => `${m.account_id}|${isStory(m) ? 'story' : 'feed'}`;
+  const groups = new Map();
   for (const m of recent) {
-    const g = byAccount.get(m.account_id) || { sum: 0, n: 0 };
+    const g = groups.get(groupKey(m)) || { sum: 0, n: 0 };
     g.sum += m.reach > 0 ? weighted(m) / m.reach : weighted(m);
     g.n += 1;
-    byAccount.set(m.account_id, g);
+    groups.set(groupKey(m), g);
   }
   return recent
-    .filter(m => !promotedIds.has(m.external_id) && !promotedLinks.has(normLink(m.permalink)))
+    .filter(m => (!kind || m.kind === kind) && !promotedIds.has(m.external_id) && !promotedLinks.has(normLink(m.permalink)))
     .map(m => {
       const w = weighted(m);
       const rate = m.reach > 0 ? w / m.reach : null;
-      const g = byAccount.get(m.account_id);
+      const g = groups.get(groupKey(m));
       const avg = g.sum / g.n;
       const own = rate ?? w;
-      return { ...m, weighted: w, rate: rate === null ? null : Math.round(rate * 1000) / 10, vsAverage: avg > 0 ? Math.round((own / avg) * 10) / 10 : null, confidence: m.reach > 0 && w >= 10 ? 'ok' : 'baixa' };
+      const liveUntil = isStory(m) && now - new Date(m.posted_at).getTime() < 86_400_000 ? new Date(new Date(m.posted_at).getTime() + 86_400_000).toISOString() : null;
+      return {
+        ...m, weighted: w, rate: rate === null ? null : Math.round(rate * 1000) / 10,
+        vsAverage: avg > 0 ? Math.round((own / avg) * 10) / 10 : null, liveUntil,
+        confidence: m.reach > 0 && w >= 10 ? 'ok' : 'baixa',
+      };
     })
-    .filter(m => m.weighted >= 2)
+    .filter(m => m.weighted >= (isStory(m) ? 1 : 2))
     .sort((a, b) => (b.vsAverage ?? 0) - (a.vsAverage ?? 0) || b.weighted - a.weighted)
     .slice(0, limit);
 }

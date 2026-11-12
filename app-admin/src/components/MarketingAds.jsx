@@ -4,6 +4,8 @@ import Loading from './Loading';
 import EmptyState from './EmptyState';
 import { Paged } from './ShowMore';
 
+const SUGGEST_KINDS = [{ key: '', label: 'Todos' }, { key: 'reel', label: 'Reels' }, { key: 'carousel', label: 'Carrosséis' }, { key: 'image', label: 'Fotos' }, { key: 'story', label: 'Stories' }];
+
 const fmt = n => (n === null || n === undefined ? '–' : Number(n).toLocaleString('pt-BR'));
 
 function money(value, currency = 'BRL') {
@@ -21,6 +23,7 @@ function money(value, currency = 'BRL') {
 export default function MarketingAds({ days, metrics = [], accounts: networkAccounts = [] }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [kind, setKind] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -38,7 +41,7 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
   const single = currencies.length === 1 ? currencies[0] : null;
   const totals = useMemo(() => adTotals(ads), [ads]);
   const failed = accounts.filter(a => a.error);
-  const suggestions = useMemo(() => (data ? promoCandidates(metrics, ads) : []), [data, metrics, ads]);
+  const suggestions = useMemo(() => (data ? promoCandidates(metrics, ads, { kind }) : []), [data, metrics, ads, kind]);
   const networkOf = m => networkAccounts.find(a => a.id === m.account_id)?.platform;
 
   return (
@@ -108,8 +111,14 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
       {data && (
         <div className="stack" aria-label="Posts com potencial de promoção">
           <h3 className="section-title">Próximos para promover</h3>
+          <div className="mkt-filter" role="group" aria-label="Formato">
+            {SUGGEST_KINDS.map(k => (
+              <button key={k.key} type="button" aria-pressed={kind === k.key}
+                className={`btn btn--small${kind === k.key ? '' : ' btn--ghost'}`} onClick={() => setKind(k.key)}>{k.label}</button>
+            ))}
+          </div>
           {suggestions.length === 0 && (
-            <p className="user-detail__meta">Nenhum post dos últimos 30 dias engajou o bastante para sugerir (ou os que engajaram já estão promovidos).</p>
+            <p className="user-detail__meta">Nenhum post deste formato nos últimos 30 dias engajou o bastante para sugerir (ou os que engajaram já estão promovidos).</p>
           )}
           {suggestions.map(m => (
             <div key={`${m.account_id}-${m.external_id}`} className="mkt-row mkt-row--metric">
@@ -119,10 +128,11 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
                   <span className="badge">{KIND_LABEL[m.kind] || m.kind}</span>
                   <span className="badge">{PLATFORMS[networkOf(m)]?.label || '–'}</span>
                   {m.confidence === 'baixa' && <span className="badge">poucos dados</span>}
+                  {m.liveUntil && <span className="badge">no ar até {new Date(m.liveUntil).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>}
                 </div>
                 <div className="mkt-row__caption">{(String(m.caption || '').split('\n')[0] || '(sem legenda)').slice(0, 90)}</div>
                 <div className="user-detail__meta">
-                  {fmt(m.likes)} curtidas · {fmt(m.comments)} comentários{m.saves ? ` · ${fmt(m.saves)} salvos` : ''}{m.shares ? ` · ${fmt(m.shares)} compart.` : ''}
+                  {m.kind === 'story' ? `${fmt(m.comments)} respostas` : `${fmt(m.likes)} curtidas · ${fmt(m.comments)} comentários`}{m.saves ? ` · ${fmt(m.saves)} salvos` : ''}{m.shares ? ` · ${fmt(m.shares)} compart.` : ''}
                   {m.rate !== null ? ` · ${m.rate.toLocaleString('pt-BR')}% de engajamento sobre o alcance` : ''}
                   {m.vsAverage ? ` · ${m.vsAverage.toLocaleString('pt-BR')}× a média da conta` : ''}
                 </div>
@@ -133,7 +143,7 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
           {suggestions.length > 0 && (
             <p className="user-detail__meta">
               Ordem por engajamento em relação à média da própria conta, sem os posts que já têm anúncio. Para promover, abra o post
-              no Instagram ou no Facebook e toque em “Impulsionar”. Com poucas curtidas o ranking é só uma pista: o alcance ajuda a decidir.
+              no Instagram ou no Facebook e toque em “Impulsionar”. Story só pode ser impulsionado enquanto está no ar (24 h); os mais antigos servem de modelo para repetir. Com poucas curtidas o ranking é só uma pista: o alcance ajuda a decidir.
             </p>
           )}
         </div>

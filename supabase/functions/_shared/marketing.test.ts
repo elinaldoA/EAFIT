@@ -305,3 +305,26 @@ Deno.test('anúncios: lista as contas e soma gasto, alcance e cliques por anúnc
   assertEquals(ads[0].post_id, 'P1_55');
   assertEquals(calls[1].params.fields.includes('"since":"2026-10-13"'), true);
 });
+
+Deno.test('métricas do Instagram: stories no ar entram como story (respostas viram comentários)', async () => {
+  const { fn } = fakeFetch({
+    'GET /IG1/media': { data: [] },
+    'GET /IG1/stories': { data: [{ id: 's1', permalink: 'https://instagram.com/stories/x/1', timestamp: '2026-11-12T10:00:00+0000', thumbnail_url: 'https://t/s.jpg' }] },
+    'GET /s1/insights': { data: [
+      { name: 'reach', values: [{ value: 320 }] }, { name: 'replies', values: [{ value: 7 }] },
+      { name: 'shares', values: [{ value: 2 }] }, { name: 'views', values: [{ value: 410 }] },
+    ] },
+  });
+  const rows = await fetchMetrics(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), IG);
+  assertEquals(rows.length, 1);
+  assertEquals([rows[0].kind, rows[0].comments, rows[0].shares, rows[0].reach, rows[0].views, rows[0].likes], ['story', 7, 2, 320, 410, null]);
+});
+
+Deno.test('métricas do Instagram: conta sem stories não derruba as métricas do feed', async () => {
+  const { fn } = fakeFetch({
+    'GET /IG1/media': { data: [{ id: 'm1', caption: 'x', media_type: 'IMAGE', like_count: 3, comments_count: 1 }] },
+    'GET /m1/insights': { data: [] },
+  }); // sem rota de /stories: a Meta responde erro
+  const rows = await fetchMetrics(makeApi(fn, 'https://graph.facebook.com/v23.0', 'tok'), IG);
+  assertEquals(rows.map((r) => r.external_id), ['m1']);
+});
