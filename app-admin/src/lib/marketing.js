@@ -110,6 +110,7 @@ export async function uploadMedia({ file, title, credit = null, width = null, he
     await db.storage.from(BUCKET).remove([path]); // não deixa arquivo órfão
     throw error;
   }
+  return { path, url: publicUrl(path) };
 }
 
 export async function removeMedia(item) {
@@ -210,6 +211,55 @@ export async function createArt({ imageUrl, headline, subline, format = 'feed' }
   ctx.font = '700 40px Inter, system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('eafit.com.br', w / 2, h - footer + 30);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+  if (!blob) throw new Error('Não deu para gerar a arte.');
+  return { blob, width: w, height: h };
+}
+
+// Arte só com texto (sem print do app): título grande no meio, subtítulo e o endereço do site.
+export async function createTextArt({ headline, subline, format = 'story' }) {
+  const { w, h } = ART_FORMATS[format];
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#17171b');
+  bg.addColorStop(1, '#0e0e12');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+  const glow = ctx.createRadialGradient(w * 0.8, h * 0.15, 0, w * 0.8, h * 0.15, w * 0.8);
+  glow.addColorStop(0, 'rgba(249,115,22,.35)');
+  glow.addColorStop(1, 'rgba(249,115,22,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
+
+  const pad = 90;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 96px Inter, system-ui, sans-serif';
+  const title = wrapLines(t => ctx.measureText(t).width, headline, w - pad * 2, 4);
+  ctx.font = '500 48px Inter, system-ui, sans-serif'; // o subtítulo se mede com a fonte dele
+  const sub = subline ? wrapLines(t => ctx.measureText(t).width, subline, w - pad * 2, 3) : [];
+  const sublineBlock = sub.length * 62;
+  let y = Math.round((h - (title.length * 112 + (sub.length ? 40 + sublineBlock : 0))) / 2);
+  ctx.fillStyle = '#f97316';
+  ctx.fillRect(pad, y - 48, 120, 10);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 96px Inter, system-ui, sans-serif';
+  for (const line of title) { ctx.fillText(line, pad, y); y += 112; }
+  if (sub.length) {
+    y += 40;
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = '500 48px Inter, system-ui, sans-serif';
+    for (const line of sub) { ctx.fillText(line, pad, y); y += 62; }
+  }
+  ctx.fillStyle = '#f97316';
+  ctx.font = '700 44px Inter, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('eafit.com.br', w / 2, h - 200);
 
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
   if (!blob) throw new Error('Não deu para gerar a arte.');
