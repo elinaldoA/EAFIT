@@ -21,13 +21,13 @@ function fakeCtx() {
 }
 
 describe('Destaques do Instagram', () => {
-  it('lista as cinco capas e deixa a Corrida de fora', () => {
+  it('lista as oito capas e deixa a Corrida de fora', () => {
     render(<MarketingHighlights />);
-    for (const label of ['Como começar', 'Treinos', 'Nutrição', 'Evolução', 'Personal']) {
+    for (const label of ['Como começar', 'Treinos', 'Nutrição', 'Evolução', 'Personal', 'Depoimentos', 'Embaixador', 'Influenciador']) {
       expect(screen.getByText(label)).toBeTruthy();
     }
     expect(screen.queryByText('Corrida')).toBeNull();
-    expect(screen.getAllByRole('button', { name: 'Baixar capa' })).toHaveLength(5);
+    expect(screen.getAllByRole('button', { name: 'Baixar capa' })).toHaveLength(8);
     expect(screen.getByRole('button', { name: 'Baixar todas' })).toBeTruthy();
   });
 

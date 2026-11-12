@@ -18,6 +18,17 @@ const stroke = (ctx, color, width) => {
   ctx.lineJoin = 'round';
 };
 
+// Estrela de 5 pontas centrada em (x, y); r = raio externo.
+function star(ctx, x, y, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const rad = i % 2 === 0 ? r : r * 0.45;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    ctx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad);
+  }
+  ctx.closePath();
+}
+
 // Cada ícone é desenhado no centro do círculo (CX, ~CY - 30), em coordenadas absolutas.
 const ICONS = {
   // Bandeira de largada: "comece aqui".
@@ -114,6 +125,69 @@ const ICONS = {
     ctx.lineTo(684, 990);
     ctx.stroke();
   },
+  // Balão de fala com estrelas: o que os alunos dizem.
+  depoimentos(ctx) {
+    ctx.fillStyle = WHITE;
+    roundRect(ctx, 392, 800, 296, 200, 36);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(456, 990);
+    ctx.lineTo(446, 1068);
+    ctx.lineTo(540, 996);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = ORANGE;
+    [468, 540, 612].forEach(x => { star(ctx, x, 900, 36); ctx.fill(); });
+  },
+  // Medalha com estrela: o embaixador da marca.
+  embaixador(ctx) {
+    ctx.fillStyle = WHITE;
+    ctx.beginPath();
+    ctx.moveTo(470, 940);
+    ctx.lineTo(430, 1090);
+    ctx.lineTo(500, 1056);
+    ctx.lineTo(530, 1110);
+    ctx.lineTo(548, 960);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(610, 940);
+    ctx.lineTo(650, 1090);
+    ctx.lineTo(580, 1056);
+    ctx.lineTo(550, 1110);
+    ctx.lineTo(532, 960);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = ORANGE;
+    ctx.beginPath();
+    ctx.arc(540, 880, 112, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = WHITE;
+    star(ctx, 540, 884, 66);
+    ctx.fill();
+  },
+  // Megafone: o influenciador divulga.
+  influenciador(ctx) {
+    ctx.fillStyle = ORANGE;
+    ctx.beginPath();
+    ctx.moveTo(452, 898);
+    ctx.lineTo(600, 810);
+    ctx.lineTo(600, 1050);
+    ctx.lineTo(452, 962);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = WHITE;
+    roundRect(ctx, 394, 892, 78, 76, 14);
+    ctx.fill();
+    roundRect(ctx, 436, 962, 52, 104, 12);
+    ctx.fill();
+    stroke(ctx, WHITE, 16);
+    [[48, 0.95], [92, 0.85]].forEach(([r, a]) => {
+      ctx.beginPath();
+      ctx.arc(612, 930, r, -a, a);
+      ctx.stroke();
+    });
+  },
 };
 
 // Corrida fica de fora até o módulo ser liberado.
@@ -123,6 +197,9 @@ export const HIGHLIGHTS = [
   { key: 'nutricao', label: 'Nutrição', hint: 'Refeições e hidratação' },
   { key: 'evolucao', label: 'Evolução', hint: 'Gráficos, cargas e conquistas' },
   { key: 'personal', label: 'Personal', hint: 'Para quem treina alunos' },
+  { key: 'depoimentos', label: 'Depoimentos', hint: 'O que dizem quem já usa (relatos reais)' },
+  { key: 'embaixador', label: 'Embaixador', hint: 'O programa de embaixadores' },
+  { key: 'influenciador', label: 'Influenciador', hint: 'O programa de influenciadores' },
 ];
 
 function background(ctx) {
