@@ -20,6 +20,17 @@ export const fetchGeoCompare = (days = 30) => rpcRows('admin_geo_period_compare'
 // Contas distintas por lugar no período atual × anterior (20261216010000_user_geo_compare.sql).
 export const fetchUserGeoCompare = (days = 30) => rpcRows('admin_user_geo_compare', { days_back: days });
 
+// Retenção por estado (20261216020000_geo_resolve_now_retention.sql).
+export const fetchUserGeoRetention = (days = 30) => rpcRows('admin_user_geo_retention', { days_back: days });
+
+// Pede na hora uma rodada da resolve-geo (a fila dos IPs pendentes); o cron já
+// roda a cada 15 minutos. Devolve o id do pedido no pg_net.
+export async function resolveGeoNow() {
+  const { data, error } = await db.rpc('admin_geo_resolve_now');
+  if (error) throw error;
+  return data;
+}
+
 // Acessos localizados por dia (20261215020000_geo_daily.sql).
 export const fetchGeoDaily = (days = 30) => rpcRows('admin_geo_daily', { days_back: days });
 
@@ -36,6 +47,7 @@ export const ACCESS_PAGES = {
   tudo: ['landing', 'acesso', 'app'],
   site: ['landing'],
   app: ['acesso', 'app'],
+  contas: ['app'], // dias de uso de contas logadas (gráficos por dia e horário do modo Contas)
 };
 
 // Linhas de visitas e de uso do app → só as do modo escolhido.
@@ -189,6 +201,29 @@ export function demographics(rows, place = {}) {
     sexo: rank(sexo, ([v, n]) => ({ value: v, label: SEXO_LABELS[v] || v, total: n, pct: pct(n, sum) })),
     faixa: AGE_BANDS.filter(b => faixa.has(b)).map(b => ({ value: b, label: b, total: faixa.get(b), pct: pct(faixa.get(b), sum) })),
   };
+}
+
+// Retenção só tem sentido com contas antigas suficientes no estado.
+export const MIN_RETENTION_BASE = 10;
+
+// Linhas de admin_user_geo_retention → uma por estado (só Brasil), ordenadas por
+// contas. `retention` = % das contas criadas antes do período que voltaram a
+// abrir o app nele (null sem contas antigas); `activePct` = % de ativas no total.
+export function retentionByUf(rows) {
+  const out = new Map();
+  for (const r of rows || []) {
+    if (r.country !== 'BR' || !r.uf) continue;
+    const v = out.get(r.uf) || { uf: r.uf, label: UF_NAMES[r.uf] || r.uf, total: 0, novas: 0, ativas: 0, antigas: 0, antigasAtivas: 0 };
+    v.total += Number(r.total) || 0;
+    v.novas += Number(r.novas) || 0;
+    v.ativas += Number(r.ativas) || 0;
+    v.antigas += Number(r.antigas) || 0;
+    v.antigasAtivas += Number(r.antigas_ativas) || 0;
+    out.set(r.uf, v);
+  }
+  return [...out.values()]
+    .map(v => ({ ...v, retention: v.antigas > 0 ? Math.round((v.antigasAtivas / v.antigas) * 100) : null, activePct: v.total > 0 ? Math.round((v.ativas / v.total) * 100) : 0 }))
+    .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
 }
 
 // Abaixo disso a taxa de conversão do estado engana (1 conta em 2 visitas = 50).

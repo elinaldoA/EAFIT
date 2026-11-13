@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
-  legendSteps, compareGeo, conversionByUf, conversionPrev, compareUsers, sortConversion, inPlace, groupByRegion, regionTrends, dailySeries, audience, hourSeries, newPlaces, trend, trendLabel, countryName, flag, UF_NAMES,
+  legendSteps, compareGeo, conversionByUf, conversionPrev, compareUsers, retentionByUf, resolveGeoNow, sortConversion, inPlace, groupByRegion, regionTrends, dailySeries, audience, hourSeries, newPlaces, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -250,6 +250,38 @@ describe('comparação com o período anterior', () => {
     expect(prev.get('SP')).toEqual({ visits: 40, users: 4, rate: 10 });
     expect(prev.get('RJ').rate).toBeNull();
     expect(prev.has('PT')).toBe(false);
+  });
+
+  it('retentionByUf agrupa por estado, só Brasil, e calcula a retenção das contas antigas', () => {
+    const out = retentionByUf([
+      { country: 'BR', uf: 'SP', total: 10, novas: 3, ativas: 6, antigas: 7, antigas_ativas: 4 },
+      { country: 'BR', uf: 'SP', total: 2, novas: 0, ativas: 1, antigas: 2, antigas_ativas: 1 },
+      { country: 'BR', uf: 'RJ', total: 4, novas: 4, ativas: 4, antigas: 0, antigas_ativas: 0 },
+      { country: 'PT', uf: null, total: 9, novas: 1, ativas: 1, antigas: 8, antigas_ativas: 1 },
+    ]);
+    expect(out.map(r => [r.uf, r.total, r.novas, r.ativas, r.antigas, r.antigasAtivas, r.retention, r.activePct])).toEqual([
+      ['SP', 12, 3, 7, 9, 5, 56, 58], ['RJ', 4, 4, 4, 0, 0, null, 100],
+    ]);
+    expect(retentionByUf(null)).toEqual([]);
+  });
+
+  it('dailySeries e hourSeries do modo contas contam só os dias de uso do app', () => {
+    const rows = [
+      { day: '2027-03-02', page: 'app', country: 'BR', uf: 'SP', total: 3 },
+      { day: '2027-03-02', page: 'landing', country: 'BR', uf: 'SP', total: 50 },
+      { day: '2027-03-02', page: 'acesso', country: 'BR', uf: 'SP', total: 9 },
+    ];
+    expect(dailySeries(rows, 1, 'contas', {}, '2027-03-02')).toEqual([{ day: '2027-03-02', total: 3 }]);
+    const h = hourSeries([{ hour: 9, page: 'app', country: 'BR', uf: 'SP', total: 2 }, { hour: 9, page: 'landing', country: 'BR', uf: 'SP', total: 8 }], 'contas');
+    expect(h[9].total).toBe(2);
+  });
+
+  it('resolveGeoNow chama a RPC e propaga o erro', async () => {
+    mockRpc.mockResolvedValueOnce({ data: 42, error: null });
+    await expect(resolveGeoNow()).resolves.toBe(42);
+    expect(mockRpc).toHaveBeenLastCalledWith('admin_geo_resolve_now');
+    mockRpc.mockResolvedValueOnce({ data: null, error: new Error('not_authorized') });
+    await expect(resolveGeoNow()).rejects.toThrow('not_authorized');
   });
 
   it('sortConversion por taxa deixa sem taxa e amostra pequena por último', () => {

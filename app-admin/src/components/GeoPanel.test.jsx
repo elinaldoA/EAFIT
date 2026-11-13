@@ -38,6 +38,11 @@ const userCompare = [
   { country: 'BR', uf: 'BA', region: 'Bahia', city: 'Salvador', cur: 1, prev: 1 },
 ];
 
+const retentionRows = [
+  { country: 'BR', uf: 'SP', total: 12, novas: 3, ativas: 7, antigas: 9, antigas_ativas: 5 },
+  { country: 'BR', uf: 'BA', total: 4, novas: 1, ativas: 2, antigas: 3, antigas_ativas: 1 },
+];
+
 const calls = name => mockRpc.mock.calls.filter(c => c[0] === name).length;
 
 beforeEach(() => {
@@ -45,7 +50,7 @@ beforeEach(() => {
   mockRpc.mockReset();
   mockDownload.mockReset();
   mockRpc.mockImplementation(async name => ({
-    data: { admin_user_geo: users, admin_app_geo: app, admin_geo_period_compare: compare, admin_user_geo_compare: userCompare }[name] ?? visits, error: null,
+    data: { admin_user_geo: users, admin_app_geo: app, admin_geo_period_compare: compare, admin_user_geo_compare: userCompare, admin_user_geo_retention: retentionRows }[name] ?? visits, error: null,
   }));
 });
 
@@ -66,6 +71,34 @@ describe('GeoPanel', () => {
     expect(await screen.findByText('No período anterior')).toBeTruthy();
     // SP: 3 contas / 3 visitas no período anterior = 100 por 100.
     expect(await screen.findByText('100')).toBeTruthy();
+  });
+
+  it('Retenção mostra contas, novas, ativas e retenção por estado, sem consultar gráficos', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    const before = calls('admin_geo_daily');
+    fireEvent.click(screen.getByRole('button', { name: 'Retenção' }));
+    expect(await screen.findByText('56% (5 de 9)')).toBeTruthy(); // SP
+    expect(screen.getByText('33% (1 de 3)')).toBeTruthy(); // BA
+    expect(calls('admin_geo_daily')).toBe(before);
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar CSV' }));
+    expect(mockDownload.mock.calls[0][0]).toBe('localizacao_retencao_30d.csv');
+  });
+
+  it('Contas ganha as abas por dia e por horário', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    fireEvent.click(screen.getByRole('button', { name: 'Contas' }));
+    await screen.findByText(/Sexo e idade/);
+    expect(calls('admin_geo_daily')).toBeGreaterThan(0);
+    expect(calls('admin_geo_hours')).toBeGreaterThan(0);
+  });
+
+  it('pendentes: "Resolver agora" pede a rodada e avisa', async () => {
+    render(<GeoPanel />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Resolver agora' }));
+    expect(await screen.findByText(/Rodada pedida/)).toBeTruthy();
+    expect(calls('admin_geo_resolve_now')).toBe(1);
   });
 
   it('lembra modo e período escolhidos na próxima abertura', async () => {

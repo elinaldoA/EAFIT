@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchUserGeoCompare, compareUsers, conversionPrev, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchUserGeoRetention, retentionByUf, resolveGeoNow, fetchGeoCompare, fetchUserGeoCompare, compareUsers, conversionPrev, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
   compareGeo, conversionByUf, sortConversion, MIN_VISITS_RATE, REGIONS, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
@@ -8,6 +8,7 @@ import PeriodChart from './PeriodChart';
 import Donut from './charts/Donut';
 import BrazilMap from './BrazilMap';
 import Loading from './Loading';
+import RetentionTable from './RetentionTable';
 
 const WorldMap = lazy(() => import('./WorldMap'));
 
@@ -27,6 +28,7 @@ const MODES = [
   { key: 'site', label: 'Site', unit: 'visitas', note: 'Visitas à página de apresentação (1 por navegador por dia).' },
   { key: 'app', label: 'App', unit: 'acessos', note: 'Tela de login de quem chega sem sessão e dias de uso de quem está logado (1 por navegador ou conta por dia).' },
   { key: 'contas', label: 'Contas', unit: 'contas', note: 'Contas que abriram o app no período, pelo último acesso. A seta compara com os dias anteriores pelos dias de uso (uma conta conta uma vez por lugar).' },
+  { key: 'retencao', label: 'Retenção', unit: 'estados', note: 'Por estado, pelo último acesso de cada conta: contas, novas no período, ativas no período e retenção (das contas criadas antes do período, quantas voltaram a abrir o app nele).' },
   { key: 'conversao', label: 'Conversão', unit: 'estados', note: 'Por estado: visitas ao site (1 por navegador por dia) × contas que abriram o app no período. Não é taxa de cadastro: mede contas ativas a cada 100 visitas, e as duas contagens não são da mesma coorte.' },
 ];
 
@@ -38,9 +40,11 @@ const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
 
 // Chaves do cache: Tudo, Site e App saem das mesmas consultas (visitas + app),
 // então trocar entre eles não consulta de novo. `round` muda no "Atualizar".
-const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' ? mode : 'acessos'}:${days}`;
+const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' || mode === 'retencao' ? mode : 'acessos'}:${days}`;
 const compareKey = (round, days, kind = 'acessos') => `${round}:comparar:${kind}:${days}`;
-const kindOf = mode => (mode === 'contas' || mode === 'conversao' ? mode : 'acessos');
+// Retenção é só uma tabela por estado: não tem comparação nem gráficos.
+const kindOf = mode => (mode === 'retencao' ? null : mode === 'contas' || mode === 'conversao' ? mode : 'acessos');
+const isTableMode = mode => mode === 'conversao' || mode === 'retencao';
 const dailyKey = (round, days) => `${round}:diario:${days}`;
 const audienceKey = (round, days) => `${round}:origem:${days}`;
 const hoursKey = (round, days) => `${round}:horas:${days}`;
@@ -62,7 +66,12 @@ const loadCompare = (mode, days) => {
   return fetchGeoCompare(days);
 };
 
-const loadFor = (mode, days) => (mode === 'contas' ? fetchUserGeo(days) : mode === 'conversao' ? loadConversion(days) : loadAccess(days));
+const loadFor = (mode, days) => {
+  if (mode === 'contas') return fetchUserGeo(days);
+  if (mode === 'conversao') return loadConversion(days);
+  if (mode === 'retencao') return fetchUserGeoRetention(days);
+  return loadAccess(days);
+};
 
 function Trend({ t, days }) {
   if (!t) return null;
@@ -140,10 +149,11 @@ export default function GeoPanel() {
   const requested = useRef(new Set());
 
   const wantKey = dataKey(round, mode, days);
-  const wantCompare = compareKey(round, days, kindOf(mode));
-  const wantDaily = mode === 'contas' || mode === 'conversao' ? null : dailyKey(round, days);
-  const wantAudience = mode === 'contas' || mode === 'conversao' ? null : audienceKey(round, days);
-  const wantHours = mode === 'contas' || mode === 'conversao' ? null : hoursKey(round, days);
+  const wantCompare = kindOf(mode) ? compareKey(round, days, kindOf(mode)) : null;
+  // Contas também tem gráfico por dia e por horário (dias de uso das contas logadas).
+  const wantDaily = isTableMode(mode) ? null : dailyKey(round, days);
+  const wantAudience = isTableMode(mode) || mode === 'contas' ? null : audienceKey(round, days);
+  const wantHours = isTableMode(mode) ? null : hoursKey(round, days);
 
   useEffect(() => {
     const load = (key, fn) => {
@@ -187,27 +197,30 @@ export default function GeoPanel() {
   const shownDays = shown?.days ?? days;
   const raw = shown ? store[shown.key] : null;
   const isConversion = shownMode === 'conversao';
-  const rawCompare = shown ? store[compareKey(shown.round, shownDays, kindOf(shownMode))] : null;
+  const isRetention = shownMode === 'retencao';
+  const isTable = isConversion || isRetention;
+  const rawCompare = shown && kindOf(shownMode) ? store[compareKey(shown.round, shownDays, kindOf(shownMode))] : null;
 
-  const rawDaily = shown && shownMode !== 'contas' && !isConversion ? store[dailyKey(shown.round, shownDays)] : null;
+  const rawDaily = shown && !isTable ? store[dailyKey(shown.round, shownDays)] : null;
 
-  const rawAudience = shown && shownMode !== 'contas' && !isConversion ? store[audienceKey(shown.round, shownDays)] : null;
+  const rawAudience = shown && shownMode !== 'contas' && !isTable ? store[audienceKey(shown.round, shownDays)] : null;
 
-  const rawHours = shown && shownMode !== 'contas' && !isConversion ? store[hoursKey(shown.round, shownDays)] : null;
+  const rawHours = shown && !isTable ? store[hoursKey(shown.round, shownDays)] : null;
 
   const rows = useMemo(() => {
-    if (!raw || isConversion) return [];
+    if (!raw || isTable) return [];
     return shownMode === 'contas' ? raw : selectAccessRows(raw.visits, raw.app, shownMode);
-  }, [raw, shownMode, isConversion]);
+  }, [raw, shownMode, isTable]);
+  const retention = useMemo(() => (isRetention && raw ? retentionByUf(raw) : []), [raw, isRetention]);
   const conversion = useMemo(
     () => (isConversion && raw ? sortConversion(conversionByUf(raw.visits, raw.users), convSort) : []),
     [raw, isConversion, convSort],
   );
   // Algum extra (comparação, dia, horário, origem) falhou: avisa em vez de sumir.
-  const extrasFailed = !!shown && (
+  const extrasFailed = !!shown && !isRetention && (
     store[compareKey(shown.round, shownDays, kindOf(shownMode))] === null
-    || (shownMode !== 'contas' && !isConversion
-      && [dailyKey, hoursKey, audienceKey].some(k => store[k(shown.round, shownDays)] === null))
+    || (!isConversion
+      && (shownMode === 'contas' ? [dailyKey, hoursKey] : [dailyKey, hoursKey, audienceKey]).some(k => store[k(shown.round, shownDays)] === null))
   );
 
   const countKey = shownMode === 'contas' ? 'users' : 'visits';
@@ -218,9 +231,9 @@ export default function GeoPanel() {
   const summary = useMemo(() => summarizeGeo(rows, countKey, place), [rows, countKey, place]);
   const demo = useMemo(() => (shownMode === 'contas' ? demographics(rows, place) : null), [rows, shownMode, place]);
   const cmp = useMemo(() => {
-    if (!rawCompare || isConversion) return null;
+    if (!rawCompare || isTable) return null;
     return shownMode === 'contas' ? compareUsers(rawCompare) : compareGeo(rawCompare, shownMode);
-  }, [rawCompare, shownMode, isConversion]);
+  }, [rawCompare, shownMode, isTable]);
   const convPrev = useMemo(() => (isConversion && rawCompare ? conversionPrev(rawCompare.visits, rawCompare.users) : null), [rawCompare, isConversion]);
   const daily = useMemo(() => (rawDaily ? dailySeries(rawDaily, shownDays, shownMode, place) : null), [rawDaily, shownDays, shownMode, place]);
   const aud = useMemo(() => (rawAudience ? audience(rawAudience, shownMode, place) : null), [rawAudience, shownMode, place]);
@@ -262,7 +275,22 @@ export default function GeoPanel() {
   const pickCountry = v => { setCountry(v); setAllCities(false); setCityQuery(''); };
   const refresh = () => setRound(r => r + 1);
 
+  // "Resolver agora": pede uma rodada da resolve-geo pros IPs pendentes.
+  const [resolving, setResolving] = useState('idle');
+  const resolveNow = async () => {
+    setResolving('busy');
+    try { await resolveGeoNow(); setResolving('done'); } catch { setResolving('error'); }
+  };
+
   const exportCsv = () => {
+    if (isRetention) {
+      downloadCsv(`localizacao_retencao_${shownDays}d.csv`, toCsv(retention.map(r => ({ ...r, retention: r.retention ?? '' })), [
+        { key: 'label', label: 'Estado' }, { key: 'total', label: 'Contas' }, { key: 'novas', label: 'Novas no período' },
+        { key: 'ativas', label: 'Ativas no período' }, { key: 'antigas', label: 'Contas criadas antes do período' },
+        { key: 'antigasAtivas', label: 'Dessas, ativas no período' }, { key: 'retention', label: 'Retenção %' },
+      ]));
+      return;
+    }
     if (isConversion) {
       downloadCsv(`localizacao_conversao_${shownDays}d.csv`, toCsv(conversion.map(c => ({ ...c, rate: c.rate ?? '', prevRate: convPrev?.get(c.uf)?.rate ?? '' })), [
         { key: 'label', label: 'Estado' }, { key: 'visits', label: 'Visitas ao site' },
@@ -364,7 +392,9 @@ export default function GeoPanel() {
           <button type="button" className="btn btn--ghost btn--small" onClick={refresh}>Tentar de novo</button>
         </p>
       )}
-      {!shown ? (!error && <Loading />) : isConversion ? (
+      {!shown ? (!error && <Loading />) : isRetention ? (
+        <RetentionTable rows={retention} note={current.note} updating={updating} />
+      ) : isConversion ? (
         <div className={updating ? 'card geo-body geo-body--updating' : 'card geo-body'} aria-busy={updating}>
           <p className="card-note" style={{ marginTop: 0 }}>
             {current.note}{updating && <> · <em>atualizando…</em></>}
@@ -440,7 +470,16 @@ export default function GeoPanel() {
             {split && <> Site: <strong>{split.site}</strong> · App: <strong>{split.app}</strong>.</>}
             {' '}<strong>{summary.located}</strong> localizados de {summary.total}
             {cmp && <> <Trend t={trend(cmp.total)} days={shownDays} /></>}
-            {summary.pending > 0 && <> · {summary.pending} aguardando localização</>}
+            {summary.pending > 0 && (
+              <>
+                {' '}· {summary.pending} aguardando localização{' '}
+                <button type="button" className="btn btn--ghost btn--small" onClick={resolveNow} disabled={resolving === 'busy' || resolving === 'done'}>
+                  {resolving === 'busy' ? 'Pedindo…' : 'Resolver agora'}
+                </button>
+                {resolving === 'done' && <> Rodada pedida: leva cerca de um minuto, depois clique em Atualizar.</>}
+                {resolving === 'error' && <> Não foi possível pedir a rodada; o cron tenta de novo em até 15 minutos.</>}
+              </>
+            )}
             {summary.noLocation > 0 && <> · {summary.noLocation} sem localização</>}
             {summary.brNoUf > 0 && <> · {summary.brNoUf} no Brasil sem estado identificado</>}
             {summary.abroad > 0 && <> · {summary.abroad} fora do Brasil{view === 'brasil' && ' (veja em Mundo)'}</>}
