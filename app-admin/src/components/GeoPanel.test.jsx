@@ -32,17 +32,62 @@ const compare = [
   { page: 'landing', country: 'PT', uf: null, cur: 2, prev: 4 },
 ];
 
+// Contas por lugar, atual × anterior: SP 6/3, BA 1/1.
+const userCompare = [
+  { country: 'BR', uf: 'SP', region: 'São Paulo', city: 'Campinas', cur: 6, prev: 3 },
+  { country: 'BR', uf: 'BA', region: 'Bahia', city: 'Salvador', cur: 1, prev: 1 },
+];
+
 const calls = name => mockRpc.mock.calls.filter(c => c[0] === name).length;
 
 beforeEach(() => {
+  localStorage.clear();
   mockRpc.mockReset();
   mockDownload.mockReset();
   mockRpc.mockImplementation(async name => ({
-    data: { admin_user_geo: users, admin_app_geo: app, admin_geo_period_compare: compare }[name] ?? visits, error: null,
+    data: { admin_user_geo: users, admin_app_geo: app, admin_geo_period_compare: compare, admin_user_geo_compare: userCompare }[name] ?? visits, error: null,
   }));
 });
 
 describe('GeoPanel', () => {
+  it('em Contas mostra a variação contra o período anterior', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    fireEvent.click(screen.getByRole('button', { name: 'Contas' }));
+    await screen.findByText(/Sexo e idade/);
+    expect((await screen.findAllByText('↑ 100%')).length).toBeGreaterThan(0); // SP: 6 contra 3
+    expect(calls('admin_user_geo_compare')).toBe(1);
+  });
+
+  it('em Conversão mostra a taxa do período anterior', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    fireEvent.click(screen.getByRole('button', { name: 'Conversão' }));
+    expect(await screen.findByText('No período anterior')).toBeTruthy();
+    // SP: 3 contas / 3 visitas no período anterior = 100 por 100.
+    expect(await screen.findByText('100')).toBeTruthy();
+  });
+
+  it('lembra modo e período escolhidos na próxima abertura', async () => {
+    const first = render(<GeoPanel />);
+    await screen.findByText('Estados');
+    fireEvent.click(screen.getByRole('button', { name: 'Site' }));
+    fireEvent.click(screen.getByRole('button', { name: '90 dias' }));
+    first.unmount();
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    expect(screen.getByRole('button', { name: 'Site' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: '90 dias' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('ignora preferência salva inválida', async () => {
+    localStorage.setItem('admin.geo.prefs', JSON.stringify({ days: 9999, mode: 'xyz', view: 1 }));
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    expect(screen.getByRole('button', { name: 'Tudo' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: '30 dias' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('em Tudo soma site e app, com estados, cidades e países', async () => {
     render(<GeoPanel />);
     expect(await screen.findByText('Estados')).toBeTruthy();
@@ -52,7 +97,7 @@ describe('GeoPanel', () => {
     expect(screen.getAllByText('6 · 50%')).toHaveLength(4); // SP e BA: 6 de 12 cada no Brasil, e as regiões Sudeste e Nordeste iguais
     expect(document.querySelector('.card-note').textContent).toMatch(/Site: 9 · App: 6\./);
     expect(screen.getByText('Campinas · SP')).toBeTruthy();
-    expect(screen.getByText('Lisboa · Lisbon · PT')).toBeTruthy();
+    expect(screen.getByText('Lisboa · Lisbon · Portugal')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Países' }));
     expect(screen.getByText(/Portugal/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Bahia: 6 acessos' })).toBeTruthy();
@@ -161,7 +206,7 @@ describe('GeoPanel', () => {
     expect(screen.queryByText('Estados')).toBeNull();
     fireEvent.click(pt);
     expect(screen.getByText(/Portugal · 2 acessos/)).toBeTruthy();
-    expect(screen.getByText('Lisboa · Lisbon · PT')).toBeTruthy();
+    expect(screen.getByText('Lisboa · Lisbon · Portugal')).toBeTruthy();
     expect(screen.queryByText('Campinas · SP')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Ver o mundo todo' }));
     expect(screen.getByText('Campinas · SP')).toBeTruthy();

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
-  compareGeo, conversionByUf, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
+  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, fetchUserGeoCompare, compareUsers, conversionPrev, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
+  compareGeo, conversionByUf, sortConversion, MIN_VISITS_RATE, REGIONS, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
 import PeriodChart from './PeriodChart';
@@ -26,7 +26,7 @@ const MODES = [
   { key: 'tudo', label: 'Tudo', unit: 'acessos', note: 'Visitas ao site e acessos ao app (1 por navegador ou conta por dia).' },
   { key: 'site', label: 'Site', unit: 'visitas', note: 'Visitas à página de apresentação (1 por navegador por dia).' },
   { key: 'app', label: 'App', unit: 'acessos', note: 'Tela de login de quem chega sem sessão e dias de uso de quem está logado (1 por navegador ou conta por dia).' },
-  { key: 'contas', label: 'Contas', unit: 'contas', note: 'Contas que abriram o app no período, pelo último acesso.' },
+  { key: 'contas', label: 'Contas', unit: 'contas', note: 'Contas que abriram o app no período, pelo último acesso. A seta compara com os dias anteriores pelos dias de uso (uma conta conta uma vez por lugar).' },
   { key: 'conversao', label: 'Conversão', unit: 'estados', note: 'Por estado: visitas ao site (1 por navegador por dia) × contas que abriram o app no período. Não é taxa de cadastro: mede contas ativas a cada 100 visitas, e as duas contagens não são da mesma coorte.' },
 ];
 
@@ -39,7 +39,8 @@ const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
 // Chaves do cache: Tudo, Site e App saem das mesmas consultas (visitas + app),
 // então trocar entre eles não consulta de novo. `round` muda no "Atualizar".
 const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' ? mode : 'acessos'}:${days}`;
-const compareKey = (round, days) => `${round}:comparar:${days}`;
+const compareKey = (round, days, kind = 'acessos') => `${round}:comparar:${kind}:${days}`;
+const kindOf = mode => (mode === 'contas' || mode === 'conversao' ? mode : 'acessos');
 const dailyKey = (round, days) => `${round}:diario:${days}`;
 const audienceKey = (round, days) => `${round}:origem:${days}`;
 const hoursKey = (round, days) => `${round}:horas:${days}`;
@@ -53,6 +54,13 @@ async function loadConversion(days) {
   const [visits, users] = await Promise.all([fetchVisitGeo(days), fetchUserGeo(days)]);
   return { visits, users };
 }
+
+// Comparação com o período anterior de cada modo.
+const loadCompare = (mode, days) => {
+  if (mode === 'contas') return fetchUserGeoCompare(days);
+  if (mode === 'conversao') return Promise.all([fetchGeoCompare(days), fetchUserGeoCompare(days)]).then(([visits, users]) => ({ visits, users }));
+  return fetchGeoCompare(days);
+};
 
 const loadFor = (mode, days) => (mode === 'contas' ? fetchUserGeo(days) : mode === 'conversao' ? loadConversion(days) : loadAccess(days));
 
@@ -95,14 +103,31 @@ function Bars({ rows, onPick, selected, trends, days }) {
   );
 }
 
+// Lembra modo, período e visão entre visitas ao painel (só conveniência: se o
+// armazenamento falhar ou vier algo estranho, volta ao padrão).
+const PREFS_KEY = 'admin.geo.prefs';
+function readPrefs() {
+  const out = { days: 30, mode: 'tudo', view: 'brasil' };
+  try {
+    const p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+    if (Number.isInteger(p.days) && p.days >= 1 && p.days <= 366) out.days = p.days;
+    if (MODES.some(m => m.key === p.mode)) out.mode = p.mode;
+    if (VIEWS.some(v => v.key === p.view)) out.view = p.view;
+  } catch { /* sem armazenamento: usa o padrão */ }
+  return out;
+}
+
 const fmtDay = day => day.split('-').reverse().slice(0, 2).join('/');
 
 // Dashboard → Localização: de onde vêm as visitas e onde estão as contas.
 export default function GeoPanel() {
-  const [days, setDays] = useState(30);
-  const [mode, setMode] = useState('tudo');
-  const [view, setView] = useState('brasil');
+  const [saved] = useState(readPrefs);
+  const [days, setDays] = useState(saved.days);
+  const [mode, setMode] = useState(saved.mode);
+  const [view, setView] = useState(saved.view);
   const [uf, setUf] = useState(null);
+  const [region, setRegion] = useState(null);
+  const [convSort, setConvSort] = useState('visitas');
   const [country, setCountry] = useState(null);
   const [round, setRound] = useState(0);
   const [store, setStore] = useState({});
@@ -115,7 +140,7 @@ export default function GeoPanel() {
   const requested = useRef(new Set());
 
   const wantKey = dataKey(round, mode, days);
-  const wantCompare = mode === 'contas' || mode === 'conversao' ? null : compareKey(round, days);
+  const wantCompare = compareKey(round, days, kindOf(mode));
   const wantDaily = mode === 'contas' || mode === 'conversao' ? null : dailyKey(round, days);
   const wantAudience = mode === 'contas' || mode === 'conversao' ? null : audienceKey(round, days);
   const wantHours = mode === 'contas' || mode === 'conversao' ? null : hoursKey(round, days);
@@ -130,12 +155,26 @@ export default function GeoPanel() {
     };
     load(wantKey, () => loadFor(mode, days));
     // A comparação é um extra: se falhar, o painel segue sem as setas.
-    if (wantCompare) load(wantCompare, () => fetchGeoCompare(days).catch(() => null));
+    if (wantCompare) load(wantCompare, () => loadCompare(mode, days).catch(() => null));
     // O gráfico diário também é um extra.
     if (wantDaily) load(wantDaily, () => fetchGeoDaily(days).catch(() => null));
     if (wantAudience) load(wantAudience, () => fetchGeoAudience(days).catch(() => null));
     if (wantHours) load(wantHours, () => fetchGeoHours(days).catch(() => null));
   }, [wantKey, wantCompare, wantDaily, wantAudience, wantHours, mode, days]);
+
+  useEffect(() => {
+    try { localStorage.setItem(PREFS_KEY, JSON.stringify({ days, mode, view })); } catch { /* ignora */ }
+  }, [days, mode, view]);
+
+  // Depois do "Atualizar", descarta o que veio das rodadas anteriores (só quando
+  // a consulta nova já chegou, pra tela não esvaziar no meio).
+  const currentLoaded = wantKey in store;
+  useEffect(() => {
+    if (!currentLoaded) return;
+    const old = k => Number(k.split(':')[0]) < round;
+    for (const k of [...requested.current]) if (old(k)) requested.current.delete(k);
+    setStore(s => (Object.keys(s).some(old) ? Object.fromEntries(Object.entries(s).filter(([k]) => !old(k))) : s));
+  }, [currentLoaded, round]);
 
   // Enquanto o período novo carrega, continua mostrando o anterior.
   // Só o erro da consulta atual aparece (trocar de período tenta de novo).
@@ -148,7 +187,7 @@ export default function GeoPanel() {
   const shownDays = shown?.days ?? days;
   const raw = shown ? store[shown.key] : null;
   const isConversion = shownMode === 'conversao';
-  const rawCompare = shown && shownMode !== 'contas' && !isConversion ? store[compareKey(shown.round, shownDays)] : null;
+  const rawCompare = shown ? store[compareKey(shown.round, shownDays, kindOf(shownMode))] : null;
 
   const rawDaily = shown && shownMode !== 'contas' && !isConversion ? store[dailyKey(shown.round, shownDays)] : null;
 
@@ -160,16 +199,29 @@ export default function GeoPanel() {
     if (!raw || isConversion) return [];
     return shownMode === 'contas' ? raw : selectAccessRows(raw.visits, raw.app, shownMode);
   }, [raw, shownMode, isConversion]);
-  const conversion = useMemo(() => (isConversion && raw ? conversionByUf(raw.visits, raw.users) : []), [raw, isConversion]);
+  const conversion = useMemo(
+    () => (isConversion && raw ? sortConversion(conversionByUf(raw.visits, raw.users), convSort) : []),
+    [raw, isConversion, convSort],
+  );
+  // Algum extra (comparação, dia, horário, origem) falhou: avisa em vez de sumir.
+  const extrasFailed = !!shown && (
+    store[compareKey(shown.round, shownDays, kindOf(shownMode))] === null
+    || (shownMode !== 'contas' && !isConversion
+      && [dailyKey, hoursKey, audienceKey].some(k => store[k(shown.round, shownDays)] === null))
+  );
 
   const countKey = shownMode === 'contas' ? 'users' : 'visits';
   const current = MODES.find(m => m.key === shownMode);
   // Brasil: filtra por estado; Mundo: por país.
-  const place = useMemo(() => (view === 'brasil' ? { uf } : { country }), [view, uf, country]);
-  const placeName = view === 'brasil' ? uf && (UF_NAMES[uf] || uf) : country && countryName(country);
+  const place = useMemo(() => (view === 'brasil' ? { uf, region } : { country }), [view, uf, region, country]);
+  const placeName = view === 'brasil' ? (uf && (UF_NAMES[uf] || uf)) || region : country && countryName(country);
   const summary = useMemo(() => summarizeGeo(rows, countKey, place), [rows, countKey, place]);
   const demo = useMemo(() => (shownMode === 'contas' ? demographics(rows, place) : null), [rows, shownMode, place]);
-  const cmp = useMemo(() => (rawCompare ? compareGeo(rawCompare, shownMode) : null), [rawCompare, shownMode]);
+  const cmp = useMemo(() => {
+    if (!rawCompare || isConversion) return null;
+    return shownMode === 'contas' ? compareUsers(rawCompare) : compareGeo(rawCompare, shownMode);
+  }, [rawCompare, shownMode, isConversion]);
+  const convPrev = useMemo(() => (isConversion && rawCompare ? conversionPrev(rawCompare.visits, rawCompare.users) : null), [rawCompare, isConversion]);
   const daily = useMemo(() => (rawDaily ? dailySeries(rawDaily, shownDays, shownMode, place) : null), [rawDaily, shownDays, shownMode, place]);
   const aud = useMemo(() => (rawAudience ? audience(rawAudience, shownMode, place) : null), [rawAudience, shownMode, place]);
   const hours = useMemo(() => (rawHours ? hourSeries(rawHours, shownMode, place) : null), [rawHours, shownMode, place]);
@@ -181,13 +233,15 @@ export default function GeoPanel() {
   const split = shownMode === 'tudo' ? splitSiteApp(rows) : null;
   const placeSplit = shownMode === 'tudo' && placeName ? splitSiteApp(rows, place) : null;
   // % das cidades sobre os localizados do estado/país escolhido (ou de todos).
-  const cityBase = uf && view === 'brasil' ? ufTotal : country && view === 'mundo' ? countryTotal : summary.located;
+  const regionTotal = region ? regions.find(r => r.region === region)?.total || 0 : 0;
+  const cityBase = view === 'brasil' ? (uf ? ufTotal : region ? regionTotal : summary.located) : country ? countryTotal : summary.located;
   const query = fold(cityQuery.trim());
   const matches = useMemo(() => (query
     ? summary.cities.filter(c => fold(`${c.city} ${c.place} ${c.country !== 'BR' ? countryName(c.country) : ''}`).includes(query))
     : summary.cities), [summary.cities, query]);
   const cities = allCities || query ? matches : matches.slice(0, CITIES_PREVIEW);
-  const states = allStates ? summary.states : summary.states.slice(0, STATES_PREVIEW);
+  const regionStates = region ? summary.states.filter(s => REGIONS[region]?.includes(s.uf)) : summary.states;
+  const states = allStates || region ? regionStates : regionStates.slice(0, STATES_PREVIEW);
   const freshCount = fresh ? fresh.states.length + fresh.countries.length + fresh.cities.length : 0;
   const hasDaily = !!daily?.some(d => d.total);
   const hasHours = !!hours?.some(h => h.total);
@@ -202,16 +256,18 @@ export default function GeoPanel() {
   const activeTab = tabs.some(t => t.key === detail) ? detail : 'cidades';
   const cityPct = n => (cityBase > 0 ? Math.round((n / cityBase) * 100) : 0);
 
-  const pickView = v => { setView(v); setUf(null); setCountry(null); setAllCities(false); };
-  const pickUf = v => { setUf(v); setAllCities(false); };
-  const pickCountry = v => { setCountry(v); setAllCities(false); };
+  const pickView = v => { setView(v); setUf(null); setRegion(null); setCountry(null); setAllCities(false); setCityQuery(''); };
+  const pickUf = v => { setUf(v); setRegion(null); setAllCities(false); setCityQuery(''); };
+  const pickRegion = v => { setRegion(v); setUf(null); setAllCities(false); setCityQuery(''); };
+  const pickCountry = v => { setCountry(v); setAllCities(false); setCityQuery(''); };
   const refresh = () => setRound(r => r + 1);
 
   const exportCsv = () => {
     if (isConversion) {
-      downloadCsv(`localizacao_conversao_${shownDays}d.csv`, toCsv(conversion.map(c => ({ ...c, rate: c.rate ?? '' })), [
+      downloadCsv(`localizacao_conversao_${shownDays}d.csv`, toCsv(conversion.map(c => ({ ...c, rate: c.rate ?? '', prevRate: convPrev?.get(c.uf)?.rate ?? '' })), [
         { key: 'label', label: 'Estado' }, { key: 'visits', label: 'Visitas ao site' },
         { key: 'users', label: 'Contas' }, { key: 'rate', label: 'Contas por 100 visitas' },
+        ...(convPrev ? [{ key: 'prevRate', label: `Contas por 100 visitas (${shownDays} dias anteriores)` }] : []),
       ]));
       return;
     }
@@ -231,12 +287,18 @@ export default function GeoPanel() {
         ...demo.sexo.map(x => ({ tipo: 'Sexo', nome: x.label, total: x.total, pct: x.pct })),
         ...demo.faixa.map(x => ({ tipo: 'Faixa etária', nome: x.label, total: x.total, pct: x.pct })),
       ] : []),
+      ...(daily ? daily.map(d => ({ tipo: 'Dia', nome: fmtDay(d.day), total: d.total })) : []),
+      ...(hours ? hours.map(h => ({ tipo: 'Horário (Brasília)', nome: `${h.hour}h`, total: h.total })) : []),
+      ...(aud?.total > 0 ? [
+        ...aud.source.map(x => ({ tipo: 'Origem', nome: x.label, total: x.total, pct: x.pct })),
+        ...aud.device.map(x => ({ tipo: 'Aparelho', nome: x.label, total: x.total, pct: x.pct })),
+      ] : []),
     ];
     const columns = [
       { key: 'tipo', label: 'Tipo' }, { key: 'nome', label: 'Local' }, { key: 'total', label: current.unit }, { key: 'pct', label: '%' },
       ...(cmp ? [{ key: 'anterior', label: `${shownDays} dias anteriores` }, { key: 'variacao', label: 'Variação' }] : []),
     ];
-    const suffix = placeName ? `_${(uf || country).toLowerCase()}` : '';
+    const suffix = placeName ? `_${(uf || country || region).toLowerCase()}` : '';
     downloadCsv(`localizacao_${shownMode}_${shownDays}d${suffix}.csv`, toCsv(out, columns));
   };
 
@@ -296,18 +358,37 @@ export default function GeoPanel() {
     </div>
 
       {error && <p className="form-msg form-msg--error">{error}</p>}
+      {extrasFailed && (
+        <p className="form-msg form-msg--error">
+          Parte dos detalhes (comparação, por dia, por horário ou origem) não carregou.{' '}
+          <button type="button" className="btn btn--ghost btn--small" onClick={refresh}>Tentar de novo</button>
+        </p>
+      )}
       {!shown ? (!error && <Loading />) : isConversion ? (
         <div className={updating ? 'card geo-body geo-body--updating' : 'card geo-body'} aria-busy={updating}>
           <p className="card-note" style={{ marginTop: 0 }}>
             {current.note}{updating && <> · <em>atualizando…</em></>}
           </p>
           {conversion.length ? (
+            <>
+            <div className="seg" role="group" aria-label="Ordenar por">
+              {[{ key: 'visitas', label: 'Mais visitas' }, { key: 'taxa', label: 'Maior taxa' }].map(o => (
+                <button
+                  key={o.key} type="button" aria-pressed={convSort === o.key}
+                  className={`seg__btn${convSort === o.key ? ' seg__btn--active' : ''}`}
+                  onClick={() => setConvSort(o.key)}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
             <div className="table-wrap">
               <table className="source-table">
                 <thead>
                   <tr>
                     <th scope="col">Estado</th><th scope="col">Visitas ao site</th>
                     <th scope="col">Contas</th><th scope="col">Contas por 100 visitas</th>
+                    {convPrev && <th scope="col">No período anterior</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -316,12 +397,21 @@ export default function GeoPanel() {
                       <th scope="row">{c.label}</th>
                       <td>{c.visits}</td>
                       <td>{c.users}</td>
-                      <td>{c.rate === null ? '—' : c.rate.toLocaleString('pt-BR')}</td>
+                      <td>
+                        {c.rate === null ? '—' : c.rate.toLocaleString('pt-BR')}
+                        {c.rate !== null && c.visits < MIN_VISITS_RATE && (
+                          <span title={`Menos de ${MIN_VISITS_RATE} visitas: a taxa não é confiável`}> ⚠ amostra pequena</span>
+                        )}
+                      </td>
+                      {convPrev && (
+                        <td>{convPrev.get(c.uf)?.rate == null ? '—' : convPrev.get(c.uf).rate.toLocaleString('pt-BR')}</td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            </>
           ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no Brasil no período ainda.</p>}
         </div>
       ) : (
@@ -429,12 +519,15 @@ export default function GeoPanel() {
                   {regions.length > 1 && (
                     <>
                       <h3 className="subsection-title" style={{ marginTop: 0 }}>Regiões</h3>
-                      <Bars rows={regions} trends={regionCmp} days={shownDays} />
+                      <Bars rows={regions} onPick={pickRegion} selected={region} trends={regionCmp} days={shownDays} />
+                      {region && (
+                        <button type="button" className="btn btn--ghost btn--small geo-more" onClick={() => pickRegion(null)}>Ver o Brasil todo</button>
+                      )}
                     </>
                   )}
-                  <h3 className="subsection-title" style={regions.length > 1 ? undefined : { marginTop: 0 }}>Estados</h3>
+                  <h3 className="subsection-title" style={regions.length > 1 ? undefined : { marginTop: 0 }}>Estados{region ? ` · ${region}` : ''}</h3>
                   <Bars rows={states} onPick={pickUf} selected={uf} trends={cmp?.byUf} days={shownDays} />
-                  {summary.states.length > STATES_PREVIEW && (
+                  {!region && summary.states.length > STATES_PREVIEW && (
                     <button type="button" className="btn btn--ghost btn--small geo-more" onClick={() => setAllStates(v => !v)}>
                       {allStates ? 'Mostrar menos' : `Ver todos os ${summary.states.length} estados`}
                     </button>
@@ -484,7 +577,7 @@ export default function GeoPanel() {
                         <tbody>
                           {cities.map(c => (
                             <tr key={cityKey(c)}>
-                              <th scope="row">{c.city}{c.place ? ` · ${c.place}` : ''}{c.country !== 'BR' ? ` · ${c.country}` : ''}</th>
+                              <th scope="row">{c.city}{c.place ? ` · ${c.place}` : ''}{c.country !== 'BR' ? ` · ${countryName(c.country)}` : ''}</th>
                               <td>{c.total}</td>
                               <td>{cityPct(c.total)}%</td>
                               {cmp && <td><Trend t={trend(cmp.byCity.get(cityKey(c)))} days={shownDays} /></td>}

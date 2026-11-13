@@ -17,6 +17,9 @@ export const fetchUserGeo = (days = 30) => rpcRows('admin_user_geo', { days_back
 // Período atual × anterior (20261125010000_geo_panel_compare.sql).
 export const fetchGeoCompare = (days = 30) => rpcRows('admin_geo_period_compare', { days_back: days });
 
+// Contas distintas por lugar no período atual × anterior (20261216010000_user_geo_compare.sql).
+export const fetchUserGeoCompare = (days = 30) => rpcRows('admin_user_geo_compare', { days_back: days });
+
 // Acessos localizados por dia (20261215020000_geo_daily.sql).
 export const fetchGeoDaily = (days = 30) => rpcRows('admin_geo_daily', { days_back: days });
 
@@ -117,8 +120,9 @@ function rank(map, build) {
 }
 
 // Filtro de um estado ou de um país (clique no mapa ou na lista).
-export function inPlace(r, { uf = null, country = null } = {}) {
+export function inPlace(r, { uf = null, country = null, region = null } = {}) {
   if (uf) return r.uf === uf;
+  if (region) return r.country === 'BR' && UF_REGION[r.uf] === region;
   if (country) return r.country === country;
   return true;
 }
@@ -187,6 +191,17 @@ export function demographics(rows, place = {}) {
   };
 }
 
+// Abaixo disso a taxa de conversão do estado engana (1 conta em 2 visitas = 50).
+export const MIN_VISITS_RATE = 30;
+
+// Ordena as linhas da conversão: por visitas (padrão) ou pela taxa, deixando
+// sem taxa e amostra pequena por último.
+export function sortConversion(rows, by = 'visitas') {
+  if (by !== 'taxa') return rows;
+  const rank = r => (r.rate === null || r.visits < MIN_VISITS_RATE ? -1 : r.rate);
+  return [...rows].sort((a, b) => rank(b) - rank(a) || b.visits - a.visits || a.label.localeCompare(b.label));
+}
+
 // Visitas ao site × contas que abriram o app, por estado (só localizados no
 // Brasil). `rate` = contas a cada 100 visitas; null quando o estado não tem
 // visita (não dá pra dividir). Ordena por visitas.
@@ -249,6 +264,24 @@ export function compareGeo(rows, mode = 'tudo') {
     if (r.city) add(byCity, cityKey(r), cur, prev);
   }
   return { total, byUf, byCountry, byCity };
+}
+
+// Linhas de admin_user_geo_compare → mesmo formato de compareGeo (modo Contas).
+export const compareUsers = rows => compareGeo((rows || []).map(r => ({ ...r, page: 'app' })), 'app');
+
+// Conversão do período anterior por estado: { uf → { visits, users, rate } }, com
+// as visitas ao site (admin_geo_period_compare) e as contas (admin_user_geo_compare).
+export function conversionPrev(visitCmpRows, userCmpRows) {
+  const out = new Map();
+  const get = uf => out.get(uf) || out.set(uf, { visits: 0, users: 0, rate: null }).get(uf);
+  for (const r of visitCmpRows || []) {
+    if (r.page === 'landing' && r.country === 'BR' && r.uf) get(r.uf).visits += Number(r.prev) || 0;
+  }
+  for (const r of userCmpRows || []) {
+    if (r.country === 'BR' && r.uf) get(r.uf).users += Number(r.prev) || 0;
+  }
+  for (const v of out.values()) v.rate = v.visits > 0 ? Math.round((v.users / v.visits) * 1000) / 10 : null;
+  return out;
 }
 
 export const DEVICE_LABELS = { celular: 'Celular', tablet: 'Tablet', desktop: 'Computador', desconhecido: 'Desconhecido' };

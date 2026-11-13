@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
-  legendSteps, compareGeo, conversionByUf, groupByRegion, regionTrends, dailySeries, audience, hourSeries, newPlaces, trend, trendLabel, countryName, flag, UF_NAMES,
+  legendSteps, compareGeo, conversionByUf, conversionPrev, compareUsers, sortConversion, inPlace, groupByRegion, regionTrends, dailySeries, audience, hourSeries, newPlaces, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -225,6 +225,49 @@ describe('comparação com o período anterior', () => {
       ['SP', 40, 4, 10], ['RJ', 10, 0, 0], ['MG', 0, 2, null],
     ]);
     expect(conversionByUf(null, null)).toEqual([]);
+  });
+
+  it('compareUsers entra no formato da comparação, só no modo de app', () => {
+    const c = compareUsers([
+      { country: 'BR', uf: 'SP', region: 'São Paulo', city: 'Santos', cur: 4, prev: 2 },
+      { country: 'PT', uf: null, region: 'Lisbon', city: 'Lisboa', cur: 1, prev: 0 },
+    ]);
+    expect(c.total).toEqual({ cur: 5, prev: 2 });
+    expect(c.byUf.get('SP')).toEqual({ cur: 4, prev: 2 });
+    expect(c.byCity.get('Lisboa|Lisbon|PT')).toEqual({ cur: 1, prev: 0 });
+    expect(compareUsers(null).total).toEqual({ cur: 0, prev: 0 });
+  });
+
+  it('conversionPrev cruza visitas e contas do período anterior por estado', () => {
+    const prev = conversionPrev(
+      [
+        { page: 'landing', country: 'BR', uf: 'SP', cur: 9, prev: 40 },
+        { page: 'app', country: 'BR', uf: 'SP', cur: 9, prev: 99 },
+        { page: 'landing', country: 'BR', uf: 'RJ', cur: 1, prev: 0 },
+      ],
+      [{ country: 'BR', uf: 'SP', cur: 7, prev: 4 }, { country: 'PT', uf: null, cur: 1, prev: 9 }],
+    );
+    expect(prev.get('SP')).toEqual({ visits: 40, users: 4, rate: 10 });
+    expect(prev.get('RJ').rate).toBeNull();
+    expect(prev.has('PT')).toBe(false);
+  });
+
+  it('sortConversion por taxa deixa sem taxa e amostra pequena por último', () => {
+    const rows = [
+      { uf: 'AC', label: 'Acre', visits: 2, users: 1, rate: 50 },
+      { uf: 'SP', label: 'São Paulo', visits: 100, users: 5, rate: 5 },
+      { uf: 'RJ', label: 'Rio', visits: 40, users: 8, rate: 20 },
+      { uf: 'MG', label: 'Minas', visits: 0, users: 2, rate: null },
+    ];
+    expect(sortConversion(rows, 'visitas')).toBe(rows);
+    expect(sortConversion(rows, 'taxa').map(r => r.uf)).toEqual(['RJ', 'SP', 'AC', 'MG']);
+  });
+
+  it('inPlace filtra por região (só Brasil)', () => {
+    expect(inPlace({ country: 'BR', uf: 'SP' }, { region: 'Sudeste' })).toBe(true);
+    expect(inPlace({ country: 'BR', uf: 'BA' }, { region: 'Sudeste' })).toBe(false);
+    expect(inPlace({ country: 'PT', uf: 'SP' }, { region: 'Sudeste' })).toBe(false);
+    expect(inPlace({ country: 'BR', uf: 'BA' }, { uf: null, region: null })).toBe(true);
   });
 
   it('groupByRegion e regionTrends somam os estados por região', () => {
