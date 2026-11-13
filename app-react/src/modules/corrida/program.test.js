@@ -39,7 +39,7 @@ describe('programa na conta e semana de hoje', () => {
   it('lê o programa salvo e normaliza o início para a segunda-feira', () => {
     expect(programFromMetadata({})).toBeNull();
     expect(programFromMetadata({ runGoal: '5k', runNivel: 'x', runStart: '2026-11-05' }))
-      .toEqual({ goal: '5k', nivel: 'intermediario', start: '2026-11-02' });
+      .toEqual({ goal: '5k', nivel: 'intermediario', start: '2026-11-02', raceDate: null });
   });
 
   it('acha a semana e o dia de hoje', () => {
@@ -93,5 +93,25 @@ describe('dias de corrida (espelho de run_day_planned no banco)', () => {
 
   it('a semana de manutenção corre seg, qua e sáb em qualquer nível', () => {
     for (const nivel of Object.keys(EXPECTED)) expect(mask(maintenanceWeek(nivel))).toBe('1010010');
+  });
+});
+
+describe('dia da prova no programa', () => {
+  const base = { goal: '5k', nivel: 'intermediario', start: '2026-11-02' };
+  const last = p => buildRunProgram(p).weeks.at(-1).days;
+  it('sem prova marcada, o dia da prova fica no sábado', () => {
+    expect(last(base)[5].type).toBe('prova');
+  });
+  it('prova no domingo da última semana: o dia da prova vai para o domingo', () => {
+    const days = last({ ...base, raceDate: '2026-12-27' });
+    expect(days[6].type).toBe('prova');
+    expect(days[5].type).not.toBe('prova');
+  });
+  it('prova fora da última semana não muda nada', () => {
+    expect(last({ ...base, raceDate: '2027-02-06' })[5].type).toBe('prova');
+  });
+  it('lê a data da prova da conta', () => {
+    const p = programFromMetadata({ runGoal: '5k', runStart: '2026-11-02', runRace: { date: '2026-12-27', km: 5 } });
+    expect(p.raceDate).toBe('2026-12-27');
   });
 });

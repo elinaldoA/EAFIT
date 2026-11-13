@@ -78,19 +78,30 @@ export function maintenanceWeek(nivel) {
 }
 
 // { goal, nivel, weeks: [{ week, days: [7 sessões, segunda a domingo] }] }.
-export function buildRunProgram({ goal, nivel }) {
+// start + raceDate (opcionais): se a prova marcada cai na última semana do programa,
+// o "Dia da prova" vai para o dia dela (em vez de sempre sábado) e o dia que ele
+// ocupava troca de lugar com ele.
+export function buildRunProgram({ goal, nivel, start = null, raceDate = null }) {
   const lvl = normalizeLevel(nivel);
   const g = effectiveGoal(goal, lvl);
   const plan = PLANS[g];
   if (!plan) return { goal: g, nivel: lvl, weeks: [] };
-  return {
-    goal: g,
-    nivel: lvl,
-    weeks: Array.from({ length: plan.weeks }, (_, i) => ({
-      week: i + 1,
-      days: buildWeek(i + 1, plan.weeks, lvl, plan),
-    })),
-  };
+  const weeks = Array.from({ length: plan.weeks }, (_, i) => ({
+    week: i + 1,
+    days: buildWeek(i + 1, plan.weeks, lvl, plan),
+  }));
+  if (start && /^\d{4}-\d{2}-\d{2}$/.test(raceDate || '')) {
+    const lastMonday = parseLocalDate(mondayOf(start));
+    lastMonday.setDate(lastMonday.getDate() + (plan.weeks - 1) * 7);
+    if (mondayOf(raceDate) === toDateStr(lastMonday)) {
+      const days = [...weeks[plan.weeks - 1].days];
+      const from = days.findIndex(d => d.type === 'prova');
+      const to = (parseLocalDate(raceDate).getDay() + 6) % 7;
+      if (from >= 0 && from !== to) [days[from], days[to]] = [days[to], days[from]];
+      weeks[plan.weeks - 1] = { week: plan.weeks, days };
+    }
+  }
+  return { goal: g, nivel: lvl, weeks };
 }
 
 // Segunda-feira da semana de `dateStr` (YYYY-MM-DD).
@@ -107,7 +118,8 @@ const daysBetween = (a, b) => Math.round((parseLocalDate(b) - parseLocalDate(a))
 export function programFromMetadata(md) {
   if (!md || !RUN_GOALS.includes(md.runGoal)) return null;
   const start = /^\d{4}-\d{2}-\d{2}$/.test(md.runStart || '') ? mondayOf(md.runStart) : null;
-  return { goal: effectiveGoal(md.runGoal, md.runNivel), nivel: normalizeLevel(md.runNivel), start };
+  const raceDate = /^\d{4}-\d{2}-\d{2}$/.test(md.runRace?.date || '') ? md.runRace.date : null;
+  return { goal: effectiveGoal(md.runGoal, md.runNivel), nivel: normalizeLevel(md.runNivel), start, raceDate };
 }
 
 // Onde a pessoa está hoje: { week, weeks, dayIndex, days, finished, maintenance }.
