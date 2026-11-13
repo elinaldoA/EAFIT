@@ -273,6 +273,61 @@ export function comebackEmail(lang: Lang, days: number, neverTrained: boolean, n
     });
 }
 
+// Ativação (activation.ts): quem criou a conta e ainda não finalizou nenhum
+// treino. Passo 1 no 2º dia (o plano já está pronto), passo 2 no 5º (treino
+// curto, sem cobrança).
+export function activationEmail(lang: Lang, step: 1 | 2, name?: string): EmailContent {
+  const en = lang === 'en';
+  if (step === 1) {
+    return greet(lang, name, en
+      ? {
+        subject: 'Your EAFIT plan is ready',
+        preheader: 'Your first workout is one tap away.',
+        eyebrow: 'Getting started',
+        heading: 'Your plan is ready. Time for workout number 1.',
+        paragraphs: [
+          'Your account is set up and your plan is waiting. Open the app, pick today’s workout and tick off the first set. Everything else builds from there.',
+          'Do not wait for the perfect day: a short workout already counts and starts your streak.',
+        ],
+        cta: { label: 'Start my first workout', url: `${APP_URL}#treino` },
+      }
+      : {
+        subject: 'Seu plano no EAFIT está pronto',
+        preheader: 'Seu primeiro treino está a um toque.',
+        eyebrow: 'Primeiros passos',
+        heading: 'Seu plano está pronto. Hora do treino número 1.',
+        paragraphs: [
+          'Sua conta está configurada e o seu plano já está esperando. Abra o app, escolha o treino de hoje e marque a primeira série. O resto vem a partir daí.',
+          'Não espere o dia perfeito: um treino curto já conta e começa a sua sequência.',
+        ],
+        cta: { label: 'Começar meu primeiro treino', url: `${APP_URL}#treino` },
+      });
+  }
+  return greet(lang, name, en
+    ? {
+      subject: 'Just 15 minutes is enough to start',
+      preheader: 'No pressure, only a first step.',
+      eyebrow: 'No pressure',
+      heading: 'Just 15 minutes is enough to start',
+      paragraphs: [
+        'Starting is the hardest part. Open the app, do only the first exercises of the workout and stop when you want: whatever you finish is saved.',
+        'You can adjust the plan or ask for a swap any time. We are here with you.',
+      ],
+      cta: { label: 'Open today’s workout', url: `${APP_URL}#treino` },
+    }
+    : {
+      subject: 'Só 15 minutos já bastam para começar',
+      preheader: 'Sem pressão, só um primeiro passo.',
+      eyebrow: 'Sem pressão',
+      heading: 'Só 15 minutos já bastam para começar',
+      paragraphs: [
+        'Começar é a parte mais difícil. Abra o app, faça só os primeiros exercícios do treino e pare quando quiser: o que você concluir fica salvo.',
+        'Você pode ajustar o plano ou pedir uma troca de exercício quando quiser. A gente está aqui com você.',
+      ],
+      cta: { label: 'Abrir o treino de hoje', url: `${APP_URL}#treino` },
+    });
+}
+
 // Pesquisa de inatividade: passou das 4 semanas do convite pra voltar, então
 // pergunta o motivo. Cada opção é um link que já registra a resposta
 // (`linkFor`, ver inactivity.ts). 'absent' = sumiu do app; 'idle' = continua

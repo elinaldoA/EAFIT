@@ -14,7 +14,7 @@ export const FEEDBACK_REPLY_TITLE = '💬 Resposta ao seu feedback';
 // Lembretes automáticos (engagement_rules) que falam do treino.
 const WORKOUT_KINDS = [
   'plan_expiring', 'first_workout', 'first_workout_late', 'no_plan', 'second_workout',
-  'weekly_goal', 'workout_today', 'comeback', 'welcome',
+  'weekly_goal', 'workout_today', 'comeback', 'activation', 'welcome',
 ];
 
 // Destinos: aba (hash), modo do app (quem é personal usa os dois) e o que a

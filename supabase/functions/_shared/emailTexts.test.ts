@@ -1,7 +1,7 @@
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
 import { renderEmail } from './emailLayout.ts';
 import {
-  accountDeletedEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, firstNameOf, inactivityEmail, runWeeklySummaryEmail, shouldSendWelcome, weeklyExtrasLine,
+  accountDeletedEmail, activationEmail, broadcastEmail, comebackEmail, feedbackReplyEmail, firstNameOf, inactivityEmail, runWeeklySummaryEmail, shouldSendWelcome, weeklyExtrasLine,
   weeklySummaryEmail, welcomeEmail,
 } from './emailTexts.ts';
 
@@ -155,4 +155,13 @@ Deno.test('e-mails chamam a pessoa pelo nome quando ele é conhecido', () => {
   assertEquals(comebackEmail('pt', 9, false, 'Maria').subject, 'Maria, sentimos sua falta no EAFIT');
   assertEquals(weeklySummaryEmail('pt', 3, 4, 100, {}, 'Maria').paragraphs[0], 'Oi, Maria!');
   assertEquals(feedbackReplyEmail('pt', 'ok', 'Maria').paragraphs[0], 'Oi, Maria!');
+});
+
+Deno.test('activationEmail: passo 1 (plano pronto) e passo 2 (15 minutos), pt e en, com botão pro treino', () => {
+  assertEquals(activationEmail('pt', 1).subject, 'Seu plano no EAFIT está pronto');
+  assertEquals(activationEmail('en', 1).subject, 'Your EAFIT plan is ready');
+  assertEquals(activationEmail('pt', 2).subject, 'Só 15 minutos já bastam para começar');
+  assertEquals(activationEmail('en', 2).subject, 'Just 15 minutes is enough to start');
+  assertEquals(activationEmail('pt', 1).cta?.url, 'https://eafit.com.br/app/#treino');
+  assertStringIncludes(activationEmail('pt', 2, 'Maria').paragraphs[0], 'Oi, Maria!');
 });
