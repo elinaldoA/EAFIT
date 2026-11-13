@@ -101,6 +101,20 @@ describe('GeoPanel', () => {
     expect(calls('admin_geo_resolve_now')).toBe(1);
   });
 
+  it('aba sem dados no período aparece com aviso em vez de sumir', async () => {
+    mockRpc.mockImplementation(async name => ({
+      data: { admin_user_geo: users, admin_app_geo: app, admin_geo_period_compare: compare, admin_geo_daily: [], admin_geo_hours: [], admin_geo_audience: [] }[name] ?? visits,
+      error: null,
+    }));
+    render(<GeoPanel />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Por dia' }));
+    expect(screen.getByText(/localizados por dia/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Por horário' }));
+    expect(screen.getByText(/localizados por horário/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Origem e aparelho' }));
+    expect(screen.getByText(/Sem visitas com origem e aparelho/)).toBeTruthy();
+  });
+
   it('lembra modo e período escolhidos na próxima abertura', async () => {
     const first = render(<GeoPanel />);
     await screen.findByText('Estados');

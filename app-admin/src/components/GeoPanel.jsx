@@ -33,6 +33,7 @@ const MODES = [
 ];
 
 const CITIES_PREVIEW = 10;
+const CITIES_MAX = 200; // "Ver todas" não despeja milhares de linhas; a busca acha o resto
 const STATES_PREVIEW = 8;
 
 // Busca sem diferenciar maiúsculas nem acentos ("sao paulo" acha "São Paulo").
@@ -252,7 +253,7 @@ export default function GeoPanel() {
   const matches = useMemo(() => (query
     ? summary.cities.filter(c => fold(`${c.city} ${c.place} ${c.country !== 'BR' ? countryName(c.country) : ''}`).includes(query))
     : summary.cities), [summary.cities, query]);
-  const cities = allCities || query ? matches : matches.slice(0, CITIES_PREVIEW);
+  const cities = allCities || query ? matches.slice(0, CITIES_MAX) : matches.slice(0, CITIES_PREVIEW);
   const regionStates = region ? summary.states.filter(s => REGIONS[region]?.includes(s.uf)) : summary.states;
   const states = allStates || region ? regionStates : regionStates.slice(0, STATES_PREVIEW);
   const freshCount = fresh ? fresh.states.length + fresh.countries.length + fresh.cities.length : 0;
@@ -260,9 +261,9 @@ export default function GeoPanel() {
   const hasHours = !!hours?.some(h => h.total);
   const tabs = [
     { key: 'cidades', label: 'Cidades' },
-    ...(hasDaily ? [{ key: 'dia', label: 'Por dia' }] : []),
-    ...(hasHours ? [{ key: 'hora', label: 'Por horário' }] : []),
-    ...(aud?.total > 0 ? [{ key: 'origem', label: 'Origem e aparelho' }] : []),
+    ...(daily ? [{ key: 'dia', label: 'Por dia' }] : []),
+    ...(hours ? [{ key: 'hora', label: 'Por horário' }] : []),
+    ...(aud ? [{ key: 'origem', label: 'Origem e aparelho' }] : []),
     ...(demo ? [{ key: 'perfil', label: 'Sexo e idade' }] : []),
     ...(view === 'brasil' && summary.countries.length ? [{ key: 'paises', label: 'Países' }] : []),
   ];
@@ -480,7 +481,9 @@ export default function GeoPanel() {
                 {resolving === 'error' && <> Não foi possível pedir a rodada; o cron tenta de novo em até 15 minutos.</>}
               </>
             )}
-            {summary.noLocation > 0 && <> · {summary.noLocation} sem localização</>}
+            {summary.noLocation > 0 && (
+              <> · <span title="IP privado, VPN ou rede que o provedor de localização não reconhece">{summary.noLocation} sem localização</span></>
+            )}
             {summary.brNoUf > 0 && <> · {summary.brNoUf} no Brasil sem estado identificado</>}
             {summary.abroad > 0 && <> · {summary.abroad} fora do Brasil{view === 'brasil' && ' (veja em Mundo)'}</>}
             {updating && <> · <em>atualizando…</em></>}
@@ -631,49 +634,47 @@ export default function GeoPanel() {
                       {allCities ? 'Mostrar menos' : `Ver todas as ${summary.cities.length} cidades`}
                     </button>
                   )}
+                  {(allCities || query) && matches.length > CITIES_MAX && (
+                    <p className="card-note">Mostrando as {CITIES_MAX} primeiras de {matches.length}: use a busca para achar uma cidade.</p>
+                  )}
                 </>
               ) : <p className="card-note" style={{ marginTop: 0 }}>Sem cidade identificada no período.</p>}
             </div>
           )}
           {activeTab === 'dia' && daily && (
             <div className="geo-detail">
-              <PeriodChart
+              {!hasDaily ? <p className="card-note" style={{ marginTop: 0 }}>Sem {current.unit} localizados por dia{placeName ? ` em ${placeName}` : ''} neste período.</p> : <PeriodChart
                 title="Por dia" series={daily.map(d => ({ key: d.day, label: fmtDay(d.day), total: d.total }))}
                 unit={current.unit} where={placeName} from={fmtDay(daily[0].day)} to={fmtDay(daily[daily.length - 1].day)}
-              />
+              />}
             </div>
           )}
           {activeTab === 'hora' && hours && (
             <div className="geo-detail">
-              <PeriodChart
+              {!hasHours ? <p className="card-note" style={{ marginTop: 0 }}>Sem {current.unit} localizados por horário{placeName ? ` em ${placeName}` : ''} neste período.</p> : <PeriodChart
                 title="Por horário (Brasília)" series={hours.map(h => ({ key: h.hour, label: `${h.hour}h`, total: h.total }))}
                 unit={current.unit} where={placeName} from="0h" to="23h" cyclic
-              />
+              />}
             </div>
           )}
-          {activeTab === 'origem' && aud?.total > 0 && (
+          {activeTab === 'origem' && aud && (
             <div className="geo-detail">
-              {aud?.total > 0 && (
+              {aud.total > 0 ? (
                 <>
                   <h3 className="subsection-title">Origem das visitas{placeName ? ` em ${placeName}` : ''}</h3>
                   <Donut rows={aud.source} />
                   <h3 className="subsection-title">Aparelho{placeName ? ` em ${placeName}` : ''}</h3>
                   <Donut rows={aud.device} />
                 </>
-              )}
-
+              ) : <p className="card-note" style={{ marginTop: 0 }}>Sem visitas com origem e aparelho{placeName ? ` em ${placeName}` : ''} neste período.</p>}
             </div>
           )}
           {activeTab === 'perfil' && demo && (
             <div className="geo-detail">
-              {demo && (
-                <>
-                  <h3 className="subsection-title">Sexo{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Donut rows={demo.sexo} />
-                  <h3 className="subsection-title">Faixa etária{placeName ? ` em ${placeName}` : ''}</h3>
-                  <Donut rows={demo.faixa} ordered />
-                </>
-              )}
+              <h3 className="subsection-title">Sexo{placeName ? ` em ${placeName}` : ''}</h3>
+              <Donut rows={demo.sexo} />
+              <h3 className="subsection-title">Faixa etária{placeName ? ` em ${placeName}` : ''}</h3>
+              <Donut rows={demo.faixa} ordered />
 
             </div>
           )}
