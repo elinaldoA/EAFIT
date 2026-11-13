@@ -2,3 +2,6 @@ supabase/.temp/
 
 # trilha licenciada usada nos stories (nao publicar no site nem versionar)
 app-admin/music/
+
+# musica local do painel admin
+app-admin/public/song.mp3
