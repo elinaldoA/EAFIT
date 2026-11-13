@@ -300,6 +300,7 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, hear
   const avgPace = paceSeconds(totalS, run.meters);
   const splits = splitsOf(run.kmMarks);
   const lastSplit = splits.length ? splits[splits.length - 1] : null;
+  const [dark, setDark] = useState(false);
   const gain = run.gps ? elevationGain(run.elev) : null;
   const s = run.session;
   const target = s?.minutes ? { done: el / 60000, total: s.minutes, label: t('{v1} de {v2} min', { v1: Math.floor(el / 60000), v2: s.minutes }) }
@@ -308,6 +309,13 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, hear
 
   return (
     <div className="run-live" role="dialog" aria-modal="true" aria-label={t('Corrida em andamento')}>
+      {dark && (
+        <button type="button" className="run-live__dark" onClick={() => setDark(false)} aria-label={t('Tela escura: toque para voltar')}>
+          <span className="run-live__dark-clock">{formatClock(totalS)}</span>
+          <span className="run-live__dark-km">{formatKm(run.meters)} {t('km')}</span>
+          <span className="run-live__dark-hint">{t('Toque para voltar')}</span>
+        </button>
+      )}
       <div className="run-live__top">
         <span className="run-live__brand">EAFIT · Run</span>
         <div className="run-live__toggles">
@@ -316,6 +324,7 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, hear
               {autoPauseOn ? t('Pausa auto ligada') : t('Pausa auto desligada')}
             </button>
           )}
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setDark(true)}>{t('🌙 Tela escura')}</button>
           <button type="button" className="btn btn--ghost btn--sm" onClick={onToggleVoice} aria-pressed={voiceOn}>
             {voiceOn ? t('🔊 Voz ligada') : t('🔇 Voz desligada')}
           </button>

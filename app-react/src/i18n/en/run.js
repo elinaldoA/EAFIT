@@ -319,6 +319,9 @@ export default {
   "Tiro {v1} de {v2}: {v3} forte!": "Interval {v1} of {v2}: {v3} hard!",
   "Trote: {v1}. Respire.": "Jog: {v1}. Breathe.",
   "Acelere um pouco: ritmo {v1}, alvo {v2}.": "Pick it up a little: pace {v1}, target {v2}.",
+  "🌙 Tela escura": "🌙 Dark screen",
+  "Tela escura: toque para voltar": "Dark screen: tap to go back",
+  "Toque para voltar": "Tap to go back",
   "Frequência alta: {v1} batimentos. Diminua o ritmo.": "Heart rate high: {v1} bpm. Slow down.",
   "Segure o ritmo: {v1}, alvo {v2}.": "Ease off a little: pace {v1}, target {v2}.",
   // Comentários, medalhas e resumo da semana

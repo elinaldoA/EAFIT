@@ -535,3 +535,13 @@
 .run-zones__list li { display: grid; grid-template-columns: 12px 1fr auto 4.5rem; gap: var(--sp-2); align-items: center; }
 .run-zones__list small { text-align: right; opacity: .7; }
 .run-zones__dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Tela escura da corrida: fundo preto (poupa bateria em tela OLED), só o tempo e os km em cinza. */
+.run-live__dark {
+  position: fixed; inset: 0; z-index: 10; border: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2);
+  background: #000; color: #5c5c5c; font-family: inherit;
+}
+.run-live__dark-clock { font-size: 4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.run-live__dark-km { font-size: 1.75rem; font-variant-numeric: tabular-nums; }
+.run-live__dark-hint { font-size: var(--fs-sm); color: #3a3a3a; }
