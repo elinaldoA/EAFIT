@@ -81,7 +81,7 @@ export function ManualRunForm({ userId, onClose }) {
   const [form, setForm] = useState(() => {
     const d = new Date(Date.now() - 45 * 60000);
     return {
-      date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`,
+      date: todayDate(d), // mesma data de Brasília do limite (max) do campo
       time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
       hours: '', minutes: '', seconds: '', km: '', title: '', treadmill: true, visibility: 'amigos',
     };

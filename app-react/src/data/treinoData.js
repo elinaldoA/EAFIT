@@ -11,8 +11,8 @@ const SAO_PAULO_DATE = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Sao_Paulo',
   year: 'numeric', month: '2-digit', day: '2-digit',
 });
-export function todayDate() {
-  return SAO_PAULO_DATE.format(new Date());
+export function todayDate(date = new Date()) {
+  return SAO_PAULO_DATE.format(date);
 }
 // Nome do dia derivado da MESMA data acima, para não divergir de todayDate()
 // no intervalo 21:00–00:00 (parse como meio-dia local evita salto de fuso).
