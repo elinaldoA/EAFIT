@@ -111,6 +111,16 @@ describe('contexto do erro', () => {
     expect(insert.mock.calls[0][0].context.where).toBe('https://x/a.js:3:4');
   });
 
+  it('erro do script injetado pelo navegador do Instagram não é gravado', async () => {
+    const err = new Error('Error invoking postMessage: Java object is gone');
+    err.stack = `Error: x\n    at sendDataToNative (iabjs://navigation_performance_logger_android:1:11722)`;
+    await reportError('error', err, { where: 'iabjs://navigation_performance_logger_android:1:20806' });
+    await reportError('unhandledrejection', new Error('Error invoking postMessage: Java object is gone'));
+    expect(insert).not.toHaveBeenCalled();
+    await reportError('error', new Error('erro nosso'));
+    expect(insert).toHaveBeenCalledTimes(1);
+  });
+
   it('console.error entra no rastro e continua indo para o console', async () => {
     const original = console.error;
     const spy = vi.fn();

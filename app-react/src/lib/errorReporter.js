@@ -61,6 +61,10 @@ export async function reportError(kind, error, extra) {
   try {
     const message = clip(error?.message || error, 500);
     if (!message) return;
+    if (isForeignInjectedError(error, extra?.where)) {
+      addBreadcrumb('erro de script injetado pelo navegador interno (ignorado)');
+      return;
+    }
     const key = `${kind}:${message}`;
     if (seen.has(key) || sent >= MAX_PER_SESSION) return;
     seen.add(key);
@@ -141,6 +145,16 @@ function eventLocation(e) {
 // painel; fica só no rastro das próximas ocorrências.
 export function isOpaqueScriptError(e) {
   return !e.error && !e.filename && /^script error\.?$/i.test(String(e.message || '').trim());
+}
+
+// Navegadores internos (Instagram, Facebook...) injetam scripts próprios na
+// página (`iabjs://...`) e, quando o app vai para segundo plano, o canal deles
+// com o app nativo some: "Error invoking postMessage: Java object is gone".
+// O erro nasce fora do nosso código e não dá para corrigir aqui, então não vai
+// para o painel; fica só no rastro.
+export function isForeignInjectedError(error, where) {
+  const text = [error?.message ?? error, error?.stack, where].filter(Boolean).join('\n');
+  return /iabjs:\/\/|Java object is gone|Error invoking postMessage/i.test(text);
 }
 
 export function installErrorReporter() {
