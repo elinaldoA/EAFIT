@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
+import { useReminders } from '../hooks/useReminders';
+import { isNotificationSupported } from '../lib/notifications';
+import { isPushSupported } from '../lib/pushSubscriptions';
 import { goTo } from '../lib/appNav';
 import { trackFeature } from '../lib/tracking';
 import {
@@ -17,6 +21,8 @@ const STEPS = {
 // Checklist dos primeiros dias, no topo do Treino (ver lib/firstSteps.js).
 export default function FirstSteps({ onStartWorkout = null }) {
   const { user } = useAuth();
+  const toast = useToast();
+  const [, toggleReminders] = useReminders(toast, user);
   const userId = user?.id;
   const eligible = !!userId && isNewAccount(user) && !isFirstStepsDismissed(userId);
   const [steps, setSteps] = useState(null);
@@ -32,6 +38,16 @@ export default function FirstSteps({ onStartWorkout = null }) {
   if (!eligible || hidden || !steps) return null;
   const done = countDone(steps);
   if (done === STEP_KEYS.length) return null;
+
+  // Liga os lembretes aqui mesmo, num toque, quando o navegador pergunta
+  // (permissão ainda não decidida); senão leva ao Perfil, onde há o motivo.
+  const canEnableHere = isNotificationSupported() && isPushSupported() && Notification.permission === 'default';
+  async function handleReminders() {
+    trackFeature('first_steps_reminders');
+    if (!canEnableHere) { goTo({ tab: 'perfil' }); return; }
+    await toggleReminders();
+    setSteps(await fetchFirstSteps(userId));
+  }
 
   function handleDismiss() {
     dismissFirstSteps(userId);
@@ -59,7 +75,9 @@ export default function FirstSteps({ onStartWorkout = null }) {
           );
           return (
             <li key={key} className={ok ? 'first-steps__item first-steps__item--done' : 'first-steps__item'}>
-              {!ok && s.tab ? (
+              {!ok && key === 'reminders' ? (
+                <button type="button" onClick={handleReminders}>{inner}</button>
+              ) : !ok && s.tab ? (
                 <button type="button" onClick={() => { trackFeature(`first_steps_${key}`); goTo({ tab: s.tab }); }}>{inner}</button>
               ) : !ok && key === 'workout' && onStartWorkout ? (
                 <button type="button" onClick={() => { trackFeature('first_steps_workout'); onStartWorkout(); }}>{inner}</button>
