@@ -116,11 +116,19 @@ describe('PlanEditorModal — planos', () => {
 
   it('renomear o plano ativo atualiza o treino da tela', async () => {
     setup();
+    await screen.findByDisplayValue('Hipertrofia');
+    // Espera o carregamento inicial assentar (lista -> plano escolhido -> dias): editar o nome
+    // no meio dele, com o runner do CI lento, às vezes deixava o renomear sem efeito.
+    await waitFor(() => expect(h.api.fetchPlanDays).toHaveBeenCalled(), { timeout: 15000 });
+    await waitFor(() => expect(screen.queryByText('Carregando…')).toBeNull(), { timeout: 15000 });
     const input = await screen.findByDisplayValue('Hipertrofia');
     fireEvent.change(input, { target: { value: 'Massa' } });
+    expect(input.value).toBe('Massa');
     fireEvent.blur(input);
     // renomear -> recarregar a lista -> atualizar o treino: três awaits em cadeia, que
-    // estouram o 1s padrão do waitFor quando o runner do CI está lento.
+    // estouram o 1s padrão do waitFor quando o runner do CI está lento. Dois passos, para a
+    // falha dizer em qual deles parou.
+    await waitFor(() => expect(h.api.renamePlan).toHaveBeenCalledWith('p1', 'Massa'), { timeout: 15000 });
     await waitFor(() => expect(h.refreshPlan).toHaveBeenCalled(), { timeout: 15000 });
   });
 
