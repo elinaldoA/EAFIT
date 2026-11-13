@@ -23,8 +23,11 @@ export function dismissFirstSteps(userId) {
   try { localStorage.setItem(`${DISMISS_KEY}_${userId}`, '1'); } catch { /* sem storage: volta na próxima */ }
 }
 
-async function hasRow(table, userId) {
-  const { data, error } = await db.from(table).select('user_id').eq('user_id', userId).limit(1);
+async function hasRow(table, userId, completedOnly = false) {
+  let query = db.from(table).select('user_id').eq('user_id', userId);
+  // Abrir o dia já cria a linha do treino: só conta o que foi finalizado.
+  if (completedOnly) query = query.eq('completed', true);
+  const { data, error } = await query.limit(1);
   if (error) throw error;
   return (data?.length || 0) > 0;
 }
@@ -34,7 +37,7 @@ async function hasRow(table, userId) {
 export async function fetchFirstSteps(userId) {
   const safe = p => p.catch(() => false);
   const [workout, water, food] = await Promise.all([
-    safe(hasRow('workouts', userId)),
+    safe(hasRow('workouts', userId, true)),
     safe(hasRow('water_logs', userId)),
     safe(hasRow('protein_logs', userId)),
   ]);

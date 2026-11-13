@@ -15,7 +15,7 @@ const STEPS = {
 };
 
 // Checklist dos primeiros dias, no topo do Treino (ver lib/firstSteps.js).
-export default function FirstSteps() {
+export default function FirstSteps({ onStartWorkout = null }) {
   const { user } = useAuth();
   const userId = user?.id;
   const eligible = !!userId && isNewAccount(user) && !isFirstStepsDismissed(userId);
@@ -54,13 +54,15 @@ export default function FirstSteps() {
           const inner = (
             <>
               <span className="first-steps__icon" aria-hidden="true">{ok ? '✅' : s.icon}</span>
-              <span className="first-steps__label">{s.label}{!ok && s.hint && <small>{s.hint}</small>}</span>
+              <span className="first-steps__label">{s.label}{!ok && s.hint && !(key === 'workout' && onStartWorkout) && <small>{s.hint}</small>}</span>
             </>
           );
           return (
             <li key={key} className={ok ? 'first-steps__item first-steps__item--done' : 'first-steps__item'}>
               {!ok && s.tab ? (
                 <button type="button" onClick={() => { trackFeature(`first_steps_${key}`); goTo({ tab: s.tab }); }}>{inner}</button>
+              ) : !ok && key === 'workout' && onStartWorkout ? (
+                <button type="button" onClick={() => { trackFeature('first_steps_workout'); onStartWorkout(); }}>{inner}</button>
               ) : <div>{inner}</div>}
             </li>
           );

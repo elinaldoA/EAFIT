@@ -19,6 +19,8 @@ import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
 import FirstSteps from '../components/FirstSteps';
+import { isNewAccount } from '../lib/firstSteps';
+import { pickFirstWorkoutDay } from '../lib/firstWorkout';
 import PersonalMessages from '../components/PersonalMessages';
 import MyAppointments from '../components/MyAppointments';
 import { syncCoachPrefs } from '../lib/coach';
@@ -123,6 +125,11 @@ export default function TreinoPage() {
   const hardWeeks = history ? hardWeekStreak(history.sets, todayStr) : null;
   const volume = history ? weekVolume(history.sets, todayStr) : null;
   const todayHasSets = todaySets.total > 0;
+  // Primeiro treino de quem acabou de chegar: se hoje é descanso no plano, oferece o próximo dia.
+  const firstDay = history && history.sets.length === 0 && isNewAccount(user)
+    ? pickFirstWorkoutDay(activePlanDays, todayName(), d => countSets(gatherExerciseDetails(d)).total > 0)
+    : null;
+  const startFirst = firstDay ? () => { trackFeature('first_workout_start'); setLiveDay(firstDay.dia); } : null;
   const coach = history && !planExpired && !activePause(user?.user_metadata || {}, todayStr)
     ? buildTrainingCoach({
         today: today && { hasSets: todayHasSets, done: todayDone, started: todaySets.done > 0, quick: !!quickMinutes },
@@ -167,7 +174,7 @@ export default function TreinoPage() {
       <PauseBanner />
       <PersonalMessages />
       <MyAppointments onlyPending />
-      <FirstSteps />
+      <FirstSteps onStartWorkout={startFirst} />
       {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
@@ -186,6 +193,8 @@ export default function TreinoPage() {
           onQuick={quickOn ? () => setShowQuick(true) : null}
           mobility={isFlagOn(config.flags, 'mobilidade')}
           coach={coachEl}
+          firstDay={firstDay && firstDay.dia !== today.dia ? firstDay : null}
+          onStartFirst={startFirst}
         />
       )}
       {!today && !loading && coach && <div className="today-card">{coachEl}</div>}
@@ -291,7 +300,7 @@ export default function TreinoPage() {
   );
 }
 
-function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility, coach }) {
+function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility, coach, firstDay, onStartFirst }) {
   const hasSets = sets.total > 0;
   const pct = hasSets ? (sets.done / sets.total) * 100 : 0;
   let cta = t('⚡ Começar treino');
@@ -319,6 +328,11 @@ function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility, 
       {!hasSets && <p className="today-card__rest">{t('Dia de recuperação — descanse bem ou faça um cardio leve. 🧘')}</p>}
       {coach}
       {hasSets && <button type="button" className="btn btn--primary btn--full" onClick={onStart}>{cta}</button>}
+      {!hasSets && firstDay && onStartFirst && (
+        <button type="button" className="btn btn--primary btn--full" onClick={onStartFirst}>
+          {t('⚡ Começar pelo primeiro treino: {foco}', { foco: tFoco(firstDay.foco) })}
+        </button>
+      )}
       {hasSets && !done && onQuick && (
         <button type="button" className="today-card__link" onClick={onQuick}>
           {quickMinutes ? t('Mudar o tempo ou voltar ao treino completo') : t('⏱ Pouco tempo hoje? Enxugar o treino')}
