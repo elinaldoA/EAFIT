@@ -5,7 +5,7 @@ vi.mock('./supabase', () => ({ db: { rpc: mockRpc } }));
 
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchGeoCompare, selectAccessRows, splitSiteApp, summarizeGeo, demographics, colorStep,
-  legendSteps, compareGeo, conversionByUf, conversionPrev, compareUsers, retentionByUf, resolveGeoNow, sortConversion, inPlace, groupByRegion, regionTrends, dailySeries, audience, hourSeries, newPlaces, trend, trendLabel, countryName, flag, UF_NAMES,
+  legendSteps, compareGeo, conversionByUf, conversionPrev, compareUsers, rangeFromDates, monthRange, rangeStart, fetchGeoDaily, retentionByUf, resolveGeoNow, sortConversion, inPlace, groupByRegion, regionTrends, dailySeries, audience, hourSeries, newPlaces, trend, trendLabel, countryName, flag, UF_NAMES,
 } from './geo';
 import { BR_STATES } from './brazilStates';
 import { WORLD_COUNTRIES } from './worldCountries';
@@ -282,6 +282,38 @@ describe('comparação com o período anterior', () => {
     expect(mockRpc).toHaveBeenLastCalledWith('admin_geo_resolve_now');
     mockRpc.mockResolvedValueOnce({ data: null, error: new Error('not_authorized') });
     await expect(resolveGeoNow()).rejects.toThrow('not_authorized');
+  });
+
+  it('rangeFromDates converte de/até em dias e fim, e recusa períodos inválidos', () => {
+    const today = '2026-11-13';
+    expect(rangeFromDates('2026-10-01', '2026-10-31', today)).toEqual({ days: 31, end: '2026-10-31' });
+    expect(rangeFromDates('2026-11-01', '2026-11-13', today)).toEqual({ days: 13, end: null }); // termina hoje
+    expect(rangeFromDates('2026-11-05', '2026-11-05', today)).toEqual({ days: 1, end: '2026-11-05' });
+    expect(rangeFromDates('2026-10-01', '2026-11-14', today)).toBeNull(); // futuro
+    expect(rangeFromDates('2026-10-05', '2026-10-01', today)).toBeNull(); // invertido
+    expect(rangeFromDates('2025-01-01', '2026-11-13', today)).toBeNull(); // passa de 366 dias
+    expect(rangeFromDates('', '2026-10-01', today)).toBeNull();
+    expect(rangeFromDates('2026-02-30', '2026-03-01', today)).toBeNull(); // data que não existe
+  });
+
+  it('monthRange: este mês até hoje, mês passado inteiro (inclusive virada de ano)', () => {
+    expect(monthRange(0, '2026-11-13')).toMatchObject({ from: '2026-11-01', to: '2026-11-13', days: 13, end: null });
+    expect(monthRange(-1, '2026-11-13')).toMatchObject({ from: '2026-10-01', to: '2026-10-31', days: 31, end: '2026-10-31' });
+    expect(monthRange(-1, '2027-01-10')).toMatchObject({ from: '2026-12-01', to: '2026-12-31', days: 31 });
+    expect(monthRange(-1, '2028-03-05')).toMatchObject({ from: '2028-02-01', to: '2028-02-29', days: 29 }); // bissexto
+  });
+
+  it('rangeStart devolve o primeiro dia do período', () => {
+    expect(rangeStart(31, '2026-10-31', '2026-11-13')).toBe('2026-10-01');
+    expect(rangeStart(7, null, '2026-11-13')).toBe('2026-11-07');
+  });
+
+  it('as consultas por dia mandam end_day só quando o período não termina hoje', async () => {
+    mockRpc.mockResolvedValue({ data: [], error: null });
+    await fetchGeoDaily(30);
+    expect(mockRpc).toHaveBeenLastCalledWith('admin_geo_daily', { days_back: 30 });
+    await fetchGeoDaily(31, '2026-10-31');
+    expect(mockRpc).toHaveBeenLastCalledWith('admin_geo_daily', { days_back: 31, end_day: '2026-10-31' });
   });
 
   it('sortConversion por taxa deixa sem taxa e amostra pequena por último', () => {

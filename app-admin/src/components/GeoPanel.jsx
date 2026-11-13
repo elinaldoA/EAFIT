@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchUserGeoRetention, retentionByUf, resolveGeoNow, fetchGeoCompare, fetchUserGeoCompare, compareUsers, conversionPrev, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
-  compareGeo, conversionByUf, sortConversion, REGIONS, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
+  compareGeo, conversionByUf, sortConversion, REGIONS, groupByRegion, regionTrends, rangeFromDates, monthRange, rangeStart, todaySp, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
 import PeriodChart from './PeriodChart';
@@ -44,6 +44,10 @@ const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase
 
 // Chaves do cache: Tudo, Site e App saem das mesmas consultas (visitas + app),
 // então trocar entre eles não consulta de novo. `round` muda no "Atualizar".
+// Período na chave do cache: "30" (termina hoje) ou "30@2026-10-31".
+const spanKey = (days, end) => (end ? `${days}@${end}` : String(days));
+// Modos que olham o último acesso de cada conta: só valem para períodos até hoje.
+const TODAY_ONLY = ['contas', 'conversao', 'retencao'];
 const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' || mode === 'retencao' ? mode : 'acessos'}:${days}`;
 const compareKey = (round, days, kind = 'acessos') => `${round}:comparar:${kind}:${days}`;
 // Retenção é só uma tabela por estado: não tem comparação nem gráficos.
@@ -53,8 +57,8 @@ const dailyKey = (round, days) => `${round}:diario:${days}`;
 const audienceKey = (round, days) => `${round}:origem:${days}`;
 const hoursKey = (round, days) => `${round}:horas:${days}`;
 
-async function loadAccess(days) {
-  const [visits, app] = await Promise.all([fetchVisitGeo(days), fetchAppGeo(days)]);
+async function loadAccess(days, end) {
+  const [visits, app] = await Promise.all([fetchVisitGeo(days, end), fetchAppGeo(days, end)]);
   return { visits, app };
 }
 
@@ -64,17 +68,17 @@ async function loadConversion(days) {
 }
 
 // Comparação com o período anterior de cada modo.
-const loadCompare = (mode, days) => {
+const loadCompare = (mode, days, end) => {
   if (mode === 'contas') return fetchUserGeoCompare(days);
   if (mode === 'conversao') return Promise.all([fetchGeoCompare(days), fetchUserGeoCompare(days)]).then(([visits, users]) => ({ visits, users }));
-  return fetchGeoCompare(days);
+  return fetchGeoCompare(days, end);
 };
 
-const loadFor = (mode, days) => {
+const loadFor = (mode, days, end) => {
   if (mode === 'contas') return fetchUserGeo(days);
   if (mode === 'conversao') return loadConversion(days);
   if (mode === 'retencao') return fetchUserGeoRetention(days);
-  return loadAccess(days);
+  return loadAccess(days, end);
 };
 
 // Lembra modo, período e visão entre visitas ao painel (só conveniência: se o
@@ -91,12 +95,16 @@ function readPrefs() {
   return out;
 }
 
+const fmtFull = day => day.split('-').reverse().join('/');
 const fmtDay = day => day.split('-').reverse().slice(0, 2).join('/');
 
 // Dashboard → Localização: de onde vêm as visitas e onde estão as contas.
 export default function GeoPanel() {
   const [saved] = useState(readPrefs);
   const [days, setDays] = useState(saved.days);
+  const [endDay, setEndDay] = useState(null); // null = o período termina hoje
+  const [rangeFrom, setRangeFrom] = useState('');
+  const [rangeTo, setRangeTo] = useState('');
   const [mode, setMode] = useState(saved.mode);
   const [view, setView] = useState(saved.view);
   const [uf, setUf] = useState(null);
@@ -113,12 +121,13 @@ export default function GeoPanel() {
   const [detail, setDetail] = useState('cidades');
   const requested = useRef(new Set());
 
-  const wantKey = dataKey(round, mode, days);
-  const wantCompare = kindOf(mode) ? compareKey(round, days, kindOf(mode)) : null;
+  const sk = spanKey(days, endDay);
+  const wantKey = dataKey(round, mode, sk);
+  const wantCompare = kindOf(mode) ? compareKey(round, sk, kindOf(mode)) : null;
   // Contas também tem gráfico por dia e por horário (dias de uso das contas logadas).
-  const wantDaily = isTableMode(mode) ? null : dailyKey(round, days);
-  const wantAudience = isTableMode(mode) || mode === 'contas' ? null : audienceKey(round, days);
-  const wantHours = isTableMode(mode) ? null : hoursKey(round, days);
+  const wantDaily = isTableMode(mode) ? null : dailyKey(round, sk);
+  const wantAudience = isTableMode(mode) || mode === 'contas' ? null : audienceKey(round, sk);
+  const wantHours = isTableMode(mode) ? null : hoursKey(round, sk);
 
   useEffect(() => {
     const load = (key, fn) => {
@@ -128,14 +137,14 @@ export default function GeoPanel() {
         .then(value => setStore(s => ({ ...s, [key]: value })))
         .catch(err => { requested.current.delete(key); setFailure({ key, message: err.message }); });
     };
-    load(wantKey, () => loadFor(mode, days));
+    load(wantKey, () => loadFor(mode, days, endDay));
     // A comparação é um extra: se falhar, o painel segue sem as setas.
-    if (wantCompare) load(wantCompare, () => loadCompare(mode, days).catch(() => null));
+    if (wantCompare) load(wantCompare, () => loadCompare(mode, days, endDay).catch(() => null));
     // O gráfico diário também é um extra.
-    if (wantDaily) load(wantDaily, () => fetchGeoDaily(days).catch(() => null));
-    if (wantAudience) load(wantAudience, () => fetchGeoAudience(days).catch(() => null));
-    if (wantHours) load(wantHours, () => fetchGeoHours(days).catch(() => null));
-  }, [wantKey, wantCompare, wantDaily, wantAudience, wantHours, mode, days]);
+    if (wantDaily) load(wantDaily, () => fetchGeoDaily(days, endDay).catch(() => null));
+    if (wantAudience) load(wantAudience, () => fetchGeoAudience(days, endDay).catch(() => null));
+    if (wantHours) load(wantHours, () => fetchGeoHours(days, endDay).catch(() => null));
+  }, [wantKey, wantCompare, wantDaily, wantAudience, wantHours, mode, days, endDay]);
 
   useEffect(() => {
     try { localStorage.setItem(PREFS_KEY, JSON.stringify({ days, mode, view })); } catch { /* ignora */ }
@@ -155,22 +164,24 @@ export default function GeoPanel() {
   // Só o erro da consulta atual aparece (trocar de período tenta de novo).
   const error = failure?.key === wantKey && !(wantKey in store) ? failure.message : '';
   const [shown, setShown] = useState(null);
-  if (wantKey in store && (shown?.key !== wantKey || shown.mode !== mode)) setShown({ key: wantKey, mode, days, round });
+  if (wantKey in store && (shown?.key !== wantKey || shown.mode !== mode)) setShown({ key: wantKey, mode, days, end: endDay, round });
   const updating = !(wantKey in store) && !error;
 
   const shownMode = shown?.mode ?? mode;
   const shownDays = shown?.days ?? days;
+  const shownEnd = shown ? shown.end : endDay;
+  const shownSk = spanKey(shownDays, shownEnd);
   const raw = shown ? store[shown.key] : null;
   const isConversion = shownMode === 'conversao';
   const isRetention = shownMode === 'retencao';
   const isTable = isConversion || isRetention;
-  const rawCompare = shown && kindOf(shownMode) ? store[compareKey(shown.round, shownDays, kindOf(shownMode))] : null;
+  const rawCompare = shown && kindOf(shownMode) ? store[compareKey(shown.round, shownSk, kindOf(shownMode))] : null;
 
-  const rawDaily = shown && !isTable ? store[dailyKey(shown.round, shownDays)] : null;
+  const rawDaily = shown && !isTable ? store[dailyKey(shown.round, shownSk)] : null;
 
-  const rawAudience = shown && shownMode !== 'contas' && !isTable ? store[audienceKey(shown.round, shownDays)] : null;
+  const rawAudience = shown && shownMode !== 'contas' && !isTable ? store[audienceKey(shown.round, shownSk)] : null;
 
-  const rawHours = shown && !isTable ? store[hoursKey(shown.round, shownDays)] : null;
+  const rawHours = shown && !isTable ? store[hoursKey(shown.round, shownSk)] : null;
 
   const rows = useMemo(() => {
     if (!raw || isTable) return [];
@@ -183,9 +194,9 @@ export default function GeoPanel() {
   );
   // Algum extra (comparação, dia, horário, origem) falhou: avisa em vez de sumir.
   const extrasFailed = !!shown && !isRetention && (
-    store[compareKey(shown.round, shownDays, kindOf(shownMode))] === null
+    store[compareKey(shown.round, shownSk, kindOf(shownMode))] === null
     || (!isConversion
-      && (shownMode === 'contas' ? [dailyKey, hoursKey] : [dailyKey, hoursKey, audienceKey]).some(k => store[k(shown.round, shownDays)] === null))
+      && (shownMode === 'contas' ? [dailyKey, hoursKey] : [dailyKey, hoursKey, audienceKey]).some(k => store[k(shown.round, shownSk)] === null))
   );
 
   const countKey = shownMode === 'contas' ? 'users' : 'visits';
@@ -200,7 +211,7 @@ export default function GeoPanel() {
     return shownMode === 'contas' ? compareUsers(rawCompare) : compareGeo(rawCompare, shownMode);
   }, [rawCompare, shownMode, isTable]);
   const convPrev = useMemo(() => (isConversion && rawCompare ? conversionPrev(rawCompare.visits, rawCompare.users) : null), [rawCompare, isConversion]);
-  const daily = useMemo(() => (rawDaily ? dailySeries(rawDaily, shownDays, shownMode, place) : null), [rawDaily, shownDays, shownMode, place]);
+  const daily = useMemo(() => (rawDaily ? dailySeries(rawDaily, shownDays, shownMode, place, shownEnd || undefined) : null), [rawDaily, shownDays, shownEnd, shownMode, place]);
   const aud = useMemo(() => (rawAudience ? audience(rawAudience, shownMode, place) : null), [rawAudience, shownMode, place]);
   const hours = useMemo(() => (rawHours ? hourSeries(rawHours, shownMode, place) : null), [rawHours, shownMode, place]);
   const fresh = useMemo(() => (cmp ? newPlaces(cmp) : null), [cmp]);
@@ -239,6 +250,22 @@ export default function GeoPanel() {
   const pickRegion = v => { setRegion(v); setUf(null); setAllCities(false); setCityQuery(''); };
   const pickCountry = v => { setCountry(v); setAllCities(false); setCityQuery(''); };
   const refresh = () => setRound(r => r + 1);
+
+  // Período por datas: `r` = { days, end } (ver rangeFromDates). Os modos que
+  // dependem do último acesso da conta não têm período passado: volta pra Tudo.
+  const applyRange = r => {
+    if (!r) return;
+    setDays(r.days);
+    setEndDay(r.end);
+    setCustomDays('');
+    if (r.end && TODAY_ONLY.includes(mode)) setMode('tudo');
+  };
+  const pickMonth = offset => {
+    const m = monthRange(offset);
+    setRangeFrom(m.from);
+    setRangeTo(m.to);
+    applyRange(m);
+  };
 
   // "Resolver agora": pede uma rodada da resolve-geo pros IPs pendentes.
   const [resolving, setResolving] = useState('idle');
@@ -292,7 +319,7 @@ export default function GeoPanel() {
       ...(cmp ? [{ key: 'anterior', label: `${shownDays} dias anteriores` }, { key: 'variacao', label: 'Variação' }] : []),
     ];
     const suffix = placeName ? `_${(uf || country || region).toLowerCase()}` : '';
-    downloadCsv(`localizacao_${shownMode}_${shownDays}d${suffix}.csv`, toCsv(out, columns));
+    downloadCsv(`localizacao_${shownMode}_${shownDays}d${shownEnd ? `_ate_${shownEnd}` : ''}${suffix}.csv`, toCsv(out, columns));
   };
 
   return (
@@ -309,6 +336,8 @@ export default function GeoPanel() {
               <button
                 key={m.key} type="button" aria-pressed={mode === m.key}
                 className={`seg__btn${mode === m.key ? ' seg__btn--active' : ''}`}
+                disabled={!!endDay && TODAY_ONLY.includes(m.key)}
+                title={endDay && TODAY_ONLY.includes(m.key) ? 'Só vale para períodos que terminam hoje' : undefined}
                 onClick={() => setMode(m.key)}
               >
                 {m.label}
@@ -318,9 +347,9 @@ export default function GeoPanel() {
           <div className="seg" role="group" aria-label="Período">
             {PERIODS.map(p => (
               <button
-                key={p.days} type="button" aria-pressed={days === p.days}
-                className={`seg__btn${days === p.days ? ' seg__btn--active' : ''}`}
-                onClick={() => { setDays(p.days); setCustomDays(''); }}
+                key={p.days} type="button" aria-pressed={days === p.days && !endDay}
+                className={`seg__btn${days === p.days && !endDay ? ' seg__btn--active' : ''}`}
+                onClick={() => { setDays(p.days); setEndDay(null); setCustomDays(''); setRangeFrom(''); setRangeTo(''); }}
               >
                 {p.label}
               </button>
@@ -331,7 +360,7 @@ export default function GeoPanel() {
             onSubmit={e => {
               e.preventDefault();
               const n = Math.floor(Number(customDays));
-              if (n >= 1 && n <= 366) setDays(n);
+              if (n >= 1 && n <= 366) { setDays(n); setEndDay(null); setRangeFrom(''); setRangeTo(''); }
             }}
           >
             <label>
@@ -348,6 +377,24 @@ export default function GeoPanel() {
           <button type="button" className="btn btn--ghost btn--small" onClick={exportCsv} disabled={!shown}>Exportar CSV</button>
         </div>
       </div>
+      <form className="geo-controls geo-range" aria-label="Período por datas" onSubmit={e => { e.preventDefault(); applyRange(rangeFromDates(rangeFrom, rangeTo)); }}>
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => pickMonth(0)}>Este mês</button>
+        <button type="button" className="btn btn--ghost btn--small" onClick={() => pickMonth(-1)}>Mês passado</button>
+        <label>
+          De{' '}
+          <input type="date" className="input" value={rangeFrom} max={todaySp()} onChange={e => setRangeFrom(e.target.value)} />
+        </label>
+        <label>
+          até{' '}
+          <input type="date" className="input" value={rangeTo} max={todaySp()} onChange={e => setRangeTo(e.target.value)} />
+        </label>
+        <button type="submit" className="btn btn--ghost btn--small" disabled={!rangeFromDates(rangeFrom, rangeTo)}>Aplicar</button>
+        {endDay && (
+          <span className="card-note" style={{ margin: 0 }}>
+            Mostrando {fmtFull(rangeStart(days, endDay))} a {fmtFull(endDay)} ({days} dias). Contas, Conversão e Retenção só valem até hoje.
+          </span>
+        )}
+      </form>
     </div>
 
       {error && <p className="form-msg form-msg--error">{error}</p>}

@@ -11,11 +11,16 @@ async function rpcRows(name, args) {
   return data || [];
 }
 
-export const fetchVisitGeo = (days = 30) => rpcRows('admin_visit_geo', { days_back: days });
-export const fetchAppGeo = (days = 30) => rpcRows('admin_app_geo', { days_back: days });
+// `end` ('AAAA-MM-DD', fuso de São Paulo) fecha a janela num dia que não é hoje;
+// sem ele o período termina hoje. Só as consultas por dia aceitam; as de contas
+// (último acesso) valem apenas até hoje.
+const span = (days, end) => (end ? { days_back: days, end_day: end } : { days_back: days });
+
+export const fetchVisitGeo = (days = 30, end = null) => rpcRows('admin_visit_geo', span(days, end));
+export const fetchAppGeo = (days = 30, end = null) => rpcRows('admin_app_geo', span(days, end));
 export const fetchUserGeo = (days = 30) => rpcRows('admin_user_geo', { days_back: days });
 // Período atual × anterior (20261125010000_geo_panel_compare.sql).
-export const fetchGeoCompare = (days = 30) => rpcRows('admin_geo_period_compare', { days_back: days });
+export const fetchGeoCompare = (days = 30, end = null) => rpcRows('admin_geo_period_compare', span(days, end));
 
 // Contas distintas por lugar no período atual × anterior (20261216010000_user_geo_compare.sql).
 export const fetchUserGeoCompare = (days = 30) => rpcRows('admin_user_geo_compare', { days_back: days });
@@ -32,13 +37,13 @@ export async function resolveGeoNow() {
 }
 
 // Acessos localizados por dia (20261215020000_geo_daily.sql).
-export const fetchGeoDaily = (days = 30) => rpcRows('admin_geo_daily', { days_back: days });
+export const fetchGeoDaily = (days = 30, end = null) => rpcRows('admin_geo_daily', span(days, end));
 
 // Origem e aparelho das visitas por lugar (20261215030000_geo_audience.sql).
-export const fetchGeoAudience = (days = 30) => rpcRows('admin_geo_audience', { days_back: days });
+export const fetchGeoAudience = (days = 30, end = null) => rpcRows('admin_geo_audience', span(days, end));
 
 // Acessos localizados por hora do dia, em Brasília (20261215040000_geo_hours.sql).
-export const fetchGeoHours = (days = 30) => rpcRows('admin_geo_hours', { days_back: days });
+export const fetchGeoHours = (days = 30, end = null) => rpcRows('admin_geo_hours', span(days, end));
 
 // Qual página conta em cada modo do mapa. 'acesso' é a tela de login do app
 // (quem chega sem sessão); 'app' são os dias de uso de quem está logado
@@ -370,8 +375,43 @@ export function newPlaces(cmp) {
 }
 
 // Hoje (fuso de São Paulo, o mesmo do banco) como 'AAAA-MM-DD'.
-function todaySp() {
+export function todaySp() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+}
+
+// Períodos por datas. Tudo em 'AAAA-MM-DD' (fuso de São Paulo, como o banco).
+const DAY = 86400000;
+const utc = d => new Date(`${d}T12:00:00Z`);
+const iso = t => new Date(t).toISOString().slice(0, 10);
+export const MAX_RANGE_DAYS = 366;
+
+// De/até → { days, end } pra consulta. `end` fica null quando o período termina
+// hoje (a consulta padrão). null se as datas não formam um período válido
+// (vazio, invertido, no futuro ou maior que o limite).
+export function rangeFromDates(from, to, today = todaySp()) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from || '') || !/^\d{4}-\d{2}-\d{2}$/.test(to || '')) return null;
+  // Date aceita 30/02 e rola pro mês seguinte: só vale se a data volta igual.
+  const real = d => { const t = utc(d).getTime(); return !Number.isNaN(t) && iso(t) === d; };
+  if (!real(from) || !real(to)) return null;
+  if (to > today || from > to) return null;
+  const days = Math.round((utc(to) - utc(from)) / DAY) + 1;
+  if (days > MAX_RANGE_DAYS) return null;
+  return { days, end: to === today ? null : to };
+}
+
+// Atalhos de mês: 0 = este mês até hoje; -1 = mês passado inteiro; etc.
+export function monthRange(offset, today = todaySp()) {
+  const [y, m] = today.split('-').map(Number);
+  const first = new Date(Date.UTC(y, m - 1 + offset, 1, 12));
+  const last = new Date(Date.UTC(y, m + offset, 0, 12));
+  const from = iso(first);
+  const to = offset === 0 ? today : iso(last);
+  return { from, to, ...rangeFromDates(from, to, today) };
+}
+
+// Início do período ('AAAA-MM-DD') a partir do fim e dos dias, pra mostrar nos campos.
+export function rangeStart(days, end = null, today = todaySp()) {
+  return iso(utc(end || today).getTime() - (days - 1) * DAY);
 }
 
 // Linhas de admin_geo_daily → um ponto por dia dos últimos `days` (zero onde não

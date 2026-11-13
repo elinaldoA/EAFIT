@@ -115,6 +115,37 @@ describe('GeoPanel', () => {
     expect(screen.getByText(/Sem visitas com origem e aparelho/)).toBeTruthy();
   });
 
+  it('Mês passado consulta com end_day, desliga os modos de conta e volta ao normal nos atalhos', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    fireEvent.click(screen.getByRole('button', { name: 'Contas' }));
+    await screen.findByText(/Sexo e idade/);
+    fireEvent.click(screen.getByRole('button', { name: 'Mês passado' }));
+    await waitFor(() => expect(mockRpc.mock.calls.some(c => c[0] === 'admin_visit_geo' && c[1].end_day)).toBe(true));
+    // saiu de Contas para Tudo e os modos que dependem do último acesso ficam desligados
+    expect(screen.getByRole('button', { name: 'Tudo' }).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button', { name: 'Contas' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Retenção' }).disabled).toBe(true);
+    expect(screen.getByText(/Contas, Conversão e Retenção só valem até hoje/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '30 dias' }));
+    expect(screen.getByRole('button', { name: 'Contas' }).disabled).toBe(false);
+  });
+
+  it('De/até só habilita Aplicar com período válido', async () => {
+    render(<GeoPanel />);
+    await screen.findByText('Estados');
+    const apply = screen.getByRole('button', { name: 'Aplicar' });
+    expect(apply.disabled).toBe(true);
+    const [from, to] = [...document.querySelectorAll('input[type="date"]')];
+    fireEvent.change(from, { target: { value: '2026-01-10' } });
+    fireEvent.change(to, { target: { value: '2026-01-05' } });
+    expect(apply.disabled).toBe(true); // invertido
+    fireEvent.change(to, { target: { value: '2026-01-20' } });
+    expect(apply.disabled).toBe(false);
+    fireEvent.click(apply);
+    await waitFor(() => expect(mockRpc).toHaveBeenCalledWith('admin_visit_geo', { days_back: 11, end_day: '2026-01-20' }));
+  });
+
   it('lembra modo e período escolhidos na próxima abertura', async () => {
     const first = render(<GeoPanel />);
     await screen.findByText('Estados');
