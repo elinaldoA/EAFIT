@@ -182,6 +182,18 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   const isLast = index === items.length - 1;
   const exDone = isExerciseDone(ex);
   const { done: setsDone, total: setsTotal } = countSets(gatherExerciseDetails(day));
+  // Funil do treino (painel → Novidades): abriu o modo treino, marcou a primeira
+  // série, e saiu com ou sem ter marcado alguma. Mostra onde quem começa desiste.
+  const setsDoneRef = useRef(setsDone);
+  setsDoneRef.current = setsDone;
+  const setsAtOpen = useRef(setsDone);
+  useEffect(() => {
+    trackFeature('live_open');
+    return () => trackFeature(setsDoneRef.current > setsAtOpen.current ? 'live_exit_with_sets' : 'live_exit_no_sets');
+  }, []);
+  useEffect(() => {
+    if (setsDone > setsAtOpen.current) trackFeature('live_first_set');
+  }, [setsDone]);
   // Quem reabre o treino já além da metade não ouve "metade do treino" de novo.
   const halfSaid = useRef(setsDone * 2 >= setsTotal);
   const techniqueSaid = useRef(new Set());
