@@ -261,8 +261,9 @@ function readPending() {
   }
 }
 
+// false quando o aparelho não conseguiu gravar (sem storage ou cheio).
 function writePending(all) {
-  try { localStorage.setItem(PENDING_KEY, JSON.stringify(all)); } catch { /* sem storage */ }
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(all)); return true; } catch { return false; }
 }
 
 export const pendingRuns = userId => readPending()[userId] || [];
@@ -271,7 +272,16 @@ function setPending(userId, list) {
   const all = readPending();
   if (list.length) all[userId] = list;
   else delete all[userId];
-  writePending(all);
+  return writePending(all);
+}
+
+// O servidor respondeu e recusou a corrida (dado ou regra que não passa: classes
+// 22 e 23 do Postgres, ou coluna/tabela inexistente), diferente de falta de
+// internet ou sessão vencida, que passam sozinhas. 42501 (RLS) fica de fora: é
+// o que sessão vencida costuma devolver.
+export function isRejectedByServer(err) {
+  const code = String(err?.code || '');
+  return /^(22|23)\w{3}$/.test(code) || code === '42703' || code === '42P01';
 }
 
 async function insertRun(userId, run, extras = OPTIONAL_COLUMNS.filter(c => hasValue(run[c]))) {
@@ -292,13 +302,16 @@ async function insertRun(userId, run, extras = OPTIONAL_COLUMNS.filter(c => hasV
 }
 
 // Salva a corrida; sem conexão, guarda na fila e devolve { pending: true }.
+// rejected: o servidor recusou (fica na fila e é tentada de novo, mas a tela não
+// pode dizer "sem internet"). lost: nem a fila do aparelho aceitou (sem espaço);
+// quem chamou deve manter a corrida na tela em vez de descartá-la.
 export async function saveRun(userId, run) {
   try {
     return { run: await insertRun(userId, run), pending: false };
   } catch (err) {
     console.error('saveRun:', err);
-    setPending(userId, [...pendingRuns(userId).filter(r => r.client_id !== run.client_id), run]);
-    return { run: normalizeRow(run), pending: true };
+    const queued = setPending(userId, [...pendingRuns(userId).filter(r => r.client_id !== run.client_id), run]);
+    return { run: normalizeRow(run), pending: queued, lost: !queued, rejected: isRejectedByServer(err) };
   }
 }
 
@@ -311,7 +324,7 @@ export async function flushPendingRuns(userId) {
   for (const run of list) {
     try { await insertRun(userId, run); sent++; } catch { left.push(run); }
   }
-  setPending(userId, left);
+  if (sent) setPending(userId, left);
   return sent;
 }
 

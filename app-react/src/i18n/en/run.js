@@ -98,6 +98,8 @@ export default {
   // Fim da corrida
   '⚠️ Distância inválida': '⚠️ Invalid distance',
   '📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois': '📶 No internet — the run stays on this device and uploads later',
+  '⚠️ O servidor não aceitou a corrida agora — ela fica no aparelho e tentamos de novo depois': '⚠️ The server did not accept the run right now — it stays on this device and we will try again later',
+  '⚠️ Sem espaço no aparelho para guardar a corrida. Libere espaço e toque em salvar de novo': '⚠️ Not enough space on this device to keep the run. Free up space and tap save again',
   '🏆 Novo recorde — {v1}!': '🏆 New record — {v1}!',
   '✅ Corrida salva: {v1} km em {v2}': '✅ Run saved: {v1} km in {v2}',
   'Corrida descartada': 'Run discarded',

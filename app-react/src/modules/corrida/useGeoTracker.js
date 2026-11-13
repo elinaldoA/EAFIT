@@ -8,6 +8,10 @@ const SLOW_AFTER_MS = 30000;
 // Precisão pior que isso (m) é localização aproximada (Wi-Fi/rede ou
 // "localização precisa" desligada no celular), não GPS.
 const APPROX_M = 500;
+// Intervalo sem leitura aceita (ms) a partir do qual a próxima não liga ao ponto
+// anterior no desenho: app em segundo plano ou GPS parado, a linha reta entre os
+// dois pontos não é o caminho feito. A distância continua somando em linha reta.
+export const ROUTE_GAP_MS = 60000;
 
 export const geoSupported = () => typeof navigator !== 'undefined' && 'geolocation' in navigator;
 
@@ -57,6 +61,7 @@ export function useGeoTracker({ active, paused = false, baseMeters, onMeters, on
       pos => {
         const { latitude: lat, longitude: lon, accuracy: acc, altitude, altitudeAccuracy } = pos.coords;
         const before = track.meters;
+        const gap = track.last ? pos.timestamp - track.last.t : 0;
         const result = applyFix(track, { lat, lon, accuracy: acc, t: pos.timestamp });
         const moved = result.reason === 'moved' ? result.track.meters - before : 0;
         const paused = pausedRef.current;
@@ -72,7 +77,7 @@ export function useGeoTracker({ active, paused = false, baseMeters, onMeters, on
           lastAcceptedAt = Date.now();
           setStatus('tracking');
           if (!paused) {
-            onFixRef.current?.({ lat, lon, jump: result.reason === 'jump', altitude, altitudeAccuracy });
+            onFixRef.current?.({ lat, lon, jump: result.reason === 'jump' || gap > ROUTE_GAP_MS, altitude, altitudeAccuracy });
             if (result.reason !== 'first') onMetersRef.current?.(Math.round(track.meters));
           }
         }

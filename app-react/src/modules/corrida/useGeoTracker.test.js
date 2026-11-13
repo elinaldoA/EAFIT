@@ -25,6 +25,18 @@ afterEach(() => {
 const fix = (accuracy, t = Date.now(), lat = -23.5) => ({ coords: { latitude: lat, longitude: -46.6, accuracy }, timestamp: t });
 
 describe('useGeoTracker', () => {
+  it('depois de um intervalo longo sem leitura o ponto novo recomeça o trecho no desenho', () => {
+    const onFix = vi.fn();
+    const onMeters = vi.fn();
+    renderHook(() => useGeoTracker({ active: true, baseMeters: 0, onFix, onMeters }));
+    const t0 = 1_000_000;
+    act(() => onPos(fix(10, t0, -23.5)));
+    act(() => onPos(fix(10, t0 + 5000, -23.5002)));
+    act(() => onPos(fix(10, t0 + 5000 + 120000, -23.5006)));
+    expect(onFix.mock.calls.map(c => c[0].jump)).toEqual([false, false, true]);
+    expect(onMeters).toHaveBeenCalledTimes(2);
+  });
+
   it('mostra a precisão enquanto procura e passa a rastrear com leitura boa', () => {
     const { result } = renderHook(() => useGeoTracker({ active: true }));
     expect(result.current.status).toBe('searching');

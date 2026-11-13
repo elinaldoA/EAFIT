@@ -472,7 +472,9 @@ function FinishRun({ run, now, onBack, onDone }) {
     const weatherPromise = record.gps ? fetchWeather(run.route) : Promise.resolve(null);
     try { previous = await fetchRuns(user.id); loaded = true; } catch { /* sem rede: sem recorde agora */ }
     record.weather = await weatherPromise;
-    const { pending } = await saveRun(user.id, record);
+    const out = await saveRun(user.id, record);
+    if (out.lost) { setBusy(false); return toast(t('⚠️ Sem espaço no aparelho para guardar a corrida. Libere espaço e toque em salvar de novo')); }
+    const { pending } = out;
     rememberShoe(shoeId);
     const others = previous.filter(r => r.client_id !== record.client_id);
     const records = newRecords(others, record);
@@ -486,7 +488,8 @@ function FinishRun({ run, now, onBack, onDone }) {
     setBusy(false);
     onDone();
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
-    if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
+    if (pending && out.rejected) toast(t('⚠️ O servidor não aceitou a corrida agora — ela fica no aparelho e tentamos de novo depois'));
+    else if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
     else if (records.length) toast(t('🏆 Novo recorde — {v1}!', { v1: records.map(describeRecord).join(', ') }));
     else if (medals.length) toast(t('🏅 Medalha: {v1}!', { v1: medals.map(m => m.title).join(', ') }));
     else if (achieved.length) toast(t('🎖️ Conquista: {v1}!', { v1: achieved.map(a => a.title).join(', ') }));

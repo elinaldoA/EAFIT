@@ -17,7 +17,7 @@ vi.mock('../../lib/supabase', () => {
 
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
-  saveRun, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
+  saveRun, isRejectedByServer, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
   shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
@@ -99,6 +99,34 @@ describe('banco e fila do aparelho', () => {
 
     h.result = { data: { ...run(), id: 'r1' }, error: null };
     expect(await flushPendingRuns('u1')).toBe(1);
+    expect(pendingRuns('u1')).toEqual([]);
+  });
+
+  it('recusa do servidor também guarda na fila, mas avisa que não foi falta de internet', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.result = { data: null, error: { code: '23514', message: 'check violation' } };
+    const out = await saveRun('u1', run());
+    expect(out).toMatchObject({ pending: true, rejected: true, lost: false });
+    expect(pendingRuns('u1')).toHaveLength(1);
+    h.result = { data: null, error: new Error('offline') };
+    expect((await saveRun('u1', run({ client_id: 'c2' }))).rejected).toBe(false);
+  });
+
+  it('isRejectedByServer só reconhece dado recusado, não sessão vencida nem rede', () => {
+    expect(isRejectedByServer({ code: '23505' })).toBe(true);
+    expect(isRejectedByServer({ code: '22001' })).toBe(true);
+    expect(isRejectedByServer({ code: '42501' })).toBe(false);
+    expect(isRejectedByServer({ code: 'PGRST301' })).toBe(false);
+    expect(isRejectedByServer(new Error('Failed to fetch'))).toBe(false);
+  });
+
+  it('sem espaço no aparelho a corrida não é dada como guardada', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.result = { data: null, error: new Error('offline') };
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
+    const out = await saveRun('u1', run());
+    setItem.mockRestore();
+    expect(out).toMatchObject({ pending: false, lost: true });
     expect(pendingRuns('u1')).toEqual([]);
   });
 
