@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchUserGeoRetention, retentionByUf, resolveGeoNow, fetchGeoCompare, fetchUserGeoCompare, compareUsers, conversionPrev, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
-  compareGeo, conversionByUf, sortConversion, MIN_VISITS_RATE, REGIONS, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
+  compareGeo, conversionByUf, sortConversion, REGIONS, groupByRegion, regionTrends, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
 } from '../lib/geo';
 import { toCsv, downloadCsv } from '../lib/csv';
 import PeriodChart from './PeriodChart';
@@ -9,6 +9,9 @@ import Donut from './charts/Donut';
 import BrazilMap from './BrazilMap';
 import Loading from './Loading';
 import RetentionTable from './RetentionTable';
+import ConversionTable from './ConversionTable';
+import { CitiesTab, CountriesTab } from './GeoTables';
+import { Trend, Bars } from './GeoParts';
 
 const WorldMap = lazy(() => import('./WorldMap'));
 
@@ -73,45 +76,6 @@ const loadFor = (mode, days) => {
   if (mode === 'retencao') return fetchUserGeoRetention(days);
   return loadAccess(days);
 };
-
-function Trend({ t, days }) {
-  if (!t) return null;
-  return (
-    <span className={`geo-trend geo-trend--${t.dir}`} title={`Em relação aos ${days} dias anteriores`}>
-      {trendLabel(t)}
-    </span>
-  );
-}
-
-function Bars({ rows, onPick, selected, trends, days }) {
-  if (!rows?.length) return <p className="card-note">Sem dados.</p>;
-  return (
-    <ul className="dist">
-      {rows.map(r => {
-        const key = r.uf || r.region || r.value || r.code;
-        const label = (
-          <>
-            <span className="dist__label">{r.label}</span>
-            <span className="dist__track"><span className="dist__fill" style={{ width: `${Math.max(2, r.pct)}%` }} /></span>
-            <span className="dist__end">
-              <span className="dist__value">{r.total} · {r.pct}%</span>
-              {trends && <Trend t={trend(trends.get(key))} days={days} />}
-            </span>
-          </>
-        );
-        return (
-          <li key={key}>
-            {onPick ? (
-              <button type="button" className={`dist__row dist__row--btn${selected === key ? ' dist__row--sel' : ''}`} onClick={() => onPick(selected === key ? null : key)}>
-                {label}
-              </button>
-            ) : <div className="dist__row">{label}</div>}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
 
 // Lembra modo, período e visão entre visitas ao painel (só conveniência: se o
 // armazenamento falhar ou vier algo estranho, volta ao padrão).
@@ -396,55 +360,7 @@ export default function GeoPanel() {
       {!shown ? (!error && <Loading />) : isRetention ? (
         <RetentionTable rows={retention} note={current.note} updating={updating} />
       ) : isConversion ? (
-        <div className={updating ? 'card geo-body geo-body--updating' : 'card geo-body'} aria-busy={updating}>
-          <p className="card-note" style={{ marginTop: 0 }}>
-            {current.note}{updating && <> · <em>atualizando…</em></>}
-          </p>
-          {conversion.length ? (
-            <>
-            <div className="seg" role="group" aria-label="Ordenar por">
-              {[{ key: 'visitas', label: 'Mais visitas' }, { key: 'taxa', label: 'Maior taxa' }].map(o => (
-                <button
-                  key={o.key} type="button" aria-pressed={convSort === o.key}
-                  className={`seg__btn${convSort === o.key ? ' seg__btn--active' : ''}`}
-                  onClick={() => setConvSort(o.key)}
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
-            <div className="table-wrap">
-              <table className="source-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Estado</th><th scope="col">Visitas ao site</th>
-                    <th scope="col">Contas</th><th scope="col">Contas por 100 visitas</th>
-                    {convPrev && <th scope="col">No período anterior</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {conversion.map(c => (
-                    <tr key={c.uf}>
-                      <th scope="row">{c.label}</th>
-                      <td>{c.visits}</td>
-                      <td>{c.users}</td>
-                      <td>
-                        {c.rate === null ? '—' : c.rate.toLocaleString('pt-BR')}
-                        {c.rate !== null && c.visits < MIN_VISITS_RATE && (
-                          <span title={`Menos de ${MIN_VISITS_RATE} visitas: a taxa não é confiável`}> ⚠ amostra pequena</span>
-                        )}
-                      </td>
-                      {convPrev && (
-                        <td>{convPrev.get(c.uf)?.rate == null ? '—' : convPrev.get(c.uf).rate.toLocaleString('pt-BR')}</td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            </>
-          ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no Brasil no período ainda.</p>}
-        </div>
+        <ConversionTable rows={conversion} prev={convPrev} sort={convSort} onSort={setConvSort} note={current.note} updating={updating} />
       ) : (
         <div className={updating ? 'geo-body geo-body--updating stack' : 'geo-body stack'} aria-busy={updating}>
           <div className="tile-grid tile-grid--kpi">
@@ -597,49 +513,11 @@ export default function GeoPanel() {
           </div>
 
           {activeTab === 'cidades' && (
-            <div className="geo-detail">
-              <h3 className="subsection-title">Cidades{placeName ? ` em ${placeName}` : ''}</h3>
-              {summary.cities.length ? (
-                <>
-                  {summary.cities.length > CITIES_PREVIEW && (
-                    <input
-                      type="search" className="input geo-search" value={cityQuery} placeholder="Buscar cidade"
-                      aria-label="Buscar cidade" onChange={e => setCityQuery(e.target.value)}
-                    />
-                  )}
-                  {cities.length ? (
-                    <div className="table-wrap">
-                      <table className="source-table">
-                        <thead>
-                          <tr>
-                            <th scope="col">Cidade</th><th scope="col">Total</th><th scope="col">%</th>
-                            {cmp && <th scope="col">Variação</th>}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {cities.map(c => (
-                            <tr key={cityKey(c)}>
-                              <th scope="row">{c.city}{c.place ? ` · ${c.place}` : ''}{c.country !== 'BR' ? ` · ${countryName(c.country)}` : ''}</th>
-                              <td>{c.total}</td>
-                              <td>{cityPct(c.total)}%</td>
-                              {cmp && <td><Trend t={trend(cmp.byCity.get(cityKey(c)))} days={shownDays} /></td>}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : <p className="card-note" style={{ marginTop: 0 }}>Nenhuma cidade encontrada para “{cityQuery.trim()}”.</p>}
-                  {!query && summary.cities.length > CITIES_PREVIEW && (
-                    <button type="button" className="btn btn--ghost btn--small geo-more" onClick={() => setAllCities(v => !v)}>
-                      {allCities ? 'Mostrar menos' : `Ver todas as ${summary.cities.length} cidades`}
-                    </button>
-                  )}
-                  {(allCities || query) && matches.length > CITIES_MAX && (
-                    <p className="card-note">Mostrando as {CITIES_MAX} primeiras de {matches.length}: use a busca para achar uma cidade.</p>
-                  )}
-                </>
-              ) : <p className="card-note" style={{ marginTop: 0 }}>Sem cidade identificada no período.</p>}
-            </div>
+            <CitiesTab
+              summary={summary} cities={cities} matches={matches} query={query} cityQuery={cityQuery} onQuery={setCityQuery}
+              previewCount={CITIES_PREVIEW} maxRows={CITIES_MAX} allCities={allCities} onToggleAll={() => setAllCities(v => !v)}
+              placeName={placeName} cmp={cmp} days={shownDays} cityPct={cityPct}
+            />
           )}
           {activeTab === 'dia' && daily && (
             <div className="geo-detail">
@@ -678,27 +556,7 @@ export default function GeoPanel() {
 
             </div>
           )}
-          {activeTab === 'paises' && (
-            <div className="geo-detail">
-          {summary.countries.length ? (
-            <div className="table-wrap">
-              <table className="source-table">
-                <thead><tr><th scope="col">País</th><th scope="col">Total</th><th scope="col">%</th>{cmp && <th scope="col">Variação</th>}</tr></thead>
-                <tbody>
-                  {summary.countries.map(c => (
-                    <tr key={c.code}>
-                      <th scope="row"><span aria-hidden="true">{c.flag}</span> {c.label}</th>
-                      <td>{c.total}</td>
-                      <td>{c.pct}%</td>
-                      {cmp && <td><Trend t={trend(cmp.byCountry.get(c.code))} days={shownDays} /></td>}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : <p className="card-note" style={{ marginTop: 0 }}>Nada localizado no período ainda.</p>}
-            </div>
-          )}
+          {activeTab === 'paises' && <CountriesTab summary={summary} cmp={cmp} days={shownDays} />}
           </div>
         </div>
       )}
