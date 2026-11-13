@@ -80,3 +80,30 @@ describe('zonas de esforço', () => {
     expect(cleanHr({ avg: 150, max: 170, z: [10, 20, 30, 40, 50] }).z).toEqual([10, 20, 30, 40, 50]);
   });
 });
+
+describe('hrAlert', () => {
+  const max = 190;
+  it('só avisa depois de segurar a zona alta por 20 s', async () => {
+    const { hrAlert } = await import('./heartRate');
+    let r = hrAlert(null, 170, max, 100);
+    expect(r.message).toBeNull();
+    r = hrAlert(r.state, 171, max, 110);
+    expect(r.message).toBeNull();
+    r = hrAlert(r.state, 172, max, 121);
+    expect(r.message).toMatch(/172/);
+  });
+  it('repete só depois de 90 s e zera ao voltar para zona baixa', async () => {
+    const { hrAlert } = await import('./heartRate');
+    let r = hrAlert({ since: 0, lastAt: 100 }, 170, max, 150);
+    expect(r.message).toBeNull();
+    r = hrAlert(r.state, 170, max, 191);
+    expect(r.message).not.toBeNull();
+    r = hrAlert(r.state, 120, max, 200);
+    expect(r.state.since).toBeNull();
+  });
+  it('não avisa em treino forte nem sem frequência máxima', async () => {
+    const { hrAlert } = await import('./heartRate');
+    expect(hrAlert({ since: 0, lastAt: null }, 180, max, 60, { type: 'intervalado' }).message).toBeNull();
+    expect(hrAlert({ since: 0, lastAt: null }, 180, null, 60).message).toBeNull();
+  });
+});

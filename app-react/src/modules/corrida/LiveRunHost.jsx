@@ -21,7 +21,7 @@ import { fetchWeather } from './weather';
 import { averageCadence } from './cadence';
 import { useStepCounter } from './useStepCounter';
 import { useHeartRate } from './useHeartRate';
-import { addHeart, heartOf, hrSupported, hrText, maxHeartRate } from './heartRate';
+import { addHeart, heartOf, hrSupported, hrText, maxHeartRate, hrAlert } from './heartRate';
 import HrZones from './HrZones';
 import { useGuidedWorkout } from './useGuidedWorkout';
 import IntervalResults from './IntervalResults';
@@ -170,6 +170,20 @@ export default function LiveRunHost() {
 
   // Intervalado e ritmo alvo (useGuidedWorkout.js).
   const guided = useGuidedWorkout(run, now, voiceOn);
+
+  // Aviso de voz quando a frequência passa de 80% da máxima numa corrida leve.
+  const hrMaxBpm = maxHeartRate(user?.user_metadata);
+  const hrState = useRef(null);
+  const hrBpm = heart.bpm;
+  const hrElapsedS = run ? Math.floor(elapsedMs(run, now) / 1000) : 0;
+  useEffect(() => {
+    if (!running || !voiceOn) { hrState.current = null; return; }
+    const r = hrAlert(hrState.current, hrBpm, hrMaxBpm, hrElapsedS, run?.session);
+    hrState.current = r.state;
+    if (r.message) speak(r.message, { queue: true });
+    // run.session não muda durante a corrida
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hrElapsedS, hrBpm, hrMaxBpm, running, voiceOn]);
   prefs.current.blockAutoPause = !!guided?.blockAutoPause;
 
   if (!run) return null;

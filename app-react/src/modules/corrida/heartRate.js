@@ -76,3 +76,25 @@ export const hrText = hr => {
   const h = cleanHr(hr);
   return h ? t('❤️ {v1} bpm em média · máx {v2}', { v1: h.avg, v2: h.max }) : '';
 };
+
+// Aviso de voz de frequência alta: em corrida leve (a pessoa quer conversar), passar
+// de 80% da máxima (zona 4 ou 5) por HR_HOLD_S segundos seguidos manda diminuir;
+// depois só repete a cada HR_ALERT_EVERY_S. Treino forte (intervalado, ritmo,
+// prova) não avisa: lá a frequência alta é o objetivo.
+export const HR_HOLD_S = 20;
+export const HR_ALERT_EVERY_S = 90;
+const HARD_SESSIONS = ['intervalado', 'ritmo', 'prova'];
+
+export const hrAlertApplies = session => !HARD_SESSIONS.includes(session?.type);
+
+// state = { since, lastAt } (tempo decorrido em s). Devolve { state, message }.
+export function hrAlert(state, bpm, max, elapsedS, session = null) {
+  const idle = { since: null, lastAt: state?.lastAt ?? null };
+  if (!(bpm > 0) || !(max > 0) || !hrAlertApplies(session) || zoneOf(bpm, max) < 3) return { state: idle, message: null };
+  const since = state?.since ?? elapsedS;
+  const lastAt = state?.lastAt ?? null;
+  if (elapsedS - since < HR_HOLD_S || (lastAt != null && elapsedS - lastAt < HR_ALERT_EVERY_S)) {
+    return { state: { since, lastAt }, message: null };
+  }
+  return { state: { since, lastAt: elapsedS }, message: t('Frequência alta: {v1} batimentos. Diminua o ritmo.', { v1: bpm }) };
+}
