@@ -1155,6 +1155,8 @@ describe('Agenda: posts agendados à mão', () => {
     };
     lib.fetchPosts.mockResolvedValue([]); // o corte dos mais recentes não trouxe o post
     lib.fetchScheduledPosts.mockResolvedValue([old]);
+    // Sem fila automática: ela ocuparia os dias à vista da agenda (conforme a hora do dia) e o post à mão cairia em "ver mais".
+    lib.fetchAutopost.mockResolvedValue({ enabled: false, items: [], pending: [], skipped: [], posted: 0 });
     wrap(<MarketingPublish />);
     expect(await screen.findByText('agendado à mão')).toBeTruthy();
   });
