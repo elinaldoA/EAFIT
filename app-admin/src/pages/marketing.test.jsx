@@ -439,11 +439,19 @@ describe('agenda da fila automática', () => {
 
 describe('cartão da publicação automática', () => {
   it('mostra a legenda, as hashtags e o dia de cada item da fila', async () => {
-    wrap(<MarketingPublish />);
-    expect(await screen.findByText(/1 pulado\(s\) por repetição/)).toBeTruthy();
-    expect(screen.getAllByText(/Primeira linha/).length).toBeGreaterThan(0);
-    expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
-    expect(screen.queryAllByText('Hoje').length + screen.queryAllByText(/^Amanhã/).length).toBeGreaterThan(0);
+    // Relógio fixo (segunda, 10h em Brasília): o feed sai hoje e fica à vista. Com a hora real,
+    // numa sexta à tarde o próximo feed só sai na segunda e cai em "ver mais", quebrando o build.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-09T13:00:00Z'));
+    try {
+      wrap(<MarketingPublish />);
+      expect(await screen.findByText(/1 pulado\(s\) por repetição/)).toBeTruthy();
+      expect(screen.getAllByText(/Primeira linha/).length).toBeGreaterThan(0);
+      expect(screen.getByText('Hashtags: #treino #app')).toBeTruthy();
+      expect(screen.queryAllByText('Hoje').length + screen.queryAllByText(/^Amanhã/).length).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
