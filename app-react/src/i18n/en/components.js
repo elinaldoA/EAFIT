@@ -197,6 +197,7 @@ export default {
   '🎯 Usar sugestão': '🎯 Use suggestion',
   '💡 Sugestão: repita {suggestedCarga}kg, mas tente {suggestedReps} reps': '💡 Suggestion: repeat {suggestedCarga}kg, but aim for {suggestedReps} reps',
   '💡 Sugestão: {suggestedCarga}kg': '💡 Suggestion: {suggestedCarga}kg',
+  'sobrou folga no último treino': 'you had reps left last time',
   '(última vez: {lastCarga}kg × {lastReps} reps)': '(last time: {lastCarga}kg × {lastReps} reps)',
   'Inicie o treino para registrar as séries': 'Start the workout to log your sets',
   'Drop-set': 'Drop set',

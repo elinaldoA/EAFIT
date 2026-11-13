@@ -85,13 +85,13 @@ async function fetchSetsWithDatesFallback(userId, exerciseName) {
 
   const { data: sets, error } = await db
     .from('exercise_sets')
-    .select('workout_id, carga, reps')
+    .select('workout_id, carga, reps, rir')
     .in('workout_id', ids)
     .eq('exercise_name', exerciseName)
     .eq('completed', true)
     .not('carga', 'is', null);
   if (error) throw error;
-  return (sets || []).map(s => ({ carga: s.carga, reps: s.reps, workout_date: dateById.get(s.workout_id) }));
+  return (sets || []).map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir, workout_date: dateById.get(s.workout_id) }));
 }
 
 // Busca todas as séries concluídas (com carga, reps e data da sessão) de um
@@ -101,13 +101,13 @@ export async function fetchExerciseSetsWithDates(userId, exerciseName) {
   try {
     const { data, error } = await db
       .from('exercise_sets')
-      .select('carga, reps, workouts!inner(user_id, workout_date)')
+      .select('carga, reps, rir, workouts!inner(user_id, workout_date)')
       .eq('workouts.user_id', userId)
       .eq('exercise_name', exerciseName)
       .eq('completed', true)
       .not('carga', 'is', null);
     if (error) throw error;
-    return (data || []).map(s => ({ carga: s.carga, reps: s.reps, workout_date: s.workouts.workout_date }));
+    return (data || []).map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir, workout_date: s.workouts.workout_date }));
   } catch (err) {
     console.warn('fetchExerciseSetsWithDates: embed falhou, usando busca em 2 passos', err);
     return fetchSetsWithDatesFallback(userId, exerciseName);
@@ -126,6 +126,7 @@ export async function fetchProgressionSuggestion(userId, exerciseName, repsStr) 
 
 // Mesma conta de fetchProgressionSuggestion sobre séries já buscadas
 // ({ carga, reps, workout_date }) — o assistente do Treino busca tudo de uma vez.
+const EASY_RIR = 3;
 export function progressionFromSets(sets, repsStr) {
   const ceiling = parseRepCeiling(repsStr);
   if (ceiling === null) return null;
@@ -140,13 +141,23 @@ export function progressionFromSets(sets, repsStr) {
   const setsAtLastCarga = lastSets.filter(s => parseFloat(s.carga) === lastCarga);
   const hitCeiling = setsAtLastCarga.every(s => parseInt(s.reps, 10) >= ceiling);
   const lastReps = Math.max(...setsAtLastCarga.map(s => parseInt(s.reps, 10)));
+  // RIR (repetições que sobraram): se todas as séries dessa carga sobraram 3 ou
+  // mais, a carga ficou leve mesmo sem bater o teto das reps, e a dupla
+  // progressão só por reps seria lenta demais. Exige o RIR anotado em todas.
+  const easy = !hitCeiling && setsAtLastCarga.every(s => {
+    const rir = s.rir === null || s.rir === undefined || s.rir === '' ? NaN : Number(s.rir);
+    return Number.isFinite(rir) && rir >= EASY_RIR;
+  });
+  const up = hitCeiling || easy;
 
   return {
     lastCarga,
     lastReps,
-    suggestedCarga: hitCeiling ? lastCarga + 2.5 : lastCarga,
-    suggestedReps: hitCeiling ? null : Math.min(ceiling, lastReps + 1),
+    suggestedCarga: up ? lastCarga + 2.5 : lastCarga,
+    suggestedReps: up ? null : Math.min(ceiling, lastReps + 1),
     hitCeiling,
+    easy,
+    ready: up,
   };
 }
 

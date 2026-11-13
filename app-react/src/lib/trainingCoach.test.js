@@ -52,6 +52,14 @@ describe('exerciseReadings', () => {
     expect(stuck.map(s => [s.nome, s.suggestedDeload])).toEqual([['Leg Press', 135]]);
   });
 
+  it('RIR 3+ em todas as séries conta como pronto para subir, mesmo abaixo do topo das reps', () => {
+    const sets = [
+      { ...set('Agachamento', 80, 9, '2026-10-22'), rir: 3 }, { ...set('Agachamento', 80, 9, '2026-10-22'), rir: 4 },
+    ];
+    const { ready } = exerciseReadings(QUI, sets, TODAY);
+    expect(ready.map(r => [r.nome, r.suggestedCarga, r.easy])).toEqual([['Agachamento', 82.5, true]]);
+  });
+
   it('não usa as séries de hoje: a leitura não muda no meio do treino', () => {
     const sets = [set('Agachamento', 80, 10, '2026-10-22'), set('Agachamento', 85, 12, TODAY)];
     expect(exerciseReadings(QUI, sets, TODAY).ready).toEqual([]);

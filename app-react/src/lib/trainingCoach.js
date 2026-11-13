@@ -25,14 +25,14 @@ const MAX_NOTES = 3;
 export async function fetchRecentSets(userId, today = todayDate()) {
   const { data, error } = await db
     .from('exercise_sets')
-    .select('exercise_name, carga, reps, workouts!inner(user_id, workout_date)')
+    .select('exercise_name, carga, reps, rir, workouts!inner(user_id, workout_date)')
     .eq('workouts.user_id', userId)
     .gte('workouts.workout_date', addDays(today, -LOOKBACK_DAYS))
     .lte('workouts.workout_date', today)
     .eq('completed', true);
   if (error) throw error;
   return (data || []).map(s => ({
-    exercise_name: s.exercise_name, carga: s.carga, reps: s.reps, workout_date: s.workouts.workout_date,
+    exercise_name: s.exercise_name, carga: s.carga, reps: s.reps, rir: s.rir, workout_date: s.workouts.workout_date,
   }));
 }
 
@@ -66,7 +66,7 @@ export function exerciseReadings(day, sets, today) {
     const plateau = plateauFromSets(mine, ex.reps);
     if (plateau) { stuck.push({ nome: ex.nome, ...plateau }); return; }
     const prog = progressionFromSets(mine, ex.reps);
-    if (prog?.hitCeiling) ready.push({ nome: ex.nome, ...prog });
+    if (prog?.ready) ready.push({ nome: ex.nome, ...prog });
   });
   return { ready, stuck };
 }

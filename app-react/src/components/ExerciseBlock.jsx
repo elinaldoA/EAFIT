@@ -148,7 +148,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
             <p className="ex-block__suggestion">
               {suggestion.suggestedReps
                 ? <>{t('💡 Sugestão: repita {suggestedCarga}kg, mas tente {suggestedReps} reps', { suggestedCarga: suggestion.suggestedCarga, suggestedReps: suggestion.suggestedReps })}</>
-                : <>{t('💡 Sugestão: {suggestedCarga}kg', { suggestedCarga: suggestion.suggestedCarga })}</>}
+                : <>{t('💡 Sugestão: {suggestedCarga}kg', { suggestedCarga: suggestion.suggestedCarga })}{suggestion.easy && <> · {t('sobrou folga no último treino')}</>}</>}
               {' '}<span className="ex-block__suggestion-hint">{t('(última vez: {lastCarga}kg × {lastReps} reps)', { lastCarga: suggestion.lastCarga, lastReps: suggestion.lastReps })}</span>
               {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(suggestion.suggestedCarga, suggestion.suggestedReps)}>{t('🎯 Usar sugestão')}</button>
             </p>

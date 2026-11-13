@@ -35,7 +35,7 @@ function chainResolving(result) {
 
 function mockSets(sets) {
   mockDb.from.mockReturnValue(chainResolving({
-    data: sets.map(s => ({ carga: s.carga, reps: s.reps, workouts: { user_id: 'u1', workout_date: s.date } })),
+    data: sets.map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir ?? null, workouts: { user_id: 'u1', workout_date: s.date } })),
     error: null,
   }));
 }
@@ -72,6 +72,8 @@ describe('fetchProgressionSuggestion', () => {
       suggestedCarga: 52.5,
       suggestedReps: null,
       hitCeiling: true,
+      easy: false,
+      ready: true,
     });
   });
 
@@ -86,7 +88,25 @@ describe('fetchProgressionSuggestion', () => {
       suggestedCarga: 50,
       suggestedReps: 9,
       hitCeiling: false,
+      easy: false,
+      ready: false,
     });
+  });
+
+  it('RIR 3 ou mais em todas as séries: sobrou folga, sobe a carga mesmo sem bater o teto', async () => {
+    mockSets([
+      { carga: 50, reps: 8, rir: 3, date: '2026-07-01' },
+      { carga: 50, reps: 8, rir: 4, date: '2026-07-01' },
+    ]);
+    const result = await fetchProgressionSuggestion('u1', 'Supino Reto', '8-10');
+    expect(result).toMatchObject({ easy: true, ready: true, hitCeiling: false, suggestedCarga: 52.5, suggestedReps: null });
+  });
+
+  it('RIR baixo, ou anotado só em parte das séries, mantém a dupla progressão', async () => {
+    mockSets([{ carga: 50, reps: 8, rir: 1, date: '2026-07-01' }, { carga: 50, reps: 8, rir: 3, date: '2026-07-01' }]);
+    expect(await fetchProgressionSuggestion('u1', 'Supino Reto', '8-10')).toMatchObject({ easy: false, suggestedCarga: 50, suggestedReps: 9 });
+    mockSets([{ carga: 50, reps: 8, rir: 4, date: '2026-07-01' }, { carga: 50, reps: 8, date: '2026-07-01' }]);
+    expect(await fetchProgressionSuggestion('u1', 'Supino Reto', '8-10')).toMatchObject({ easy: false, suggestedCarga: 50 });
   });
 
   it('capa o alvo de reps no teto da faixa', async () => {
