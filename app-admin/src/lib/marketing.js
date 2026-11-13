@@ -121,6 +121,38 @@ export async function removeMedia(item) {
   if (error) throw error;
 }
 
+// Limpeza da biblioteca: o que nenhum post na fila (pendente, processando ou que
+// falhou e pode ser reenviado) usa mais. Post já publicado ou cancelado não conta:
+// a rede guarda a própria cópia. Material de parceiros também é cópia à parte.
+export const ACTIVE_TARGET_STATUS = ['pending', 'processing', 'failed'];
+
+export async function fetchMediaInUse() {
+  const { data, error } = await db.from('marketing_post_targets')
+    .select('status, marketing_posts(media)')
+    .in('status', ACTIVE_TARGET_STATUS);
+  if (error) throw error;
+  return (data || []).flatMap(t => t.marketing_posts?.media || []).map(m => String(m?.url || ''));
+}
+
+export function unusedMedia(items, activeUrls) {
+  return (items || []).filter(m => m.storage_path && !activeUrls.some(u => u.includes(m.storage_path)));
+}
+
+// Remove um a um (mesma ordem do removeMedia: linha, depois arquivo). Segue mesmo se um falhar.
+export async function removeMediaBatch(list, remove = removeMedia) {
+  const failed = [];
+  let done = 0;
+  for (const item of list) {
+    try {
+      await remove(item);
+      done += 1;
+    } catch (err) {
+      failed.push({ item, message: err?.message || String(err) });
+    }
+  }
+  return { done, failed };
+}
+
 // ---------- arte a partir de um print ----------
 
 export const ART_FORMATS = {

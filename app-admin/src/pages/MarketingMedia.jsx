@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
-  APP_PRINTS, ART_FORMATS, REEL_DEFAULTS, createArt, exerciseVideoList, fetchMedia, printUrl, removeMedia, uploadMedia, validateUpload,
+  APP_PRINTS, ART_FORMATS, REEL_DEFAULTS, createArt, exerciseVideoList, fetchMedia, fetchMediaInUse, printUrl, removeMedia, removeMediaBatch,
+  unusedMedia, uploadMedia, validateUpload,
 } from '../lib/marketing';
 import { canRenderReels, renderReel, renderStory } from '../lib/reelVideo';
 import { STORY_VARIANTS } from '../lib/reelRender';
@@ -238,6 +239,36 @@ export default function MarketingMedia() {
     }
   }
 
+  // Limpeza em lote: lista o que nenhum post da fila usa e remove tudo com uma confirmação só.
+  const [cleanup, setCleanup] = useState(null); // { list, bytes }
+
+  async function openCleanup() {
+    setMsg('');
+    setBusy(true);
+    try {
+      const list = unusedMedia(items, await fetchMediaInUse());
+      setCleanup({ list, bytes: list.reduce((s, m) => s + (m.size_bytes || 0), 0) });
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmCleanup() {
+    setBusy(true);
+    try {
+      const { done, failed } = await removeMediaBatch(cleanup.list);
+      setCleanup(null);
+      setMsg(failed.length
+        ? `Erro: ${done} removidas, ${failed.length} falharam (${failed[0].message}).`
+        : `${done} mídia${done === 1 ? '' : 's'} sem uso removida${done === 1 ? '' : 's'} da biblioteca e do armazenamento.`);
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleRemove(item) {
     if (!window.confirm(`Remover “${item.title || item.storage_path}” da biblioteca? Posts já publicados não mudam.`)) return;
     try {
@@ -278,6 +309,37 @@ export default function MarketingMedia() {
             <button type="submit" className="btn btn--primary" disabled={busy || !file}>{busy ? 'Enviando…' : 'Adicionar'}</button>
           </div>
         </form>
+        {items && items.length > 0 && !cleanup && (
+          <div className="form-grid__actions">
+            <button type="button" className="btn btn--ghost" disabled={busy} onClick={openCleanup}>Limpar mídias sem uso</button>
+          </div>
+        )}
+        {cleanup && (
+          <div className="card stack" role="region" aria-label="Limpeza da biblioteca">
+            {cleanup.list.length === 0
+              ? <p>Nenhuma mídia sem uso: tudo o que está na biblioteca ainda é usado por um post na fila.</p>
+              : (
+                <>
+                  <p>
+                    <strong>{cleanup.list.length} mídia{cleanup.list.length === 1 ? '' : 's'}</strong> ({formatSize(cleanup.bytes)}) não {cleanup.list.length === 1 ? 'é usada' : 'são usadas'} por
+                    nenhum post pendente ou com falha. Vão sair da biblioteca e do armazenamento, <strong>sem volta</strong>. Posts já
+                    publicados e o material dos parceiros não mudam.
+                  </p>
+                  <ul className="user-detail__meta">
+                    {cleanup.list.map(m => <li key={m.id}>{m.title || m.storage_path} · {m.kind === 'video' ? 'vídeo' : 'imagem'}{m.size_bytes ? ` · ${formatSize(m.size_bytes)}` : ''}</li>)}
+                  </ul>
+                </>
+              )}
+            <div className="form-grid__actions">
+              {cleanup.list.length > 0 && (
+                <button type="button" className="btn btn--primary" disabled={busy} onClick={confirmCleanup}>
+                  {busy ? 'Removendo…' : `Remover ${cleanup.list.length} definitivamente`}
+                </button>
+              )}
+              <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setCleanup(null)}>Fechar</button>
+            </div>
+          </div>
+        )}
         {!items && <Loading />}
         {items && items.length === 0 && <EmptyState icon="🖼️" label="Nada aqui ainda: envie um arquivo ou crie uma arte com um print." />}
         {items && items.length > 0 && (

@@ -11,7 +11,7 @@ const { lib } = vi.hoisted(() => ({
     fetchAutopost: vi.fn(), setAutopostEnabled: vi.fn(),
     fetchMetrics: vi.fn(), refreshMetrics: vi.fn(), fetchAds: vi.fn(), fetchAdsConversion: vi.fn(), fetchScheduledPosts: vi.fn(), fetchConversion: vi.fn(), fetchContentConversion: vi.fn(),
     uploadMedia: vi.fn(), editPost: vi.fn(), deleteExternalPost: vi.fn(), editExternalPost: vi.fn(),
-    updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
+    fetchMediaInUse: vi.fn(), removeMediaBatch: vi.fn(), updateQueueCaption: vi.fn(), moveQueueItem: vi.fn(), removeQueueItem: vi.fn(), restoreQueueItem: vi.fn(), addQueueItem: vi.fn(),
   },
 }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
@@ -799,6 +799,23 @@ describe('Gerador de Reel', () => {
     expect([arg.file.type, arg.title, arg.width, arg.height, arg.adminId]).toEqual(['video/mp4', 'Reel · Treino em segundos', 1080, 1920, 'admin-1']);
     const link = await screen.findByRole('link', { name: /adicione à fila/ });
     expect(link.getAttribute('href')).toBe('/marketing?aba=fila');
+  });
+
+  it('limpa de uma vez as mídias que nenhum post da fila usa, com uma confirmação só', async () => {
+    lib.fetchMedia.mockResolvedValue([
+      { id: 'm1', kind: 'video', storage_path: '111-em-uso.mp4', title: 'Em uso', size_bytes: 3e6, url: 'u1' },
+      { id: 'm2', kind: 'image', storage_path: '222-velha.jpg', title: 'Velha', size_bytes: 2e5, url: 'u2' },
+    ]);
+    lib.fetchMediaInUse.mockResolvedValue(['https://x.supabase.co/storage/v1/object/public/marketing-media/111-em-uso.mp4']);
+    lib.removeMediaBatch.mockResolvedValue({ done: 1, failed: [] });
+    wrap(<MarketingMedia />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Limpar mídias sem uso' }));
+    const box = await screen.findByRole('region', { name: 'Limpeza da biblioteca' });
+    expect(within(box).getByText(/Velha/)).toBeTruthy();
+    expect(within(box).queryByText(/Em uso/)).toBeNull();
+    fireEvent.click(within(box).getByRole('button', { name: 'Remover 1 definitivamente' }));
+    await waitFor(() => expect(lib.removeMediaBatch).toHaveBeenCalledWith([expect.objectContaining({ id: 'm2' })]));
+    expect(await screen.findByText(/1 mídia sem uso removida/)).toBeTruthy();
   });
 
   it('avisa quando o navegador não gera vídeo e trava o botão', async () => {
