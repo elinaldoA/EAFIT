@@ -3,7 +3,6 @@ import { useAdminAuth } from '../context/useAdminAuth';
 import { COVER_H, COVER_W, HIGHLIGHTS, drawCover } from '../lib/highlightCovers';
 import { HIGHLIGHT_SCRIPTS } from '../lib/highlightScripts';
 import { highlightSeconds } from '../lib/highlightVideo';
-import { FLOWS, flowSeconds } from '../lib/highlightFlows';
 import { PLATFORMS, createPost, fetchAccounts, printUrl, uploadMedia, validatePost } from '../lib/marketing';
 import { canRenderReels, renderHighlight } from '../lib/reelVideo';
 import logoMark from '../assets/logo-mark.png';
@@ -125,11 +124,7 @@ export default function MarketingHighlights() {
     setMsg('');
     try {
       const out = await renderHighlight({
-        scenes: script.map(item => ({
-          ...item,
-          print: item.print ? printUrl(item.print) : null,
-          atlas: item.flow ? printUrl(FLOWS[item.flow].atlas) : null,
-        })),
+        scenes: script.map(item => ({ ...item, print: item.print ? printUrl(item.print) : null })),
         onProgress: v => setProgress(`Gerando o vídeo de “${h.label}”… ${Math.round(v * 100)}%`),
       });
       const url = URL.createObjectURL(out.blob);
@@ -243,25 +238,18 @@ export default function MarketingHighlights() {
 
         {HIGHLIGHTS.filter(h => HIGHLIGHT_SCRIPTS[h.key]).map(h => (
           <details key={h.key} className="card stack" aria-label={`Roteiro ${h.label}`}>
-            <summary><strong>{h.label}</strong> · {HIGHLIGHT_SCRIPTS[h.key].length} cenas</summary>
+            <summary><strong>{h.label}</strong> · {HIGHLIGHT_SCRIPTS[h.key].length} stories</summary>
             <ol>
               {HIGHLIGHT_SCRIPTS[h.key].map(item => (
-                item.flow ? (
-                  <li key={item.flow}>
-                    <strong>Gravação do app em uso</strong> — {item.chapters.map(c => c.headline).join(' → ')}
-                    <span className="user-detail__meta"> {`(${Math.round(flowSeconds(item.flow))} s, dados preenchidos como no app)`}</span>
-                  </li>
-                ) : (
-                  <li key={item.headline}>
-                    <strong>{item.headline}</strong> — {item.subline}
-                    <span className="user-detail__meta"> {item.print ? `(print: ${item.print})` : '(só texto)'}</span>
-                  </li>
-                )
+                <li key={item.headline}>
+                  <strong>{item.headline}</strong> — {item.subline}
+                  <span className="user-detail__meta"> {item.print ? `(print: ${item.print})` : '(só texto)'}</span>
+                </li>
               ))}
             </ol>
             <div className="actions-row" style={{ flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
               <button type="button" className="btn btn--small" disabled={!!busy || !canRenderReels()} onClick={() => generate(h)}>
-                {busy === h.key && progress.startsWith('Gerando') ? 'Gerando…' : videos[h.key] ? 'Gerar de novo' : `Gerar vídeo (${highlightSeconds(HIGHLIGHT_SCRIPTS[h.key])} s)`}
+                {busy === h.key && progress.startsWith('Gerando') ? 'Gerando…' : videos[h.key] ? 'Gerar de novo' : `Gerar vídeo (${highlightSeconds(HIGHLIGHT_SCRIPTS[h.key].length)} s)`}
               </button>
             </div>
             {videos[h.key] && (

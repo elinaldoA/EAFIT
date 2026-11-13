@@ -15,7 +15,6 @@ import MarketingHighlights from './MarketingHighlights';
 import { HIGHLIGHTS, COVER_W, COVER_H, drawCover } from '../lib/highlightCovers';
 import { HIGHLIGHT_SCRIPTS } from '../lib/highlightScripts';
 import { SCENE_SECONDS, drawHighlightFrame, highlightSeconds } from '../lib/highlightVideo';
-import { FLOWS, flowSeconds } from '../lib/highlightFlows';
 
 // Contexto de canvas falso: só registra as chamadas (jsdom não desenha).
 function fakeCtx() {
@@ -100,27 +99,13 @@ describe('Vídeo do destaque', () => {
   it('duração: 4,5 s por cena e nenhum destaque passa de 60 s (limite de story)', () => {
     expect(SCENE_SECONDS).toBe(4.5);
     expect(highlightSeconds(5)).toBe(23);
-    for (const items of Object.values(HIGHLIGHT_SCRIPTS)) expect(highlightSeconds(items)).toBeLessThanOrEqual(60);
-  });
-
-  it('Como começar é a gravação do app em uso: intro, fluxo real com legendas por etapa e fecho', () => {
-    const scenes = HIGHLIGHT_SCRIPTS.comecar;
-    const flow = scenes.find(sc => sc.flow);
-    expect(flow.flow).toBe('comecar');
-    expect(flow.chapters.map(c => c.at)).toEqual([0, 10.8, 19.9]);
-    expect(flow.chapters.every(c => c.at < flowSeconds('comecar'))).toBe(true);
-    // todo quadro da gravação existe no atlas
-    const { cols, steps } = FLOWS.comecar;
-    const cells = steps.map(([cell]) => cell);
-    expect(Math.max(...cells)).toBeLessThan(cols * Math.ceil((Math.max(...cells) + 1) / cols));
-    expect(steps.every(([, d]) => d > 0)).toBe(true);
-    expect(highlightSeconds(scenes)).toBe(Math.ceil(3.5 + flowSeconds('comecar') + 3.5));
+    for (const items of Object.values(HIGHLIGHT_SCRIPTS)) expect(highlightSeconds(items.length)).toBeLessThanOrEqual(60);
   });
 
   it('desenha cena com print e cena só de texto, em qualquer instante', () => {
     const scenes = HIGHLIGHT_SCRIPTS.comecar;
-    const imgs = scenes.map(s => (s.flow ? { width: 4160, height: 10125 } : s.print ? { width: 540, height: 1170 } : null));
-    for (const t of [0, 1, 3.5 + 0.2, 3.5 + 5, 3.5 + 12, 3.5 + 22, highlightSeconds(scenes) - 0.04]) {
+    const imgs = scenes.map(s => (s.print ? { width: 540, height: 1170 } : null));
+    for (const t of [0, 1, SCENE_SECONDS + 0.2, SCENE_SECONDS * 2 + 2, highlightSeconds(scenes.length) - 0.04]) {
       const ctx = fakeCtx();
       expect(() => drawHighlightFrame(ctx, scenes, imgs, t)).not.toThrow();
       expect(ctx.calls).toContain('fillRect'); // fundo e barra de progresso
@@ -139,8 +124,7 @@ describe('Vídeo do destaque', () => {
     const scenes = video.renderHighlight.mock.calls[0][0].scenes;
     expect(scenes).toHaveLength(HIGHLIGHT_SCRIPTS.comecar.length);
     expect(scenes[0].print).toMatch(/criar-conta/); // print vira URL do site
-    expect(scenes[1].atlas).toMatch(/flow-comecar\.webp$/); // gravação do app: um atlas de quadros
-    expect(scenes[2].print).toBeNull(); // cena só de texto
+    expect(scenes[1].print).toBeNull(); // cena só de texto
     expect(await box.findByLabelText('Prévia Como começar')).toBeTruthy();
 
     fireEvent.click(box.getByRole('button', { name: 'Agendar vídeo' }));
