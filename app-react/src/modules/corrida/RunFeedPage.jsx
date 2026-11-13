@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { todayDate } from '../../data/treinoData';
 import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
@@ -7,7 +7,7 @@ import { timeAgo } from '../../lib/inbox';
 import { trackEvent } from '../../lib/tracking';
 import {
   RUN_SAVED_EVENT, fetchRunFeed, flushPendingRuns, toggleKudos, runTitle, paceSeconds, formatPace, formatClock, formatKm,
-  fetchRuns,
+  fetchRuns, mergeFeed,
 } from './runs';
 import { lastWeekSummary } from './challenges';
 import RunComments from './RunComments';
@@ -93,6 +93,8 @@ export default function RunFeedPage() {
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mine, setMine] = useState([]);
+  const feedRef = useRef(null);
+  feedRef.current = feed;
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -100,8 +102,9 @@ export default function RunFeedPage() {
       await flushPendingRuns(user.id);
       fetchRuns(user.id).then(setMine).catch(() => {});
       const list = await fetchRunFeed({ limit: PAGE });
-      setFeed(list);
-      setMore(list.length === PAGE);
+      setFeed(prev => mergeFeed(prev, list));
+      // Já tinha aberto páginas mais antigas: o "ver mais" continua como estava.
+      setMore(prev => (feedRef.current?.length > list.length ? prev : list.length === PAGE));
       setError(false);
     } catch (err) {
       console.error('RunFeedPage:', err);

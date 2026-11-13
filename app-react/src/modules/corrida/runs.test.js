@@ -276,3 +276,18 @@ describe('editar corrida', () => {
     expect(patch).toMatchObject({ title: null, notes: null, effort: null });
   });
 });
+
+describe('mergeFeed', () => {
+  const r = (id, started_at) => ({ id, started_at });
+  it('mantém as páginas antigas já abertas depois da página nova', async () => {
+    const { mergeFeed } = await import('./runs');
+    const prev = [r('b', '2026-11-12'), r('c', '2026-11-11'), r('d', '2026-11-10')];
+    const first = [r('a', '2026-11-13'), r('b', '2026-11-12')];
+    expect(mergeFeed(prev, first).map(x => x.id)).toEqual(['a', 'b', 'c', 'd']);
+  });
+  it('sem nada carregado antes, devolve a página nova', async () => {
+    const { mergeFeed } = await import('./runs');
+    const first = [r('a', '2026-11-13')];
+    expect(mergeFeed(null, first)).toBe(first);
+  });
+});

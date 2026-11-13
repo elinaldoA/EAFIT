@@ -350,6 +350,16 @@ export async function fetchRunFeed({ limit = 20, before = null } = {}) {
   }));
 }
 
+// Recarrega a primeira página do feed sem perder as páginas mais antigas que a
+// pessoa já abriu: fica a página nova e, depois dela, o que já estava carregado
+// e é mais antigo que o fim dela.
+export function mergeFeed(previous, firstPage) {
+  if (!previous?.length || !firstPage.length) return firstPage;
+  const oldest = firstPage.at(-1).started_at;
+  const ids = new Set(firstPage.map(r => r.id));
+  return [...firstPage, ...previous.filter(r => !ids.has(r.id) && r.started_at < oldest)];
+}
+
 export async function toggleKudos(runId) {
   const { data, error } = await db.rpc('toggle_run_kudos', { p_run: runId });
   if (error) throw error;
