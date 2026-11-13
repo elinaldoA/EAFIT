@@ -698,6 +698,7 @@ export const EXERCISE_YOUTUBE = {
   'Agachamento Goblet com Halter': { id: '3gpXflqRiEc', canal: 'Men\'s Health' },
   'Agachamento Hack com Barra': { id: 'IC9E6R8E5e0', canal: 'Live Lean TV Daily Exercises' },
   'Agachamento Hack Invertido': { id: 'jlVpRED1c5w', canal: 'Inspire US' },
+  'Agachamento Hack Unilateral': { id: 'DEcYaWee-D8', canal: 'Legacy Health and Performance' },
   'Agachamento Hindu': { id: 'DXvIzLtN-qY', canal: 'Hockey Training Exercise Demonstrations' },
   'Agachamento Isométrico com Anilha': { id: 'Opv_IPg2UF4', vertical: true, canal: 'Wittenberg Strength & Conditioning' },
   'Agachamento Isométrico na Parede': { id: 'cWTZ8Am1Ee0', canal: 'Medbridge' },

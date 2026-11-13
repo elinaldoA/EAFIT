@@ -89,6 +89,7 @@ export const exerciseNames: Record<string, string> = {
   "Agachamento Frontal no Smith": "Smith Machine Front Squat",
   "Agachamento Goblet com Halter": "Dumbbell Goblet Squat",
   "Agachamento Hack Invertido": "Reverse Hack Squat",
+  "Agachamento Hack Unilateral": "Single-Leg Hack Squat",
   "Agachamento Hack com Barra": "Barbell Hack Squat",
   "Agachamento Hindu": "Hindu Squat",
   "Agachamento Isométrico Unilateral na Parede": "Single-Leg Wall Sit",
