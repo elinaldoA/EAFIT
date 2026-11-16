@@ -11,6 +11,7 @@ vi.mock('../context/useToast', () => ({ useToast: () => () => {} }));
 vi.mock('../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('./OfflineBanner', () => ({ default: () => <div data-testid="offline-banner" /> }));
 vi.mock('./ExerciseDemo', () => ({ default: () => null }));
+vi.mock('./CoachPrompt', () => ({ default: () => <div data-testid="coach-prompt" /> }));
 
 import LiveWorkoutModal from './LiveWorkoutModal';
 
@@ -54,6 +55,16 @@ afterEach(() => {
 });
 
 describe('LiveWorkoutModal', () => {
+  it('convite da voz: só depois da primeira série, e no fim da tela (abaixo do exercício)', () => {
+    const { rerender, renderExercise, onFinish, onClose } = setup();
+    expect(screen.queryByTestId('coach-prompt')).toBeNull();
+    markDone('Supino Reto', 1);
+    rerender(<LiveWorkoutModal day={DAY} timer={timer()} renderExercise={renderExercise} onFinish={onFinish} onClose={onClose} />);
+    const prompt = screen.getByTestId('coach-prompt');
+    const block = screen.getByRole('button', { name: 'marcar Supino Reto' });
+    expect(block.compareDocumentPosition(prompt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('abre no primeiro exercício pendente', () => {
     markDone('Supino Reto', 1);
     markDone('Supino Reto', 2);

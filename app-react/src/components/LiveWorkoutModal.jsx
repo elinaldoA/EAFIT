@@ -281,7 +281,6 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
       </div>
 
       <main className="live__body" ref={bodyRef}>
-        <CoachPrompt onEnabled={() => announce(true)} />
         <div className="live__ex-head">
           <span className="live__kicker">
             {t('{v1} {v2}{setsDone}/{setsTotal} séries no total', { v1: isPos ? t('Pós-treino') : t('Exercício {n} de {total}', { n: index + 1, total: day.exercicios.length }), v2: ' · ', setsDone, setsTotal })}
@@ -316,6 +315,10 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
             {t('✅ Exercício concluído')}{next ? <> {t('· próximo:')} <strong>{tEx(next.nome)}</strong></> : ''}
           </div>
         )}
+        {/* Convite da voz só depois da primeira série, no fim da tela: no começo ele
+            empurrava o exercício para baixo, e no topo apareceria por cima das séries
+            logo depois do ✓. Ele chega no descanso, quando a pessoa tem tempo de ler. */}
+        {setsDone > 0 && <CoachPrompt onEnabled={() => announce(true)} />}
       </main>
 
       {rest && (
