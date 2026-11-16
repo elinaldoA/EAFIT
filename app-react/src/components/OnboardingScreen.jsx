@@ -23,7 +23,9 @@ export default function OnboardingScreen() {
   const [nivel, setNivel] = useState('intermediario');
   const [local, setLocal] = useState('academia');
   // Esporte = versão do app (modules/registry.js); só pergunta com mais de um liberado.
-  const { module: sport, available: sports } = useSportModule();
+  // A pergunta de esporte só existe com o módulo liberado para todos (`released`);
+  // antes disso o cadastro é só de musculação, como sempre foi.
+  const { module: sport, available, released: sports } = useSportModule();
   // Com mais de um esporte a pessoa escolhe de verdade: nada vem marcado, a não
   // ser o esporte do link de divulgação (?esporte=corrida, lib/sportPreference.js).
   const [picked, setPicked] = useState(() => preferredSport() || '');
@@ -34,7 +36,7 @@ export default function OnboardingScreen() {
     trackEvent('onboarding', `esporte_${id}`);
   }
   // Módulo sem plano de musculação (ex.: EAFIT Run): sem objetivo, local nem treino gerado.
-  const usesPlan = sports.find(m => m.id === esporte)?.workoutPlan !== false;
+  const usesPlan = available.find(m => m.id === esporte)?.workoutPlan !== false;
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar

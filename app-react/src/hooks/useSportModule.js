@@ -22,5 +22,9 @@ export function useSportModule() {
   return {
     module: resolveModule(user?.user_metadata, modulesConfig),
     available: availableModules(modulesConfig),
+    // Só o que está liberado para todos (lançado ou ligado no painel): sem o
+    // modo de desenvolvimento nem a liberação por conta. O cadastro usa esta
+    // lista, para a pergunta de esporte só aparecer depois do lançamento.
+    released: availableModules(fromPanel),
   };
 }

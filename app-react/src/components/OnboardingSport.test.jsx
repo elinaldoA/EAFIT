@@ -5,6 +5,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 const h = vi.hoisted(() => ({
   updateProfile: vi.fn(),
   track: vi.fn(),
+  released: null,
   sports: [
     { id: 'musculacao', label: 'Musculação', icon: '🏋️', blurb: 'Treino na academia' },
     { id: 'corrida', label: 'Corrida', icon: '🏃', blurb: 'GPS e voz', workoutPlan: false },
@@ -16,7 +17,7 @@ vi.mock('../context/useToast', () => ({ useToast: () => vi.fn() }));
 vi.mock('../data/workoutTemplates', () => ({ generatePlan: vi.fn().mockResolvedValue([{ dia: 'Seg' }]) }));
 vi.mock('../lib/workoutPlans', () => ({ seedGeneratedPlan: vi.fn().mockResolvedValue() }));
 vi.mock('../lib/tracking', () => ({ trackEvent: (...a) => h.track(...a) }));
-vi.mock('../hooks/useSportModule', () => ({ useSportModule: () => ({ module: h.sports[0], available: h.sports }) }));
+vi.mock('../hooks/useSportModule', () => ({ useSportModule: () => ({ module: h.sports[0], available: h.sports, released: h.released || h.sports }) }));
 
 import OnboardingScreen from './OnboardingScreen';
 
@@ -28,6 +29,7 @@ const fill = () => {
 };
 
 beforeEach(() => {
+  h.released = null;
   localStorage.clear();
   h.updateProfile.mockReset().mockResolvedValue({});
   h.track.mockReset();
@@ -67,5 +69,15 @@ describe('onboarding: qual é a sua vibe?', () => {
     fireEvent.click(screen.getByRole('button', { name: /Gerar meu treino|Continuar|Começar/ }));
     await waitFor(() => expect(h.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ esporte: 'corrida' })));
     expect(localStorage.getItem('eafit_sport_pref')).toBeNull();
+  });
+
+  it('sem o módulo liberado para todos não há pergunta de esporte, nem com o link de divulgação', async () => {
+    h.released = [h.sports[0]]; // liberado só por conta ou no modo de desenvolvimento
+    localStorage.setItem('eafit_sport_pref', JSON.stringify({ id: 'corrida', at: Date.now() }));
+    render(<OnboardingScreen />);
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    fill();
+    fireEvent.click(screen.getByRole('button', { name: /Gerar meu treino|Continuar|Começar/ }));
+    await waitFor(() => expect(h.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ esporte: 'musculacao' })));
   });
 });
