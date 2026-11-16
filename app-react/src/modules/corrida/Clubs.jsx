@@ -3,7 +3,7 @@ import { useToast } from '../../context/useToast';
 import { FRIEND_INVITE_URL } from '../../lib/links';
 import {
   fetchClubs, createClub, joinClub, leaveClub, deleteClub, fetchClubRanking, normalizeClubCode,
-  clubInviteText, clubError, formatKm, CLUB_NAME_MAX, CLUB_DESC_MAX, CLUB_LIMIT,
+  clubInviteText, clubError, formatKm, fetchClubGoal, setClubGoal, clubGoalProgress, CLUB_GOAL_MIN, CLUB_GOAL_MAX, CLUB_NAME_MAX, CLUB_DESC_MAX, CLUB_LIMIT,
 } from './runs';
 import { t } from '../../lib/i18n';
 
@@ -47,6 +47,65 @@ function ClubRanking({ club }) {
   );
 }
 
+// Meta coletiva do mês: barra com os km de todo o clube e, para o dono, o campo
+// para definir ou tirar a meta. Sem meta e sem ser dono, não aparece.
+function ClubGoal({ club }) {
+  const toast = useToast();
+  const [goal, setGoal] = useState(undefined);
+  const [rows, setRows] = useState([]);
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetchClubGoal(club.id).then(g => { if (alive) setGoal(g); });
+    fetchClubRanking(club.id, 'month').then(r => { if (alive) setRows(r); }).catch(() => {});
+    return () => { alive = false; };
+  }, [club.id]);
+
+  async function save(km) {
+    setBusy(true);
+    try {
+      await setClubGoal(club.id, km);
+      setGoal(km); setEditing(false);
+      toast(km ? t('🎯 Meta do clube definida') : t('Meta do clube removida'));
+    } catch (err) { toast(clubError(err)); }
+    finally { setBusy(false); }
+  }
+
+  if (goal === undefined || (!goal && !club.isOwner)) return null;
+  const p = goal ? clubGoalProgress(rows, goal) : null;
+  const n = Math.floor(Number(value));
+  return (
+    <div className="run-goal">
+      {goal ? (
+        <>
+          <div className="run-goal__head">
+            <strong>{t('🎯 Meta do clube no mês')}</strong>
+            <span>{formatKm(p.doneKm * 1000, 1)} / {goal} km · {p.pct}%</span>
+          </div>
+          <div className="run-goal__bar" role="img" aria-label={t('Meta do clube: {v1}%', { v1: p.pct })}><span style={{ width: `${p.pct}%` }} /></div>
+          <p className="profile-field__hint">{p.done ? t('🎉 O clube bateu a meta do mês!') : t('Faltam {v1} km para o clube bater a meta', { v1: formatKm(p.leftKm * 1000, 1) })}</p>
+        </>
+      ) : <p className="profile-field__hint">{t('Defina uma meta de km do mês para o clube todo.')}</p>}
+      {club.isOwner && !editing && (
+        <div className="friends__actions">
+          <button type="button" className="btn btn--outline btn--sm" onClick={() => { setEditing(true); setValue(goal ? String(goal) : ''); }}>{goal ? t('Mudar a meta') : t('Definir meta')}</button>
+          {goal && <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => save(null)}>{t('Tirar a meta')}</button>}
+        </div>
+      )}
+      {editing && (
+        <div className="challenge__form">
+          <input className="input input--sm" type="number" inputMode="numeric" min={CLUB_GOAL_MIN} max={CLUB_GOAL_MAX} placeholder={t('km no mês')} value={value} onChange={e => setValue(e.target.value)} aria-label={t('Meta do clube em km por mês')} />
+          <button type="button" className="btn btn--primary btn--sm" disabled={busy || !(n >= CLUB_GOAL_MIN && n <= CLUB_GOAL_MAX)} onClick={() => save(n)}>{t('Salvar')}</button>
+          <button type="button" className="btn btn--outline btn--sm" disabled={busy} onClick={() => setEditing(false)}>{t('Cancelar')}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ClubCard({ club, onChanged }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
@@ -85,6 +144,7 @@ function ClubCard({ club, onChanged }) {
       {open && (
         <>
           {club.description && <p className="profile-field__hint">{club.description}</p>}
+          <ClubGoal club={club} />
           <ClubRanking club={club} />
           <div className="friends__me">
             <span>{t('Código:')} <strong className="friends__code">{club.code}</strong></span>

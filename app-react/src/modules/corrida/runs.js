@@ -661,6 +661,32 @@ export function rankRows(rows) {
   });
 }
 
+// Meta coletiva do mês (km) ou null. Sem a migration, ou em qualquer falha, o
+// clube só fica sem meta: o ranking não depende dela.
+export async function fetchClubGoal(id) {
+  const { data, error } = await db.rpc('run_club_goal', { p_club: id });
+  if (error) return null;
+  return Number.isFinite(data) && data > 0 ? data : null;
+}
+
+// km: 10 a 100000, ou null para tirar a meta. Só o dono.
+export async function setClubGoal(id, km) {
+  const { error } = await db.rpc('set_run_club_goal', { p_club: id, p_km: km });
+  if (error) throw error;
+}
+
+export const CLUB_GOAL_MIN = 10;
+export const CLUB_GOAL_MAX = 100000;
+
+// Progresso da meta pelo ranking do mês: soma dos km de quem aparece (quem
+// ocultou a atividade não entra na soma). { doneKm, pct (0 a 100), leftKm, done }.
+export function clubGoalProgress(rows, goalKm) {
+  const meters = (rows || []).reduce((sum, r) => sum + (r.hidden ? 0 : r.meters), 0);
+  const doneKm = Math.round(meters / 100) / 10;
+  const pct = goalKm > 0 ? Math.min(100, Math.floor((doneKm / goalKm) * 100)) : 0;
+  return { doneKm, pct, leftKm: Math.max(0, Math.round((goalKm - doneKm) * 10) / 10), done: goalKm > 0 && doneKm >= goalKm };
+}
+
 export function normalizeClubCode(raw) {
   return String(raw || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
@@ -674,6 +700,7 @@ export function clubError(err) {
   const msg = String(err?.message || '');
   if (msg.includes('invalid_code')) return t('Clube não encontrado. Confira o código.');
   if (msg.includes('too_many_clubs')) return t('Você já está em {v1} clubes. Saia de um para entrar em outro.', { v1: CLUB_LIMIT });
+  if (msg.includes('invalid_goal')) return t('A meta do clube vai de {v1} a {v2} km.', { v1: CLUB_GOAL_MIN, v2: CLUB_GOAL_MAX });
   if (msg.includes('club_full')) return t('Esse clube já tem 100 pessoas.');
   if (msg.includes('invalid_name')) return t('O nome do clube precisa ter de 3 a 40 letras.');
   if (msg.includes('blocked_word')) return t('⚠️ O nome ou a descrição tem uma palavra que não é permitida');

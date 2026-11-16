@@ -246,6 +246,14 @@ describe('clubes', () => {
     expect(normalizeClubCode(' ab-12 cd ')).toBe('AB12CD');
   });
 
+  it('clubGoalProgress soma o ranking do mês sem os ocultos e limita em 100%', async () => {
+    const { clubGoalProgress } = await import('./runs');
+    const rows = [{ meters: 30000, hidden: false }, { meters: 12400, hidden: false }, { meters: 0, hidden: true }];
+    expect(clubGoalProgress(rows, 100)).toEqual({ doneKm: 42.4, pct: 42, leftKm: 57.6, done: false });
+    expect(clubGoalProgress(rows, 40)).toMatchObject({ pct: 100, leftKm: 0, done: true });
+    expect(clubGoalProgress([], 50)).toMatchObject({ doneKm: 0, pct: 0, done: false });
+  });
+
   it('clubError traduz o erro do banco', async () => {
     const { clubError } = await import('./runs');
     expect(clubError(new Error('invalid_code'))).toMatch(/não encontrado/);
