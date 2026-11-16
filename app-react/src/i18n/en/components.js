@@ -410,6 +410,7 @@ export default {
   '📤 Compartilhar': '📤 Share',
   '⚠️ Erro ao gerar imagem de compartilhamento': '⚠️ Error generating the share image',
   '{v1} {v2}% vs. mês anterior': '{v1} {v2}% vs. last month',
+  '{v1} {v2}% vs. mesmo período do mês anterior': '{v1} {v2}% vs. same period last month',
   'volume (carga × reps)': 'volume (weight × reps)',
   'recordes batidos': 'records broken',
   'melhor sequência': 'best streak',

@@ -150,6 +150,7 @@ export default {
   'MEU MÊS NO EAFIT': 'MY MONTH ON EAFIT',
   'volume total': 'total volume',
   'em relação ao mês anterior': 'compared with last month',
+  'vs. mesmo período do mês anterior': 'vs. same period last month',
   'Mantendo o ritmo ({kgPerWeek} kg/semana), você chega lá por volta de {date}': 'At this pace ({kgPerWeek} kg/week), you will get there around {date}',
   'ANTES E DEPOIS': 'BEFORE AND AFTER',
   '{n} dias de evolução': '{n} days of progress',

@@ -74,6 +74,28 @@ describe('buildMonthlyRecap', () => {
     expect(r).toMatchObject({ label: 'setembro de 2026', treinos: 2, treinosPrev: 0, deltaPct: null, prCount: 0 });
   });
 
+  it('mês em andamento compara com o mesmo período do anterior (até o mesmo dia)', () => {
+    const ws = [
+      w('2026-10-03'), w('2026-10-08'),                   // outubro até o dia 16: 2
+      w('2026-10-20'), w('2026-10-25'), w('2026-10-29'),  // resto de outubro: fora da comparação
+      w('2026-11-02'), w('2026-11-09'),                   // novembro até hoje (16): 2
+    ];
+    const r = buildMonthlyRecap({ workouts: ws, allTimeLogs: [], today: '2026-11-16' });
+    expect(r).toMatchObject({ treinos: 2, treinosPrev: 2, deltaPct: 0, deltaPartial: true });
+  });
+
+  it('dia que o mês anterior não tem vai até o fim dele (31/03 contra fevereiro inteiro)', () => {
+    const ws = [w('2027-02-27'), w('2027-02-28'), w('2027-03-30')];
+    const r = buildMonthlyRecap({ workouts: ws, allTimeLogs: [], today: '2027-03-31' });
+    expect(r).toMatchObject({ treinos: 1, treinosPrev: 2, deltaPct: -50 });
+  });
+
+  it('mês já fechado compara com o anterior inteiro', () => {
+    const ws = [w('2026-09-25'), w('2026-10-25')];
+    const r = buildMonthlyRecap({ workouts: ws, allTimeLogs: [], today: '2026-11-16', offset: -1 });
+    expect(r).toMatchObject({ label: 'outubro de 2026', treinos: 1, treinosPrev: 1, deltaPartial: false });
+  });
+
   it('sem dados devolve zeros e sem dia favorito', () => {
     const r = buildMonthlyRecap({ workouts: [], allTimeLogs: [], today });
     expect(r).toMatchObject({ treinos: 0, volume: 0, prCount: 0, bestStreak: 0, favWeekday: null });

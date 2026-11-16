@@ -64,7 +64,15 @@ export function pctChange(cur, prev) {
 // todo o histórico ({ exercise_name, carga, reps, workout_date }).
 export function buildMonthlyRecap({ workouts, allTimeLogs, today, offset = 0 }) {
   const range = monthBounds(today, offset);
+  // Mês em andamento (offset 0) é comparado com o mesmo pedaço do anterior
+  // (do dia 1 até o dia de hoje): contra o mês anterior inteiro, no meio do
+  // mês quase sempre dava "queda", mesmo para quem treinava no mesmo ritmo.
+  const partial = offset === 0;
   const prevRange = monthBounds(today, offset - 1);
+  if (partial) {
+    const lastDay = Number(prevRange.end.slice(8));
+    prevRange.end = `${prevRange.end.slice(0, 8)}${pad(Math.min(parts(today).d, lastDay))}`;
+  }
 
   const done = (workouts || []).filter(w => w.completed);
   const inMonth = done.filter(w => inRange(w.workout_date, range));
@@ -100,6 +108,7 @@ export function buildMonthlyRecap({ workouts, allTimeLogs, today, offset = 0 }) 
     treinos: inMonth.length,
     treinosPrev: inPrev.length,
     deltaPct: pctChange(inMonth.length, inPrev.length),
+    deltaPartial: partial,
     activeDays: dates.length,
     minutes,
     volume: Math.round(volume),

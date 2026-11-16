@@ -255,6 +255,12 @@ describe('MonthlyRecap', () => {
     expect(h.recap.buildMonthlyRecap).toHaveBeenCalledWith(expect.objectContaining({ today: '2026-10-07', offset: 0 }));
   });
 
+  it('mês em andamento diz que a comparação é com o mesmo período', async () => {
+    h.recap.buildMonthlyRecap.mockReturnValue(recap({ deltaPct: 20, deltaPartial: true }));
+    render(<MonthlyRecap userId="u1" allTimeLogs={[]} loadingLogs={false} />);
+    expect(await screen.findByText('▲ 20% vs. mesmo período do mês anterior')).toBeTruthy();
+  });
+
   it('variação negativa usa seta para baixo; nula esconde a linha', async () => {
     h.recap.buildMonthlyRecap.mockReturnValue(recap({ deltaPct: -10 }));
     const { unmount } = render(<MonthlyRecap userId="u1" allTimeLogs={[]} loadingLogs={false} />);

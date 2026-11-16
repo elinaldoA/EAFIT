@@ -46,7 +46,10 @@ export default function MonthlyRecap({ userId, allTimeLogs, loadingLogs }) {
     }
   }
 
-  const delta = recap.deltaPct === null ? null : t('{v1} {v2}% vs. mês anterior', { v1: recap.deltaPct > 0 ? '▲' : recap.deltaPct < 0 ? '▼' : '●', v2: Math.abs(recap.deltaPct) });
+  const arrow = recap.deltaPct > 0 ? '▲' : recap.deltaPct < 0 ? '▼' : '●';
+  const delta = recap.deltaPct === null ? null : recap.deltaPartial
+    ? t('{v1} {v2}% vs. mesmo período do mês anterior', { v1: arrow, v2: Math.abs(recap.deltaPct) })
+    : t('{v1} {v2}% vs. mês anterior', { v1: arrow, v2: Math.abs(recap.deltaPct) });
   const stats = [
     { value: recap.treinos, label: t('treinos') },
     { value: formatMinutes(recap.minutes), label: t('de treino') },

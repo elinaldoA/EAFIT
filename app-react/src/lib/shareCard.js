@@ -1055,7 +1055,7 @@ export async function renderMonthlyRecapCard(recap, refCode = myRefCode()) {
     ctx.fillText(t('de treinos'), PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 - 2);
     ctx.fillStyle = MUTED;
     ctx.font = `600 28px ${FONT}`;
-    ctx.fillText(t('em relação ao mês anterior'), PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 + 38);
+    ctx.fillText(recap.deltaPartial ? t('vs. mesmo período do mês anterior') : t('em relação ao mês anterior'), PAD_X + 44 + pctW + 32, y + 6 + panelH / 2 + 38);
   }
 
   await drawFooter(ctx, CARD_HEIGHT - 214, t('Monte o seu treino'), refCode ? cardUrl(refCode) : '');
