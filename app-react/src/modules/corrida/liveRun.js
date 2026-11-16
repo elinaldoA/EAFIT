@@ -3,6 +3,7 @@ import { addAltitude, elevationGain, elevMark, kmElevOf } from './elevation';
 import { averageCadence } from './cadence';
 import { heartOf } from './heartRate';
 import { cleanReps } from './intervals';
+import { idbMirror } from './liveRunMirror';
 
 // Corrida ao vivo do EAFIT Run: cronômetro com pausa, distância e a marca de
 // tempo de cada quilômetro (splits). O estado é puro (funções que devolvem um
@@ -200,15 +201,61 @@ let cache;
 let persistFailed = false;
 export const isPersistFailing = () => persistFailed;
 
+const valid = (s, now) => !!s && typeof s.id === 'string' && Number.isFinite(s.startedAt) && now - (s.updatedAt || 0) <= STALE_MS;
+
 function read(now = Date.now()) {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
-    if (!s || typeof s.id !== 'string' || !Number.isFinite(s.startedAt)) return null;
-    if (now - (s.updatedAt || 0) > STALE_MS) return null;
-    return s;
+    return valid(s, now) ? s : null;
   } catch {
     return null;
   }
+}
+
+// ---- Cópia no IndexedDB (liveRunMirror.js) ---------------------------------
+// Gravada no máximo a cada MIRROR_EVERY_MS (a corrida inteira vai junto, não
+// compensa a cada leitura do GPS) e na hora ao sair da tela; apagada na hora
+// ao terminar. Só é lida quando o localStorage não tem a corrida.
+export const MIRROR_EVERY_MS = 5000;
+let mirror = idbMirror;
+let mirrorTimer = null;
+let mirrorLast = 0;
+
+function flushMirror() {
+  clearTimeout(mirrorTimer);
+  mirrorTimer = null;
+  mirrorLast = Date.now();
+  if (cache) mirror.put(cache);
+}
+
+function scheduleMirror() {
+  if (!cache) {
+    clearTimeout(mirrorTimer);
+    mirrorTimer = null;
+    mirror.del();
+    return;
+  }
+  if (mirrorTimer) return;
+  const wait = Math.max(0, MIRROR_EVERY_MS - (Date.now() - mirrorLast));
+  mirrorTimer = setTimeout(flushMirror, wait);
+}
+
+if (typeof window !== 'undefined') {
+  const flushNow = () => { if (cache) flushMirror(); };
+  window.addEventListener('pagehide', flushNow);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+}
+
+// Ao abrir o app: se o aparelho não tem a corrida no localStorage mas a cópia
+// tem (e não é velha demais), ela volta. Devolve true se restaurou. A tela vê
+// uma corrida que ficou sem o app aberto e pergunta o que fazer com o tempo.
+export async function restoreLiveRun(now = Date.now()) {
+  if (getLiveRun()) return false;
+  let copy;
+  try { copy = await mirror.get(); } catch { return false; }
+  if (!valid(copy, now) || getLiveRun()) return false;
+  setLiveRun(copy);
+  return true;
 }
 
 export function getLiveRun() {
@@ -226,6 +273,7 @@ export function setLiveRun(next) {
     // Sem storage: segue só na memória, e a tela avisa.
     persistFailed = !!cache;
   }
+  scheduleMirror();
   listeners.forEach(fn => fn());
   return cache;
 }
@@ -247,4 +295,6 @@ export const isRunActive = () => {
 };
 
 // Só para testes.
-export function resetLiveRunCache() { cache = undefined; persistFailed = false; }
+export function resetLiveRunCache() { cache = undefined; persistFailed = false; clearTimeout(mirrorTimer); mirrorTimer = null; mirrorLast = 0; }
+// Só para testes: troca a cópia (padrão: IndexedDB).
+export function setLiveRunMirror(next) { mirror = next || idbMirror; }

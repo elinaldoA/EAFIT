@@ -13,7 +13,7 @@ import { useLiveRun, useNow } from './useLiveRun';
 import {
   elapsedMs, isPaused, pauseRun, resumeRun, setDistance, finishRun, splitsOf, addRoutePoint,
   updateLiveRun, setLiveRun, getLiveRun, autoPauseRun, autoResumeRun,
-  markRunSeen, interruptedSince, SEEN_EVERY_MS, addElevation, addSteps, isPersistFailing,
+  markRunSeen, interruptedSince, SEEN_EVERY_MS, addElevation, addSteps, isPersistFailing, restoreLiveRun,
 } from './liveRun';
 import { emptyMotion, motionStep } from './autoPause';
 import { elevationGain, kmElevOf } from './elevation';
@@ -78,6 +78,14 @@ export default function LiveRunHost() {
   const [finishing, setFinishing] = useState(false);
   // Corrida que estava rodando quando o app fechou: desde quando ficou sem o app.
   const [interrupted, setInterrupted] = useState(() => interruptedSince(getLiveRun()));
+
+  // Corrida que o localStorage perdeu mas a cópia do IndexedDB guardou: volta
+  // como "ficou sem o app" e a pessoa decide o que fazer com o tempo.
+  useEffect(() => {
+    let alive = true;
+    restoreLiveRun().then(restored => { if (alive && restored) setInterrupted(interruptedSince(getLiveRun())); });
+    return () => { alive = false; };
+  }, []);
 
   const running = !!run && !isPaused(run);
   const autoPaused = !!run?.autoPaused;

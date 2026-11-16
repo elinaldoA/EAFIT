@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   startRun, pauseRun, resumeRun, elapsedMs, isPaused, setDistance, splitsOf, finishRun,
-  getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS, isPersistFailing,
+  getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS, isPersistFailing, restoreLiveRun, setLiveRunMirror, MIRROR_EVERY_MS,
   autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps,
 } from './liveRun';
 
@@ -109,6 +109,60 @@ describe('loja no aparelho', () => {
     vi.unstubAllGlobals();
     setLiveRun(startRun({}, Date.now()));
     expect(isPersistFailing()).toBe(false);
+  });
+});
+
+describe('cópia no IndexedDB', () => {
+  const fakeMirror = () => {
+    const m = { value: undefined, puts: 0, dels: 0 };
+    m.put = async v => { m.puts++; m.value = v; };
+    m.get = async () => m.value;
+    m.del = async () => { m.dels++; m.value = undefined; };
+    return m;
+  };
+  let m;
+  beforeEach(() => { m = fakeMirror(); setLiveRunMirror(m); localStorage.clear(); resetLiveRunCache(); vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); setLiveRunMirror(null); resetLiveRunCache(); localStorage.clear(); });
+
+  it('grava a cópia no máximo a cada 5 s, com a última versão', () => {
+    const base = startRun({}, Date.now());
+    setLiveRun(base);
+    for (let i = 1; i <= 20; i++) setLiveRun({ ...base, meters: i * 10 });
+    expect(m.puts).toBe(0);
+    vi.advanceTimersByTime(MIRROR_EVERY_MS);
+    expect(m.puts).toBe(1);
+    expect(m.value.meters).toBe(200);
+  });
+
+  it('terminar a corrida apaga a cópia e cancela a gravação pendente', () => {
+    setLiveRun(startRun({}, Date.now()));
+    setLiveRun(null);
+    expect(m.dels).toBe(1);
+    vi.advanceTimersByTime(MIRROR_EVERY_MS * 2);
+    expect(m.puts).toBe(0);
+    expect(m.value).toBeUndefined();
+  });
+
+  it('restaura a corrida da cópia quando o localStorage perdeu', async () => {
+    const run = { ...startRun({}, Date.now() - 60_000), meters: 1500 };
+    m.value = run;
+    expect(getLiveRun()).toBeNull();
+    expect(await restoreLiveRun()).toBe(true);
+    expect(getLiveRun().meters).toBe(1500);
+    expect(JSON.parse(localStorage.getItem('eafit_live_run')).id).toBe(run.id);
+  });
+
+  it('não restaura se o localStorage já tem a corrida, se a cópia é velha ou inválida', async () => {
+    setLiveRun(startRun({}, Date.now()));
+    m.value = { ...startRun({}, Date.now()), meters: 99 };
+    expect(await restoreLiveRun()).toBe(false);
+    setLiveRun(null);
+    m.value = { ...startRun({}, 0), updatedAt: Date.now() - STALE_MS - 1 };
+    expect(await restoreLiveRun()).toBe(false);
+    m.value = { id: 1 };
+    expect(await restoreLiveRun()).toBe(false);
+    m.value = undefined;
+    expect(await restoreLiveRun()).toBe(false);
   });
 });
 
