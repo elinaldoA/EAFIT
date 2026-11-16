@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 
-vi.mock('./supabase', () => ({ db: {} }));
+const rpc = vi.fn();
+vi.mock('./supabase', () => ({ db: { rpc: (...a) => rpc(...a) } }));
 
-import { normalizeSettings, isValidLink, isValidMovedUrl, nextBannerVersion, DEFAULT_SETTINGS, toggleModule } from './appSettings';
+import { normalizeSettings, isValidLink, isValidMovedUrl, nextBannerVersion, DEFAULT_SETTINGS, toggleModule, fetchModuleBetaUsers, setModuleBeta, searchBetaCandidates } from './appSettings';
 
 describe('normalizeSettings', () => {
   it('sem linhas devolve o padrão', () => {
@@ -144,5 +145,32 @@ describe('tema de temporada', () => {
     expect(badgeLabel('outra_coisa_2027')).toBe('outra_coisa_2027');
     expect(badgeLabel('streak_3')).toBe('🔥 Sequência de 3 dias');
     expect(badgeLabel('desconhecida')).toBe('desconhecida');
+  });
+});
+
+describe('liberação do módulo por conta', () => {
+  it('lista as contas liberadas', async () => {
+    rpc.mockResolvedValueOnce({ data: [{ bu_user: 'u1', bu_email: 'a@x.com', bu_name: 'Ana' }], error: null });
+    expect(await fetchModuleBetaUsers('corrida')).toEqual([{ id: 'u1', email: 'a@x.com', name: 'Ana' }]);
+    expect(rpc).toHaveBeenLastCalledWith('admin_module_beta_users', { p_module: 'corrida' });
+  });
+
+  it('libera e tira o acesso, e propaga o erro do banco', async () => {
+    rpc.mockResolvedValueOnce({ error: null });
+    await setModuleBeta('u1', 'corrida', true);
+    expect(rpc).toHaveBeenLastCalledWith('admin_set_module_beta', { p_user: 'u1', p_module: 'corrida', p_on: true });
+    rpc.mockResolvedValueOnce({ error: new Error('not_authorized') });
+    await expect(setModuleBeta('u1', 'corrida', false)).rejects.toThrow('not_authorized');
+  });
+
+  it('a busca só consulta com 3 letras ou mais e junta nome e sobrenome', async () => {
+    rpc.mockClear();
+    expect(await searchBetaCandidates('an')).toEqual([]);
+    expect(rpc).not.toHaveBeenCalled();
+    rpc.mockResolvedValueOnce({ data: [{ id: 'u2', email: 'b@x.com', nome: 'Bia', sobrenome: 'Lima' }, { id: 'u3', email: 'c@x.com' }], error: null });
+    expect(await searchBetaCandidates(' bia ')).toEqual([
+      { id: 'u2', email: 'b@x.com', name: 'Bia Lima' },
+      { id: 'u3', email: 'c@x.com', name: 'c@x.com' },
+    ]);
   });
 });

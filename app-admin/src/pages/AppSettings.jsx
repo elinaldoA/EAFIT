@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
-  KNOWN_FLAGS, SPORT_MODULES, toggleModule, fetchModuleStats, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
+  KNOWN_FLAGS, SPORT_MODULES, toggleModule, fetchModuleStats, fetchModuleBetaUsers, setModuleBeta, searchBetaCandidates, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
   SEASON_THEMES, isValidSeasonWindow as isValidPeriod, seasonScheduleError, seasonStatus, seasonThemeLabel, sortPeriods, withDefaultPeriods,
 } from '../lib/appSettings';
 import { todayStr } from '../lib/community';
@@ -172,6 +172,72 @@ function BannerCard({ saved, adminId, onSaved }) {
   );
 }
 
+// Libera o módulo só para contas escolhidas (teste fechado), sem ligar para todos.
+function BetaUsers({ module }) {
+  const [users, setUsers] = useState(null);
+  const [term, setTerm] = useState('');
+  const [found, setFound] = useState([]);
+  const [busyId, setBusyId] = useState('');
+  const [msg, setMsg] = useState('');
+
+  const load = useCallback(async () => {
+    try { setUsers(await fetchModuleBetaUsers(module)); }
+    catch (err) { setMsg(`Erro: ${err.message}`); setUsers([]); }
+  }, [module]);
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (term.trim().length < 3) { setFound([]); return undefined; }
+    let alive = true;
+    const id = setTimeout(() => {
+      searchBetaCandidates(term).then(r => { if (alive) setFound(r); }).catch(err => { if (alive) setMsg(`Erro: ${err.message}`); });
+    }, 300);
+    return () => { alive = false; clearTimeout(id); };
+  }, [term]);
+
+  async function change(user, on) {
+    setBusyId(user.id); setMsg('');
+    try {
+      await setModuleBeta(user.id, module, on);
+      setMsg(on ? `${user.email} liberado. Vale na próxima renovação da sessão (até 1 hora) ou num novo login.` : `${user.email} sem acesso.`);
+      if (on) { setTerm(''); setFound([]); }
+      await load();
+    } catch (err) {
+      setMsg(`Erro: ${err.message}`);
+    } finally {
+      setBusyId('');
+    }
+  }
+
+  const has = new Set((users || []).map(u => u.id));
+  return (
+    <div className="stack" style={{ gap: 6, marginTop: 8 }}>
+      <strong>Liberar só para algumas contas</strong>
+      <div className="user-detail__meta">Funciona mesmo com o módulo desligado para todos: quem estiver na lista vê o seletor de esporte. Ligar o interruptor acima libera para todo mundo.</div>
+      <input
+        className="input" type="search" placeholder="Buscar conta por nome ou e-mail (3 letras ou mais)"
+        value={term} onChange={e => setTerm(e.target.value)} aria-label="Buscar conta para liberar o módulo"
+      />
+      {found.map(u => (
+        <div className="flag-row" key={u.id}>
+          <div><strong>{u.name}</strong><div className="user-detail__meta">{u.email}</div></div>
+          <button className="btn btn--primary btn--small" disabled={busyId === u.id || has.has(u.id)} onClick={() => change(u, true)}>
+            {has.has(u.id) ? 'Já liberada' : 'Liberar'}
+          </button>
+        </div>
+      ))}
+      <div className="user-detail__meta">{users === null ? 'Carregando…' : `${users.length} conta(s) com acesso liberado`}</div>
+      {(users || []).map(u => (
+        <div className="flag-row" key={u.id}>
+          <div><strong>{u.name}</strong><div className="user-detail__meta">{u.email}</div></div>
+          <button className="btn btn--ghost btn--small" disabled={busyId === u.id} onClick={() => change(u, false)}>Tirar acesso</button>
+        </div>
+      ))}
+      <SectionMessage msg={msg} />
+    </div>
+  );
+}
+
 function ModulesCard({ saved, adminId, onSaved }) {
   const [busyKey, setBusyKey] = useState('');
   const [msg, setMsg] = useState('');
@@ -220,11 +286,12 @@ function ModulesCard({ saved, adminId, onSaved }) {
             </div>
             <label className="switch-row">
               <input type="checkbox" checked={on} disabled={busyKey === m.key} onChange={e => toggle(m.key, e.target.checked)} />
-              <span>{on ? 'Liberado' : 'Desligado'}</span>
+              <span>{on ? 'Liberado para todos' : 'Desligado para todos'}</span>
             </label>
           </div>
         );
       })}
+      {SPORT_MODULES.map(m => <BetaUsers key={m.key} module={m.key} />)}
       <SectionMessage msg={msg} />
     </div>
   );

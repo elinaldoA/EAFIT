@@ -130,6 +130,32 @@ export function toggleModule(enabled, key, on) {
   return SPORT_MODULES.map(m => m.key).filter(k => set.has(k));
 }
 
+// Contas com o módulo liberado só para elas (app_metadata.beta_modules):
+// [{ id, email, name }].
+export async function fetchModuleBetaUsers(module) {
+  const { data, error } = await db.rpc('admin_module_beta_users', { p_module: module });
+  if (error) throw error;
+  return (data || []).map(r => ({ id: r.bu_user, email: r.bu_email, name: r.bu_name }));
+}
+
+// Libera (on) ou tira (off) o módulo de uma conta. Vale na próxima renovação
+// da sessão da pessoa (até 1 h) ou num novo login.
+export async function setModuleBeta(userId, module, on) {
+  const { error } = await db.rpc('admin_set_module_beta', { p_user: userId, p_module: module, p_on: !!on });
+  if (error) throw error;
+}
+
+// Busca de contas para liberar (a mesma da lista de usuários): nome ou e-mail.
+export async function searchBetaCandidates(term, limit = 8) {
+  const q = String(term || '').trim();
+  if (q.length < 3) return [];
+  const { data, error } = await db.rpc('admin_list_users_page', {
+    search: q, status_filter: null, page_size: limit, page_offset: 0, sort_by: 'created_desc', nivel_filter: null, meta_filter: null,
+  });
+  if (error) throw error;
+  return (data || []).map(r => ({ id: r.id, email: r.email, name: [r.nome, r.sobrenome].filter(Boolean).join(' ') || r.email }));
+}
+
 // Números de cada módulo (admin_module_stats): { musculacao: {...}, corrida: {...} }.
 export async function fetchModuleStats() {
   const { data, error } = await db.rpc('admin_module_stats');
