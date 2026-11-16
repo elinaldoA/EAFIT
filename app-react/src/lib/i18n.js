@@ -24,6 +24,9 @@ function readLang() {
 export const lang = readLang();
 export const locale = LANGS.find(l => l.code === lang).locale;
 
+// Separador decimal do idioma do app: "2,8" em português, "2.8" em inglês.
+export const decimal = (text, language = lang) => (language === 'en' ? String(text) : String(text).replace('.', ','));
+
 // Os dicionários em inglês pesam cerca de 400 KB: só quem usa o app em inglês
 // baixa. O await no topo segura os módulos que importam este arquivo até o
 // dicionário chegar, então t() continua síncrono (inclusive nas constantes de

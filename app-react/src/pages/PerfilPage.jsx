@@ -31,10 +31,9 @@ import { takeProfileCardToOpen } from '../lib/appNav';
 import { useRunProfileStats } from '../modules/corrida/useRunProfileStats';
 import { RunGoalSection, RunPrefsSection, RunShortcuts } from '../modules/corrida/RunProfile';
 import { weeklyKmGoal } from '../modules/corrida/runProfileStats';
-import { decimal } from '../modules/corrida/runs';
 
 import { bodyErrors, BODY_FIELD_IDS, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
-import { t, locale } from '../lib/i18n';
+import { t, decimal, locale } from '../lib/i18n';
 export default function PerfilPage({ active }) {
   const { user, updateProfile } = useAuth();
   const toast = useToast();
@@ -220,10 +219,10 @@ export default function PerfilPage({ active }) {
   const suggestedWaterGoal = computedWaterGoalLiters(saved.peso) ?? DEFAULT_WATER_GOAL;
   const weeklyGoalNum = getWeeklyGoal(user);
   const nutritionGoals = computeNutritionGoals(saved);
-  const waterGoalLabel = String(getWaterGoalLiters(user)).replace('.', ',');
+  const waterGoalLabel = decimal(getWaterGoalLiters(user));
   const savedImc = imcInfo(parseFloat(saved.peso), parseFloat(saved.altura));
   const fullName = [nome, sobrenome].filter(Boolean).join(' ');
-  const bodySummary = [saved.peso && `${saved.peso}kg`, saved.altura && `${saved.altura}cm`, savedImc && t('IMC {v1}', { v1: savedImc.value.replace('.', ',') })]
+  const bodySummary = [saved.peso && `${saved.peso}kg`, saved.altura && `${saved.altura}cm`, savedImc && t('IMC {v1}', { v1: decimal(savedImc.value) })]
     .filter(Boolean).join(' · ') || t('Peso, altura, meta e nível');
 
   // Peso e fotos moram na aba Corpo da Evolução (antes ficavam repetidos

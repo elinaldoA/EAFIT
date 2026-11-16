@@ -88,7 +88,7 @@ export default function DashPage({ active }) {
         </div>
         <div className="dash-kpi">
           <span className="dash-kpi__value">{loading ? '–' : `${summary.streak}d`}</span>
-          <span className="dash-kpi__label">{t('Sequência')}<br />{t('atual')}</span>
+          <span className="dash-kpi__label">{t('Sequência atual')}</span>
         </div>
         <div className="dash-kpi">
           <span className="dash-kpi__value">{loadingPR ? '–' : summary.recordes}</span>

@@ -27,7 +27,7 @@ import ClientTags from './ClientTags';
 import ClientProfileEdit from './ClientProfileEdit';
 import ClientPlanHistory from './ClientPlanHistory';
 
-import { t, tEx } from '../lib/i18n';
+import { t, decimal, tEx } from '../lib/i18n';
 const GOALS = {
   massa: t('Ganho de massa'), forca: t('Aumento de força'), emagrecer: t('Emagrecimento'),
   definicao: t('Definição muscular'), saude: t('Saúde e bem-estar'), resistencia: t('Resistência / Condicionamento'),
@@ -43,7 +43,7 @@ const TABS = [
   { key: 'cobranca', label: t('Cobrança') },
   { key: 'dados', label: t('Dados') },
 ];
-const fmt = n => String(n).replace('.', ',');
+const fmt = n => decimal(n);
 
 // Barras de treinos por semana (8 semanas), com a meta como linha de referência.
 function WeeklyBars({ weeks, goal }) {

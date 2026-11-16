@@ -1,4 +1,4 @@
-import { t } from './i18n';
+import { t, decimal } from './i18n';
 import { parseLocalDate } from './utils';
 
 // Periodização simples por semana de um plano com data de início:
@@ -66,5 +66,5 @@ export function weekLabel(info) {
 }
 
 export function stepLabel(step) {
-  return t('+{step} kg por semana', { step: String(step).replace('.', ',') });
+  return t('+{step} kg por semana', { step: decimal(step) });
 }

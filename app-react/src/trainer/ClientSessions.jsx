@@ -3,7 +3,7 @@ import { fmtDate } from '../lib/utils';
 import { buildSessions, formatSets, formatDurationMin, fetchClientSessions, progressionSuggestions } from '../lib/trainerInsights';
 import Loading from '../components/Loading';
 
-import { t, tEx } from '../lib/i18n';
+import { t, decimal, tEx } from '../lib/i18n';
 // Últimos treinos do aluno, série a série, com a evolução de carga em relação
 // à sessão anterior de cada exercício.
 export default function ClientSessions({ clientId }) {
@@ -21,7 +21,7 @@ export default function ClientSessions({ clientId }) {
   const sessions = useMemo(() => (raw ? buildSessions(raw) : []), [raw]);
 
   const suggestions = useMemo(() => progressionSuggestions(sessions), [sessions]);
-  const fmtKg = n => String(n).replace('.', ',');
+  const fmtKg = n => decimal(n);
 
   return (
     <>
@@ -73,7 +73,7 @@ export default function ClientSessions({ clientId }) {
                       <span><strong>{tEx(e.name)}</strong><small>{formatSets(e.sets)}</small></span>
                       {e.delta !== null && e.delta !== 0 && (
                         <span className={e.delta > 0 ? 'measure-deltas__down' : 'measure-deltas__up'}>
-                          {e.delta > 0 ? '↑' : '↓'} {String(Math.abs(e.delta)).replace('.', ',')} kg
+                          {e.delta > 0 ? '↑' : '↓'} {decimal(Math.abs(e.delta))} kg
                         </span>
                       )}
                     </li>

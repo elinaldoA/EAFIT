@@ -1,4 +1,4 @@
-import { t, locale } from '../lib/i18n';
+import { t, decimal, locale } from '../lib/i18n';
 import { heightToCm, BODY_FIELD_IDS } from '../lib/profileValidation';
 import { invalidProps } from '../lib/fieldErrors';
 import FieldError from './FieldError';
@@ -109,7 +109,7 @@ export default function ProfileBodySection({
           {progress.projection && (
             <p className="progress-card__projection">
               {t('Mantendo o ritmo ({kgPerWeek} kg/semana), você chega lá por volta de {date}', {
-                kgPerWeek: String(progress.projection.kgPerWeek).replace('.', ','),
+                kgPerWeek: decimal(progress.projection.kgPerWeek),
                 date: progress.projection.date.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }),
               })}
             </p>
@@ -119,7 +119,7 @@ export default function ProfileBodySection({
       {imc && (
         <div className="imc-card">
           <span className="imc-card__label">{t('IMC')}</span>
-          <span className="imc-card__value">{imc.value.replace('.', ',')}</span>
+          <span className="imc-card__value">{decimal(imc.value)}</span>
           <span className="imc-card__class">{imc.cls}</span>
         </div>
       )}

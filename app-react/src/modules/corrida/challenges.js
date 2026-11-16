@@ -1,4 +1,4 @@
-import { t, lang } from '../../lib/i18n';
+import { t, decimal } from '../../lib/i18n';
 import { mondayOf } from './program';
 
 // Desafios do mês do EAFIT Run, calculados das próprias corridas (sem banco):
@@ -19,7 +19,7 @@ const TIERS = {
 const ICON = { km: '🛣️', runs: '👟', long: '🏔️', week: '📆' };
 
 function title(kind, goal) {
-  const g = lang === 'en' ? String(goal) : String(goal).replace('.', ',');
+  const g = decimal(goal);
   if (kind === 'km') return t('Corra {v1} km no mês', { v1: g });
   if (kind === 'runs') return t('{v1} corridas no mês', { v1: g });
   if (kind === 'long') return t('Uma corrida de {v1} km', { v1: g });

@@ -7,9 +7,9 @@ import { buildComparison } from '../lib/photoCompare';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useToast } from '../context/useToast';
 
-import { t, locale } from '../lib/i18n';
+import { t, decimal, locale } from '../lib/i18n';
 const fullDate = iso => new Date(`${iso}T12:00:00`).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
-const num = v => String(v).replace('.', ',');
+const num = v => decimal(v);
 const signed = v => `${v > 0 ? '+' : ''}${num(v)}`;
 const tone = diff => (diff < 0 ? 'measure-deltas__down' : diff > 0 ? 'measure-deltas__up' : '');
 

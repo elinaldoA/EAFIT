@@ -26,7 +26,7 @@ import { isFlagOn } from '../lib/appConfig';
 import { goalFor } from '../lib/strengthGoals';
 import { fmtDate } from '../lib/utils';
 
-import { t, tEx, tReps } from '../lib/i18n';
+import { t, decimal, tEx, tReps } from '../lib/i18n';
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
 // destaque no próprio cabeçalho, então o bloco omite os dele.
 export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, open, version, onToggleAll, onFillOthers, onApplySuggestion, started, hideName = false }) {
@@ -127,7 +127,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
             ex.deload ? (
               <p className="ex-block__intensity">{t('🌿 Semana leve: {n} séries (eram {m}), mesma carga e sem ir à falha', { n: ex.series, m: ex.seriesPlanned })}</p>
             ) : periodization.step && suggestion?.lastCarga ? (
-              <p className="ex-block__intensity">{t('📈 Meta da semana {week}: {target} kg', { week: periodization.week, target: String(suggestion.lastCarga + periodization.step).replace('.', ',') })}</p>
+              <p className="ex-block__intensity">{t('📈 Meta da semana {week}: {target} kg', { week: periodization.week, target: decimal(suggestion.lastCarga + periodization.step) })}</p>
             ) : null
           )}
           {isIntensity(ex.intensidade) && (

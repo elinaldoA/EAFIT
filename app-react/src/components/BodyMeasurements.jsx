@@ -7,7 +7,7 @@ import {
 } from '../lib/bodyMeasurements';
 import LineChart from './LineChart';
 
-import { t } from '../lib/i18n';
+import { t, decimal } from '../lib/i18n';
 // Medidas corporais (cm) no Dashboard → Corpo: registro do dia, evolução de
 // cada medida e a diferença desde o primeiro registro.
 export default function BodyMeasurements({ userId }) {
@@ -82,7 +82,7 @@ export default function BodyMeasurements({ userId }) {
               <li key={key}>
                 <span>{label}</span>
                 <span>{d.first} → {d.last} cm <strong className={d.diff < 0 ? 'measure-deltas__down' : d.diff > 0 ? 'measure-deltas__up' : ''}>
-                  ({d.diff > 0 ? '+' : ''}{String(d.diff).replace('.', ',')})</strong></span>
+                  ({d.diff > 0 ? '+' : ''}{decimal(d.diff)})</strong></span>
               </li>
             );
           })}

@@ -9,7 +9,7 @@ import {
   normalizeTrainerCode, friendlyTrainerError, fetchMyTrainer, linkTrainer, unlinkTrainer,
 } from '../lib/trainer';
 
-import { t } from '../lib/i18n';
+import { t, decimal } from '../lib/i18n';
 // Perfil → Meu personal: o aluno entra com o código do personal (autorizando o
 // acompanhamento) ou encerra o vínculo quando quiser.
 export default function ProfileTrainerSection({ toast, onChange }) {
@@ -91,7 +91,7 @@ export default function ProfileTrainerSection({ toast, onChange }) {
           <div className="personal-goals">
             <span className="profile-field__label">{t('🎯 Metas do seu personal')}</span>
             <p>
-              {[goals.weekly && t('{weekly} treinos por semana', { weekly: goals.weekly }), goals.weight && t('peso alvo {v1} kg', { v1: String(goals.weight).replace('.', ',') })].filter(Boolean).join(' · ')}
+              {[goals.weekly && t('{weekly} treinos por semana', { weekly: goals.weekly }), goals.weight && t('peso alvo {v1} kg', { v1: decimal(goals.weight) })].filter(Boolean).join(' · ')}
             </p>
             {goals.note && <small>{goals.note}</small>}
           </div>

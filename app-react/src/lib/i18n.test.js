@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import en from '../i18n/en';
-import { t } from './i18n';
+import { t, decimal } from './i18n';
 
 // Guarda: todo t('...') literal no código precisa ter tradução em en, e os
 // {placeholders} têm que bater. Evita texto em português vazando no inglês.
@@ -61,5 +61,24 @@ describe('idioma inglês', () => {
     vi.resetModules();
     const { t } = await import('./i18n');
     expect(t('Segunda')).toBe('Monday');
+  });
+});
+
+describe('decimal', () => {
+  it('vírgula em português, ponto em inglês', () => {
+    expect(decimal(24.7, 'pt')).toBe('24,7');
+    expect(decimal('2.8', 'en')).toBe('2.8');
+    expect(decimal(80)).toBe('80');
+  });
+
+  // Número mostrado na tela passa por decimal(): "BMI 24,7" no inglês era vírgula fixa no código.
+  it('ninguém troca o ponto por vírgula na mão fora dos casos de propósito', () => {
+    const allowed = [
+      './i18n.js',
+      './coach.js', // fala do coach é só em português ("quarenta e dois vírgula cinco")
+      '../trainer/ClientGoals.jsx', '../trainer/ClientProfileEdit.jsx', // valor de campo, lido de volta pelo formulário
+    ];
+    const hits = Object.entries(sources).filter(([file, src]) => src.includes(".replace('.', ',')") && !allowed.includes(file)).map(([file]) => file);
+    expect(hits).toEqual([]);
   });
 });

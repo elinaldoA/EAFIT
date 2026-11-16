@@ -4,7 +4,7 @@ import { addDays } from './pause';
 import { weeklyCounts } from './trainerRoster';
 import { fmtDate } from './utils';
 
-import { t, tEx, locale } from './i18n';
+import { t, decimal, tEx, locale } from './i18n';
 // Relatório de acompanhamento do aluno em PDF, para o personal mostrar o
 // resultado (compartilhar pelo celular ou imprimir). Só traz o que é de
 // treino e corpo: sem e-mail, lesões, restrições nem contato de emergência,
@@ -19,7 +19,7 @@ const MUTED = [113, 113, 122];
 const LINE = [228, 228, 231];
 const SOFT = [250, 250, 250];
 
-const num = v => String(v).replace('.', ',');
+const num = v => decimal(v);
 const signed = v => `${v > 0 ? '+' : ''}${num(v)}`;
 
 // Remove acentos que a fonte padrão do PDF não cobre e emojis; mantém o resto.

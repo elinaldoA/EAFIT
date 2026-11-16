@@ -7,7 +7,7 @@ import { cleanKmElev } from './elevation';
 import { cleanWeather } from './weather';
 import { cleanHr } from './heartRate';
 
-import { t, lang } from '../../lib/i18n';
+import { t, decimal } from '../../lib/i18n';
 // Corridas do EAFIT Run (tabela public.runs): salvar, listar, apagar e as
 // contas de ritmo, totais e recordes. Corrida que não subiu (sem internet no
 // fim do treino) fica numa fila no aparelho e sobe na próxima abertura; o
@@ -59,8 +59,8 @@ export function formatClock(totalSeconds) {
   return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
 }
 
-// Separador decimal do idioma do app: "5,23" em português, "5.23" em inglês.
-export const decimal = (text, language = lang) => (language === 'en' ? String(text) : String(text).replace('.', ','));
+// Separador decimal do idioma do app (lib/i18n).
+export { decimal };
 
 export const formatKm = (meters, digits = 2) => decimal((Math.max(0, meters || 0) / 1000).toFixed(digits));
 

@@ -3,8 +3,8 @@ import { todayDate } from '../data/treinoData';
 import { addDays } from '../lib/pause';
 import { CHECKIN_FIELDS, fetchCheckins, buildCheckinInsights } from '../lib/checkin';
 
-import { t } from '../lib/i18n';
-const fmt = n => String(n).replace('.', ',');
+import { t, decimal } from '../lib/i18n';
+const fmt = n => decimal(n);
 
 // Médias dos check-ins dos últimos 30 dias e como a energia muda nos dias de treino.
 export default function CheckinInsights({ userId, trainedDates }) {

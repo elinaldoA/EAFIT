@@ -8,7 +8,7 @@ export default {
   '= igual': '= same',
   'meta': 'goal',
   '30 dias': '30 days',
-  'atual': 'current',
+  'Sequência atual': 'Current streak',
   'Seg': 'Mon',
   'de {liters}L': 'of {liters}L',
   'incompleto': 'incomplete',

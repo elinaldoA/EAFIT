@@ -9,7 +9,7 @@ import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE, MUSCLE_LABELS } from '../data/bodyMuscleMap';
 import bodyAnatomyImg from '../assets/anatomia.jpg';
 
-import { t, locale, tFoco } from './i18n';
+import { t, decimal, locale, tFoco } from './i18n';
 // Desenha os cards de compartilhamento num canvas offscreen (mesmo padrão de canvas
 // usado em lib/imageUtils.js para compressão de imagem) e retorna um Blob PNG pronto
 // pra compartilhar ou baixar.
@@ -1070,8 +1070,8 @@ export async function shareMonthlyRecap(recap) {
   return shareImageBlob(blob, 'meu-mes-eafit.png', t('Meu mês no EAFIT'), t('Meu mês no EAFIT 💪 Monte o seu: {SHARE_CARD_URL}', { SHARE_CARD_URL: cardUrl(refCode) }));
 }
 
-const signedNum = v => `${v > 0 ? '+' : ''}${String(v).replace('.', ',')}`;
-const plainNum = v => String(v).replace('.', ',');
+const signedNum = v => `${v > 0 ? '+' : ''}${decimal(v)}`;
+const plainNum = v => decimal(v);
 const deltaColor = diff => (diff < 0 ? EMERALD : diff > 0 ? ORANGE_LIGHT : MUTED);
 
 // Cartão 9:16 do antes e depois: as duas fotos lado a lado, o tempo entre elas

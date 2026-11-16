@@ -9,7 +9,7 @@ import { getHolidays } from '../lib/holidays';
 import Skeleton from '../components/Skeleton';
 import SessionDetailModal from '../components/SessionDetailModal';
 
-import { t, locale } from '../lib/i18n';
+import { t, lang, locale } from '../lib/i18n';
 // Iniciais de segunda a domingo no idioma do app (01/01/2024 foi segunda).
 const WEEKDAYS = Array.from({ length: 7 }, (_, i) =>
   new Date(2024, 0, 1 + i).toLocaleDateString(locale, { weekday: 'narrow' }).toUpperCase());
@@ -152,7 +152,7 @@ export default function HistoricoPage() {
         ) : visible.length === 0 ? (
           <div className="empty-state">
             <span className="empty-state__icon" aria-hidden="true">📅</span>
-            <p className="empty-state__title">{t('Nenhum treino registrado em {v1}', { v1: MONTH_NAMES[cursor.month].toLowerCase() })}</p>
+            <p className="empty-state__title">{t('Nenhum treino registrado em {v1}', { v1: lang === 'en' ? MONTH_NAMES[cursor.month] : MONTH_NAMES[cursor.month].toLowerCase() })}</p>
             <p className="empty-state__text">
               {isCurrentMonth ? t('Inicie um treino na aba Treino — ele aparece aqui assim que você marcar a primeira série.') : t('Use as setas para ver outros meses.')}
             </p>

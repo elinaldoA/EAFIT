@@ -1,6 +1,6 @@
 import { DEFAULT_WATER_GOAL, DEFAULT_WEEKLY_GOAL } from '../data/treinoData';
 
-import { t } from '../lib/i18n';
+import { t, decimal } from '../lib/i18n';
 export function WeeklyGoalSection({ weeklyGoal, setWeeklyGoal, onSave }) {
   return (
     <>
@@ -30,7 +30,7 @@ export function MacrosSection({ macroAgua, setMacroAgua, onSave, suggestedGoal =
           aria-describedby="macroAguaHint"
         />
         <p className="profile-field__hint" id="macroAguaHint">
-          {t('Deixe em branco para usar {v1} L, calculado pelo seu peso (35 ml/kg).', { v1: String(suggestedGoal).replace('.', ',') })}
+          {t('Deixe em branco para usar {v1} L, calculado pelo seu peso (35 ml/kg).', { v1: decimal(suggestedGoal) })}
         </p>
       </div>
       <button className="btn btn--primary btn--full" onClick={onSave}>{t('Salvar meta de água')}</button>

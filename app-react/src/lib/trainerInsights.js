@@ -1,6 +1,6 @@
 import { db } from './supabase';
 
-import { t } from './i18n';
+import { t, decimal } from './i18n';
 import { setExtras } from './intensity';
 const ERRORS = {
   not_authorized: t('Você não tem vínculo ativo com este aluno.'),
@@ -54,7 +54,7 @@ export function formatSets(sets) {
   return sets
     .map(x => {
       const reps = Number.isFinite(x.reps) ? x.reps : '?';
-      const base = Number.isFinite(x.carga) && x.carga > 0 ? `${String(x.carga).replace('.', ',')}×${reps}` : `${reps} reps`;
+      const base = Number.isFinite(x.carga) && x.carga > 0 ? `${decimal(x.carga)}×${reps}` : `${reps} reps`;
       const extras = setExtras(x.rir, x.tipo);
       return extras.length ? `${base} (${extras.join(', ')})` : base;
     })

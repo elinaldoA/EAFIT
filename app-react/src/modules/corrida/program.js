@@ -1,4 +1,4 @@
-import { t, lang } from '../../lib/i18n';
+import { t, decimal } from '../../lib/i18n';
 import { parseLocalDate, toDateStr } from '../../lib/utils';
 
 // Programa do EAFIT Run: semanas de corrida por objetivo (5K, 10K, meia
@@ -190,7 +190,7 @@ export function describeSession(s) {
     case 'intervalado': return t('{v1}x 400 m forte / 200 m trote', { v1: s.reps });
     case 'ritmo': return t('{v1} min · forte, mas sustentável', { v1: s.minutes });
     case 'corre_caminha': return t('{v1} min · {v2} min corre / {v3} min caminha', { v1: s.minutes, v2: s.run, v3: s.walk });
-    case 'prova': return t('{v1} km · comece conservador e acelere no fim', { v1: lang === 'en' ? String(s.km) : String(s.km).replace('.', ',') });
+    case 'prova': return t('{v1} km · comece conservador e acelere no fim', { v1: decimal(s.km) });
     case 'cross': return t('{v1} min de bicicleta ou natação', { v1: s.minutes });
     case 'descanso': return t('Recuperação: o corpo fica mais forte no descanso');
     default: return t('Sem alvo: corra no seu ritmo');

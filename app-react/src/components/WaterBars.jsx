@@ -1,7 +1,9 @@
 import { parseLocalDate } from '../lib/utils';
 
 import { t, locale } from '../lib/i18n';
-const WEEKDAY = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+// Inicial do dia no idioma do app (D S T Q Q S S / S M T W T F S), de domingo a sábado.
+const WEEKDAY = Array.from({ length: 7 }, (_, i) =>
+  new Date(2024, 0, 7 + i).toLocaleDateString(locale, { weekday: 'narrow' }).toUpperCase());
 
 // Barras de consumo diário com a linha da meta tracejada. series vem de
 // buildDailySeries (último item = hoje).
