@@ -8,7 +8,7 @@ import { useToast } from '../context/useToast';
 import { useAvatar } from '../context/useAvatar';
 import { useWorkout } from '../context/useWorkout';
 import { enqueue } from '../lib/syncQueue';
-import { todayDate, DEFAULT_WEEKLY_GOAL, computedWaterGoalLiters, DEFAULT_WATER_GOAL } from '../data/treinoData';
+import { todayDate, DEFAULT_WEEKLY_GOAL, computedWaterGoalLiters, DEFAULT_WATER_GOAL, getWaterGoalLiters, getWeeklyGoal } from '../data/treinoData';
 import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
@@ -23,7 +23,7 @@ import { focusFirstError } from '../lib/fieldErrors';
 import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
-import { computeNutritionGoals, DEFAULT_META } from '../lib/nutritionGoals';
+import { computeNutritionGoals, DEFAULT_META, nutritionProfile } from '../lib/nutritionGoals';
 import ProfileSportSection from '../components/ProfileSportSection';
 import { useSportModule } from '../hooks/useSportModule';
 import { brandName } from '../lib/sportModule';
@@ -204,17 +204,26 @@ export default function PerfilPage({ active }) {
     toast(t('🎯 Meta de água salva!'));
   }
 
-  const weeklyGoalNum = parseInt(weeklyGoal, 10) || DEFAULT_WEEKLY_GOAL;
+  // Dentro do card aberto, o IMC e o progresso acompanham o que está sendo digitado (prévia).
   const imc = imcInfo(parseFloat(peso), parseFloat(altura));
   const progress = useMemo(
     () => metaProgress(parseFloat(peso), parseFloat(pesoAlvo), weightLogs),
     [peso, pesoAlvo, weightLogs]
   );
-  const nutritionGoals = computeNutritionGoals({ sexo, idade, peso, altura, meta, weeklyGoal });
-  const suggestedWaterGoal = computedWaterGoalLiters(peso) ?? DEFAULT_WATER_GOAL;
-  const waterGoalLabel = String(parseFloat(macroAgua) || suggestedWaterGoal).replace('.', ',');
+
+  // Os resumos dos cards e o cabeçalho mostram o que está SALVO, com as mesmas
+  // leituras das outras telas (Água, Treino, Nutrição): antes eles seguiam o
+  // formulário, e um peso 850 digitado (ainda não salvo, e inválido) já
+  // aparecia como "29,8L de água por dia" no card Metas.
+  const saved = nutritionProfile(md);
+  // Sugestão do campo de água (vazio = calculada pelo peso salvo, como na aba Água).
+  const suggestedWaterGoal = computedWaterGoalLiters(saved.peso) ?? DEFAULT_WATER_GOAL;
+  const weeklyGoalNum = getWeeklyGoal(user);
+  const nutritionGoals = computeNutritionGoals(saved);
+  const waterGoalLabel = String(getWaterGoalLiters(user)).replace('.', ',');
+  const savedImc = imcInfo(parseFloat(saved.peso), parseFloat(saved.altura));
   const fullName = [nome, sobrenome].filter(Boolean).join(' ');
-  const bodySummary = [peso && `${peso}kg`, altura && `${altura}cm`, imc && t('IMC {v1}', { v1: imc.value.replace('.', ',') })]
+  const bodySummary = [saved.peso && `${saved.peso}kg`, saved.altura && `${saved.altura}cm`, savedImc && t('IMC {v1}', { v1: savedImc.value.replace('.', ',') })]
     .filter(Boolean).join(' · ') || t('Peso, altura, meta e nível');
 
   // Peso e fotos moram na aba Corpo da Evolução (antes ficavam repetidos

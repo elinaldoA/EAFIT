@@ -133,6 +133,21 @@ describe('PerfilPage', () => {
     expect(screen.getByTestId('summary-Metas').textContent).toContain('treinos/semana');
   });
 
+  it('os resumos mostram o que está salvo: digitar um peso (ainda não salvo) não muda nada', () => {
+    const { rerender } = render(<PerfilPage active />);
+    const summaries = () => ['Meu corpo', 'Metas', 'Nutrição'].map(card => screen.getByTestId(`summary-${card}`).textContent);
+    const before = summaries();
+    type('peso', '850');
+    expect(summaries()).toEqual(before);
+    expect(screen.getByTestId('summary-Metas').textContent).not.toContain('29,8');
+
+    // Salvo (a conta devolve o peso novo), os resumos acompanham.
+    auth.user = { ...USER, user_metadata: { ...USER.user_metadata, peso: 85 } };
+    rerender(<PerfilPage active />);
+    expect(screen.getByTestId('summary-Meu corpo').textContent).toMatch(/^85kg · 175cm/);
+    expect(screen.getByTestId('summary-Metas').textContent).not.toBe(before[1]);
+  });
+
   it('usa o cache local quando o perfil na nuvem ainda não tem o dado', () => {
     auth.user = { id: 'u1', user_metadata: {} };
     localStorage.setItem('profile_nome', 'Bia');

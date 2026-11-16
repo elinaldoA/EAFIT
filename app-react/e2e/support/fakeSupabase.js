@@ -102,7 +102,7 @@ export class FakeSupabase {
     this.requests.push({ method, path: url.pathname, ok: true });
 
     let res;
-    if (url.pathname.startsWith('/auth/v1/')) res = this.auth(url);
+    if (url.pathname.startsWith('/auth/v1/')) res = this.auth(url, method, req);
     else if (url.pathname.startsWith('/rest/v1/rpc/')) res = this.rpc(url.pathname.split('/').pop());
     else if (url.pathname.startsWith('/rest/v1/')) res = this.rest(url, method, req);
     else if (url.pathname.startsWith('/functions/v1/')) res = { status: 200, body: {} };
@@ -115,8 +115,13 @@ export class FakeSupabase {
     });
   }
 
-  auth(url) {
-    if (url.pathname.endsWith('/user')) return { status: 200, body: this.user };
+  auth(url, method, req) {
+    if (url.pathname.endsWith('/user')) {
+      // updateUser({ data }): grava os dados do perfil, como o GoTrue, e devolve o usuário atualizado.
+      const data = method === 'PUT' ? req.postDataJSON?.()?.data : null;
+      if (data) this.user = { ...this.user, user_metadata: { ...this.user.user_metadata, ...data } };
+      return { status: 200, body: this.user };
+    }
     if (url.pathname.endsWith('/token')) return { status: 200, body: makeSession(this.user) };
     if (url.pathname.endsWith('/logout')) return { status: 204 };
     return { status: 200, body: {} };
