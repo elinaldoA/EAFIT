@@ -24,6 +24,7 @@ export default {
   "Gravar": "Record",
   "Gravar corrida": "Record a run",
   "Hoje: {v1} · {v2}": "Today: {v1} · {v2}",
+  "Ritmo sugerido: {v1} a {v2} /km": "Suggested pace: {v1} to {v2} /km",
   "Início": "Home",
   "Km da semana entre amigos": "This week's km among friends",
   "Medir distância e percurso pelo GPS": "Measure distance and route by GPS",

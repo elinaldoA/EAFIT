@@ -174,6 +174,38 @@ export function racePredictions(runs, today) {
   });
 }
 
+// ---- Ritmo sugerido para o treino -------------------------------------------
+
+// Faixa de ritmo (s/km) de cada tipo de treino, como múltiplo do ritmo de 5K
+// previsto: leve e longão em ritmo de conversa, ritmo perto do de 10K,
+// intervalado mais rápido que o 5K. Corre-caminha, descanso e treino cruzado
+// não têm ritmo.
+const PACE_BAND = {
+  leve: [1.2, 1.35],
+  longao: [1.2, 1.35],
+  ritmo: [1.05, 1.1],
+  intervalado: [0.93, 0.98],
+};
+
+// { from, to } em s/km (from = o mais rápido), ou null sem corridas recentes
+// que sirvam de base (racePredictions) ou para treino sem ritmo. A prova usa o
+// ritmo previsto para a própria distância.
+export function suggestedPace(session, runs, today) {
+  if (!session) return null;
+  const preds = racePredictions(runs, today);
+  if (session.type === 'prova') {
+    const race = preds.filter(p => p.seconds !== null).find(p => Math.abs(p.meters - session.km * 1000) <= 500);
+    if (!race) return null;
+    const pace = race.seconds / (race.meters / 1000);
+    return { from: Math.round(pace * 0.99), to: Math.round(pace * 1.02) };
+  }
+  const band = PACE_BAND[session.type];
+  const five = preds.find(p => p.key === '5k')?.seconds;
+  if (!band || !five) return null;
+  const pace = five / 5;
+  return { from: Math.round(pace * band[0]), to: Math.round(pace * band[1]) };
+}
+
 // ---- Tendência de ritmo ----------------------------------------------------
 
 // Ritmo médio (s/km) das últimas 4 semanas contra as 4 anteriores.

@@ -8,12 +8,13 @@ import {
   RUN_GOALS, RUN_LEVELS, GOAL_LABEL, sessionTitle, programFromMetadata, programToday,
   describeSession, isRunSession, mondayOf, goalWeeks,
 } from './program';
+import { suggestedPace } from './runReadings';
 import RunRace from './RunRace';
 import MyRoutes from './MyRoutes';
 import ProgramCalendar from './ProgramCalendar';
 import {
   fetchRuns, flushPendingRuns, formatKm, formatClock, RUN_SAVED_EVENT, manualRun, saveRun, newRecords, describeRecord,
-  fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice,
+  formatPace, fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice,
 } from './runs';
 import { requestMotionPermission } from './cadence';
 import { ShoePicker } from './Shoes';
@@ -240,6 +241,7 @@ export default function RunHomePage() {
   const weekMeters = weekRuns.reduce((sum, r) => sum + r.distance_m, 0);
   const doneToday = ranOn.has(today);
   const planned = !!session && isRunSession(session);
+  const pace = planned ? suggestedPace(session, runs, today) : null;
 
   // Correr de novo numa rota já feita: o fantasma é a melhor corrida dela.
   function runAgainst(ghost) {
@@ -276,6 +278,11 @@ export default function RunHomePage() {
         <p className="run-record__hint">
           {planned ? t('Hoje: {v1} · {v2}', { v1: sessionTitle(session), v2: describeSession(session) }) : t('Corrida livre, no seu ritmo')}
         </p>
+        {planned && pace && (
+          <p className="run-record__hint">
+            {t('Ritmo sugerido: {v1} a {v2} /km', { v1: formatPace(pace.from), v2: formatPace(pace.to) })}
+          </p>
+        )}
         {planned && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => begin(false)}>{t('Fazer corrida livre')}</button>
         )}

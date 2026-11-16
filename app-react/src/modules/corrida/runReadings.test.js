@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { longestStreakWeeks, achievements, weeklyLoad, weekEffort, racePredictions, paceTrend } from './runReadings';
+import { longestStreakWeeks, achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, suggestedPace } from './runReadings';
 
 // Sexta, 6/11/2026 (segunda da semana: 2/11).
 const TODAY = '2026-11-06';
@@ -128,5 +128,36 @@ describe('metas de km', () => {
     const { goalProgress } = await import('./runReadings');
     const [month] = goalProgress([], '2026-11-30', { month: 10 });
     expect(month.perWeekKm).toBe(10);
+  });
+});
+
+describe('ritmo sugerido do treino', () => {
+  // 5 km em 25 min: 300 s/km no 5K.
+  const base = [run('2026-11-01', 5000, 1500)];
+
+  it('leve fica em ritmo de conversa, mais lento que o 5K', () => {
+    expect(suggestedPace({ type: 'leve', minutes: 30 }, base, TODAY)).toEqual({ from: 360, to: 405 });
+  });
+
+  it('intervalado fica mais rápido que o 5K e ritmo perto do 10K', () => {
+    const iv = suggestedPace({ type: 'intervalado', reps: 6 }, base, TODAY);
+    expect(iv.to).toBeLessThan(300);
+    const tempo = suggestedPace({ type: 'ritmo', minutes: 20 }, base, TODAY);
+    expect(tempo.from).toBeGreaterThan(300);
+    expect(tempo.from).toBeLessThan(suggestedPace({ type: 'leve' }, base, TODAY).from);
+  });
+
+  it('a prova usa o ritmo previsto da própria distância', () => {
+    const p = suggestedPace({ type: 'prova', km: 5 }, base, TODAY);
+    expect(p.from).toBeLessThanOrEqual(300);
+    expect(p.to).toBeGreaterThanOrEqual(300);
+  });
+
+  it('sem base, sem corrida recente ou treino sem ritmo: null', () => {
+    expect(suggestedPace({ type: 'leve' }, [], TODAY)).toBeNull();
+    expect(suggestedPace({ type: 'leve' }, [run('2026-01-01')], TODAY)).toBeNull();
+    expect(suggestedPace({ type: 'corre_caminha', minutes: 20, run: 1, walk: 2 }, base, TODAY)).toBeNull();
+    expect(suggestedPace({ type: 'descanso' }, base, TODAY)).toBeNull();
+    expect(suggestedPace(null, base, TODAY)).toBeNull();
   });
 });
