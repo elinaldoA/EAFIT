@@ -43,7 +43,7 @@ function CheckinModal({ draft, setDraft, busy, onSave, onClose }) {
                   return (
                     <button
                       key={i} type="button" role="radio" aria-checked={draft[key] === i + 1}
-                      aria-label={end ? `${label} ${i + 1} de 5 (${end})` : `${label} ${i + 1} de 5`}
+                      aria-label={end ? t('{label} {n} de 5 ({end})', { label, n: i + 1, end }) : t('{label} {n} de 5', { label, n: i + 1 })}
                       className={draft[key] === i + 1 ? 'checkin__opt checkin__opt--on' : 'checkin__opt'}
                       onClick={() => setDraft(d => ({ ...d, [key]: i + 1 }))}
                     >{emoji}</button>

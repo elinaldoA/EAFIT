@@ -70,6 +70,16 @@ describe('TreinoPage', () => {
     expect(await screen.findByText('pesquisa: Indicaria?')).toBeTruthy();
   });
 
+  it('"Pouco tempo hoje?" só aparece quando há o que enxugar', () => {
+    const { unmount } = render(<TreinoPage />);
+    expect(screen.queryByText(/Pouco tempo hoje/)).toBeNull(); // Supino 3×10: cerca de 7 min
+    unmount();
+    const longo = { ...SEGUNDA, exercicios: Array.from({ length: 8 }, (_, i) => ({ nome: `Ex ${i}`, series: '4', reps: '10', descanso: '90s', tecnica: '' })) };
+    workout.activePlanDays = [longo, TERCA];
+    render(<TreinoPage />);
+    expect(screen.getByText(/Pouco tempo hoje/)).toBeTruthy();
+  });
+
   it('mostra o treino de hoje e um card por dia do plano', () => {
     render(<TreinoPage />);
     expect(screen.getByText('Treino de hoje')).toBeTruthy();

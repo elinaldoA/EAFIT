@@ -47,24 +47,34 @@ export function DiscomfortPanel({ userId, exerciseName, toast }) {
           {' '}<span className="discomfort-panel__hint">{t('— considere reduzir a carga ou trocar o exercício')}</span>
         </p>
       )}
-      <button type="button" className="discomfort-panel__toggle" onClick={() => setReportOpen(o => !o)}>
-        {reportOpen ? t('Cancelar') : t('⚠️ Reportar desconforto neste exercício')}
-      </button>
+      {!reportOpen && (
+        <button type="button" className="discomfort-panel__toggle" onClick={() => setReportOpen(true)}>
+          {t('⚠️ Reportar desconforto neste exercício')}
+        </button>
+      )}
+      {/* Rótulo visível no seletor (só "Leve" não dizia o que era) e o Cancelar
+          junto do Salvar, em vez de no lugar do link, acima do formulário. */}
       {reportOpen && (
         <div className="discomfort-panel__form">
-          <select className="input input--sm" value={severity} onChange={e => setSeverity(e.target.value)}>
-            <option value="leve">{t('Leve')}</option>
-            <option value="moderada">{t('Moderada')}</option>
-            <option value="forte">{t('Forte')}</option>
-            <option value="lesao">{t('Lesão')}</option>
-          </select>
+          <label className="field">
+            <span className="field__label">{t('Intensidade do desconforto')}</span>
+            <select className="input input--sm" value={severity} onChange={e => setSeverity(e.target.value)}>
+              <option value="leve">{t('Leve')}</option>
+              <option value="moderada">{t('Moderada')}</option>
+              <option value="forte">{t('Forte')}</option>
+              <option value="lesao">{t('Lesão')}</option>
+            </select>
+          </label>
           <input
-            type="text" className="input input--sm" placeholder={t('Nota (opcional)')}
+            type="text" className="input input--sm" placeholder={t('Nota (opcional)')} aria-label={t('Nota (opcional)')}
             value={note} onChange={e => setNote(e.target.value)}
           />
-          <button type="button" className="btn btn--primary btn--sm" disabled={saving} onClick={handleSave}>
-            {t('Salvar')}
-          </button>
+          <div className="discomfort-panel__actions">
+            <button type="button" className="btn btn--primary btn--sm" disabled={saving} onClick={handleSave}>
+              {t('Salvar')}
+            </button>
+            <button type="button" className="link-btn" disabled={saving} onClick={() => setReportOpen(false)}>{t('Cancelar')}</button>
+          </div>
         </div>
       )}
     </div>

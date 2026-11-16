@@ -435,9 +435,10 @@
 
 .discomfort-panel__form {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--sp-2);
 }
+.discomfort-panel__actions { display: flex; align-items: center; gap: var(--sp-3); }
 
 /* Discomfort history (agregado, todos os exercícios) */
 .discomfort-history { display: flex; flex-direction: column; }

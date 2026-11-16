@@ -112,11 +112,14 @@ describe('DiscomfortPanel', () => {
     expect(screen.getByText('Salvar')).toBeTruthy();
   });
 
-  it('alterna o botão entre reportar e cancelar', () => {
+  it('o seletor tem rótulo e o Cancelar fica junto do Salvar e volta ao link', () => {
     render(<DiscomfortPanel userId="u1" exerciseName="Supino" toast={h.toast} />);
     fireEvent.click(screen.getByText('⚠️ Reportar desconforto neste exercício'));
+    expect(screen.getByLabelText('Intensidade do desconforto').value).toBe('leve');
+    expect(screen.queryByText('⚠️ Reportar desconforto neste exercício')).toBeNull();
     fireEvent.click(screen.getByText('Cancelar'));
     expect(screen.queryByText('Salvar')).toBeNull();
+    expect(screen.getByText('⚠️ Reportar desconforto neste exercício')).toBeTruthy();
   });
 });
 

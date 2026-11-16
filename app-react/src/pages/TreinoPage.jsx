@@ -28,7 +28,7 @@ import { syncCoachPrefs } from '../lib/coach';
 import QuickWorkoutModal from '../components/QuickWorkoutModal';
 import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
 import MobilityButton from '../components/MobilityButton';
-import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice } from '../lib/quickWorkout';
+import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice, QUICK_OPTIONS } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
 import { activePause } from '../lib/pause';
 import { fetchLibraryMap } from '../lib/muscleVolume';
@@ -114,6 +114,9 @@ export default function TreinoPage() {
   const quickOn = isFlagOn(config.flags, 'treino_rapido');
   const fullToday = activePlanDays.find(d => d.dia === todayName());
   const quickMinutes = quickOn && fullToday ? readQuickChoice(fullToday.dia) : null;
+  // Treino que já cabe no menor tempo não tem o que enxugar: sem o link (ele abria
+  // uma janela só para dizer isso). Já enxugado, o link segue para voltar ao completo.
+  const canQuick = quickOn && !!fullToday && (!!quickMinutes || QUICK_OPTIONS.some(m => m < estimateMinutes(fullToday)));
   const today = quickMinutes ? fitDayToTime(fullToday, quickMinutes).day : fullToday;
   const planDays = activePlanDays.map(d => (d === fullToday ? today : d));
   const todaySets = today ? countSets(gatherExerciseDetails(today)) : { done: 0, total: 0 };
@@ -192,7 +195,7 @@ export default function TreinoPage() {
           day={today} sets={todaySets} done={todayDone}
           onStart={() => setLiveDay(today.dia)}
           quickMinutes={quickMinutes}
-          onQuick={quickOn ? () => setShowQuick(true) : null}
+          onQuick={canQuick ? () => setShowQuick(true) : null}
           mobility={isFlagOn(config.flags, 'mobilidade')}
           coach={coachEl}
           firstDay={firstDay && firstDay.dia !== today.dia ? firstDay : null}
