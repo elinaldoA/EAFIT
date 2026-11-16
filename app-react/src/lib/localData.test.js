@@ -9,6 +9,7 @@ function seed() {
   localStorage.setItem('treino_Segunda', 'true');
   localStorage.setItem('profile_peso', '80');
   localStorage.setItem('pendingSyncQueue', '[{"id":"1"}]');
+  localStorage.setItem('pr_best', '{"userId":"u1","items":{}}');
   localStorage.setItem('theme', 'dark');
   localStorage.setItem('app_lang', 'en');
 }
@@ -21,6 +22,7 @@ describe('clearUserLocalData', () => {
     expect(localStorage.getItem('treino_Segunda')).toBeNull();
     expect(localStorage.getItem('profile_peso')).toBeNull();
     expect(localStorage.getItem('pendingSyncQueue')).toBeNull();
+    expect(localStorage.getItem('pr_best')).toBeNull();
     expect(localStorage.getItem('theme')).toBe('dark');
     expect(localStorage.getItem('app_lang')).toBe('en');
   });

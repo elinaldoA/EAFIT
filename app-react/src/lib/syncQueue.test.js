@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { enqueue, queueSize, flushQueue } from './syncQueue';
+import { enqueue, queueSize, flushQueue, SYNC_QUEUE_EVENT } from './syncQueue';
 
 beforeEach(() => {
   localStorage.clear();
@@ -82,5 +82,22 @@ describe('coalescência e limites', () => {
   it('a fila é limitada em 500 operações (descarta as mais antigas)', () => {
     for (let i = 0; i < 520; i++) enqueue('weight_log', { userId: 'u', date: `d${i}`, peso: 80 });
     expect(queueSize()).toBe(500);
+  });
+});
+
+describe('aviso de mudança na fila', () => {
+  it('enfileirar e esvaziar avisam a tela já com o tamanho novo gravado', async () => {
+    // Este arquivo roda sem DOM: um EventTarget faz o papel do window.
+    const fakeWindow = new EventTarget();
+    vi.stubGlobal('window', fakeWindow);
+    const sizes = [];
+    fakeWindow.addEventListener(SYNC_QUEUE_EVENT, () => sizes.push(queueSize()));
+    try {
+      enqueue('weight_log', { userId: 'u1', date: '2026-07-10', peso: 80 });
+      await flushQueue({ weight_log: async () => {} });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(sizes).toEqual([1, 0]);
   });
 });

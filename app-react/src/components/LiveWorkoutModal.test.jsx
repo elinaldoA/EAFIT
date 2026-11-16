@@ -9,6 +9,7 @@ vi.mock('../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: null }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => () => {} }));
 vi.mock('../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
+vi.mock('./OfflineBanner', () => ({ default: () => <div data-testid="offline-banner" /> }));
 vi.mock('./ExerciseDemo', () => ({ default: () => null }));
 
 import LiveWorkoutModal from './LiveWorkoutModal';
@@ -105,6 +106,11 @@ describe('LiveWorkoutModal', () => {
     expect(onFinish).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('tab', { name: 'Prancha' }));
     expect(screen.queryByRole('button', { name: 'Finalizar' })).toBeNull();
+  });
+
+  it('mostra a faixa de conexão no topo do treino', () => {
+    setup();
+    expect(screen.getByTestId('offline-banner')).toBeTruthy();
   });
 
   it('✕ chama onClose', () => {

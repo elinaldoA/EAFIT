@@ -16,6 +16,7 @@ vi.mock('../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: null }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => () => {} }));
 vi.mock('../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
+vi.mock('./OfflineBanner', () => ({ default: () => null }));
 vi.mock('./ExerciseDemo', () => ({ default: () => null }));
 
 import LiveWorkoutModal from './LiveWorkoutModal';

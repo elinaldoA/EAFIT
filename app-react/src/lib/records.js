@@ -1,5 +1,6 @@
 import { db } from './supabase';
 import { parseRepCeiling } from './utils';
+import { queueSize } from './syncQueue';
 
 // Fórmula de Epley — estimativa padrão de 1RM a partir de peso x repetições.
 export function estimateOneRepMax(weight, reps) {
@@ -205,16 +206,78 @@ export function plateauFromSets(sets, repsStr) {
   };
 }
 
+// Melhores marcas guardadas no aparelho, por exercício, para detectar recorde
+// sem rede. A cada consulta que dá certo o servidor renova o retrato; sem rede
+// vale o último retrato mais o que foi feito offline e ainda não subiu.
+// { userId, items: { [exercicio]: { bestCarga, bestOneRm, localCarga, localOneRm } } }
+// Exercício que nunca foi consultado com rede fica fora: sem histórico conhecido
+// não dá para dizer que algo é recorde (diria que tudo é).
+const PR_CACHE_KEY = 'pr_best';
+
+function readPrItems(userId) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PR_CACHE_KEY));
+    return raw?.userId === userId && raw.items && typeof raw.items === 'object' ? raw.items : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePrItem(userId, exerciseName, item) {
+  try {
+    const items = readPrItems(userId);
+    items[exerciseName] = item;
+    localStorage.setItem(PR_CACHE_KEY, JSON.stringify({ userId, items }));
+  } catch { /* cota cheia: segue sem cache */ }
+}
+
+function maxOf(a, b) {
+  if (a === null || a === undefined) return b ?? null;
+  if (b === null || b === undefined) return a;
+  return Math.max(a, b);
+}
+
 // Compara a série recém-concluída com o histórico e diz se ela bateu algum recorde.
+// Sem rede (ou com o servidor fora) usa as melhores marcas guardadas no aparelho;
+// se o exercício não tem marcas guardadas, não afirma nada (null).
 export async function checkForNewPR(userId, exerciseName, carga, reps, exclude = {}) {
   const cargaNum = parseFloat(carga);
   if (!Number.isFinite(cargaNum)) return null;
-
-  const { bestCarga, bestOneRm } = await fetchBestForExercise(userId, exerciseName, exclude);
   const newOneRm = estimateOneRepMax(carga, reps);
+
+  let bestCarga;
+  let bestOneRm;
+  let fromServer = false;
+  const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  if (!offline) {
+    try {
+      ({ bestCarga, bestOneRm } = await fetchBestForExercise(userId, exerciseName, exclude));
+      fromServer = true;
+    } catch (err) {
+      console.warn('checkForNewPR: sem resposta do servidor, usando as marcas do aparelho', err);
+    }
+  }
+
+  const cached = readPrItems(userId)[exerciseName];
+  if (!fromServer) {
+    if (!cached) return null;
+    bestCarga = maxOf(cached.bestCarga, cached.localCarga);
+    bestOneRm = maxOf(cached.bestOneRm, cached.localOneRm);
+  }
 
   const isCargaPR = bestCarga === null || cargaNum > bestCarga;
   const isOneRmPR = newOneRm !== null && (bestOneRm === null || newOneRm > bestOneRm);
+
+  // Guarda o novo retrato: o do servidor mais esta série (o servidor a deixou de
+  // fora da conta). Marcas feitas offline só ficam à parte enquanto ainda há
+  // escrita na fila; depois que sobem, o servidor já as conhece.
+  const keepLocal = !fromServer || queueSize() > 0;
+  writePrItem(userId, exerciseName, {
+    bestCarga: fromServer ? maxOf(bestCarga, cargaNum) : (cached.bestCarga ?? null),
+    bestOneRm: fromServer ? maxOf(bestOneRm, newOneRm) : (cached.bestOneRm ?? null),
+    localCarga: keepLocal ? maxOf(cached?.localCarga, cargaNum) : null,
+    localOneRm: keepLocal ? maxOf(cached?.localOneRm, newOneRm) : null,
+  });
 
   if (isCargaPR || isOneRmPR) return { isCargaPR, isOneRmPR, carga: cargaNum, oneRm: newOneRm };
   return null;

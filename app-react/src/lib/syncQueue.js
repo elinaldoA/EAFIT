@@ -12,7 +12,18 @@ function readQueue() {
 // cota do localStorage. Passando disso, descarta as operações mais antigas.
 const MAX_QUEUE = 500;
 
+// Avisa a tela (faixa de offline, ponto de sincronização) que a fila mudou.
+export const SYNC_QUEUE_EVENT = 'eafit-syncqueue';
+function notify() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(SYNC_QUEUE_EVENT));
+}
+
 function writeQueue(queue) {
+  persist(queue);
+  notify();
+}
+
+function persist(queue) {
   let items = queue.length > MAX_QUEUE ? queue.slice(-MAX_QUEUE) : queue;
   // Cota cheia: tenta de novo com metade da fila (as mais recentes) em vez de
   // perder a operação que acabou de acontecer.

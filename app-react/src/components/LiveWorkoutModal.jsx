@@ -16,6 +16,7 @@ import { findGroup, groupKindLabel } from '../lib/supersets';
 import ExerciseDemo from './ExerciseDemo';
 import CoachPrompt from './CoachPrompt';
 import HydrationAlert from './HydrationAlert';
+import OfflineBanner from './OfflineBanner';
 import { isIntensity, intensityLabel, intensityHint } from '../lib/intensity';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
@@ -255,6 +256,8 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
           )}
         </div>
       </header>
+
+      <OfflineBanner />
 
       <div className="live__progress" aria-label={t('{setsDone} de {setsTotal} séries concluídas', { setsDone, setsTotal })}>
         <div className="live__progress-fill" style={{ width: `${pct}%` }} />

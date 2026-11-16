@@ -6,7 +6,7 @@
 // biometria entra: é da conta que a ligou.
 const OWNER_KEY = 'eafit_data_owner';
 const PREFIXES = ['treino_', 'set_', 'carga_', 'profile_', 'warm_', 'hr_'];
-const EXACT = ['pendingSyncQueue', 'plan_cache', 'dash_tab', 'reminders_enabled', 'coach_prefs', 'eafit_bio_lock'];
+const EXACT = ['pendingSyncQueue', 'plan_cache', 'pr_best', 'dash_tab', 'reminders_enabled', 'coach_prefs', 'eafit_bio_lock'];
 
 function safe(fn) {
   try { return fn(); } catch { return undefined; }
