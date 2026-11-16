@@ -77,10 +77,14 @@ beforeEach(() => {
     saveWorkoutNotes: vi.fn().mockResolvedValue(undefined),
     syncAfterFinish: vi.fn().mockResolvedValue(null),
   };
+  // Finalizar com séries por fazer pergunta antes; nos testes de outros
+  // assuntos a pessoa confirma.
+  h.confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  h.confirm.mockRestore();
 });
 
 describe('DayCard — cabeçalho', () => {
@@ -367,6 +371,37 @@ describe('DayCard — notas e modo ao vivo', () => {
     const { onCloseLive } = setup({ liveOpen: true });
     fireEvent.click(screen.getByRole('button', { name: 'fechar ao vivo' }));
     expect(onCloseLive).toHaveBeenCalledTimes(1);
+  });
+
+  it('finalizar com séries por fazer pergunta antes; cancelar continua o treino como estava', async () => {
+    const { onFinish } = setup();
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
+    h.confirm.mockReturnValue(false);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
+    expect(h.confirm).toHaveBeenCalledWith('Ainda faltam 7 séries. Finalizar o treino mesmo assim?');
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(h.finishedSound).not.toHaveBeenCalled();
+    expect(h.workout.saveWorkoutStatus).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Pausar' })).toBeTruthy();
+  });
+
+  it('com todas as séries feitas, finaliza sem perguntar', async () => {
+    for (const [nome, total] of [['Supino', 3], ['Crucifixo', 2], ['Prancha', 2]]) {
+      for (let n = 1; n <= total; n++) localStorage.setItem(`set_${nome}_${n}_done`, 'true');
+    }
+    const { onFinish } = setup();
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
+    expect(h.confirm).not.toHaveBeenCalled();
+    expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+
+  it('no modo ao vivo, cancelar a confirmação deixa a pessoa no modo ao vivo', async () => {
+    h.confirm.mockReturnValue(false);
+    const { onCloseLive, onFinish } = setup({ liveOpen: true });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'fim ao vivo' })); });
+    expect(onCloseLive).not.toHaveBeenCalled();
+    expect(onFinish).not.toHaveBeenCalled();
   });
 
   it('finalizar pelo modo ao vivo fecha e abre o resumo', async () => {

@@ -138,6 +138,22 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
       : t('✅ Treino enviado')), FINISH_TOAST_MS);
   }
 
+  // Finalizar com séries por fazer pede confirmação: o botão fica embaixo do
+  // polegar, e encerrar sem querer para o cronômetro, marca o dia e avisa os
+  // amigos ("Refazer treino" zeraria o tempo).
+  function confirmFinish() {
+    const { done, total } = countSets(gatherExerciseDetails(day));
+    const left = total - done;
+    if (left <= 0) return true;
+    return window.confirm(left === 1
+      ? t('Ainda falta 1 série. Finalizar o treino mesmo assim?')
+      : t('Ainda faltam {n} séries. Finalizar o treino mesmo assim?', { n: left }));
+  }
+
+  function handleFinishClick() {
+    if (confirmFinish()) handleFinishWorkout();
+  }
+
   function handleFinishWorkout() {
     const result = timer.finish();
     if (!result) return;
@@ -184,6 +200,8 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
 
   function finishFromLive() {
     const alreadyFinished = timer.status === 'finished';
+    // Cancelar deixa a pessoa no modo treino, onde estava.
+    if (!alreadyFinished && !confirmFinish()) return;
     closeLive();
     if (alreadyFinished) handleShowSummary();
     else handleFinishWorkout();
@@ -353,7 +371,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
                 {setsTotal > 0 && (
                   <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
                 )}
-                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>{t('🏁 Finalizar')}</button>
+                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishClick}>{t('🏁 Finalizar')}</button>
               </>
             )}
             {timer.status === 'paused' && (
@@ -362,7 +380,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
                 {setsTotal > 0 && (
                   <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
                 )}
-                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishWorkout}>{t('🏁 Finalizar')}</button>
+                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishClick}>{t('🏁 Finalizar')}</button>
               </>
             )}
             {timer.status === 'finished' && (

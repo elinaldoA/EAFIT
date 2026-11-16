@@ -187,8 +187,12 @@ test.describe('treino sem rede (navegador real)', () => {
     // O servidor volta a responder, mas nenhum evento de rede avisa o app (o navegador nunca saiu do "online").
     // A repetição automática só tentaria de novo em 15 s: finalizar tem que enviar antes disso.
     fake.hang = false;
+    // Falta a série 3: o app pergunta antes de finalizar.
+    let asked = '';
+    page.once('dialog', dialog => { asked = dialog.message(); dialog.accept(); });
     const before = Date.now();
     await page.getByRole('button', { name: '🏁 Finalizar treino' }).click();
+    expect(asked).toBe('Ainda falta 1 série. Finalizar o treino mesmo assim?');
 
     await expect.poll(() => fake.setOf(EXERCISE, 2), { timeout: 8_000 }).toMatchObject({ carga: 120, reps: 8, completed: true });
     await expect.poll(() => fake.workouts[0]).toMatchObject({ completed: true });
