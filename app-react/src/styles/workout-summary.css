@@ -161,7 +161,7 @@
 .rating-modal__option--selected {
   border-color: var(--primary);
   background: var(--surface);
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 /* Avaliação do app: reaproveita o painel do .rating-modal */
@@ -181,7 +181,7 @@
   cursor: pointer;
 }
 
-.app-rating__star--on { color: var(--primary); }
+.app-rating__star--on { color: var(--primary-text); }
 
 /* Pesquisa do painel (SurveyPrompt): escala de 0 a 10 em duas linhas no celular */
 .survey__scale { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: var(--sp-1); }
@@ -230,7 +230,7 @@
   margin-left: -12px;
   border: 2px dashed var(--primary);
   background: var(--surface-3);
-  color: var(--primary);
+  color: var(--primary-text);
   font-weight: 800;
 }
 

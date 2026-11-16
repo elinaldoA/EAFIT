@@ -39,6 +39,14 @@ describe('HidratacaoPage', () => {
     expect(waterLog.fetchWaterLog).not.toHaveBeenCalled();
   });
 
+  it('o que falta é contado em copos do botão Copo (200 ml)', async () => {
+    render(<HidratacaoPage active />);
+    await waitFor(() => expect(localStorage.getItem(waterStorageKey())).toBe('500'));
+    const hint = document.querySelector('.water-hero__hint').textContent;
+    expect(hint).toMatch(/^≈ \d+ copos de 200ml$/);
+    expect(screen.getByText('+200ml')).toBeTruthy();
+  });
+
   it('adicionar um copo grava local e no servidor', async () => {
     render(<HidratacaoPage active />);
     await waitFor(() => expect(localStorage.getItem(waterStorageKey())).toBe('500'));

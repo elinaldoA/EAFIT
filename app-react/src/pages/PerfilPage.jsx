@@ -22,7 +22,7 @@ import ProfileBodySection from '../components/ProfileBodySection';
 import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
-import { computeNutritionGoals } from '../lib/nutritionGoals';
+import { computeNutritionGoals, DEFAULT_META } from '../lib/nutritionGoals';
 import ProfileSportSection from '../components/ProfileSportSection';
 import { useSportModule } from '../hooks/useSportModule';
 import { brandName } from '../lib/sportModule';
@@ -49,7 +49,7 @@ export default function PerfilPage({ active }) {
   const [idade, setIdade] = useState(md.idade || localStorage.getItem('profile_idade') || '');
   const [peso, setPeso] = useState(md.peso || localStorage.getItem('profile_peso') || '');
   const [altura, setAltura] = useState(md.altura || localStorage.getItem('profile_altura') || '');
-  const [meta, setMeta] = useState(md.meta || localStorage.getItem('profile_meta') || 'massa');
+  const [meta, setMeta] = useState(md.meta || localStorage.getItem('profile_meta') || DEFAULT_META);
   const [nivel, setNivel] = useState(md.nivel || localStorage.getItem('profile_nivel') || 'intermediario');
   const [local, setLocal] = useState(md.local || localStorage.getItem('profile_local') || 'academia');
   const [pesoAlvo, setPesoAlvo] = useState(md.pesoAlvo || localStorage.getItem('profile_pesoAlvo') || '');

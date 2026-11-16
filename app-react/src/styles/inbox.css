@@ -64,7 +64,7 @@
 .inbox__time { font-size: var(--fs-xs); color: var(--text-dim); }
 .inbox__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .inbox__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-1) 14px; }
-.inbox__go { color: var(--primary); }
+.inbox__go { color: var(--primary-text); }
 .inbox__bar {
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-4); border-bottom: 1px solid var(--border);

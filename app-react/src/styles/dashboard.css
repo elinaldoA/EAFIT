@@ -311,7 +311,7 @@
 .bar-col__val {
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-text);
   line-height: 1;
 }
 
@@ -400,7 +400,7 @@
 .load-history__row:last-child { border-bottom: none; }
 
 .load-history__date { color: var(--text-dim); }
-.load-history__val { font-weight: 700; color: var(--primary); }
+.load-history__val { font-weight: 700; color: var(--primary-text); }
 
 /* Discomfort panel (tela de Evolução) */
 .discomfort-panel {
@@ -535,7 +535,7 @@
 .pr-row__val {
   font-size: var(--fs-base);
   font-weight: 900;
-  color: var(--primary);
+  color: var(--primary-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -567,7 +567,7 @@
   font-size: var(--fs-xl);
   font-weight: 900;
   line-height: 1;
-  color: var(--primary);
+  color: var(--primary-text);
   font-variant-numeric: tabular-nums;
 }
 .dash-kpi__label {

@@ -1,7 +1,7 @@
 /* Modo Influenciador (influencer/): reaproveita topbar e páginas do Personal
    (trainer.css) e o painel do embaixador (.amb, profile.css). */
 .influencer-hero__total { margin: 0; font-size: var(--fs-md); color: var(--text-muted); }
-.influencer-hero__total strong { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-right: var(--sp-1); }
+.influencer-hero__total strong { font-size: 1.6rem; font-weight: 800; color: var(--primary-text); margin-right: var(--sp-1); }
 .influencer-hero .amb__notice { margin-top: 10px; }
 .influencer-caption { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 0; border-top: 1px solid var(--border); }
 .influencer-caption:first-of-type { border-top: 0; }
@@ -43,5 +43,5 @@
 .partner-campaign__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap; }
 .partner-campaign__head small { font-size: var(--fs-sm); color: var(--text-muted); }
 .partner-campaign__text { margin: 0; font-size: var(--fs-md); line-height: 1.45; white-space: pre-line; word-break: break-word; }
-.partner-campaign__goal { margin: 0; font-size: var(--fs-md); font-weight: 700; color: var(--primary); }
+.partner-campaign__goal { margin: 0; font-size: var(--fs-md); font-weight: 700; color: var(--primary-text); }
 .partner-campaign .influencer-caption { border-top: 0; padding: var(--sp-1) 0 0; }

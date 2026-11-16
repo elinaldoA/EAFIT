@@ -1,5 +1,25 @@
 import { BODY_LIMITS } from './profileValidation';
 
+// Meta principal quando a conta não tem uma salva (a mesma do cadastro).
+export const DEFAULT_META = 'massa';
+
+const PROFILE_FIELDS = ['sexo', 'idade', 'peso', 'altura', 'meta', 'weeklyGoal'];
+
+// Dados do perfil que entram nas metas de nutrição, lidos como o Perfil lê:
+// o que está na conta, senão a cópia do aparelho (profile_*), senão o padrão.
+// Perfil e Nutrição usam esta mesma leitura: antes a Nutrição lia só a conta e,
+// para quem não tinha a meta salva nela, mostrava calorias e proteína diferentes
+// das do Perfil.
+export function nutritionProfile(md = {}, storage = globalThis.localStorage) {
+  const read = key => {
+    try { return storage?.getItem(`profile_${key}`) || ''; } catch { return ''; }
+  };
+  const out = { ...md };
+  for (const key of PROFILE_FIELDS) out[key] = md[key] || read(key) || '';
+  out.meta ||= DEFAULT_META;
+  return out;
+}
+
 // Ajuste de calorias sobre o gasto total (TDEE) e proteína em g/kg por meta.
 const GOAL_PLAN = {
   massa:       { kcalFactor: 1.10, proteinPerKg: 2.0 },

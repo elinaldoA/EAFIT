@@ -111,7 +111,7 @@
 .stat-card__value {
   font-size: 1.55rem;
   font-weight: 900;
-  color: var(--primary);
+  color: var(--primary-text);
   line-height: 1;
 }
 
@@ -135,7 +135,7 @@
 .section-group__label {
   font-size: var(--fs-xs);
   font-weight: 800;
-  color: var(--primary);
+  color: var(--primary-text);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   padding: 0 2px;
@@ -227,7 +227,7 @@ button.profile-section__title {
 .imc-card__value {
   font-size: var(--fs-xl);
   font-weight: 900;
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .imc-card__class {

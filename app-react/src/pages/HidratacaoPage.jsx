@@ -119,6 +119,8 @@ export default function HidratacaoPage({ active }) {
 
   const pct = goalMl ? Math.min(100, (water / goalMl) * 100) : 0;
   const remaining = Math.max(0, goalMl - water);
+  // Em copos do botão "Copo" (o primeiro atalho): o número que a pessoa toca até a meta.
+  const glassesLeft = Math.ceil(remaining / QUICK_ADD[0].ml);
   const done = water >= goalMl;
   const undoAmount = undoStack[undoStack.length - 1];
 
@@ -139,7 +141,7 @@ export default function HidratacaoPage({ active }) {
           <span className="water-hero__hint">
             {done
               ? t('{v1}% da meta · continue se hidratando', { v1: Math.round(pct) })
-              : (Math.ceil(remaining / 250) === 1 ? t('≈ 1 copo de 250ml') : t('≈ {n} copos de 250ml', { n: Math.ceil(remaining / 250) }))}
+              : (glassesLeft === 1 ? t('≈ 1 copo de 200ml') : t('≈ {n} copos de 200ml', { n: glassesLeft }))}
           </span>
         </div>
       </div>

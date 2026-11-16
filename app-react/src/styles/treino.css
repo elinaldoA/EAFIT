@@ -31,7 +31,7 @@
 .progress-card__count {
   font-size: var(--fs-sm);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .progress-card__bar {
@@ -222,7 +222,7 @@
 .session-timer__done {
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .session-timer__actions {
@@ -244,7 +244,7 @@
 .day-card__total {
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-text);
   padding: 10px 0 var(--sp-1);
 }
 
@@ -286,7 +286,7 @@
 
 .ex-block__suggestion {
   font-size: var(--fs-xs);
-  color: var(--primary-h);
+  color: var(--primary-text);
   margin: 2px 0 0;
 }
 
@@ -439,7 +439,7 @@
 .ex-block__intensity {
   margin: var(--sp-1) 0 0;
   font-size: var(--fs-xs);
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .set-row-wrap {
@@ -452,7 +452,7 @@
   border: none;
   background: none;
   padding: 0;
-  color: var(--primary-h);
+  color: var(--primary-text);
   font-size: var(--fs-xs);
   font-weight: 700;
   text-decoration: underline;
@@ -533,7 +533,7 @@
   border-top: 1px solid var(--border);
   margin-top: var(--sp-1);
 }
-.footer strong { color: var(--primary); }
+.footer strong { color: var(--primary-text); }
 
 /* ============================================================
    CARD "TREINO DE HOJE"
@@ -560,7 +560,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: var(--primary);
+  color: var(--primary-text);
 }
 .today-card--done .today-card__kicker { color: var(--success); }
 
@@ -645,7 +645,7 @@
 .week-strip__day--today .week-strip__dot { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
 
 .week-strip__label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-dim); }
-.week-strip__day--today .week-strip__label { color: var(--primary); }
+.week-strip__day--today .week-strip__label { color: var(--primary-text); }
 
 /* ── Troca geral de exercício (ExerciseSwap) ── */
 .ex-swap { margin-top: var(--sp-2); }
@@ -658,7 +658,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.ex-swap__toggle:hover { color: var(--primary); }
+.ex-swap__toggle:hover { color: var(--primary-text); }
 .ex-swap__panel {
   margin-top: 6px;
   padding: 10px;
@@ -781,7 +781,7 @@
   min-width: 78px;
 }
 
-.cardio-row__clock--running { color: var(--primary-h); }
+.cardio-row__clock--running { color: var(--primary-text); }
 
 .cardio-row__fields {
   display: grid;
@@ -822,7 +822,7 @@
 .superset__badge {
   font-size: var(--fs-xs);
   font-weight: 800;
-  color: var(--primary);
+  color: var(--primary-text);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

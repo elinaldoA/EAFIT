@@ -314,7 +314,10 @@ function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility, 
           <span className="today-card__kicker">{done ? t('Treino de hoje concluído') : t('Treino de hoje')}</span>
           <h2 className="today-card__title">{tFoco(day.foco)}</h2>
           <span className="today-card__meta">
-            {t('{dia} · {length} exercícios {v1}', { dia: t(day.dia), length: day.exercicios.length, v1: hasSets && ` · ${t('{setsDone}/{setsTotal} séries', { setsDone: sets.done, setsTotal: sets.total })}` })}
+            {day.exercicios.length === 1
+              ? t('{dia} · 1 exercício', { dia: t(day.dia) })
+              : t('{dia} · {length} exercícios', { dia: t(day.dia), length: day.exercicios.length })}
+            {hasSets && ` · ${t('{setsDone}/{setsTotal} séries', { setsDone: sets.done, setsTotal: sets.total })}`}
             {hasSets && !done && ` · ${t('~{m} min', { m: estimateMinutes(day) })}`}
           </span>
           {quickMinutes && <span className="today-card__quick">{t('⏱ Versão de {m} min', { m: quickMinutes })}</span>}

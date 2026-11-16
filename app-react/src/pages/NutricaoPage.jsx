@@ -11,7 +11,7 @@ import { parseLocalDate, toDateStr } from '../lib/utils';
 import { buildProteinSeries, proteinStats } from '../lib/proteinStats';
 import { fetchWeightLogs } from '../lib/weightLog';
 import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading, estimateTdee } from '../lib/nutritionInsights';
-import { computeNutritionGoals, goalKcalFactor, MIN_KCAL } from '../lib/nutritionGoals';
+import { computeNutritionGoals, goalKcalFactor, MIN_KCAL, nutritionProfile } from '../lib/nutritionGoals';
 import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS } from '../lib/foodShortcuts';
 import { MEALS, mealForHour, readCachedEntries, fetchEntries, fetchEntriesRange, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
@@ -57,7 +57,8 @@ export default function NutricaoPage({ active }) {
   const { user } = useAuth();
   const { markPending } = useWorkout();
   const toast = useToast();
-  const goals = useMemo(() => computeNutritionGoals(user?.user_metadata), [user]);
+  const profile = useMemo(() => nutritionProfile(user?.user_metadata), [user]);
+  const goals = useMemo(() => computeNutritionGoals(profile), [profile]);
   const goalG = goals?.protein ?? 0;
 
   const [_tick, setTick] = useState(0);
@@ -144,7 +145,7 @@ export default function NutricaoPage({ active }) {
   const kcalGoal = goals?.kcal ?? 0;
   const week = useMemo(() => kcalWeekSummary(nSeries, kcalGoal), [nSeries, kcalGoal]);
   const weightRate = useMemo(() => weightRatePerWeek(weightLogs, todayDate()), [weightLogs]);
-  const reading = nutritionReading(week, user?.user_metadata?.meta, weightRate);
+  const reading = nutritionReading(week, profile.meta, weightRate);
   const kcalSeries = useMemo(() => nSeries.map(d => ({ date: d.date, g: d.kcal })), [nSeries]);
 
   function saveTotals(next) {
@@ -347,12 +348,12 @@ export default function NutricaoPage({ active }) {
     if (spread) return t('{share}% da proteína de hoje veio de uma refeição só ({meal}). Amanhã, divida melhor entre as refeições.', { share: spread.share, meal: MEAL_NAME[spread.meal]() });
     return stats.streak >= 2 ? t('🔥 {n} dias seguidos na meta', { n: stats.streak }) : null;
   })();
-  const newKcal = suggestedKcal(kcalGoal, reading, user?.user_metadata?.meta);
+  const newKcal = suggestedKcal(kcalGoal, reading, profile.meta);
   // Gasto real pelo histórico (comida registrada + balança). A meta sugerida só
   // aparece quando foge 5% ou mais da meta da fórmula.
   const tdee = useMemo(() => estimateTdee(nSeries, weightRate), [nSeries, weightRate]);
   const tdeeKcal = tdee && goals
-    ? Math.max(MIN_KCAL[user?.user_metadata?.sexo] || 1200, Math.round((tdee * goalKcalFactor(user?.user_metadata?.meta)) / 10) * 10)
+    ? Math.max(MIN_KCAL[profile.sexo] || 1200, Math.round((tdee * goalKcalFactor(profile.meta)) / 10) * 10)
     : null;
   const tdeeDiffers = !!tdeeKcal && Math.abs(tdeeKcal - kcalGoal) / kcalGoal >= 0.05;
   // Fibra e sódio do dia: só dos registros que trazem o dado.
@@ -372,7 +373,7 @@ export default function NutricaoPage({ active }) {
         <div className="section-group">
           <div className="section-group__label">{t('Sua próxima refeição')}</div>
           <GoalMeals
-            meta={user?.user_metadata?.meta} goals={goals} totals={totals}
+            meta={profile.meta} goals={goals} totals={totals}
             meal={meal} onMealChange={setMeal}
             hour={now.getHours() + now.getMinutes() / 60} trainingHour={user?.user_metadata?.trainingHour}
             onAdd={foods => { handleAddMany(foods); toast(t('Refeição registrada')); }}

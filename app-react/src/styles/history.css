@@ -53,7 +53,7 @@ button.history-cal__cell:not(:disabled) { cursor: pointer; }
 
 .history-cal__cell--partial {
   background: var(--primary-glow);
-  color: var(--primary-h);
+  color: var(--primary-text);
   border-color: rgba(249, 115, 22, .35);
 }
 
@@ -128,7 +128,7 @@ button.history-cal__cell:not(:disabled) { cursor: pointer; }
   background: var(--surface-3);
   color: var(--text-muted);
 }
-.history-item__date--done { background: var(--primary-glow); color: var(--primary); }
+.history-item__date--done { background: var(--primary-glow); color: var(--primary-text); }
 .history-item__day { font-size: var(--fs-lg); font-weight: 900; line-height: 1; }
 .history-item__month { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; }
 

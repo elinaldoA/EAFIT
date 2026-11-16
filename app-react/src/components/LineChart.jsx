@@ -52,7 +52,7 @@ export default function LineChart({ points: rawPoints, emptyMsg, singleMsg, valu
           </text>
         );
       })}
-      <text x={mX.toFixed(1)} y={(mY - 8).toFixed(1)} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="var(--primary)">
+      <text x={mX.toFixed(1)} y={(mY - 8).toFixed(1)} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="var(--primary-text)">
         {maxV.toLocaleString(locale)}{valueSuffix}
       </text>
     </svg>

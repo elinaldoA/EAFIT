@@ -206,7 +206,7 @@ body.modal-open { overflow: hidden; }
   place-items: center;
   border-radius: var(--r-lg);
   background: var(--primary-glow);
-  color: var(--primary);
+  color: var(--primary-text);
 }
 .update-card__icon svg { width: 20px; height: 20px; }
 .update-card__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -254,7 +254,7 @@ body.modal-open { overflow: hidden; }
 .announce--warning { background: rgba(251, 191, 36, .14); border-bottom-color: var(--warning); }
 .announce--success { background: rgba(74, 222, 128, .14); border-bottom-color: var(--success); }
 .announce__text { flex: 1; min-width: 0; }
-.announce__link { color: var(--primary); font-weight: 600; }
+.announce__link { color: var(--primary-text); font-weight: 600; }
 .announce__close {
   flex-shrink: 0;
   width: 26px;

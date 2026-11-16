@@ -7,7 +7,7 @@
   padding: 2px var(--sp-2);
   border-radius: var(--r-full);
   background: var(--primary-glow);
-  color: var(--primary);
+  color: var(--primary-text);
   font-size: var(--fs-xs);
   font-weight: 700;
 }
@@ -78,7 +78,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--primary);
+  color: var(--primary-text);
 }
 .mobility__count { font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
@@ -103,7 +103,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: var(--primary);
+  color: var(--primary-text);
 }
 .mobility__name { margin: 0; font-size: 1.35rem; font-weight: 900; line-height: 1.2; }
 .mobility__cue { margin: 0; max-width: 32ch; font-size: var(--fs-base); line-height: 1.45; color: var(--text-muted); }
@@ -174,7 +174,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.plates__chip--on { border-color: var(--primary); background: var(--primary-glow); color: var(--primary); }
+.plates__chip--on { border-color: var(--primary); background: var(--primary-glow); color: var(--primary-text); }
 
 /* Ponta da barra com as anilhas de um lado, da mais pesada (junto ao
    batente) para a mais leve. Cores no padrão de competição. */

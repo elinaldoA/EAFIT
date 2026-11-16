@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeNutritionGoals, goalKcalFactor } from './nutritionGoals';
+import { computeNutritionGoals, goalKcalFactor, nutritionProfile } from './nutritionGoals';
 
 const base = { sexo: 'M', idade: '30', peso: '80', altura: '180', meta: 'saude', weeklyGoal: 4 };
 
@@ -51,5 +51,30 @@ describe('fibra, sódio e fator da meta', () => {
     expect(goalKcalFactor('emagrecer')).toBe(0.8);
     expect(goalKcalFactor('massa')).toBe(1.1);
     expect(goalKcalFactor(undefined)).toBe(1);
+  });
+});
+
+describe('nutritionProfile', () => {
+  const store = data => ({ getItem: k => data[k] ?? null });
+
+  it('usa o que está na conta', () => {
+    expect(nutritionProfile({ ...base }, store({ profile_meta: 'emagrecer' }))).toMatchObject(base);
+  });
+
+  it('sem o dado na conta, lê a cópia do aparelho, como o Perfil', () => {
+    const p = nutritionProfile({ sexo: 'M', idade: 30, peso: 80, altura: 180 }, store({ profile_meta: 'emagrecer', profile_weeklyGoal: '3' }));
+    expect(p).toMatchObject({ meta: 'emagrecer', weeklyGoal: '3' });
+  });
+
+  it('sem meta em lugar nenhum, vale a do cadastro (massa): Nutrição e Perfil mostram o mesmo número', () => {
+    const p = nutritionProfile({ sexo: 'M', idade: 30, peso: 80, altura: 180 }, store({}));
+    expect(p.meta).toBe('massa');
+    const g = computeNutritionGoals(p);
+    expect(g).toMatchObject({ kcal: 3030, protein: 160 });
+  });
+
+  it('aparelho sem armazenamento não quebra', () => {
+    const broken = { getItem: () => { throw new Error('bloqueado'); } };
+    expect(nutritionProfile({}, broken).meta).toBe('massa');
   });
 });

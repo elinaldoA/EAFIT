@@ -70,7 +70,7 @@
 .auth-logo__more {
   margin-top: 6px;
   padding: 6px var(--sp-1);
-  color: var(--primary);
+  color: var(--primary-text);
   font-size: var(--fs-md);
   font-weight: 600;
   text-decoration: none;
@@ -128,7 +128,7 @@
 .auth-google { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
 .auth-google__icon { width: 18px; height: 18px; flex-shrink: 0; }
 .auth-form__legal { margin: 0; font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.4; text-align: center; }
-.auth-form__legal a { color: var(--primary); }
+.auth-form__legal a { color: var(--primary-text); }
 
 .app-version {
   text-align: center;
@@ -228,7 +228,7 @@ h1.auth-logo__name { margin: 0; }
   border: 0;
   border-radius: var(--r-md, 8px);
   background: transparent;
-  color: var(--primary);
+  color: var(--primary-text);
   font: inherit;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -240,14 +240,14 @@ h1.auth-logo__name { margin: 0; }
   padding: 6px var(--sp-1);
   border: 0;
   background: transparent;
-  color: var(--primary);
+  color: var(--primary-text);
   font: inherit;
   font-size: var(--fs-md);
   font-weight: 600;
   cursor: pointer;
 }
 .auth-form__link--right { align-self: flex-end; margin-top: -4px; }
-.auth-form__terms a { color: var(--primary); }
+.auth-form__terms a { color: var(--primary-text); }
 
 /* Foco visível pra quem navega por teclado */
 .auth-tabs__tab:focus-visible,

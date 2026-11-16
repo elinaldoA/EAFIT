@@ -78,6 +78,18 @@ describe('TreinoPage', () => {
     expect(screen.getByText('0/2 treinos')).toBeTruthy();
   });
 
+  it('o resumo do treino de hoje concorda o número de exercícios e mostra as séries', () => {
+    render(<TreinoPage />);
+    expect(document.querySelector('.today-card__meta').textContent).toMatch(/^Segunda · 1 exercício · 0\/3 séries/);
+  });
+
+  it('dia sem séries contáveis não escreve "false" no resumo', () => {
+    const solto = { nome: 'Alongamento', series: '', reps: '', descanso: '', tecnica: '' };
+    workout.activePlanDays = [{ ...SEGUNDA, exercicios: [solto, { ...solto, nome: 'Respiração' }] }, TERCA];
+    render(<TreinoPage />);
+    expect(document.querySelector('.today-card__meta').textContent).toBe('Segunda · 2 exercícios');
+  });
+
   it('o botão do dia acompanha o progresso: começar, continuar e revisar', () => {
     const { unmount } = render(<TreinoPage />);
     expect(screen.getByText('⚡ Começar treino')).toBeTruthy();

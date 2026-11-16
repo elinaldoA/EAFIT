@@ -76,7 +76,7 @@
   border-bottom: 2px solid transparent;
 }
 
-.plan-modal__tab.active { color: var(--primary); border-color: var(--primary); }
+.plan-modal__tab.active { color: var(--primary-text); border-color: var(--primary); }
 
 .plan-modal__body {
   flex: 1;
@@ -132,7 +132,7 @@
 .plan-row__badge {
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-text);
   padding: 6px 10px;
   white-space: nowrap;
 }
