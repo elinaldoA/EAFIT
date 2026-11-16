@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { longestStreakWeeks, achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, suggestedPace } from './runReadings';
+import { longestStreakWeeks, achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, suggestedPace, effortHistory } from './runReadings';
 
 // Sexta, 6/11/2026 (segunda da semana: 2/11).
 const TODAY = '2026-11-06';
@@ -159,5 +159,35 @@ describe('ritmo sugerido do treino', () => {
     expect(suggestedPace({ type: 'corre_caminha', minutes: 20, run: 1, walk: 2 }, base, TODAY)).toBeNull();
     expect(suggestedPace({ type: 'descanso' }, base, TODAY)).toBeNull();
     expect(suggestedPace(null, base, TODAY)).toBeNull();
+  });
+});
+
+describe('evolução do melhor esforço', () => {
+  const splits5 = secs => Array(5).fill(secs);
+
+  it('pega o melhor tempo de cada mês, dos 6 últimos, do mais antigo ao atual', () => {
+    const h = effortHistory([
+      run('2026-11-02', 5000, 1500, { splits: splits5(300) }),
+      run('2026-11-04', 5000, 1450, { splits: splits5(290) }),
+      run('2026-09-10', 5000, 1600, { splits: splits5(320) }),
+    ], 5, TODAY);
+    expect(h.map(x => x.month)).toEqual(['2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11']);
+    expect(h.find(x => x.month === '2026-11').seconds).toBe(1450);
+    expect(h.find(x => x.month === '2026-09').seconds).toBe(1600);
+    expect(h.find(x => x.month === '2026-10').seconds).toBeNull();
+  });
+
+  it('ignora corrida sem parciais, fora do período ou curta demais', () => {
+    const h = effortHistory([
+      run('2026-11-02', 5000, 1500),
+      run('2025-01-02', 5000, 1500, { splits: splits5(300) }),
+      run('2026-11-03', 3000, 900, { splits: [300, 300, 300] }),
+    ], 5, TODAY);
+    expect(h.every(x => x.seconds === null)).toBe(true);
+  });
+
+  it('atravessa a virada do ano', () => {
+    const h = effortHistory([], 1, '2027-02-10', 4);
+    expect(h.map(x => x.month)).toEqual(['2026-11', '2026-12', '2027-01', '2027-02']);
   });
 });

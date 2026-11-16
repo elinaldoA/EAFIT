@@ -2,6 +2,12 @@
 export default {
   // EAFIT Run no estilo dos apps de corrida (feed, gravar, desafios, você)
   "Adicione amigos em Desafios: as corridas deles aparecem aqui e vocês se aplaudem.": "Add friends in Challenges: their runs show up here and you cheer each other on.",
+  "Evolução do melhor tempo": "Best time over time",
+  "Sem corrida com GPS de {v1} km ou mais nos últimos 6 meses.": "No GPS run of {v1} km or more in the last 6 months.",
+  "📈 {v1} km: {v2} mais rápido que no primeiro mês com registro.": "📈 {v1} km: {v2} faster than the first month on record.",
+  "📉 {v1} km: {v2} mais lento que no primeiro mês com registro.": "📉 {v1} km: {v2} slower than the first month on record.",
+  "jan": "Jan", "fev": "Feb", "mar": "Mar", "abr": "Apr", "mai": "May", "jun": "Jun",
+  "jul": "Jul", "ago": "Aug", "set": "Sep", "out": "Oct", "nov": "Nov", "dez": "Dec",
   "Ano": "Year",
   "Aplaudir a corrida de {v1}": "Give kudos to {v1}'s run",
   "Começar": "Start",

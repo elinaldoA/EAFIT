@@ -174,6 +174,30 @@ export function racePredictions(runs, today) {
   });
 }
 
+// ---- Evolução do melhor esforço ---------------------------------------------
+
+export const EFFORT_HISTORY_KM = [1, 5, 10];
+
+// Melhor tempo (s) em `km` seguidos de cada mês, dos últimos `months` meses
+// (do mais antigo ao atual), pelos parciais do GPS. [{ month: 'YYYY-MM',
+// seconds }] com seconds = null no mês sem esse esforço.
+export function effortHistory(runs, km, today, months = 6) {
+  const [y, m] = today.split('-').map(Number);
+  const keys = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(y, m - 1 - i, 1);
+    keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  const best = new Map(keys.map(k => [k, null]));
+  for (const r of runs) {
+    const key = (r.run_date || '').slice(0, 7);
+    if (!best.has(key) || r.run_date > today) continue;
+    const s = bestEffort(r.splits, km);
+    if (s !== null && s > 0 && (best.get(key) === null || s < best.get(key))) best.set(key, s);
+  }
+  return keys.map(month => ({ month, seconds: best.get(month) }));
+}
+
 // ---- Ritmo sugerido para o treino -------------------------------------------
 
 // Faixa de ritmo (s/km) de cada tipo de treino, como múltiplo do ritmo de 5K

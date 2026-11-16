@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { todayDate } from '../../data/treinoData';
 import { formatKm, formatClock, formatPace } from './runs';
-import { achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, goalProgress } from './runReadings';
+import { achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, goalProgress, effortHistory, EFFORT_HISTORY_KM } from './runReadings';
 import { kmGoals } from './runProfileStats';
 import { t } from '../../lib/i18n';
 
@@ -92,6 +93,53 @@ function Predictions({ runs, today }) {
   );
 }
 
+const MONTHS = () => [t('jan'), t('fev'), t('mar'), t('abr'), t('mai'), t('jun'), t('jul'), t('ago'), t('set'), t('out'), t('nov'), t('dez')];
+
+// Melhor tempo de 1, 5 ou 10 km em cada mês: a barra mais comprida é o melhor mês.
+function EffortHistory({ runs, today }) {
+  const [km, setKm] = useState(5);
+  const hasAny = EFFORT_HISTORY_KM.some(k => effortHistory(runs, k, today).some(h => h.seconds !== null));
+  if (!hasAny) return null;
+  const history = effortHistory(runs, km, today);
+  const times = history.map(h => h.seconds).filter(s => s !== null);
+  const best = times.length ? Math.min(...times) : null;
+  const names = MONTHS();
+  const first = times.length > 1 ? history.find(h => h.seconds !== null).seconds : null;
+  const last = [...history].reverse().find(h => h.seconds !== null)?.seconds ?? null;
+  return (
+    <div className="section-group">
+      <div className="section-group__label">{t('Evolução do melhor tempo')}</div>
+      <div className="dash-card run-goals">
+        <div className="run-chips">
+          {EFFORT_HISTORY_KM.map(k => (
+            <button key={k} type="button" aria-pressed={km === k} className={`run-chip${km === k ? ' run-chip--on' : ''}`} onClick={() => setKm(k)}>{k} km</button>
+          ))}
+        </div>
+        {best === null ? (
+          <p className="profile-field__hint">{t('Sem corrida com GPS de {v1} km ou mais nos últimos 6 meses.', { v1: km })}</p>
+        ) : history.map(h => (
+          <div key={h.month} className="run-goal">
+            <div className="run-goal__head">
+              <strong>{names[Number(h.month.slice(5)) - 1]}</strong>
+              <span>{h.seconds === null ? '–' : formatClock(h.seconds)}</span>
+            </div>
+            <div className="run-goal__bar" role="img" aria-label={`${names[Number(h.month.slice(5)) - 1]}: ${h.seconds === null ? '–' : formatClock(h.seconds)}`}>
+              <span style={{ width: h.seconds === null ? '0%' : `${Math.round((best / h.seconds) * 100)}%` }} />
+            </div>
+          </div>
+        ))}
+        {first !== null && last !== null && first !== last && (
+          <p className="run-trend">
+            {last < first
+              ? t('📈 {v1} km: {v2} mais rápido que no primeiro mês com registro.', { v1: km, v2: formatClock(first - last) })
+              : t('📉 {v1} km: {v2} mais lento que no primeiro mês com registro.', { v1: km, v2: formatClock(last - first) })}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Achievements({ runs }) {
   const list = achievements(runs);
   const unlocked = list.filter(a => a.unlocked).length;
@@ -123,6 +171,7 @@ export default function RunInsights({ runs, meta }) {
       <Goals runs={runs} today={today} meta={meta} />
       <WeekLoad runs={runs} today={today} />
       <Predictions runs={runs} today={today} />
+      <EffortHistory runs={runs} today={today} />
       <Achievements runs={runs} />
     </>
   );
