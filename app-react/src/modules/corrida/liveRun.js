@@ -22,7 +22,10 @@ import { cleanReps } from './intervals';
 
 const KEY = 'eafit_live_run';
 // Corrida sem sinal há mais tempo que isso é resto de um app fechado no meio.
-export const STALE_MS = 12 * 60 * 60 * 1000;
+// Até lá ela volta e a tela pergunta o que fazer com o tempo fora (não some
+// em silêncio: uma corrida longa não pode se perder porque o app ficou
+// fechado de um dia para o outro).
+export const STALE_MS = 48 * 60 * 60 * 1000;
 
 export function newRunId(now = Date.now(), random = Math.random) {
   return `${now.toString(36)}-${Math.floor(random() * 1e9).toString(36)}`;
@@ -192,6 +195,10 @@ export function interruptedSince(s, now = Date.now()) {
 
 const listeners = new Set();
 let cache;
+// true quando a última gravação no aparelho falhou (sem espaço ou storage
+// bloqueado): a corrida segue na memória, mas fechar o app a perderia.
+let persistFailed = false;
+export const isPersistFailing = () => persistFailed;
 
 function read(now = Date.now()) {
   try {
@@ -214,7 +221,11 @@ export function setLiveRun(next) {
   try {
     if (cache) localStorage.setItem(KEY, JSON.stringify(cache));
     else { localStorage.removeItem(KEY); localStorage.removeItem(SEEN_KEY); }
-  } catch { /* sem storage: segue só na memória */ }
+    persistFailed = false;
+  } catch {
+    // Sem storage: segue só na memória, e a tela avisa.
+    persistFailed = !!cache;
+  }
   listeners.forEach(fn => fn());
   return cache;
 }
@@ -236,4 +247,4 @@ export const isRunActive = () => {
 };
 
 // Só para testes.
-export function resetLiveRunCache() { cache = undefined; }
+export function resetLiveRunCache() { cache = undefined; persistFailed = false; }

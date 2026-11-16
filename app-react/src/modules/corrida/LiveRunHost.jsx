@@ -13,7 +13,7 @@ import { useLiveRun, useNow } from './useLiveRun';
 import {
   elapsedMs, isPaused, pauseRun, resumeRun, setDistance, finishRun, splitsOf, addRoutePoint,
   updateLiveRun, setLiveRun, getLiveRun, autoPauseRun, autoResumeRun,
-  markRunSeen, interruptedSince, SEEN_EVERY_MS, addElevation, addSteps,
+  markRunSeen, interruptedSince, SEEN_EVERY_MS, addElevation, addSteps, isPersistFailing,
 } from './liveRun';
 import { emptyMotion, motionStep } from './autoPause';
 import { elevationGain, kmElevOf } from './elevation';
@@ -404,6 +404,12 @@ function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, hear
       )}
 
       <RouteDrawing route={run.route} width={320} height={130} className="run-route--live" />
+
+      {isPersistFailing() && (
+        <div className="run-live__gps" role="alert">
+          {t('⚠️ O aparelho está sem espaço para guardar a corrida: não feche o app até finalizar')}
+        </div>
+      )}
 
       <div className="run-live__gps">
         {!run.gps ? t('Sem GPS: digite a distância no fim')

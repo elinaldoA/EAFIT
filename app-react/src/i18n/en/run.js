@@ -77,6 +77,7 @@ export default {
   'Caminhe.': 'Walk.',
   'Tempo completo. Ótimo trabalho!': 'Time complete. Great job!',
   '🏃 Corrida em andamento — finalize para sair': '🏃 Run in progress — finish it to leave',
+  '⚠️ O aparelho está sem espaço para guardar a corrida: não feche o app até finalizar': '⚠️ This device is out of space to store the run: do not close the app until you finish',
   '{v1} de {v2} min': '{v1} of {v2} min',
   '{v1} de {v2} km': '{v1} of {v2} km',
   'Corrida em andamento': 'Run in progress',

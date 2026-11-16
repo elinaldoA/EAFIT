@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   startRun, pauseRun, resumeRun, elapsedMs, isPaused, setDistance, splitsOf, finishRun,
-  getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS,
+  getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS, isPersistFailing,
   autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps,
 } from './liveRun';
 
@@ -93,6 +93,21 @@ describe('loja no aparelho', () => {
     const old = { ...startRun({}, 0), updatedAt: Date.now() - STALE_MS - 1 };
     localStorage.setItem('eafit_live_run', JSON.stringify(old));
     expect(getLiveRun()).toBeNull();
+  });
+
+  it('corrida parada de ontem ainda volta para a pessoa decidir', () => {
+    const old = { ...startRun({}, 0), updatedAt: Date.now() - 20 * 60 * 60 * 1000 };
+    localStorage.setItem('eafit_live_run', JSON.stringify(old));
+    expect(getLiveRun()?.id).toBe(old.id);
+  });
+
+  it('avisa quando o aparelho não consegue gravar a corrida', () => {
+    const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('quota'); });
+    setLiveRun(startRun({}, Date.now()));
+    expect(isPersistFailing()).toBe(true);
+    spy.mockRestore();
+    setLiveRun(startRun({}, Date.now()));
+    expect(isPersistFailing()).toBe(false);
   });
 });
 

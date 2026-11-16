@@ -123,7 +123,7 @@ describe('banco e fila do aparelho', () => {
   it('sem espaço no aparelho a corrida não é dada como guardada', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     h.result = { data: null, error: new Error('offline') };
-    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
+    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
     const out = await saveRun('u1', run());
     setItem.mockRestore();
     expect(out).toMatchObject({ pending: false, lost: true });
