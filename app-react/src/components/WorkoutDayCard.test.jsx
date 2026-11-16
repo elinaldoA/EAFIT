@@ -72,6 +72,7 @@ beforeEach(() => {
     saveSetState: vi.fn().mockResolvedValue(undefined),
     saveWorkoutTimer: vi.fn().mockResolvedValue(undefined),
     saveWorkoutNotes: vi.fn().mockResolvedValue(undefined),
+    syncAfterFinish: vi.fn().mockResolvedValue(null),
   };
 });
 afterEach(() => {
@@ -160,6 +161,57 @@ describe('DayCard — cronômetro do treino', () => {
     expect(summary.weekTotal).toBe(2); // Segunda e Terça — fim de semana não conta
     expect(summary.weekDone).toBe(1);
     expect(screen.getByText(/concluído/)).toBeTruthy();
+  });
+
+  describe('envio ao finalizar', () => {
+    async function finish() {
+      fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
+    }
+
+    it('espera as gravações do fim assentarem e só então tenta enviar a fila', async () => {
+      const order = [];
+      h.workout.saveWorkoutStatus = vi.fn(async () => { await Promise.resolve(); order.push('status'); });
+      h.workout.saveWorkoutTimer = vi.fn(async () => { await Promise.resolve(); order.push('timer'); });
+      h.workout.syncAfterFinish = vi.fn(async () => { order.push('envio'); return null; });
+      setup();
+      await finish();
+      expect(order.at(-1)).toBe('envio');
+      expect(order).toContain('timer');
+      expect(h.workout.syncAfterFinish).toHaveBeenCalledTimes(1);
+    });
+
+    it('havia pendência e subiu tudo: avisa que o treino foi enviado, depois do "Treino finalizado"', async () => {
+      h.workout.syncAfterFinish = vi.fn().mockResolvedValue({ remaining: 0 });
+      setup();
+      await finish();
+      expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('Treino finalizado'));
+      expect(h.toast).not.toHaveBeenCalledWith('✅ Treino enviado');
+      await act(async () => { vi.advanceTimersByTime(2700); });
+      expect(h.toast).toHaveBeenLastCalledWith('✅ Treino enviado');
+    });
+
+    it('sem rede (ainda sobra pendência): avisa que ficou salvo no aparelho', async () => {
+      h.workout.syncAfterFinish = vi.fn().mockResolvedValue({ remaining: 3 });
+      setup();
+      await finish();
+      await act(async () => { vi.advanceTimersByTime(2700); });
+      expect(h.toast).toHaveBeenLastCalledWith('📴 Treino salvo no aparelho — envia quando a conexão voltar');
+    });
+
+    it('nada pendente: não diz nada além de "Treino finalizado"', async () => {
+      setup();
+      await finish();
+      await act(async () => { vi.advanceTimersByTime(5000); });
+      expect(h.toast).toHaveBeenCalledTimes(1);
+    });
+
+    it('sem usuário logado não tenta enviar nada', async () => {
+      h.user = null;
+      setup();
+      await finish();
+      expect(h.workout.syncAfterFinish).not.toHaveBeenCalled();
+    });
   });
 
   it('finalizar sem nenhuma série marcada não publica atividade para os amigos', async () => {

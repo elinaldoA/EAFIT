@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
 import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
-import { enqueue, flushQueue, queueSize } from '../lib/syncQueue';
+import { enqueue, flushQueue, queueSize, SYNC_QUEUE_EVENT } from '../lib/syncQueue';
 import { upsertWaterLog } from '../lib/waterLog';
 import { upsertProteinLog, upsertNutritionLog } from '../lib/proteinLog';
 import { saveCustomFoodRow, deleteCustomFoodRow } from '../lib/nutritionFoods';
@@ -219,8 +219,15 @@ export function WorkoutProvider({ children }) {
 
     function schedule() {
       clearTimeout(timer);
-      timer = setTimeout(() => { attempt(); }, delay);
+      timer = setTimeout(() => { timer = null; attempt(); }, delay);
       delay = Math.min(delay * 2, RETRY_MAX_MS);
+    }
+    // Uma gravação que falha com a fila parada (envio anterior deu certo, sinal
+    // fraco) entra na fila sem ninguém olhando: agenda a nova tentativa. Durante
+    // um envio em andamento a própria passada agenda se sobrar algo.
+    function onQueueChange() {
+      if (timer !== null || flushing.current || queueSize() === 0) return;
+      schedule();
     }
     async function attempt() {
       const remaining = await flushPending();
@@ -236,11 +243,13 @@ export function WorkoutProvider({ children }) {
     attempt();
     window.addEventListener('online', onOnline);
     document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener(SYNC_QUEUE_EVENT, onQueueChange);
     return () => {
       active = false;
       clearTimeout(timer);
       window.removeEventListener('online', onOnline);
       document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener(SYNC_QUEUE_EVENT, onQueueChange);
     };
   }, [user, flushPending]);
 
@@ -488,6 +497,19 @@ export function WorkoutProvider({ children }) {
     }
   }
 
+  // Treino finalizado: o que ficou pendente (sem rede, sinal fraco) tenta subir
+  // agora, sem esperar o intervalo da repetição automática nem o evento de rede
+  // — é o momento em que a pessoa quer saber se o treino foi salvo. Sem nada
+  // na fila não faz nada e devolve null; senão devolve quantas ainda sobraram.
+  async function syncAfterFinish() {
+    if (queueSize() === 0) return null;
+    // Um envio que já estava em andamento pode ter começado antes das últimas
+    // gravações entrarem na fila: se sobrar algo, uma segunda passada cobre.
+    let remaining = await flushPending();
+    if (remaining > 0 || queueSize() > 0) remaining = await flushPending();
+    return { remaining };
+  }
+
   async function syncNow() {
     const remaining = await flushPending();
     await loadUserData();
@@ -495,7 +517,7 @@ export function WorkoutProvider({ children }) {
   }
 
   return (
-    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays: periodizedDays, periodization, planExpired, planByTrainer, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, markPending, refreshPlan: loadUserData }}>
+    <WorkoutContext.Provider value={{ syncStatus, dataVersion, activePlanDays: periodizedDays, periodization, planExpired, planByTrainer, planStartDate, planEndDate, workoutIds, saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutRating, saveWorkoutNotes, syncNow, syncAfterFinish, markPending, refreshPlan: loadUserData }}>
       {children}
     </WorkoutContext.Provider>
   );

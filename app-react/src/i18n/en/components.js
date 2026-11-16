@@ -898,6 +898,8 @@ export default {
   '1 alteração pendente': '1 pending change',
   '{n} alterações pendentes': '{n} pending changes',
   'Tentar agora': 'Try now',
+  '📴 Treino salvo no aparelho — envia quando a conexão voltar': '📴 Workout saved on this device — it will be sent when the connection is back',
+  '✅ Treino enviado': '✅ Workout sent',
   '⚠️ Algumas alterações ainda não sincronizaram': '⚠️ Some changes have not synced yet',
   '✅ Dados sincronizados': '✅ Data synced',
   '🏅 Conquista desbloqueada: {title}': '🏅 Achievement unlocked: {title}',

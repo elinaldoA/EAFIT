@@ -40,6 +40,11 @@ async function openWorkout(page) {
   await expect(page.locator('.live')).toBeVisible();
 }
 
+// As gravações de uma série (carga, reps, ✓) vencem o prazo em instantes diferentes e
+// viram uma só pendência. Esperar a série inteira evita agir com a fila pela metade.
+const queuedSetIsComplete = page => page.evaluate(() => JSON.parse(localStorage.getItem('pendingSyncQueue') || '[]')
+  .some(op => op.type === 'set_state' && op.payload.patch?.completed === true && op.payload.patch?.carga != null && op.payload.patch?.reps != null));
+
 const banner = page => page.locator('.live__net');
 const queue = page => page.evaluate(() => JSON.parse(localStorage.getItem('pendingSyncQueue') || '[]'));
 
@@ -100,6 +105,7 @@ test.describe('treino sem rede (navegador real)', () => {
     await fillSet(page, 2, 120, 8);
     // Passados os 10 s de prazo, a gravação vira pendência (sem prazo ela ficaria pendurada e a faixa nunca apareceria).
     await expect(banner(page)).toContainText(/\d+ altera(ção|ções) pendentes?/, { timeout: 25_000 });
+    await expect.poll(() => queuedSetIsComplete(page), { timeout: 15_000 }).toBe(true);
     await expect(banner(page)).not.toContainText('Sem conexão');
     expect(fake.setOf(EXERCISE, 2).completed).not.toBe(true);
 
@@ -138,6 +144,31 @@ test.describe('treino sem rede (navegador real)', () => {
     await expect(banner(page)).toHaveCount(0, { timeout: 20_000 });
     await expect(setRow(page, 1).carga).toHaveValue('80');
     await expect(setRow(page, 2).carga).toHaveValue('90');
+    expect(await queue(page)).toEqual([]);
+  });
+
+  test('finalizar o treino envia na hora o que estava pendente, sem esperar o intervalo nem um evento de rede', async ({ page, fake }) => {
+    test.setTimeout(90_000);
+    await openWorkout(page);
+    await fillSet(page, 1, 100, 8);
+    await expect.poll(() => fake.setOf(EXERCISE, 1)).toMatchObject({ completed: true });
+
+    // Sinal fraco: a série 2 vai para a fila depois do prazo de 10 s.
+    fake.hang = true;
+    await fillSet(page, 2, 120, 8);
+    await expect(banner(page)).toContainText(/\d+ altera(ção|ções) pendentes?/, { timeout: 25_000 });
+    await expect.poll(() => queuedSetIsComplete(page), { timeout: 15_000 }).toBe(true);
+
+    // O servidor volta a responder, mas nenhum evento de rede avisa o app (o navegador nunca saiu do "online").
+    // A repetição automática só tentaria de novo em 15 s: finalizar tem que enviar antes disso.
+    fake.hang = false;
+    const before = Date.now();
+    await page.getByRole('button', { name: '🏁 Finalizar treino' }).click();
+
+    await expect.poll(() => fake.setOf(EXERCISE, 2), { timeout: 8_000 }).toMatchObject({ carga: 120, reps: 8, completed: true });
+    await expect.poll(() => fake.workouts[0]).toMatchObject({ completed: true });
+    expect(fake.workouts[0].duration_seconds).not.toBeNull();
+    expect(Date.now() - before).toBeLessThan(10_000);
     expect(await queue(page)).toEqual([]);
   });
 });

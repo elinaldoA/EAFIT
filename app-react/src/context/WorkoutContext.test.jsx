@@ -29,6 +29,7 @@ vi.mock('./useToast', () => ({ useToast: () => mockToast }));
 
 import { WorkoutProvider } from './WorkoutContext';
 import { getDateForWeekday } from '../lib/utils';
+import { enqueue } from '../lib/syncQueue';
 import { useWorkout } from './useWorkout';
 
 function wrapper({ children }) {
@@ -233,6 +234,41 @@ describe('WorkoutProvider — fila pendente na abertura e reenvio', () => {
     expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toEqual([]);
   });
 
+  it('gravação que falha com a fila parada agenda uma nova tentativa (sinal fraco depois de um envio ok)', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const upserts = [];
+      let online = false;
+      mockFrom.mockImplementation((table) => {
+        if (table === 'exercise_sets') {
+          return new Proxy({}, {
+            get(_t, prop) {
+              if (prop === 'upsert') return () => { upserts.push(1); return chain({ error: online ? null : { message: 'offline' } }); };
+              return () => chain({ data: [], error: null });
+            },
+          });
+        }
+        return okFrom();
+      });
+      renderHook(() => useWorkout(), { wrapper });
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      expect(upserts).toHaveLength(0); // fila vazia na abertura: nada a enviar
+
+      // Entra uma pendência depois (a gravação falhou): ninguém chamou o envio.
+      await act(async () => {
+        enqueue('set_state', { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 80 } });
+        await vi.advanceTimersByTimeAsync(14000);
+      });
+      expect(upserts).toHaveLength(0);
+      online = true;
+      await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+      expect(upserts).toHaveLength(1);
+      expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('enquanto sobra pendência, tenta de novo sozinho em intervalos que dobram', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
@@ -273,5 +309,40 @@ describe('WorkoutProvider — fila pendente na abertura e reenvio', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('WorkoutProvider — envio ao finalizar o treino', () => {
+  const setOp = (carga) => ({ id: `op${carga}`, type: 'set_state', payload: { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga } } });
+
+  it('sem nada na fila: não consulta o servidor e devolve null', async () => {
+    const result = await renderReady();
+    mockFrom.mockClear();
+    let out;
+    await act(async () => { out = await result.current.syncAfterFinish(); });
+    expect(out).toBeNull();
+    expect(mockFrom).not.toHaveBeenCalled();
+  });
+
+  it('com pendência e rede: envia agora, sem esperar o intervalo nem o evento de rede', async () => {
+    const result = await renderReady();
+    // Entra na fila depois da abertura (como a gravação de fim de treino que falhou).
+    localStorage.setItem('pendingSyncQueue', JSON.stringify([setOp(80)]));
+    let out;
+    await act(async () => { out = await result.current.syncAfterFinish(); });
+    expect(out).toEqual({ remaining: 0 });
+    expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toEqual([]);
+    expect(mockFrom).toHaveBeenCalledWith('exercise_sets');
+  });
+
+  it('sem rede: devolve quantas ficaram e mantém a fila', async () => {
+    const result = await renderReady();
+    mockFrom.mockImplementation(() => chain({ data: null, error: { message: 'offline' } }));
+    localStorage.setItem('pendingSyncQueue', JSON.stringify([setOp(80), { id: 'x', type: 'workout_status', payload: { id: 'w1', completed: true } }]));
+    let out;
+    await act(async () => { out = await result.current.syncAfterFinish(); });
+    expect(out).toEqual({ remaining: 2 });
+    expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toHaveLength(2);
+    expect(result.current.syncStatus).toBe('pending');
   });
 });

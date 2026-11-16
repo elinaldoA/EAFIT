@@ -24,12 +24,15 @@ import { dayMuscles } from '../lib/muscleVolume';
 
 import { weekLabel } from '../lib/periodization';
 import { t, locale, tFoco } from '../lib/i18n';
+
+// Quanto o toast "Treino finalizado" fica na tela (ToastContext) antes de a mensagem do envio entrar.
+const FINISH_TOAST_MS = 2700;
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
 // TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
 // que é quem tem o cronômetro e as ações de série do dia.
 export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
-  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, activePlanDays, markPending, periodization } = useWorkout();
+  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, syncAfterFinish, activePlanDays, markPending, periodization } = useWorkout();
   const toast = useToast();
   const { config } = useAppConfig();
   const [open, setOpen] = useState(isToday);
@@ -123,14 +126,28 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     };
   }
 
+  // Treino finalizado: depois que as gravações do fim assentam (as que falharam
+  // entram na fila), tenta subir tudo que estiver pendente e conta o resultado —
+  // só se havia pendência. O aviso espera o "Treino finalizado" ser lido.
+  async function sendAfterFinish(saves) {
+    await Promise.allSettled(saves);
+    const outcome = await syncAfterFinish();
+    if (!outcome) return;
+    setTimeout(() => toast(outcome.remaining > 0
+      ? t('📴 Treino salvo no aparelho — envia quando a conexão voltar')
+      : t('✅ Treino enviado')), FINISH_TOAST_MS);
+  }
+
   function handleFinishWorkout() {
     const result = timer.finish();
     if (!result) return;
     const { accumulatedMs, startedAt, finishedAt } = result;
     playWorkoutFinishedSound();
     toast(t('🏁 Treino finalizado em {v1}!', { v1: formatDuration(accumulatedMs) }));
-    if (!checked) markDone(true);
-    if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) });
+    const saves = [];
+    if (!checked) saves.push(markDone(true));
+    if (user) saves.push(saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) }));
+    if (user) sendAfterFinish(saves);
     bump();
     const summary = buildSummary(accumulatedMs);
     coachSay('finish', { feitos: summary.weekDone, meta: summary.weekTotal }, { delayMs: 900 });
