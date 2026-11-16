@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ghostFrom, ghostTimeAt, ghostGapS, sameRoute, bestOnSameRoute, groupRoutes } from './ghost';
+import { ghostFrom, ghostTimeAt, ghostGapS, sameRoute, bestOnSameRoute, groupRoutes, routeProgress } from './ghost';
 
 // 5 km em 25:00, km 1 a 5 em 300 s cada.
 const five = { client_id: 'a', title: 'Parque', run_date: '2026-10-01', duration_s: 1500, distance_m: 5000, splits: [300, 300, 300, 300, 300] };
@@ -100,5 +100,28 @@ describe('groupRoutes', () => {
   });
   it('ignora corrida sem percurso e rota feita uma vez só', () => {
     expect(groupRoutes([mk('a', '2026-11-01T08:00:00Z', -23.5, 5000, 1700), { client_id: 'x', distance_m: 5000, duration_s: 1500, route: [] }])).toEqual([]);
+  });
+});
+
+describe('routeProgress', () => {
+  const g = secs => ({ runs: secs.map((duration_s, i) => ({ duration_s, started_at: `2026-0${i + 1}-01T08:00:00Z` })) });
+
+  it('compara a última com a primeira e com a melhor', () => {
+    const p = routeProgress(g([1500, 1440, 1380, 1410]));
+    expect(p.times).toEqual([1500, 1440, 1380, 1410]);
+    expect(p.vsFirst).toBe(-90);
+    expect(p.vsBest).toBe(30);
+  });
+
+  it('ordena pela data, mesmo com o grupo na ordem inversa', () => {
+    const grp = g([1500, 1400]);
+    grp.runs.reverse();
+    expect(routeProgress(grp).times).toEqual([1500, 1400]);
+  });
+
+  it('limita aos últimos tempos; com menos de 2 corridas, null', () => {
+    expect(routeProgress(g([1, 2, 3, 4, 5, 6, 7, 8].map(n => 1000 + n)), 3).times).toEqual([1006, 1007, 1008]);
+    expect(routeProgress(g([1500]))).toBeNull();
+    expect(routeProgress(null)).toBeNull();
   });
 });

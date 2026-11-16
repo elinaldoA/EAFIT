@@ -63,3 +63,36 @@ export function cleanKmElev(list) {
 
 // Subida (m) para salvar; null se o GPS nunca deu altitude.
 export const elevationGain = elev => (elev && elev.smooth != null ? Math.min(20000, Math.round(elev.gain)) : null);
+
+// ---- Ritmo ajustado pela inclinação -----------------------------------------
+
+// Aproximação simples: cada metro de subida num km deixa o km ~0,33% mais lento
+// (1% de rampa custa cerca de 3,3% de ritmo) e cada metro de descida o deixa
+// ~0,18% mais rápido, já que a descida ajuda menos do que a subida atrapalha.
+// O fator de um km fica entre 0,85 e 1,30.
+const UP_COST = 0.0033;
+const DOWN_GAIN = 0.0018;
+
+// Tempo (s) de um km como se fosse no plano.
+export const flatSeconds = (seconds, gain, loss) => {
+  const f = Math.min(1.3, Math.max(0.85, 1 + UP_COST * (gain || 0) - DOWN_GAIN * (loss || 0)));
+  return seconds / f;
+};
+
+// { actual, adjusted, diff } em s/km pelos km completos (splits alinhados com
+// km_elev: [[subida, descida], ...]); null sem os dois ou se a diferença for
+// menor que 3 s/km (rota plana, nada a mostrar).
+export function gradeAdjustedPace(splits, kmElev) {
+  if (!Array.isArray(splits) || !splits.length || !Array.isArray(kmElev) || kmElev.length < splits.length) return null;
+  let actual = 0;
+  let adjusted = 0;
+  for (let i = 0; i < splits.length; i++) {
+    const e = kmElev[i];
+    if (!(splits[i] > 0) || !Array.isArray(e)) return null;
+    actual += splits[i];
+    adjusted += flatSeconds(splits[i], e[0], e[1]);
+  }
+  const a = Math.round(actual / splits.length);
+  const g = Math.round(adjusted / splits.length);
+  return Math.abs(a - g) < 3 ? null : { actual: a, adjusted: g, diff: a - g };
+}

@@ -116,3 +116,18 @@ export function groupRoutes(runs, min = 2) {
     .sort((a, b) => b.runs.length - a.runs.length || String(b.last.started_at).localeCompare(String(a.last.started_at)))
     .map(g => ({ ...g, count: g.runs.length }));
 }
+
+// Como o ritmo mudou numa rota feita várias vezes (grupo de groupRoutes): os
+// tempos da mais antiga para a mais recente (até `max`), e a diferença da
+// última para a primeira e para a melhor, em segundos (negativo = mais rápida).
+export function routeProgress(group, max = 8) {
+  const runs = [...(group?.runs || [])].sort((a, b) => String(a.started_at).localeCompare(String(b.started_at)));
+  if (runs.length < 2) return null;
+  const last = runs.at(-1);
+  const first = runs[0];
+  return {
+    times: runs.slice(-max).map(r => r.duration_s),
+    vsFirst: last.duration_s - first.duration_s,
+    vsBest: last.duration_s - Math.min(...runs.map(r => r.duration_s)),
+  };
+}

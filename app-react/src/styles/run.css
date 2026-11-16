@@ -545,3 +545,7 @@
 .run-live__dark-clock { font-size: 4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .run-live__dark-km { font-size: 1.75rem; font-variant-numeric: tabular-nums; }
 .run-live__dark-hint { font-size: var(--fs-sm); color: #3a3a3a; }
+
+.run-trendbars { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+.run-trendbars i { display: block; width: 8px; min-height: 3px; border-radius: 2px; background: var(--primary); opacity: .75; }
+.run-trendbars i:last-child { opacity: 1; }

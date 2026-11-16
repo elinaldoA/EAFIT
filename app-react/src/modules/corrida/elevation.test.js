@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { addAltitude, elevationGain, emptyElevation } from './elevation';
+import { addAltitude, elevationGain, emptyElevation, gradeAdjustedPace, flatSeconds } from './elevation';
 
 const feed = (alts, acc = 5) => alts.reduce((e, a) => addAltitude(e, a, acc), emptyElevation());
 
@@ -76,5 +76,34 @@ describe('subida por km', () => {
     expect(cleanKmElev([[10, 2], ['x', 1]])).toEqual([]);
     expect(cleanKmElev([[-1, 2]])).toEqual([]);
     expect(cleanKmElev(Array.from({ length: 700 }, () => [1, 1]))).toHaveLength(600);
+  });
+});
+
+describe('ritmo ajustado pela inclinação', () => {
+  it('subida deixa o ritmo ajustado mais rápido que o real; descida, mais lento', () => {
+    const up = gradeAdjustedPace([360, 360], [[30, 0], [30, 0]]);
+    expect(up.actual).toBe(360);
+    expect(up.adjusted).toBeLessThan(360);
+    expect(up.diff).toBeGreaterThan(0);
+    const down = gradeAdjustedPace([300, 300], [[0, 40], [0, 40]]);
+    expect(down.adjusted).toBeGreaterThan(300);
+    expect(down.diff).toBeLessThan(0);
+  });
+
+  it('30 m de subida num km de 6:00 vale cerca de 5:28', () => {
+    expect(Math.round(flatSeconds(360, 30, 0))).toBe(Math.round(360 / 1.099));
+  });
+
+  it('rota plana, sem altitude ou desalinhada: null', () => {
+    expect(gradeAdjustedPace([300, 300], [[1, 1], [0, 0]])).toBeNull();
+    expect(gradeAdjustedPace([300, 300], null)).toBeNull();
+    expect(gradeAdjustedPace([300, 300], [[10, 0]])).toBeNull();
+    expect(gradeAdjustedPace([], [])).toBeNull();
+    expect(gradeAdjustedPace([300], [null])).toBeNull();
+  });
+
+  it('o fator tem limite (rampa absurda não explode o ritmo)', () => {
+    expect(flatSeconds(300, 500, 0)).toBeCloseTo(300 / 1.3);
+    expect(flatSeconds(300, 0, 500)).toBeCloseTo(300 / 0.85);
   });
 });

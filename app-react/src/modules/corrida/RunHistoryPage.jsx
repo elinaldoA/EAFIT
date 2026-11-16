@@ -20,6 +20,7 @@ import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
 import { weatherText } from './weather';
 import { hrText } from './heartRate';
+import { gradeAdjustedPace } from './elevation';
 import HrZones from './HrZones';
 import { ghostFrom, bestOnSameRoute } from './ghost';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
@@ -30,6 +31,8 @@ import { trackEvent } from '../../lib/tracking';
 
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
+
+const gap = run => gradeAdjustedPace(run.splits, run.km_elev);
 
 function RunItem({ run, runs, shoe, onDelete }) {
   const toast = useToast();
@@ -96,6 +99,11 @@ function RunItem({ run, runs, shoe, onDelete }) {
               {run.cadence && <span>{t('👣 {v1} passos/min', { v1: run.cadence })}</span>}
               {shoe && <span>👟 {shoe.name}</span>}
             </div>
+          )}
+          {gap(run) && (
+            <p className="run-item__weather">
+              {t('⛰ Ritmo ajustado pela inclinação: {v1}/km (real {v2}/km)', { v1: formatPace(gap(run).adjusted), v2: formatPace(gap(run).actual) })}
+            </p>
           )}
           {run.hr && <p className="run-item__weather">{hrText(run.hr)}</p>}
           {run.hr?.z && <HrZones zones={run.hr.z} />}
