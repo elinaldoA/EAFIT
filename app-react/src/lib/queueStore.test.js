@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { enqueue, queueSize, restoreQueue, flushQueue, resetQueueMirrorState } from './syncQueue';
 import { readMirror } from './queueStore';
 import { clearUserLocalData } from './localData';
 
 const settle = () => new Promise(r => setTimeout(r, 30));
+
+// A cópia no IndexedDB é gravada em segundo plano: espera ela chegar em vez
+// de um tempo fixo, que com a máquina ocupada (suíte inteira) não bastava.
+const mirrored = count => vi.waitFor(async () => expect((await readMirror())?.items ?? []).toHaveLength(count), { timeout: 3000 });
 
 beforeEach(async () => {
   clearUserLocalData();
@@ -21,7 +25,7 @@ describe('espelho da fila no IndexedDB', () => {
   it('cada alteração da fila é copiada com o dono dos dados', async () => {
     localStorage.setItem('eafit_data_owner', 'u1');
     enqueue('weight_log', { userId: 'u1', date: '2026-07-10', peso: 80 });
-    await settle();
+    await mirrored(1);
     const m = await readMirror();
     expect(m.owner).toBe('u1');
     expect(m.items).toHaveLength(1);
@@ -31,7 +35,7 @@ describe('espelho da fila no IndexedDB', () => {
     localStorage.setItem('eafit_data_owner', 'u1');
     enqueue('weight_log', { userId: 'u1', date: '2026-07-10', peso: 80 });
     enqueue('weight_log', { userId: 'u1', date: '2026-07-11', peso: 81 });
-    await settle();
+    await mirrored(2);
     localStorage.clear(); // limpeza de armazenamento
     reopen();
     localStorage.setItem('eafit_data_owner', 'u1');
@@ -44,8 +48,9 @@ describe('espelho da fila no IndexedDB', () => {
   it('fila esvaziada (chave "[]") não é restaurada: nada de reenviar o que já subiu', async () => {
     localStorage.setItem('eafit_data_owner', 'u1');
     enqueue('weight_log', { userId: 'u1', date: '2026-07-10', peso: 80 });
+    await mirrored(1);
     await flushQueue({ weight_log: async () => {} });
-    await settle();
+    await mirrored(0);
     expect(queueSize()).toBe(0);
     reopen();
     expect(await restoreQueue('u1')).toBe(0);
@@ -55,7 +60,7 @@ describe('espelho da fila no IndexedDB', () => {
   it('não restaura a fila de outra conta', async () => {
     localStorage.setItem('eafit_data_owner', 'u1');
     enqueue('weight_log', { userId: 'u1', date: '2026-07-10', peso: 80 });
-    await settle();
+    await mirrored(1);
     localStorage.clear();
     reopen();
     expect(await restoreQueue('u2')).toBe(0);
@@ -65,9 +70,9 @@ describe('espelho da fila no IndexedDB', () => {
   it('logout apaga também o espelho', async () => {
     localStorage.setItem('eafit_data_owner', 'u1');
     enqueue('weight_log', { userId: 'u1', date: '2026-07-10', peso: 80 });
-    await settle();
+    await mirrored(1);
     clearUserLocalData();
-    await settle();
+    await mirrored(0);
     reopen();
     expect(await readMirror()).toBeNull();
     expect(await restoreQueue('u1')).toBe(0);
@@ -76,7 +81,7 @@ describe('espelho da fila no IndexedDB', () => {
   it('o que já está no localStorage não é duplicado ao restaurar', async () => {
     localStorage.setItem('eafit_data_owner', 'u1');
     enqueue('weight_log', { userId: 'u1', date: '2026-07-10', peso: 80 });
-    await settle();
+    await mirrored(1);
     reopen();
     expect(await restoreQueue('u1')).toBe(0); // chave presente: nada a restaurar
     expect(queueSize()).toBe(1);
@@ -86,7 +91,7 @@ describe('espelho da fila no IndexedDB', () => {
     localStorage.setItem('eafit_data_owner', 'u1');
     const base = { workout_id: 'w1', exercise_name: 'Supino', set_number: 2 };
     enqueue('set_state', { ...base, patch: { carga: 130, reps: 8, completed: true } });
-    await settle();
+    await mirrored(1);
     localStorage.removeItem('pendingSyncQueue');
     reopen();
     enqueue('set_state', { ...base, patch: { carga: 135 } }); // gravação na abertura, antes da restauração
