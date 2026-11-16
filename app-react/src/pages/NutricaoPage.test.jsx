@@ -161,6 +161,12 @@ describe('NutricaoPage', () => {
     expect(readLocalTotals().kcal).toBe(140);
   });
 
+  it('abrir a busca já deixa o campo pronto para digitar', async () => {
+    render(<NutricaoPage active />);
+    fireEvent.click(await screen.findByText('🔎 Buscar alimento'));
+    expect(document.activeElement).toBe(screen.getByLabelText('Buscar alimento'));
+  });
+
   it('buscar um alimento e informar os gramas soma o valor proporcional', async () => {
     render(<NutricaoPage active />);
     fireEvent.click(await screen.findByText('🔎 Buscar alimento'));

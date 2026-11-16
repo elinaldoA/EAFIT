@@ -115,6 +115,9 @@ export default function FoodSearch({ onAdd }) {
     <div className="food-search">
       <input
         type="search" className="food-search__input" value={query} maxLength={40}
+        // A busca só aparece quando a pessoa toca em "Buscar alimento": o campo
+        // já vem pronto para digitar, sem um segundo toque.
+        autoFocus
         placeholder={t('Buscar alimento (ex.: arroz, frango)')} aria-label={t('Buscar alimento')}
         onChange={e => { setQuery(e.target.value); setPicked(null); }}
       />
