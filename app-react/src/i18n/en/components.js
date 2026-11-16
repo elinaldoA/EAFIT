@@ -200,6 +200,7 @@ export default {
   'sobrou folga no último treino': 'you had reps left last time',
   '(última vez: {lastCarga}kg × {lastReps} reps)': '(last time: {lastCarga}kg × {lastReps} reps)',
   'Inicie o treino para registrar as séries': 'Start the workout to log your sets',
+  'Prefere marcar aqui na lista? Começar sem o modo treino': 'Rather log here in the list? Start without workout mode',
   'Drop-set': 'Drop set',
   'Rest-pause': 'Rest-pause',
   'Cluster': 'Cluster',

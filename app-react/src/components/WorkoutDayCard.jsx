@@ -341,14 +341,12 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
             {timer.status === 'finished' && <span className="session-timer__done"> {t('· concluído')}</span>}
           </div>
           <div className="session-timer__actions">
-            {timer.status === 'idle' && (
-              <>
-                <button type="button" className="btn btn--outline btn--sm" onClick={handleStartWorkout}>{t('▶ Iniciar')}</button>
-                {setsTotal > 0 && (
-                  <button type="button" className="btn btn--primary btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
-                )}
-              </>
-            )}
+            {/* Um botão só para começar, com o mesmo nome e a mesma ação do card
+                "Treino de hoje": abre o modo treino, que já liga o cronômetro.
+                Dia sem séries (só cardio ou alongamento) começa na própria lista. */}
+            {timer.status === 'idle' && (setsTotal > 0
+              ? <button type="button" className="btn btn--primary btn--sm" onClick={onOpenLive}>{t('⚡ Começar treino')}</button>
+              : <button type="button" className="btn btn--primary btn--sm" onClick={handleStartWorkout}>{t('▶ Iniciar')}</button>)}
             {timer.status === 'running' && (
               <>
                 <button type="button" className="btn btn--outline btn--sm" aria-label={t('Pausar')} onClick={timer.pause}>⏸</button>
@@ -374,7 +372,12 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
               </>
             )}
           </div>
-          {timer.status === 'idle' && (
+          {timer.status === 'idle' && setsTotal > 0 && (
+            <button type="button" className="link-btn session-timer__alt" onClick={handleStartWorkout}>
+              {t('Prefere marcar aqui na lista? Começar sem o modo treino')}
+            </button>
+          )}
+          {timer.status === 'idle' && setsTotal === 0 && (
             <span className="session-timer__hint">{t('Inicie o treino para registrar as séries')}</span>
           )}
         </div>

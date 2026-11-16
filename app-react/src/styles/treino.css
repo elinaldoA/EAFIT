@@ -238,6 +238,17 @@
   color: var(--text-dim);
 }
 
+/* Caminho secundário: começar marcando na lista, sem o modo treino */
+.session-timer__alt {
+  flex-basis: 100%;
+  min-height: var(--tap-min);
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* ============================================================
    TOTAL DE CARGA DO DIA
 ============================================================ */

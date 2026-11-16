@@ -51,6 +51,9 @@ const DAY = {
   pos: [{ nome: 'Prancha', series: '2', reps: '30s', descanso: '30s', tecnica: '' }],
 };
 
+// Caminho secundário: começar marcando na lista, sem abrir o modo treino.
+const LIST_START = 'Prefere marcar aqui na lista? Começar sem o modo treino';
+
 function setup(props = {}) {
   const fns = { bump: vi.fn(), onRestStart: vi.fn(), onFinish: vi.fn(), onOpenLive: vi.fn(), onCloseLive: vi.fn() };
   const view = render(<DayCard day={DAY} isToday {...fns} {...props} />);
@@ -116,15 +119,28 @@ describe('DayCard — cabeçalho', () => {
 });
 
 describe('DayCard — cronômetro do treino', () => {
-  it('sem iniciar, os exercícios ficam travados e há a dica', () => {
-    setup();
+  it('sem iniciar, os exercícios ficam travados e há um botão só para começar (o modo treino)', () => {
+    const { onOpenLive } = setup();
     expect(screen.getByTestId('ex-Supino').dataset.started).toBe('false');
+    expect(screen.queryByRole('button', { name: '▶ Iniciar' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '⚡ Modo treino' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '⚡ Começar treino' }));
+    expect(onOpenLive).toHaveBeenCalledTimes(1);
+  });
+
+  it('dia sem séries (só cardio ou alongamento) começa na lista, com a dica', () => {
+    const onOpenLive = vi.fn();
+    render(<DayCard day={{ ...DAY, exercicios: [{ nome: 'Alongamento', series: '', reps: '', descanso: '', tecnica: '' }], pos: [] }} isToday bump={vi.fn()} onRestStart={vi.fn()} onFinish={vi.fn()} onOpenLive={onOpenLive} onCloseLive={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: '⚡ Começar treino' })).toBeNull();
     expect(screen.getByText('Inicie o treino para registrar as séries')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    expect(onOpenLive).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Pausar' })).toBeTruthy();
   });
 
   it('iniciar libera as séries e salva o início', () => {
     setup();
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     expect(screen.getByTestId('ex-Supino').dataset.started).toBe('true');
     expect(h.workout.saveWorkoutTimer).toHaveBeenCalledWith('Segunda', expect.objectContaining({ finishedAt: null, durationSeconds: null }));
     expect(screen.getByRole('button', { name: 'Pausar' })).toBeTruthy();
@@ -132,7 +148,7 @@ describe('DayCard — cronômetro do treino', () => {
 
   it('pausar e continuar', () => {
     setup();
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     act(() => { vi.advanceTimersByTime(5000); });
     fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
     expect(screen.getByRole('button', { name: 'Continuar' })).toBeTruthy();
@@ -144,7 +160,7 @@ describe('DayCard — cronômetro do treino', () => {
     localStorage.setItem('set_Supino_1_done', 'true');
     localStorage.setItem('set_Supino_1_carga', '80');
     const { onFinish, bump } = setup();
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     act(() => { vi.advanceTimersByTime(60_000); });
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
 
@@ -165,7 +181,7 @@ describe('DayCard — cronômetro do treino', () => {
 
   describe('envio ao finalizar', () => {
     async function finish() {
-      fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+      fireEvent.click(screen.getByRole('button', { name: LIST_START }));
       await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
     }
 
@@ -216,14 +232,14 @@ describe('DayCard — cronômetro do treino', () => {
 
   it('finalizar sem nenhuma série marcada não publica atividade para os amigos', async () => {
     setup();
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
     expect(h.postActivity).not.toHaveBeenCalled();
   });
 
   it('depois de finalizado: Ver resumo reabre o resumo e Refazer zera o cronômetro', async () => {
     const { onFinish } = setup();
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: '🏁 Finalizar' })); });
     onFinish.mockClear();
 
@@ -232,13 +248,13 @@ describe('DayCard — cronômetro do treino', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '↺ Refazer treino' }));
     expect(h.workout.saveWorkoutTimer).toHaveBeenLastCalledWith('Segunda', { startedAt: null, finishedAt: null, durationSeconds: null });
-    expect(screen.getByRole('button', { name: '▶ Iniciar' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: LIST_START })).toBeTruthy();
   });
 
   it('sem usuário o cronômetro funciona só local', () => {
     h.user = null;
     setup();
-    fireEvent.click(screen.getByRole('button', { name: '▶ Iniciar' }));
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     expect(h.workout.saveWorkoutTimer).not.toHaveBeenCalled();
     expect(screen.getByTestId('ex-Supino').dataset.started).toBe('true');
   });
@@ -333,8 +349,9 @@ describe('DayCard — notas e modo ao vivo', () => {
     err.mockRestore();
   });
 
-  it('⚡ Modo treino chama onOpenLive', () => {
+  it('⚡ Modo treino (com o treino em andamento) chama onOpenLive', () => {
     const { onOpenLive } = setup();
+    fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     fireEvent.click(screen.getByRole('button', { name: '⚡ Modo treino' }));
     expect(onOpenLive).toHaveBeenCalledTimes(1);
   });

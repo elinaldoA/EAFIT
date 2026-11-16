@@ -33,10 +33,11 @@ async function waitForServiceWorker(page) {
 
 async function openWorkout(page) {
   await page.goto('/app/');
-  await expect(page.getByRole('button', { name: '▶ Iniciar' })).toBeVisible();
+  // O botão do card do dia (o card "Treino de hoje" tem outro com o mesmo nome e a mesma ação).
+  const start = page.locator('.day-card').getByRole('button', { name: '⚡ Começar treino' });
+  await expect(start).toBeVisible();
   await waitForServiceWorker(page);
-  await page.getByRole('button', { name: '▶ Iniciar' }).click();
-  await page.getByRole('button', { name: '⚡ Modo treino' }).click();
+  await start.click();
   await expect(page.locator('.live')).toBeVisible();
 }
 
