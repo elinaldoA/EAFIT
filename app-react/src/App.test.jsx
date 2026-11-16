@@ -167,10 +167,10 @@ describe('App', () => {
     expect(screen.getByText('tela-auth')).toBeTruthy();
   });
 
-  it('usuário sem peso cai no onboarding', () => {
+  it('usuário sem peso cai no onboarding', async () => {
     h.auth = { user: loggedIn({}), authLoading: false, recoveryMode: false };
     render(<App />);
-    expect(screen.getByText('tela-onboarding')).toBeTruthy();
+    expect(await screen.findByText('tela-onboarding')).toBeTruthy();
     expect(screen.queryByTestId('workout-provider')).toBeNull();
     expect(screen.getByText('update-prompt:false')).toBeTruthy();
   });
@@ -218,11 +218,11 @@ describe('App', () => {
     expect(h.trainer.setMode).toHaveBeenCalledWith('trainer');
   });
 
-  it('personal no modo personal vê só o painel (e não precisa de peso)', () => {
+  it('personal no modo personal vê só o painel (e não precisa de peso)', async () => {
     h.auth = { user: loggedIn({}), authLoading: false, recoveryMode: false };
     h.trainer = { isTrainer: true, mode: 'trainer', setMode: vi.fn() };
     render(<App />);
-    expect(screen.getByText('painel-personal')).toBeTruthy();
+    expect(await screen.findByText('painel-personal')).toBeTruthy();
     expect(screen.queryByText('tela-onboarding')).toBeNull();
     expect(screen.queryByTestId('workout-provider')).toBeNull();
     fireEvent.click(screen.getByText('usar-como-aluno'));
@@ -253,12 +253,12 @@ describe('App', () => {
     expect(h.trainer.setMode).toHaveBeenCalledWith('program');
   });
 
-  it('no modo do programa vê só o painel (e não precisa de peso)', () => {
+  it('no modo do programa vê só o painel (e não precisa de peso)', async () => {
     h.auth = { user: loggedIn({}), authLoading: false, recoveryMode: false };
     h.program = 'embaixador';
     h.trainer = { isTrainer: false, mode: 'program', setMode: vi.fn() };
     render(<App />);
-    expect(screen.getByText('painel-programa:embaixador')).toBeTruthy();
+    expect(await screen.findByText('painel-programa:embaixador')).toBeTruthy();
     expect(screen.queryByText('tela-onboarding')).toBeNull();
     expect(screen.queryByTestId('workout-provider')).toBeNull();
     fireEvent.click(screen.getByText('usar-como-aluno'));

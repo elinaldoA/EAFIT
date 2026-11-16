@@ -11,11 +11,9 @@ import AuthScreen from './components/AuthScreen';
 import { markKnownUser } from './lib/knownUser';
 import { setTrackingUser, trackClient, trackAccess, startSession, trackScreen, trackEvent, trackInstall, flushPushOpen, markVisitor } from './lib/tracking';
 import { detectDisplayMode } from './lib/clientInfo';
-import OnboardingScreen from './components/OnboardingScreen';
 import TopbarProfile from './components/TopbarProfile';
 import TopbarMenu from './components/TopbarMenu';
 import BottomNav from './components/BottomNav';
-import Tutorial from './components/Tutorial';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 import { useDayRollover } from './hooks/useDayRollover';
@@ -38,11 +36,8 @@ import { cameFromOldAddress } from './lib/installPrompt';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import SeasonBanner, { SeasonDecor } from './components/SeasonBanner';
 import TermsUpdateScreen from './components/TermsUpdateScreen';
-import HealthScreen from './components/HealthScreen';
 import InstallScreen from './components/InstallScreen';
 import TrainerInvitePrompt from './components/TrainerInvitePrompt';
-import TrainerShell from './trainer/TrainerShell';
-import ProgramShell from './program/ProgramShell';
 import { useTrainerMode } from './hooks/useTrainerMode';
 import { useProgram } from './hooks/useProgram';
 import { programLabels } from './lib/programLabels';
@@ -61,6 +56,15 @@ const HidratacaoPage = lazy(() => importPage(() => import('./pages/HidratacaoPag
 const NutricaoPage = lazy(() => importPage(() => import('./pages/NutricaoPage')));
 const DashPage = lazy(() => importPage(() => import('./pages/DashPage')));
 const PerfilPage = lazy(() => importPage(() => import('./pages/PerfilPage')));
+
+// Telas que só alguns abrem (cadastro novo, tutorial, questionário de saúde, modo
+// personal e programa de embaixador) saem do pacote inicial: quem só treina não
+// baixa esse código nem os dados que elas puxam.
+const OnboardingScreen = lazy(() => importPage(() => import('./components/OnboardingScreen')));
+const Tutorial = lazy(() => importPage(() => import('./components/Tutorial')));
+const HealthScreen = lazy(() => importPage(() => import('./components/HealthScreen')));
+const TrainerShell = lazy(() => importPage(() => import('./trainer/TrainerShell')));
+const ProgramShell = lazy(() => importPage(() => import('./program/ProgramShell')));
 
 const noSubscribe = () => () => {};
 const notBusy = () => false;
@@ -169,13 +173,13 @@ function Shell() {
       <AnnouncementBanner />
       {studentView && !needsOnboarding && <SeasonBanner />}
       {user && <TermsUpdateScreen />}
-      {studentView && !needsOnboarding && <HealthScreen />}
+      {studentView && !needsOnboarding && <Suspense fallback={null}><HealthScreen /></Suspense>}
       {(user || fromOldAddress) && <InstallScreen />}
       <UpdatePrompt aboveNav={!!user && !needsOnboarding} />
       {!user && <AuthScreen />}
-      {user && needsOnboarding && <OnboardingScreen />}
-      {trainerView && <TrainerShell onSwitchToStudent={() => setMode('aluno')} />}
-      {programView && <ProgramShell kind={programKind} onSwitchToStudent={() => setMode('aluno')} />}
+      {user && needsOnboarding && <Suspense fallback={<PageFallback />}><OnboardingScreen /></Suspense>}
+      {trainerView && <Suspense fallback={<PageFallback />}><TrainerShell onSwitchToStudent={() => setMode('aluno')} /></Suspense>}
+      {programView && <Suspense fallback={<PageFallback />}><ProgramShell kind={programKind} onSwitchToStudent={() => setMode('aluno')} /></Suspense>}
 
       {studentView && !needsOnboarding && (
         <AvatarProvider>
@@ -210,7 +214,7 @@ function Shell() {
               </main>
 
               <BottomNav active={page} onChange={setPage} badges={{ perfil: unreadMessages }} tabs={sport.tabs} extraItems={sport.navItems} />
-              {sport.tutorial && <Tutorial role="aluno" userId={user.id} onNavigate={setPage} />}
+              {sport.tutorial && <Suspense fallback={null}><Tutorial role="aluno" userId={user.id} onNavigate={setPage} /></Suspense>}
             </div>
           </WorkoutProvider>
         </AvatarProvider>

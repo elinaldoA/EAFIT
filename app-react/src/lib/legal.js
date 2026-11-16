@@ -10,10 +10,17 @@ const FETCH_TIMEOUT_MS = 4000;
 
 // Data (YYYY-MM-DD) da mudança mais recente já em vigor, ou null.
 export async function fetchCurrentLegalDate() {
-  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), FETCH_TIMEOUT_MS));
-  const { data, error } = await Promise.race([db.rpc('current_legal_date'), timeout]);
-  if (error) throw error;
-  return typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
+  let timer;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), FETCH_TIMEOUT_MS); });
+  try {
+    // A chamada entra numa promessa: se falhar na hora, o erro vai pela corrida
+    // (e não deixa o timeout órfão rejeitando sem ninguém ouvir).
+    const { data, error } = await Promise.race([Promise.resolve().then(() => db.rpc('current_legal_date')), timeout]);
+    if (error) throw error;
+    return typeof data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // Dia do aceite no fuso do app, ou null se não há aceite válido gravado.

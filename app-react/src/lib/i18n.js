@@ -1,6 +1,4 @@
-import en from '../i18n/en';
 import { seasonText } from './season';
-import { names as exNames, techniques as exTec, focos as exFocos, focoParts, repsRules } from '../i18n/en/exercises';
 
 // Textos da interface usam o próprio português como chave: 'Iniciar treino'.
 // Sem tradução (ou em português) devolve o texto original, então nada quebra
@@ -26,7 +24,14 @@ function readLang() {
 export const lang = readLang();
 export const locale = LANGS.find(l => l.code === lang).locale;
 
-const dict = lang === 'en' ? en : null;
+// Os dicionários em inglês pesam cerca de 400 KB: só quem usa o app em inglês
+// baixa. O await no topo segura os módulos que importam este arquivo até o
+// dicionário chegar, então t() continua síncrono (inclusive nas constantes de
+// módulo que chamam t() na importação). Em português nada é baixado.
+const english = lang === 'en' ? await import('../i18n/en') : null;
+const exercises = lang === 'en' ? await import('../i18n/en/exercises') : null;
+const dict = english ? english.default : null;
+
 
 export function t(text, vars) {
   let out = dict?.[text] ?? text;
@@ -42,7 +47,7 @@ export function t(text, vars) {
 const EMOJI_PREFIX = /^([\p{Extended_Pictographic}\uFE0F\u200D]+\s*)/u;
 
 function viaDict(text, dictionary) {
-  if (lang !== 'en' || !text || typeof text !== 'string') return text;
+  if (!dictionary || !text || typeof text !== 'string') return text;
   const m = text.match(EMOJI_PREFIX);
   const prefix = m ? m[1] : '';
   const core = text.slice(prefix.length);
@@ -50,19 +55,19 @@ function viaDict(text, dictionary) {
   return hit ? prefix + hit : text;
 }
 
-export const tEx = nome => viaDict(nome, exNames);
-export const tTec = tecnica => viaDict(tecnica, exTec);
+export const tEx = nome => viaDict(nome, exercises?.names);
+export const tTec = tecnica => viaDict(tecnica, exercises?.techniques);
 
 export function tFoco(foco) {
-  if (lang !== 'en' || !foco || typeof foco !== 'string') return foco;
-  if (exFocos[foco]) return exFocos[foco];
+  if (!exercises || !foco || typeof foco !== 'string') return foco;
+  if (exercises.focos[foco]) return exercises.focos[foco];
   const parts = foco.split(' / ');
-  return parts.map(p => focoParts[p] ?? p).join(' / ');
+  return parts.map(p => exercises.focoParts[p] ?? p).join(' / ');
 }
 
 export function tReps(reps) {
-  if (lang !== 'en' || !reps || typeof reps !== 'string') return reps;
-  return repsRules.reduce((acc, [re, to]) => acc.replace(re, to), reps);
+  if (!exercises || !reps || typeof reps !== 'string') return reps;
+  return exercises.repsRules.reduce((acc, [re, to]) => acc.replace(re, to), reps);
 }
 
 export function setLang(code) {
