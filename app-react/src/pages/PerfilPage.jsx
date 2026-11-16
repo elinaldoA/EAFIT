@@ -1,14 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../context/useAuth';
-import { useAppConfig } from '../context/useAppConfig';
-import ProfileFeedbackSection from '../components/ProfileFeedbackSection';
-import ProfilePauseSection from '../components/ProfilePauseSection';
-import ProfileHealthSection from '../components/ProfileHealthSection';
-import ProfileTrainerSection from '../components/ProfileTrainerSection';
-import ProfileTrainerRequestSection from '../components/ProfileTrainerRequestSection';
 import ProfileAmbassadorSection from '../components/ProfileAmbassadorSection';
-import { activePause, formatDayBR } from '../lib/pause';
-import { isFlagOn } from '../lib/appConfig';
+import ProfilePreferencesGroup from '../components/ProfilePreferencesGroup';
+import ProfileAccountGroup from '../components/ProfileAccountGroup';
+import { InviteAndFeedback, HelpSection, ShortcutCard } from '../components/ProfileCommunity';
 import { useToast } from '../context/useToast';
 import { useAvatar } from '../context/useAvatar';
 import { useWorkout } from '../context/useWorkout';
@@ -19,7 +14,6 @@ import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
 import { computeImcBracket } from '../data/workoutAdjustments';
 import { createGeneratedPlan } from '../lib/workoutPlans';
-import { useReminders } from '../hooks/useReminders';
 import { useProfileData } from '../hooks/useProfileData';
 import CollapsibleCard from '../components/CollapsibleCard';
 import ProfileHeader from '../components/ProfileHeader';
@@ -29,34 +23,20 @@ import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import { computeNutritionGoals } from '../lib/nutritionGoals';
-import { isCoachAvailable } from '../lib/coach';
-import { NotificationsSection, ExportSection, CoachSection } from '../components/ProfilePreferencesSection';
-import ProfileAccountSection from '../components/ProfileAccountSection';
-import { isGoogleOnly } from '../lib/googleAuth';
-import ProfileBiometricSection from '../components/ProfileBiometricSection';
-import ProfileSeasonSection from '../components/ProfileSeasonSection';
 import ProfileSportSection from '../components/ProfileSportSection';
 import { useSportModule } from '../hooks/useSportModule';
 import { brandName } from '../lib/sportModule';
-import { useSeason } from '../hooks/useSeason';
-import { SEASONS } from '../lib/season';
-import { SEASON_DECOR_TITLE } from '../lib/seasonLabels';
-import { isBiometricAvailable, getLock } from '../lib/biometricLock';
-import LanguageSwitch from '../components/LanguageSwitch';
-import { shareInvite } from '../lib/invite';
 import { takeProfileCardToOpen } from '../lib/appNav';
-import { startTutorial } from '../lib/tutorial';
 import { useRunProfileStats } from '../modules/corrida/useRunProfileStats';
 import { RunGoalSection, RunPrefsSection, RunShortcuts } from '../modules/corrida/RunProfile';
 import { weeklyKmGoal } from '../modules/corrida/runProfileStats';
 import { decimal } from '../modules/corrida/runs';
 
 import { validateBody, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
-import { t, locale, lang } from '../lib/i18n';
+import { t, locale } from '../lib/i18n';
 export default function PerfilPage({ active }) {
-  const { user, logout, updateProfile, updateEmail, updatePassword, deleteAccount } = useAuth();
+  const { user, updateProfile } = useAuth();
   const toast = useToast();
-  const { config } = useAppConfig();
   // Atalho vindo de uma notificação ou de um aviso do sino (ex.: resposta a um feedback).
   const [cardToOpen] = useState(takeProfileCardToOpen);
   const { markPending, refreshPlan, planByTrainer } = useWorkout();
@@ -77,40 +57,14 @@ export default function PerfilPage({ active }) {
   const [weeklyGoal, setWeeklyGoal] = useState(md.weeklyGoal || localStorage.getItem('profile_weeklyGoal') || DEFAULT_WEEKLY_GOAL);
   const { stats, weightLogs, setWeightLogs } = useProfileData(active, user, toast);
   const { avatarData, setAvatarData } = useAvatar();
-  const [remindersEnabled, toggleReminders] = useReminders(toast, user);
 
-  const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricOn, setBiometricOn] = useState(() => !!getLock(user?.id));
-  const season = useSeason();
   const { module: sport, available: sports } = useSportModule();
   // Módulo sem plano de musculação (corrida): o Perfil troca os cartões de
   // treino, nutrição e peso pelos do esporte.
   const usesWorkouts = sport.workoutPlan !== false;
   const runStats = useRunProfileStats(active && !usesWorkouts, user);
-
-  useEffect(() => {
-    let alive = true;
-    isBiometricAvailable().then(ok => { if (alive) setBiometricAvailable(ok); });
-    return () => { alive = false; };
-  }, []);
-
-  async function handleExport(action, label) {
-    if (!user || exporting) return;
-    setExporting(true);
-    try {
-      await action(user.id);
-    } catch (err) {
-      console.error('export:', err);
-      toast(t('⚠️ Erro ao gerar {label}', { label }));
-    } finally {
-      setExporting(false);
-    }
-  }
 
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0];
@@ -238,28 +192,6 @@ export default function PerfilPage({ active }) {
     toast(t('🎯 Meta de água salva!'));
   }
 
-  async function handleUpdateEmail() {
-    if (!newEmail.trim()) return;
-    const { error } = await updateEmail(newEmail.trim());
-    if (error) return toast(`⚠️ ${error}`);
-    toast(t('✅ Confirme o e-mail enviado para a nova conta'));
-    setNewEmail('');
-  }
-
-  async function handleUpdatePassword() {
-    if (!newPassword) return;
-    const firstPassword = isGoogleOnly(user);
-    const { error } = await updatePassword(newPassword);
-    if (error) return toast(`⚠️ ${error}`);
-    toast(firstPassword ? t('✅ Senha criada. Agora você também entra com e-mail e senha.') : t('✅ Senha atualizada'));
-    setNewPassword('');
-  }
-
-  async function handleDeleteAccount() {
-    const { error } = await deleteAccount();
-    if (error) toast(`⚠️ ${error}`);
-  }
-
   const weeklyGoalNum = parseInt(weeklyGoal, 10) || DEFAULT_WEEKLY_GOAL;
   const imc = imcInfo(parseFloat(peso), parseFloat(altura));
   const progress = useMemo(
@@ -278,12 +210,6 @@ export default function PerfilPage({ active }) {
   function openBodyProgress() {
     try { localStorage.setItem('dash_tab', 'corpo'); } catch { /* sem storage */ }
     window.location.hash = 'dash';
-  }
-
-  async function handleInvite() {
-    const result = await shareInvite();
-    if (result === 'copied') toast(t('🔗 Link copiado — cole na conversa com seus amigos'));
-    else if (result === 'failed') toast(t('⚠️ Não deu pra compartilhar. Mande o link eafit.com.br'));
   }
 
   return (
@@ -338,16 +264,10 @@ export default function PerfilPage({ active }) {
               <ProfileNutritionSection goals={nutritionGoals} />
             </CollapsibleCard>
 
-            <button type="button" className="shortcut-card" onClick={openBodyProgress}>
-              <span className="collapse__icon" aria-hidden="true">📈</span>
-              <span className="collapse__text">
-                <span className="collapse__title">{t('Peso e fotos de progresso')}</span>
-                <span className="collapse__summary">
-                  {weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
-                </span>
-              </span>
-              <span className="collapse__chevron" aria-hidden="true">›</span>
-            </button>
+            <ShortcutCard
+              icon="📈" title={t('Peso e fotos de progresso')} onClick={openBodyProgress}
+              summary={weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
+            />
           </>
         ) : (
           <>
@@ -369,109 +289,13 @@ export default function PerfilPage({ active }) {
 
       <ProfileAmbassadorSection />
 
-      {isFlagOn(config.flags, 'convite_amigos') && (
-        <div className="section-group">
-          <div className="section-group__label">{usesWorkouts ? t('Treine junto') : t('Corra junto')}</div>
-          <button type="button" className="shortcut-card" onClick={handleInvite}>
-            <span className="collapse__icon" aria-hidden="true">🤝</span>
-            <span className="collapse__text">
-              <span className="collapse__title">{t('Convidar amigos')}</span>
-              <span className="collapse__summary">{usesWorkouts ? t('Mande o link do EAFIT pra quem treina com você') : t('Mande o link do EAFIT pra quem corre com você')}</span>
-            </span>
-            <span className="collapse__chevron" aria-hidden="true">›</span>
-          </button>
-        </div>
-      )}
+      <InviteAndFeedback user={user} toast={toast} usesWorkouts={usesWorkouts} cardToOpen={cardToOpen} />
 
-      {isFlagOn(config.flags, 'feedback') && (
-        <div className="section-group">
-          <div className="section-group__label">{t('Ajude a melhorar')}</div>
-          <CollapsibleCard icon="💬" title={t('Enviar feedback')} summary={t('Sugestão, problema ou elogio')} defaultOpen={cardToOpen === 'feedback'}>
-            <ProfileFeedbackSection userId={user.id} toast={toast} />
-          </CollapsibleCard>
-        </div>
-      )}
+      <ProfilePreferencesGroup user={user} updateProfile={updateProfile} toast={toast} usesWorkouts={usesWorkouts} />
 
-      <div className="section-group">
-        <div className="section-group__label">{t('Preferências')}</div>
-        {SEASON_DECOR_TITLE[season.available] && (
-          <CollapsibleCard icon={SEASONS[season.available].emoji} title={SEASON_DECOR_TITLE[season.available]()} summary={season.off ? t('Desativado') : t('Ativado')}>
-            <ProfileSeasonSection theme={season.available} off={season.off} />
-          </CollapsibleCard>
-        )}
-        <CollapsibleCard icon="🌐" title={t('Idioma')} summary={lang === 'en' ? 'English' : 'Português'}>
-          <LanguageSwitch />
-        </CollapsibleCard>
-        <CollapsibleCard icon="🔔" title={t('Notificações')} summary={remindersEnabled ? t('Ativadas') : t('Desativadas')}>
-          <NotificationsSection
-            user={user} updateProfile={updateProfile} toast={toast}
-            remindersEnabled={remindersEnabled} toggleReminders={toggleReminders}
-            running={!usesWorkouts}
-          />
-        </CollapsibleCard>
-        {usesWorkouts && isCoachAvailable() && (
-          <CollapsibleCard
-            icon="🎙️" title={t('Treinador por voz')}
-            summary={user.user_metadata?.coachEnabled ? t('Ativado') : t('Desativado')}
-          >
-            <CoachSection updateProfile={updateProfile} toast={toast} />
-          </CollapsibleCard>
-        )}
-        <CollapsibleCard
-          icon="⏸" title={t('Modo pausa')}
-          summary={activePause(user.user_metadata, todayDate()) ? t('Pausado até {v1}', { v1: formatDayBR(activePause(user.user_metadata, todayDate()).to) }) : usesWorkouts ? t('Viagem ou doença? Pause sem perder a sequência') : t('Viagem ou lesão? Pause sem perder a sequência')}
-        >
-          <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
-        </CollapsibleCard>
-        <CollapsibleCard
-          icon="🩺" title={t('Saúde (PAR-Q)')}
-          summary={user.user_metadata?.parqAt ? (user.user_metadata?.parqAlert ? t('Respondido · vale ver um médico') : t('Respondido')) : t('7 perguntas rápidas sobre prontidão')}
-        >
-          <ProfileHealthSection user={user} updateProfile={updateProfile} toast={toast} />
-        </CollapsibleCard>
-        {biometricAvailable && (
-          <CollapsibleCard icon="🔒" title={t('Bloqueio com biometria')} summary={biometricOn ? t('Ativado neste aparelho') : t('Desativado')}>
-            <ProfileBiometricSection user={user} toast={toast} onChange={setBiometricOn} />
-          </CollapsibleCard>
-        )}
-        {usesWorkouts && (
-          <>
-            <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal trainer')}>
-              <ProfileTrainerSection toast={toast} />
-            </CollapsibleCard>
-            <CollapsibleCard icon="🧑‍🏫" title={t('Sou personal trainer')} summary={t('Peça o acesso ao modo Personal')}>
-              <ProfileTrainerRequestSection toast={toast} />
-            </CollapsibleCard>
-          </>
-        )}
-        <CollapsibleCard icon="💾" title={t('Exportar e backup')} summary={t('CSV, JSON ou relatório para imprimir')}>
-          <ExportSection exporting={exporting} onExport={handleExport} />
-        </CollapsibleCard>
-      </div>
+      {sport.tutorial && <HelpSection />}
 
-      {sport.tutorial && (
-        <div className="section-group">
-          <div className="section-group__label">{t('Ajuda')}</div>
-          <button type="button" className="shortcut-card" onClick={startTutorial}>
-            <span className="collapse__icon" aria-hidden="true">🎓</span>
-            <span className="collapse__text">
-              <span className="collapse__title">{t('Ver tutorial')}</span>
-              <span className="collapse__summary">{t('Passo a passo de todas as funções do app')}</span>
-            </span>
-            <span className="collapse__chevron" aria-hidden="true">›</span>
-          </button>
-        </div>
-      )}
-
-      <div className="section-group">
-        <div className="section-group__label">{t('Conta')}</div>
-        <ProfileAccountSection
-          user={user}
-          newEmail={newEmail} setNewEmail={setNewEmail} onUpdateEmail={handleUpdateEmail}
-          newPassword={newPassword} setNewPassword={setNewPassword} onUpdatePassword={handleUpdatePassword}
-          onLogout={logout} onDeleteAccount={handleDeleteAccount}
-        />
-      </div>
+      <ProfileAccountGroup user={user} toast={toast} />
     </section>
   );
 }

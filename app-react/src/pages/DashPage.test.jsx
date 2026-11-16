@@ -137,6 +137,22 @@ describe('DashPage', () => {
       expect(screen.getByRole('tab', { name: 'Recordes' }).getAttribute('aria-selected')).toBe('true');
     });
 
+    it('trocar de aba e voltar não zera o exercício escolhido nem a visão anatômica', () => {
+      Object.assign(dash, baseDash({
+        exercises: ['Remada', 'Supino'],
+        logs: [
+          { exercise_name: 'Remada', carga: '40', workout_date: '2026-09-20' },
+          { exercise_name: 'Supino', carga: '60', workout_date: '2026-10-02' },
+        ],
+      }));
+      render(<DashPage active />);
+      fireEvent.change(screen.getByLabelText('Exercício'), { target: { value: 'Remada' } });
+      fireEvent.click(screen.getByRole('tab', { name: 'Corpo' }));
+      expect(screen.queryByLabelText('Exercício')).toBeNull();
+      fireEvent.click(screen.getByRole('tab', { name: 'Treinos' }));
+      expect(screen.getByLabelText('Exercício').value).toBe('Remada');
+    });
+
     it('Recordes: lista os PRs e atualiza sob demanda', () => {
       localStorage.setItem('dash_tab', 'recordes');
       Object.assign(dash, baseDash({ allTimeLogs: [{ exercise_name: 'Supino', carga: '80', workout_date: '2026-10-07' }] }));
