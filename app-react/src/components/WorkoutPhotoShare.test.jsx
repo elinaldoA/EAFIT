@@ -24,7 +24,7 @@ vi.mock('../lib/imageUtils', () => ({
 
 import WorkoutPhotoShare from './WorkoutPhotoShare';
 
-const SUMMARY = { day: { dia: 'Segunda', foco: 'Peito' }, durationMs: 1000, totalCarga: 10, exercises: [] };
+const SUMMARY = { day: { dia: 'Segunda', foco: 'Peito' }, durationMs: 1000, volume: 10, exercises: [] };
 const IMG = { width: 100, height: 200 };
 
 beforeEach(() => {
@@ -66,7 +66,7 @@ describe('WorkoutPhotoShare', () => {
     render(<WorkoutPhotoShare summary={SUMMARY} onClose={() => {}} />);
     upload(pick());
     await waitFor(() => expect(h.render).toHaveBeenCalledTimes(1));
-    fireEvent.click(screen.getByRole('button', { name: 'Carga total' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Volume' }));
     await waitFor(() => expect(h.render).toHaveBeenCalledTimes(2));
     expect(h.render.mock.calls[1][2]).toEqual({ duracao: true, carga: false, series: true, exercicios: true });
   });

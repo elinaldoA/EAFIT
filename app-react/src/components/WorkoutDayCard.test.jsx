@@ -163,6 +163,7 @@ describe('DayCard — cronômetro do treino', () => {
   it('finalizar: toca o som, marca o treino, salva a duração e abre o resumo', async () => {
     localStorage.setItem('set_Supino_1_done', 'true');
     localStorage.setItem('set_Supino_1_carga', '80');
+    localStorage.setItem('set_Supino_1_reps', '10');
     const { onFinish, bump } = setup();
     fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     act(() => { vi.advanceTimersByTime(60_000); });
@@ -177,7 +178,7 @@ describe('DayCard — cronômetro do treino', () => {
     expect(bump).toHaveBeenCalled();
     expect(h.postActivity).toHaveBeenCalledWith('treino', 'Concluiu o treino de Peito', expect.stringContaining('1 séries'));
     const summary = onFinish.mock.calls[0][0];
-    expect(summary).toMatchObject({ durationMs: 60000, totalSetsDone: 1, totalPlannedSets: 7, totalCarga: 80 });
+    expect(summary).toMatchObject({ durationMs: 60000, totalSetsDone: 1, totalPlannedSets: 7, volume: 800 }); // 80 kg × 10
     expect(summary.weekTotal).toBe(2); // Segunda e Terça — fim de semana não conta
     expect(summary.weekDone).toBe(1);
     expect(screen.getByText(/concluído/)).toBeTruthy();

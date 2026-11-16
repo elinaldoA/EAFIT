@@ -141,7 +141,7 @@ export default {
   'Treino & evolução': 'Workouts & progress',
   'TREINO CONCLUÍDO': 'WORKOUT DONE',
   'duração': 'duration',
-  'carga total': 'total weight',
+  'volume': 'volume',
   'séries concluídas': 'sets done',
   'exercícios': 'exercises',
   'Monte o seu treino': 'Build your workout',

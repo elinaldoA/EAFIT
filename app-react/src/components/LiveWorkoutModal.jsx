@@ -108,26 +108,27 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   const restDone = !!rest && restLeft === 0;
 
   useEffect(() => {
-    if (rest && !rest.final && restLeft === 10 && rest.total > 10) coachSay('rest10');
+    if (rest && restLeft === 10 && rest.total > 10) coachSay('rest10');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restLeft, rest?.id]);
 
   useEffect(() => {
     if (!restDone) return;
     playRestDoneSound();
-    if (!rest.final) coachSay('restDone', {}, { delayMs: 3900 }); // depois do alarme, sem sobrepor
+    coachSay('restDone', {}, { delayMs: 3900 }); // depois do alarme, sem sobrepor
     const id = setTimeout(() => setRest(null), 1500);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restDone, rest?.id]);
 
   function handleRestStart(label, seconds, nextName) {
+    // Depois da última série do treino não há o que esperar: sem contagem de
+    // descanso (antes corria 60s na frente do "Finalizar treino"), só o anúncio.
+    if (announceSetDone(seconds, nextName) === 'allDone') { setRest(null); return; }
     restSeq.current += 1;
     const start = Date.now();
     setNow(start);
-    // Depois da última série do treino não há "próxima" para a voz anunciar.
-    const final = announceSetDone(seconds, nextName) === 'allDone';
-    setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000, final });
+    setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000 });
   }
 
   // A série acabou de ser marcada (o localStorage já tem o check): em vez de só

@@ -6,7 +6,9 @@ export function setCountOf(ex) {
   return isCardioItem(ex) ? 1 : (parseInt(ex.series, 10) || 0);
 }
 
-export function calcDayTotalCarga(day) {
+// Volume do dia (carga × reps das séries feitas), a mesma conta do Histórico e
+// da Evolução. Antes era a soma das cargas: 3 séries de 60 kg davam "180 kg".
+export function calcDayVolume(day) {
   let total = 0;
   [...day.exercicios, ...day.pos].forEach(ex => {
     const count = parseInt(ex.series, 10);
@@ -14,10 +16,11 @@ export function calcDayTotalCarga(day) {
     for (let n = 1; n <= count; n++) {
       const done = localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true';
       const carga = parseFloat(localStorage.getItem(`set_${ex.nome}_${n}_carga`));
-      if (done && !isNaN(carga)) total += carga;
+      const reps = parseFloat(localStorage.getItem(`set_${ex.nome}_${n}_reps`));
+      if (done && !isNaN(carga) && !isNaN(reps)) total += carga * reps;
     }
   });
-  return total;
+  return Math.round(total);
 }
 
 export function gatherExerciseDetails(day) {

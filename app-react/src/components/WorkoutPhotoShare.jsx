@@ -5,7 +5,7 @@ import { renderWorkoutPhotoCard, shareWorkoutPhoto, PHOTO_STATS } from '../lib/s
 import { t } from '../lib/i18n';
 const STAT_LABELS = {
   duracao: 'Duração',
-  carga: 'Carga total',
+  carga: 'Volume',
   series: 'Séries',
   exercicios: 'Exercícios',
 };

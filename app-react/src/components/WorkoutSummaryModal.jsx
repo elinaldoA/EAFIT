@@ -18,7 +18,7 @@ import { useBackToClose } from '../hooks/useBackToClose';
 import { t, locale, tEx, tFoco } from '../lib/i18n';
 export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
   useBackToClose(onClose);
-  const { day, durationMs, totalCarga, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets } = summary;
+  const { day, durationMs, volume, weekDone, weekTotal, exercises, totalSetsDone, totalPlannedSets } = summary;
   const activeGroups = getMuscleGroupsForDay(day);
   const weekPct = weekTotal ? Math.min(100, (weekDone / weekTotal) * 100) : 0;
   const toast = useToast();
@@ -95,8 +95,8 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
                   <span className="stat-card__label">{t('Duração')}</span>
                 </div>
                 <div className="stat-card">
-                  <span className="stat-card__value">{totalCarga.toLocaleString(locale)}kg</span>
-                  <span className="stat-card__label">{t('Carga total')}</span>
+                  <span className="stat-card__value">{(volume || 0).toLocaleString(locale)}kg</span>
+                  <span className="stat-card__label">{t('Volume')}</span>
                 </div>
                 <div className="stat-card">
                   <span className="stat-card__value">{totalSetsDone}/{totalPlannedSets}</span>

@@ -204,7 +204,7 @@ describe('SessionDetailModal', () => {
 describe('WorkoutSummaryModal', () => {
   const summary = () => ({
     day: { dia: 'Segunda', foco: 'Peito / Tríceps', pos: [] },
-    durationMs: 3_600_000, totalCarga: 12500, weekDone: 2, weekTotal: 4, totalSetsDone: 9, totalPlannedSets: 12,
+    durationMs: 3_600_000, volume: 12500, weekDone: 2, weekTotal: 4, totalSetsDone: 9, totalPlannedSets: 12,
     exercises: [
       { nome: 'Supino', sets: [{ n: 1, reps: 10, carga: 60, done: true }, { n: 2, reps: null, carga: null, done: false }] },
       { nome: 'Esteira', cardio: true, sets: [{ n: 1, duracao: 20, distancia: 3, done: true }] },

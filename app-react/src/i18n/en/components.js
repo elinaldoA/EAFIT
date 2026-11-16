@@ -874,7 +874,7 @@ export default {
   '🏁 Finalizar': '🏁 Finish',
   'Continuar': 'Resume',
   '↺ Refazer treino': '↺ Redo workout',
-  'Carga total do treino: {v1} kg': 'Total workout weight: {v1} kg',
+  'Volume do treino: {v1} kg': 'Workout volume: {v1} kg',
   '📝 Notas do treino {v1}': '📝 Workout notes {v1}',
   'Como foi o treino? Alguma observação pra próxima vez…': 'How was the workout? Any notes for next time…',
   '🏁 Pós-treino — Cardio + Abdômen': '🏁 Post-workout — Cardio + Abs',

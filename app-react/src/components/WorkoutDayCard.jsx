@@ -8,7 +8,7 @@ import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
 import { postActivity } from '../lib/friends';
 import { coachSay, coachRecords, takeRecords, speechTime } from '../lib/coach';
-import { calcDayTotalCarga, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
+import { calcDayVolume, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
 import { findGroup, nextInGroup, segmentExercises, groupKindLabel } from '../lib/supersets';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
@@ -121,7 +121,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     const { done: totalSetsDone, total: totalPlannedSets } = countSets(exercises);
     const { done: weekDone, total: weekTotal } = weekProgress();
     return {
-      day, durationMs, totalCarga: calcDayTotalCarga(day),
+      day, durationMs, volume: calcDayVolume(day),
       exercises, totalSetsDone, totalPlannedSets, weekDone, weekTotal,
     };
   }
@@ -401,7 +401,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         </div>
 
         <div className="day-card__total">
-          {t('Carga total do treino: {v1} kg', { v1: calcDayTotalCarga(day).toLocaleString(locale) })}
+          {t('Volume do treino: {v1} kg', { v1: calcDayVolume(day).toLocaleString(locale) })}
         </div>
 
         {isFlagOn(config.flags, 'mobilidade') && setsTotal > 0 && (

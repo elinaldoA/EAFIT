@@ -186,6 +186,13 @@ describe('LiveWorkoutModal — descanso', () => {
     expect(screen.queryByRole('timer')).toBeNull();
   });
 
+  it('depois da última série do treino não começa descanso (não há próxima)', () => {
+    [['Supino Reto', 2], ['Crucifixo', 3], ['Prancha', 3]].forEach(([nome, n]) => { for (let i = 1; i <= n; i++) markDone(nome, i); });
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: /^marcar / }));
+    expect(screen.queryByRole('timer')).toBeNull();
+  });
+
   it('ao zerar toca o alarme, avisa e some sozinho', () => {
     setup();
     fireEvent.click(screen.getByRole('button', { name: 'marcar Supino Reto' }));

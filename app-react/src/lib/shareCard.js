@@ -762,7 +762,7 @@ function formatCardDate(date = new Date()) {
 
 export async function renderWorkoutSummaryCard(summary, refCode = myRefCode()) {
   const {
-    day, durationMs, totalCarga, weekDone, weekTotal,
+    day, durationMs, volume, weekDone, weekTotal,
     exercises = [], totalSetsDone, totalPlannedSets,
   } = summary;
 
@@ -822,7 +822,7 @@ export async function renderWorkoutSummaryCard(summary, refCode = myRefCode()) {
   y += 56 + 44 + bonus;
   const boxW = (CONTENT_W - statsGap) / 2;
   drawStatBox(ctx, PAD_X, y, boxW, statBoxH, formatDuration(durationMs), t('duração'), ORANGE);
-  drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, `${(totalCarga || 0).toLocaleString(locale)} kg`, t('carga total'), SKY);
+  drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, `${(volume || 0).toLocaleString(locale)} kg`, t('volume'), SKY);
   y += statBoxH + statsGap;
   drawStatBox(ctx, PAD_X, y, boxW, statBoxH, `${totalSetsDone}/${totalPlannedSets}`, t('séries concluídas'), EMERALD);
   drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, String(exercises.length), t('exercícios'), VIOLET);
@@ -853,7 +853,7 @@ export const PHOTO_STATS = ['duracao', 'carga', 'series', 'exercicios'];
 // (marca no topo, foco do treino e números embaixo), no estilo dos apps de
 // academia. `show` escolhe quais números aparecem; `img` é uma imagem já carregada.
 export async function renderWorkoutPhotoCard(summary, img, show = {}) {
-  const { day, durationMs, totalCarga, exercises = [], totalSetsDone, totalPlannedSets } = summary;
+  const { day, durationMs, volume, exercises = [], totalSetsDone, totalPlannedSets } = summary;
   const on = k => show[k] !== false;
 
   const canvas = document.createElement('canvas');
@@ -876,7 +876,7 @@ export async function renderWorkoutPhotoCard(summary, img, show = {}) {
 
   const stats = [
     on('duracao') && [formatDuration(durationMs), t('duração')],
-    on('carga') && [`${(totalCarga || 0).toLocaleString(locale)} kg`, t('carga total')],
+    on('carga') && [`${(volume || 0).toLocaleString(locale)} kg`, t('volume')],
     on('series') && [`${totalSetsDone}/${totalPlannedSets}`, t('séries concluídas')],
     on('exercicios') && [String(exercises.length), t('exercícios')],
   ].filter(Boolean);
