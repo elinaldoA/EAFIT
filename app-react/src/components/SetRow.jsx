@@ -13,20 +13,40 @@ import { t, tEx } from '../lib/i18n';
 import { INTENSITY_KEYS, normalizeIntensity, intensityLabel } from '../lib/intensity';
 // onSetDone: só nos exercícios de bi-set/circuito — quem decide o descanso e o
 // próximo exercício é o grupo (WorkoutDayCard), não o descanso desta série.
-export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFillOthers, started }) {
+//
+// version: muda quando alguém de fora grava nesta série (repetir a Série 1 nas
+// outras, "Marcar todas", sugestão aplicada, voltar do modo ao vivo). A linha
+// relê os valores em vez de ser recriada: recriar no meio de um toque perdia o
+// ✓ — ao digitar as reps da Série 1 e tocar no ✓ direto, o blur do campo
+// repetia os valores nas outras séries, a linha era trocada entre o soltar do
+// campo e o clique, e a série não era marcada.
+export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFillOthers, started, version }) {
   const { user } = useAuth();
   const { saveSetState, workoutIds } = useWorkout();
   const toast = useToast();
-  const [carga, setCarga] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_carga`) || '');
-  const [reps, setReps] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_reps`) || '');
-  const [done, setDone] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true');
+  const stored = field => localStorage.getItem(`set_${ex.nome}_${n}_${field}`);
+  const [carga, setCarga] = useState(() => stored('carga') || '');
+  const [reps, setReps] = useState(() => stored('reps') || '');
+  const [done, setDone] = useState(() => stored('done') === 'true');
   const [saved, setSaved] = useState(false);
   // RIR opcional: '' = não respondeu. A pergunta só aparece com a série feita.
-  const [rir, setRir] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_rir`) || '');
+  const [rir, setRir] = useState(() => stored('rir') || '');
   // Tipo da série ('' = normal). Sem escolha própria, vale a técnica prescrita
   // no exercício, gravada ao marcar a série como feita.
   const prescribed = normalizeIntensity(ex.intensidade) || '';
-  const [tipo, setTipo] = useState(() => localStorage.getItem(`set_${ex.nome}_${n}_tipo`) ?? '');
+  const [tipo, setTipo] = useState(() => stored('tipo') ?? '');
+
+  const seenVersion = useRef(version);
+  useEffect(() => {
+    if (seenVersion.current === version) return;
+    seenVersion.current = version;
+    setCarga(stored('carga') || '');
+    setReps(stored('reps') || '');
+    setDone(stored('done') === 'true');
+    setRir(stored('rir') || '');
+    setTipo(stored('tipo') ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version]);
   const tipoShown = tipo || prescribed;
   const cargaSaveTimer = useRef(null);
   const repsSaveTimer = useRef(null);

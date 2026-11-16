@@ -169,7 +169,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
       <div className="ex-block__sets">
         {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (timed
           ? <TimedSetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} started={started} />
-          : <SetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} onFillOthers={onFillOthers} started={started} />
+          : <SetRow key={n} version={version} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} onFillOthers={onFillOthers} started={started} />
         ))}
       </div>
 

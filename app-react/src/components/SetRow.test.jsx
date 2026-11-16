@@ -53,6 +53,38 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('SetRow — gravação vinda de fora (version)', () => {
+  it('relê carga, reps e o ✓ sem recriar a linha: o botão tocado continua o mesmo', () => {
+    const props = { ex: EX, n: 2, day: DAY, bump: vi.fn(), onRestStart: vi.fn(), started: true };
+    const { rerender } = render(<SetRow {...props} version="0" />);
+    const button = check();
+    localStorage.setItem('set_Supino Reto_2_carga', '60');
+    localStorage.setItem('set_Supino Reto_2_reps', '10');
+    localStorage.setItem('set_Supino Reto_2_done', 'true');
+    rerender(<SetRow {...props} version="1" />);
+    expect(carga().value).toBe('60');
+    expect(reps().value).toBe('10');
+    expect(check()).toBe(button);
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('digitar as reps da Série 1 e tocar no ✓ direto marca a série, mesmo com a cópia para as outras no meio', () => {
+    const props = { ex: EX, n: 1, day: DAY, bump: vi.fn(), onRestStart: vi.fn(), started: true };
+    let version = 0;
+    // A cópia para as outras séries muda a versão do exercício, como no WorkoutDayCard.
+    const onFillOthers = () => { version += 1; view.rerender(<SetRow {...props} onFillOthers={onFillOthers} version={String(version)} />); };
+    const view = render(<SetRow {...props} onFillOthers={onFillOthers} version="0" />);
+    fireEvent.change(carga(), { target: { value: '60' } });
+    fireEvent.change(reps(), { target: { value: '10' } });
+    const button = check();
+    fireEvent.blur(reps());
+    expect(version).toBe(1);
+    fireEvent.click(button);
+    expect(check().getAttribute('aria-pressed')).toBe('true');
+    expect(localStorage.getItem('set_Supino Reto_1_done')).toBe('true');
+  });
+});
+
 describe('SetRow — registro de carga e reps', () => {
   it('começa com o que já estava salvo no aparelho', () => {
     localStorage.setItem('set_Supino Reto_1_carga', '80');

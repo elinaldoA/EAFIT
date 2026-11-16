@@ -14,3 +14,5 @@ Rodam contra o **build de produção** (com service worker), gerado em `dist-e2e
 Primeira vez: `npx playwright install chromium`. Para rodar um só: `npx playwright test -g "sinal fraco"`. Se falhar, o relatório fica em `test-results/` (captura de tela e `trace.zip`, que abre com `npx playwright show-trace`).
 
 `e2e/offline-workout.spec.js` cobre o treino sem rede: perder o sinal no meio do treino, reabrir o app offline (service worker), a rede voltando, sinal fraco (servidor que não responde) a fila subindo com o servidor lento, a fila voltando do IndexedDB quando o navegador apaga o `localStorage` e o envio ao finalizar o treino.
+
+`e2e/workout-flow.spec.js` faz o treino como na academia: digitar carga e reps da Série 1 e tocar no ✓ direto, com o teclado aberto (a série tem que ser marcada e os valores repetidos nas outras).
