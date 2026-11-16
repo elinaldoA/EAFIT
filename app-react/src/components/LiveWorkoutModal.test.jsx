@@ -65,6 +65,14 @@ describe('LiveWorkoutModal', () => {
     expect(block.compareDocumentPosition(prompt) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it('a trilha de exercícios só aparece com mais de um (com um só parecia outra barra de progresso)', () => {
+    setup();
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
+    cleanup();
+    setup({ day: { ...DAY, exercicios: [DAY.exercicios[0]], pos: [] } });
+    expect(screen.queryByRole('tablist', { name: 'Exercícios do treino' })).toBeNull();
+  });
+
   it('abre no primeiro exercício pendente', () => {
     markDone('Supino Reto', 1);
     markDone('Supino Reto', 2);

@@ -265,3 +265,5 @@
   border-radius: var(--r-full);
   cursor: pointer;
 }
+.plan-ex-row__del { font-size: var(--fs-sm); line-height: 1; }
+.plan-ex-row__del:hover, .plan-ex-row__del:focus-visible { border-color: var(--error); background: color-mix(in srgb, var(--error) 12%, var(--surface)); }

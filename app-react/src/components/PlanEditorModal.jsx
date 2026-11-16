@@ -123,15 +123,25 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = 
       <div className="plan-ex-row__fields">
         <input className="input input--sm plan-ex-row__name" placeholder={t('Exercício')} value={local.nome}
           onChange={e => setLocal(l => ({ ...l, nome: e.target.value }))} onBlur={() => save('nome')} />
+        {/* Rótulo em cima de cada campo: preenchido, "3 · 8-10 · 60s" não diz qual é qual. */}
         <div className="plan-ex-row__nums">
-          <input className="input input--sm" placeholder={t('Séries')} value={local.series}
-            onChange={e => setLocal(l => ({ ...l, series: e.target.value }))} onBlur={() => save('series')} />
-          <input className="input input--sm" placeholder="Reps" value={local.reps}
-            onChange={e => setLocal(l => ({ ...l, reps: e.target.value }))} onBlur={() => save('reps')} />
-          <input className="input input--sm" placeholder={t('Descanso')} value={local.descanso}
-            onChange={e => setLocal(l => ({ ...l, descanso: e.target.value }))} onBlur={() => save('descanso')} />
+          <label className="plan-ex-row__extra">
+            {t('Séries')}
+            <input className="input input--sm" placeholder="3" value={local.series}
+              onChange={e => setLocal(l => ({ ...l, series: e.target.value }))} onBlur={() => save('series')} />
+          </label>
+          <label className="plan-ex-row__extra">
+            {t('Repetições')}
+            <input className="input input--sm" placeholder="8-12" value={local.reps}
+              onChange={e => setLocal(l => ({ ...l, reps: e.target.value }))} onBlur={() => save('reps')} />
+          </label>
+          <label className="plan-ex-row__extra">
+            {t('Descanso')}
+            <input className="input input--sm" placeholder="60s" value={local.descanso}
+              onChange={e => setLocal(l => ({ ...l, descanso: e.target.value }))} onBlur={() => save('descanso')} />
+          </label>
         </div>
-        <input className="input input--sm" placeholder={t('Técnica')} value={local.tecnica}
+        <input className="input input--sm" placeholder={t('Técnica')} aria-label={t('Técnica')} value={local.tecnica}
           onChange={e => setLocal(l => ({ ...l, tecnica: e.target.value }))} onBlur={() => save('tecnica')} />
         {extras && (
           <ExerciseExtras
@@ -140,7 +150,7 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = 
           />
         )}
       </div>
-      <button type="button" className="plan-ex-row__del" onClick={() => onDelete(ex.id)} aria-label={t('Remover exercício')}>✕</button>
+      <button type="button" className="plan-ex-row__del" onClick={() => onDelete(ex)} aria-label={t('Remover exercício')} title={t('Remover exercício')}>🗑️</button>
     </div>
   );
 }
@@ -341,9 +351,12 @@ export default function PlanEditorModal({ onClose }) {
     }
   }
 
-  async function handleDeleteExercise(id) {
+  // Um toque sem querer apagava o exercício na hora, com séries, técnica e o resto.
+  async function handleDeleteExercise(ex) {
+    const nome = ex.nome?.trim();
+    if (!window.confirm(nome ? t('Remover "{nome}" deste dia?', { nome }) : t('Remover este exercício do dia?'))) return;
     try {
-      await deleteExercise(id);
+      await deleteExercise(ex.id);
       await reloadDays();
     } catch (err) {
       console.error('deleteExercise:', err);

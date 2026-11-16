@@ -276,10 +276,27 @@ describe('PlanEditorModal — editar dia', () => {
     ));
   });
 
-  it('remove um exercício', async () => {
+  it('remove um exercício depois de confirmar, dizendo qual', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     await openEditor();
     fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
+    expect(confirm).toHaveBeenCalledWith('Remover "Supino" deste dia?');
     await waitFor(() => expect(h.api.deleteExercise).toHaveBeenCalledWith('e1'));
+  });
+
+  it('recusar a confirmação não remove o exercício', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    await openEditor();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
+    expect(h.api.deleteExercise).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue('Supino')).toBeTruthy();
+  });
+
+  it('séries, repetições e descanso têm rótulo (preenchidos, o placeholder some)', async () => {
+    await openEditor();
+    expect(screen.getAllByLabelText('Séries').length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('Repetições').length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText('Descanso').length).toBeGreaterThan(0);
   });
 
   it('mover troca as posições de dois exercícios; os extremos ficam desabilitados', async () => {
@@ -298,6 +315,7 @@ describe('PlanEditorModal — editar dia', () => {
 
   it('erros viram toast e não derrubam o editor', async () => {
     await openEditor();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     h.api.deleteExercise.mockRejectedValue(new Error('falhou'));
     fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Erro ao remover exercício'));

@@ -263,6 +263,9 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
         <div className="live__progress-fill" style={{ width: `${pct}%` }} />
       </div>
 
+      {/* Com um exercício só não há para onde navegar, e o segmento único cheio
+          parecia uma segunda barra de progresso (em 100%) logo abaixo da de séries. */}
+      {items.length > 1 && (
       <div className="live__steps" role="tablist" aria-label={t('Exercícios do treino')}>
         {items.map((item, i) => (
           <button
@@ -279,6 +282,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
           />
         ))}
       </div>
+      )}
 
       <main className="live__body" ref={bodyRef}>
         <div className="live__ex-head">
