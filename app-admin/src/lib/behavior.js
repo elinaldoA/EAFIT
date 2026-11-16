@@ -233,6 +233,7 @@ export function buildVisitorJourney(rows) {
 
 const ONBOARDING_STEPS = [
   { key: 'view', label: 'Abriram o formulário' },
+  { key: 'nome', label: 'Informaram o nome' },
   { key: 'sexo', label: 'Informaram o sexo' },
   { key: 'idade', label: 'Informaram a idade' },
   { key: 'peso', label: 'Informaram o peso' },
@@ -241,7 +242,10 @@ const ONBOARDING_STEPS = [
   { key: 'done', label: 'Plano gerado' },
 ];
 const ONBOARDING_ERRORS = {
-  erro_idade: 'Sexo ou idade inválidos',
+  erro_nome: 'Nome não informado',
+  erro_sexo: 'Sexo não informado',
+  // Antes do erro por campo (nov/2026), um só evento valia para sexo ou idade.
+  erro_idade: 'Idade inválida (ou sexo, nos dados antigos)',
   erro_peso: 'Peso inválido',
   erro_altura: 'Altura inválida',
   erro_plano: 'Falha ao gerar o plano',

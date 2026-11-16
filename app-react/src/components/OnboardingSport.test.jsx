@@ -22,6 +22,7 @@ vi.mock('../hooks/useSportModule', () => ({ useSportModule: () => ({ module: h.s
 import OnboardingScreen from './OnboardingScreen';
 
 const fill = () => {
+  fireEvent.change(screen.getByLabelText('Como podemos te chamar?'), { target: { value: 'Ana' } });
   fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: 'M' } });
   fireEvent.change(screen.getByLabelText('Idade'), { target: { value: '30' } });
   fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '80' } });

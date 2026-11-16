@@ -363,7 +363,8 @@ describe('PasswordRecoveryScreen', () => {
 });
 
 describe('OnboardingScreen', () => {
-  const fill = ({ sexo = 'M', idade = '30', peso = '80', altura = '180' } = {}) => {
+  const fill = ({ nome = 'Ana', sexo = 'M', idade = '30', peso = '80', altura = '180' } = {}) => {
+    fireEvent.change(screen.getByLabelText('Como podemos te chamar?'), { target: { value: nome } });
     fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: sexo } });
     fireEvent.change(screen.getByLabelText('Idade'), { target: { value: idade } });
     fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: peso } });
@@ -372,6 +373,7 @@ describe('OnboardingScreen', () => {
   const submit = () => fireEvent.click(screen.getByText('Gerar meu treino'));
 
   it.each([
+    [{ nome: '   ' }, 'Como podemos te chamar?', 'Diga como podemos te chamar.'],
     [{ sexo: '' }, 'Sexo biológico', 'Selecione o sexo biológico.'],
     [{ idade: '10' }, 'Idade', 'Informe uma idade válida (14–100).'],
     [{ peso: '10' }, 'Peso (kg)', 'Informe um peso entre 30 e 300 kg.'],
@@ -406,6 +408,23 @@ describe('OnboardingScreen', () => {
 
     fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '85' } });
     expect(screen.queryByText('Corrija os campos marcados acima.')).toBeNull();
+  });
+
+  it('salva o nome sem espaços sobrando; quem entrou com o Google já vem com o primeiro nome', async () => {
+    h.tpl.generatePlan.mockResolvedValue([{ dia: 'Seg' }]);
+    h.auth.updateProfile.mockResolvedValue({});
+    const first = render(<OnboardingScreen />);
+    expect(screen.getByLabelText('Como podemos te chamar?').value).toBe('');
+    fill({ nome: '  Bia   Souza ' });
+    submit();
+    await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ nome: 'Bia Souza' })));
+    first.unmount();
+
+    const prev = h.auth.user;
+    h.auth.user = { ...prev, user_metadata: { full_name: 'Carla Dias', given_name: 'Carla' } };
+    render(<OnboardingScreen />);
+    expect(screen.getByLabelText('Como podemos te chamar?').value).toBe('Carla');
+    h.auth.user = prev;
   });
 
   it('altura digitada em metros vira centímetros ao sair do campo', () => {
@@ -443,7 +462,7 @@ describe('OnboardingScreen', () => {
     expect(order).toEqual(['generate', 'seed', 'profile']);
     expect(h.tpl.generatePlan).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa' });
     expect(h.plans.seedGeneratedPlan).toHaveBeenCalledWith('u1', [{ dia: 'Seg' }]);
-    expect(h.auth.updateProfile).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', esporte: 'musculacao' });
+    expect(h.auth.updateProfile).toHaveBeenCalledWith({ nome: 'Ana', sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', esporte: 'musculacao' });
   });
 
   it('erro ao gerar o plano mostra mensagem e toast, e não salva o perfil', async () => {

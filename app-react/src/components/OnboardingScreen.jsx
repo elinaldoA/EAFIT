@@ -5,7 +5,7 @@ import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
-import { heightToCm, bodyErrors } from '../lib/profileValidation';
+import { heightToCm, bodyErrors, cleanName, NAME_MAX } from '../lib/profileValidation';
 import { invalidProps, focusFirstError } from '../lib/fieldErrors';
 import FieldError from './FieldError';
 import SportPicker from './SportPicker';
@@ -15,11 +15,21 @@ import { preferredSport, clearSportPref } from '../lib/sportPreference';
 import { t } from '../lib/i18n';
 import Wordmark from './Wordmark';
 // Na ordem da tela: o foco vai para o primeiro com erro.
-const FIELD_IDS = { sexo: 'onbSexo', idade: 'onbIdade', peso: 'onbPeso', altura: 'onbAltura' };
+const FIELD_IDS = { nome: 'onbNome', sexo: 'onbSexo', idade: 'onbIdade', peso: 'onbPeso', altura: 'onbAltura' };
+
+// Quem entra com o Google já traz o nome na conta: o campo vem preenchido com o
+// primeiro nome (dá para trocar). Por e-mail, vem vazio.
+function firstNameFromAccount(md = {}) {
+  const raw = md.nome || md.given_name || md.full_name || md.name || '';
+  return cleanName(raw).split(' ')[0] || '';
+}
 
 export default function OnboardingScreen() {
   const { user, updateProfile } = useAuth();
   const toast = useToast();
+  // Como o app chama a pessoa (topo das telas, treinador por voz, e-mails); sem
+  // ele, o topo mostrava o e-mail.
+  const [nome, setNome] = useState(() => firstNameFromAccount(user?.user_metadata));
   const [sexo, setSexo] = useState('');
   const [idade, setIdade] = useState('');
   const [peso, setPeso] = useState('');
@@ -54,10 +64,10 @@ export default function OnboardingScreen() {
   // Métrica do painel: até onde cada pessoa chega no preenchimento.
   useEffect(() => { trackEvent('onboarding', 'view'); }, []);
   useEffect(() => {
-    Object.entries({ sexo, idade, peso, altura }).forEach(([field, value]) => {
+    Object.entries({ nome, sexo, idade, peso, altura }).forEach(([field, value]) => {
       if (value) trackEvent('onboarding', field);
     });
-  }, [sexo, idade, peso, altura]);
+  }, [nome, sexo, idade, peso, altura]);
 
   async function handleSubmit() {
     trackEvent('onboarding', 'submit');
@@ -74,7 +84,11 @@ export default function OnboardingScreen() {
       return;
     }
 
-    const found = bodyErrors({ sexo, idade, peso, altura: alturaCm }, { onboarding: true });
+    const nomeLimpo = cleanName(nome);
+    const found = {
+      ...(!nomeLimpo && { nome: t('Diga como podemos te chamar.') }),
+      ...bodyErrors({ sexo, idade, peso, altura: alturaCm }, { onboarding: true }),
+    };
     const fields = Object.keys(found);
     setErrors(found);
     if (fields.length) {
@@ -99,7 +113,7 @@ export default function OnboardingScreen() {
         seeded.current = true;
       }
 
-      const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, esporte });
+      const { error } = await updateProfile({ nome: nomeLimpo, sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, esporte });
       if (error) throw error;
       trackEvent('onboarding', 'done');
       clearSportPref();
@@ -123,6 +137,16 @@ export default function OnboardingScreen() {
         </div>
         <div className="auth-form">
           <SportPicker id="onbSport" value={esporte} onChange={pickSport} modules={sports} />
+          <div className="profile-field">
+            <label className="profile-field__label" htmlFor={FIELD_IDS.nome}>{t('Como podemos te chamar?')}</label>
+            <input
+              type="text" id={FIELD_IDS.nome} className="input" placeholder={t('Seu primeiro nome')}
+              autoComplete="given-name" autoCapitalize="words" maxLength={NAME_MAX}
+              value={nome} {...invalidProps(FIELD_IDS.nome, errors.nome)}
+              onChange={e => { setNome(e.target.value); clearError('nome'); }}
+            />
+            <FieldError id={FIELD_IDS.nome} message={errors.nome} />
+          </div>
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbSexo">{t('Sexo biológico')}</label>
             <select id="onbSexo" className="input" value={sexo} {...invalidProps(FIELD_IDS.sexo, errors.sexo)} onChange={e => { setSexo(e.target.value); clearError('sexo'); }}>

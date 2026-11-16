@@ -125,7 +125,7 @@ describe('buildUserEvents', () => {
 
   it('monta o onboarding na ordem do formulário, com os erros', () => {
     const out = buildUserEvents(rows);
-    expect(out.onboarding.map(s => s.key)).toEqual(['view', 'sexo', 'idade', 'peso', 'altura', 'submit', 'done']);
+    expect(out.onboarding.map(s => s.key)).toEqual(['view', 'nome', 'sexo', 'idade', 'peso', 'altura', 'submit', 'done']);
     expect(out.onboarding.find(s => s.key === 'done')).toMatchObject({ count: 4, pctOfStart: 50 });
     expect(out.onboardingErrors).toEqual([{ key: 'erro_peso', label: 'Peso inválido', users: 2 }]);
   });
