@@ -39,7 +39,7 @@ function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSucc
         ) : (
           <button type="button" className="btn btn--outline btn--sm" onClick={onSetActive}>{t('Ativar')}</button>
         )}
-        <button type="button" className="plan-row__del" onClick={onDelete} aria-label={t('Excluir plano')}>✕</button>
+        <button type="button" className="plan-row__del" onClick={onDelete} aria-label={t('Excluir plano')} title={t('Excluir plano')}>🗑️</button>
       </div>
 
       {plan.end_date && (

@@ -181,7 +181,7 @@ export default function FoodSearch({ onAdd }) {
               </small>
             )}
           </p>
-          <button type="submit" className="btn btn--sm custom-food__submit" disabled={!(grams > 0)}>{t('Adicionar')}</button>
+          <button type="submit" className="btn btn--primary btn--sm custom-food__submit" disabled={!(grams > 0)}>{t('Adicionar')}</button>
           <button type="button" className="link-btn" onClick={() => setPicked(null)}>{t('Cancelar')}</button>
         </form>
       )}

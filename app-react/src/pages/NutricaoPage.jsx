@@ -458,7 +458,7 @@ export default function NutricaoPage({ active }) {
                 {myFoods.length >= MAX_CUSTOM_FOODS ? t('Limite de {n} atalhos atingido', { n: MAX_CUSTOM_FOODS }) : t('Salvar como atalho')}
               </label>
             )}
-            <button type="submit" className="btn btn--sm custom-food__submit">{editingEntry || editingId ? t('Salvar') : t('Adicionar')}</button>
+            <button type="submit" className="btn btn--primary btn--sm custom-food__submit">{editingEntry || editingId ? t('Salvar') : t('Adicionar')}</button>
           </form>
         )}
         {(allFoods.length > VISIBLE_FOODS || myFoods.length > 0) && (

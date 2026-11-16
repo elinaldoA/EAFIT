@@ -53,7 +53,7 @@ export default function DayFixForm({ todayTotals, logs, onSaveToday, onSavePast 
           <input type="number" inputMode="numeric" min="0" max="5000" value={fix[k]} onChange={e => setFix(c => ({ ...c, [k]: e.target.value }))} />
         </label>
       ))}
-      <button type="submit" className="btn btn--sm custom-food__submit" disabled={!fixDate}>{t('Salvar o dia')}</button>
+      <button type="submit" className="btn btn--primary btn--sm custom-food__submit" disabled={!fixDate}>{t('Salvar o dia')}</button>
     </form>
   );
 }
