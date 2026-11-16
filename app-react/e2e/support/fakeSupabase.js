@@ -174,7 +174,7 @@ export class FakeSupabase {
     };
     const wantsBody = prefer.includes('return=representation');
 
-    if (method === 'GET') {
+    if (method === 'GET' || method === 'HEAD') {
       let list = rows.filter(r => where(r) && joinedOk(r));
       const order = params.get('order');
       if (order) {
@@ -183,6 +183,8 @@ export class FakeSupabase {
       }
       if (params.get('limit')) list = list.slice(0, Number(params.get('limit')));
       if (!(table in this.tables)) this.unhandled.push(`GET ${table}`);
+      // HEAD (select com { count, head: true }): só a contagem, no content-range.
+      if (method === 'HEAD') return { status: 200, headers: { 'content-range': `*/${list.length}` } };
       return reply(list.map(shape));
     }
 
