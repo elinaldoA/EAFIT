@@ -1,0 +1,47 @@
+name: E2E (navegador)
+
+# Testes no navegador real (Playwright) do app-react. Fica separado do deploy:
+# não trava a publicação, mas avisa quando o fluxo offline do treino quebra.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app-react/**'
+      - '.github/workflows/e2e.yml'
+  pull_request:
+    paths:
+      - 'app-react/**'
+      - '.github/workflows/e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: app-react
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-react/package-lock.json
+
+      - run: npm ci
+
+      - name: Instalar o Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Testes no navegador
+        run: npm run e2e
+
+      - name: Guardar o relatório de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: app-react/test-results
+          retention-days: 7

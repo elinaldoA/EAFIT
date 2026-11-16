@@ -14,3 +14,12 @@ export const db = createClient(
     },
   }
 );
+
+// O postgrest-js repete sozinho as leituras (GET) que falham na rede, esperando
+// 1 s, 2 s e 4 s: sem sinal cada consulta levava ~7 s para falhar (com o prazo
+// de lib/fetchTimeout.js, mais de 40 s). Abrir o app sem rede demorava ~15 s
+// de "Carregando dados salvos…" antes de cair no plano guardado no aparelho.
+// O app já trata a falha (plano em cache, fila de pendências, "Tentar agora"),
+// então falhar logo é melhor. O supabase-js não repassa essa opção ao criar o
+// cliente (campo `rest` é interno), por isso o ajuste é feito aqui.
+if (db.rest) db.rest.retry = false;

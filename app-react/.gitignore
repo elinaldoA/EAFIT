@@ -33,3 +33,8 @@ public/landing/sitemap.xml
 
 # OCR da importação de treinos: copiado de node_modules por scripts/copy-ocr.mjs
 public/ocr/
+
+# Testes no navegador (Playwright)
+dist-e2e
+test-results
+playwright-report

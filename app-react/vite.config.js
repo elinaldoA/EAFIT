@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite'
+import { configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/app/',
   test: {
+    // e2e/ e dist-e2e/ são do Playwright (npm run e2e), não do Vitest.
+    exclude: [...configDefaults.exclude, 'e2e/**', 'dist-e2e/**'],
     setupFiles: ['./src/test/setupTests.js'],
     // Runner do CI lento com ~200 arquivos em paralelo: 5s (padrão) estoura em testes com cadeias de await.
     testTimeout: 20000,
