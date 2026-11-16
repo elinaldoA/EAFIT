@@ -195,8 +195,8 @@ describe('AppSettings', () => {
     render(<AppSettings />);
     await screen.findByText('Recursos do app');
     expect(screen.getAllByText('Desligado').length).toBe(1); // a flag
-    expect(screen.getAllByText('Desligado para todos').length).toBe(1); // o módulo de corrida
-    const flagBoxes = screen.getAllByRole('checkbox').slice(3);
+    expect(screen.getByText(/Desligado para todos/)).toBeTruthy(); // o módulo de corrida
+    const flagBoxes = screen.getAllByRole('checkbox').slice(2);
     fireEvent.click(flagBoxes[0]);
     await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('flags', { feedback: false, fotos_progresso: false }, 'adm1'));
   });
@@ -234,6 +234,38 @@ describe('AppSettings → corrida só para algumas contas', () => {
   });
 });
 
+describe('AppSettings → ligar para todos', () => {
+  const settings = enabled => ({
+    maintenance: { enabled: false, message: '' },
+    banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 2 },
+    flags: {}, moved: { enabled: false, url: '' }, season: { enabled: false, periods: [] },
+    minVersion: { version: '', mode: 'warn', message: '' }, modules: { enabled },
+  });
+  beforeEach(() => {
+    st.fetchModuleStats.mockResolvedValue({});
+    st.fetchModuleBetaUsers.mockResolvedValue([]);
+    st.saveSetting.mockResolvedValue();
+  });
+
+  it('cancelar a confirmação não liga para todos', async () => {
+    st.fetchSettings.mockResolvedValue(settings([]));
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<AppSettings />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Ligar para todos' }));
+    expect(confirm).toHaveBeenCalled();
+    expect(st.saveSetting).not.toHaveBeenCalled();
+    confirm.mockRestore();
+  });
+
+  it('com o módulo ligado, o botão desliga sem pedir confirmação', async () => {
+    st.fetchSettings.mockResolvedValue(settings(['corrida']));
+    render(<AppSettings />);
+    expect(await screen.findByText(/Liberado para todos/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Desligar para todos' }));
+    await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('modules', { enabled: [] }, 'adm1'));
+  });
+});
+
 describe('AppSettings → módulos de esporte', () => {
   it('libera a corrida e mostra os números do módulo', async () => {
     st.fetchSettings.mockResolvedValue({
@@ -247,8 +279,11 @@ describe('AppSettings → módulos de esporte', () => {
     render(<AppSettings />);
     await screen.findByText('Módulos de esporte');
     expect(await screen.findByText(/4 contas no módulo · 3 com programa/)).toBeTruthy();
-    fireEvent.click(screen.getAllByRole('checkbox')[2]);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Ligar para todos' }));
+    expect(confirm).toHaveBeenCalled();
     await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('modules', { enabled: ['corrida'] }, 'adm1'));
+    confirm.mockRestore();
   });
 });
 

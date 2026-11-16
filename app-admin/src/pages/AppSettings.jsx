@@ -213,7 +213,7 @@ function BetaUsers({ module }) {
   return (
     <div className="stack" style={{ gap: 6, marginTop: 8 }}>
       <strong>Liberar só para algumas contas</strong>
-      <div className="user-detail__meta">Funciona mesmo com o módulo desligado para todos: quem estiver na lista vê o seletor de esporte. Ligar o interruptor acima libera para todo mundo.</div>
+      <div className="user-detail__meta">Funciona mesmo com o módulo desligado para todos: quem estiver na lista vê o seletor de esporte. O botão "Ligar para todos" acima libera para todo mundo.</div>
       <input
         className="input" type="search" placeholder="Buscar conta por nome ou e-mail (3 letras ou mais)"
         value={term} onChange={e => setTerm(e.target.value)} aria-label="Buscar conta para liberar o módulo"
@@ -284,10 +284,17 @@ function ModulesCard({ saved, adminId, onSaved }) {
                 </div>
               )}
             </div>
-            <label className="switch-row">
-              <input type="checkbox" checked={on} disabled={busyKey === m.key} onChange={e => toggle(m.key, e.target.checked)} />
-              <span>{on ? 'Liberado para todos' : 'Desligado para todos'}</span>
-            </label>
+            <div className="stack" style={{ gap: 4, alignItems: 'flex-end' }}>
+              <span className="user-detail__meta">{on ? '🟢 Liberado para todos' : '⚪ Desligado para todos'}</span>
+              {on ? (
+                <button className="btn btn--ghost btn--small" disabled={busyKey === m.key} onClick={() => toggle(m.key, false)}>Desligar para todos</button>
+              ) : (
+                <button
+                  className="btn btn--primary btn--small" disabled={busyKey === m.key}
+                  onClick={() => { if (window.confirm(`Ligar "${m.label}" para todos? Qualquer pessoa poderá escolher o módulo no cadastro e no Perfil.`)) toggle(m.key, true); }}
+                >Ligar para todos</button>
+              )}
+            </div>
           </div>
         );
       })}
