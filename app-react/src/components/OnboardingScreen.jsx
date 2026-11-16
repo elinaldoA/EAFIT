@@ -6,6 +6,7 @@ import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
 import { heightToCm, bodyErrors, cleanName, NAME_MAX } from '../lib/profileValidation';
+import { firstNameFromAccount } from '../lib/namePrompt';
 import { invalidProps, focusFirstError } from '../lib/fieldErrors';
 import FieldError from './FieldError';
 import SportPicker from './SportPicker';
@@ -16,13 +17,6 @@ import { t } from '../lib/i18n';
 import Wordmark from './Wordmark';
 // Na ordem da tela: o foco vai para o primeiro com erro.
 const FIELD_IDS = { nome: 'onbNome', sexo: 'onbSexo', idade: 'onbIdade', peso: 'onbPeso', altura: 'onbAltura' };
-
-// Quem entra com o Google já traz o nome na conta: o campo vem preenchido com o
-// primeiro nome (dá para trocar). Por e-mail, vem vazio.
-function firstNameFromAccount(md = {}) {
-  const raw = md.nome || md.given_name || md.full_name || md.name || '';
-  return cleanName(raw).split(' ')[0] || '';
-}
 
 export default function OnboardingScreen() {
   const { user, updateProfile } = useAuth();

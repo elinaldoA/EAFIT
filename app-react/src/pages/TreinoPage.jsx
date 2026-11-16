@@ -19,6 +19,7 @@ import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
 import DailyCheckin from '../components/DailyCheckin';
 import FirstSteps from '../components/FirstSteps';
+import NamePrompt from '../components/NamePrompt';
 import { isNewAccount } from '../lib/firstSteps';
 import { pickFirstWorkoutDay } from '../lib/firstWorkout';
 import PersonalMessages from '../components/PersonalMessages';
@@ -174,6 +175,7 @@ export default function TreinoPage() {
       <PauseBanner />
       <PersonalMessages />
       <MyAppointments onlyPending />
+      <NamePrompt />
       <FirstSteps onStartWorkout={startFirst} />
       {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
