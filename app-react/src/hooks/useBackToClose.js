@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-// Faz o botão/gesto "voltar" (Android, navegador) fechar o modal aberto em vez
-// de sair do app. Cada modal empilha uma entrada no histórico ao montar; o
+// Faz o botão/gesto "voltar" (Android, navegador) e a tecla Esc fecharem o
+// modal aberto em vez de sair do app. Cada modal empilha uma entrada no histórico ao montar; o
 // popstate fecha só o modal do topo — com modais aninhados (ex.: RatingModal
 // por cima do WorkoutSummaryModal), um "voltar" fecha um de cada vez.
 //
@@ -25,6 +25,17 @@ function pushEntry(entry) {
   window.history.pushState({ eafitModal: true }, '');
 }
 
+// Esc no teclado (computador, teclado físico) fecha o modal do topo, como o
+// "voltar": a mesma pilha, um de cada vez. Quem já tratou a tecla
+// (preventDefault) não é atropelado.
+function handleKeyDown(e) {
+  if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return;
+  const top = stack[stack.length - 1];
+  if (!top) return;
+  e.preventDefault();
+  top.onCloseRef.current();
+}
+
 function handlePopState() {
   if (ignorePops > 0) {
     ignorePops -= 1;
@@ -42,6 +53,7 @@ export function useBackToClose(onClose) {
   useEffect(() => {
     if (!listening) {
       window.addEventListener('popstate', handlePopState);
+      window.addEventListener('keydown', handleKeyDown);
       listening = true;
     }
     const entry = { onCloseRef, pushed: false };

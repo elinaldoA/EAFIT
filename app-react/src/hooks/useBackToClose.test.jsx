@@ -45,4 +45,35 @@ describe('useBackToClose', () => {
     backSpy.mockRestore();
     await settled;
   });
+  it('Esc fecha só o modal do topo, um de cada vez', async () => {
+    const closeA = vi.fn();
+    const closeB = vi.fn();
+    const a = renderHook(() => useBackToClose(closeA));
+    const b = renderHook(() => useBackToClose(closeB));
+    const esc = () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+    esc();
+    expect(closeB).toHaveBeenCalledTimes(1);
+    expect(closeA).not.toHaveBeenCalled();
+    let settled = nextPopState();
+    b.unmount(); // o modal fecha de verdade: sai da pilha
+    await settled;
+    esc();
+    expect(closeA).toHaveBeenCalledTimes(1);
+    settled = nextPopState();
+    a.unmount();
+    await settled;
+  });
+
+  it('outras teclas e Esc já tratado por outro componente não fecham', async () => {
+    const close = vi.fn();
+    const m = renderHook(() => useBackToClose(close));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }));
+    const handled = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    handled.preventDefault();
+    window.dispatchEvent(handled);
+    expect(close).not.toHaveBeenCalled();
+    const settled = nextPopState();
+    m.unmount();
+    await settled;
+  });
 });
