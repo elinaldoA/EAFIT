@@ -3,7 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 const { st, hl } = vi.hoisted(() => ({
-  st: { fetchSettings: vi.fn(), saveSetting: vi.fn(), fetchModuleStats: vi.fn() },
+  st: {
+    fetchSettings: vi.fn(), saveSetting: vi.fn(), fetchModuleStats: vi.fn(),
+    fetchModuleBetaUsers: vi.fn(), setModuleBeta: vi.fn(), searchBetaCandidates: vi.fn(),
+  },
   hl: { fetchHealth: vi.fn() },
 }));
 
@@ -34,6 +37,9 @@ describe('AppSettings', () => {
   beforeEach(() => {
     st.fetchSettings.mockResolvedValue(base);
     st.saveSetting.mockResolvedValue();
+    st.fetchModuleBetaUsers.mockResolvedValue([]);
+    st.setModuleBeta.mockResolvedValue();
+    st.searchBetaCandidates.mockResolvedValue([]);
     st.fetchModuleStats.mockResolvedValue({
       musculacao: { users: 120, new30: 10, program: 0, runners30: 1, runs30: 2, km30: 8 },
       corrida: { users: 4, new30: 2, program: 3, runners30: 3, runs30: 9, km30: 41.5 },
@@ -188,10 +194,43 @@ describe('AppSettings', () => {
   it('recursos: alterna uma flag preservando as demais', async () => {
     render(<AppSettings />);
     await screen.findByText('Recursos do app');
-    expect(screen.getAllByText('Desligado').length).toBe(2); // a flag e o módulo de corrida
+    expect(screen.getAllByText('Desligado').length).toBe(1); // a flag
+    expect(screen.getAllByText('Desligado para todos').length).toBe(1); // o módulo de corrida
     const flagBoxes = screen.getAllByRole('checkbox').slice(3);
     fireEvent.click(flagBoxes[0]);
     await waitFor(() => expect(st.saveSetting).toHaveBeenCalledWith('flags', { feedback: false, fotos_progresso: false }, 'adm1'));
+  });
+});
+
+describe('AppSettings → corrida só para algumas contas', () => {
+  beforeEach(() => {
+    st.fetchSettings.mockResolvedValue({
+      maintenance: { enabled: false, message: '' },
+      banner: { enabled: false, message: '', level: 'info', linkUrl: '', linkLabel: '', version: 2 },
+      flags: {}, moved: { enabled: false, url: '' }, season: { enabled: false, periods: [] },
+      minVersion: { version: '', mode: 'warn', message: '' }, modules: { enabled: [] },
+    });
+    st.fetchModuleStats.mockResolvedValue({});
+    st.fetchModuleBetaUsers.mockResolvedValue([{ id: 'u9', email: 'ana@x.com', name: 'Ana' }]);
+    st.setModuleBeta.mockResolvedValue();
+    st.searchBetaCandidates.mockResolvedValue([{ id: 'u7', email: 'bia@x.com', name: 'Bia Lima' }]);
+  });
+
+  it('lista quem tem acesso e tira o acesso de uma conta', async () => {
+    render(<AppSettings />);
+    expect(await screen.findByText('1 conta(s) com acesso liberado')).toBeTruthy();
+    expect(screen.getByText('ana@x.com')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Tirar acesso' }));
+    await waitFor(() => expect(st.setModuleBeta).toHaveBeenCalledWith('u9', 'corrida', false));
+  });
+
+  it('busca uma conta e libera o módulo só para ela', async () => {
+    render(<AppSettings />);
+    await screen.findByText('1 conta(s) com acesso liberado');
+    fireEvent.change(screen.getByLabelText('Buscar conta para liberar o módulo'), { target: { value: 'bia' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Liberar' }));
+    await waitFor(() => expect(st.setModuleBeta).toHaveBeenCalledWith('u7', 'corrida', true));
+    expect(st.saveSetting).not.toHaveBeenCalled();
   });
 });
 
