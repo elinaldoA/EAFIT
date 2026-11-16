@@ -32,6 +32,11 @@ beforeEach(() => {
   h.calls = [];
 });
 
+const fullStorage = () => {
+  const real = localStorage;
+  return { getItem: k => real.getItem(k), removeItem: k => real.removeItem(k), setItem: () => { throw new Error('QuotaExceededError'); } };
+};
+
 describe('contas', () => {
   it('ritmo só a partir de 1 km', () => {
     expect(paceSeconds(1800, 5000)).toBe(360);
@@ -123,9 +128,9 @@ describe('banco e fila do aparelho', () => {
   it('sem espaço no aparelho a corrida não é dada como guardada', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     h.result = { data: null, error: new Error('offline') };
-    const setItem = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
+    vi.stubGlobal('localStorage', fullStorage());
     const out = await saveRun('u1', run());
-    setItem.mockRestore();
+    vi.unstubAllGlobals();
     expect(out).toMatchObject({ pending: false, lost: true });
     expect(pendingRuns('u1')).toEqual([]);
   });

@@ -102,10 +102,11 @@ describe('loja no aparelho', () => {
   });
 
   it('avisa quando o aparelho não consegue gravar a corrida', () => {
-    const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('quota'); });
+    const real = localStorage;
+    vi.stubGlobal('localStorage', { getItem: k => real.getItem(k), removeItem: k => real.removeItem(k), setItem: () => { throw new Error('quota'); } });
     setLiveRun(startRun({}, Date.now()));
     expect(isPersistFailing()).toBe(true);
-    spy.mockRestore();
+    vi.unstubAllGlobals();
     setLiveRun(startRun({}, Date.now()));
     expect(isPersistFailing()).toBe(false);
   });
