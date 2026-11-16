@@ -6,7 +6,7 @@ import { todayDate } from '../../data/treinoData';
 import { trackEvent } from '../../lib/tracking';
 import {
   RUN_GOALS, RUN_LEVELS, GOAL_LABEL, sessionTitle, programFromMetadata, programToday,
-  describeSession, isRunSession, mondayOf, goalWeeks,
+  describeSession, isRunSession, mondayOf, goalWeeks, missedWeek, postponeStart,
 } from './program';
 import { suggestedPace } from './runReadings';
 import RunRace from './RunRace';
@@ -185,6 +185,8 @@ export default function RunHomePage() {
   const program = programFromMetadata(md);
   const today = todayDate();
   const [runs, setRuns] = useState([]);
+  const [runsLoaded, setRunsLoaded] = useState(false);
+  const [missedHidden, setMissedHidden] = useState(false);
   const [editing, setEditing] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
@@ -203,6 +205,7 @@ export default function RunHomePage() {
     try {
       await flushPendingRuns(user.id);
       setRuns(await fetchRuns(user.id));
+      setRunsLoaded(true);
     } catch (err) {
       console.error('RunHomePage:', err);
     }
@@ -225,6 +228,14 @@ export default function RunHomePage() {
     toast(t('✅ Programa {v1} montado', { v1: GOAL_LABEL[goal] }));
   }
 
+  async function repeatWeek() {
+    setBusy(true);
+    const { error } = await updateProfile({ runStart: postponeStart(program.start) });
+    setBusy(false);
+    if (error) return toast(t('⚠️ Não foi possível salvar — tente novamente'));
+    toast(t('Programa adiado em uma semana.'));
+  }
+
   async function stopProgram() {
     setBusy(true);
     const { error } = await updateProfile({ runGoal: null, runStart: null });
@@ -241,6 +252,7 @@ export default function RunHomePage() {
   const weekMeters = weekRuns.reduce((sum, r) => sum + r.distance_m, 0);
   const doneToday = ranOn.has(today);
   const planned = !!session && isRunSession(session);
+  const missed = runsLoaded && program && program.start ? missedWeek(program, runs, today) : null;
   const pace = planned ? suggestedPace(session, runs, today) : null;
 
   // Correr de novo numa rota já feita: o fantasma é a melhor corrida dela.
@@ -327,6 +339,19 @@ export default function RunHomePage() {
               ? (where.finished ? t('Programa concluído 🎉 · semanas de manutenção') : t('Programa: {v1}', { v1: GOAL_LABEL[program.goal] }))
               : t('{v1} · semana {v2} de {v3}', { v1: GOAL_LABEL[program.goal], v2: where.week, v3: where.weeks })}
           </div>
+          {missed && !missedHidden && (
+            <div className="dash-card run-missed" role="status">
+              <p>
+                {missed.level === 'skipped'
+                  ? t('Você não correu na semana {v1} do programa. Quer repetir essa semana antes de seguir?', { v1: missed.week })
+                  : t('Você fez {v1} de {v2} treinos na semana {v3} do programa. Quer repetir essa semana antes de seguir?', { v1: missed.done, v2: missed.planned, v3: missed.week })}
+              </p>
+              <div className="run-setup__actions">
+                <button type="button" className="btn btn--primary btn--sm" onClick={repeatWeek} disabled={busy}>{t('Repetir a semana')}</button>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setMissedHidden(true)}>{t('Seguir assim')}</button>
+              </div>
+            </div>
+          )}
           <ol className="run-week">
             {where.days.map((d, i) => (
               <li key={dates[i]} className={`run-week__day${i === where.dayIndex ? ' run-week__day--today' : ''}${ranOn.has(dates[i]) ? ' run-week__day--done' : ''}`}>

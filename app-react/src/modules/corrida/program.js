@@ -136,6 +136,38 @@ export function programToday(program, today) {
   return { week, weeks, dayIndex, days: built.weeks[week - 1].days, finished: false, maintenance: false };
 }
 
+// Semana anterior do programa quase sem corrida: { week, planned, done, level }
+// ou null. planned = treinos de corrida previstos; done = dias com corrida;
+// level 'skipped' (nenhum) ou 'partial' (menos da metade). Não avisa na
+// primeira semana, na manutenção, se a semana anterior tinha menos de 2 treinos
+// ou se a pessoa já voltou a correr nesta semana.
+export function missedWeek(program, runs, today) {
+  const where = programToday(program, today);
+  if (where.maintenance || where.week < 2) return null;
+  const prevWeek = where.week - 1;
+  const planned = buildRunProgram(program).weeks[prevWeek - 1].days.filter(isRunSession).length;
+  if (planned < 2) return null;
+  const from = toDateStr(addDaysTo(parseLocalDate(program.start), (prevWeek - 1) * 7));
+  const thisMonday = toDateStr(addDaysTo(parseLocalDate(program.start), (where.week - 1) * 7));
+  const lastSunday = toDateStr(addDaysTo(parseLocalDate(thisMonday), -1));
+  const dates = date => (date >= from && date <= lastSunday);
+  const done = new Set(runs.filter(r => dates(r.run_date)).map(r => r.run_date)).size;
+  const backNow = runs.some(r => r.run_date >= thisMonday && r.run_date <= today);
+  if (backNow || done * 2 >= planned) return null;
+  return { week: prevWeek, planned, done, level: done === 0 ? 'skipped' : 'partial' };
+}
+
+// Programa começando uma semana depois (repetir a semana perdida).
+export function postponeStart(start) {
+  return toDateStr(addDaysTo(parseLocalDate(start), 7));
+}
+
+function addDaysTo(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
 export const SESSION_TITLE = {
   leve: t('Corrida leve'),
   longao: t('Longão'),

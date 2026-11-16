@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildRunProgram, effectiveGoal, goalWeeks, programFromMetadata, programToday, mondayOf,
-  maintenanceWeek, describeSession, isRunSession,
+  maintenanceWeek, describeSession, isRunSession, missedWeek, postponeStart,
 } from './program';
 
 describe('buildRunProgram', () => {
@@ -113,5 +113,32 @@ describe('dia da prova no programa', () => {
   it('lê a data da prova da conta', () => {
     const p = programFromMetadata({ runGoal: '5k', runStart: '2026-11-02', runRace: { date: '2026-12-27', km: 5 } });
     expect(p.raceDate).toBe('2026-12-27');
+  });
+});
+
+describe('semana perdida', () => {
+  // Segunda 2/11/2026; semana 2 começa em 9/11. Intermediário: 4 treinos de corrida por semana.
+  const program = { goal: '10k', nivel: 'intermediario', start: '2026-11-02', raceDate: null };
+  const ran = run_date => ({ run_date });
+
+  it('sem corrida na semana anterior avisa', () => {
+    expect(missedWeek(program, [], '2026-11-10')).toMatchObject({ week: 1, planned: 4, done: 0, level: 'skipped' });
+  });
+
+  it('menos da metade dos treinos é parcial; metade ou mais não avisa', () => {
+    expect(missedWeek(program, [ran('2026-11-03')], '2026-11-10')).toMatchObject({ done: 1, level: 'partial' });
+    expect(missedWeek(program, [ran('2026-11-03'), ran('2026-11-05')], '2026-11-10')).toBeNull();
+  });
+
+  it('não avisa na primeira semana, se já voltou a correr ou na manutenção', () => {
+    expect(missedWeek(program, [], '2026-11-04')).toBeNull();
+    expect(missedWeek(program, [ran('2026-11-10')], '2026-11-10')).toBeNull();
+    expect(missedWeek(program, [], '2027-03-01')).toBeNull();
+    expect(missedWeek({ ...program, goal: 'livre', start: null }, [], '2026-11-10')).toBeNull();
+  });
+
+  it('repetir a semana empurra o início em 7 dias', () => {
+    expect(postponeStart('2026-11-02')).toBe('2026-11-09');
+    expect(postponeStart('2026-12-28')).toBe('2027-01-04');
   });
 });
