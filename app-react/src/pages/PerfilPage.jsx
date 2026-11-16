@@ -19,6 +19,7 @@ import CollapsibleCard from '../components/CollapsibleCard';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
+import { focusFirstError } from '../lib/fieldErrors';
 import { imcInfo, metaProgress } from '../lib/profileCalc';
 import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSection';
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
@@ -32,7 +33,7 @@ import { RunGoalSection, RunPrefsSection, RunShortcuts } from '../modules/corrid
 import { weeklyKmGoal } from '../modules/corrida/runProfileStats';
 import { decimal } from '../modules/corrida/runs';
 
-import { validateBody, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
+import { bodyErrors, BODY_FIELD_IDS, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
 import { t, locale } from '../lib/i18n';
 export default function PerfilPage({ active }) {
   const { user, updateProfile } = useAuth();
@@ -60,6 +61,17 @@ export default function PerfilPage({ active }) {
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  // Erros do "Meu corpo", mostrados junto de cada campo; mexer no campo apaga o dele.
+  const [bodyErrs, setBodyErrs] = useState({});
+  const clearBodyError = field => setBodyErrs(e => (e[field] ? { ...e, [field]: undefined } : e));
+  // Marca os campos com problema, avisa e leva ao primeiro. Devolve se havia erro.
+  function showBodyErrors(found) {
+    setBodyErrs(found);
+    if (!Object.keys(found).length) return false;
+    toast(t('⚠️ Corrija os campos marcados em Meu corpo.'));
+    focusFirstError(found, BODY_FIELD_IDS);
+    return true;
+  }
   const { module: sport, available: sports } = useSportModule();
   // Módulo sem plano de musculação (corrida): o Perfil troca os cartões de
   // treino, nutrição e peso pelos do esporte.
@@ -102,8 +114,7 @@ export default function PerfilPage({ active }) {
   }
 
   async function handleSave() {
-    const invalid = validateBody({ sexo, idade, peso, altura, pesoAlvo });
-    if (invalid) return toast(`⚠️ ${invalid.message}`);
+    if (showBodyErrors(bodyErrors({ sexo, idade, peso, altura, pesoAlvo }))) return;
 
     // O peso só muda o treino pela faixa de IMC (applyImcAdjustment). Como
     // generatePlan sorteia os exercícios da biblioteca, regenerar a cada
@@ -155,10 +166,11 @@ export default function PerfilPage({ active }) {
 
   async function handleRegeneratePlan() {
     if (!user || regenerating) return;
-    const pesoNum = parseFloat(peso);
-    const alturaNum = parseFloat(altura);
-    if (!pesoNum || !alturaNum) {
-      toast(t('⚠️ Preencha peso e altura antes de gerar um novo treino'));
+    // O treino sai do peso e da altura: os dois têm que valer (antes, só preenchidos
+    // bastava, e peso 850 gerava um treino com o IMC errado).
+    const { peso: pesoErr, altura: alturaErr } = bodyErrors({ peso, altura });
+    if (pesoErr || alturaErr) {
+      showBodyErrors({ ...(pesoErr && { peso: pesoErr }), ...(alturaErr && { altura: alturaErr }) });
       return;
     }
     if (planByTrainer && !window.confirm(t('Seu plano atual foi montado pelo seu personal. Gerar um novo treino automático vai substituí-lo (ele continua salvo em "Editar treino"). Continuar?'))) return;
@@ -245,6 +257,7 @@ export default function PerfilPage({ active }) {
             progress={progress} imc={imc} onSave={handleSave}
             regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}
             showTraining={usesWorkouts}
+            errors={bodyErrs} onFieldChange={clearBodyError}
           />
         </CollapsibleCard>
 

@@ -292,7 +292,7 @@ export default {
   'Informe uma idade válida (14–100).': 'Enter a valid age (14–100).',
   'Informe um peso entre 30 e 300 kg.': 'Enter a weight between 30 and 300 kg.',
   'Informe a altura entre 100 e 250 cm.': 'Enter a height between 100 and 250 cm.',
-  'Informe um peso alvo válido (kg).': 'Enter a valid target weight (kg).',
+  'Informe um peso alvo entre 30 e 300 kg.': 'Enter a target weight between 30 and 300 kg.',
   '⚠️ Escolha de 1 a 7 treinos por semana.': '⚠️ Choose 1 to 7 workouts per week.',
   '⚠️ Meta de água entre 0,5 e 10 L.': '⚠️ Water goal must be between 0.5 and 10 L.',
   'Senha: máximo {MAX_PASSWORD} caracteres.': 'Password: at most {MAX_PASSWORD} characters.',

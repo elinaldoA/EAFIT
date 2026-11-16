@@ -428,9 +428,6 @@ export default {
   'Confirmar': 'Confirm',
 
   // Onboarding
-  'Preencha sexo e uma idade válida (14–100).': 'Select your sex and enter a valid age (14–100).',
-  'Informe um peso válido (kg).': 'Enter a valid weight (kg).',
-  'Informe uma altura válida (cm).': 'Enter a valid height (cm).',
   '⚠️ Não foi possível gerar seu plano — tente novamente.': '⚠️ Could not generate your plan — try again.',
   '⚠️ Erro ao criar seu plano personalizado': '⚠️ Error creating your personalized plan',
   'Vamos montar seu treino personalizado': "Let's build your personalized workout",

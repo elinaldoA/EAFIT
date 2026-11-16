@@ -1,45 +1,58 @@
 import { t, locale } from '../lib/i18n';
-import { heightToCm } from '../lib/profileValidation';
+import { heightToCm, BODY_FIELD_IDS } from '../lib/profileValidation';
+import { invalidProps } from '../lib/fieldErrors';
+import FieldError from './FieldError';
+
+const ID = BODY_FIELD_IDS;
+
 export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
   meta, setMeta, nivel, setNivel, local, setLocal, pesoAlvo, setPesoAlvo,
   progress, imc, onSave, regenerating, onRegeneratePlan, showTraining = true,
+  errors = {}, onFieldChange = () => {},
 }) {
   // showTraining false (módulo sem plano de musculação): só os dados do corpo.
+  // errors: { campo: mensagem } da última tentativa de salvar; mexer no campo
+  // avisa o Perfil (onFieldChange) para apagar o erro dele.
+  const change = (field, set) => e => { set(e.target.value); onFieldChange(field); };
   return (
     <>
       <div className="profile-section__fields">
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileSexo">{t('Sexo biológico')}</label>
-          <select id="profileSexo" className="input input--sm" value={sexo} onChange={e => setSexo(e.target.value)}>
+          <select id={ID.sexo} className="input input--sm" value={sexo} {...invalidProps(ID.sexo, errors.sexo)} onChange={change('sexo', setSexo)}>
             <option value="" disabled>{t('Selecione')}</option>
             <option value="M">{t('Masculino')}</option>
             <option value="F">{t('Feminino')}</option>
           </select>
+          <FieldError id={ID.sexo} message={errors.sexo} />
         </div>
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileIdade">{t('Idade')}</label>
           <input
-            type="number" id="profileIdade" className="input input--sm" placeholder={t('Ex: 28')}
-            min="14" max="100" value={idade} onChange={e => setIdade(e.target.value)}
+            type="number" id={ID.idade} className="input input--sm" placeholder={t('Ex: 28')}
+            min="14" max="100" value={idade} {...invalidProps(ID.idade, errors.idade)} onChange={change('idade', setIdade)}
           />
+          <FieldError id={ID.idade} message={errors.idade} />
         </div>
       </div>
       <div className="profile-section__fields">
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profilePeso">{t('Peso (kg)')}</label>
           <input
-            type="number" id="profilePeso" className="input input--sm" placeholder={t('Ex: 85')}
-            min="30" max="300" step="0.1" value={peso} onChange={e => setPeso(e.target.value)}
+            type="number" id={ID.peso} className="input input--sm" placeholder={t('Ex: 85')}
+            min="30" max="300" step="0.1" value={peso} {...invalidProps(ID.peso, errors.peso)} onChange={change('peso', setPeso)}
           />
+          <FieldError id={ID.peso} message={errors.peso} />
         </div>
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileAltura">{t('Altura (cm)')}</label>
           <input
-            type="number" id="profileAltura" className="input input--sm" placeholder={t('Ex: 178')}
-            min="100" max="250" value={altura} onChange={e => setAltura(e.target.value)}
+            type="number" id={ID.altura} className="input input--sm" placeholder={t('Ex: 178')}
+            min="100" max="250" value={altura} {...invalidProps(ID.altura, errors.altura)} onChange={change('altura', setAltura)}
             onBlur={e => setAltura(heightToCm(e.target.value))}
           />
+          <FieldError id={ID.altura} message={errors.altura} />
         </div>
       </div>
       {showTraining && (
@@ -78,9 +91,10 @@ export default function ProfileBodySection({
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="profilePesoAlvo">{t('Peso alvo (kg)')}</label>
         <input
-          type="number" id="profilePesoAlvo" className="input input--sm" placeholder={t('Ex: 80')}
-          min="30" max="300" step="0.1" value={pesoAlvo} onChange={e => setPesoAlvo(e.target.value)}
+          type="number" id={ID.pesoAlvo} className="input input--sm" placeholder={t('Ex: 80')}
+          min="30" max="300" step="0.1" value={pesoAlvo} {...invalidProps(ID.pesoAlvo, errors.pesoAlvo)} onChange={change('pesoAlvo', setPesoAlvo)}
         />
+        <FieldError id={ID.pesoAlvo} message={errors.pesoAlvo} />
       </div>
       {progress && (
         <div className="progress-card">

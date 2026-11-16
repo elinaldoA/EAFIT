@@ -1,19 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { heightToCm, validateBody, bodyErrors, cleanName, validWeeklyGoal, validWaterGoal } from './profileValidation';
+import { heightToCm, bodyErrors, cleanName, validWeeklyGoal, validWaterGoal } from './profileValidation';
 
 const ok = { sexo: 'M', idade: '30', peso: '80', altura: '180' };
 
-describe('validateBody', () => {
-  it('dados válidos passam', () => {
-    expect(validateBody(ok)).toBeNull();
-    expect(validateBody(ok, { onboarding: true })).toBeNull();
-    expect(validateBody({ ...ok, peso: '80,5', pesoAlvo: '75' })).toBeNull();
-  });
-
-  it('onboarding exige sexo e idade; o Perfil aceita vazios', () => {
-    expect(validateBody({ ...ok, sexo: '' }, { onboarding: true })?.field).toBe('idade');
-    expect(validateBody({ ...ok, idade: '' }, { onboarding: true })?.field).toBe('idade');
-    expect(validateBody({ ...ok, sexo: '', idade: '' })).toBeNull();
+describe('bodyErrors — cada regra', () => {
+  it('dados válidos passam, com vírgula decimal e peso alvo', () => {
+    expect(bodyErrors(ok)).toEqual({});
+    expect(bodyErrors(ok, { onboarding: true })).toEqual({});
+    expect(bodyErrors({ ...ok, peso: '80,5', pesoAlvo: '75' })).toEqual({});
   });
 
   it.each([
@@ -26,7 +20,7 @@ describe('validateBody', () => {
     [{ altura: '' }, 'altura'],
     [{ pesoAlvo: '5' }, 'pesoAlvo'],
   ])('recusa %j', (patch, field) => {
-    expect(validateBody({ ...ok, ...patch })?.field).toBe(field);
+    expect(Object.keys(bodyErrors({ ...ok, ...patch }))).toEqual([field]);
   });
 });
 
@@ -65,7 +59,7 @@ describe('heightToCm', () => {
   });
 
   it('o resultado passa na validação do cadastro', () => {
-    expect(validateBody({ sexo: 'M', idade: '30', peso: '80', altura: heightToCm('1,78') }, { onboarding: true })).toBeNull();
+    expect(bodyErrors({ sexo: 'M', idade: '30', peso: '80', altura: heightToCm('1,78') }, { onboarding: true })).toEqual({});
   });
 });
 
@@ -81,7 +75,7 @@ describe('bodyErrors', () => {
     expect(bodyErrors({ ...ok, sexo: '', idade: '' })).toEqual({});
     expect(Object.keys(bodyErrors({ ...ok, sexo: '', idade: '' }, { onboarding: true }))).toEqual(['sexo', 'idade']);
   });
-  it('aceita vírgula decimal, como o validateBody', () => {
+  it('aceita vírgula decimal', () => {
     expect(bodyErrors({ ...ok, peso: '80,5' }, { onboarding: true })).toEqual({});
   });
 });

@@ -162,6 +162,18 @@ describe('ProfileBodySection', () => {
     expect(screen.queryByText(/Gerar novo treino/)).toBeNull();
   });
 
+  it('mostra cada erro junto do seu campo e avisa quando o campo muda', () => {
+    const onFieldChange = vi.fn();
+    render(<ProfileBodySection {...base()} errors={{ peso: 'Informe um peso entre 30 e 300 kg.', pesoAlvo: 'Informe um peso alvo entre 30 e 300 kg.' }} onFieldChange={onFieldChange} />);
+    const peso = screen.getByLabelText('Peso (kg)');
+    expect(peso.getAttribute('aria-invalid')).toBe('true');
+    expect(document.getElementById(peso.getAttribute('aria-describedby')).textContent).toBe('Informe um peso entre 30 e 300 kg.');
+    expect(screen.getByLabelText('Peso alvo (kg)').getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByLabelText('Altura (cm)').getAttribute('aria-invalid')).toBeNull();
+    fireEvent.change(peso, { target: { value: '81' } });
+    expect(onFieldChange).toHaveBeenCalledWith('peso');
+  });
+
   it('propaga alterações de cada campo', () => {
     const p = base();
     render(<ProfileBodySection {...p} />);

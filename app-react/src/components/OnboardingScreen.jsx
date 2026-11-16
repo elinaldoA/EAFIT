@@ -6,24 +6,16 @@ import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
 import { heightToCm, bodyErrors } from '../lib/profileValidation';
+import { invalidProps, focusFirstError } from '../lib/fieldErrors';
+import FieldError from './FieldError';
 import SportPicker from './SportPicker';
 import { useSportModule } from '../hooks/useSportModule';
 import { preferredSport, clearSportPref } from '../lib/sportPreference';
 
 import { t } from '../lib/i18n';
 import Wordmark from './Wordmark';
+// Na ordem da tela: o foco vai para o primeiro com erro.
 const FIELD_IDS = { sexo: 'onbSexo', idade: 'onbIdade', peso: 'onbPeso', altura: 'onbAltura' };
-
-// Mensagem do campo, ligada a ele por aria-describedby.
-function FieldError({ field, errors }) {
-  if (!errors[field]) return null;
-  return <span className="profile-field__error" id={`${FIELD_IDS[field]}Err`}>{errors[field]}</span>;
-}
-
-// Props de um campo com erro: marcado como inválido e descrito pela mensagem.
-const invalidProps = (field, errors) => (errors[field]
-  ? { 'aria-invalid': true, 'aria-describedby': `${FIELD_IDS[field]}Err` }
-  : {});
 
 export default function OnboardingScreen() {
   const { user, updateProfile } = useAuth();
@@ -88,8 +80,7 @@ export default function OnboardingScreen() {
     if (fields.length) {
       fields.forEach(field => trackEvent('onboarding', `erro_${field}`));
       setMsg('');
-      // Leva a pessoa (e o leitor de tela) ao primeiro campo com problema.
-      document.getElementById(FIELD_IDS[fields[0]])?.focus();
+      focusFirstError(found, FIELD_IDS);
       return;
     }
 
@@ -134,40 +125,40 @@ export default function OnboardingScreen() {
           <SportPicker id="onbSport" value={esporte} onChange={pickSport} modules={sports} />
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbSexo">{t('Sexo biológico')}</label>
-            <select id="onbSexo" className="input" value={sexo} {...invalidProps('sexo', errors)} onChange={e => { setSexo(e.target.value); clearError('sexo'); }}>
+            <select id="onbSexo" className="input" value={sexo} {...invalidProps(FIELD_IDS.sexo, errors.sexo)} onChange={e => { setSexo(e.target.value); clearError('sexo'); }}>
               <option value="" disabled>{t('Selecione')}</option>
               <option value="M">{t('Masculino')}</option>
               <option value="F">{t('Feminino')}</option>
             </select>
-            <FieldError field="sexo" errors={errors} />
+            <FieldError id={FIELD_IDS.sexo} message={errors.sexo} />
           </div>
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbIdade">{t('Idade')}</label>
             <input
               type="number" id="onbIdade" className="input" placeholder={t('Ex: 28')}
-              min="14" max="100" value={idade} {...invalidProps('idade', errors)}
+              min="14" max="100" value={idade} {...invalidProps(FIELD_IDS.idade, errors.idade)}
               onChange={e => { setIdade(e.target.value); clearError('idade'); }}
             />
-            <FieldError field="idade" errors={errors} />
+            <FieldError id={FIELD_IDS.idade} message={errors.idade} />
           </div>
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbPeso">{t('Peso (kg)')}</label>
             <input
               type="number" id="onbPeso" className="input" placeholder={t('Ex: 85')}
-              min="30" max="300" step="0.1" value={peso} {...invalidProps('peso', errors)}
+              min="30" max="300" step="0.1" value={peso} {...invalidProps(FIELD_IDS.peso, errors.peso)}
               onChange={e => { setPeso(e.target.value); clearError('peso'); }}
             />
-            <FieldError field="peso" errors={errors} />
+            <FieldError id={FIELD_IDS.peso} message={errors.peso} />
           </div>
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbAltura">{t('Altura (cm)')}</label>
             <input
               type="number" id="onbAltura" className="input" placeholder={t('Ex: 178')}
-              min="100" max="250" value={altura} {...invalidProps('altura', errors)}
+              min="100" max="250" value={altura} {...invalidProps(FIELD_IDS.altura, errors.altura)}
               onChange={e => { setAltura(e.target.value); clearError('altura'); }}
               onBlur={e => setAltura(heightToCm(e.target.value))}
             />
-            <FieldError field="altura" errors={errors} />
+            <FieldError id={FIELD_IDS.altura} message={errors.altura} />
           </div>
           {usesPlan && (
             <div className="profile-field">

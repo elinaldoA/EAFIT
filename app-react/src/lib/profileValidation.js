@@ -8,6 +8,10 @@ import { t } from './i18n';
 
 export const BODY_LIMITS = { idade: [14, 100], peso: [30, 300], altura: [100, 250] };
 export const NAME_MAX = 50;
+
+// Ids dos campos do "Meu corpo" no Perfil (ProfileBodySection), na ordem da tela:
+// o Perfil leva o foco ao primeiro com erro.
+export const BODY_FIELD_IDS = { sexo: 'profileSexo', idade: 'profileIdade', peso: 'profilePeso', altura: 'profileAltura', pesoAlvo: 'profilePesoAlvo' };
 export const WATER_LIMITS = [0.5, 10];
 
 const filled = v => v !== undefined && v !== null && String(v).trim() !== '';
@@ -22,31 +26,19 @@ export function heightToCm(value) {
   return String(Math.round(n * 100));
 }
 
-// Devolve { field, message } do primeiro problema, ou null. `onboarding`
-// exige sexo e idade; no Perfil eles podem ficar vazios (contas antigas), mas
-// se preenchidos precisam valer. Peso e altura são sempre obrigatórios.
-export function validateBody({ sexo, idade, peso, altura, pesoAlvo }, { onboarding = false } = {}) {
-  if (onboarding && (!sexo || !inRange(idade, BODY_LIMITS.idade))) {
-    return { field: 'idade', message: t('Preencha sexo e uma idade válida (14–100).') };
-  }
-  if (sexo && !['M', 'F'].includes(sexo)) return { field: 'sexo', message: t('Selecione o sexo biológico.') };
-  if (filled(idade) && !inRange(idade, BODY_LIMITS.idade)) return { field: 'idade', message: t('Informe uma idade válida (14–100).') };
-  if (!inRange(peso, BODY_LIMITS.peso)) return { field: 'peso', message: t('Informe um peso válido (kg).') };
-  if (!inRange(altura, BODY_LIMITS.altura)) return { field: 'altura', message: t('Informe uma altura válida (cm).') };
-  if (filled(pesoAlvo) && !inRange(pesoAlvo, BODY_LIMITS.peso)) return { field: 'pesoAlvo', message: t('Informe um peso alvo válido (kg).') };
-  return null;
-}
-
 // Todos os problemas de uma vez, por campo ({ sexo: 'mensagem', … }; vazio = tudo
-// certo), com as mesmas regras do validateBody. O cadastro mostra cada erro
-// junto do seu campo: com um erro por vez, a pessoa corrigia a idade, enviava
+// certo). `onboarding` exige sexo e idade; no Perfil eles podem ficar vazios
+// (contas antigas), mas se preenchidos precisam valer. Peso e altura são sempre
+// obrigatórios; o peso alvo é opcional. O cadastro e o Perfil mostram cada erro
+// junto do seu campo: com um erro por vez, a pessoa corrigia a idade, salvava
 // e só então descobria que o peso também estava errado.
-export function bodyErrors({ sexo, idade, peso, altura }, { onboarding = false } = {}) {
+export function bodyErrors({ sexo, idade, peso, altura, pesoAlvo }, { onboarding = false } = {}) {
   const errors = {};
   if (onboarding ? !['M', 'F'].includes(sexo) : sexo && !['M', 'F'].includes(sexo)) errors.sexo = t('Selecione o sexo biológico.');
   if ((onboarding || filled(idade)) && !inRange(idade, BODY_LIMITS.idade)) errors.idade = t('Informe uma idade válida (14–100).');
   if (!inRange(peso, BODY_LIMITS.peso)) errors.peso = t('Informe um peso entre 30 e 300 kg.');
   if (!inRange(altura, BODY_LIMITS.altura)) errors.altura = t('Informe a altura entre 100 e 250 cm.');
+  if (filled(pesoAlvo) && !inRange(pesoAlvo, BODY_LIMITS.peso)) errors.pesoAlvo = t('Informe um peso alvo entre 30 e 300 kg.');
   return errors;
 }
 

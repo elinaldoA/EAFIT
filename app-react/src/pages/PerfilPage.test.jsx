@@ -58,10 +58,11 @@ vi.mock('../components/ProfilePersonalSection', () => ({
   ),
 }));
 vi.mock('../components/ProfileBodySection', () => ({
-  default: ({ peso, setPeso, altura, setAltura, onSave, onRegeneratePlan, showTraining }) => (
+  default: ({ peso, setPeso, altura, setAltura, onSave, onRegeneratePlan, showTraining, errors = {}, onFieldChange }) => (
     <div data-show-training={String(showTraining)}>
-      <input aria-label="peso" value={peso} onChange={e => setPeso(e.target.value)} />
-      <input aria-label="altura" value={altura} onChange={e => setAltura(e.target.value)} />
+      <input id="profilePeso" aria-label="peso" value={peso} onChange={e => { setPeso(e.target.value); onFieldChange('peso'); }} />
+      <input id="profileAltura" aria-label="altura" value={altura} onChange={e => { setAltura(e.target.value); onFieldChange('altura'); }} />
+      {Object.entries(errors).filter(([, m]) => m).map(([field, m]) => <p key={field} data-testid={`erro-${field}`}>{m}</p>)}
       <button onClick={onSave}>salvar corpo</button>
       <button onClick={onRegeneratePlan}>gerar treino</button>
     </div>
@@ -179,16 +180,30 @@ describe('PerfilPage', () => {
     });
 
     it.each([
-      ['peso', '', '⚠️ Informe um peso válido (kg).'],
-      ['peso', '3', '⚠️ Informe um peso válido (kg).'],
-      ['altura', '1.75', '⚠️ Informe uma altura válida (cm).'],
-    ])('%s "%s" não salva (peso vazio mandaria de volta ao onboarding)', (field, value, message) => {
+      ['peso', '', 'Informe um peso entre 30 e 300 kg.'],
+      ['peso', '3', 'Informe um peso entre 30 e 300 kg.'],
+      ['altura', '1.75', 'Informe a altura entre 100 e 250 cm.'],
+    ])('%s "%s" não salva e marca o campo (peso vazio mandaria de volta ao onboarding)', (field, value, message) => {
       render(<PerfilPage active />);
       type(field, value);
       fireEvent.click(screen.getByText('salvar corpo'));
-      expect(mockToast).toHaveBeenCalledWith(message);
+      expect(screen.getByTestId(`erro-${field}`).textContent).toBe(message);
+      expect(mockToast).toHaveBeenCalledWith('⚠️ Corrija os campos marcados em Meu corpo.');
+      expect(document.activeElement).toBe(screen.getByLabelText(field));
       expect(auth.updateProfile).not.toHaveBeenCalled();
       expect(weight.upsertWeightLog).not.toHaveBeenCalled();
+    });
+
+    it('peso e altura errados aparecem juntos; cada erro some ao mexer no campo', () => {
+      render(<PerfilPage active />);
+      type('peso', '850');
+      type('altura', '1.75');
+      fireEvent.click(screen.getByText('salvar corpo'));
+      expect(screen.getByTestId('erro-peso')).toBeTruthy();
+      expect(screen.getByTestId('erro-altura')).toBeTruthy();
+      type('peso', '85');
+      expect(screen.queryByTestId('erro-peso')).toBeNull();
+      expect(screen.getByTestId('erro-altura')).toBeTruthy();
     });
 
     it('peso novo na mesma faixa de IMC não mexe no treino', async () => {
@@ -243,11 +258,23 @@ describe('PerfilPage', () => {
   });
 
   describe('gerar novo treino', () => {
-    it('sem peso e altura pede o preenchimento antes', async () => {
+    it('sem peso e altura marca os dois campos antes', async () => {
       auth.user = { id: 'u1', user_metadata: {} };
       render(<PerfilPage active />);
       fireEvent.click(screen.getByText('gerar treino'));
-      expect(mockToast).toHaveBeenCalledWith('⚠️ Preencha peso e altura antes de gerar um novo treino');
+      expect(mockToast).toHaveBeenCalledWith('⚠️ Corrija os campos marcados em Meu corpo.');
+      expect(screen.getByTestId('erro-peso')).toBeTruthy();
+      expect(screen.getByTestId('erro-altura')).toBeTruthy();
+      expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
+    });
+
+    it('peso fora da faixa não gera treino (antes bastava estar preenchido)', () => {
+      const confirm = vi.spyOn(window, 'confirm');
+      render(<PerfilPage active />);
+      type('peso', '850');
+      fireEvent.click(screen.getByText('gerar treino'));
+      expect(screen.getByTestId('erro-peso').textContent).toBe('Informe um peso entre 30 e 300 kg.');
+      expect(confirm).not.toHaveBeenCalled();
       expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
     });
 
