@@ -39,8 +39,10 @@ function habitOption(habit, target, meal) {
 // A próxima refeição, e só ela: quanto comer, o quê e um botão. A refeição
 // escolhida aqui é a mesma em que "Adicionar ao dia" registra. O objetivo e as
 // regras ficam num link fechado.
-export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hour, trainingHour, onAdd, habit }) {
+export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hour, trainingHour, onAdd, onUndo, habit }) {
   const [pick, setPick] = useState(0);
+  // Refeição recém-registrada: { meal, name, token } (token = o que onAdd devolveu, para desfazer).
+  const [done, setDone] = useState(null);
   const [howOpen, setHowOpen] = useState(false);
   if (!goals) return null;
   const { target, meals } = suggestGoalMeals({ goals, totals, meal, meta, hour, trainingHour });
@@ -55,7 +57,12 @@ export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hou
   const current = options[pick % options.length];
   const focus = goalFocus(meta);
 
-  const register = () => { onAdd(current.items); setPick(0); };
+  // Registrada, a sugestão fica na tela com "✅ Registrada" e o desfazer da
+  // refeição inteira, em vez do mesmo botão de novo (dois toques = duas refeições;
+  // e o desfazer da página tirava um alimento por vez).
+  const isDone = done && done.meal === meal && done.name === current.name;
+  const register = () => { setDone({ meal, name: current.name, token: onAdd(current.items) }); };
+  const undo = () => { onUndo?.(done.token); setDone(null); };
 
   return (
     <div className="dash-card goal-meals">
@@ -97,10 +104,17 @@ export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hou
         </p>
         <p className="goal-meals__why">{current.why}</p>
         <div className="goal-meals__actions">
-          <button type="button" className="btn btn--primary btn--sm" onClick={register}>
-            {t('Registrar esta refeição')}
-          </button>
-          {options.length > 1 && (
+          {isDone ? (
+            <span className="goal-meals__done" role="status">
+              {t('✅ Registrada no {meal}', { meal: MEAL_NAME[meal]().toLowerCase() })}
+              {onUndo && <button type="button" className="link-btn" onClick={undo}>{t('Desfazer')}</button>}
+            </span>
+          ) : (
+            <button type="button" className="btn btn--primary btn--sm" onClick={register}>
+              {t('Registrar esta refeição')}
+            </button>
+          )}
+          {!isDone && options.length > 1 && (
             <button type="button" className="link-btn" onClick={() => setPick(i => i + 1)}>
               {t('Outra opção')} →
             </button>

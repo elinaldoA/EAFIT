@@ -5,7 +5,7 @@ import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { useAppConfig } from '../context/useAppConfig';
 import { isFlagOn } from '../lib/appConfig';
-import { getDateForWeekday, fmtDate, daysUntil } from '../lib/utils';
+import { getDateForWeekday, fmtDate, daysUntil, toDateStr } from '../lib/utils';
 import { db } from '../lib/supabase';
 import { countSets, gatherExerciseDetails } from '../lib/workoutSets';
 import RestTimer from '../components/RestTimer';
@@ -121,7 +121,7 @@ export default function TreinoPage() {
   const isDayDone = dia => localStorage.getItem(`treino_${dia}`) === 'true';
 
   const todayStr = todayDate();
-  const missed = missedDays(activePlanDays, todayStr, isDayDone);
+  const missed = missedDays(activePlanDays, todayStr, isDayDone, user?.created_at ? toDateStr(new Date(user.created_at)) : null);
   const missedSet = new Set(missed.map(d => d.dia));
   const hardWeeks = history ? hardWeekStreak(history.sets, todayStr) : null;
   const volume = history ? weekVolume(history.sets, todayStr) : null;

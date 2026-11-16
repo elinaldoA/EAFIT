@@ -321,6 +321,7 @@
 .goal-meals__macros { margin: 0; font-size: var(--fs-xs); color: var(--text-muted); }
 .goal-meals__why { margin: 0; font-size: var(--fs-sm); line-height: 1.4; }
 .goal-meals__actions { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
+.goal-meals__done { display: inline-flex; align-items: center; gap: var(--sp-3); font-size: var(--fs-sm); font-weight: 700; color: var(--success); }
 .goal-meals__how { align-self: flex-start; }
 .goal-meals__how-body { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-sm); line-height: 1.4; }
 .goal-meals__how-body p { margin: 0; }

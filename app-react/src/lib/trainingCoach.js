@@ -40,10 +40,14 @@ const hasWork = day => [...day.exercicios, ...day.pos].some(ex => parseInt(ex.se
 
 // Dias do plano desta semana (domingo a sábado, como o resto do app) que já
 // passaram sem treino concluído, do mais recente para o mais antigo.
-export function missedDays(planDays, today, isDone) {
+// since ("YYYY-MM-DD", o dia em que a conta foi criada): dia antes disso não
+// "ficou para trás" — quem chega na quarta não perdeu a segunda.
+export function missedDays(planDays, today, isDone, since = null) {
   const todayIdx = parseLocalDate(today).getDay();
+  const start = weekStart(today);
   return (planDays || [])
     .filter(d => DAY_NAMES.indexOf(d.dia) < todayIdx && hasWork(d) && !isDone(d.dia))
+    .filter(d => !since || addDays(start, DAY_NAMES.indexOf(d.dia)) >= since)
     .sort((a, b) => DAY_NAMES.indexOf(b.dia) - DAY_NAMES.indexOf(a.dia));
 }
 
@@ -151,8 +155,12 @@ export function buildTrainingCoach({ today, checkin, sore = [], readings, missed
 }
 
 // Atalho para a página: músculos do plano com pouco volume nos últimos 7 dias.
+// Só com histórico anterior à janela: quem começou há menos de uma semana
+// ainda não tem "semana" para comparar (no fim do primeiro treino de peito
+// aparecia "Pouco volume na semana: Peitoral").
 export function weekBehind(planDays, sets, today, libraryMap = null) {
   const since = addDays(today, -6);
+  if (!sets.some(s => s.workout_date < since)) return [];
   const counts = countSetsByMuscle(sets.filter(s => s.workout_date >= since), libraryMap);
   return behindMuscles(counts, plannedMuscles(planDays, libraryMap));
 }

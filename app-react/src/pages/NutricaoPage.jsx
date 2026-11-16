@@ -178,8 +178,22 @@ export default function NutricaoPage({ active }) {
     setUndoStack(s => { const n = [...s, ...added].slice(-10); writeUndo(n); return n; });
     if (goalG && next.protein >= goalG && protein < goalG) toast(t('🎉 Meta de proteína do dia atingida!'));
     saveTotals(next);
+    return added;
   }
   const handleAdd = food => handleAddMany([food]);
+
+  // Desfaz de uma vez o que um handleAddMany registrou (a refeição sugerida inteira).
+  function handleRemoveMany(added) {
+    if (!added?.length) return;
+    const ids = new Set(added.map(f => f.entryId));
+    if (user) {
+      added.forEach(f => removeEntry(user.id, todayDate(), f.entryId));
+      setEntries(readCachedEntries(todayDate()));
+    }
+    setUndoStack(s => { const n = s.filter(f => !ids.has(f.entryId)); writeUndo(n); return n; });
+    saveTotals(added.reduce((acc, f) => applyFood(acc, f, -1), totals));
+    toast(t('Refeição desfeita'));
+  }
 
   async function handleSavePlan(meals) {
     if (!user) return;
@@ -376,7 +390,8 @@ export default function NutricaoPage({ active }) {
             meta={profile.meta} goals={goals} totals={totals}
             meal={meal} onMealChange={setMeal}
             hour={now.getHours() + now.getMinutes() / 60} trainingHour={user?.user_metadata?.trainingHour}
-            onAdd={foods => { handleAddMany(foods); toast(t('Refeição registrada')); }}
+            onAdd={foods => { const added = handleAddMany(foods); toast(t('Refeição registrada')); return added; }}
+            onUndo={handleRemoveMany}
             habit={habit}
           />
         </div>

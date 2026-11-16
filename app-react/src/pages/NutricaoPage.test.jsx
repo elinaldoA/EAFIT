@@ -269,4 +269,19 @@ describe('NutricaoPage', () => {
     expect(document.querySelector('.meal-log').textContent).toContain('Almoço');
     expect(mockToast).toHaveBeenCalledWith('Refeição registrada');
   });
+
+  it('registrada, a sugestão vira "✅ Registrada" (sem registrar de novo) e Desfazer tira a refeição inteira', async () => {
+    render(<NutricaoPage active />);
+    await screen.findByText('Sua próxima refeição');
+    fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'almoco' } });
+    const before = readLocalTotals().kcal || 0;
+    fireEvent.click(screen.getByText('Registrar esta refeição'));
+    expect(screen.queryByText('Registrar esta refeição')).toBeNull();
+    const status = screen.getByText(/Registrada no almoço/);
+    fireEvent.click(within(status).getByRole('button', { name: 'Desfazer' }));
+    expect(document.querySelectorAll('.meal-log__item')).toHaveLength(0);
+    expect(readLocalTotals().kcal || 0).toBe(before);
+    expect(mockToast).toHaveBeenCalledWith('Refeição desfeita');
+    expect(screen.getByText('Registrar esta refeição')).toBeTruthy();
+  });
 });

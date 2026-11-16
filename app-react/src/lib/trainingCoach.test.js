@@ -24,6 +24,11 @@ describe('missedDays', () => {
     expect(out.map(d => d.dia)).toEqual(['Quarta']);
   });
 
+  it('dia antes de a conta existir não ficou para trás (chegou na quarta, não perdeu a segunda)', () => {
+    expect(missedDays([SEG, QUA], TODAY, () => false, '2026-10-28').map(d => d.dia)).toEqual(['Quarta']);
+    expect(missedDays([SEG, QUA], TODAY, () => false, '2026-10-29')).toEqual([]);
+  });
+
   it('não conta o dia de hoje nem os que vêm depois', () => {
     expect(missedDays([QUI, SEX], TODAY, () => false)).toEqual([]);
   });
@@ -108,8 +113,13 @@ describe('hardWeekStreak', () => {
 
 describe('weekBehind', () => {
   it('lista músculos do plano com menos de 5 séries nos últimos 7 dias', () => {
-    const sets = Array.from({ length: 6 }, () => set('Supino Reto', 60, 10, '2026-10-26'));
+    const sets = [...Array.from({ length: 6 }, () => set('Supino Reto', 60, 10, '2026-10-26')), set('Supino Reto', 60, 10, '2026-10-15')];
     expect(weekBehind([SEG, QUA], sets, TODAY)).toEqual(['back']);
+  });
+
+  it('quem começou há menos de uma semana ainda não tem semana para comparar', () => {
+    const sets = Array.from({ length: 2 }, () => set('Supino Reto', 60, 10, TODAY));
+    expect(weekBehind([SEG, QUA], sets, TODAY)).toEqual([]);
   });
 });
 
