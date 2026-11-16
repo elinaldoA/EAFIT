@@ -5,13 +5,26 @@ import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
-import { heightToCm, validateBody } from '../lib/profileValidation';
+import { heightToCm, bodyErrors } from '../lib/profileValidation';
 import SportPicker from './SportPicker';
 import { useSportModule } from '../hooks/useSportModule';
 import { preferredSport, clearSportPref } from '../lib/sportPreference';
 
 import { t } from '../lib/i18n';
 import Wordmark from './Wordmark';
+const FIELD_IDS = { sexo: 'onbSexo', idade: 'onbIdade', peso: 'onbPeso', altura: 'onbAltura' };
+
+// Mensagem do campo, ligada a ele por aria-describedby.
+function FieldError({ field, errors }) {
+  if (!errors[field]) return null;
+  return <span className="profile-field__error" id={`${FIELD_IDS[field]}Err`}>{errors[field]}</span>;
+}
+
+// Props de um campo com erro: marcado como inválido e descrito pela mensagem.
+const invalidProps = (field, errors) => (errors[field]
+  ? { 'aria-invalid': true, 'aria-describedby': `${FIELD_IDS[field]}Err` }
+  : {});
+
 export default function OnboardingScreen() {
   const { user, updateProfile } = useAuth();
   const toast = useToast();
@@ -39,6 +52,9 @@ export default function OnboardingScreen() {
   const usesPlan = available.find(m => m.id === esporte)?.workoutPlan !== false;
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  // Erros por campo, mostrados junto de cada um. Mexer no campo apaga o erro dele.
+  const [errors, setErrors] = useState({});
+  const clearError = field => setErrors(e => (e[field] ? { ...e, [field]: undefined } : e));
   // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar
   // de novo não cria um segundo plano.
   const seeded = useRef(false);
@@ -66,10 +82,14 @@ export default function OnboardingScreen() {
       return;
     }
 
-    const invalid = validateBody({ sexo, idade, peso, altura: alturaCm }, { onboarding: true });
-    if (invalid) {
-      trackEvent('onboarding', `erro_${invalid.field}`);
-      setMsg(invalid.message);
+    const found = bodyErrors({ sexo, idade, peso, altura: alturaCm }, { onboarding: true });
+    const fields = Object.keys(found);
+    setErrors(found);
+    if (fields.length) {
+      fields.forEach(field => trackEvent('onboarding', `erro_${field}`));
+      setMsg('');
+      // Leva a pessoa (e o leitor de tela) ao primeiro campo com problema.
+      document.getElementById(FIELD_IDS[fields[0]])?.focus();
       return;
     }
 
@@ -114,33 +134,40 @@ export default function OnboardingScreen() {
           <SportPicker id="onbSport" value={esporte} onChange={pickSport} modules={sports} />
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbSexo">{t('Sexo biológico')}</label>
-            <select id="onbSexo" className="input" value={sexo} onChange={e => setSexo(e.target.value)}>
+            <select id="onbSexo" className="input" value={sexo} {...invalidProps('sexo', errors)} onChange={e => { setSexo(e.target.value); clearError('sexo'); }}>
               <option value="" disabled>{t('Selecione')}</option>
               <option value="M">{t('Masculino')}</option>
               <option value="F">{t('Feminino')}</option>
             </select>
+            <FieldError field="sexo" errors={errors} />
           </div>
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbIdade">{t('Idade')}</label>
             <input
               type="number" id="onbIdade" className="input" placeholder={t('Ex: 28')}
-              min="14" max="100" value={idade} onChange={e => setIdade(e.target.value)}
+              min="14" max="100" value={idade} {...invalidProps('idade', errors)}
+              onChange={e => { setIdade(e.target.value); clearError('idade'); }}
             />
+            <FieldError field="idade" errors={errors} />
           </div>
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbPeso">{t('Peso (kg)')}</label>
             <input
               type="number" id="onbPeso" className="input" placeholder={t('Ex: 85')}
-              min="30" max="300" step="0.1" value={peso} onChange={e => setPeso(e.target.value)}
+              min="30" max="300" step="0.1" value={peso} {...invalidProps('peso', errors)}
+              onChange={e => { setPeso(e.target.value); clearError('peso'); }}
             />
+            <FieldError field="peso" errors={errors} />
           </div>
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbAltura">{t('Altura (cm)')}</label>
             <input
               type="number" id="onbAltura" className="input" placeholder={t('Ex: 178')}
-              min="100" max="250" value={altura} onChange={e => setAltura(e.target.value)}
+              min="100" max="250" value={altura} {...invalidProps('altura', errors)}
+              onChange={e => { setAltura(e.target.value); clearError('altura'); }}
               onBlur={e => setAltura(heightToCm(e.target.value))}
             />
+            <FieldError field="altura" errors={errors} />
           </div>
           {usesPlan && (
             <div className="profile-field">
@@ -176,7 +203,9 @@ export default function OnboardingScreen() {
           <button className="btn btn--primary btn--full" disabled={busy} onClick={handleSubmit}>
             {busy ? (usesPlan ? t('Gerando seu plano…') : t('Salvando…')) : usesPlan ? t('Gerar meu treino') : t('Começar')}
           </button>
-          <p className="auth-form__msg auth-form__msg--error">{msg}</p>
+          <p className="auth-form__msg auth-form__msg--error" role="alert">
+            {Object.values(errors).some(Boolean) ? t('Corrija os campos marcados acima.') : msg}
+          </p>
         </div>
       </div>
     </div>

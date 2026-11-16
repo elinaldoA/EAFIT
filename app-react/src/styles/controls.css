@@ -204,3 +204,7 @@
 .empty-state__icon { font-size: 1.8rem; line-height: 1; margin-bottom: var(--sp-1); }
 .empty-state__title { font-weight: 700; font-size: var(--fs-md); }
 .empty-state__text { font-size: var(--fs-xs); color: var(--text-muted); max-width: 300px; }
+
+/* Campo com erro (aria-invalid) e a mensagem logo abaixo dele */
+.input[aria-invalid="true"] { border-color: var(--error); }
+.profile-field__error { display: block; margin-top: var(--sp-1); font-size: var(--fs-xs); font-weight: 600; color: var(--error); }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { heightToCm, validateBody, cleanName, validWeeklyGoal, validWaterGoal } from './profileValidation';
+import { heightToCm, validateBody, bodyErrors, cleanName, validWeeklyGoal, validWaterGoal } from './profileValidation';
 
 const ok = { sexo: 'M', idade: '30', peso: '80', altura: '180' };
 
@@ -66,5 +66,22 @@ describe('heightToCm', () => {
 
   it('o resultado passa na validação do cadastro', () => {
     expect(validateBody({ sexo: 'M', idade: '30', peso: '80', altura: heightToCm('1,78') }, { onboarding: true })).toBeNull();
+  });
+});
+
+describe('bodyErrors', () => {
+  const ok = { sexo: 'M', idade: '30', peso: '80', altura: '180' };
+  it('tudo certo: nenhum erro', () => {
+    expect(bodyErrors(ok, { onboarding: true })).toEqual({});
+  });
+  it('devolve todos os campos com problema de uma vez', () => {
+    expect(Object.keys(bodyErrors({ sexo: '', idade: '3', peso: '850', altura: '1' }, { onboarding: true }))).toEqual(['sexo', 'idade', 'peso', 'altura']);
+  });
+  it('fora do cadastro, sexo e idade vazios valem (contas antigas)', () => {
+    expect(bodyErrors({ ...ok, sexo: '', idade: '' })).toEqual({});
+    expect(Object.keys(bodyErrors({ ...ok, sexo: '', idade: '' }, { onboarding: true }))).toEqual(['sexo', 'idade']);
+  });
+  it('aceita vírgula decimal, como o validateBody', () => {
+    expect(bodyErrors({ ...ok, peso: '80,5' }, { onboarding: true })).toEqual({});
   });
 });

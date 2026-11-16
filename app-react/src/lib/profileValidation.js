@@ -37,6 +37,19 @@ export function validateBody({ sexo, idade, peso, altura, pesoAlvo }, { onboardi
   return null;
 }
 
+// Todos os problemas de uma vez, por campo ({ sexo: 'mensagem', … }; vazio = tudo
+// certo), com as mesmas regras do validateBody. O cadastro mostra cada erro
+// junto do seu campo: com um erro por vez, a pessoa corrigia a idade, enviava
+// e só então descobria que o peso também estava errado.
+export function bodyErrors({ sexo, idade, peso, altura }, { onboarding = false } = {}) {
+  const errors = {};
+  if (onboarding ? !['M', 'F'].includes(sexo) : sexo && !['M', 'F'].includes(sexo)) errors.sexo = t('Selecione o sexo biológico.');
+  if ((onboarding || filled(idade)) && !inRange(idade, BODY_LIMITS.idade)) errors.idade = t('Informe uma idade válida (14–100).');
+  if (!inRange(peso, BODY_LIMITS.peso)) errors.peso = t('Informe um peso entre 30 e 300 kg.');
+  if (!inRange(altura, BODY_LIMITS.altura)) errors.altura = t('Informe a altura entre 100 e 250 cm.');
+  return errors;
+}
+
 // Nome, sobrenome e apelido sem espaços nas pontas e com tamanho limitado.
 export function cleanName(value) {
   return String(value ?? '').trim().replace(/\s+/g, ' ').slice(0, NAME_MAX);

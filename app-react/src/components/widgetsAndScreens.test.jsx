@@ -366,16 +366,40 @@ describe('OnboardingScreen', () => {
   const submit = () => fireEvent.click(screen.getByText('Gerar meu treino'));
 
   it.each([
-    [{ sexo: '' }, 'Preencha sexo e uma idade válida (14–100).'],
-    [{ idade: '10' }, 'Preencha sexo e uma idade válida (14–100).'],
-    [{ peso: '10' }, 'Informe um peso válido (kg).'],
-    [{ altura: '50' }, 'Informe uma altura válida (cm).'],
-  ])('valida %j', (values, message) => {
+    [{ sexo: '' }, 'Sexo biológico', 'Selecione o sexo biológico.'],
+    [{ idade: '10' }, 'Idade', 'Informe uma idade válida (14–100).'],
+    [{ peso: '10' }, 'Peso (kg)', 'Informe um peso entre 30 e 300 kg.'],
+    [{ altura: '50' }, 'Altura (cm)', 'Informe a altura entre 100 e 250 cm.'],
+  ])('valida %j: marca o campo, com a mensagem junto dele', (values, label, message) => {
     render(<OnboardingScreen />);
     fill(values);
     submit();
-    expect(screen.getByText(message)).toBeTruthy();
+    const field = screen.getByLabelText(label);
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    expect(document.getElementById(field.getAttribute('aria-describedby')).textContent).toBe(message);
+    expect(screen.getByText('Corrija os campos marcados acima.')).toBeTruthy();
     expect(h.tpl.generatePlan).not.toHaveBeenCalled();
+  });
+
+  it('mostra todos os erros de uma vez, leva ao primeiro e cada um some ao mexer no campo', () => {
+    render(<OnboardingScreen />);
+    fill({ sexo: '', idade: '3', peso: '850' });
+    submit();
+    expect(screen.getByText('Selecione o sexo biológico.')).toBeTruthy();
+    expect(screen.getByText('Informe uma idade válida (14–100).')).toBeTruthy();
+    expect(screen.getByText('Informe um peso entre 30 e 300 kg.')).toBeTruthy();
+    expect(screen.queryByText('Informe a altura entre 100 e 250 cm.')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByLabelText('Sexo biológico'));
+
+    fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: 'F' } });
+    fireEvent.change(screen.getByLabelText('Idade'), { target: { value: '30' } });
+    expect(screen.queryByText('Selecione o sexo biológico.')).toBeNull();
+    expect(screen.queryByText('Informe uma idade válida (14–100).')).toBeNull();
+    expect(screen.getByLabelText('Idade').getAttribute('aria-invalid')).toBeNull();
+    expect(screen.getByText('Corrija os campos marcados acima.')).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '85' } });
+    expect(screen.queryByText('Corrija os campos marcados acima.')).toBeNull();
   });
 
   it('altura digitada em metros vira centímetros ao sair do campo', () => {
@@ -395,7 +419,7 @@ describe('OnboardingScreen', () => {
     submit();
     await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ altura: 180 })));
     expect(h.tpl.generatePlan).toHaveBeenCalledWith(expect.objectContaining({ altura: 180 }));
-    expect(screen.queryByText('Informe uma altura válida (cm).')).toBeNull();
+    expect(screen.queryByText('Informe a altura entre 100 e 250 cm.')).toBeNull();
   });
 
   it('gera e semeia o plano ANTES de salvar o perfil', async () => {
