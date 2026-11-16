@@ -189,6 +189,9 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   const setsAtOpen = useRef(setsDone);
   useEffect(() => {
     trackFeature('live_open');
+    // De propósito lê o valor mais recente no cleanup (a ref guarda as séries
+    // marcadas até a saída): é um contador, não um nó do DOM.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => trackFeature(setsDoneRef.current > setsAtOpen.current ? 'live_exit_with_sets' : 'live_exit_no_sets');
   }, []);
   useEffect(() => {

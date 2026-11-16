@@ -72,7 +72,6 @@ window.LANDING_EN = {
     'cada quilo a mais.': 'every extra pound.',
     'O EAFIT monta seu treino pelo seu objetivo e nível, guia cada série no modo ao vivo e transforma o que você registra em gráficos, recordes e sequência. Dá pra desafiar os amigos e pausar sem perder a sequência — no celular, mesmo sem internet.':
       'EAFIT builds your workout from your goal and level, guides every set in live mode and turns what you log into charts, records and streaks. You can challenge friends and pause without losing your streak — on your phone, even without internet.',
-    'Começar agora': 'Start now',
     'Ver o app por dentro': 'See the app inside',
     'Sem cartão de crédito': 'No credit card',
     '1000 exercícios na biblioteca': '1000 exercises in the library',
@@ -265,7 +264,6 @@ window.LANDING_EN = {
     'Registre sem internet; quando a conexão volta, tudo sincroniza entre celular, tablet e computador.': 'Log without internet; when the connection returns, everything syncs between phone, tablet and computer.',
     'Comece em menos de 2 minutos': 'Get started in under 2 minutes',
     'Sem download em loja e sem configuração complicada.': 'No store download and no complicated setup.',
-    'Crie sua conta': 'Create your account',
     'Só e-mail e senha. Abre direto no navegador do celular ou do computador.': 'Just email and password. Opens right in your phone or computer browser.',
     'Conte seu objetivo': 'Tell us your goal',
     'Peso, altura, objetivo e nível — o plano da semana sai na hora.': 'Weight, height, goal and level — your weekly plan is ready instantly.',
@@ -353,7 +351,6 @@ window.LANDING_EN = {
     'Seu app, nos dois modos': 'Your app, in both modes',
     'Troque para o modo aluno e treine também. Mesma conta, mesmo app.': 'Switch to client mode and train too. Same account, same app.',
     'Como ter acesso?': 'How do I get access?',
-    'Criar minha conta': 'Create my account',
     'Quem usa, recomenda': 'Users recommend it',
     'Veja o que o pessoal da academia está dizendo sobre o EAFIT.': 'See what the gym crowd is saying about EAFIT.',
     '“Finalmente parei de anotar treino no bloco de notas. O app já monta tudo e eu só vou marcando as séries. Funciona até no subsolo da academia, sem sinal.”': '“I finally stopped logging workouts in a notes app. The app builds everything and I just check off my sets. It even works in the gym basement, with no signal.”',

@@ -220,7 +220,6 @@ describe('withLibraryExercises', () => {
 describe('withLibraryExercises — equipamento do local', () => {
   beforeEach(() => { mockDb.from.mockReset(); });
   const ex = nome => ({ nome, series: '3', reps: '10', descanso: '60s', tecnica: '' });
-  const pool = [row('H1', 'composto', 'quadriceps'), row('H2', 'composto', 'quadriceps'), row('H3', 'isolado', 'quadriceps')];
 
   it('condomínio: tira barra/máquina/esteira do dia que ficou com o template e repõe da biblioteca', async () => {
     mockDb.from.mockImplementation(() => chainResolving({ data: [row('Afundo', 'composto', 'quadriceps')], error: null }));

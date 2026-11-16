@@ -9,7 +9,7 @@ function money(value) {
   return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-export function summaryText(s) {
+function summaryText(s) {
   const lines = [
     'Resumo da semana · EAFIT',
     `Posts no feed: ${s.posts} · stories: ${s.stories}`,
