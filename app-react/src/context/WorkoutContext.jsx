@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
 import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
@@ -15,6 +15,9 @@ import { WorkoutContext } from './useWorkout';
 
 import { t } from '../lib/i18n';
 import { periodizationInfo, applyPeriodization } from '../lib/periodization';
+const RETRY_FIRST_MS = 15 * 1000;
+const RETRY_MAX_MS = 5 * 60 * 1000;
+
 // Reexecuta uma escrita que falhou (ex.: sem internet no momento) quando a fila é esvaziada.
 const SYNC_EXECUTORS = {
   workout_status: async ({ id, completed }) => {
@@ -182,21 +185,63 @@ export function WorkoutProvider({ children }) {
   const periodization = useMemo(() => periodizationInfo(planProgression || {}), [planProgression]);
   const periodizedDays = useMemo(() => applyPeriodization(activePlanDays, periodization), [activePlanDays, periodization]);
 
-  const flushPending = useCallback(async () => {
-    const { remaining } = await flushQueue(SYNC_EXECUTORS);
-    setSyncStatus(s => (remaining > 0 ? 'pending' : (s === 'pending' ? 'ok' : s)));
-    return remaining;
+  // Um envio por vez: o app abrindo, o evento `online`, a volta para a tela e a
+  // carga dos dados podem pedir o envio quase juntos; quem chega no meio pega o
+  // mesmo envio em andamento em vez de reexecutar a fila em paralelo.
+  const flushing = useRef(null);
+  const flushPending = useCallback(() => {
+    if (!flushing.current) {
+      flushing.current = (async () => {
+        try {
+          const { remaining } = await flushQueue(SYNC_EXECUTORS);
+          setSyncStatus(s => (remaining > 0 ? 'pending' : (s === 'pending' ? 'ok' : s)));
+          return remaining;
+        } finally {
+          flushing.current = null;
+        }
+      })();
+    }
+    return flushing.current;
   }, []);
 
   // Usado por páginas fora do fluxo de treino (água, perfil) para sinalizar
   // que enfileiraram uma escrita que falhou.
   const markPending = useCallback(() => setSyncStatus('pending'), []);
 
+  // Quando enviar o que ficou pendente: ao abrir, ao voltar a rede, ao voltar
+  // para o app (o navegador nem sempre dispara `online`) e, se ainda sobrar
+  // algo, de novo depois de um intervalo que dobra a cada falha (15 s até 5 min).
   useEffect(() => {
-    if (!user) return;
-    flushPending();
-    window.addEventListener('online', flushPending);
-    return () => window.removeEventListener('online', flushPending);
+    if (!user) return undefined;
+    let active = true;
+    let timer = null;
+    let delay = RETRY_FIRST_MS;
+
+    function schedule() {
+      clearTimeout(timer);
+      timer = setTimeout(() => { attempt(); }, delay);
+      delay = Math.min(delay * 2, RETRY_MAX_MS);
+    }
+    async function attempt() {
+      const remaining = await flushPending();
+      if (!active) return;
+      if (remaining > 0) schedule();
+      else delay = RETRY_FIRST_MS;
+    }
+    function onOnline() { delay = RETRY_FIRST_MS; attempt(); }
+    function onVisible() {
+      if (document.visibilityState === 'visible' && queueSize() > 0) attempt();
+    }
+
+    attempt();
+    window.addEventListener('online', onOnline);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      window.removeEventListener('online', onOnline);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [user, flushPending]);
 
   const applyPlanMeta = useCallback((plan) => {
@@ -233,6 +278,11 @@ export function WorkoutProvider({ children }) {
     }
 
     try {
+      // O que foi marcado sem rede precisa chegar ao servidor antes da leitura
+      // abaixo: o servidor ainda tem os valores antigos, e eles sobrescreveriam,
+      // na tela, o treino que a pessoa acabou de fazer.
+      if (queueSize() > 0) await flushPending();
+
       const days = plan.days;
       applyPlanMeta(plan);
       if (plan.switchInfo) {
@@ -278,6 +328,9 @@ export function WorkoutProvider({ children }) {
           return;
         }
         ids[dayName] = w.id;
+        // Ainda há escrita na fila (sem rede, ou o envio falhou): o aparelho tem
+        // dados mais novos que o servidor, então só guarda o id do treino.
+        if (!canResetMissing) return;
         localStorage.setItem(`treino_${dayName}`, w.completed);
         allSets.filter(s => s.workout_id === w.id).forEach(s => {
           localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_carga`, s.carga ?? '');
@@ -304,7 +357,7 @@ export function WorkoutProvider({ children }) {
 
       setActivePlanDays(days);
       setWorkoutIds(ids);
-      setSyncStatus('ok');
+      setSyncStatus(queueSize() > 0 ? 'pending' : 'ok');
       setDataVersion(v => v + 1);
     } catch (err) {
       console.error('loadUserData:', err);
@@ -313,7 +366,7 @@ export function WorkoutProvider({ children }) {
       setSyncStatus('error');
       toast(t('⚠️ Erro ao sincronizar dados'));
     }
-  }, [user, toast, applyPlanMeta]);
+  }, [user, toast, applyPlanMeta, flushPending]);
 
   useEffect(() => {
     if (user) loadUserData();

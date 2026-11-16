@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, act, waitFor, cleanup } from '@testing-library/react';
 
 const { mockFrom, mockAuthState, mockToast, mockFetchActivePlan } = vi.hoisted(() => ({
   mockFrom: vi.fn(),
@@ -46,6 +46,9 @@ function okFrom() {
   const data = Object.assign([row], row);
   return chain({ data, error: null });
 }
+
+// Sem isso os providers de testes anteriores seguem montados e escutando online/visibilitychange.
+afterEach(() => cleanup());
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -121,5 +124,154 @@ describe('WorkoutProvider — sincronização offline', () => {
 
     expect(result.current.activePlanDays).toEqual([]);
     expect(mockFetchActivePlan).not.toHaveBeenCalled();
+  });
+});
+
+describe('WorkoutProvider — fila pendente na abertura e reenvio', () => {
+  const SET_KEY = 'set_Supino_1_carga';
+
+  // Servidor "atrasado": responde com a carga antiga até a escrita da fila chegar.
+  function serverWith(state) {
+    const weekRow = { id: 'w1', workout_date: getDateForWeekday('Segunda'), completed: false, started_at: null, finished_at: null, duration_seconds: null };
+    return (table) => {
+      if (table === 'exercise_sets') {
+        return new Proxy({}, {
+          get(_t, prop) {
+            // Escrita lenta (rede ruim): o servidor só passa a ter o valor novo depois de um tempo,
+            // então uma leitura feita nesse intervalo ainda enxerga o valor antigo.
+            if (prop === 'upsert') return (row) => new Promise((resolve) => {
+              state.upserts += 1;
+              setTimeout(() => { state.carga = row.carga; resolve({ error: null }); }, 40);
+            });
+            if (prop === 'then') return (res, rej) => Promise.resolve({ data: [{ workout_id: 'w1', exercise_name: 'Supino', set_number: 1, carga: state.carga, completed: false }], error: null }).then(res, rej);
+            return () => chain({ data: [{ workout_id: 'w1', exercise_name: 'Supino', set_number: 1, carga: state.carga, completed: false }], error: null });
+          },
+        });
+      }
+      return chain({ data: Object.assign([weekRow], weekRow), error: null });
+    };
+  }
+
+  it('abrir o app com treino feito offline não volta as cargas para as do servidor', async () => {
+    const state = { carga: 60, upserts: 0 };
+    mockFrom.mockImplementation(serverWith(state));
+    // Treinou sem rede: 80 kg no aparelho e na fila; o servidor ainda tem 60.
+    localStorage.setItem(SET_KEY, '80');
+    localStorage.setItem('pendingSyncQueue', JSON.stringify([
+      { id: 'a', type: 'set_state', payload: { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 80 } } },
+    ]));
+
+    const result = await renderReady();
+
+    expect(state.upserts).toBe(1);
+    expect(state.carga).toBe(80);
+    expect(localStorage.getItem(SET_KEY)).toBe('80');
+    expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toEqual([]);
+    expect(result.current.workoutIds.Segunda).toBe('w1');
+  });
+
+  it('se a fila não esvazia na abertura, o que está no aparelho continua valendo e o status segue pendente', async () => {
+    const state = { carga: 60, upserts: 0 };
+    const server = serverWith(state);
+    mockFrom.mockImplementation((table) => {
+      if (table === 'exercise_sets') {
+        return new Proxy({}, {
+          get(_t, prop) {
+            if (prop === 'upsert') return () => chain({ error: { message: 'offline' } });
+            return () => chain({ data: [{ workout_id: 'w1', exercise_name: 'Supino', set_number: 1, carga: 60, completed: false }], error: null });
+          },
+        });
+      }
+      return server(table);
+    });
+    localStorage.setItem(SET_KEY, '80');
+    localStorage.setItem('pendingSyncQueue', JSON.stringify([
+      { id: 'a', type: 'set_state', payload: { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 80 } } },
+    ]));
+
+    const { result } = renderHook(() => useWorkout(), { wrapper });
+    await waitFor(() => expect(result.current.workoutIds.Segunda).toBe('w1'));
+
+    expect(localStorage.getItem(SET_KEY)).toBe('80');
+    expect(result.current.syncStatus).toBe('pending');
+    expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toHaveLength(1);
+  });
+
+  it('envio pedido várias vezes ao mesmo tempo roda a fila uma vez só', async () => {
+    const state = { carga: 60, upserts: 0 };
+    mockFrom.mockImplementation(serverWith(state));
+    localStorage.setItem('pendingSyncQueue', JSON.stringify([
+      { id: 'a', type: 'set_state', payload: { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 80 } } },
+    ]));
+    const result = await renderReady();
+    expect(state.upserts).toBe(1);
+
+    localStorage.setItem('pendingSyncQueue', JSON.stringify([
+      { id: 'b', type: 'set_state', payload: { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 90 } } },
+    ]));
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+      window.dispatchEvent(new Event('online'));
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await waitFor(() => expect(state.carga).toBe(90));
+    expect(state.upserts).toBe(2);
+    expect(result.current.syncStatus).toBe('ok');
+  });
+
+  it('voltar para o app com pendências tenta enviar de novo', async () => {
+    const state = { carga: 60, upserts: 0 };
+    mockFrom.mockImplementation(serverWith(state));
+    await renderReady();
+
+    localStorage.setItem('pendingSyncQueue', JSON.stringify([
+      { id: 'c', type: 'set_state', payload: { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 70 } } },
+    ]));
+    await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
+
+    await waitFor(() => expect(state.carga).toBe(70));
+    expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toEqual([]);
+  });
+
+  it('enquanto sobra pendência, tenta de novo sozinho em intervalos que dobram', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const upserts = [];
+      let online = false;
+      mockFrom.mockImplementation((table) => {
+        if (table === 'exercise_sets') {
+          return new Proxy({}, {
+            get(_t, prop) {
+              if (prop === 'upsert') return () => { upserts.push(Date.now()); return chain({ error: online ? null : { message: 'offline' } }); };
+              return () => chain({ data: [], error: null });
+            },
+          });
+        }
+        return okFrom();
+      });
+      localStorage.setItem('pendingSyncQueue', JSON.stringify([
+        { id: 'a', type: 'set_state', payload: { workout_id: 'w1', exercise_name: 'Supino', set_number: 1, patch: { carga: 80 } } },
+      ]));
+
+      renderHook(() => useWorkout(), { wrapper });
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      expect(upserts).toHaveLength(1);          // abertura
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(15000); });
+      expect(upserts).toHaveLength(2);          // 15 s depois
+      await act(async () => { await vi.advanceTimersByTimeAsync(29000); });
+      expect(upserts).toHaveLength(2);          // ainda não: o intervalo dobrou para 30 s
+      await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+      expect(upserts).toHaveLength(3);
+
+      online = true;
+      await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
+      expect(upserts).toHaveLength(4);          // deu certo: para de tentar
+      await act(async () => { await vi.advanceTimersByTimeAsync(10 * 60000); });
+      expect(upserts).toHaveLength(4);
+      expect(JSON.parse(localStorage.getItem('pendingSyncQueue'))).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
