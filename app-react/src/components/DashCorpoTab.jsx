@@ -7,10 +7,10 @@ import ProgressPhotos from './ProgressPhotos';
 import BodyMeasurements from './BodyMeasurements';
 import CheckinInsights from './CheckinInsights';
 import Skeleton from './Skeleton';
-import { t } from '../lib/i18n';
+import { t, decimal } from '../lib/i18n';
 
 // Aba "Corpo" da Evolução: peso, fotos de progresso, medidas e check-in diário.
-export default function DashCorpoTab({ userId, workouts, weightLogs, loadingPR }) {
+export default function DashCorpoTab({ userId, workouts, weightLogs, loadingPR, profileWeight }) {
   const { config } = useAppConfig();
   const trainedDates = useMemo(() => workouts.filter(w => w.completed).map(w => w.workout_date), [workouts]);
   const weightPoints = useMemo(
@@ -28,7 +28,11 @@ export default function DashCorpoTab({ userId, workouts, weightLogs, loadingPR }
               points={weightPoints}
               valueSuffix="kg"
               singleMsg={v => t('1 registro: {v}kg — registre seu peso novamente em outro dia para ver a evolução', { v })}
-              emptyMsg={t('Nenhum peso registrado ainda. Registre em Perfil para começar.')}
+              // Conta com peso no perfil e sem registro (cadastro de antes de o peso
+              // inicial entrar no gráfico): "nenhum peso registrado" contradizia o Perfil.
+              emptyMsg={profileWeight
+                ? t('Peso atual: {v}kg. Cada vez que você atualizar o peso em Perfil › Meu corpo, ele entra neste gráfico.', { v: decimal(profileWeight) })
+                : t('Nenhum peso registrado ainda. Registre em Perfil para começar.')}
             />
           )}
         </div>

@@ -129,7 +129,7 @@ export default function DashPage({ active }) {
         />
       )}
 
-      {tab === 'corpo' && <DashCorpoTab userId={user.id} workouts={workouts} weightLogs={weightLogs} loadingPR={loadingPR} />}
+      {tab === 'corpo' && <DashCorpoTab userId={user.id} workouts={workouts} weightLogs={weightLogs} loadingPR={loadingPR} profileWeight={user?.user_metadata?.peso} />}
     </section>
   );
 }

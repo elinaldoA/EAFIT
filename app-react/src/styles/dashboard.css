@@ -611,7 +611,7 @@
 .recap__head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
 .recap__toggle { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); }
 .recap__btn { padding: 5px 10px; border: 0; border-radius: var(--r-sm); background: none; color: var(--text-muted); font-size: var(--fs-xs); font-weight: 600; cursor: pointer; }
-.recap__btn--active { background: var(--primary); color: var(--on-accent); }
+.recap__btn--active { background: var(--primary); color: var(--on-primary); }
 .recap__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-2); }
 .recap__stat { display: flex; flex-direction: column; gap: 2px; padding: 10px var(--sp-3); background: var(--surface-2); border-radius: var(--r-md); }
 .recap__value { font-size: var(--fs-xl); font-weight: 800; }

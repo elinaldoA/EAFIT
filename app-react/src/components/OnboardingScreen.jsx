@@ -3,6 +3,9 @@ import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { generatePlan } from '../data/workoutTemplates';
 import { seedGeneratedPlan } from '../lib/workoutPlans';
+import { upsertWeightLog } from '../lib/weightLog';
+import { enqueue } from '../lib/syncQueue';
+import { todayDate } from '../data/treinoData';
 import logoMark from '../assets/app-icon.png';
 import { trackEvent } from '../lib/tracking';
 import { heightToCm, bodyErrors, cleanName, NAME_MAX } from '../lib/profileValidation';
@@ -109,6 +112,11 @@ export default function OnboardingScreen() {
 
       const { error } = await updateProfile({ nome: nomeLimpo, sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, esporte });
       if (error) throw error;
+      // O peso do cadastro é o primeiro ponto do gráfico da Evolução (antes ia só
+      // para o perfil, e a aba Corpo dizia "Nenhum peso registrado" para quem tinha
+      // acabado de informar). Sem esperar: a tela já está saindo; sem rede, vai pela fila.
+      const today = todayDate();
+      upsertWeightLog(user.id, today, pesoNum).catch(() => enqueue('weight_log', { userId: user.id, date: today, peso: pesoNum }));
       trackEvent('onboarding', 'done');
       clearSportPref();
     } catch (err) {

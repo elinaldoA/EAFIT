@@ -16,6 +16,7 @@ vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' }, upd
 vi.mock('../context/useToast', () => ({ useToast: () => vi.fn() }));
 vi.mock('../data/workoutTemplates', () => ({ generatePlan: vi.fn().mockResolvedValue([{ dia: 'Seg' }]) }));
 vi.mock('../lib/workoutPlans', () => ({ seedGeneratedPlan: vi.fn().mockResolvedValue() }));
+vi.mock('../lib/weightLog', () => ({ upsertWeightLog: vi.fn().mockResolvedValue() }));
 vi.mock('../lib/tracking', () => ({ trackEvent: (...a) => h.track(...a) }));
 vi.mock('../hooks/useSportModule', () => ({ useSportModule: () => ({ module: h.sports[0], available: h.sports, released: h.released || h.sports }) }));
 

@@ -23,7 +23,7 @@ vi.mock('../data/treinoData', async (importOriginal) => ({
 
 // Filhos pesados viram stubs: a página só decide o que mostrar e passa dados.
 vi.mock('../components/BodyAvatar', () => ({ default: ({ activeGroups }) => <div data-testid="avatar">{activeGroups.size}</div> }));
-vi.mock('../components/LineChart', () => ({ default: ({ points }) => <div data-testid="line-chart">{points.length}</div> }));
+vi.mock('../components/LineChart', () => ({ default: ({ points, emptyMsg }) => <div data-testid="line-chart">{points.length || emptyMsg}</div> }));
 vi.mock('../components/ProgressPhotos', () => ({ default: () => <div data-testid="photos" /> }));
 vi.mock('../components/MonthlyRecap', () => ({ default: () => null }));
 vi.mock('../components/Challenges', () => ({ default: () => null }));
@@ -171,6 +171,17 @@ describe('DashPage', () => {
       appConfig.config = { flags: { fotos_progresso: false } };
       render(<DashPage active />);
       expect(screen.queryByTestId('photos')).toBeNull();
+    });
+
+    it('Corpo sem registro de peso: mostra o peso do perfil em vez de "nenhum peso registrado"', () => {
+      localStorage.setItem('dash_tab', 'corpo');
+      USER.user_metadata = { peso: 80.5 };
+      const { unmount } = render(<DashPage active />);
+      expect(screen.getByTestId('line-chart').textContent).toMatch(/^Peso atual: 80,5kg\./);
+      unmount();
+      USER.user_metadata = {};
+      render(<DashPage active />);
+      expect(screen.getByTestId('line-chart').textContent).toMatch(/^Nenhum peso registrado ainda/);
     });
 
     it('Amigos: recebe quantos dias treinou nos últimos 7', () => {

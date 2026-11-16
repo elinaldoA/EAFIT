@@ -526,6 +526,7 @@ export default {
   'Técnica': 'Technique',
   'Remover exercício': 'Remove exercise',
   'Repetições': 'Reps',
+  'Peso atual: {v}kg. Cada vez que você atualizar o peso em Perfil › Meu corpo, ele entra neste gráfico.': 'Current weight: {v}kg. Each time you update your weight in Profile › My body, it goes into this chart.',
   'Remover "{nome}" deste dia?': 'Remove "{nome}" from this day?',
   'Remover este exercício do dia?': 'Remove this exercise from the day?',
   '⚠️ Erro ao carregar planos': '⚠️ Error loading plans',

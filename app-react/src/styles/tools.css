@@ -37,7 +37,7 @@
   font-weight: 700;
   cursor: pointer;
 }
-.quick__option--on { border-color: var(--primary); background: var(--primary); color: var(--on-accent); }
+.quick__option--on { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
 
 .quick__preview {
   display: flex;

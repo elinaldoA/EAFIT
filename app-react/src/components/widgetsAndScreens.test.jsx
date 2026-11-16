@@ -15,6 +15,8 @@ const h = vi.hoisted(() => ({
   notif: { sendNotification: vi.fn(), isNotifyEnabled: (meta, key) => meta?.[key] !== false },
   push: { supported: false },
   water: { goal: 3 },
+  weight: { upsertWeightLog: vi.fn(), fetchWeightLogs: vi.fn() },
+  queue: { enqueue: vi.fn() },
 }));
 
 vi.mock('../lib/supabase', () => ({ db: {} }));
@@ -24,6 +26,8 @@ vi.mock('../lib/discomfort', async orig => ({ ...(await orig()), ...h.disc }));
 vi.mock('../lib/checkin', async orig => ({ ...(await orig()), ...h.checkin }));
 vi.mock('../lib/exerciseSwap', () => h.swap);
 vi.mock('../lib/workoutPlans', () => h.plans);
+vi.mock('../lib/weightLog', () => h.weight);
+vi.mock('../lib/syncQueue', async orig => ({ ...(await orig()), enqueue: (...a) => h.queue.enqueue(...a) }));
 vi.mock('../lib/monthlyRecap', async orig => ({ ...(await orig()), ...h.recap }));
 vi.mock('../lib/shareCard', () => h.share);
 vi.mock('../data/workoutTemplates', () => h.tpl);
@@ -463,6 +467,38 @@ describe('OnboardingScreen', () => {
     expect(h.tpl.generatePlan).toHaveBeenCalledWith({ sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa' });
     expect(h.plans.seedGeneratedPlan).toHaveBeenCalledWith('u1', [{ dia: 'Seg' }]);
     expect(h.auth.updateProfile).toHaveBeenCalledWith({ nome: 'Ana', sexo: 'M', idade: 30, peso: 80, altura: 180, meta: 'forca', nivel: 'avancado', local: 'casa', esporte: 'musculacao' });
+  });
+
+  it('o peso do cadastro vira o primeiro registro do gráfico de peso', async () => {
+    h.tpl.generatePlan.mockResolvedValue([{ dia: 'Seg' }]);
+    h.auth.updateProfile.mockResolvedValue({});
+    h.weight.upsertWeightLog.mockReset().mockResolvedValue();
+    render(<OnboardingScreen />);
+    fill({ peso: '72.5' });
+    submit();
+    await waitFor(() => expect(h.weight.upsertWeightLog).toHaveBeenCalledWith('u1', '2026-10-07', 72.5));
+  });
+
+  it('sem rede, o peso do cadastro vai pela fila', async () => {
+    h.tpl.generatePlan.mockResolvedValue([{ dia: 'Seg' }]);
+    h.auth.updateProfile.mockResolvedValue({});
+    h.weight.upsertWeightLog.mockReset().mockRejectedValue(new Error('offline'));
+    h.queue.enqueue.mockReset();
+    render(<OnboardingScreen />);
+    fill();
+    submit();
+    await waitFor(() => expect(h.queue.enqueue).toHaveBeenCalledWith('weight_log', { userId: 'u1', date: '2026-10-07', peso: 80 }));
+  });
+
+  it('perfil que não salvou não registra o peso', async () => {
+    h.tpl.generatePlan.mockResolvedValue([{ dia: 'Seg' }]);
+    h.auth.updateProfile.mockResolvedValue({ error: new Error('x') });
+    h.weight.upsertWeightLog.mockReset();
+    render(<OnboardingScreen />);
+    fill();
+    submit();
+    await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalled());
+    expect(h.weight.upsertWeightLog).not.toHaveBeenCalled();
   });
 
   it('erro ao gerar o plano mostra mensagem e toast, e não salva o perfil', async () => {

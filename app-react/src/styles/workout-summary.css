@@ -195,7 +195,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.survey__score--on { border-color: var(--primary); background: var(--primary); color: var(--on-accent); }
+.survey__score--on { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
 .survey__ends { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-dim); }
 .survey__options { display: flex; flex-direction: column; gap: var(--sp-2); }
 @media (max-width: 360px) {

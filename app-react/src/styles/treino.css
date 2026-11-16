@@ -324,7 +324,7 @@
 
 .ex-block__mark-all--done {
   background: var(--primary);
-  color: var(--on-accent);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 

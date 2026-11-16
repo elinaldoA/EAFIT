@@ -212,7 +212,7 @@ h1.auth-logo__name { margin: 0; }
   cursor: pointer;
   transition: background var(--t), color var(--t);
 }
-.auth-tabs__tab--active { background: var(--primary); color: var(--on-accent); }
+.auth-tabs__tab--active { background: var(--primary); color: var(--on-primary); }
 
 /* Campo com rótulo visível (antes só placeholder, que some ao digitar) */
 .field { display: flex; flex-direction: column; gap: 6px; }
