@@ -2,10 +2,13 @@ import { db } from './supabase';
 import { trackFeature } from './tracking';
 
 import { t } from './i18n';
+// low/high: o que valem as pontas da escala, escrito embaixo dos rostos. O mesmo
+// rosto não se repete com sentidos opostos: o 😴 era o 1 da energia (sem
+// energia) e o 5 do sono (dormi muito bem).
 export const CHECKIN_FIELDS = [
-  { key: 'energy', label: t('Energia'), emojis: ['😴', '🥱', '🙂', '😃', '⚡'] },
-  { key: 'sleep', label: t('Sono'), emojis: ['😵', '😪', '🙂', '😌', '😴'] },
-  { key: 'mood', label: t('Humor'), emojis: ['😞', '😕', '😐', '🙂', '😄'] },
+  { key: 'energy', label: t('Energia'), low: t('Sem energia'), high: t('Cheio de energia'), emojis: ['😴', '🥱', '🙂', '😃', '⚡'] },
+  { key: 'sleep', label: t('Sono'), low: t('Dormi mal'), high: t('Dormi muito bem'), emojis: ['😵', '😪', '🙂', '😌', '😁'] },
+  { key: 'mood', label: t('Humor'), low: t('Para baixo'), high: t('Ótimo'), emojis: ['😞', '😕', '😐', '🙂', '😄'] },
 ];
 
 export async function fetchCheckins(userId, sinceDate) {

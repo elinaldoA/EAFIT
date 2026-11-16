@@ -755,6 +755,9 @@
 .checkin__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .checkin__label { font-size: var(--fs-sm); color: var(--text-muted); min-width: 52px; }
 .checkin__scale { display: flex; gap: var(--sp-1); }
+.checkin__scale-wrap { display: flex; flex-direction: column; gap: 2px; }
+/* As pontas da escala escritas ("Dormi mal" … "Dormi muito bem") */
+.checkin__ends { display: flex; justify-content: space-between; gap: var(--sp-2); font-size: var(--fs-xs); color: var(--text-dim); }
 .checkin__opt {
   font-size: var(--fs-xl);
   line-height: 1;

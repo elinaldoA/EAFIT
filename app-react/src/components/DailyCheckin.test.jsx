@@ -18,7 +18,9 @@ import DailyCheckin from './DailyCheckin';
 import { markTutorialSeen } from '../lib/tutorial';
 
 const TITLE = 'Como você está hoje?';
-const pick = (label, n) => fireEvent.click(screen.getByRole('radio', { name: `${label} ${n} de 5` }));
+// As pontas (1 e 5) levam o significado no nome: "Energia 5 de 5 (Cheio de energia)".
+const option = (label, n) => screen.getByRole('radio', { name: new RegExp(`^${label} ${n} de 5`) });
+const pick = (label, n) => fireEvent.click(option(label, n));
 const modal = () => screen.queryByRole('dialog');
 
 beforeEach(() => {
@@ -56,6 +58,16 @@ describe('DailyCheckin (modal)', () => {
     expect(screen.getByRole('button', { name: 'Fazer check-in' })).toBeTruthy();
   });
 
+  it('cada escala diz o que valem as pontas, e o mesmo rosto não aparece com sentidos opostos', async () => {
+    render(<DailyCheckin />);
+    await screen.findByRole('dialog');
+    for (const text of ['Sem energia', 'Cheio de energia', 'Dormi mal', 'Dormi muito bem', 'Para baixo', 'Ótimo']) {
+      expect(screen.getByText(text)).toBeTruthy();
+    }
+    expect(option('Sono', 5).getAttribute('aria-label')).toBe('Sono 5 de 5 (Dormi muito bem)');
+    expect(option('Energia', 1).textContent).not.toBe(option('Sono', 5).textContent);
+  });
+
   it('só habilita Registrar com energia, sono e humor escolhidos', async () => {
     render(<DailyCheckin />);
     await screen.findByRole('dialog');
@@ -64,7 +76,7 @@ describe('DailyCheckin (modal)', () => {
     expect(screen.getByRole('button', { name: 'Registrar' }).disabled).toBe(true);
     pick('Humor', 5);
     expect(screen.getByRole('button', { name: 'Registrar' }).disabled).toBe(false);
-    expect(screen.getByRole('radio', { name: 'Energia 4 de 5' }).getAttribute('aria-checked')).toBe('true');
+    expect(option('Energia', 4).getAttribute('aria-checked')).toBe('true');
   });
 
   it('registrar salva, avisa, fecha o modal e mostra a linha com a dica do dia', async () => {
@@ -89,7 +101,7 @@ describe('DailyCheckin (modal)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Registrar' }));
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível salvar o check-in'));
     expect(modal()).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'Energia 3 de 5' }).getAttribute('aria-checked')).toBe('true');
+    expect(option('Energia', 3).getAttribute('aria-checked')).toBe('true');
   });
 
   it('Agora não fecha e não reabre no mesmo dia; o botão da linha abre de novo', async () => {
@@ -117,7 +129,7 @@ describe('DailyCheckin (modal)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Refazer' }));
     expect(screen.getByRole('dialog', { name: TITLE })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: 'Energia 5 de 5' }).getAttribute('aria-checked')).toBe('true');
+    expect(option('Energia', 5).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('button', { name: 'Registrar' }).disabled).toBe(false);
   });
 

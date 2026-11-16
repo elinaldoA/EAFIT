@@ -33,18 +33,24 @@ function CheckinModal({ draft, setDraft, busy, onSave, onClose }) {
           <h3 className="rating-modal__title" id="checkin-title">{t('Como você está hoje?')}</h3>
           <button type="button" className="rating-modal__close" aria-label={t('Fechar')} disabled={busy} onClick={onClose}>✕</button>
         </div>
-        {CHECKIN_FIELDS.map(({ key, label, emojis }) => (
+        {CHECKIN_FIELDS.map(({ key, label, low, high, emojis }) => (
           <div className="checkin__row" key={key}>
             <span className="checkin__label">{label}</span>
-            <div className="checkin__scale" role="radiogroup" aria-label={label}>
-              {emojis.map((emoji, i) => (
-                <button
-                  key={i} type="button" role="radio" aria-checked={draft[key] === i + 1}
-                  aria-label={`${label} ${i + 1} de 5`}
-                  className={draft[key] === i + 1 ? 'checkin__opt checkin__opt--on' : 'checkin__opt'}
-                  onClick={() => setDraft(d => ({ ...d, [key]: i + 1 }))}
-                >{emoji}</button>
-              ))}
+            <div className="checkin__scale-wrap">
+              <div className="checkin__scale" role="radiogroup" aria-label={label}>
+                {emojis.map((emoji, i) => {
+                  const end = i === 0 ? low : i === emojis.length - 1 ? high : '';
+                  return (
+                    <button
+                      key={i} type="button" role="radio" aria-checked={draft[key] === i + 1}
+                      aria-label={end ? `${label} ${i + 1} de 5 (${end})` : `${label} ${i + 1} de 5`}
+                      className={draft[key] === i + 1 ? 'checkin__opt checkin__opt--on' : 'checkin__opt'}
+                      onClick={() => setDraft(d => ({ ...d, [key]: i + 1 }))}
+                    >{emoji}</button>
+                  );
+                })}
+              </div>
+              <div className="checkin__ends" aria-hidden="true"><span>{low}</span><span>{high}</span></div>
             </div>
           </div>
         ))}
