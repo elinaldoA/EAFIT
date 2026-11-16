@@ -24,7 +24,7 @@ export default function ProfileSportSection({ current, modules, updateProfile, t
   return (
     <>
       <SportPicker id="profileSport" value={value} onChange={setValue} modules={modules} small />
-      <span className="profile-field__hint">{t('Cada esporte tem sua versão do EAFIT, com treinos, telas e cores próprios. Seus dados continuam os mesmos.')}</span>
+      <span className="profile-field__hint">{t('Cada esporte tem sua versão do EAFIT, com treinos, telas e cores próprios. Seus treinos e corridas já registrados continuam salvos, e você pode voltar quando quiser.')}</span>
       <button type="button" className="btn btn--primary btn--full" disabled={busy || value === current.id} onClick={handleSave}>
         {busy ? t('Salvando…') : t('Trocar de esporte')}
       </button>

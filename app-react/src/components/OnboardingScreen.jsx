@@ -8,6 +8,7 @@ import { trackEvent } from '../lib/tracking';
 import { heightToCm, validateBody } from '../lib/profileValidation';
 import SportPicker from './SportPicker';
 import { useSportModule } from '../hooks/useSportModule';
+import { preferredSport, clearSportPref } from '../lib/sportPreference';
 
 import { t } from '../lib/i18n';
 import Wordmark from './Wordmark';
@@ -23,7 +24,15 @@ export default function OnboardingScreen() {
   const [local, setLocal] = useState('academia');
   // Esporte = versão do app (modules/registry.js); só pergunta com mais de um liberado.
   const { module: sport, available: sports } = useSportModule();
-  const [esporte, setEsporte] = useState(sport.id);
+  // Com mais de um esporte a pessoa escolhe de verdade: nada vem marcado, a não
+  // ser o esporte do link de divulgação (?esporte=corrida, lib/sportPreference.js).
+  const [picked, setPicked] = useState(() => preferredSport() || '');
+  const choosing = sports.length > 1;
+  const esporte = choosing ? (sports.some(m => m.id === picked) ? picked : '') : sport.id;
+  function pickSport(id) {
+    setPicked(id);
+    trackEvent('onboarding', `esporte_${id}`);
+  }
   // Módulo sem plano de musculação (ex.: EAFIT Run): sem objetivo, local nem treino gerado.
   const usesPlan = sports.find(m => m.id === esporte)?.workoutPlan !== false;
   const [busy, setBusy] = useState(false);
@@ -48,6 +57,12 @@ export default function OnboardingScreen() {
     const alturaCm = heightToCm(altura);
     if (alturaCm !== altura) setAltura(alturaCm);
     const alturaNum = parseFloat(alturaCm);
+
+    if (!esporte) {
+      trackEvent('onboarding', 'erro_esporte');
+      setMsg(t('Escolha o seu esporte para continuar.'));
+      return;
+    }
 
     const invalid = validateBody({ sexo, idade, peso, altura: alturaCm }, { onboarding: true });
     if (invalid) {
@@ -74,6 +89,7 @@ export default function OnboardingScreen() {
       const { error } = await updateProfile({ sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, esporte });
       if (error) throw error;
       trackEvent('onboarding', 'done');
+      clearSportPref();
     } catch (err) {
       trackEvent('onboarding', 'erro_plano');
       console.error('onboarding:', err);
@@ -93,7 +109,7 @@ export default function OnboardingScreen() {
           <p className="auth-logo__tagline">{usesPlan ? t('Vamos montar seu treino personalizado') : t('Conte um pouco sobre você')}</p>
         </div>
         <div className="auth-form">
-          <SportPicker id="onbSport" value={esporte} onChange={setEsporte} modules={sports} />
+          <SportPicker id="onbSport" value={esporte} onChange={pickSport} modules={sports} />
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbSexo">{t('Sexo biológico')}</label>
             <select id="onbSexo" className="input" value={sexo} onChange={e => setSexo(e.target.value)}>

@@ -10,6 +10,7 @@ import { enableTracking, capturePushOpen } from './lib/tracking'
 import { captureInstallPrompt } from './lib/installPrompt'
 import { capturePushTarget } from './lib/appNav'
 import { captureRef } from './lib/ambassadorRef'
+import { captureSportPref } from './lib/sportPreference'
 import { captureAttribution } from './lib/attribution'
 import { capturePersonalInvite } from './lib/trainerInvite'
 import { capturePartnerCampaign } from './lib/partnerCampaign'
@@ -26,6 +27,7 @@ capturePushTarget()
 capturePushOpen()
 captureInstallPrompt()
 captureRef()
+captureSportPref()
 captureAttribution()
 capturePersonalInvite()
 capturePartnerCampaign()

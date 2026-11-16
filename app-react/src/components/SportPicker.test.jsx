@@ -6,8 +6,8 @@ import SportPicker from './SportPicker';
 afterEach(cleanup);
 
 const mods = [
-  { id: 'musculacao', label: 'Musculação', icon: '🏋️' },
-  { id: 'corrida', label: 'Corrida', icon: '🏃' },
+  { id: 'musculacao', label: 'Musculação', icon: '🏋️', blurb: 'Treino na academia' },
+  { id: 'corrida', label: 'Corrida', icon: '🏃', blurb: 'GPS e voz a cada km' },
 ];
 
 describe('SportPicker', () => {
@@ -16,11 +16,21 @@ describe('SportPicker', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('lista os esportes e avisa a escolha', () => {
+  it('mostra um cartão por esporte com a frase e avisa a escolha', () => {
     const onChange = vi.fn();
     render(<SportPicker id="x" value="musculacao" onChange={onChange} modules={mods} />);
-    fireEvent.change(screen.getByLabelText('Seu esporte'), { target: { value: 'corrida' } });
+    expect(screen.getByRole('radiogroup', { name: 'Qual é a sua vibe?' })).toBeTruthy();
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getByText('GPS e voz a cada km')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: /Corrida/ }));
     expect(onChange).toHaveBeenCalledWith('corrida');
-    expect(screen.getAllByRole('option')).toHaveLength(2);
+  });
+
+  it('marca só o cartão escolhido, e nenhum quando o valor é vazio', () => {
+    const { rerender } = render(<SportPicker id="x" value="corrida" onChange={() => {}} modules={mods} />);
+    expect(screen.getByRole('radio', { name: /Corrida/ }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('radio', { name: /Musculação/ }).getAttribute('aria-checked')).toBe('false');
+    rerender(<SportPicker id="x" value="" onChange={() => {}} modules={mods} />);
+    expect(screen.getAllByRole('radio').every(r => r.getAttribute('aria-checked') === 'false')).toBe(true);
   });
 });
