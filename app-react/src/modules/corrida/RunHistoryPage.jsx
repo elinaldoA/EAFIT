@@ -9,6 +9,7 @@ import {
 } from './runs';
 import SplitBars from './SplitBars';
 import { downloadGpx } from './gpx';
+import { downloadTcx } from './tcx';
 import RunShoes from './Shoes';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
@@ -120,7 +121,10 @@ function RunItem({ run, runs, shoe, onDelete }) {
           {run.notes && <p className="run-item__notes">{run.notes}</p>}
           {run.pending && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
           {run.route.length > 0 && (
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => downloadGpx(run)}>{t('📤 Exportar GPX')}</button>
+            <>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => downloadGpx(run)}>{t('📤 Exportar GPX')}</button>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => downloadTcx(run)}>{t('📤 Exportar TCX (Garmin, Strava)')}</button>
+            </>
           )}
           {canRepeat && (
             <button type="button" className="btn btn--primary btn--sm" onClick={() => runAgainst(run)}>

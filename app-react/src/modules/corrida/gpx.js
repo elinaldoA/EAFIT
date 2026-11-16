@@ -48,17 +48,20 @@ ${body}
 
 export const gpxFilename = run => `eafit-run-${(run.run_date || String(run.started_at || '').slice(0, 10) || 'corrida')}.gpx`;
 
-export function downloadGpx(run) {
-  const blob = new Blob([buildGpx(run)], { type: 'application/gpx+xml' });
+// Baixa um texto como arquivo (GPX e TCX).
+export function downloadText(filename, text, type) {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = gpxFilename(run);
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+export const downloadGpx = run => downloadText(gpxFilename(run), buildGpx(run), 'application/gpx+xml');
 
 // ---- Importar ----------------------------------------------------------------
 

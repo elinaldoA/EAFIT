@@ -27,6 +27,7 @@ export default {
   "Tirar a meta": "Remove goal",
   "km no mês": "km per month",
   "Meta do clube em km por mês": "Club goal in km per month",
+  "📤 Exportar TCX (Garmin, Strava)": "📤 Export TCX (Garmin, Strava)",
   "Ano": "Year",
   "Aplaudir a corrida de {v1}": "Give kudos to {v1}'s run",
   "Começar": "Start",
