@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
 import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
-import { enqueue, flushQueue, queueSize, SYNC_QUEUE_EVENT } from '../lib/syncQueue';
+import { enqueue, flushQueue, queueSize, restoreQueue, SYNC_QUEUE_EVENT } from '../lib/syncQueue';
 import { upsertWaterLog } from '../lib/waterLog';
 import { upsertProteinLog, upsertNutritionLog } from '../lib/proteinLog';
 import { saveCustomFoodRow, deleteCustomFoodRow } from '../lib/nutritionFoods';
@@ -264,6 +264,7 @@ export function WorkoutProvider({ children }) {
   const loadUserData = useCallback(async () => {
     if (!user) return;
     setSyncStatus('loading');
+    await restoreQueue(user.id); // fila apagada pelo navegador volta do IndexedDB
 
     let plan;
     try {

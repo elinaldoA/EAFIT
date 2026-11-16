@@ -1,4 +1,7 @@
+import { mirrorQueue, readMirror, clearMirror, requestPersistence } from './queueStore';
+
 const STORAGE_KEY = 'pendingSyncQueue';
+const OWNER_KEY = 'eafit_data_owner'; // mesma chave de lib/localData.js
 
 function readQueue() {
   try {
@@ -23,8 +26,17 @@ function writeQueue(queue) {
   notify();
 }
 
+function owner() {
+  try { return localStorage.getItem(OWNER_KEY); } catch { return null; }
+}
+
 function persist(queue) {
-  let items = queue.length > MAX_QUEUE ? queue.slice(-MAX_QUEUE) : queue;
+  const full = queue.length > MAX_QUEUE ? queue.slice(-MAX_QUEUE) : queue;
+  // O espelho no IndexedDB não tem a cota apertada do localStorage: guarda a fila inteira.
+  // Antes de juntar o que o espelho já tinha (abertura do app), não grava por cima dele.
+  if (reconciled) mirrorQueue(full, owner());
+  else reconcile().then(() => mirrorQueue(readQueue(), owner()));
+  let items = full;
   // Cota cheia: tenta de novo com metade da fila (as mais recentes) em vez de
   // perder a operação que acabou de acontecer.
   for (let i = 0; i < 4; i++) {
@@ -35,6 +47,69 @@ function persist(queue) {
       items = items.slice(Math.ceil(items.length / 2));
     }
   }
+}
+
+// Junta à fila o que o espelho do IndexedDB tem e o localStorage não (o navegador
+// apagou o localStorage, ou ele perdeu a última gravação). Roda uma vez por sessão,
+// antes da primeira gravação do espelho: sem isso, uma gravação feita na abertura
+// (com o localStorage vazio) apagaria do espelho a fila que estava lá.
+// Só da mesma conta. O que já está na fila local vence: é mais novo que o espelho.
+let reconciled = false;
+let reconciling = null;
+function reconcile(userId) {
+  if (!reconciling) {
+    reconciling = mergeMirror(userId || owner()).then(n => { reconciled = true; return n; });
+  }
+  return reconciling;
+}
+
+async function mergeMirror(userId) {
+  try {
+    const mirror = await readMirror();
+    if (!mirror?.items?.length || !userId || mirror.owner !== userId) return 0;
+    const current = readQueue();
+    const ids = new Set(current.map(op => op.id));
+    const byKey = new Map(current.map(op => [coalesceKey(op.type, op.payload), op]).filter(([k]) => k));
+    let changed = 0;
+    const missing = [];
+    for (const op of mirror.items) {
+      if (!op || ids.has(op.id)) continue;
+      const k = coalesceKey(op.type, op.payload);
+      const local = k && byKey.get(k);
+      if (!local) { missing.push(op); continue; }
+      // Mesmo dado já na fila (ex.: o app regravou a carga ao abrir): o valor local
+      // vence campo a campo, mas os campos que só o espelho tem (reps, ✓) voltam.
+      if (op.type.startsWith('set_state') && local.type === op.type) {
+        const patch = { ...op.payload.patch, ...local.payload.patch };
+        if (Object.keys(patch).length > Object.keys(local.payload.patch || {}).length) {
+          local.payload = { ...local.payload, patch };
+          changed += 1;
+        }
+      }
+    }
+    if (!missing.length && !changed) return 0;
+    reconciled = true; // a gravação abaixo já pode ir para o espelho
+    writeQueue([...missing, ...current]);
+    return missing.length + changed;
+  } catch {
+    return 0;
+  }
+}
+
+// Na abertura do app (antes de enviar a fila): devolve quantas operações voltaram do espelho.
+export async function restoreQueue(userId) {
+  requestPersistence();
+  return reconcile(userId);
+}
+
+// Só para testes: simula uma nova abertura do app.
+export function resetQueueMirrorState() {
+  reconciled = false;
+  reconciling = null;
+}
+
+export function clearQueueMirror() {
+  clearMirror();
 }
 
 // Chave de coalescência: operações que sobrescrevem o mesmo dado (editar a

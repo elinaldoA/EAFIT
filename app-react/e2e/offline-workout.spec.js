@@ -147,6 +147,30 @@ test.describe('treino sem rede (navegador real)', () => {
     expect(await queue(page)).toEqual([]);
   });
 
+  test('o navegador apaga o localStorage com a fila cheia: a fila volta do IndexedDB e sobe quando a rede volta', async ({ page, context, fake }) => {
+    await openWorkout(page);
+    await fillSet(page, 1, 100, 8);
+    await expect.poll(() => fake.setOf(EXERCISE, 1)).toMatchObject({ completed: true });
+
+    fake.reachable = false;
+    await context.setOffline(true);
+    await expect(banner(page)).toContainText('Sem conexão');
+    await fillSet(page, 2, 130, 8);
+    await expect.poll(() => queuedSetIsComplete(page)).toBe(true);
+    await page.waitForTimeout(500); // o espelho é gravado em segundo plano
+
+    // Limpeza de armazenamento do navegador: some só a fila (o que o iOS faz de pior).
+    await page.evaluate(() => localStorage.removeItem('pendingSyncQueue'));
+    await page.reload();
+    await expect(page.getByRole('button', { name: '⚡ Modo treino' })).toBeVisible({ timeout: 4000 });
+    await expect.poll(() => queuedSetIsComplete(page)).toBe(true);
+
+    fake.reachable = true;
+    await context.setOffline(false);
+    await expect.poll(() => fake.setOf(EXERCISE, 2)).toMatchObject({ carga: 130, reps: 8, completed: true });
+    expect(await queue(page)).toEqual([]);
+  });
+
   test('finalizar o treino envia na hora o que estava pendente, sem esperar o intervalo nem um evento de rede', async ({ page, fake }) => {
     test.setTimeout(90_000);
     await openWorkout(page);

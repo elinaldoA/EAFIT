@@ -4,6 +4,8 @@
 // anterior, e a fila dela era reexecutada (e falhava na RLS) para sempre.
 // Tema e idioma não entram: são do aparelho, não da conta. A trava de
 // biometria entra: é da conta que a ligou.
+import { clearQueueMirror } from './syncQueue';
+
 const OWNER_KEY = 'eafit_data_owner';
 const PREFIXES = ['treino_', 'set_', 'carga_', 'profile_', 'warm_', 'hr_'];
 const EXACT = ['pendingSyncQueue', 'plan_cache', 'pr_best', 'dash_tab', 'reminders_enabled', 'coach_prefs', 'eafit_bio_lock'];
@@ -19,6 +21,7 @@ export function clearUserLocalData() {
     });
     localStorage.removeItem(OWNER_KEY);
   });
+  clearQueueMirror(); // a cópia da fila no IndexedDB também é da conta que saiu
 }
 
 // Chamado a cada sessão: se o dono dos dados locais é outro usuário, limpa tudo
