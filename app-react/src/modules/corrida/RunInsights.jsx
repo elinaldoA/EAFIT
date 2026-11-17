@@ -151,13 +151,15 @@ const BAND_LABEL = {
 
 // Como o clima mexe no ritmo neste mês: só com corridas do mês que têm clima salvo (weatherInsights.js).
 function WeatherPace({ runs, today }) {
-  const w = weatherBands(monthRuns(runs, today));
+  const w = weatherBands(monthRuns(runs, today), 1);
   if (!w) return null;
   return (
     <div className="section-group">
       <div className="section-group__label">{t('Clima e ritmo do mês')}</div>
       <div className="dash-card run-wx">
-        <p className="run-wx__avg">{t('{v1} corridas com clima neste mês · média de {v2}', { v1: w.total, v2: tempText(w.avgTemp) })}</p>
+        <p className="run-wx__avg">{w.total === 1
+            ? t('1 corrida com clima neste mês · {v1}', { v1: tempText(w.avgTemp) })
+            : t('{v1} corridas com clima neste mês · média de {v2}', { v1: w.total, v2: tempText(w.avgTemp) })}</p>
         <ul className="run-wx__list">
           {w.bands.map(b => {
             const [icon, name, range] = BAND_LABEL[b.key]();
@@ -171,7 +173,9 @@ function WeatherPace({ runs, today }) {
             );
           })}
         </ul>
-        {w.fastest && <p className="profile-field__hint">{t('Você corre mais rápido na faixa destacada.')}</p>}
+        {w.fastest
+          ? <p className="profile-field__hint">{t('Você corre mais rápido na faixa destacada.')}</p>
+          : <p className="profile-field__hint">{t('Com mais corridas em faixas diferentes, aparece em qual temperatura você corre mais rápido.')}</p>}
       </div>
     </div>
   );

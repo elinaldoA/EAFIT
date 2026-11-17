@@ -301,6 +301,16 @@ describe('correr de novo (fantasma)', () => {
     expect(document.querySelector('.run-wx__row--best').textContent).toContain('Ameno');
   });
 
+  it('na aba Você: com 1 corrida com clima no mês o bloco já aparece, sem apontar a mais rápida', async () => {
+    h.fetchRuns.mockResolvedValue([{ ...past('a', 1800, -2300000), run_date: todayDate(), weather: { t: 24, c: 0 } }]);
+    render(<RunHistoryPage />);
+    await screen.findByText('Clima e ritmo do mês');
+    expect(screen.getByText('1 corrida com clima neste mês · 24°C')).toBeTruthy();
+    expect(document.querySelectorAll('.run-wx__row')).toHaveLength(1);
+    expect(document.querySelector('.run-wx__row--best')).toBeNull();
+    expect(screen.getByText(/Com mais corridas em faixas diferentes/)).toBeTruthy();
+  });
+
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
     h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
     render(<RunHistoryPage />);

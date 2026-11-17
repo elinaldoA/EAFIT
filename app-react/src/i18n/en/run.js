@@ -625,4 +625,6 @@ export default {
   '1 corrida · {v1}': '1 run · {v1}',
   'Clima e ritmo do mês': 'Weather and pace this month',
   '{v1} corridas com clima neste mês · média de {v2}': '{v1} runs with weather this month · average {v2}',
+  '1 corrida com clima neste mês · {v1}': '1 run with weather this month · {v1}',
+  'Com mais corridas em faixas diferentes, aparece em qual temperatura você corre mais rápido.': 'With more runs in different ranges, you will see which temperature you run fastest in.',
 };
