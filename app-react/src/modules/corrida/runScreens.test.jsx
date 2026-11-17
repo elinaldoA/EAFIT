@@ -252,6 +252,30 @@ describe('LiveRunHost: clima', () => {
     expect(screen.getByText('vento 8 km/h · umidade 85%')).toBeTruthy();
   });
 
+  it('o resumo da corrida tem o botão de compartilhar, que manda o cartão com o título e o clima da tela', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ current: { temperature_2m: 19, weather_code: 61 } }) }));
+    act(() => { setLiveRun(addRoutePoint(startRun({ gps: true, session: null }), -23.5, -46.6)); });
+    render(<LiveRunHost />);
+    await screen.findByText('🌧️ 19°C');
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Treino do parque' } });
+    await screen.findByText('🌧️ 19°C');
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '📤 Compartilhar esta corrida' })); });
+    expect(shareRunCard).toHaveBeenCalledTimes(1);
+    expect(shareRunCard.mock.calls[0][0]).toMatchObject({ title: 'Treino do parque', weather: { t: 19, c: 61 }, gps: true });
+    expect(getLiveRun()).not.toBeNull(); // compartilhar não salva nem encerra a corrida
+  });
+
+  it('distância inválida no resumo avisa em vez de compartilhar', async () => {
+    act(() => { setLiveRun(startRun({ gps: false, session: null })); });
+    render(<LiveRunHost />);
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
+    fireEvent.change(screen.getByLabelText('Distância (km)'), { target: { value: 'abc' } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '📤 Compartilhar esta corrida' })); });
+    expect(shareRunCard).not.toHaveBeenCalled();
+    expect(h.toast).toHaveBeenCalledWith('⚠️ Distância inválida');
+  });
+
   it('sem GPS ou sem internet não mostra clima', async () => {
     act(() => { setLiveRun(startRun({ gps: false, session: null })); });
     render(<LiveRunHost />);
