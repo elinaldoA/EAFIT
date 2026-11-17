@@ -15,6 +15,7 @@ import PushPrompt from '../../components/PushPrompt';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
 import { weatherText } from './weather';
+import { renderRunCard, shareRunCard } from './runShareCard';
 
 import { t } from '../../lib/i18n';
 const PAGE = 20;
@@ -54,7 +55,25 @@ function WeekSummary({ runs }) {
 }
 
 function RunCard({ run, onToggleKudos }) {
+  const toast = useToast();
   const pace = paceSeconds(run.duration_s, run.distance_m);
+  const [sharing, setSharing] = useState(false);
+  // O cartão (com o clima) começa a ser desenhado no primeiro toque no botão:
+  // quando o toque termina ele já está quase pronto (runShareCard.js).
+  const prepared = useRef(null);
+  const prepare = () => { if (!prepared.current) prepared.current = renderRunCard(run).catch(() => null); };
+  async function handleShare() {
+    prepare();
+    setSharing(true);
+    try {
+      const result = await shareRunCard(run, prepared.current);
+      if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
+    } catch (err) {
+      if (err?.name !== 'AbortError') toast(t('⚠️ Não foi possível gerar a imagem'));
+    } finally {
+      setSharing(false);
+    }
+  }
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(run.comments || 0);
   return (
@@ -80,6 +99,12 @@ function RunCard({ run, onToggleKudos }) {
           type="button" className={`run-card__kudos run-card__comments${open ? ' run-card__kudos--on' : ''}`}
           aria-expanded={open} aria-label={t('Comentários ({v1})', { v1: count })} onClick={() => setOpen(o => !o)}
         >💬 {count}</button>
+        {run.isMe && (
+          <button
+            type="button" className="run-card__kudos run-card__share" disabled={sharing}
+            aria-label={t('Compartilhar a corrida')} onPointerDown={prepare} onFocus={prepare} onClick={handleShare}
+          >{sharing ? t('Gerando imagem…') : t('📤 Compartilhar')}</button>
+        )}
       </div>
       {open && <RunComments run={run} onCount={setCount} />}
     </li>

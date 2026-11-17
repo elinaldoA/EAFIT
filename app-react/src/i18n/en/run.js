@@ -599,4 +599,5 @@ export default {
   '💨 Vento forte: comece contra o vento para voltar com ele a favor.': '💨 Strong wind: start against the wind to come back with it behind you.',
   '🧥 Frio: aqueça bem e use camadas de roupa.': '🧥 Cold: warm up well and dress in layers.',
   'Clima': 'Weather',
+  'Compartilhar a corrida': 'Share the run',
 };

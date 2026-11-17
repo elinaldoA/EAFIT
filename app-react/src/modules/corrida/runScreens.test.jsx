@@ -25,6 +25,7 @@ vi.mock('../../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
 vi.mock('../../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('../../lib/voice', () => ({ speak: vi.fn(), cancelSpeech: vi.fn() }));
 vi.mock('../../lib/tracking', () => ({ trackEvent: vi.fn() }));
+vi.mock('./runShareCard', () => ({ renderRunCard: vi.fn(async () => 'blob'), shareRunCard: vi.fn(async () => 'shared') }));
 vi.mock('./runs', async (orig) => ({
   ...(await orig()),
   saveRun: (...a) => h.saveRun(...a),
@@ -49,6 +50,7 @@ import LiveRunHost from './LiveRunHost';
 import RunHomePage from './RunHomePage';
 import RunHistoryPage from './RunHistoryPage';
 import RunFeedPage from './RunFeedPage';
+import { shareRunCard } from './runShareCard';
 import RunChallengesPage from './RunChallengesPage';
 import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint } from './liveRun';
 
@@ -353,6 +355,17 @@ describe('RunFeedPage (aba Início)', () => {
     render(<RunFeedPage />);
     await screen.findByText('Corrida da manhã');
     expect(screen.getAllByText('☀️ 24°C · Céu limpo · vento 12 km/h · umidade 60%')).toHaveLength(1);
+  });
+
+  it('só as corridas da própria pessoa têm o botão de compartilhar, e ele manda o cartão', async () => {
+    const mine = { ...friendRun, id: 'm1', name: 'Eu', isMe: true, title: 'Minha volta', weather: { t: 24, c: 0 } };
+    h.fetchRunFeed.mockResolvedValueOnce([friendRun, mine]);
+    render(<RunFeedPage />);
+    await screen.findByText('Minha volta');
+    const buttons = screen.getAllByRole('button', { name: 'Compartilhar a corrida' });
+    expect(buttons).toHaveLength(1); // a do amigo não tem
+    await act(async () => { fireEvent.click(buttons[0]); });
+    expect(shareRunCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1', weather: { t: 24, c: 0 } }), expect.anything());
   });
 
   it('sem corridas convida a gravar e a chamar amigos', async () => {
