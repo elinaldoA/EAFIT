@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../lib/supabase';
 import { useAdminAuth } from '../context/useAdminAuth';
@@ -21,6 +22,7 @@ export default function UserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { adminUser } = useAdminAuth();
+  const confirm = useConfirm();
 
   const [detail, setDetail] = useState(null);
   const [activePlan, setActivePlan] = useState(null);
@@ -166,7 +168,7 @@ export default function UserDetail() {
   // uma ação da GoTrue Admin API, só um update de coluna comum.
   async function handleToggleAdmin() {
     const makeAdmin = !detail.is_admin;
-    if (!window.confirm(makeAdmin ? 'Tornar este usuário admin?' : 'Remover acesso de admin deste usuário?')) return;
+    if (!await confirm({ title: makeAdmin ? 'Tornar administrador' : 'Remover administrador', message: makeAdmin ? 'Tornar este usuário admin? Ele passa a ver dados de todos os usuários.' : 'Remover acesso de admin deste usuário?', confirmLabel: makeAdmin ? 'Tornar admin' : 'Remover acesso', danger: !makeAdmin, reauth: true })) return;
     setBusy(true);
     setActionMsg('');
     try {

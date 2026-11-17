@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import {
   LEGAL_DOCS, currentVersions, legalUrl, validateLegalVersion, friendlyLegalError,
   fetchLegalVersions, publishLegalVersion, fetchTermsAcceptance,
@@ -10,6 +11,7 @@ import EmptyState from '../components/EmptyState';
 const DOC_LABEL = Object.fromEntries(LEGAL_DOCS.map(d => [d.key, d.label]));
 
 function VersionForm({ onPublished }) {
+  const confirm = useConfirm();
   const [form, setForm] = useState({ doc: LEGAL_DOCS[0].key, version: '', effectiveDate: todayStr(), summary: '' });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -18,7 +20,7 @@ function VersionForm({ onPublished }) {
     e.preventDefault();
     const problem = validateLegalVersion(form);
     if (problem) { setMsg(`Erro: ${problem}`); return; }
-    if (!window.confirm('Registrar esta versão? A partir da data de entrada em vigor, o app pede um novo aceite a quem aceitou antes dela.')) return;
+    if (!await confirm({ title: 'Registrar nova versão', message: 'A partir da data de entrada em vigor, o app pede um novo aceite a quem aceitou antes dela.', confirmLabel: 'Registrar versão', reauth: true })) return;
     setBusy(true);
     setMsg('');
     try {

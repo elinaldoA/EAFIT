@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { fetchClientErrors, purgeOldClientErrors, describeDevice, formatUptime, KIND_LABELS, PAGE_SIZE } from '../lib/clientErrors';
@@ -53,6 +54,7 @@ function ErrorDetails({ row }) {
 }
 
 export default function ClientErrors() {
+  const confirm = useConfirm();
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -77,7 +79,7 @@ export default function ClientErrors() {
   useEffect(() => { load(page); }, [load, page]);
 
   async function handlePurge() {
-    if (!window.confirm('Apagar os erros com mais de 30 dias?')) return;
+    if (!await confirm({ title: 'Apagar erros antigos', message: 'Apagar os erros com mais de 30 dias? Não dá para desfazer.', confirmLabel: 'Apagar', danger: true, reauth: true })) return;
     try {
       const removed = await purgeOldClientErrors(30);
       setMsg(`${removed} erro(s) apagado(s).`);

@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import SeasonTheme from './components/SeasonTheme';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { useAdminAuth } from './context/useAdminAuth';
+import ConfirmProvider from './components/ConfirmProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import RequireArea from './components/RequireArea';
 import Layout from './components/Layout/Layout';
@@ -148,7 +149,7 @@ export default function App() {
     <ThemeProvider>
       <SeasonTheme />
       <AdminAuthProvider>
-        <AppShell />
+        <ConfirmProvider><AppShell /></ConfirmProvider>
       </AdminAuthProvider>
     </ThemeProvider>
   );

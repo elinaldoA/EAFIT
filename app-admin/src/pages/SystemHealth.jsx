@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import { evaluateJobs, summarizeHttp, fetchHealth, formatBytes } from '../lib/health';
 import { mapStorage, PURGE_DAYS, fetchPurgeStats, purgeOld } from '../lib/ops';
 import { formatDate } from '../lib/userDetailHelpers';
@@ -18,6 +19,7 @@ function BlockError({ message }) {
 // Limpeza de dados técnicos antigos (métricas e controle de envio). Carrega
 // sozinha: se a consulta falhar, o bloco não aparece.
 function PurgeCard() {
+  const confirm = useConfirm();
   const [rows, setRows] = useState(null);
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState('');
@@ -28,7 +30,7 @@ function PurgeCard() {
   useEffect(() => { load(); }, [load]);
 
   async function handlePurge(r) {
-    if (!window.confirm(`Apagar ${r.old.toLocaleString('pt-BR')} registro(s) de "${r.label}" com mais de ${PURGE_DAYS} dias? Não dá para desfazer.`)) return;
+    if (!await confirm({ title: 'Apagar dados antigos', message: `Apagar ${r.old.toLocaleString('pt-BR')} registro(s) de "${r.label}" com mais de ${PURGE_DAYS} dias? Não dá para desfazer.`, confirmLabel: 'Apagar', danger: true, reauth: true })) return;
     setBusy(r.kind);
     setMsg('');
     try {

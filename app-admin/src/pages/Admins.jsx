@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
+import { useConfirm } from '../context/confirmContext';
 import { fetchAdmins, removeAdmin } from '../lib/ops';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
@@ -12,6 +13,7 @@ import { ROLE_LABELS, fetchAccessList } from '../lib/adminAccess';
 // Ações (é lá que se escolhe a pessoa); aqui dá para conferir e remover.
 export default function Admins() {
   const { adminUser } = useAdminAuth();
+  const confirm = useConfirm();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,7 +40,7 @@ export default function Admins() {
   useEffect(() => { load(); }, [load]);
 
   async function handleRemove(a) {
-    if (!window.confirm(`Remover o acesso de admin de ${a.email}? A pessoa continua com a conta no app.`)) return;
+    if (!await confirm({ title: 'Remover administrador', message: `Remover o acesso de admin de ${a.email}? A pessoa continua com a conta no app.`, confirmLabel: 'Remover acesso', danger: true, reauth: true })) return;
     setBusyId(a.id);
     setMsg('');
     try {
