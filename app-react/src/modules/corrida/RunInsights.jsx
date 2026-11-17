@@ -3,6 +3,8 @@ import { todayDate } from '../../data/treinoData';
 import { formatKm, formatClock, formatPace } from './runs';
 import { achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, goalProgress, effortHistory, EFFORT_HISTORY_KM } from './runReadings';
 import { kmGoals } from './runProfileStats';
+import { weatherBands } from './weatherInsights';
+import { tempText } from './weather';
 import { t } from '../../lib/i18n';
 
 // Leituras da aba Você do EAFIT Run: carga da semana, previsão de prova,
@@ -140,6 +142,40 @@ function EffortHistory({ runs, today }) {
   );
 }
 
+const BAND_LABEL = {
+  frio: () => ['🥶', t('Frio'), `≤ ${tempText(15)}`],
+  ameno: () => ['🌤️', t('Ameno'), `${tempText(16)}–${tempText(27)}`],
+  calor: () => ['🥵', t('Calor'), `≥ ${tempText(28)}`],
+};
+
+// Como o clima mexe no ritmo: só com corridas que têm clima salvo (weatherInsights.js).
+function WeatherPace({ runs }) {
+  const w = weatherBands(runs);
+  if (!w) return null;
+  return (
+    <div className="section-group">
+      <div className="section-group__label">{t('Clima e ritmo')}</div>
+      <div className="dash-card run-wx">
+        <p className="run-wx__avg">{t('{v1} corridas com clima · média de {v2}', { v1: w.total, v2: tempText(w.avgTemp) })}</p>
+        <ul className="run-wx__list">
+          {w.bands.map(b => {
+            const [icon, name, range] = BAND_LABEL[b.key]();
+            return (
+              <li key={b.key} className={`run-wx__row${w.fastest === b.key ? ' run-wx__row--best' : ''}`}>
+                <span aria-hidden="true">{icon}</span>
+                <span className="run-wx__name">{name} <small>{range}</small></span>
+                <span className="run-wx__runs">{t('{v1} corrida(s)', { v1: b.runs })}</span>
+                <strong>{b.pace === null ? '–' : `${formatPace(b.pace)}/km`}</strong>
+              </li>
+            );
+          })}
+        </ul>
+        {w.fastest && <p className="profile-field__hint">{t('Você corre mais rápido na faixa destacada.')}</p>}
+      </div>
+    </div>
+  );
+}
+
 function Achievements({ runs }) {
   const list = achievements(runs);
   const unlocked = list.filter(a => a.unlocked).length;
@@ -172,6 +208,7 @@ export default function RunInsights({ runs, meta }) {
       <WeekLoad runs={runs} today={today} />
       <Predictions runs={runs} today={today} />
       <EffortHistory runs={runs} today={today} />
+      <WeatherPace runs={runs} />
       <Achievements runs={runs} />
     </>
   );

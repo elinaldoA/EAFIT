@@ -620,3 +620,11 @@
 .run-card__wx { margin: 0; color: var(--text-muted); font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
 
 .run-filters { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+
+/* Clima e ritmo (aba Você) */
+.run-wx__avg { margin: 0 0 var(--sp-2); color: var(--text-muted); font-size: var(--fs-md); }
+.run-wx__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-wx__row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: baseline; gap: var(--sp-2); padding: var(--sp-2); border-radius: var(--r-md); font-variant-numeric: tabular-nums; }
+.run-wx__row--best { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); }
+.run-wx__name small { color: var(--text-muted); margin-left: 4px; }
+.run-wx__runs { color: var(--text-muted); font-size: var(--fs-md); }

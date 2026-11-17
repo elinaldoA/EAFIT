@@ -130,3 +130,8 @@ export function weatherDetail(weather) {
   if (w.h != null) parts.push(t('umidade {v1}%', { v1: w.h }));
   return parts.join(' · ');
 }
+
+// Temperatura com a unidade do idioma: "24°C" (em inglês, °F).
+export function tempText(celsius) {
+  return lang === 'en' ? `${Math.round(celsius * 9 / 5 + 32)}°F` : `${celsius}°C`;
+}

@@ -288,6 +288,17 @@ describe('correr de novo (fantasma)', () => {
     expect(screen.getByRole('button', { name: '90 dias' }).getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('na aba Você: "Clima e ritmo" compara o ritmo por faixa de temperatura', async () => {
+    const mk = (id, t, dur) => ({ ...past(id, dur, -2300000), client_id: id, weather: { t, c: 0 } });
+    h.fetchRuns.mockResolvedValue([mk('a', 12, 1800), mk('b', 20, 1700), mk('c', 22, 1700), mk('d', 31, 2100)]);
+    render(<RunHistoryPage />);
+    await screen.findByText('Clima e ritmo');
+    expect(screen.getByText(/4 corridas com clima · média de 21°C/)).toBeTruthy();
+    expect(document.querySelectorAll('.run-wx__row')).toHaveLength(3);
+    expect(document.querySelectorAll('.run-wx__row--best')).toHaveLength(1);
+    expect(document.querySelector('.run-wx__row--best').textContent).toContain('Ameno');
+  });
+
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
     h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
     render(<RunHistoryPage />);

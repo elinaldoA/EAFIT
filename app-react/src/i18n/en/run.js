@@ -607,4 +607,11 @@ export default {
   '{v1} de {v2} corridas': '{v1} of {v2} runs',
   'Nenhuma corrida com esses filtros.': 'No runs match these filters.',
   'Limpar filtros': 'Clear filters',
+  'Frio': 'Cold',
+  'Ameno': 'Mild',
+  'Calor': 'Hot',
+  'Clima e ritmo': 'Weather and pace',
+  '{v1} corridas com clima · média de {v2}': '{v1} runs with weather · average {v2}',
+  'Você corre mais rápido na faixa destacada.': 'You run faster in the highlighted range.',
+  '{v1} corrida(s)': '{v1} run(s)',
 };
