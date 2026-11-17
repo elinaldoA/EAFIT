@@ -143,6 +143,21 @@ describe('TreinoPage', () => {
       localStorage.setItem('theme', 'dark');
     });
 
+    it('a confirmação diz que as sessões concluídas somem do Histórico e quantas são', () => {
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      render(<TreinoPage />);
+      fireEvent.click(screen.getByText('Limpar'));
+      expect(confirm).toHaveBeenCalledWith(expect.stringMatching(/também os treinos já concluídos \(1 dia\), inclusive do Histórico/));
+    });
+
+    it('sem treino concluído, a pergunta é só sobre checks e cargas', () => {
+      localStorage.removeItem('treino_Segunda');
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      render(<TreinoPage />);
+      fireEvent.click(screen.getByText('Limpar'));
+      expect(confirm).toHaveBeenCalledWith('Limpar os checks e as cargas marcados nesta semana? Não dá para desfazer.');
+    });
+
     it('cancelando a confirmação não apaga nada', () => {
       vi.spyOn(window, 'confirm').mockReturnValue(false);
       render(<TreinoPage />);

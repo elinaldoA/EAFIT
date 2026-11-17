@@ -39,7 +39,7 @@ import {
 } from '../lib/trainingCoach';
 import TrainingCoach from '../components/TrainingCoach';
 
-import { t, tFoco } from '../lib/i18n';
+import { t, nDias, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
   const { user } = useAuth();
   const { config } = useAppConfig();
@@ -154,7 +154,13 @@ export default function TreinoPage() {
   );
 
   async function handleReset() {
-    if (!window.confirm(t('Limpar todos os checks e cargas salvas?'))) return;
+    // Apaga também as sessões da semana no servidor (somem do Histórico): a pergunta
+    // diz isso e quantos treinos concluídos vão junto, em vez de só "checks e cargas".
+    const doneDays = activePlanDays.filter(d => isDayDone(d.dia)).length;
+    const question = doneDays > 0
+      ? t('Apagar o treino desta semana? Isso remove os checks e as cargas e também os treinos já concluídos ({dias}), inclusive do Histórico. Não dá para desfazer.', { dias: nDias(doneDays) })
+      : t('Limpar os checks e as cargas marcados nesta semana? Não dá para desfazer.');
+    if (!window.confirm(question)) return;
     Object.keys(localStorage).forEach(k => {
       if (['treino_', 'carga_', 'set_', 'warm_', 'hr_'].some(p => k.startsWith(p))) localStorage.removeItem(k);
     });
@@ -250,7 +256,7 @@ export default function TreinoPage() {
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn--ghost btn--sm" onClick={() => setShowPlanEditor(true)}>{t('⚙️ Editar treino')}</button>
-          <button className="btn btn--ghost btn--sm" onClick={handleReset} disabled={loading}>{t('Limpar')}</button>
+          <button className="btn btn--ghost btn--sm" onClick={handleReset} disabled={loading} aria-label={t('Limpar a semana')}>{t('Limpar')}</button>
         </div>
       </div>
       <div id="treinoContainer">
