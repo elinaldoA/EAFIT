@@ -247,7 +247,7 @@ export default function RunHistoryPage() {
       </div>
 
       <div className="dash-card">
-        <div className="summary-stats">
+        <div className="summary-stats run-stats">
           <div className="stat-card">
             <span className="stat-card__value">{formatKm(stats.totalM, 1)}</span>
             <span className="stat-card__label">{t('km no total')}</span>
@@ -269,7 +269,7 @@ export default function RunHistoryPage() {
 
       <div className="section-group">
         <div className="section-group__label">{t('Recordes')}</div>
-        <div className="run-records">
+        <div className="run-records run-stats">
           {EFFORT_KM.map(k => (
             <div key={k} className="stat-card">
               <span className="stat-card__value">{stats.efforts[k] === null ? '–' : formatClock(stats.efforts[k])}</span>
