@@ -6,6 +6,7 @@ import {
   clubInviteText, clubError, formatKm, fetchClubGoal, setClubGoal, clubGoalProgress, CLUB_GOAL_MIN, CLUB_GOAL_MAX, CLUB_NAME_MAX, CLUB_DESC_MAX, CLUB_LIMIT,
 } from './runs';
 import { t } from '../../lib/i18n';
+import { useDeferredRemoval } from '../../lib/useDeferredRemoval';
 
 const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
@@ -106,7 +107,7 @@ function ClubGoal({ club }) {
   );
 }
 
-function ClubCard({ club, onChanged }) {
+function ClubCard({ club, onChanged, onLeave }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
 
@@ -118,12 +119,6 @@ function ClubCard({ club, onChanged }) {
     } catch (err) {
       if (err?.name !== 'AbortError') toast(t('Código: {code}', { code: club.code }));
     }
-  }
-
-  async function leave() {
-    if (!window.confirm(t('Sair do clube {name}?', { name: club.name }))) return;
-    try { await leaveClub(club.id); toast(t('Você saiu do clube')); onChanged(); }
-    catch (err) { toast(clubError(err)); }
   }
 
   async function remove() {
@@ -151,7 +146,7 @@ function ClubCard({ club, onChanged }) {
             <button type="button" className="btn btn--outline btn--sm" onClick={invite}>{t('📤 Convidar')}</button>
           </div>
           <div className="friends__actions">
-            <button type="button" className="btn btn--outline btn--sm" onClick={leave}>{t('Sair do clube')}</button>
+            <button type="button" className="btn btn--outline btn--sm" onClick={() => onLeave(club)}>{t('Sair do clube')}</button>
             {club.isOwner && <button type="button" className="btn btn--outline btn--sm" onClick={remove}>{t('Encerrar clube')}</button>}
           </div>
         </>
@@ -170,6 +165,7 @@ export default function RunClubs() {
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
 
   const reload = useCallback(async () => {
     try { setClubs(await fetchClubs()); }
@@ -191,6 +187,18 @@ export default function RunClubs() {
     }
   }
 
+  // Some da tela na hora; sair de verdade (o dono que sai passa o clube a outro
+  // membro, e sozinho o clube some) roda em 6s, a não ser que desfaça.
+  function handleLeave(club) {
+    removal.schedule(club.id, async () => {
+      try { await leaveClub(club.id); } catch (err) { toast(clubError(err)); }
+      await reload();
+    });
+    toast(t('Você saiu do clube {name}', { name: club.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(club.id) },
+    });
+  }
+
   function handleJoin() {
     const c = normalizeClubCode(code);
     if (c.length !== 6) { setError(t('O código do clube tem 6 letras e números.')); return; }
@@ -203,16 +211,17 @@ export default function RunClubs() {
   }
 
   if (!clubs) return null;
-  const full = clubs.length >= CLUB_LIMIT;
+  const shown = clubs.filter(c => !removal.hidden.has(c.id));
+  const full = shown.length >= CLUB_LIMIT;
 
   return (
     <div className="section-group">
       <div className="section-group__label">{t('Clubes de corrida')}</div>
       <div className="dash-card">
-        {clubs.length === 0 && mode === null && (
+        {shown.length === 0 && mode === null && (
           <p className="dash-empty">{t('Crie um clube para correr com o seu grupo, ou entre em um com o código: todos veem o ranking de km da semana e do mês.')}</p>
         )}
-        {clubs.map(c => <ClubCard key={c.id} club={c} onChanged={reload} />)}
+        {shown.map(c => <ClubCard key={c.id} club={c} onChanged={reload} onLeave={handleLeave} />)}
 
         {mode === null && (
           <div className="friends__actions">
