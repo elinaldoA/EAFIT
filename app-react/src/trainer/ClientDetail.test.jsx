@@ -374,27 +374,50 @@ describe('ClientDetail', () => {
     await screen.findByText('Frequência');
   });
 
-  it('encerrar o acompanhamento pede confirmação, encerra e avisa o pai', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('encerrar o acompanhamento: sem confirmação, avisa com Desfazer e só encerra em 6s, avisando o pai', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     const { onRemoved } = setup();
     const btn = await screen.findByRole('button', { name: 'Encerrar acompanhamento' });
-    fireEvent.click(btn);
-    expect(h.api.removeClient).not.toHaveBeenCalled();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Encerrando…' }).disabled).toBe(true);
+      expect(h.toast).toHaveBeenCalledWith(expect.stringMatching(/^Encerrando o acompanhamento de .*…$/), 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.removeClient).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.removeClient).toHaveBeenCalledWith('c1');
+      expect(h.toast).toHaveBeenCalledWith('Vínculo encerrado');
+      expect(onRemoved).toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
 
-    confirm.mockReturnValue(true);
-    fireEvent.click(btn);
-    await waitFor(() => expect(h.api.removeClient).toHaveBeenCalledWith('c1'));
-    expect(h.toast).toHaveBeenCalledWith('Vínculo encerrado');
-    expect(onRemoved).toHaveBeenCalled();
+  it('Desfazer mantém o acompanhamento e nada é encerrado', async () => {
+    const { onRemoved } = setup();
+    const btn = await screen.findByRole('button', { name: 'Encerrar acompanhamento' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: 'Encerrar acompanhamento' }).disabled).toBe(false);
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.removeClient).not.toHaveBeenCalled();
+      expect(onRemoved).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 
   it('erro ao encerrar avisa e não sai da ficha', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     h.api.removeClient.mockRejectedValue(new Error('not_authorized'));
     const { onRemoved } = setup();
-    fireEvent.click(await screen.findByRole('button', { name: 'Encerrar acompanhamento' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('❌')));
+    const btn = await screen.findByRole('button', { name: 'Encerrar acompanhamento' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('❌'));
+    } finally { vi.useRealTimers(); }
     expect(onRemoved).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Encerrar acompanhamento' }).disabled).toBe(false);
   });
 
   it('aluno em pausa mostra até quando', async () => {

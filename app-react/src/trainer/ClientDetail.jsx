@@ -75,6 +75,7 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
   const [building, setBuilding] = useState(false);
   const [version, setVersion] = useState(0);
   const [renewing, setRenewing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const removal = useDeferredRemoval();
   const [reporting, setReporting] = useState(false);
   const [tab, setTab] = useState(TABS.some(x => x.key === initialTab) ? initialTab : 'resumo');
@@ -102,10 +103,24 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
     onDone: iso => toast(t('🕒 Recado agendado para {v}', { v: whenLabel(iso) })),
   }), [client.id, toast]);
 
-  async function handleRemove() {
-    if (!window.confirm(t('Encerrar o acompanhamento de {name}? Você deixa de ver os dados dele.', { name: client.name }))) return;
-    try { await removeClient(client.id); toast(t('Vínculo encerrado')); onRemoved(); }
-    catch (err) { toast(`❌ ${friendlyTrainerError(err)}`); }
+  // Encerrar o acompanhamento tira o acesso aos dados do aluno (e só o código dele
+  // reabre o vínculo): o botão fica em "Encerrando…" por 6s com Desfazer, e o
+  // encerramento só vai ao servidor depois, ou ao sair da tela.
+  function handleRemove() {
+    setRemoving(true);
+    removal.schedule('remove', async () => {
+      try {
+        await removeClient(client.id);
+        toast(t('Vínculo encerrado'));
+        onRemoved();
+      } catch (err) {
+        toast(`❌ ${friendlyTrainerError(err)}`);
+        setRemoving(false);
+      }
+    });
+    toast(t('Encerrando o acompanhamento de {name}…', { name: client.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => { removal.undo('remove'); setRemoving(false); } },
+    });
   }
 
   // O botão fica em "Renovando…" por 6s com Desfazer; a renovação (que recomeça o
@@ -252,7 +267,7 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
           <ClientGoals clientId={client.id} />
           <ClientNotes clientId={client.id} />
 
-          <button type="button" className="btn btn--outline btn--full" onClick={handleRemove}>{t('Encerrar acompanhamento')}</button>
+          <button type="button" className="btn btn--outline btn--full" disabled={removing} onClick={handleRemove}>{removing ? t('Encerrando…') : t('Encerrar acompanhamento')}</button>
         </>
       )}
 

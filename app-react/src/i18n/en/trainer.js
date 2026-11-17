@@ -64,7 +64,8 @@ export default {
   'Marcar aula e avisar o aluno': 'Schedule class and notify client',
 
   // ClientDetail
-  'Encerrar o acompanhamento de {name}? Você deixa de ver os dados dele.': 'Stop following {name}? You will no longer see their data.',
+  'Encerrando o acompanhamento de {name}…': 'Ending the follow-up of {name}…',
+  'Encerrando…': 'Ending…',
   '‹ Voltar aos alunos': '‹ Back to clients',
   '⏸ Em pausa até {v1}': '⏸ On pause until {v1}',
   'Não foi possível carregar os dados deste aluno.': 'Could not load this client’s data.',
