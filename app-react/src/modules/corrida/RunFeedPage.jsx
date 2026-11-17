@@ -197,6 +197,12 @@ export default function RunFeedPage() {
   const hasFriendsRuns = feed.some(r => !r.isMe);
   return (
     <section id="page-inicio" className="page active">
+      {/* Atalho para gravar: sem corridas o estado vazio abaixo já tem o botão. */}
+      {feed.length > 0 && (
+        <button type="button" className="btn btn--primary btn--full run-quick" onClick={() => goTo({ tab: 'gravar' })}>
+          {t('▶ Gravar corrida')}
+        </button>
+      )}
       <WeekSummary runs={mine} />
       {/* Quem já correu pode ligar os avisos de corrida: o convite só existia no resumo do treino de musculação. */}
       {feed.some(r => r.isMe) && <PushPrompt running />}

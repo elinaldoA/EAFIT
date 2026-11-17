@@ -25,6 +25,7 @@ vi.mock('../../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
 vi.mock('../../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('../../lib/voice', () => ({ speak: vi.fn(), cancelSpeech: vi.fn() }));
 vi.mock('../../lib/tracking', () => ({ trackEvent: vi.fn() }));
+vi.mock('../../lib/appNav', () => ({ goTo: vi.fn() }));
 vi.mock('./runShareCard', () => ({ renderRunCard: vi.fn(async () => 'blob'), shareRunCard: vi.fn(async () => 'shared'), renderRunSummaryCard: vi.fn(async () => 'blob'), shareRunSummary: vi.fn(async () => 'shared') }));
 vi.mock('./runs', async (orig) => ({
   ...(await orig()),
@@ -54,6 +55,7 @@ import { shareRunCard, shareRunSummary } from './runShareCard';
 import { todayDate } from '../../data/treinoData';
 import RunChallengesPage from './RunChallengesPage';
 import { speak } from '../../lib/voice';
+import { goTo } from '../../lib/appNav';
 import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint, markRunSeen } from './liveRun';
 
 beforeEach(() => {
@@ -540,6 +542,21 @@ describe('RunFeedPage (aba Início)', () => {
     expect(buttons).toHaveLength(1); // a do amigo não tem
     await act(async () => { fireEvent.click(buttons[0]); });
     expect(shareRunCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1', weather: { t: 24, c: 0 } }), expect.anything());
+  });
+
+  it('com corridas no feed tem o botão rápido de gravar, que abre a aba Gravar', async () => {
+    h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+    render(<RunFeedPage />);
+    await screen.findByText('Corrida da manhã');
+    fireEvent.click(screen.getByRole('button', { name: '▶ Gravar corrida' }));
+    expect(goTo).toHaveBeenCalledWith({ tab: 'gravar' });
+  });
+
+  it('sem corridas só há um botão de gravar (o do estado vazio), sem repetir o atalho', async () => {
+    render(<RunFeedPage />);
+    await screen.findByText(/Nenhuma corrida ainda/);
+    expect(screen.queryByRole('button', { name: '▶ Gravar corrida' })).toBeNull();
+    expect(screen.getAllByRole('button', { name: 'Gravar corrida' })).toHaveLength(1);
   });
 
   it('sem corridas convida a gravar e a chamar amigos', async () => {

@@ -634,4 +634,5 @@ export default {
   "🔋 Confira a bateria antes de sair: o GPS gasta bastante e a corrida não continua com o celular desligado.": "🔋 Check your battery before heading out: GPS uses a lot, and the run can't continue with the phone off.",
   "⏱️ Corrida longa: se a bateria estiver baixa, use a tela escura.": "⏱️ Long run: if your battery is low, use the dark screen.",
   "Corrida longa. Se a bateria estiver baixa, use a tela escura.": "Long run. If your battery is low, use the dark screen.",
+  "▶ Gravar corrida": "▶ Record a run",
 };
