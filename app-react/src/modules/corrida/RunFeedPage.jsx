@@ -14,6 +14,7 @@ import RunComments from './RunComments';
 import PushPrompt from '../../components/PushPrompt';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
+import { weatherText } from './weather';
 
 import { t } from '../../lib/i18n';
 const PAGE = 20;
@@ -66,6 +67,7 @@ function RunCard({ run, onToggleKudos }) {
         </div>
       </div>
       <h3 className="run-card__title">{runTitle(run)}</h3>
+      {run.weather && <p className="run-card__wx">{weatherText(run.weather)}</p>}
       <div className="run-card__stats">
         <div><span>{t('Distância')}</span><strong>{t('{v1} km', { v1: formatKm(run.distance_m) })}</strong></div>
         <div><span>{t('Ritmo')}</span><strong>{formatPace(pace)}/km</strong></div>

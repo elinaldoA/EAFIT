@@ -12,13 +12,13 @@ vi.mock('../../lib/supabase', () => {
     q.then = (res, rej) => Promise.resolve(h.result).then(res, rej);
     return q;
   };
-  return { db: { from: table => { h.calls.push(['from', table]); return chain(); } } };
+  return { db: { from: table => { h.calls.push(['from', table]); return chain(); }, rpc: (name, args) => { h.calls.push(['rpc', name, args]); return Promise.resolve(h.result); } } };
 });
 
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
   saveRun, isRejectedByServer, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
-  shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
+  fetchRunFeed, shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
 const run = (over = {}) => ({
@@ -330,5 +330,17 @@ describe('mergeFeed', () => {
     const { mergeFeed } = await import('./runs');
     const first = [r('a', '2026-11-13')];
     expect(mergeFeed(null, first)).toBe(first);
+  });
+});
+
+describe('fetchRunFeed', () => {
+  it('traz o clima de cada corrida do feed e ignora o que não é clima', async () => {
+    h.result = { error: null, data: [
+      { rf_id: 'a', rf_name: 'Bia', rf_distance_m: 5000, rf_duration_s: 1800, rf_route: [], rf_weather: { t: 24, w: 12, h: 60, c: 0 } },
+      { rf_id: 'b', rf_name: 'Caio', rf_distance_m: 3000, rf_duration_s: 1200, rf_route: [], rf_weather: { t: 'x' } },
+      { rf_id: 'c', rf_name: 'Du', rf_distance_m: 1000, rf_duration_s: 400, rf_route: [] }, // banco sem a migration
+    ] };
+    const feed = await fetchRunFeed({ limit: 20 });
+    expect(feed.map(r => r.weather)).toEqual([{ t: 24, w: 12, h: 60, c: 0 }, null, null]);
   });
 });

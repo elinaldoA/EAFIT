@@ -359,7 +359,7 @@ export async function fetchRunFeed({ limit = 20, before = null } = {}) {
     id: r.rf_id, name: r.rf_name, isMe: !!r.rf_is_me, started_at: r.rf_started_at, run_date: r.rf_run_date,
     duration_s: Number(r.rf_duration_s) || 0, distance_m: Number(r.rf_distance_m) || 0,
     route: cleanRoute(r.rf_route), kind: r.rf_kind, title: r.rf_title, visibility: r.rf_visibility,
-    kudos: Number(r.rf_kudos) || 0, kudoed: !!r.rf_kudoed, comments: Number(r.rf_comments) || 0,
+    kudos: Number(r.rf_kudos) || 0, kudoed: !!r.rf_kudoed, comments: Number(r.rf_comments) || 0, weather: cleanWeather(r.rf_weather),
   }));
 }
 

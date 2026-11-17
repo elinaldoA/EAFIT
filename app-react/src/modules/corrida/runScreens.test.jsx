@@ -345,6 +345,16 @@ describe('RunFeedPage (aba Início)', () => {
     expect(screen.getByRole('button', { name: 'Tirar aplauso' }).textContent).toContain('1');
   });
 
+  it('o cartão da corrida mostra o clima de quando ela começou, quando tem', async () => {
+    h.fetchRunFeed.mockResolvedValueOnce([
+      { ...friendRun, weather: { t: 24, w: 12, h: 60, c: 0 } },
+      { ...friendRun, id: 'r2', title: 'Sem clima' },
+    ]);
+    render(<RunFeedPage />);
+    await screen.findByText('Corrida da manhã');
+    expect(screen.getAllByText('☀️ 24°C · Céu limpo · vento 12 km/h · umidade 60%')).toHaveLength(1);
+  });
+
   it('sem corridas convida a gravar e a chamar amigos', async () => {
     render(<RunFeedPage />);
     expect(await screen.findByText(/Nenhuma corrida ainda/)).toBeTruthy();

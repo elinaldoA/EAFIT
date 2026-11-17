@@ -616,3 +616,5 @@
 /* Clima na tela ao vivo */
 .run-live__weather { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px var(--sp-3); color: var(--text-muted); font-size: var(--fs-base); font-variant-numeric: tabular-nums; }
 .run-live__weather span:first-child { color: var(--text); font-weight: 700; }
+
+.run-card__wx { margin: 0; color: var(--text-muted); font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
