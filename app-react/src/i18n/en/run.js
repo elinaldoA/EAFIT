@@ -623,4 +623,6 @@ export default {
   '📤 Compartilhar meu mês': '📤 Share my month',
   '{v1} corridas · média de {v2}': '{v1} runs · average {v2}',
   '1 corrida · {v1}': '1 run · {v1}',
+  'Clima e ritmo do mês': 'Weather and pace this month',
+  '{v1} corridas com clima neste mês · média de {v2}': '{v1} runs with weather this month · average {v2}',
 };

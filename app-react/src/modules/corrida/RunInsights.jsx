@@ -4,6 +4,7 @@ import { formatKm, formatClock, formatPace } from './runs';
 import { achievements, weeklyLoad, weekEffort, racePredictions, paceTrend, goalProgress, effortHistory, EFFORT_HISTORY_KM } from './runReadings';
 import { kmGoals } from './runProfileStats';
 import { weatherBands } from './weatherInsights';
+import { monthRuns } from './runSummary';
 import { tempText } from './weather';
 import { t } from '../../lib/i18n';
 
@@ -148,15 +149,15 @@ const BAND_LABEL = {
   calor: () => ['🥵', t('Calor'), `≥ ${tempText(28)}`],
 };
 
-// Como o clima mexe no ritmo: só com corridas que têm clima salvo (weatherInsights.js).
-function WeatherPace({ runs }) {
-  const w = weatherBands(runs);
+// Como o clima mexe no ritmo neste mês: só com corridas do mês que têm clima salvo (weatherInsights.js).
+function WeatherPace({ runs, today }) {
+  const w = weatherBands(monthRuns(runs, today));
   if (!w) return null;
   return (
     <div className="section-group">
-      <div className="section-group__label">{t('Clima e ritmo')}</div>
+      <div className="section-group__label">{t('Clima e ritmo do mês')}</div>
       <div className="dash-card run-wx">
-        <p className="run-wx__avg">{t('{v1} corridas com clima · média de {v2}', { v1: w.total, v2: tempText(w.avgTemp) })}</p>
+        <p className="run-wx__avg">{t('{v1} corridas com clima neste mês · média de {v2}', { v1: w.total, v2: tempText(w.avgTemp) })}</p>
         <ul className="run-wx__list">
           {w.bands.map(b => {
             const [icon, name, range] = BAND_LABEL[b.key]();
@@ -208,7 +209,7 @@ export default function RunInsights({ runs, meta }) {
       <WeekLoad runs={runs} today={today} />
       <Predictions runs={runs} today={today} />
       <EffortHistory runs={runs} today={today} />
-      <WeatherPace runs={runs} />
+      <WeatherPace runs={runs} today={today} />
       <Achievements runs={runs} />
     </>
   );

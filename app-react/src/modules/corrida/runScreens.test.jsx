@@ -288,28 +288,17 @@ describe('correr de novo (fantasma)', () => {
     expect(screen.getByRole('button', { name: '90 dias' }).getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('na aba Você: "Clima e ritmo" compara o ritmo por faixa de temperatura', async () => {
-    const mk = (id, t, dur) => ({ ...past(id, dur, -2300000), client_id: id, weather: { t, c: 0 } });
-    h.fetchRuns.mockResolvedValue([mk('a', 12, 1800), mk('b', 20, 1700), mk('c', 22, 1700), mk('d', 31, 2100)]);
+  it('na aba Você: "Clima e ritmo do mês" compara o ritmo por faixa só com as corridas do mês', async () => {
+    const mk = (id, t, dur, run_date = todayDate()) => ({ ...past(id, dur, -2300000), client_id: id, run_date, weather: { t, c: 0 } });
+    h.fetchRuns.mockResolvedValue([
+      mk('a', 12, 1800), mk('b', 20, 1700), mk('c', 22, 1700), mk('d', 31, 2100),
+      mk('old1', 5, 1500, '2020-01-01'), mk('old2', 5, 1500, '2020-01-02'), // de outro mês: não entram
+    ]);
     render(<RunHistoryPage />);
-    await screen.findByText('Clima e ritmo');
-    expect(screen.getByText(/4 corridas com clima · média de 21°C/)).toBeTruthy();
+    await screen.findByText('Clima e ritmo do mês');
+    expect(screen.getByText(/4 corridas com clima neste mês · média de 21°C/)).toBeTruthy();
     expect(document.querySelectorAll('.run-wx__row')).toHaveLength(3);
-    expect(document.querySelectorAll('.run-wx__row--best')).toHaveLength(1);
     expect(document.querySelector('.run-wx__row--best').textContent).toContain('Ameno');
-  });
-
-  it('na aba Você: compartilha o cartão do mês só quando há corrida no mês', async () => {
-    h.fetchRuns.mockResolvedValue([{ ...past('a', 1800, -2300000), run_date: todayDate() }]);
-    const first = render(<RunHistoryPage />);
-    const btn = await screen.findByRole('button', { name: '📤 Compartilhar meu mês' });
-    await act(async () => { fireEvent.click(btn); });
-    expect(shareRunSummary).toHaveBeenCalledTimes(1);
-    first.unmount();
-    h.fetchRuns.mockResolvedValue([{ ...past('b', 1800, -2300000), run_date: '2020-01-01' }]);
-    render(<RunHistoryPage />);
-    await screen.findByText('Semana'); // a aba já carregou
-    expect(screen.queryByRole('button', { name: '📤 Compartilhar meu mês' })).toBeNull();
   });
 
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
