@@ -511,7 +511,7 @@
 .run-goals { gap: var(--sp-3); }
 .run-goal__head { display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
 .run-goal__head span { color: var(--text-muted); font-size: var(--fs-lg); }
-.run-goal__head strong { font-size: var(--fs-lg); }
+
 .run-goal__bar { height: 8px; border-radius: 4px; background: rgba(128,128,128,.25); overflow: hidden; margin: 6px 0 2px; }
 .run-goal__bar > span { display: block; height: 100%; background: var(--primary); }
 
@@ -586,3 +586,13 @@
 .run-friends .friends__row { font-size: var(--fs-xl); padding: var(--sp-2) 0; }
 .run-friends .friends__manage,
 .run-friends .friends__privacy { font-size: var(--fs-lg); }
+
+/* Clubes: nome, membros, código, meta do mês e hints com números */
+.run-club__head strong { font-size: var(--fs-xl); }
+.run-club__head .run-challenge__meta { font-size: var(--fs-lg); }
+.run-club .friends__me { font-size: var(--fs-lg); }
+.run-club .friends__code { font-size: 1.75rem; }
+.run-goal__head strong { font-size: var(--fs-xl); }
+.run-goal__head span { font-size: var(--fs-xl); font-weight: 700; color: var(--text); }
+.run-goal__bar { height: 12px; border-radius: 6px; }
+.run-goal .profile-field__hint { font-size: var(--fs-lg); }
