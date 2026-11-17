@@ -6,6 +6,7 @@ import {
   friendlyChallengeError, inviteText, fetchMyChallenges, createChallenge, joinChallenge, leaveChallenge,
   fetchLeaderboard, fetchOfficialChallenges,
 } from '../lib/challenges';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import Loading from './Loading';
 
 import { t, nDias, diasRestantes } from '../lib/i18n';
@@ -46,6 +47,7 @@ export default function Challenges() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const today = todayDate();
+  const removal = useDeferredRemoval();
 
   const reload = useCallback(async () => {
     try { setItems(await fetchMyChallenges()); } catch (err) { console.error('fetchMyChallenges:', err); setItems([]); }
@@ -90,13 +92,21 @@ export default function Challenges() {
     }
   }
 
-  async function handleLeave(c) {
-    if (!window.confirm(t('Sair do desafio "{title}"?', { title: c.title }))) return;
-    try { await leaveChallenge(c.id); toast(t('Você saiu do desafio')); setOpen(null); await reload(); }
-    catch { toast(t('❌ Não foi possível sair')); }
+  // Some na hora; sair de verdade (o último a sair apaga o desafio, sem volta)
+  // roda em 6s, a não ser que desfaça.
+  function handleLeave(c) {
+    setOpen(null);
+    removal.schedule(c.id, async () => {
+      try { await leaveChallenge(c.id); } catch { toast(t('❌ Não foi possível sair')); }
+      await reload();
+    });
+    toast(t('Você saiu do desafio "{title}"', { title: c.title }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(c.id) },
+    });
   }
 
   if (!items) return null;
+  const shown = items.filter(c => !removal.hidden.has(c.id));
 
   return (
     <div className="dash-card">
@@ -121,11 +131,11 @@ export default function Challenges() {
         </div>
       ))}
 
-      {items.length === 0 && official.length === 0 && mode === null && (
+      {shown.length === 0 && official.length === 0 && mode === null && (
         <p className="dash-empty">{t('Crie um desafio e mande o código para os amigos: vence quem treinar mais dias no período.')}</p>
       )}
 
-      {items.map(c => {
+      {shown.map(c => {
         const status = challengeStatus(c, today);
         const left = daysLeft(c, today);
         const expanded = open === c.id;

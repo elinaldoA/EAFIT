@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {} }));
 
@@ -184,27 +184,49 @@ describe('Challenges — convidar e sair', () => {
     expect(h.toast).toHaveBeenCalledWith('📋 Convite copiado');
   });
 
-  it('sair pede confirmação, sai e fecha o painel', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('sair some na hora, sem confirmação, e só sai no servidor depois de 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     await setup();
     fireEvent.click(screen.getByRole('button', { name: /Outubro firme/ }));
     const leave = await screen.findByRole('button', { name: 'Sair' });
-    fireEvent.click(leave);
-    expect(h.api.leaveChallenge).not.toHaveBeenCalled();
-
-    confirm.mockReturnValue(true);
-    fireEvent.click(leave);
-    await waitFor(() => expect(h.api.leaveChallenge).toHaveBeenCalledWith('c1'));
-    expect(h.toast).toHaveBeenCalledWith('Você saiu do desafio');
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(leave);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: /Outubro firme/ })).toBeNull();
+      expect(h.toast).toHaveBeenCalledWith('Você saiu do desafio "Outubro firme"', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.leaveChallenge).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.leaveChallenge).toHaveBeenCalledWith('c1');
+    } finally { vi.useRealTimers(); }
   });
 
-  it('falha ao sair avisa', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('Desfazer devolve o desafio e nunca sai no servidor', async () => {
+    await setup();
+    fireEvent.click(screen.getByRole('button', { name: /Outubro firme/ }));
+    const leave = await screen.findByRole('button', { name: 'Sair' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(leave);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: /Outubro firme/ })).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.leaveChallenge).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('falha ao sair avisa e o desafio volta', async () => {
     h.api.leaveChallenge.mockRejectedValue(new Error('x'));
     await setup();
     fireEvent.click(screen.getByRole('button', { name: /Outubro firme/ }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Sair' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível sair'));
+    const leave = await screen.findByRole('button', { name: 'Sair' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(leave);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível sair');
+    } finally { vi.useRealTimers(); }
+    expect(await screen.findByRole('button', { name: /Outubro firme/ })).toBeTruthy();
   });
 });
 
