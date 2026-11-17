@@ -5,7 +5,8 @@ import { useToast } from '../../context/useToast';
 import { trackEvent } from '../../lib/tracking';
 import { elapsedMs, finishRun, splitsOf, setLiveRun } from './liveRun';
 import { elevationGain, kmElevOf } from './elevation';
-import { fetchWeather } from './weather';
+import { fetchWeather, startPosition, weatherShort, weatherDetail } from './weather';
+import { useStartWeather } from './useStartWeather';
 import { averageCadence } from './cadence';
 import { heartOf, hrText } from './heartRate';
 import HrZones from './HrZones';
@@ -53,6 +54,8 @@ export default function FinishRun({ run, now, onBack, onDone }) {
   }, [user.id]);
   const gain = run.gps ? elevationGain(run.elev) : null;
   const cadence = averageCadence(run.steps, run.stepMs);
+  // Clima de onde a corrida começou, já na tela de resumo (ao salvar, o mesmo clima vai com a corrida).
+  const weather = useStartWeather(run.gps ? startPosition(run.route) : null);
 
   async function handleSave() {
     const parsed = Number(String(km).replace(',', '.'));
@@ -104,6 +107,12 @@ export default function FinishRun({ run, now, onBack, onDone }) {
       </div>
       <h2 className="run-live__title">{t('Fim da corrida')}</h2>
       <div className="run-live__clock run-live__clock--small">{formatClock(totalS)}</div>
+      {weather && (
+        <div className="run-live__weather" aria-label={t('Clima')}>
+          <span>{weatherShort(weather)}</span>
+          {weatherDetail(weather) && <span>{weatherDetail(weather)}</span>}
+        </div>
+      )}
       {run.ghost && <GhostResult ghost={run.ghost} totalS={totalS} meters={edited ? (Number(String(km).replace(',', '.')) || 0) * 1000 : run.meters} />}
       {(gain !== null || cadence) && (
         <div className="run-live__extra">

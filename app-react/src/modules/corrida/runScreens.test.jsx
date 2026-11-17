@@ -134,6 +134,17 @@ describe('LiveRunHost: clima', () => {
     expect(screen.getByText('vento 12 km/h · umidade 60%')).toBeTruthy();
   });
 
+  it('o resumo da corrida também mostra o clima', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ current: { temperature_2m: 19, weather_code: 61, wind_speed_10m: 8, relative_humidity_2m: 85 } }) }));
+    act(() => { setLiveRun(addRoutePoint(startRun({ gps: true, session: null }), -23.5, -46.6)); });
+    render(<LiveRunHost />);
+    await screen.findByText('🌧️ 19°C'); // tela ao vivo
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
+    expect(screen.getByRole('dialog', { name: 'Finalizar corrida' })).toBeTruthy();
+    expect(await screen.findByText('🌧️ 19°C')).toBeTruthy();
+    expect(screen.getByText('vento 8 km/h · umidade 85%')).toBeTruthy();
+  });
+
   it('sem GPS ou sem internet não mostra clima', async () => {
     act(() => { setLiveRun(startRun({ gps: false, session: null })); });
     render(<LiveRunHost />);
