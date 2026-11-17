@@ -32,7 +32,7 @@ describe('RestTimer', () => {
 
   it('+15s soma ao tempo restante', () => {
     render(<RestTimer session={session()} onClose={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: '+15s' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mais 15 segundos de descanso' }));
     expect(screen.getByText('00:25')).toBeTruthy();
   });
 

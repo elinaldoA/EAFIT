@@ -179,7 +179,7 @@ describe('LiveWorkoutModal — descanso', () => {
     act(() => { vi.advanceTimersByTime(10_000); });
     expect(screen.getByRole('timer').textContent).toMatch(/00:20/);
 
-    fireEvent.click(screen.getByRole('button', { name: '+15s' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mais 15 segundos de descanso' }));
     expect(screen.getByRole('timer').textContent).toMatch(/00:35/);
 
     fireEvent.click(screen.getByRole('button', { name: 'Pular' }));

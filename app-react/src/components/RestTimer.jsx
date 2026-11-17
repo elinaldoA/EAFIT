@@ -83,7 +83,7 @@ export default function RestTimer({ session, onClose }) {
         <div className="rest-modal__actions">
           {!finished && (
             <>
-              <button type="button" className="rest-modal__btn" onClick={() => setLeft(l => l + 15)}>+15s</button>
+              <button type="button" className="rest-modal__btn" aria-label={t('Mais 15 segundos de descanso')} onClick={() => setLeft(l => l + 15)}>+15s</button>
               <button type="button" className="rest-modal__btn" onClick={() => setPaused(p => !p)}>
                 {paused ? t('▶ Continuar') : t('⏸ Pausar')}
               </button>

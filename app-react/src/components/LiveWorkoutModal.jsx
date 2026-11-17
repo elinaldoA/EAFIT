@@ -338,7 +338,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
             </div>
             {!restDone && (
               <div className="live__rest-actions">
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => addRest(15)}>+15s</button>
+                <button type="button" className="btn btn--ghost btn--sm" aria-label={t('Mais 15 segundos de descanso')} onClick={() => addRest(15)}>+15s</button>
                 <button type="button" className="btn btn--outline btn--sm" onClick={() => setRest(null)}>{t('Pular')}</button>
               </div>
             )}
