@@ -107,7 +107,7 @@ function ClubGoal({ club }) {
   );
 }
 
-function ClubCard({ club, onChanged, onLeave }) {
+function ClubCard({ club, onLeave, onClose }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
 
@@ -119,12 +119,6 @@ function ClubCard({ club, onChanged, onLeave }) {
     } catch (err) {
       if (err?.name !== 'AbortError') toast(t('Código: {code}', { code: club.code }));
     }
-  }
-
-  async function remove() {
-    if (!window.confirm(t('Encerrar o clube {name} para todos os {v1} membros?', { name: club.name, v1: club.members }))) return;
-    try { await deleteClub(club.id); toast(t('Clube encerrado')); onChanged(); }
-    catch (err) { toast(clubError(err)); }
   }
 
   return (
@@ -147,7 +141,7 @@ function ClubCard({ club, onChanged, onLeave }) {
           </div>
           <div className="friends__actions">
             <button type="button" className="btn btn--outline btn--sm" onClick={() => onLeave(club)}>{t('Sair do clube')}</button>
-            {club.isOwner && <button type="button" className="btn btn--outline btn--sm" onClick={remove}>{t('Encerrar clube')}</button>}
+            {club.isOwner && <button type="button" className="btn btn--outline btn--sm" onClick={() => onClose(club)}>{t('Encerrar clube')}</button>}
           </div>
         </>
       )}
@@ -199,6 +193,19 @@ export default function RunClubs() {
     });
   }
 
+  // Encerrar apaga o clube para todos os membros (sem volta): some da tela na
+  // hora, mas o servidor só apaga em 6s, a não ser que desfaça. Quem é membro
+  // continua vendo o clube até lá.
+  function handleCloseClub(club) {
+    removal.schedule(club.id, async () => {
+      try { await deleteClub(club.id); } catch (err) { toast(clubError(err)); }
+      await reload();
+    });
+    toast(t('Clube {name} encerrado para os {v1} membros', { name: club.name, v1: club.members }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(club.id) },
+    });
+  }
+
   function handleJoin() {
     const c = normalizeClubCode(code);
     if (c.length !== 6) { setError(t('O código do clube tem 6 letras e números.')); return; }
@@ -221,7 +228,7 @@ export default function RunClubs() {
         {shown.length === 0 && mode === null && (
           <p className="dash-empty">{t('Crie um clube para correr com o seu grupo, ou entre em um com o código: todos veem o ranking de km da semana e do mês.')}</p>
         )}
-        {shown.map(c => <ClubCard key={c.id} club={c} onChanged={reload} onLeave={handleLeave} />)}
+        {shown.map(c => <ClubCard key={c.id} club={c} onLeave={handleLeave} onClose={handleCloseClub} />)}
 
         {mode === null && (
           <div className="friends__actions">

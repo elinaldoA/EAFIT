@@ -5,6 +5,7 @@ import { render, screen, fireEvent, cleanup, act, waitFor } from '@testing-libra
 const h = vi.hoisted(() => ({
   toast: vi.fn(),
   leaveClub: vi.fn(),
+  deleteClub: vi.fn(),
   fetchClubs: vi.fn(),
 }));
 
@@ -13,6 +14,7 @@ vi.mock('./runs', async importOriginal => ({
   ...(await importOriginal()),
   fetchClubs: (...a) => h.fetchClubs(...a),
   leaveClub: (...a) => h.leaveClub(...a),
+  deleteClub: (...a) => h.deleteClub(...a),
   fetchClubRanking: async () => [],
   fetchClubGoal: async () => null,
 }));
@@ -26,6 +28,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.fetchClubs.mockResolvedValue([CLUB]);
   h.leaveClub.mockResolvedValue(undefined);
+  h.deleteClub.mockResolvedValue(undefined);
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
@@ -56,5 +59,32 @@ describe('sair do clube', () => {
     await waitFor(() => expect(screen.getByText('Corredores')).toBeTruthy());
     await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
     expect(h.leaveClub).not.toHaveBeenCalled();
+  });
+});
+
+describe('encerrar clube', () => {
+  beforeEach(() => h.fetchClubs.mockResolvedValue([{ ...CLUB, isOwner: true }]));
+
+  it('some na hora, sem confirmação, e só apaga para todos depois de 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    await openClub();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar clube' }));
+    expect(confirm).not.toHaveBeenCalled();
+    expect(screen.queryByText('Corredores')).toBeNull();
+    expect(h.toast).toHaveBeenCalledWith('Clube Corredores encerrado para os 4 membros', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+    expect(h.deleteClub).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+    expect(h.deleteClub).toHaveBeenCalledWith('c1');
+  });
+
+  it('Desfazer devolve o clube e nada é apagado', async () => {
+    await openClub();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Encerrar clube' }));
+    act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+    await waitFor(() => expect(screen.getByText('Corredores')).toBeTruthy());
+    await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+    expect(h.deleteClub).not.toHaveBeenCalled();
   });
 });
