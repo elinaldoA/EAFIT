@@ -171,23 +171,33 @@ describe('PlanEditorModal — planos', () => {
     expect(h.api.deletePlan).not.toHaveBeenCalled();
   });
 
-  it('exclui um plano inativo depois de confirmar', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('excluir plano some na hora, sem confirmação, e só apaga no servidor em 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     setup();
     await screen.findByDisplayValue('Força');
-    const dels = screen.getAllByRole('button', { name: 'Excluir plano' });
-    fireEvent.click(dels[1]);
-    await waitFor(() => expect(h.api.deletePlan).toHaveBeenCalledWith('p2', 'u1'));
-    expect(confirm).toHaveBeenCalled();
-    expect(h.toast).toHaveBeenCalledWith('🗑️ Plano excluído');
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Excluir plano' })[1]);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByDisplayValue('Força')).toBeNull();
+      expect(h.toast).toHaveBeenCalledWith('🗑️ Plano "Força" excluído', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.deletePlan).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.deletePlan).toHaveBeenCalledWith('p2', 'u1');
+    } finally { vi.useRealTimers(); }
   });
 
-  it('recusar a confirmação não exclui', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('Desfazer devolve o plano e nada é apagado', async () => {
     setup();
     await screen.findByDisplayValue('Força');
-    fireEvent.click(screen.getAllByRole('button', { name: 'Excluir plano' })[1]);
-    expect(h.api.deletePlan).not.toHaveBeenCalled();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Excluir plano' })[1]);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByDisplayValue('Força')).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.deletePlan).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 
   it('novo plano em branco e duplicando o atual', async () => {

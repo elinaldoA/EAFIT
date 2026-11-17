@@ -226,6 +226,7 @@ export default function PlanEditorModal({ onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlanId]);
 
+  const shownPlans = useMemo(() => plans.filter(p => !removal.hidden.has(p.id)), [plans, removal.hidden]);
   const rawDay = days.find(d => d.dia === selectedDay);
   // Exercício removido some já; o servidor só apaga em 6s (a não ser que desfaça).
   const day = useMemo(() => (rawDay ? {
@@ -307,19 +308,25 @@ export default function PlanEditorModal({ onClose }) {
     }
   }
 
-  async function handleDeletePlan(planId) {
+  // O plano some da lista na hora; o servidor (apaga dias e exercícios, sem volta)
+  // só roda em 6s ou ao fechar o editor, a não ser que desfaça.
+  function handleDeletePlan(planId) {
     const plan = plans.find(p => p.id === planId);
     if (plan?.is_active) { toast(t('Ative outro plano antes de excluir este')); return; }
-    if (plans.length <= 1) { toast(t('Você precisa de pelo menos um plano')); return; }
-    if (!window.confirm(t('Excluir o plano "{name}"? Essa ação não pode ser desfeita.', { name: plan?.name }))) return;
-    try {
-      await deletePlan(planId, user.id);
-      await loadPlans();
-      toast(t('🗑️ Plano excluído'));
-    } catch (err) {
-      console.error('deletePlan:', err);
-      toast(t('⚠️ Erro ao excluir plano'));
-    }
+    if (shownPlans.length <= 1) { toast(t('Você precisa de pelo menos um plano')); return; }
+    if (selectedPlanId === planId) setSelectedPlanId(plans.find(p => p.is_active)?.id || shownPlans.find(p => p.id !== planId)?.id || null);
+    removal.schedule(planId, async () => {
+      try {
+        await deletePlan(planId, user.id);
+      } catch (err) {
+        console.error('deletePlan:', err);
+        toast(t('⚠️ Erro ao excluir plano'));
+      }
+      await loadPlans(selectedPlanId === planId ? undefined : selectedPlanId);
+    });
+    toast(t('🗑️ Plano "{name}" excluído', { name: plan?.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(planId) },
+    });
   }
 
   async function handleFocoBlur(value) {
@@ -411,9 +418,9 @@ export default function PlanEditorModal({ onClose }) {
         <div className="plan-modal__body">
           {tab === 'planos' && (
             <div className="plan-list">
-              {loadingPlans ? <Loading /> : plans.map(p => (
+              {loadingPlans ? <Loading /> : shownPlans.map(p => (
                 <PlanRow
-                  key={p.id} plan={p} allPlans={plans}
+                  key={p.id} plan={p} allPlans={shownPlans}
                   onSetActive={() => handleSetActive(p.id)}
                   onRename={name => handleRename(p.id, name)}
                   onDelete={() => handleDeletePlan(p.id)}
@@ -443,7 +450,7 @@ export default function PlanEditorModal({ onClose }) {
           {tab === 'editar' && (
             <div className="plan-editor">
               <select className="input input--sm" value={selectedPlanId || ''} onChange={e => setSelectedPlanId(e.target.value)}>
-                {plans.map(p => <option key={p.id} value={p.id}>{p.name}{p.is_active ? ' (ativo)' : ''}</option>)}
+                {shownPlans.map(p => <option key={p.id} value={p.id}>{p.name}{p.is_active ? ' (ativo)' : ''}</option>)}
               </select>
 
               <div className="plan-editor__daypills">
