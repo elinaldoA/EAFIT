@@ -16,6 +16,7 @@ import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
+import { PERIODS, kindsIn, filterRuns } from './runFilter';
 import EditRunForm from './EditRunForm';
 import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
@@ -162,6 +163,8 @@ export default function RunHistoryPage() {
   const toast = useToast();
   const [runs, setRuns] = useState(null);
   const [error, setError] = useState(false);
+  const [period, setPeriod] = useState('tudo');
+  const [kind, setKind] = useState(null);
   const [shoes, setShoes] = useState(() => (user ? cachedShoes(user.id) : []));
   const loadShoes = useCallback(async () => {
     if (user) setShoes(await fetchShoes(user.id));
@@ -234,6 +237,9 @@ export default function RunHistoryPage() {
     [t('Ano'), sumSince(`${today.slice(0, 4)}-01-01`)],
   ];
   const maxWeek = Math.max(1, ...stats.weeks.map(w => w.meters));
+  const kinds = kindsIn(runs);
+  const shown = filterRuns(runs, { period, kind: kinds.includes(kind) ? kind : null }, today);
+  const filtering = period !== 'tudo' || (kind && kinds.includes(kind));
 
   return (
     <section id="page-voce" className="page active">
@@ -298,9 +304,34 @@ export default function RunHistoryPage() {
 
       <div className="section-group">
         <div className="section-group__label">{t('Corridas')}</div>
-        <ul className="run-list">
-          {runs.map(r => <RunItem key={r.client_id} run={r} runs={runs} shoe={shoes.find(s => s.id === r.shoe_id)} onDelete={handleDelete} />)}
-        </ul>
+        {runs.length > 1 && (
+          <div className="run-filters">
+            <div className="run-chips" role="group" aria-label={t('Período')}>
+              {PERIODS.map(p => (
+                <button key={p.key} type="button" aria-pressed={period === p.key} className={`run-chip${period === p.key ? ' run-chip--on' : ''}`} onClick={() => setPeriod(p.key)}>{p.label()}</button>
+              ))}
+            </div>
+            {kinds.length > 1 && (
+              <div className="run-chips" role="group" aria-label={t('Tipo de corrida')}>
+                <button type="button" aria-pressed={!kind} className={`run-chip${!kind ? ' run-chip--on' : ''}`} onClick={() => setKind(null)}>{t('Todos os tipos')}</button>
+                {kinds.map(k => (
+                  <button key={k} type="button" aria-pressed={kind === k} className={`run-chip${kind === k ? ' run-chip--on' : ''}`} onClick={() => setKind(k)}>{SESSION_TITLE[k]}</button>
+                ))}
+              </div>
+            )}
+            {filtering && <p className="profile-field__hint" role="status">{t('{v1} de {v2} corridas', { v1: shown.length, v2: runs.length })}</p>}
+          </div>
+        )}
+        {shown.length === 0 ? (
+          <div className="empty-state">
+            <p>{t('Nenhuma corrida com esses filtros.')}</p>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setPeriod('tudo'); setKind(null); }}>{t('Limpar filtros')}</button>
+          </div>
+        ) : (
+          <ul className="run-list">
+            {shown.map(r => <RunItem key={r.client_id} run={r} runs={runs} shoe={shoes.find(s => s.id === r.shoe_id)} onDelete={handleDelete} />)}
+          </ul>
+        )}
       </div>
 
       <RunShoes userId={user.id} shoes={shoes} runs={runs} onChange={loadShoes} />

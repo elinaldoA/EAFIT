@@ -618,3 +618,5 @@
 .run-live__weather span:first-child { color: var(--text); font-weight: 700; }
 
 .run-card__wx { margin: 0; color: var(--text-muted); font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
+
+.run-filters { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-3); }

@@ -51,6 +51,7 @@ import RunHomePage from './RunHomePage';
 import RunHistoryPage from './RunHistoryPage';
 import RunFeedPage from './RunFeedPage';
 import { shareRunCard } from './runShareCard';
+import { todayDate } from '../../data/treinoData';
 import RunChallengesPage from './RunChallengesPage';
 import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint } from './liveRun';
 
@@ -255,6 +256,25 @@ describe('correr de novo (fantasma)', () => {
     render(<RunHistoryPage />);
     await screen.findByRole('button', { name: /Parque lento/ });
     expect(screen.getAllByText('☀️ 24°C')).toHaveLength(1); // só a corrida que tem clima
+  });
+
+  it('no histórico: filtra a lista por tipo e por período, e limpa os filtros', async () => {
+    const mk = (id, kind, run_date) => ({ ...past(id, 1800, -2300000), client_id: id, title: `Volta ${id}`, kind, run_date });
+    h.fetchRuns.mockResolvedValue([mk('a', 'longao', todayDate()), mk('b', 'livre', '2020-01-01')]);
+    render(<RunHistoryPage />);
+    await screen.findByRole('button', { name: /Volta a/ });
+    expect(screen.getAllByRole('button', { name: /^.*Volta / })).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: '30 dias' }));
+    expect(screen.queryByRole('button', { name: /Volta b/ })).toBeNull();
+    expect(screen.getByRole('status').textContent).toBe('1 de 2 corridas');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Corrida livre' })); // tipo que só existe fora do período
+    expect(screen.getByText('Nenhuma corrida com esses filtros.')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpar filtros' }));
+    expect(screen.getByRole('button', { name: /Volta a/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Volta b/ })).toBeTruthy();
   });
 
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {

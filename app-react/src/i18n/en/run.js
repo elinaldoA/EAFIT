@@ -600,4 +600,11 @@ export default {
   '🧥 Frio: aqueça bem e use camadas de roupa.': '🧥 Cold: warm up well and dress in layers.',
   'Clima': 'Weather',
   'Compartilhar a corrida': 'Share the run',
+  'Tudo': 'All',
+  'Este ano': 'This year',
+  'Tipo de corrida': 'Run type',
+  'Todos os tipos': 'All types',
+  '{v1} de {v2} corridas': '{v1} of {v2} runs',
+  'Nenhuma corrida com esses filtros.': 'No runs match these filters.',
+  'Limpar filtros': 'Clear filters',
 };
