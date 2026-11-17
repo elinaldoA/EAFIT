@@ -9,6 +9,7 @@ export default function ProfileBodySection({
   sexo, setSexo, idade, setIdade, peso, setPeso, altura, setAltura,
   meta, setMeta, nivel, setNivel, local, setLocal, pesoAlvo, setPesoAlvo,
   progress, imc, onSave, regenerating, onRegeneratePlan, showTraining = true,
+  imcInvite = false, onAcceptImcInvite, onDismissImcInvite,
   errors = {}, onFieldChange = () => {},
 }) {
   // showTraining false (módulo sem plano de musculação): só os dados do corpo.
@@ -124,7 +125,19 @@ export default function ProfileBodySection({
         </div>
       )}
       <button className="btn btn--primary btn--full" onClick={onSave}>{t('Salvar dados corporais')}</button>
-      {showTraining && (
+      {showTraining && imcInvite && (
+        <div className="imc-invite" role="status">
+          <p className="imc-invite__text">
+            <strong>{imc ? t('Seu IMC mudou de faixa ({cls}).', { cls: imc.cls }) : t('Seu IMC mudou de faixa.')}</strong>{' '}
+            {t('O treino atual foi montado para a faixa anterior. Quer um treino novo com esses dados? O atual continua salvo em "Editar treino".')}
+          </p>
+          <div className="imc-invite__actions">
+            <button type="button" className="btn btn--primary btn--sm" disabled={regenerating} onClick={onAcceptImcInvite}>{t('Gerar treino novo')}</button>
+            <button type="button" className="link-btn" disabled={regenerating} onClick={onDismissImcInvite}>{t('Agora não')}</button>
+          </div>
+        </div>
+      )}
+      {showTraining && !imcInvite && (
         <button className="btn btn--outline btn--full" disabled={regenerating} onClick={onRegeneratePlan}>
           {regenerating ? t('Gerando novo treino…') : t('🔄 Gerar novo treino com esses dados')}
         </button>

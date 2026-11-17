@@ -58,13 +58,14 @@ vi.mock('../components/ProfilePersonalSection', () => ({
   ),
 }));
 vi.mock('../components/ProfileBodySection', () => ({
-  default: ({ peso, setPeso, altura, setAltura, onSave, onRegeneratePlan, showTraining, errors = {}, onFieldChange }) => (
+  default: ({ peso, setPeso, altura, setAltura, onSave, onRegeneratePlan, showTraining, errors = {}, onFieldChange, imcInvite, onAcceptImcInvite, onDismissImcInvite }) => (
     <div data-show-training={String(showTraining)}>
       <input id="profilePeso" aria-label="peso" value={peso} onChange={e => { setPeso(e.target.value); onFieldChange('peso'); }} />
       <input id="profileAltura" aria-label="altura" value={altura} onChange={e => { setAltura(e.target.value); onFieldChange('altura'); }} />
       {Object.entries(errors).filter(([, m]) => m).map(([field, m]) => <p key={field} data-testid={`erro-${field}`}>{m}</p>)}
       <button onClick={onSave}>salvar corpo</button>
       <button onClick={onRegeneratePlan}>gerar treino</button>
+      {imcInvite && <div data-testid="convite-imc"><button onClick={onAcceptImcInvite}>aceitar convite</button><button onClick={onDismissImcInvite}>agora não</button></div>}
     </div>
   ),
 }));
@@ -229,36 +230,61 @@ describe('PerfilPage', () => {
       expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
     });
 
-    it('peso novo que muda a faixa de IMC gera e ativa o treino sozinho, sem confirmação', async () => {
+    it('peso novo que muda a faixa de IMC não troca o treino sozinho: convida, e aceitar gera sem outra confirmação', async () => {
       const confirm = vi.spyOn(window, 'confirm');
       render(<PerfilPage active />);
       type('peso', '80'); // 175cm: IMC 22,9 (normal) -> 26,1 (sobrepeso)
       fireEvent.click(screen.getByText('salvar corpo'));
-      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Perfil salvo!'));
+      expect(weight.upsertWeightLog).toHaveBeenCalledWith('u1', '2026-10-07', 80);
+      expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByText('aceitar convite'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!'));
       expect(confirm).not.toHaveBeenCalled();
       expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 80, altura: 175, meta: 'massa', nivel: 'intermediario', local: 'academia' });
       expect(plans.createGeneratedPlan).toHaveBeenCalledWith('u1', expect.any(String), [{ dia: 'Segunda' }]);
       expect(workout.refreshPlan).toHaveBeenCalled();
-      expect(weight.upsertWeightLog).toHaveBeenCalledWith('u1', '2026-10-07', 80);
+      expect(screen.queryByTestId('convite-imc')).toBeNull();
     });
 
-    it('plano do personal não é trocado mesmo mudando a faixa de IMC', async () => {
+    it('"Agora não" fecha o convite sem mexer no treino', async () => {
+      render(<PerfilPage active />);
+      type('peso', '80');
+      fireEvent.click(screen.getByText('salvar corpo'));
+      await screen.findByTestId('convite-imc');
+      fireEvent.click(screen.getByText('agora não'));
+      expect(screen.queryByTestId('convite-imc')).toBeNull();
+      expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
+    });
+
+    it('peso na mesma faixa não mostra o convite', async () => {
+      render(<PerfilPage active />);
+      type('peso', '72.5');
+      fireEvent.click(screen.getByText('salvar corpo'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Perfil salvo!'));
+      expect(screen.queryByTestId('convite-imc')).toBeNull();
+    });
+
+    it('plano do personal não recebe o convite mesmo mudando a faixa de IMC', async () => {
       workout.planByTrainer = true;
       render(<PerfilPage active />);
       type('peso', '80');
       fireEvent.click(screen.getByText('salvar corpo'));
       await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Perfil salvo!'));
+      expect(screen.queryByTestId('convite-imc')).toBeNull();
       expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
     });
 
-    it('falha ao atualizar o treino: o perfil fica salvo e avisa', async () => {
+    it('falha ao gerar pelo convite: avisa e o convite volta', async () => {
       plans.createGeneratedPlan.mockRejectedValue(new Error('rpc'));
       render(<PerfilPage active />);
       type('peso', '80');
       fireEvent.click(screen.getByText('salvar corpo'));
-      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('⚠️ Perfil salvo, mas não deu pra atualizar o treino — use "Gerar novo treino com esses dados"'));
+      fireEvent.click(await screen.findByText('aceitar convite'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('⚠️ Erro ao gerar novo treino'));
       expect(localStorage.getItem('profile_peso')).toBe('80');
       expect(workout.refreshPlan).not.toHaveBeenCalled();
+      expect(screen.getByTestId('convite-imc')).toBeTruthy();
     });
 
     it('falha ao registrar o peso: enfileira para sincronizar depois', async () => {

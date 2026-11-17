@@ -204,6 +204,17 @@ describe('ProfileBodySection', () => {
     expect(screen.getByText('Gerando novo treino…').disabled).toBe(true);
   });
 
+  it('convite de IMC: diz a faixa nova, oferece gerar ou deixar para depois e esconde o botão genérico', () => {
+    const p = { ...base(), onAcceptImcInvite: vi.fn(), onDismissImcInvite: vi.fn() };
+    render(<ProfileBodySection {...p} imcInvite imc={{ value: '26.1', cls: 'Sobrepeso' }} />);
+    expect(screen.getByRole('status').textContent).toMatch(/^Seu IMC mudou de faixa \(Sobrepeso\)\./);
+    expect(screen.queryByText('🔄 Gerar novo treino com esses dados')).toBeNull();
+    fireEvent.click(screen.getByText('Gerar treino novo'));
+    fireEvent.click(screen.getByText('Agora não'));
+    expect(p.onAcceptImcInvite).toHaveBeenCalled();
+    expect(p.onDismissImcInvite).toHaveBeenCalled();
+  });
+
   it('mostra IMC com vírgula e barra de progresso só quando não concluída', () => {
     const p = base();
     const { rerender } = render(<ProfileBodySection {...p} imc={{ value: '24.7', cls: 'Normal' }} progress={{ msg: '50% da meta', pct: 50, done: false }} />);

@@ -60,6 +60,8 @@ export default function PerfilPage({ active }) {
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  // Peso salvo mudou a faixa de IMC: convite para gerar um treino novo (antes trocava sozinho).
+  const [imcInvite, setImcInvite] = useState(false);
   // Erros do "Meu corpo", mostrados junto de cada campo; mexer no campo apaga o dele.
   const [bodyErrs, setBodyErrs] = useState({});
   const clearBodyError = field => setBodyErrs(e => (e[field] ? { ...e, [field]: undefined } : e));
@@ -118,9 +120,10 @@ export default function PerfilPage({ active }) {
     // O peso só muda o treino pela faixa de IMC (applyImcAdjustment). Como
     // generatePlan sorteia os exercícios da biblioteca, regenerar a cada
     // pesagem trocaria o treino inteiro toda semana e zeraria a progressão —
-    // por isso o treino só é refeito quando o peso novo muda de faixa.
-    // Plano do personal nunca é trocado sozinho (mesma regra do ciclo
-    // automático em lib/workoutPlans.js).
+    // por isso só a mudança de faixa sugere um treino novo. E só sugere: trocar
+    // sozinho surpreendia quem tinha ajustado o próprio treino (2 kg a mais
+    // podiam trocar tudo). Plano do personal não recebe o convite (mesma regra
+    // do ciclo automático em lib/workoutPlans.js).
     const prevBracket = parseFloat(md.peso) && parseFloat(md.altura) ? computeImcBracket(md.peso, md.altura) : null;
     const bracketChanged = !!prevBracket && !!parseFloat(peso) && !!parseFloat(altura)
       && computeImcBracket(peso, altura) !== prevBracket;
@@ -147,20 +150,25 @@ export default function PerfilPage({ active }) {
       }
     }
 
-    if (user && usesWorkouts && bracketChanged && !planByTrainer && !regenerating) {
-      setRegenerating(true);
-      try {
-        await generateAndActivatePlan();
-        toast(t('✅ Perfil salvo — seu IMC mudou de faixa e o treino foi atualizado automaticamente'));
-      } catch (err) {
-        console.error('autoRegeneratePlan:', err);
-        toast(t('⚠️ Perfil salvo, mas não deu pra atualizar o treino — use "Gerar novo treino com esses dados"'));
-      } finally {
-        setRegenerating(false);
-      }
-      return;
-    }
+    if (user && usesWorkouts && bracketChanged && !planByTrainer) setImcInvite(true);
     toast(t('Perfil salvo!'));
+  }
+
+  // "Gerar treino novo" do convite: o convite já explica o que acontece, então sem outra confirmação.
+  async function handleAcceptImcInvite() {
+    if (!user || regenerating) return;
+    setImcInvite(false);
+    setRegenerating(true);
+    try {
+      await generateAndActivatePlan();
+      toast(t('✅ Novo treino gerado e ativado!'));
+    } catch (err) {
+      console.error('regeneratePlan:', err);
+      toast(t('⚠️ Erro ao gerar novo treino'));
+      setImcInvite(true);
+    } finally {
+      setRegenerating(false);
+    }
   }
 
   async function handleRegeneratePlan() {
@@ -264,6 +272,7 @@ export default function PerfilPage({ active }) {
             pesoAlvo={pesoAlvo} setPesoAlvo={setPesoAlvo}
             progress={progress} imc={imc} onSave={handleSave}
             regenerating={regenerating} onRegeneratePlan={handleRegeneratePlan}
+            imcInvite={imcInvite} onAcceptImcInvite={handleAcceptImcInvite} onDismissImcInvite={() => setImcInvite(false)}
             showTraining={usesWorkouts}
             errors={bodyErrs} onFieldChange={clearBodyError}
           />
@@ -287,7 +296,7 @@ export default function PerfilPage({ active }) {
 
             <ShortcutCard
               icon="📈" title={t('Peso e fotos de progresso')} onClick={openBodyProgress}
-              summary={weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
+              summary={weightLogs.length === 1 ? t('1 registro de peso · ver em Evolução') : weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
             />
           </>
         ) : (
