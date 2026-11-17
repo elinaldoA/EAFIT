@@ -180,7 +180,6 @@ export default {
   '🕒 Agendar para depois': '🕒 Schedule for later',
   'Enviar em': 'Send at',
   'Agendar recado': 'Schedule message',
-  'Cancelar este recado agendado?': 'Cancel this scheduled message?',
   'Agendamento cancelado': 'Schedule cancelled',
   '🕒 Agendados': '🕒 Scheduled',
   'Cancelar recado agendado: {v}': 'Cancel scheduled message: {v}',

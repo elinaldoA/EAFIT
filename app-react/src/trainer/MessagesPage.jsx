@@ -6,6 +6,7 @@ import { useToast } from '../context/useToast';
 import { fmtDate } from '../lib/utils';
 import MessageComposer from './MessageComposer';
 import Loading from '../components/Loading';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 
 import { t } from '../lib/i18n';
 // Aba Recados do personal: escolhe quem recebe (todos ou alunos específicos),
@@ -16,6 +17,8 @@ export default function MessagesPage({ header }) {
   const [selected, setSelected] = useState([]); // vazio = todos
   const [sent, setSent] = useState(null);
   const [scheduled, setScheduled] = useState([]);
+  const removal = useDeferredRemoval();
+  const liveScheduled = useMemo(() => scheduled.filter(s => !removal.hidden.has(s.id)), [scheduled, removal.hidden]);
 
   const loadSent = useCallback(() => {
     fetchSentMessages().then(setSent).catch(err => { console.error('fetchSentMessages:', err); setSent([]); });
@@ -27,15 +30,17 @@ export default function MessagesPage({ header }) {
 
   const reload = useCallback(() => { loadSent(); loadScheduled(); }, [loadSent, loadScheduled]);
 
-  async function handleCancel(item) {
-    if (!window.confirm(t('Cancelar este recado agendado?'))) return;
-    try {
-      await cancelScheduled(item.id);
-      toast(t('Agendamento cancelado'));
-    } catch (err) {
-      toast(`❌ ${friendlyScheduleError(err)}`);
-    }
-    loadScheduled();
+  // Some na hora; o cancelamento só vai ao servidor em 6s (ou ao sair da tela),
+  // a não ser que desfaça. Se o horário chegar nesse intervalo, o servidor avisa
+  // que o recado já foi enviado.
+  function handleCancel(item) {
+    removal.schedule(item.id, async () => {
+      try { await cancelScheduled(item.id); } catch (err) { toast(`❌ ${friendlyScheduleError(err)}`); }
+      loadScheduled();
+    });
+    toast(t('Agendamento cancelado'), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(item.id) },
+    });
   }
 
   useEffect(() => {
@@ -76,10 +81,10 @@ export default function MessagesPage({ header }) {
         )}
       </div>
 
-      {scheduled.length > 0 && (
+      {liveScheduled.length > 0 && (
         <div className="dash-card">
           <div className="dash-card__title">{t('🕒 Agendados')}</div>
-          {scheduled.map(s => (
+          {liveScheduled.map(s => (
             <div className="sent-msg" key={s.id}>
               <div className="sent-msg__head">
                 <span>{scheduledTarget(s)}</span>

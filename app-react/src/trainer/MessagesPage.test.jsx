@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ api: {}, composer: vi.fn(), toast: vi.fn() }));
 
@@ -122,31 +122,49 @@ describe('MessagesPage', () => {
       expect(screen.getByText('Bom treino amanhã!')).toBeTruthy();
     });
 
-    it('cancelar pede confirmação, cancela e recarrega a lista', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-      h.api.fetchScheduled.mockResolvedValueOnce(SCHEDULED).mockResolvedValueOnce([SCHEDULED[1]]);
-      render(<MessagesPage />);
-      fireEvent.click(await screen.findByRole('button', { name: /Cancelar recado agendado: Bom treino/ }));
-      await waitFor(() => expect(h.api.cancelScheduled).toHaveBeenCalledWith('s1'));
-      await waitFor(() => expect(screen.queryByText('Bom treino amanhã!')).toBeNull());
-      expect(h.toast).toHaveBeenCalledWith('Agendamento cancelado');
-    });
-
-    it('recusar a confirmação não cancela', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('cancelar some na hora, sem confirmação, e só cancela no servidor em 6s', async () => {
+      const confirm = vi.spyOn(window, 'confirm');
       h.api.fetchScheduled.mockResolvedValue(SCHEDULED);
       render(<MessagesPage />);
-      fireEvent.click(await screen.findByRole('button', { name: /Cancelar recado agendado: Bom treino/ }));
-      expect(h.api.cancelScheduled).not.toHaveBeenCalled();
+      const btn = await screen.findByRole('button', { name: /Cancelar recado agendado: Bom treino/ });
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        fireEvent.click(btn);
+        expect(confirm).not.toHaveBeenCalled();
+        expect(screen.queryByText('Bom treino amanhã!')).toBeNull();
+        expect(screen.getByText('Semana de teste')).toBeTruthy();
+        expect(h.toast).toHaveBeenCalledWith('Agendamento cancelado', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+        expect(h.api.cancelScheduled).not.toHaveBeenCalled();
+        await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+        expect(h.api.cancelScheduled).toHaveBeenCalledWith('s1');
+      } finally { vi.useRealTimers(); }
+    });
+
+    it('Desfazer devolve o recado agendado e nada é cancelado', async () => {
+      h.api.fetchScheduled.mockResolvedValue(SCHEDULED);
+      render(<MessagesPage />);
+      const btn = await screen.findByRole('button', { name: /Cancelar recado agendado: Bom treino/ });
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        fireEvent.click(btn);
+        act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+        expect(screen.getByText('Bom treino amanhã!')).toBeTruthy();
+        await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+        expect(h.api.cancelScheduled).not.toHaveBeenCalled();
+      } finally { vi.useRealTimers(); }
     });
 
     it('erro ao cancelar mostra o motivo e recarrega', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       h.api.cancelScheduled.mockRejectedValue(new Error('not_found'));
       h.api.fetchScheduled.mockResolvedValue(SCHEDULED);
       render(<MessagesPage />);
-      fireEvent.click(await screen.findByRole('button', { name: /Cancelar recado agendado: Bom treino/ }));
-      await waitFor(() => expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('já foi enviado ou cancelado')));
+      const btn = await screen.findByRole('button', { name: /Cancelar recado agendado: Bom treino/ });
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        fireEvent.click(btn);
+        await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+        expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('já foi enviado ou cancelado'));
+      } finally { vi.useRealTimers(); }
       await waitFor(() => expect(h.api.fetchScheduled).toHaveBeenCalledTimes(2));
     });
 
