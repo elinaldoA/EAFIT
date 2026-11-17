@@ -20,6 +20,7 @@ import { requestMotionPermission } from './cadence';
 import { ShoePicker } from './Shoes';
 import GuidedSetup from './GuidedSetup';
 import GpxImport from './GpxImport';
+import StartCountdown from './StartCountdown';
 import { newMedals } from './challenges';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported, useGeoTracker } from './useGeoTracker';
@@ -193,6 +194,7 @@ export default function RunHomePage() {
   const [guidedOpen, setGuidedOpen] = useState(false);
   const [gpxOpen, setGpxOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [countdown, setCountdown] = useState(null); // { start } enquanto conta 3-2-1
   const [gps, setGps] = useState(() => readPref(GPS_KEY) && geoSupported());
   // Aquece o GPS antes do Começar: o celular leva de segundos a um minuto para
   // achar os satélites, e assim a corrida já começa com sinal. Para quando a
@@ -260,8 +262,7 @@ export default function RunHomePage() {
     if (getLiveRun()) return toast(t('Já existe uma corrida em andamento'));
     writePref(GPS_KEY, gps);
     requestMotionPermission();
-    setLiveRun(startRun({ gps, ghost }));
-    trackEvent('run_start', 'fantasma');
+    setCountdown({ start: () => { setLiveRun(startRun({ gps, ghost })); trackEvent('run_start', 'fantasma'); } });
   }
 
   // custom: sessão montada no treino guiado (GuidedSetup).
@@ -272,12 +273,17 @@ export default function RunHomePage() {
     setGuidedOpen(false);
     // iPhone: a permissão do acelerômetro (cadência) só pode ser pedida no toque.
     requestMotionPermission();
-    setLiveRun(startRun({ gps, session: s }));
-    trackEvent('run_start', s ? s.type : 'livre');
+    setCountdown({ start: () => { setLiveRun(startRun({ gps, session: s })); trackEvent('run_start', s ? s.type : 'livre'); } });
   }
 
   return (
     <section id="page-gravar" className="page active">
+      {countdown && !live && (
+        <StartCountdown
+          onCancel={() => setCountdown(null)}
+          onDone={() => { const { start } = countdown; setCountdown(null); if (!getLiveRun()) start(); }}
+        />
+      )}
       <div className="dash-card run-record">
         <div className="run-record__week">
           <span><strong>{formatKm(weekMeters, 1)}</strong> {t('km nesta semana')}</span>

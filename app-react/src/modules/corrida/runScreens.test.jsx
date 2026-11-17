@@ -154,6 +154,7 @@ describe('Treino guiado', () => {
     fireEvent.change(screen.getByLabelText('Ritmo dos tiros (opcional)'), { target: { value: '4:45' } });
     expect(screen.getByText('8x 400 m forte / 200 m trote · alvo 4:45/km')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Começar treino/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
     expect(getLiveRun().session).toMatchObject({ type: 'intervalado', custom: { reps: 8, targetPace: 285 } });
   });
 
@@ -242,7 +243,30 @@ describe('RunHomePage (aba Gravar)', () => {
   it('o botão grande começa uma corrida livre sem programa', () => {
     render(<RunHomePage />);
     fireEvent.click(screen.getByRole('button', { name: 'Começar corrida' }));
+    expect(getLiveRun()).toBeNull(); // antes, a contagem 3-2-1
+    fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
     expect(getLiveRun()).toMatchObject({ session: null });
+  });
+
+  it('a contagem 3-2-1 começa a corrida sozinha ao chegar no zero', () => {
+    vi.useFakeTimers();
+    try {
+      render(<RunHomePage />);
+      fireEvent.click(screen.getByRole('button', { name: 'Começar corrida' }));
+      expect(screen.getByText('3')).toBeTruthy();
+      for (let i = 0; i < 2; i++) act(() => { vi.advanceTimersByTime(1000); }); // um passo por vez: cada número arma o próximo
+      expect(screen.getByText('1')).toBeTruthy();
+      expect(getLiveRun()).toBeNull();
+      act(() => { vi.advanceTimersByTime(1000); });
+      expect(getLiveRun()).toMatchObject({ session: null });
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('cancelar a contagem não inicia a corrida', () => {
+    render(<RunHomePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Começar corrida' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(getLiveRun()).toBeNull();
   });
 
   it('o programa é opcional: abre a montagem e salva na conta', async () => {
@@ -374,6 +398,7 @@ describe('Minhas rotas (aba Gravar)', () => {
     await act(async () => {});
     expect(screen.getByText('Minhas rotas')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Correr de novo contra a melhor/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
     expect(getLiveRun()?.ghost).toMatchObject({ id: 'b', duration_s: 1600 });
   });
 });

@@ -589,4 +589,7 @@ export default {
   '✏️ Editar corrida': '✏️ Edit run',
   'Esforço (1 a 10)': 'Effort (1 to 10)',
   'Distância e tempo vieram do GPS e não mudam, para os parciais, o mapa e os recordes continuarem batendo.': "Distance and time came from the GPS and can't be changed, so splits, map and records keep matching.",
+  'Contagem para começar a corrida': 'Countdown to start the run',
+  'Já!': 'Go!',
+  'Começar já': 'Start now',
 };
