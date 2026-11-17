@@ -630,3 +630,7 @@
 .run-wx__runs { color: var(--text-muted); font-size: var(--fs-md); }
 
 .run-periods__share { align-self: flex-start; margin: calc(var(--sp-1) * -1) 0 var(--sp-3); }
+
+/* Aviso de bateria baixa na corrida */
+.run-live__battery { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-3); border-radius: var(--r-md); background: color-mix(in srgb, var(--warning) 16%, var(--surface)); border: 1px solid var(--warning); font-size: var(--fs-base); font-weight: 600; }
+.run-live__battery--critical { background: color-mix(in srgb, var(--error) 18%, var(--surface)); border-color: var(--error); }

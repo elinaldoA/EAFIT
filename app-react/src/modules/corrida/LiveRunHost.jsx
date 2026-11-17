@@ -19,6 +19,8 @@ import { spoken } from './workout';
 import { formatPace } from './runs';
 import { t } from '../../lib/i18n';
 import { buzz } from './haptics';
+import { useBattery } from './useBattery';
+import { batteryState, batterySpoken } from './battery';
 import { VOICE_KEY, AUTOPAUSE_KEY, readPref, writePref } from './runPrefs';
 import InterruptedRun from './InterruptedRun';
 import LiveRunScreen from './LiveRunScreen';
@@ -94,6 +96,25 @@ export default function LiveRunHost() {
   });
 
   useWakeLock(!!run);
+
+  // Bateria acabando: banner na tela da corrida e, ao cruzar 20% e 10%, vibra e avisa por voz.
+  const battery = useBattery(!!run && !interrupted);
+  const batteryLevel = battery?.level ?? null;
+  const batteryNow = battery ? batteryState(battery.level, battery.charging) : 'ok';
+  const lastBattery = useRef('ok');
+  const hasRun = !!run;
+  useEffect(() => {
+    if (!hasRun) { lastBattery.current = 'ok'; return; }
+    const prev = lastBattery.current;
+    lastBattery.current = batteryNow;
+    // Só quando piora (ok → baixa → crítica); carregar e voltar a descer avisa de novo.
+    if (batteryNow !== 'ok' && batteryNow !== prev && !(prev === 'critical' && batteryNow === 'low')) {
+      buzz('battery');
+      if (voiceOn) speak(batterySpoken(batteryNow, batteryLevel), { queue: true });
+    }
+    // batteryLevel e voiceOn só entram na fala: não devem disparar o aviso sozinhos
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batteryNow, hasRun]);
 
   // Cadência: o acelerômetro conta os passos só com a corrida rodando.
   const spm = useStepCounter(running && !interrupted, (steps, ms) => updateLiveRun(s => addSteps(s, steps, ms)));
@@ -212,7 +233,7 @@ export default function LiveRunHost() {
         ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={() => setFinishing(false)} />
         : (
           <LiveRunScreen
-            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided}
+            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided} battery={battery}
             autoPauseOn={autoPauseOn} onToggleAutoPause={toggleAutoPause}
             onFinish={() => { updateLiveRun(s => pauseRun(s)); setFinishing(true); }}
           />

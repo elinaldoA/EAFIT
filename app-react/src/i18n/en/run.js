@@ -627,4 +627,8 @@ export default {
   '{v1} corridas com clima neste mês · média de {v2}': '{v1} runs with weather this month · average {v2}',
   '1 corrida com clima neste mês · {v1}': '1 run with weather this month · {v1}',
   'Com mais corridas em faixas diferentes, aparece em qual temperatura você corre mais rápido.': 'With more runs in different ranges, you will see which temperature you run fastest in.',
+  '🪫 Bateria em {v1}%: finalize logo ou ligue o carregador, senão a corrida pode se perder.': '🪫 Battery at {v1}%: finish soon or plug in the charger, or the run may be lost.',
+  '🔋 Bateria em {v1}%: use a tela escura e deixe o celular poupar energia.': '🔋 Battery at {v1}%: use the dark screen and let the phone save power.',
+  'Bateria em {v1} por cento. Finalize logo a corrida.': 'Battery at {v1} percent. Finish the run soon.',
+  'Bateria em {v1} por cento.': 'Battery at {v1} percent.',
 };

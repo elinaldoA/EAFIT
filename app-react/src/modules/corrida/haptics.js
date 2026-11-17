@@ -10,6 +10,7 @@ export const BUZZ = {
   pause: [250],
   resume: [100, 60, 100],
   done: [120, 60, 120, 60, 250],
+  battery: [400, 120, 400],
 };
 
 export function buzz(kind) {

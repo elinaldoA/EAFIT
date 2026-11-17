@@ -53,6 +53,7 @@ import RunFeedPage from './RunFeedPage';
 import { shareRunCard, shareRunSummary } from './runShareCard';
 import { todayDate } from '../../data/treinoData';
 import RunChallengesPage from './RunChallengesPage';
+import { speak } from '../../lib/voice';
 import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint } from './liveRun';
 
 beforeEach(() => {
@@ -125,6 +126,63 @@ describe('LiveRunHost', () => {
     expect(getLiveRun()).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Toque de novo para descartar' }));
     expect(getLiveRun()).toBeNull();
+  });
+});
+
+describe('LiveRunHost: bateria', () => {
+  const battery = (level, charging = false) => {
+    const ls = {};
+    const b = {
+      level, charging,
+      addEventListener: (ev, fn) => { (ls[ev] ||= []).push(fn); },
+      removeEventListener: () => {},
+      set: (next, isCharging = false) => { b.level = next; b.charging = isCharging; (ls.levelchange || []).forEach(f => f()); (ls.chargingchange || []).forEach(f => f()); },
+    };
+    return b;
+  };
+  afterEach(() => { delete navigator.getBattery; });
+
+  it('bateria em 15% mostra o aviso com o botão da tela escura, vibra e fala', async () => {
+    navigator.getBattery = vi.fn().mockResolvedValue(battery(0.15));
+    navigator.vibrate = vi.fn();
+    act(() => { setLiveRun(startRun({ gps: false, session: null })); });
+    render(<LiveRunHost />);
+    const alert = await screen.findByText(/Bateria em 15%/);
+    expect(alert.closest('[role="alert"]').textContent).toContain('Tela escura');
+    expect(navigator.vibrate).toHaveBeenCalledWith([400, 120, 400]);
+    expect(speak).toHaveBeenCalledWith('Bateria em 15 por cento.', { queue: true });
+    delete navigator.vibrate;
+  });
+
+  it('bateria boa, carregando ou sem suporte do navegador não mostra aviso', async () => {
+    act(() => { setLiveRun(startRun({ gps: false, session: null })); });
+    navigator.getBattery = vi.fn().mockResolvedValue(battery(0.8));
+    const a = render(<LiveRunHost />);
+    await act(async () => {});
+    expect(screen.queryByText(/Bateria em/)).toBeNull();
+    a.unmount();
+    navigator.getBattery = vi.fn().mockResolvedValue(battery(0.05, true));
+    const b = render(<LiveRunHost />);
+    await act(async () => {});
+    expect(screen.queryByText(/Bateria em/)).toBeNull();
+    b.unmount();
+    delete navigator.getBattery;
+    render(<LiveRunHost />);
+    await act(async () => {});
+    expect(screen.queryByText(/Bateria em/)).toBeNull();
+  });
+
+  it('cair para 10% avisa de novo em tom crítico, e carregar tira o aviso', async () => {
+    const b = battery(0.18);
+    navigator.getBattery = vi.fn().mockResolvedValue(b);
+    act(() => { setLiveRun(startRun({ gps: false, session: null })); });
+    render(<LiveRunHost />);
+    await screen.findByText(/Bateria em 18%/);
+    act(() => b.set(0.09));
+    expect(await screen.findByText(/finalize logo/)).toBeTruthy();
+    expect(speak).toHaveBeenCalledWith('Bateria em 9 por cento. Finalize logo a corrida.', { queue: true });
+    act(() => b.set(0.09, true));
+    expect(screen.queryByText(/Bateria em/)).toBeNull();
   });
 });
 

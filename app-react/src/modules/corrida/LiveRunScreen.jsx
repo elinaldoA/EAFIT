@@ -11,6 +11,7 @@ import RouteDrawing from './RouteDrawing';
 import { buzz } from './haptics';
 import { startPosition, weatherShort, weatherDetail } from './weather';
 import { useStartWeather } from './useStartWeather';
+import { batteryState, batteryMessage } from './battery';
 import { t } from '../../lib/i18n';
 
 // Tela da corrida em andamento: tempo, distância, ritmo, GPS, treino guiado e os botões (LiveRunHost.jsx).
@@ -46,7 +47,7 @@ function WorkoutStep({ guided }) {
   );
 }
 
-export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, heart, guided, autoPauseOn, onToggleAutoPause, onFinish }) {
+export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, heart, guided, battery, autoPauseOn, onToggleAutoPause, onFinish }) {
   const el = elapsedMs(run, now);
   const totalS = Math.floor(el / 1000);
   const paused = isPaused(run);
@@ -90,6 +91,12 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
         <strong>{SESSION_TITLE[s?.type || 'livre']}</strong>
         {s && <span>{sessionText(s)}</span>}
       </div>
+      {battery && batteryState(battery.level, battery.charging) !== 'ok' && (
+        <div className={`run-live__battery run-live__battery--${batteryState(battery.level, battery.charging)}`} role="alert">
+          <span>{batteryMessage(batteryState(battery.level, battery.charging), battery.level)}</span>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setDark(true)}>{t('🌙 Tela escura')}</button>
+        </div>
+      )}
       {weather && (
         <div className="run-live__weather" aria-label={t('Clima')}>
           <span>{weatherShort(weather)}</span>
