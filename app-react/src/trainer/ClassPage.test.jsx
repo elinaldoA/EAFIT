@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {}, sendMessage: vi.fn() }));
 
@@ -121,25 +121,48 @@ describe('ClassPage', () => {
     await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/Nenhum aluno vinculado/));
   });
 
-  it('apagar pede confirmação, apaga e recarrega', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('apagar some na hora, sem confirmação, e só apaga para todos em 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     await setup();
     fireEvent.click(await screen.findByRole('button', { name: /Outubro firme/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Apagar desafio' }));
-    expect(h.api.deleteClassChallenge).not.toHaveBeenCalled();
-
-    confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Apagar desafio' }));
-    await waitFor(() => expect(h.api.deleteClassChallenge).toHaveBeenCalledWith('c1'));
-    expect(h.toast).toHaveBeenCalledWith('Desafio apagado');
+    const btn = screen.getByRole('button', { name: 'Apagar desafio' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: /Outubro firme/ })).toBeNull();
+      expect(h.toast).toHaveBeenCalledWith('Desafio "Outubro firme" apagado para todos', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.deleteClassChallenge).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.deleteClassChallenge).toHaveBeenCalledWith('c1');
+    } finally { vi.useRealTimers(); }
   });
 
-  it('erro ao apagar avisa', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('Desfazer devolve o desafio e nada é apagado', async () => {
+    await setup();
+    fireEvent.click(await screen.findByRole('button', { name: /Outubro firme/ }));
+    const btn = screen.getByRole('button', { name: 'Apagar desafio' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: /Outubro firme/ })).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.deleteClassChallenge).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('erro ao apagar avisa e o desafio volta', async () => {
     h.api.deleteClassChallenge.mockRejectedValue(new Error('x'));
     await setup();
     fireEvent.click(await screen.findByRole('button', { name: /Outubro firme/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Apagar desafio' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível apagar'));
+    const btn = screen.getByRole('button', { name: 'Apagar desafio' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível apagar');
+    } finally { vi.useRealTimers(); }
+    expect(await screen.findByRole('button', { name: /Outubro firme/ })).toBeTruthy();
   });
 });

@@ -39,8 +39,7 @@ export default {
 
   // ClassPage
   '🏁 Desafio criado e alunos avisados': '🏁 Challenge created and clients notified',
-  'Encerrar e apagar o desafio "{title}" para todos?': 'End and delete the challenge "{title}" for everyone?',
-  'Desafio apagado': 'Challenge deleted',
+  'Desafio "{title}" apagado para todos': 'Challenge "{title}" deleted for everyone',
   '❌ Não foi possível apagar': '❌ Could not delete',
   '🏆 Desafios da turma': '🏆 Class challenges',
   'Crie um desafio: todos os seus alunos entram e vence quem treinar mais dias no período.': 'Create a challenge: all your clients join and whoever trains on the most days wins.',

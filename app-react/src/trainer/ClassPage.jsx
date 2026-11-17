@@ -8,6 +8,7 @@ import {
   friendlyChallengeError, fetchMyChallenges, createClassChallenge, deleteClassChallenge,
 } from '../lib/challenges';
 import { Leaderboard } from '../components/Challenges';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 
 import { t, diasRestantes } from '../lib/i18n';
 // Aba Turma do personal: cria desafios para os alunos (todos entram sozinhos),
@@ -23,6 +24,7 @@ export default function ClassPage({ header }) {
   const [selected, setSelected] = useState([]); // vazio = todos
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
   const today = todayDate();
 
   const reload = useCallback(async () => {
@@ -34,6 +36,7 @@ export default function ClassPage({ header }) {
     fetchClients().then(setClients).catch(err => console.error('fetchClients:', err));
   }, [reload]);
 
+  const shown = (items || []).filter(c => !removal.hidden.has(c.id));
   const toggle = id => setSelected(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
 
   async function handleCreate() {
@@ -55,10 +58,18 @@ export default function ClassPage({ header }) {
     }
   }
 
-  async function handleDelete(c) {
-    if (!window.confirm(t('Encerrar e apagar o desafio "{title}" para todos?', { title: c.title }))) return;
-    try { await deleteClassChallenge(c.id); toast(t('Desafio apagado')); setOpen(null); await reload(); }
-    catch { toast(t('❌ Não foi possível apagar')); }
+  // Some da lista na hora; apagar para todos os alunos (placar incluído, sem volta)
+  // só vai ao servidor em 6s, ou ao sair da tela, a não ser que desfaça. Os alunos
+  // continuam vendo o desafio até lá.
+  function handleDelete(c) {
+    setOpen(null);
+    removal.schedule(c.id, async () => {
+      try { await deleteClassChallenge(c.id); } catch { toast(t('❌ Não foi possível apagar')); }
+      await reload();
+    });
+    toast(t('Desafio "{title}" apagado para todos', { title: c.title }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(c.id) },
+    });
   }
 
   return (
@@ -66,11 +77,11 @@ export default function ClassPage({ header }) {
       {header}
       <div className="dash-card">
         <div className="dash-card__title">{t('🏆 Desafios da turma')}</div>
-        {items && items.length === 0 && !creating && (
+        {items && shown.length === 0 && !creating && (
           <p className="dash-empty">{t('Crie um desafio: todos os seus alunos entram e vence quem treinar mais dias no período.')}</p>
         )}
 
-        {(items || []).map(c => {
+        {shown.map(c => {
           const status = challengeStatus(c, today);
           const left = daysLeft(c, today);
           const expanded = open === c.id;
