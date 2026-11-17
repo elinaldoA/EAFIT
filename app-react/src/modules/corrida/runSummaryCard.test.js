@@ -43,6 +43,7 @@ describe('cartão do mês para os stories', () => {
     expect(texts).toContain('20,0'); // 4 corridas de 5 km
     expect(texts.some(x => /Novembro/i.test(x))).toBe(true);
     expect(texts).toContain('CLIMA E RITMO');
+    expect(texts).toContain('4 corridas · média de 21°C');
     expect(texts.some(x => /Ameno/.test(x))).toBe(true);
   });
 

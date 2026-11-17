@@ -399,6 +399,11 @@ export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
     setTracking(ctx, 3);
     ctx.fillText(t('CLIMA E RITMO'), PAD_X + 36, top + 52);
     setTracking(ctx, 0);
+    // Quantas corridas têm clima e a temperatura média delas, à direita do título.
+    ctx.textAlign = 'right';
+    ctx.font = `600 24px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    ctx.fillText(t('{v1} corridas · média de {v2}', { v1: wx.total, v2: tempText(wx.avgTemp) }), PAD_X + CONTENT_W - 36, top + 52);
     wx.bands.forEach((b, i) => {
       const [icon, name, range] = BAND_ROWS[b.key]();
       const y0 = top + 112 + i * 64;

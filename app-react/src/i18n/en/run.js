@@ -621,4 +621,5 @@ export default {
   '{v1} km de corrida neste mês no EAFIT Run 🏃 Corra com a gente: {v2}': '{v1} km run this month on EAFIT Run 🏃 Run with us: {v2}',
   'Meu mês de corrida': 'My month of running',
   '📤 Compartilhar meu mês': '📤 Share my month',
+  '{v1} corridas · média de {v2}': '{v1} runs · average {v2}',
 };
