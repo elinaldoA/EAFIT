@@ -60,7 +60,7 @@
   --border-2:     #4a3a63;
   --text:         #ede7f6;
   --text-muted:   #b4a7c8;
-  --text-dim:     #8c7da3;
+  --text-dim:     #988aac;
   --primary:      #f97316;
   --primary-h:    #fb923c;
   --primary-glow: rgba(249,115,22,.20);
@@ -74,7 +74,7 @@
   --border-2:     #a995c4;
   --text:         #1e1529;
   --text-muted:   #57476b;
-  --text-dim:     #6f5f85;
+  --text-dim:     #6d5d82;
   --primary-glow: rgba(249,115,22,.13);
 }
 
@@ -312,7 +312,7 @@ body.live-open .season-fx { display: none; }
   --border-2:     #cf9fb8;
   --text:         #2a0f1f;
   --text-muted:   #6b4258;
-  --text-dim:     #865a71;
+  --text-dim:     #82576e;
   --primary-glow: rgba(236,72,153,.13);
   --season-accent: #be185d;
   --season-accent-soft: rgba(190, 24, 93, .10);
@@ -326,7 +326,7 @@ body.live-open .season-fx { display: none; }
   --border-2:     #36496f;
   --text:         #e6edf8;
   --text-muted:   #a7b5cf;
-  --text-dim:     #7f8fac;
+  --text-dim:     #8595b0;
   --primary:      #3b82f6;
   --primary-h:    #60a5fa;
   --primary-glow: rgba(59,130,246,.20);
@@ -344,7 +344,7 @@ body.live-open .season-fx { display: none; }
   --border-2:     #98add0;
   --text:         #0f1a2e;
   --text-muted:   #44546f;
-  --text-dim:     #5d6d89;
+  --text-dim:     #576681;
   --primary-glow: rgba(59,130,246,.13);
   --season-accent: #1d4ed8;
   --season-accent-soft: rgba(29, 78, 216, .10);
@@ -384,7 +384,7 @@ body.live-open .season-fx { display: none; }
   --border-2:     #9fbfc6;
   --text:         #0e2125;
   --text-muted:   #426067;
-  --text-dim:     #547278;
+  --text-dim:     #506c72;
   --primary-glow: rgba(34, 211, 238, .13);
   --season-accent: #a21caf;
   --season-accent-soft: rgba(162, 28, 175, .10);
@@ -494,7 +494,7 @@ body.live-open .season-fx { display: none; }
   --border-2:     #c6b29f;
   --text:         #251a0e;
   --text-muted:   #675442;
-  --text-dim:     #786654;
+  --text-dim:     #746351;
   --primary-glow: rgba(245, 158, 11, .13);
   --season-accent: #b91c1c;
   --season-accent-soft: rgba(185, 28, 28, .10);
@@ -529,7 +529,7 @@ body.live-open .season-fx { display: none; }
   --border-2:     #9fc6b2;
   --text:         #0e251a;
   --text-muted:   #426754;
-  --text-dim:     #547866;
+  --text-dim:     #4d6e5e;
   --primary-glow: rgba(239, 68, 68, .13);
   --season-accent: #15803d;
   --season-accent-soft: rgba(21, 128, 61, .10);
@@ -569,7 +569,7 @@ body.live-open .season-fx { display: none; }
   --border-2:     #c6bc9f;
   --text:         #251f0e;
   --text-muted:   #675d42;
-  --text-dim:     #786f54;
+  --text-dim:     #70674e;
   --primary-glow: rgba(234, 179, 8, .13);
   --season-accent: #a16207;
   --season-accent-soft: rgba(161, 98, 7, .10);
@@ -791,3 +791,10 @@ body.live-open .season-fx { display: none; }
 .wordmark__ea { color: var(--text); -webkit-text-fill-color: currentColor; }
 .wordmark__fit { color: #f97316; -webkit-text-fill-color: currentColor; }
 [data-season] .wordmark__ea { color: var(--season-accent); }
+
+/* Texto na cor do tema sobre as superfícies mais claras (--surface-3) no tema escuro:
+   a cor cheia dava 3,5–4,3:1; estes tons chegam a 4,6:1. O tema claro usa o color-mix de tokens.css. */
+[data-season="outubro_rosa"]:not([data-theme="light"]) { --primary-text: #ee57a1; }
+[data-season="novembro_azul"]:not([data-theme="light"]) { --primary-text: #5694f7; }
+[data-season="namorados"]:not([data-theme="light"]) { --primary-text: #f54e6b; }
+[data-season="natal"]:not([data-theme="light"]) { --primary-text: #f37171; }

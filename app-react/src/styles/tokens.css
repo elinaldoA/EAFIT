@@ -113,5 +113,5 @@
    escurecida, ≥ 4,5:1 sobre o branco dos cartões. Sem color-mix, fica o
    laranja-escuro fixo declarado acima. */
 @supports (color: color-mix(in srgb, red 50%, blue)) {
-  [data-theme="light"] { --primary-text: color-mix(in srgb, var(--primary) 72%, #000); }
+  [data-theme="light"] { --primary-text: color-mix(in srgb, var(--primary) 62%, #000); }
 }
