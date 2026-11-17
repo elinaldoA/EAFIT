@@ -277,6 +277,17 @@ describe('correr de novo (fantasma)', () => {
     expect(screen.getByRole('button', { name: /Volta b/ })).toBeTruthy();
   });
 
+  it('no histórico: os filtros escolhidos voltam na próxima visita', async () => {
+    h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
+    const first = render(<RunHistoryPage />);
+    await screen.findByRole('button', { name: /Parque lento/ });
+    fireEvent.click(screen.getByRole('button', { name: '90 dias' }));
+    first.unmount();
+    render(<RunHistoryPage />);
+    await screen.findByRole('button', { name: /Parque lento/ });
+    expect(screen.getByRole('button', { name: '90 dias' }).getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
     h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
     render(<RunHistoryPage />);

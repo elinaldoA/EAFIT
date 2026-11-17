@@ -37,3 +37,22 @@ export function filterRuns(runs, { period = 'tudo', kind = null } = {}, today) {
   const from = periodStart(period, today);
   return runs.filter(r => (!from || r.run_date >= from) && (!kind || (r.kind || 'livre') === kind));
 }
+
+// Última escolha dos filtros, guardada no aparelho (não na conta).
+export const FILTERS_KEY = 'eafit_run_filters';
+
+export function readFilters() {
+  try {
+    const f = JSON.parse(localStorage.getItem(FILTERS_KEY) || 'null');
+    const period = PERIODS.some(p => p.key === f?.period) ? f.period : 'tudo';
+    const kind = typeof f?.kind === 'string' && Object.hasOwn(SESSION_TITLE, f.kind) ? f.kind : null;
+    return { period, kind };
+  } catch { return { period: 'tudo', kind: null }; }
+}
+
+export function writeFilters({ period, kind }) {
+  try {
+    if (period === 'tudo' && !kind) localStorage.removeItem(FILTERS_KEY);
+    else localStorage.setItem(FILTERS_KEY, JSON.stringify({ period, kind }));
+  } catch { /* sem storage: vale só nesta visita */ }
+}

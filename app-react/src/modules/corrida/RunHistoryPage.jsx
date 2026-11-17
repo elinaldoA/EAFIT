@@ -16,7 +16,7 @@ import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
-import { PERIODS, kindsIn, filterRuns } from './runFilter';
+import { PERIODS, kindsIn, filterRuns, readFilters, writeFilters } from './runFilter';
 import EditRunForm from './EditRunForm';
 import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
@@ -163,8 +163,10 @@ export default function RunHistoryPage() {
   const toast = useToast();
   const [runs, setRuns] = useState(null);
   const [error, setError] = useState(false);
-  const [period, setPeriod] = useState('tudo');
-  const [kind, setKind] = useState(null);
+  const [filters, setFilters] = useState(readFilters);
+  const { period, kind } = filters;
+  const setPeriod = p => { const next = { ...filters, period: p }; setFilters(next); writeFilters(next); };
+  const setKind = k => { const next = { ...filters, kind: k }; setFilters(next); writeFilters(next); };
   const [shoes, setShoes] = useState(() => (user ? cachedShoes(user.id) : []));
   const loadShoes = useCallback(async () => {
     if (user) setShoes(await fetchShoes(user.id));
@@ -325,7 +327,7 @@ export default function RunHistoryPage() {
         {shown.length === 0 ? (
           <div className="empty-state">
             <p>{t('Nenhuma corrida com esses filtros.')}</p>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setPeriod('tudo'); setKind(null); }}>{t('Limpar filtros')}</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { const next = { period: 'tudo', kind: null }; setFilters(next); writeFilters(next); }}>{t('Limpar filtros')}</button>
           </div>
         ) : (
           <ul className="run-list">
