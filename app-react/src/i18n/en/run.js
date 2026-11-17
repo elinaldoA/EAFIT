@@ -638,4 +638,5 @@ export default {
   "Corrida salva": "Run saved",
   "✅ Corrida salva": "✅ Run saved",
   "Concluir": "Done",
+  "▶ Começar: {v1}": "▶ Start: {v1}",
 };

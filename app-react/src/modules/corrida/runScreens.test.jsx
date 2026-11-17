@@ -57,6 +57,7 @@ import { shareRunCard, shareRunSummary } from './runShareCard';
 import { todayDate } from '../../data/treinoData';
 import RunChallengesPage from './RunChallengesPage';
 import { speak } from '../../lib/voice';
+import { programFromMetadata, programToday, isRunSession, sessionTitle } from './program';
 import { goTo } from '../../lib/appNav';
 import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint, markRunSeen } from './liveRun';
 
@@ -679,6 +680,57 @@ describe('RunFeedPage (aba Início)', () => {
     await act(async () => {});
     expect(btn.textContent).toBe('▶ Começar corrida');
     expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  describe('botão rápido com programa', () => {
+    // Um dia da semana de 02/11/2026 em que o programa manda correr (e outro de descanso, se houver).
+    const days = ['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06', '2026-11-07', '2026-11-08'];
+    const md = { runGoal: '5k', runNivel: 'intermediario', runStart: '2026-11-02' };
+    const sessionOn = day => {
+      const prog = programFromMetadata(md);
+      const w = programToday(prog, day);
+      return w.days[w.dayIndex];
+    };
+    const runDay = days.find(d => isRunSession(sessionOn(d)));
+    const restDay = days.find(d => !isRunSession(sessionOn(d)));
+
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('com treino marcado para hoje o botão mostra o treino e começa com ele', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(`${runDay}T15:00:00Z`));
+      h.user = { id: 'u1', user_metadata: md };
+      h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+      render(<RunFeedPage />);
+      const title = sessionTitle(sessionOn(runDay));
+      const btn = await screen.findByRole('button', { name: `▶ Começar: ${title}` });
+      fireEvent.click(btn);
+      fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
+      expect(getLiveRun().session).toMatchObject({ type: sessionOn(runDay).type, week: 1 });
+    });
+
+    it('com treino marcado ainda dá para fazer uma corrida livre', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(`${runDay}T15:00:00Z`));
+      h.user = { id: 'u1', user_metadata: md };
+      h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+      render(<RunFeedPage />);
+      await screen.findByRole('button', { name: /▶ Começar: / });
+      fireEvent.click(screen.getByRole('button', { name: 'Fazer corrida livre' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
+      expect(getLiveRun().session).toBeNull();
+    });
+
+    it('em dia de descanso do programa o botão segue como corrida livre', async () => {
+      if (!restDay) return; // programa sem descanso na semana: nada a verificar
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(`${restDay}T15:00:00Z`));
+      h.user = { id: 'u1', user_metadata: md };
+      h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+      render(<RunFeedPage />);
+      await screen.findByRole('button', { name: '▶ Começar corrida' });
+      expect(screen.queryByRole('button', { name: 'Fazer corrida livre' })).toBeNull();
+    });
   });
 
   it('cancelar a contagem do botão rápido não inicia nada', async () => {

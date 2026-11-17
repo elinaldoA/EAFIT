@@ -12,7 +12,7 @@ import {
 import { lastWeekSummary } from './challenges';
 import RunComments from './RunComments';
 import PushPrompt from '../../components/PushPrompt';
-import { SESSION_TITLE } from './program';
+import { SESSION_TITLE, programFromMetadata, programToday, isRunSession, sessionTitle } from './program';
 import RouteDrawing from './RouteDrawing';
 import { weatherText, weatherShort, startPosition } from './weather';
 import { useStartWeather } from './useStartWeather';
@@ -126,7 +126,7 @@ export default function RunFeedPage() {
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mine, setMine] = useState([]);
-  const [countdown, setCountdown] = useState(false);
+  const [countdown, setCountdown] = useState(null); // { session } enquanto conta 3-2-1
   // Clima no botão de começar: sem GPS aqui, usa o lugar onde a última corrida começou
   // (onde a pessoa costuma correr). Só a posição arredondada a 0,1° vai ao serviço de clima.
   const homePos = useMemo(() => {
@@ -208,31 +208,44 @@ export default function RunFeedPage() {
     );
   }
 
-  // Começar na hora: corrida livre, com o GPS como a pessoa deixou na aba Gravar,
-  // depois da contagem 3-2-1. Quem quer escolher programa, treino guiado ou GPS usa a aba Gravar.
-  function quickStart() {
+  // Treino do programa de hoje (se a pessoa tem programa e hoje é dia de correr).
+  const program = programFromMetadata(user?.user_metadata);
+  const where = program ? programToday(program, todayDate()) : null;
+  const todaySession = where ? where.days[where.dayIndex] : null;
+  const planned = todaySession && isRunSession(todaySession) ? { ...todaySession, week: where.week || null, dayIndex: where.dayIndex } : null;
+
+  // Começar na hora, depois da contagem 3-2-1: o treino do programa de hoje, se houver,
+  // senão corrida livre; o GPS vem do que a pessoa deixou na aba Gravar. Quem quer
+  // escolher treino guiado ou GPS usa a aba Gravar.
+  function quickStart(session) {
     if (getLiveRun()) return toast(t('Já existe uma corrida em andamento'));
     // iPhone: a permissão do acelerômetro (cadência) só pode ser pedida no toque.
     requestMotionPermission();
-    setCountdown(true);
+    setCountdown({ session });
   }
   function launch() {
-    setCountdown(false);
+    const { session } = countdown;
+    setCountdown(null);
     if (getLiveRun()) return;
-    setLiveRun(startRun({ gps: readPref(GPS_KEY) && geoSupported(), session: null }));
-    trackEvent('run_start', 'inicio');
+    setLiveRun(startRun({ gps: readPref(GPS_KEY) && geoSupported(), session }));
+    trackEvent('run_start', session ? session.type : 'inicio');
   }
 
   const hasFriendsRuns = feed.some(r => !r.isMe);
   return (
     <section id="page-inicio" className="page active">
-      {countdown && <StartCountdown onCancel={() => setCountdown(false)} onDone={launch} />}
+      {countdown && <StartCountdown onCancel={() => setCountdown(null)} onDone={launch} />}
       {/* Atalho para começar: sem corridas o estado vazio abaixo já tem o botão de gravar. */}
       {feed.length > 0 && (
-        <button type="button" className="btn btn--primary btn--full run-quick" onClick={quickStart}>
-          {t('▶ Começar corrida')}
-          {weather && <span className="run-quick__wx">{weatherShort(weather)}</span>}
-        </button>
+        <>
+          <button type="button" className="btn btn--primary btn--full run-quick" onClick={() => quickStart(planned)}>
+            {planned ? t('▶ Começar: {v1}', { v1: sessionTitle(planned) }) : t('▶ Começar corrida')}
+            {weather && <span className="run-quick__wx">{weatherShort(weather)}</span>}
+          </button>
+          {planned && (
+            <button type="button" className="btn btn--ghost btn--sm run-quick__free" onClick={() => quickStart(null)}>{t('Fazer corrida livre')}</button>
+          )}
+        </>
       )}
       <WeekSummary runs={mine} />
       {/* Quem já correu pode ligar os avisos de corrida: o convite só existia no resumo do treino de musculação. */}
