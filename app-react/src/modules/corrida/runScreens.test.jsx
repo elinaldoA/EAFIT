@@ -544,18 +544,42 @@ describe('RunFeedPage (aba Início)', () => {
     expect(shareRunCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1', weather: { t: 24, c: 0 } }), expect.anything());
   });
 
-  it('com corridas no feed tem o botão rápido de gravar, que abre a aba Gravar', async () => {
+  it('com corridas no feed o botão rápido começa a corrida livre depois da contagem 3-2-1', async () => {
     h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
     render(<RunFeedPage />);
     await screen.findByText('Corrida da manhã');
-    fireEvent.click(screen.getByRole('button', { name: '▶ Gravar corrida' }));
-    expect(goTo).toHaveBeenCalledWith({ tab: 'gravar' });
+    fireEvent.click(screen.getByRole('button', { name: '▶ Começar corrida' }));
+    expect(getLiveRun()).toBeNull(); // antes, a contagem
+    expect(screen.getByRole('dialog', { name: 'Contagem para começar a corrida' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
+    expect(getLiveRun()).toMatchObject({ session: null });
+    expect(goTo).not.toHaveBeenCalled(); // não passa pela aba Gravar
+  });
+
+  it('o botão rápido usa o GPS como a pessoa deixou na aba Gravar', async () => {
+    localStorage.setItem('eafit_run_gps', 'off');
+    h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+    render(<RunFeedPage />);
+    await screen.findByText('Corrida da manhã');
+    fireEvent.click(screen.getByRole('button', { name: '▶ Começar corrida' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
+    expect(getLiveRun().gps).toBe(false);
+  });
+
+  it('cancelar a contagem do botão rápido não inicia nada', async () => {
+    h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+    render(<RunFeedPage />);
+    await screen.findByText('Corrida da manhã');
+    fireEvent.click(screen.getByRole('button', { name: '▶ Começar corrida' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(getLiveRun()).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Contagem para começar a corrida' })).toBeNull();
   });
 
   it('sem corridas só há um botão de gravar (o do estado vazio), sem repetir o atalho', async () => {
     render(<RunFeedPage />);
     await screen.findByText(/Nenhuma corrida ainda/);
-    expect(screen.queryByRole('button', { name: '▶ Gravar corrida' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '▶ Começar corrida' })).toBeNull();
     expect(screen.getAllByRole('button', { name: 'Gravar corrida' })).toHaveLength(1);
   });
 

@@ -16,6 +16,11 @@ import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
 import { weatherText } from './weather';
 import { renderRunCard, shareRunCard } from './runShareCard';
+import StartCountdown from './StartCountdown';
+import { startRun, setLiveRun, getLiveRun } from './liveRun';
+import { geoSupported } from './useGeoTracker';
+import { requestMotionPermission } from './cadence';
+import { GPS_KEY, readPref } from './runPrefs';
 
 import { t } from '../../lib/i18n';
 const PAGE = 20;
@@ -120,6 +125,7 @@ export default function RunFeedPage() {
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mine, setMine] = useState([]);
+  const [countdown, setCountdown] = useState(false);
   const feedRef = useRef(null);
   feedRef.current = feed;
 
@@ -194,13 +200,29 @@ export default function RunFeedPage() {
     );
   }
 
+  // Começar na hora: corrida livre, com o GPS como a pessoa deixou na aba Gravar,
+  // depois da contagem 3-2-1. Quem quer escolher programa, treino guiado ou GPS usa a aba Gravar.
+  function quickStart() {
+    if (getLiveRun()) return toast(t('Já existe uma corrida em andamento'));
+    // iPhone: a permissão do acelerômetro (cadência) só pode ser pedida no toque.
+    requestMotionPermission();
+    setCountdown(true);
+  }
+  function launch() {
+    setCountdown(false);
+    if (getLiveRun()) return;
+    setLiveRun(startRun({ gps: readPref(GPS_KEY) && geoSupported(), session: null }));
+    trackEvent('run_start', 'inicio');
+  }
+
   const hasFriendsRuns = feed.some(r => !r.isMe);
   return (
     <section id="page-inicio" className="page active">
-      {/* Atalho para gravar: sem corridas o estado vazio abaixo já tem o botão. */}
+      {countdown && <StartCountdown onCancel={() => setCountdown(false)} onDone={launch} />}
+      {/* Atalho para começar: sem corridas o estado vazio abaixo já tem o botão de gravar. */}
       {feed.length > 0 && (
-        <button type="button" className="btn btn--primary btn--full run-quick" onClick={() => goTo({ tab: 'gravar' })}>
-          {t('▶ Gravar corrida')}
+        <button type="button" className="btn btn--primary btn--full run-quick" onClick={quickStart}>
+          {t('▶ Começar corrida')}
         </button>
       )}
       <WeekSummary runs={mine} />
