@@ -148,7 +148,7 @@
 .run-weeks { flex-direction: row; align-items: flex-end; justify-content: space-between; height: 170px; gap: 4px; }
 .run-weeks__col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; }
 .run-weeks__bar { width: 70%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--primary); }
-.run-weeks__value, .run-weeks__label { font-size: 10px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.run-weeks__value, .run-weeks__label { font-size: 12px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .run-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
 .run-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
@@ -216,7 +216,7 @@
 /* ---- Aba Gravar ---- */
 .run-record { align-items: center; text-align: center; gap: var(--sp-3); }
 .run-record__week { display: flex; gap: var(--sp-5); font-size: var(--fs-sm); color: var(--text-muted); }
-.run-record__week strong { color: var(--text); font-size: var(--fs-lg); }
+.run-record__week strong { color: var(--text); font-size: 1.75rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .run-record__start {
   width: 168px;
   height: 168px;
@@ -262,8 +262,8 @@
 .run-card__title { margin: 0; font-size: var(--fs-lg); }
 .run-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
 .run-card__stats div { display: flex; flex-direction: column; }
-.run-card__stats span { font-size: var(--fs-xs); color: var(--text-muted); }
-.run-card__stats strong { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.run-card__stats span { font-size: var(--fs-sm); color: var(--text-muted); }
+.run-card__stats strong { font-size: clamp(1.25rem, 6vw, 1.75rem); font-variant-numeric: tabular-nums; }
 .run-card__foot { display: flex; justify-content: flex-start; gap: var(--sp-2); }
 .run-card__kudos {
   min-height: var(--tap-min);
@@ -303,9 +303,9 @@
   padding: var(--sp-3) var(--sp-2);
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
 }
-.run-periods__item span { font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
-.run-periods__item strong { font-size: var(--fs-xl); color: var(--primary-text); font-variant-numeric: tabular-nums; }
-.run-periods__item small { font-size: var(--fs-xs); color: var(--text-muted); }
+.run-periods__item span { font-size: var(--fs-sm); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.run-periods__item strong { font-size: clamp(1.5rem, 7vw, 2rem); color: var(--primary-text); font-variant-numeric: tabular-nums; }
+.run-periods__item small { font-size: var(--fs-sm); color: var(--text-muted); }
 
 /* ---- Zonas de privacidade (aba Você) ---- */
 .run-zones { display: flex; flex-direction: column; gap: var(--sp-3); }
@@ -378,7 +378,7 @@
 
 /* Ritmo por km em barras (SplitBars.jsx) */
 .run-splits { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
-.run-splits__row { display: grid; grid-template-columns: 2ch 1fr 4.5ch; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); }
+.run-splits__row { display: grid; grid-template-columns: 2ch 1fr 5ch; align-items: center; gap: var(--sp-2); font-size: var(--fs-lg); }
 .run-splits__km { color: var(--text-dim); text-align: right; }
 .run-splits__track { height: 10px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
 .run-splits__bar { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--primary) 55%, transparent); }
@@ -449,7 +449,7 @@
 /* Resumo da semana passada (aba Início) */
 .run-summary { display: flex; flex-direction: column; gap: 2px; }
 .run-summary__label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--primary-text); font-weight: 800; }
-.run-summary strong { font-size: var(--fs-lg); }
+.run-summary strong { font-size: var(--fs-xl); }
 .run-summary__meta { color: var(--text-muted); font-size: var(--fs-sm); }
 .run-summary__up { color: var(--success); }
 .run-summary__down { color: var(--text-muted); }
@@ -464,7 +464,7 @@
 .run-gpx__file { display: none; }
 .run-gpx__summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); text-align: center; }
 .run-gpx__summary span { display: block; font-size: var(--fs-xs); color: var(--text-muted); }
-.run-gpx__summary strong { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.run-gpx__summary strong { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; }
 
 /* Clubes de corrida */
 .run-club { border-top: 1px solid var(--border); padding: 10px 0; }
@@ -482,8 +482,8 @@
 
 /* Aba Você: carga da semana, tendência e conquistas */
 .run-load__numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); text-align: center; }
-.run-load__numbers strong { display: block; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
-.run-load__numbers small { color: var(--text-muted); font-size: 11px; }
+.run-load__numbers strong { display: block; font-size: clamp(1.5rem, 7vw, 2rem); font-variant-numeric: tabular-nums; }
+.run-load__numbers small { color: var(--text-muted); font-size: 13px; }
 .run-load__msg { margin: var(--sp-2) 0 0; font-weight: 600; }
 .run-load--high { border-color: var(--warning, #e0a100); }
 .run-trend { margin: var(--sp-2) 0 0; font-size: 13px; }
