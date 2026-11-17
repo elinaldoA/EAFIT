@@ -39,6 +39,27 @@ describe('parseDiet', () => {
     expect(meals[0].items).toHaveLength(2);
   });
 
+  it('refeição e alimentos na mesma linha ("Almoço: 150g arroz, 100g feijão e 150g frango")', () => {
+    const { meals } = parseDiet('Café da manhã: 2 ovos, 1 pão francês\nAlmoço (12h): 150g arroz, 100g feijão e 150g frango\nLanche: 1,5 scoop de whey; 1 banana');
+    expect(meals.map(m => [m.meal, m.name, m.items.length])).toEqual([['cafe', 'Café da manhã', 2], ['almoco', 'Almoço', 3], ['lanche', 'Lanche', 2]]);
+    expect(meals[1].items.map(i => i.label)).toEqual(['arroz', 'feijão', 'frango']);
+    expect(meals[1].items.every(i => i.kcal > 0)).toBe(true);
+  });
+
+  it('"Almoço: 12h" continua cabeçalho (é o horário, não um alimento)', () => {
+    const { meals } = parseDiet('Almoço: 12h\n150g arroz');
+    expect(meals).toHaveLength(1);
+    expect(meals[0]).toMatchObject({ meal: 'almoco', name: 'Almoço' });
+    expect(meals[0].items.map(i => i.label)).toEqual(['arroz']);
+  });
+
+  it('na mesma linha com calorias escritas, a linha é um item só', () => {
+    const { meals } = parseDiet('Jantar: omelete de 3 ovos, tomate - 320 kcal - 20g prot');
+    expect(meals[0]).toMatchObject({ meal: 'jantar' });
+    expect(meals[0].items).toHaveLength(1);
+    expect(meals[0].items[0]).toMatchObject({ kcal: 320, g: 20 });
+  });
+
   it('lê CSV com cabeçalho', () => {
     const { meals } = parseDiet('Refeição;Alimento;Quantidade;Kcal;Proteína;Carbo;Gordura\nAlmoço;Arroz;150;195;4;42;0\nAlmoço;Feijão;100;77;5;14;0');
     expect(meals).toHaveLength(1);

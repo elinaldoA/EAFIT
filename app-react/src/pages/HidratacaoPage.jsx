@@ -24,8 +24,9 @@ function getWaterMl() {
   return parseInt(localStorage.getItem(waterStorageKey()), 10) || 0;
 }
 
+// Até duas casas: com uma, 750ml virava "0,8L" e faltavam "2,1L" de 2,8L (0,8 + 2,1 ≠ 2,8).
 function fmtLiters(ml) {
-  return (ml / 1000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return (ml / 1000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 }
 
 export default function HidratacaoPage({ active }) {

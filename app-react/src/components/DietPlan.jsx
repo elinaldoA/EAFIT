@@ -109,10 +109,11 @@ export default function DietPlan({ plan, onSave, onClear, onRegister }) {
 
       {open && (
         <div className="diet-plan__import">
-          <label className="custom-food__name">
-            {t('Cole a dieta aqui')}
+          {/* Rótulo em cima e a caixa na largura toda (antes ficava estreita, ao lado do rótulo). */}
+          <label className="field">
+            <span className="field__label">{t('Cole a dieta aqui')}</span>
             <textarea
-              rows={8} maxLength={MAX_DIET_CHARS} value={text}
+              className="input diet-plan__text" rows={8} maxLength={MAX_DIET_CHARS} value={text}
               placeholder={t('Café da manhã\n2 ovos mexidos - 150 kcal - 12g prot\n1 fatia de pão integral\n\nAlmoço\n150g arroz branco cozido\n120g peito de frango grelhado')}
               onChange={e => { setText(e.target.value); setPreview(null); setError(''); }}
             />
@@ -122,7 +123,7 @@ export default function DietPlan({ plan, onSave, onClear, onRegister }) {
               {t('Enviar arquivo (.txt, .csv)')}
               <input type="file" accept=".txt,.csv,.md,text/plain,text/csv" hidden onChange={onFile} />
             </label>
-            <button type="button" className="btn btn--sm" disabled={!text.trim()} onClick={() => read()}>{t('Ler a dieta')}</button>
+            <button type="button" className="btn btn--primary btn--sm" disabled={!text.trim()} onClick={() => read()}>{t('Ler a dieta')}</button>
           </div>
           {error && <p className="custom-food__save" role="alert">{error}</p>}
           {preview && (

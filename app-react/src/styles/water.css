@@ -326,3 +326,5 @@
 .goal-meals__how-body { display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-sm); line-height: 1.4; }
 .goal-meals__how-body p { margin: 0; }
 .goal-meals__how-body ul { margin: 0; padding-left: var(--sp-4); display: flex; flex-direction: column; gap: 4px; }
+
+.diet-plan__text { width: 100%; min-height: 9rem; font: inherit; line-height: 1.4; resize: vertical; }

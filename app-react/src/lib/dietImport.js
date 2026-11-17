@@ -138,6 +138,22 @@ function headerOf(line) {
   return { meal: key, name: (name || line).slice(0, 40) };
 }
 
+// Refeição e alimentos na mesma linha, como o nutricionista manda no WhatsApp:
+// "Almoço: 150g arroz, 100g feijão e 150g frango". Os itens se separam por
+// vírgula (com espaço depois, para não partir "1,5"), ";", " + " ou " e ".
+// Linha com kcal ou macros escritos fica um item só (as vírgulas são dele).
+function inlineMeal(line) {
+  const m = line.match(/^([^:]{2,40}):\s*(.+)$/);
+  if (!m) return null;
+  const head = headerOf(m[1]);
+  if (!head) return null;
+  const rest = m[2].trim();
+  // "Almoço: 12h" / "Café da manhã: 7h30" é só o horário: cabeçalho comum.
+  if (/^\(?\d{1,2}\s*(?:h|:)\s*\d{0,2}\s*(?:min)?\)?$/i.test(rest)) return null;
+  if (/\d\s*(?:kcal|cal)\b|\b(?:prot|carb|gord|lip)/i.test(rest)) return { head, items: [rest] };
+  return { head, items: rest.split(/\s*;\s*|,\s+|\s+\+\s+|\s+e\s+/).map(x => x.trim()).filter(Boolean) };
+}
+
 const CSV_COLS = {
   meal: /^(refeicao|meal|horario)/,
   item: /^(alimento|item|food|descricao|nome)/,
@@ -207,6 +223,9 @@ export function parseDiet(input) {
     for (const rawLine of text.split(/\r?\n/)) {
       const line = clean(rawLine);
       if (!line) continue;
+      // Antes do cabeçalho: "Lanche: 1 banana" é curta o bastante para passar por um.
+      const inline = inlineMeal(line);
+      if (inline) { open(inline.head.meal, inline.head.name); inline.items.forEach(add); continue; }
       const head = headerOf(line);
       if (head) { open(head.meal, head.name); continue; }
       add(line);

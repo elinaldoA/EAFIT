@@ -47,6 +47,17 @@ describe('HidratacaoPage', () => {
     expect(screen.getByText('+200ml')).toBeTruthy();
   });
 
+  it('o consumido e o que falta somam a meta (750 ml é 0,75L, não 0,8L)', async () => {
+    waterLog.fetchWaterLog.mockResolvedValue(750);
+    render(<HidratacaoPage active />);
+    await waitFor(() => expect(localStorage.getItem(waterStorageKey())).toBe('750'));
+    const num = sel => parseFloat(document.querySelector(sel).textContent.match(/[\d,]+/)[0].replace(',', '.'));
+    expect(document.querySelector('.water-hero__value').textContent).toBe('0,75L');
+    const goal = num('.water-hero__goal');
+    const left = parseFloat(screen.getByText(/^Faltam/).textContent.match(/[\d,]+/)[0].replace(',', '.'));
+    expect(Math.round((0.75 + left) * 100)).toBe(Math.round(goal * 100));
+  });
+
   it('adicionar um copo grava local e no servidor', async () => {
     render(<HidratacaoPage active />);
     await waitFor(() => expect(localStorage.getItem(waterStorageKey())).toBe('500'));
