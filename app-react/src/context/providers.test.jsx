@@ -99,6 +99,23 @@ describe('ThemeProvider', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
+  it('a cor da barra do navegador acompanha o tema, e some do caminho com tema de temporada', () => {
+    document.head.innerHTML = '<meta name="theme-color" content="#0e0e12">';
+    const color = () => document.querySelector('meta[name="theme-color"]').getAttribute('content');
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(color()).toBe('#0e0e12');
+    fireEvent.click(screen.getByRole('button'));
+    expect(color()).toBe('#f4f4f5');
+    fireEvent.click(screen.getByRole('button'));
+    expect(color()).toBe('#0e0e12');
+    document.documentElement.setAttribute('data-season', 'halloween');
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#120c1a');
+    fireEvent.click(screen.getByRole('button'));
+    expect(color()).toBe('#120c1a'); // a temporada manda
+    document.documentElement.removeAttribute('data-season');
+    document.head.innerHTML = '';
+  });
+
   it('sistema claro abre claro', () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: true });
     render(<ThemeProvider><Probe /></ThemeProvider>);

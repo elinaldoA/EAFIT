@@ -12,6 +12,7 @@ export function seasonToday(now = new Date()) {
 }
 
 import { easterSunday } from './easter';
+import { baseThemeColor } from './themeColor';
 
 // Temas, na ordem do calendário. O Dia das Bruxas tem decoração própria; os
 // outros usam a decoração suave (cores, arte no canto e partículas), marcada
@@ -139,9 +140,8 @@ export function applySeason(theme) {
 
   const meta = document.querySelector('meta[name="theme-color"]');
   const icon = document.querySelector('link[rel="icon"]');
-  if (meta && original.color === undefined) original.color = meta.getAttribute('content');
   if (icon && original.icon === undefined) original.icon = icon.getAttribute('href');
-  if (meta) meta.setAttribute('content', SEASON_COLOR[theme] || original.color);
+  if (meta) meta.setAttribute('content', SEASON_COLOR[theme] || baseThemeColor());
   if (icon) icon.setAttribute('href', SEASON_FAVICON[theme] || (theme ? emojiFavicon(SEASONS[theme].emoji) : original.icon));
 }
 
