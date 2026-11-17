@@ -151,8 +151,9 @@ describe('LiveRunHost: bateria', () => {
     render(<LiveRunHost />);
     const alert = await screen.findByText(/Bateria em 15%/);
     expect(alert.closest('[role="alert"]').textContent).toContain('Tela escura');
-    expect(navigator.vibrate).toHaveBeenCalledWith([400, 120, 400]);
-    expect(speak).toHaveBeenCalledWith('Bateria em 15 por cento.', { queue: true });
+    // vibração e voz saem no efeito, logo depois de o aviso aparecer
+    await waitFor(() => expect(navigator.vibrate).toHaveBeenCalledWith([400, 120, 400]));
+    await waitFor(() => expect(speak).toHaveBeenCalledWith('Bateria em 15 por cento.', { queue: true }));
     delete navigator.vibrate;
   });
 
@@ -182,7 +183,7 @@ describe('LiveRunHost: bateria', () => {
     await screen.findByText(/Bateria em 18%/);
     act(() => b.set(0.09));
     expect(await screen.findByText(/finalize logo/)).toBeTruthy();
-    expect(speak).toHaveBeenCalledWith('Bateria em 9 por cento. Finalize logo a corrida.', { queue: true });
+    await waitFor(() => expect(speak).toHaveBeenCalledWith('Bateria em 9 por cento. Finalize logo a corrida.', { queue: true }));
     act(() => b.set(0.09, true));
     expect(screen.queryByText(/Bateria em/)).toBeNull();
   });
@@ -252,28 +253,38 @@ describe('LiveRunHost: clima', () => {
     expect(screen.getByText('vento 8 km/h · umidade 85%')).toBeTruthy();
   });
 
-  it('o resumo da corrida tem o botão de compartilhar, que manda o cartão com o título e o clima da tela', async () => {
+  it('compartilhar só existe depois de salvar: a tela "Corrida salva" manda o cartão com título e clima', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ current: { temperature_2m: 19, weather_code: 61 } }) }));
     act(() => { setLiveRun(addRoutePoint(startRun({ gps: true, session: null }), -23.5, -46.6)); });
     render(<LiveRunHost />);
     await screen.findByText('🌧️ 19°C');
     fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
+    // Antes de salvar não há botão de compartilhar.
+    expect(screen.queryByRole('button', { name: /Compartilhar/ })).toBeNull();
     fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Treino do parque' } });
-    await screen.findByText('🌧️ 19°C');
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '📤 Compartilhar esta corrida' })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Salvar corrida' })); });
+    await waitFor(() => expect(h.saveRun).toHaveBeenCalled());
+
+    // A corrida em andamento acabou, mas a tela de confirmação segue com o compartilhar.
+    expect(getLiveRun()).toBeNull();
+    const dialog = await screen.findByRole('dialog', { name: 'Corrida salva' });
+    expect(within(dialog).getByText(/🌧️ 19°C/)).toBeTruthy();
+    await act(async () => { fireEvent.click(within(dialog).getByRole('button', { name: '📤 Compartilhar' })); });
     expect(shareRunCard).toHaveBeenCalledTimes(1);
     expect(shareRunCard.mock.calls[0][0]).toMatchObject({ title: 'Treino do parque', weather: { t: 19, c: 61 }, gps: true });
-    expect(getLiveRun()).not.toBeNull(); // compartilhar não salva nem encerra a corrida
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Concluir' }));
+    expect(screen.queryByRole('dialog', { name: 'Corrida salva' })).toBeNull();
   });
 
-  it('distância inválida no resumo avisa em vez de compartilhar', async () => {
+  it('descartar a corrida não abre a tela "Corrida salva"', async () => {
     act(() => { setLiveRun(startRun({ gps: false, session: null })); });
     render(<LiveRunHost />);
     fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
-    fireEvent.change(screen.getByLabelText('Distância (km)'), { target: { value: 'abc' } });
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '📤 Compartilhar esta corrida' })); });
-    expect(shareRunCard).not.toHaveBeenCalled();
-    expect(h.toast).toHaveBeenCalledWith('⚠️ Distância inválida');
+    fireEvent.click(screen.getByRole('button', { name: 'Descartar corrida' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Toque de novo para descartar' }));
+    expect(getLiveRun()).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Corrida salva' })).toBeNull();
   });
 
   it('sem GPS ou sem internet não mostra clima', async () => {

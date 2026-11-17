@@ -635,5 +635,7 @@ export default {
   "⏱️ Corrida longa: se a bateria estiver baixa, use a tela escura.": "⏱️ Long run: if your battery is low, use the dark screen.",
   "Corrida longa. Se a bateria estiver baixa, use a tela escura.": "Long run. If your battery is low, use the dark screen.",
   "▶ Começar corrida": "▶ Start run",
-  "📤 Compartilhar esta corrida": "📤 Share this run",
+  "Corrida salva": "Run saved",
+  "✅ Corrida salva": "✅ Run saved",
+  "Concluir": "Done",
 };

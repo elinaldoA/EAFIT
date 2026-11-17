@@ -25,6 +25,7 @@ import { VOICE_KEY, AUTOPAUSE_KEY, readPref, writePref } from './runPrefs';
 import InterruptedRun from './InterruptedRun';
 import LiveRunScreen from './LiveRunScreen';
 import FinishRun from './FinishRun';
+import SavedRun from './SavedRun';
 
 function BackGuard({ onBlocked }) {
   useBackToClose(onBlocked);
@@ -52,6 +53,7 @@ export default function LiveRunHost() {
   const [voiceOn, setVoiceOn] = useState(() => readPref(VOICE_KEY));
   const [autoPauseOn, setAutoPauseOn] = useState(() => readPref(AUTOPAUSE_KEY));
   const [finishing, setFinishing] = useState(false);
+  const [saved, setSaved] = useState(null); // a corrida que acabou de ser salva (SavedRun)
   // Corrida que estava rodando quando o app fechou: desde quando ficou sem o app.
   const [interrupted, setInterrupted] = useState(() => interruptedSince(getLiveRun()));
 
@@ -218,7 +220,8 @@ export default function LiveRunHost() {
     return () => clearTimeout(id);
   }, [batteryNudge]);
 
-  if (!run) return null;
+  // Corrida salva: a em andamento já acabou, mas a tela de "Corrida salva" (com o compartilhar) segue aberta.
+  if (!run) return saved ? <SavedRun record={saved} onClose={() => setSaved(null)} /> : null;
 
   const toggleVoice = () => {
     const next = !voiceOn;
@@ -255,7 +258,7 @@ export default function LiveRunHost() {
         }}
       />
       {finishing
-        ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={() => setFinishing(false)} />
+        ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={record => { setFinishing(false); setSaved(record); }} />
         : (
           <LiveRunScreen
             run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided} battery={battery} batteryNudge={batteryNudge} onDismissNudge={() => setBatteryNudge(false)}

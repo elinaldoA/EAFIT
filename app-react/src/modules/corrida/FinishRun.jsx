@@ -18,7 +18,6 @@ import { newMedals } from './challenges';
 import { todayDate } from '../../data/treinoData';
 import { RUN_SAVED_EVENT, defaultRunTitle, saveRun, fetchRuns, newRecords, describeRecord, formatClock, formatKm, fetchShoes, cachedShoes, defaultShoeId, rememberShoe, shoeUsage, shoeWearNotice } from './runs';
 import { privateRoute } from './route';
-import { renderRunCard, shareRunCard } from './runShareCard';
 import RouteDrawing from './RouteDrawing';
 import { t } from '../../lib/i18n';
 
@@ -58,38 +57,6 @@ export default function FinishRun({ run, now, onBack, onDone }) {
   // Clima de onde a corrida começou, já na tela de resumo (ao salvar, o mesmo clima vai com a corrida).
   const weather = useStartWeather(run.gps ? startPosition(run.route) : null);
 
-  // Compartilhar já na tela de resumo: o cartão sai com o que está preenchido agora
-  // (título, distância corrigida, clima), sem esperar salvar. O cartão começa a ser
-  // desenhado no primeiro toque no botão.
-  const [sharing, setSharing] = useState(false);
-  const prepared = useRef(null);
-  function draftRecord() {
-    const parsed = Number(String(km).replace(',', '.'));
-    if (edited && (!Number.isFinite(parsed) || parsed < 0 || parsed > 500)) return null;
-    return { ...finishRun(run, { meters: edited ? parsed * 1000 : undefined, effort, notes, title, visibility, zones, shoeId }), weather };
-  }
-  function prepareShare() {
-    if (prepared.current) return;
-    const draft = draftRecord();
-    if (draft) prepared.current = renderRunCard(draft).catch(() => null);
-  }
-  async function handleShare() {
-    const draft = draftRecord();
-    if (!draft) return toast(t('⚠️ Distância inválida'));
-    prepareShare();
-    const ready = prepared.current;
-    prepared.current = null; // a próxima vez desenha de novo, com o que estiver na tela
-    setSharing(true);
-    try {
-      const result = await shareRunCard(draft, ready);
-      if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
-    } catch (err) {
-      if (err?.name !== 'AbortError') toast(t('⚠️ Não foi possível gerar a imagem'));
-    } finally {
-      setSharing(false);
-    }
-  }
-
   async function handleSave() {
     const parsed = Number(String(km).replace(',', '.'));
     if (edited && (!Number.isFinite(parsed) || parsed < 0 || parsed > 500)) return toast(t('⚠️ Distância inválida'));
@@ -115,7 +82,7 @@ export default function FinishRun({ run, now, onBack, onDone }) {
     trackEvent('run', record.kind);
     setLiveRun(null);
     setBusy(false);
-    onDone();
+    onDone(record); // a tela "Corrida salva" (SavedRun) segue aberta depois que a corrida acaba
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
     if (pending && out.rejected) toast(t('⚠️ O servidor não aceitou a corrida agora — ela fica no aparelho e tentamos de novo depois'));
     else if (pending) toast(t('📶 Sem internet — a corrida fica no aparelho e sobe sozinha depois'));
@@ -129,7 +96,7 @@ export default function FinishRun({ run, now, onBack, onDone }) {
   function handleDiscard() {
     if (!confirmDiscard) { setConfirmDiscard(true); return; }
     setLiveRun(null);
-    onDone();
+    onDone(null);
     toast(t('Corrida descartada'));
   }
 
@@ -221,10 +188,6 @@ export default function FinishRun({ run, now, onBack, onDone }) {
         <button type="button" className="btn btn--ghost run-live__btn" onClick={onBack} disabled={busy}>{t('Voltar')}</button>
         <button type="button" className="btn btn--primary run-live__btn" onClick={handleSave} disabled={busy}>{busy ? t('Salvando…') : t('Salvar corrida')}</button>
       </div>
-      <button
-        type="button" className="btn btn--outline btn--full" disabled={busy || sharing}
-        onPointerDown={prepareShare} onFocus={prepareShare} onClick={handleShare}
-      >{sharing ? t('Gerando imagem…') : t('📤 Compartilhar esta corrida')}</button>
       <button type="button" className="btn btn--ghost btn--sm run-live__discard" onClick={handleDiscard} disabled={busy}>
         {confirmDiscard ? t('Toque de novo para descartar') : t('Descartar corrida')}
       </button>
