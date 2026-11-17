@@ -134,7 +134,7 @@ export default {
   'Enviar para todos': 'Send to everyone',
   'Enviados': 'Sent',
   'Nenhum recado enviado ainda.': 'No messages sent yet.',
-  'Carregar o modelo substitui o que você montou até agora. Continuar?': 'Loading the template replaces what you have built so far. Continue?',
+  'Modelo "{name}" carregado no lugar do rascunho': 'Template "{name}" loaded in place of the draft',
   '💾 Modelo salvo': '💾 Template saved',
   'Enviando o treino para {name}…': 'Sending the workout to {name}…',
   'Este plano não tem duração definida. Use "Editar / enviar novo treino".': 'This plan has no set duration. Use "Edit / send new workout".',

@@ -251,19 +251,32 @@ describe('PlanBuilder — modelo (sem aluno)', () => {
     await waitFor(() => expect(onSent).toHaveBeenCalledTimes(1));
   });
 
-  it('carregar um modelo pede confirmação quando já há dias montados', async () => {
+  it('carregar um modelo sobre um rascunho não pede confirmação e o Desfazer devolve o rascunho', async () => {
     h.api.fetchTemplates.mockResolvedValue([{ id: 't1', name: 'Modelo A', weeks: 4, days: [{ dia: 'Terça', foco: 'Costas', exercicios: [{ nome: 'Remada', series: '3', reps: '10', descanso: '60s', tecnica: '' }] }] }]);
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(window, 'confirm');
     setup({ initialPlan: PLAN });
     const select = await screen.findByLabelText('Começar de um modelo');
     fireEvent.change(select, { target: { value: 't1' } });
-    expect(screen.getByDisplayValue('Supino')).toBeTruthy();
-    expect(confirm).toHaveBeenCalled();
+    expect(confirm).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByDisplayValue('Remada')).toBeTruthy());
+    expect(screen.queryByDisplayValue('Supino')).toBeNull();
+    expect(screen.getByLabelText('Duração').value).toBe('4');
+    expect(h.toast).toHaveBeenCalledWith('Modelo "Modelo A" carregado no lugar do rascunho', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
 
-    confirm.mockReturnValue(true);
+    act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+    expect(screen.getByDisplayValue('Supino')).toBeTruthy();
+    expect(screen.queryByDisplayValue('Remada')).toBeNull();
+  });
+
+  it('carregar um modelo num rascunho vazio não mostra aviso de desfazer', async () => {
+    h.api.fetchTemplates.mockResolvedValue([{ id: 't1', name: 'Modelo A', weeks: 4, days: [{ dia: 'Terça', foco: 'Costas', exercicios: [{ nome: 'Remada', series: '3', reps: '10', descanso: '60s', tecnica: '' }] }] }]);
+    h.api.fetchClientPlan.mockResolvedValue(null);
+    setup({ client: CLIENT });
+    const select = await screen.findByLabelText('Começar de um modelo');
+    h.toast.mockClear();
     fireEvent.change(select, { target: { value: 't1' } });
     await waitFor(() => expect(screen.getByDisplayValue('Remada')).toBeTruthy());
-    expect(screen.getByLabelText('Duração').value).toBe('4');
+    expect(h.toast).not.toHaveBeenCalled();
   });
 });
 

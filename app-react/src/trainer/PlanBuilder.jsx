@@ -68,9 +68,15 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
   function handleLoadTemplate(id) {
     const tpl = templates.find(t => t.id === id);
     if (!tpl) return;
-    if (draft.days.length && !window.confirm(t('Carregar o modelo substitui o que você montou até agora. Continuar?'))) return;
+    // Substitui o rascunho, mas o anterior fica guardado: o aviso devolve o que estava montado.
+    const previous = draft;
     setDraft(draftFromPlan(templateToPlan(tpl)));
     setError('');
+    if (previous.days.length) {
+      toast(t('Modelo "{name}" carregado no lugar do rascunho', { name: tpl.name }), 6000, {
+        action: { label: t('Desfazer'), onClick: () => { setDraft(previous); setError(''); } },
+      });
+    }
   }
 
   async function handleSaveTemplate() {
