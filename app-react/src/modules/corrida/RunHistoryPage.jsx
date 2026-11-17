@@ -17,6 +17,7 @@ import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard, renderRunSummaryCard, shareRunSummary } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
 import { monthSummary } from './runSummary';
+import { useDeferredRemoval } from '../../lib/useDeferredRemoval';
 import { PERIODS, kindsIn, filterRuns, readFilters, writeFilters } from './runFilter';
 import EditRunForm from './EditRunForm';
 import RunInsights from './RunInsights';
@@ -40,7 +41,6 @@ const gap = run => gradeAdjustedPace(run.splits, run.km_elev);
 function RunItem({ run, runs, shoe, onDelete }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
-  const [confirm, setConfirm] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -148,8 +148,8 @@ function RunItem({ run, runs, shoe, onDelete }) {
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setEditing(true)}>{t('✏️ Editar corrida')}</button>
           <button
             type="button" className="btn btn--ghost btn--sm"
-            onClick={() => { if (confirm) onDelete(run); else setConfirm(true); }}
-          >{confirm ? t('Toque de novo para apagar') : t('Apagar corrida')}</button>
+            onClick={() => onDelete(run)}
+          >{t('Apagar corrida')}</button>
         </div>
       )}
       {photoOpen && <RunPhotoShare run={run} onClose={() => setPhotoOpen(false)} />}
@@ -187,7 +187,10 @@ function SummaryShare({ runs, today }) {
 export default function RunHistoryPage() {
   const { user } = useAuth();
   const toast = useToast();
-  const [runs, setRuns] = useState(null);
+  const [allRuns, setRuns] = useState(null);
+  // Apagar some da tela na hora e só vai ao servidor em 6 s: dá para desfazer (lib/useDeferredRemoval.js).
+  const removal = useDeferredRemoval();
+  const runs = useMemo(() => (allRuns ? allRuns.filter(r => !removal.hidden.has(r.client_id)) : allRuns), [allRuns, removal.hidden]);
   const [error, setError] = useState(false);
   const [filters, setFilters] = useState(readFilters);
   const { period, kind } = filters;
@@ -217,15 +220,17 @@ export default function RunHistoryPage() {
     return () => window.removeEventListener(RUN_SAVED_EVENT, load);
   }, [load]);
 
-  async function handleDelete(run) {
-    try {
-      await deleteRun(user.id, run);
-      setRuns(list => list.filter(r => r.client_id !== run.client_id));
-      toast(t('Corrida apagada'));
-    } catch (err) {
-      console.error('deleteRun:', err);
-      toast(t('⚠️ Não foi possível apagar — tente novamente'));
-    }
+  function handleDelete(run) {
+    removal.schedule(run.client_id, async () => {
+      try {
+        await deleteRun(user.id, run);
+        setRuns(list => list.filter(r => r.client_id !== run.client_id));
+      } catch (err) {
+        console.error('deleteRun:', err);
+        toast(t('⚠️ Não foi possível apagar — tente novamente'));
+      }
+    });
+    toast(t('Corrida apagada'), 6000, { action: { label: t('Desfazer'), onClick: () => removal.undo(run.client_id) } });
   }
 
   if (error && !runs) {

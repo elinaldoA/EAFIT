@@ -9,6 +9,7 @@ const h = vi.hoisted(() => ({
   saveRun: vi.fn(async (uid, run) => ({ run, pending: false })),
   fetchRuns: vi.fn(async () => []),
   fetchRunFeed: vi.fn(async () => []),
+  deleteRun: vi.fn(async () => {}),
   toggleKudos: vi.fn(async () => ({ kudos: 1, kudoed: true })),
   fetchFriendsWeek: vi.fn(async () => []),
   shoes: [],
@@ -32,6 +33,7 @@ vi.mock('./runs', async (orig) => ({
   saveRun: (...a) => h.saveRun(...a),
   fetchRuns: (...a) => h.fetchRuns(...a),
   fetchRunFeed: (...a) => h.fetchRunFeed(...a),
+  deleteRun: (...a) => h.deleteRun(...a),
   toggleKudos: (...a) => h.toggleKudos(...a),
   fetchFriendsWeek: (...a) => h.fetchFriendsWeek(...a),
   flushPendingRuns: async () => 0,
@@ -468,6 +470,41 @@ describe('correr de novo (fantasma)', () => {
     expect(document.querySelectorAll('.run-wx__row')).toHaveLength(1);
     expect(document.querySelector('.run-wx__row--best')).toBeNull();
     expect(screen.getByText(/Com mais corridas em faixas diferentes/)).toBeTruthy();
+  });
+
+  it('apagar corrida some na hora, dá para desfazer e só vai ao servidor depois de 6 s', async () => {
+    h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
+    render(<RunHistoryPage />);
+    fireEvent.click(await screen.findByRole('button', { name: /Parque lento/ }));
+    vi.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Apagar corrida' })); // um toque só: sem confirmação
+      expect(screen.queryByRole('button', { name: /Parque lento/ })).toBeNull();
+      expect(h.deleteRun).not.toHaveBeenCalled();
+      const [msg, ms, opts] = h.toast.mock.calls.at(-1);
+      expect(msg).toBe('Corrida apagada');
+      expect(ms).toBe(6000);
+
+      act(() => { opts.action.onClick(); }); // Desfazer
+      expect(screen.getByRole('button', { name: /Parque lento/ })).toBeTruthy();
+      await act(async () => { vi.advanceTimersByTime(7000); });
+      expect(h.deleteRun).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('apagar sem desfazer: depois de 6 s a exclusão vai ao servidor', async () => {
+    h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
+    render(<RunHistoryPage />);
+    fireEvent.click(await screen.findByRole('button', { name: /Parque lento/ }));
+    vi.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Apagar corrida' }));
+      await act(async () => { vi.advanceTimersByTime(6100); });
+      expect(h.deleteRun).toHaveBeenCalledTimes(1);
+      expect(h.deleteRun.mock.calls[0][1]).toMatchObject({ client_id: 'slow' });
+      expect(screen.queryByRole('button', { name: /Parque lento/ })).toBeNull();
+      expect(screen.getByRole('button', { name: /Parque rápido/ })).toBeTruthy();
+    } finally { vi.useRealTimers(); }
   });
 
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
