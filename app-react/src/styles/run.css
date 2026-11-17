@@ -37,7 +37,7 @@
   color: var(--text);
 }
 .run-live__clock--paused { color: var(--text-dim); }
-.run-live__clock--small { font-size: 2.5rem; margin: 0; }
+.run-live__clock--small { font-size: clamp(3.5rem, 18vw, 5rem); margin: 0; }
 .run-live__paused { text-align: center; color: var(--warning); font-weight: 700; text-transform: uppercase; font-size: var(--fs-sm); }
 .run-live__paused--auto { text-transform: none; }
 .run-live__toggles { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-1); }
@@ -99,6 +99,7 @@
   background: var(--surface);
   color: var(--text);
   font-weight: 700;
+  font-size: var(--fs-xl);
 }
 .run-effort__btn--on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 
@@ -166,9 +167,9 @@
 }
 .run-item__date { font-size: var(--fs-sm); color: var(--text-muted); }
 .run-item__main { display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
-.run-item__main span { font-size: var(--fs-sm); color: var(--text-muted); }
+.run-item__main span { font-size: var(--fs-lg); color: var(--text-muted); }
 .run-item__kind { font-size: var(--fs-xs); color: var(--primary-text); font-weight: 700; text-align: right; }
-.run-item__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-sm); }
+.run-item__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-lg); }
 .run-item__body p { margin: 0; }
 .run-item__edit { display: flex; flex-direction: column; gap: var(--sp-2); }
 .run-item__notes { color: var(--text-muted); white-space: pre-wrap; }
@@ -506,12 +507,12 @@
 .run-goal__bar > span { display: block; height: 100%; background: var(--primary); }
 
 /* Fantasma (correr de novo contra uma corrida anterior) */
-.run-live__ghost-result { margin: var(--sp-2) 0; text-align: center; font-weight: 700; }
+.run-live__ghost-result { margin: var(--sp-2) 0; text-align: center; font-weight: 700; font-size: var(--fs-xl); }
 
 /* Colunas largas do ritmo por km: resultado dos tiros e subida/descida por km */
 .run-splits--wide .run-splits__row { grid-template-columns: 2ch 1fr auto; }
 .run-splits--elev .run-splits__row { grid-template-columns: 2ch 1fr 4.5ch auto; }
-.run-splits__elev { min-width: 9ch; text-align: right; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.run-splits__elev { min-width: 9ch; text-align: right; color: var(--text-muted); font-size: 14px; white-space: nowrap; }
 .run-route { display: flex; gap: var(--sp-3); align-items: center; }
 .run-route__map { flex: 0 0 96px; }
 .run-route__info { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); min-width: 0; }
@@ -531,8 +532,8 @@
 .run-zones__seg--3 { background: #f0c030; }
 .run-zones__seg--4 { background: #f08a24; }
 .run-zones__seg--5 { background: #d9453b; }
-.run-zones__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); }
-.run-zones__list li { display: grid; grid-template-columns: 12px 1fr auto 4.5rem; gap: var(--sp-2); align-items: center; }
+.run-zones__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-lg); }
+.run-zones__list li { display: grid; grid-template-columns: 12px 1fr auto 5.5rem; gap: var(--sp-2); align-items: center; }
 .run-zones__list small { text-align: right; opacity: .7; }
 .run-zones__dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
