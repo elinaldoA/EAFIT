@@ -134,6 +134,55 @@ describe('LiveRunHost', () => {
   });
 });
 
+describe('LiveRunHost: finalizar segurando o botão', () => {
+  afterEach(() => { vi.useRealTimers(); });
+  const live = () => { act(() => { setLiveRun(startRun({ gps: false, session: null }, Date.now() - 60_000)); }); };
+
+  it('segurar por 700 ms abre o fim da corrida', () => {
+    live();
+    vi.useFakeTimers();
+    render(<LiveRunHost />);
+    const btn = screen.getByRole('button', { name: /Finalizar/ });
+    fireEvent.pointerDown(btn);
+    act(() => { vi.advanceTimersByTime(600); });
+    expect(screen.queryByRole('dialog', { name: 'Finalizar corrida' })).toBeNull(); // ainda não
+    act(() => { vi.advanceTimersByTime(150); });
+    expect(screen.getByRole('dialog', { name: 'Finalizar corrida' })).toBeTruthy();
+  });
+
+  it('um toque rápido (soltar antes) não finaliza', () => {
+    live();
+    vi.useFakeTimers();
+    render(<LiveRunHost />);
+    const btn = screen.getByRole('button', { name: /Finalizar/ });
+    fireEvent.pointerDown(btn);
+    act(() => { vi.advanceTimersByTime(200); });
+    fireEvent.pointerUp(btn);
+    fireEvent.click(btn); // o clique que o navegador manda depois do toque com o dedo
+    act(() => { vi.advanceTimersByTime(2000); });
+    expect(screen.queryByRole('dialog', { name: 'Finalizar corrida' })).toBeNull();
+  });
+
+  it('arrastar o dedo para fora cancela', () => {
+    live();
+    vi.useFakeTimers();
+    render(<LiveRunHost />);
+    const btn = screen.getByRole('button', { name: /Finalizar/ });
+    fireEvent.pointerDown(btn);
+    act(() => { vi.advanceTimersByTime(300); });
+    fireEvent.pointerLeave(btn);
+    act(() => { vi.advanceTimersByTime(2000); });
+    expect(screen.queryByRole('dialog', { name: 'Finalizar corrida' })).toBeNull();
+  });
+
+  it('teclado e leitor de tela (clique sem pressionar antes) finalizam direto', () => {
+    live();
+    render(<LiveRunHost />);
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
+    expect(screen.getByRole('dialog', { name: 'Finalizar corrida' })).toBeTruthy();
+  });
+});
+
 describe('LiveRunHost: parcial manual', () => {
   it('o botão marca a volta, mostra na lista e fala o tempo e a distância', async () => {
     const t0 = Date.now() - 250_000;

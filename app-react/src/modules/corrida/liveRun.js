@@ -44,6 +44,9 @@ export function startRun({ gps = false, session = null, ghost = null } = {}, now
 
 export const isPaused = s => !!s && s.segmentStart == null;
 
+// Quanto tempo segurar o botão Finalizar para encerrar a corrida (ms).
+export const FINISH_HOLD_MS = 700;
+
 // ---- Parcial manual (lap) ---------------------------------------------------
 // A pessoa toca em "Parcial" quando quer marcar uma volta (além dos km). Cada
 // marca guarda o tempo e a distância acumulados; o tempo e a distância da volta

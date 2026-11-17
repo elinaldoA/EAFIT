@@ -644,4 +644,7 @@ export default {
   "Parcial {v1}": "Lap {v1}",
   "Parcial {v1}. {v2} minutos e {v3} segundos. {v4} quilômetro(s).": "Lap {v1}. {v2} minutes and {v3} seconds. {v4} kilometer(s).",
   "META DO MÊS": "MONTH GOAL",
+  "Finalizar a corrida (segure o botão)": "Finish the run (hold the button)",
+  "🏁 Segure para finalizar": "🏁 Hold to finish",
+  "Segure…": "Hold…",
 };

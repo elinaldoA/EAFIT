@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gpsStatusText } from './gpsStatus';
-import { elapsedMs, isPaused, pauseRun, resumeRun, splitsOf, updateLiveRun, isPersistFailing, addLap, lapsOf } from './liveRun';
+import { elapsedMs, isPaused, pauseRun, resumeRun, splitsOf, updateLiveRun, isPersistFailing, addLap, lapsOf, FINISH_HOLD_MS } from './liveRun';
 import { elevationGain } from './elevation';
 import { hrSupported } from './heartRate';
 import GhostBar from './GhostBar';
@@ -56,6 +56,23 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
   const splits = splitsOf(run.kmMarks);
   const lastSplit = splits.length ? splits[splits.length - 1] : null;
   const [dark, setDark] = useState(false);
+  // Finalizar exige segurar o botão (FINISH_HOLD_MS): evita encerrar sem querer no bolso ou com a mão suada.
+  // Teclado e leitor de tela mandam só o clique (sem pressionar antes) e finalizam direto.
+  const [holding, setHolding] = useState(false);
+  const holdTimer = useRef(null);
+  const pointerSeen = useRef(false);
+  useEffect(() => () => clearTimeout(holdTimer.current), []); // sair da tela no meio do toque não finaliza
+  const stopHold = () => { clearTimeout(holdTimer.current); holdTimer.current = null; setHolding(false); };
+  function startHold() {
+    pointerSeen.current = true;
+    setHolding(true);
+    buzz('resume');
+    holdTimer.current = setTimeout(() => { holdTimer.current = null; setHolding(false); buzz('done'); onFinish(); }, FINISH_HOLD_MS);
+  }
+  function clickFinish() {
+    if (pointerSeen.current) { pointerSeen.current = false; return; } // o toque com o dedo já foi tratado pelo segurar
+    onFinish();
+  }
   const laps = lapsOf(run);
   // Marca uma volta agora: vibra e, com a voz ligada, diz o tempo e a distância da volta.
   function markLap() {
@@ -232,7 +249,12 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
         {paused
           ? <button type="button" className="btn btn--primary run-live__btn" onClick={() => { buzz('resume'); updateLiveRun(r => resumeRun(r)); }}>{t('▶ Continuar')}</button>
           : <button type="button" className="btn btn--ghost run-live__btn" onClick={() => { buzz('pause'); updateLiveRun(r => pauseRun(r)); }}>{t('⏸ Pausar')}</button>}
-        <button type="button" className="btn btn--primary run-live__btn" onClick={onFinish}>{t('🏁 Finalizar')}</button>
+        <button
+          type="button" className={`btn btn--primary run-live__btn run-live__finish${holding ? ' run-live__finish--holding' : ''}`}
+          onPointerDown={startHold} onPointerUp={stopHold} onPointerLeave={stopHold} onPointerCancel={stopHold}
+          onContextMenu={e => e.preventDefault()} onClick={clickFinish}
+          aria-label={t('Finalizar a corrida (segure o botão)')}
+        >{holding ? t('Segure…') : t('🏁 Segure para finalizar')}</button>
       </div>
     </div>
   );
