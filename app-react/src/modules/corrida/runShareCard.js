@@ -7,6 +7,7 @@ import { tileSrc } from './mapStyle';
 import { weatherShort, weatherDetail, tempText } from './weather';
 import { monthSummary, monthRuns } from './runSummary';
 import { weatherBands } from './weatherInsights';
+import { goalProgress } from './runReadings';
 import { runTitle, paceSeconds, formatPace, formatClock, formatKm } from './runs';
 
 // Card 9:16 de uma corrida para os stories e o status: mapa com o percurso
@@ -344,7 +345,8 @@ const BAND_ROWS = {
 
 // Card 9:16 do mês para os stories: km, corridas, tempo e ritmo médio, com
 // "clima e ritmo" quando há corridas com clima o bastante. Sem mapa nem percurso.
-export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
+// goalKm: meta de km do mês da pessoa (opcional): vira uma barra de progresso no cartão.
+export async function renderRunSummaryCard(runs, today, refCode = myRefCode(), goalKm = null) {
   const sum = monthSummary(runs, today);
   if (!sum) return null;
   const canvas = document.createElement('canvas');
@@ -388,11 +390,39 @@ export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
     [formatPace(sum.pace), t('ritmo /km')],
   ].forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: 80, padX: 30, labelSize: 25 }));
 
+  // Meta de km do mês: barra de progresso com o que já foi e a porcentagem.
+  let nextTop = boxY + 220 + 40;
+  const goal = goalProgress(runs, today, { month: goalKm })[0];
+  if (goal) {
+    drawPanel(ctx, PAD_X, nextTop, CONTENT_W, 150, 28);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = ORANGE_LIGHT;
+    ctx.font = `800 26px ${FONT}`;
+    setTracking(ctx, 3);
+    ctx.fillText(t('META DO MÊS'), PAD_X + 36, nextTop + 52);
+    setTracking(ctx, 0);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `800 34px ${FONT}`;
+    ctx.fillText(`${formatKm(goal.doneM, 1)} / ${goalKm} km · ${goal.pct}%`, PAD_X + CONTENT_W - 36, nextTop + 52);
+    const barX = PAD_X + 36;
+    const barW = CONTENT_W - 72;
+    roundedRectPath(ctx, barX, nextTop + 84, barW, 28, 14);
+    ctx.fillStyle = 'rgba(255,255,255,0.14)';
+    ctx.fill();
+    if (goal.pct > 0) {
+      roundedRectPath(ctx, barX, nextTop + 84, Math.max(28, (barW * goal.pct) / 100), 28, 14);
+      ctx.fillStyle = ORANGE_LIGHT;
+      ctx.fill();
+    }
+    nextTop += 150 + 30;
+  }
+
   // Clima e ritmo só das corridas do mês.
   // No cartão, mesmo uma corrida com clima já aparece (na aba Você são precisas 3).
   const wx = weatherBands(monthRuns(runs, today), 1);
   if (wx) {
-    const top = boxY + 220 + 40;
+    const top = nextTop;
     drawPanel(ctx, PAD_X, top, CONTENT_W, 90 + wx.bands.length * 64, 28);
     ctx.textAlign = 'left';
     ctx.fillStyle = ORANGE_LIGHT;
@@ -431,10 +461,10 @@ export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
-export async function shareRunSummary(runs, today, prepared) {
+export async function shareRunSummary(runs, today, prepared, goalKm = null) {
   trackFeature('share_run_summary');
   const refCode = myRefCode();
-  const blob = (await prepared) || await renderRunSummaryCard(runs, today, refCode);
+  const blob = (await prepared) || await renderRunSummaryCard(runs, today, refCode, goalKm);
   const sum = monthSummary(runs, today);
   const text = t('{v1} km de corrida neste mês no EAFIT Run 🏃 Corra com a gente: {v2}', { v1: formatKm(sum?.meters || 0, 1), v2: cardUrl(refCode) });
   return shareImageBlob(blob, 'meu-mes-de-corrida.png', t('Meu mês de corrida'), text);

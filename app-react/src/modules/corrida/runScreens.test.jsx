@@ -534,6 +534,28 @@ describe('correr de novo (fantasma)', () => {
     } finally { vi.useRealTimers(); }
   });
 
+  it('na aba Você: compartilha o cartão do mês só quando há corrida no mês', async () => {
+    h.fetchRuns.mockResolvedValue([{ ...past('a', 1800, -2300000), run_date: todayDate() }]);
+    const first = render(<RunHistoryPage />);
+    const btn = await screen.findByRole('button', { name: '📤 Compartilhar meu mês' });
+    await act(async () => { fireEvent.click(btn); });
+    expect(shareRunSummary).toHaveBeenCalledTimes(1);
+    first.unmount();
+    h.fetchRuns.mockResolvedValue([{ ...past('b', 1800, -2300000), run_date: '2020-01-01' }]);
+    render(<RunHistoryPage />);
+    await screen.findByText('Semana'); // a aba já carregou
+    expect(screen.queryByRole('button', { name: '📤 Compartilhar meu mês' })).toBeNull();
+  });
+
+  it('na aba Você: o cartão do mês leva a meta de km do mês do perfil', async () => {
+    h.user = { id: 'u1', user_metadata: { runMonthlyKm: 80 } };
+    h.fetchRuns.mockResolvedValue([{ ...past('a', 1800, -2300000), run_date: todayDate() }]);
+    render(<RunHistoryPage />);
+    const btn = await screen.findByRole('button', { name: '📤 Compartilhar meu mês' }, { timeout: 3000 });
+    await act(async () => { fireEvent.click(btn); });
+    expect(shareRunSummary).toHaveBeenCalledWith(expect.any(Array), expect.any(String), expect.anything(), 80);
+  });
+
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
     h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
     render(<RunHistoryPage />);

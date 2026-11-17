@@ -17,6 +17,7 @@ import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard, renderRunSummaryCard, shareRunSummary } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
 import { monthSummary } from './runSummary';
+import { kmGoals } from './runProfileStats';
 import { useDeferredRemoval } from '../../lib/useDeferredRemoval';
 import { PERIODS, kindsIn, filterRuns, readFilters, writeFilters } from './runFilter';
 import EditRunForm from './EditRunForm';
@@ -160,16 +161,16 @@ function RunItem({ run, runs, shoe, onDelete }) {
 // Aba Você do EAFIT Run: km da semana, do mês e do ano, totais, recordes, km
 // por semana e a lista das suas corridas (inclusive as que ainda estão no aparelho).
 // Cartão do mês para os stories. A imagem começa a ser desenhada no primeiro toque.
-function SummaryShare({ runs, today }) {
+function SummaryShare({ runs, today, goalKm }) {
   const toast = useToast();
   const [sharing, setSharing] = useState(false);
   const prepared = useRef(null);
-  const prepare = () => { if (!prepared.current) prepared.current = renderRunSummaryCard(runs, today).catch(() => null); };
+  const prepare = () => { if (!prepared.current) prepared.current = renderRunSummaryCard(runs, today, undefined, goalKm).catch(() => null); };
   async function handle() {
     prepare();
     setSharing(true);
     try {
-      const result = await shareRunSummary(runs, today, prepared.current);
+      const result = await shareRunSummary(runs, today, prepared.current, goalKm);
       if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
     } catch (err) {
       if (err?.name !== 'AbortError') toast(t('⚠️ Não foi possível gerar a imagem'));
@@ -285,7 +286,7 @@ export default function RunHistoryPage() {
           </div>
         ))}
       </div>
-      {monthSummary(runs, today) && <SummaryShare runs={runs} today={today} />}
+      {monthSummary(runs, today) && <SummaryShare runs={runs} today={today} goalKm={kmGoals(user.user_metadata).month} />}
 
       <div className="dash-card">
         <div className="summary-stats run-stats">

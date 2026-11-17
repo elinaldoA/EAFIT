@@ -64,4 +64,26 @@ describe('cartão do mês para os stories', () => {
     expect(texts).toContain('1 corrida · 24°C'); // as de outubro e setembro ficam de fora
     expect(texts.some(x => /Frio|Calor/.test(x))).toBe(false);
   });
+
+  it('com meta do mês no perfil o cartão mostra o progresso (km feitos, meta e porcentagem)', async () => {
+    const runs = [run('2026-11-02', 24), run('2026-11-05', 20), run('2026-11-09', 22), run('2026-11-12', 26)]; // 4 x 5 km
+    await renderRunSummaryCard(runs, '2026-11-17', 'ABC', 80);
+    expect(texts).toContain('META DO MÊS');
+    expect(texts).toContain('20,0 / 80 km · 25%');
+  });
+
+  it('sem meta ou com a meta já batida: sem meta não aparece; batida mostra 100%', async () => {
+    const runs = [run('2026-11-02', 24), run('2026-11-05', 20)]; // 10 km
+    await renderRunSummaryCard(runs, '2026-11-17', 'ABC', null);
+    expect(texts).not.toContain('META DO MÊS');
+    texts.length = 0;
+    await renderRunSummaryCard(runs, '2026-11-17', 'ABC', 8);
+    expect(texts).toContain('10,0 / 8 km · 100%');
+  });
+
+  it('a meta só conta os km do mês, não os de meses anteriores', async () => {
+    const runs = [run('2026-11-02', 24), run('2026-10-20', 20), run('2026-10-21', 20)];
+    await renderRunSummaryCard(runs, '2026-11-17', 'ABC', 50);
+    expect(texts).toContain('5,0 / 50 km · 10%');
+  });
 });
