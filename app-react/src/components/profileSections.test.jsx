@@ -334,7 +334,7 @@ describe('ProfilePauseSection', () => {
     const toast = vi.fn();
     render(<ProfilePauseSection user={{ user_metadata: {} }} updateProfile={vi.fn().mockResolvedValue({ error: { message: 'falhou' } })} toast={toast} />);
     fireEvent.click(screen.getByText('Pausar 30 dias'));
-    await waitFor(() => expect(toast).toHaveBeenCalledWith('❌ falhou'));
+    await waitFor(() => expect(toast).toHaveBeenCalledWith('❌ Não foi possível salvar. Tente de novo.'));
   });
 });
 

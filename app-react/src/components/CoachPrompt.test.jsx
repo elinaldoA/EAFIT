@@ -59,7 +59,7 @@ describe('CoachPrompt', () => {
     h.auth.updateProfile.mockResolvedValue({ error: { message: 'falhou' } });
     render(<CoachPrompt onEnabled={() => {}} />);
     fireEvent.click(screen.getByRole('button', { name: 'Ativar voz' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ falhou'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível salvar. Tente de novo.'));
   });
 
   it('Agora não guarda a data e esconde; não volta a aparecer logo depois', () => {

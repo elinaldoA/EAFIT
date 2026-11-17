@@ -5,6 +5,7 @@ import { todayDate } from '../data/treinoData';
 import { activePause, endPauseFields, formatDayBR } from '../lib/pause';
 
 import { t } from '../lib/i18n';
+import { friendlyError } from '../lib/friendlyError';
 // Faixa no topo do Treino enquanto o modo pausa está ativo.
 export default function PauseBanner() {
   const { user, updateProfile } = useAuth();
@@ -18,7 +19,7 @@ export default function PauseBanner() {
     setBusy(true);
     const { error } = await updateProfile(endPauseFields(meta, todayDate()));
     setBusy(false);
-    toast(error ? `❌ ${error.message}` : t('▶️ Pausa encerrada. Bom treino!'));
+    toast(error ? `❌ ${friendlyError(error)}` : t('▶️ Pausa encerrada. Bom treino!'));
   }
 
   return (

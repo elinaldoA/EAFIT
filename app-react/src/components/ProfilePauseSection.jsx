@@ -3,6 +3,7 @@ import { todayDate } from '../data/treinoData';
 import { PAUSE_OPTIONS, activePause, startPauseFields, endPauseFields, formatDayBR } from '../lib/pause';
 
 import { t } from '../lib/i18n';
+import { friendlyError } from '../lib/friendlyError';
 // Modo pausa (Perfil → Preferências): viagem, doença ou semana corrida sem
 // perder a sequência. Detalhes do que a pausa faz em lib/pause.js.
 export default function ProfilePauseSection({ user, updateProfile, toast }) {
@@ -14,7 +15,7 @@ export default function ProfilePauseSection({ user, updateProfile, toast }) {
     setBusy(true);
     const { error } = await updateProfile(fields);
     setBusy(false);
-    toast(error ? `❌ ${error.message}` : okMessage);
+    toast(error ? `❌ ${friendlyError(error)}` : okMessage);
   }
 
   const handleStart = days => save(startPauseFields(meta, todayDate(), days), t('⏸ Pausa ativada por {days} dias', { days }));

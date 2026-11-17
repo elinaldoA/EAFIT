@@ -296,4 +296,6 @@ export default {
   '⚠️ Escolha de 1 a 7 treinos por semana.': '⚠️ Choose 1 to 7 workouts per week.',
   '⚠️ Meta de água entre 0,5 e 10 L.': '⚠️ Water goal must be between 0.5 and 10 L.',
   'Senha: máximo {MAX_PASSWORD} caracteres.': 'Password: at most {MAX_PASSWORD} characters.',
+  'Sem conexão. Confira a internet e tente de novo.': 'No connection. Check your internet and try again.',
+  'Não foi possível salvar. Tente de novo.': 'Could not save. Try again.',
 };

@@ -86,7 +86,7 @@ describe('PauseBanner', () => {
     h.auth.updateProfile.mockResolvedValue({ error: { message: 'falhou' } });
     render(<PauseBanner />);
     fireEvent.click(screen.getByRole('button', { name: 'Retomar' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ falhou'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível salvar. Tente de novo.'));
   });
 });
 

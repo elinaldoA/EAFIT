@@ -79,7 +79,7 @@ describe('CoachSection', () => {
     h.updateProfile.mockResolvedValue({ error: { message: 'falhou' } });
     setup();
     fireEvent.change(screen.getByLabelText('Jeito de falar'), { target: { value: 'calmo' } });
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ falhou'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível salvar. Tente de novo.'));
   });
 
   it('com várias vozes no aparelho, permite escolher uma à mão (só neste aparelho)', async () => {

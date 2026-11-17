@@ -5,6 +5,7 @@ import { getCoachPrefs, saveCoachPrefs, coachSample, coachStop } from '../lib/co
 import { listPtVoices } from '../lib/voice';
 
 import { t } from '../lib/i18n';
+import { friendlyError } from '../lib/friendlyError';
 const NOTIFY_PREFS = [
   { key: 'notifyEngagement', label: t('Lembretes e incentivos para treinar (treino do dia, meta semanal, plano vencendo)') },
   { key: 'notifyStreakRisk', label: t('Sequência em risco (à noite, se ainda não treinou hoje)') },
@@ -62,7 +63,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
           id="trainingHour" className="input input--sm"
           value={user.user_metadata?.trainingHour ?? ''}
           onChange={e => updateProfile({ trainingHour: e.target.value === '' ? null : Number(e.target.value) })
-            .then(({ error }) => (error ? toast(`❌ ${error.message}`) : toast(t('⏰ Horário salvo'))))}
+            .then(({ error }) => (error ? toast(`❌ ${friendlyError(error)}`) : toast(t('⏰ Horário salvo'))))}
         >
           <option value="">{t('Sem preferência')}</option>
           {Array.from({ length: 19 }, (_, i) => i + 5).map(h => (
@@ -81,7 +82,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
             checked={isNotifyEnabled(user.user_metadata, key)}
             disabled={!remindersEnabled}
             onChange={e => updateProfile({ [key]: e.target.checked })
-              .then(({ error }) => error && toast(`❌ ${error.message}`))}
+              .then(({ error }) => error && toast(`❌ ${friendlyError(error)}`))}
           />
         </div>
       ))}
@@ -96,7 +97,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
           type="checkbox" id="notifyWorkoutWater"
           checked={isNotifyEnabled(user.user_metadata, 'notifyWorkoutWater')}
           onChange={e => updateProfile({ notifyWorkoutWater: e.target.checked })
-            .then(({ error }) => error && toast(`❌ ${error.message}`))}
+            .then(({ error }) => error && toast(`❌ ${friendlyError(error)}`))}
         />
       </div>
       )}
@@ -110,7 +111,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
           type="checkbox" id="notifyEmail"
           checked={isNotifyEnabled(user.user_metadata, 'notifyEmail')}
           onChange={e => updateProfile({ notifyEmail: e.target.checked })
-            .then(({ error }) => error && toast(`❌ ${error.message}`))}
+            .then(({ error }) => error && toast(`❌ ${friendlyError(error)}`))}
         />
       </div>
       <span className="profile-field__hint">{t('E-mails sobre a sua conta, como redefinição de senha, continuam sendo enviados.')}</span>
@@ -153,7 +154,7 @@ export function CoachSection({ updateProfile, toast }) {
 
   function change(patch, profilePatch) {
     setPrefs(saveCoachPrefs(patch));
-    updateProfile(profilePatch).then(({ error }) => error && toast(`❌ ${error.message}`));
+    updateProfile(profilePatch).then(({ error }) => error && toast(`❌ ${friendlyError(error)}`));
   }
 
   function toggle(e) {
