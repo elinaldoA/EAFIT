@@ -50,6 +50,11 @@ const ICONS = {
   ),
 };
 
+// Nome de uma aba (para o título da janela): as do app ou as próprias do módulo.
+export function navLabel(key, extraItems = []) {
+  return [...ITEMS, ...extraItems].find(item => item.key === key)?.label || null;
+}
+
 // `tabs`: abas do módulo de esporte (modules/registry.js), na ordem;
 // `extraItems`: as abas próprias dele ({ key, label, icon }).
 export default function BottomNav({ active, onChange, badges = {}, tabs = BASE_TABS, extraItems = [] }) {

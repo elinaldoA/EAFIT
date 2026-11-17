@@ -13,7 +13,8 @@ import { setTrackingUser, trackClient, trackAccess, startSession, trackScreen, t
 import { detectDisplayMode } from './lib/clientInfo';
 import TopbarProfile from './components/TopbarProfile';
 import TopbarMenu from './components/TopbarMenu';
-import BottomNav from './components/BottomNav';
+import BottomNav, { navLabel } from './components/BottomNav';
+import { setPageTitle } from './lib/pageTitle';
 import UpdatePrompt from './components/UpdatePrompt';
 import ReminderScheduler from './components/ReminderScheduler';
 import { useDayRollover } from './hooks/useDayRollover';
@@ -141,6 +142,15 @@ function Shell() {
       trackScreen();
     }
   }, [trackedPage, user]);
+
+  // Título da janela acompanha a tela (a troca é só por hash, sem recarregar).
+  const titleLabel = trainerView ? t('Modo personal')
+    : programView ? t('Programa')
+      : trackedPage ? navLabel(trackedPage, sport.navItems) : null;
+  const titleBrand = brandName(sport);
+  useEffect(() => {
+    setPageTitle(titleLabel, titleBrand, 'EAFIT — Treino');
+  }, [titleLabel, titleBrand]);
 
   // Mudança de endereço ligada no painel admin: quem está no endereço antigo
   // só vê o aviso com o link do novo.

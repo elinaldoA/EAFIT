@@ -38,7 +38,8 @@ vi.mock('./components/OnboardingScreen', () => ({ default: () => <div>tela-onboa
 vi.mock('./components/ThemeToggle', () => ({ default: () => <div>theme-toggle</div> }));
 vi.mock('./context/useTheme', () => ({ useTheme: () => ({ theme: 'dark', toggleTheme: () => {} }) }));
 vi.mock('./components/TopbarProfile', () => ({ default: () => <div>topbar-profile</div> }));
-vi.mock('./components/BottomNav', () => ({
+vi.mock('./components/BottomNav', async importOriginal => ({
+  ...(await importOriginal()),
   default: ({ active, onChange, badges }) => (
     <nav>
       <span>nav-ativo:{active}</span>
@@ -200,6 +201,17 @@ describe('App', () => {
     render(<App />);
     expect(await screen.findByText(text)).toBeTruthy();
     expect(screen.queryByText('pg-treino')).toBeNull();
+  });
+
+  it.each([
+    ['treino', 'Treino · EAFIT'],
+    ['hidratacao', 'Água · EAFIT'],
+    ['perfil', 'Perfil · EAFIT'],
+  ])('o título da janela acompanha a aba %s', async (tab, title) => {
+    h.tab.page = tab;
+    render(<App />);
+    await screen.findByText(/^pg-/);
+    expect(document.title).toBe(title);
   });
 
   it('a navegação inferior troca de aba e mostra o contador de recados no perfil', () => {

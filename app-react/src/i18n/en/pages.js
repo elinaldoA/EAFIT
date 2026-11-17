@@ -237,4 +237,6 @@ export default {
   '{n} treinos com data futura foram ignorados': '{n} workouts with a future date were ignored',
   'Importando…': 'Importing…',
   'Importar {n} treinos': 'Import {n} workouts',
+  'Modo personal': 'Trainer mode',
+  'Programa': 'Program',
 };
