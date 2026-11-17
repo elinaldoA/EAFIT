@@ -120,3 +120,13 @@ export function weatherShort(weather) {
   const unit = lang === 'en' ? `${Math.round(w.t * 9 / 5 + 32)}°F` : `${w.t}°C`;
   return `${kind ? `${kind[0]} ` : '🌡️ '}${unit}`;
 }
+
+// "vento 12 km/h · umidade 60%" (só o que veio); '' sem os dois. Para o cartão.
+export function weatherDetail(weather) {
+  const w = cleanWeather(weather);
+  if (!w) return '';
+  const parts = [];
+  if (w.w != null) parts.push(t('vento {v1} km/h', { v1: w.w }));
+  if (w.h != null) parts.push(t('umidade {v1}%', { v1: w.h }));
+  return parts.join(' · ');
+}

@@ -4,7 +4,7 @@ import { trackFeature } from '../../lib/tracking';
 import { t } from '../../lib/i18n';
 import { mapView, TILE_SIZE } from './route';
 import { tileSrc } from './mapStyle';
-import { weatherShort } from './weather';
+import { weatherShort, weatherDetail } from './weather';
 import { runTitle, paceSeconds, formatPace, formatClock, formatKm } from './runs';
 
 // Card 9:16 de uma corrida para os stories e o status: mapa com o percurso
@@ -146,6 +146,12 @@ async function drawBrandBar(ctx, run) {
     ctx.font = `700 30px ${FONT}`;
     ctx.fillStyle = '#ffffff';
     ctx.fillText(wx, CARD_WIDTH - PAD_X, y + 82);
+    const detail = weatherDetail(run.weather);
+    if (detail) {
+      ctx.font = `600 24px ${FONT}`;
+      ctx.fillStyle = MUTED;
+      ctx.fillText(detail, CARD_WIDTH - PAD_X, y + 114);
+    }
   }
 }
 
