@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { db } from './supabase';
+import { softFail } from './softFail';
 
 const REFRESH_MS = 2 * 60 * 1000;
 
@@ -38,7 +39,7 @@ export function useAttention() {
   useEffect(() => {
     let active = true;
     const load = () => {
-      Promise.resolve().then(fetchAttention).then(c => { if (active) setCounts(c); }).catch(() => {});
+      Promise.resolve().then(fetchAttention).then(c => { if (active) setCounts(c); }).catch(softFail('Menu: contadores de atenção'));
     };
     load();
     const timer = setInterval(load, REFRESH_MS);

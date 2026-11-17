@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchUserWellbeing, scoreLevel, SCORE_BADGE } from '../lib/insights';
+import { softFail } from '../lib/softFail';
 
 const MEASURES = [
   ['cintura', 'Cintura'], ['quadril', 'Quadril'], ['peito', 'Peito'], ['braco', 'Braço'], ['coxa', 'Coxa'],
@@ -19,7 +20,7 @@ export default function UserWellbeingCard({ userId }) {
   useEffect(() => {
     if (!userId) return undefined;
     let active = true;
-    fetchUserWellbeing(userId).then(d => { if (active) setData(d); }).catch(() => {});
+    fetchUserWellbeing(userId).then(d => { if (active) setData(d); }).catch(softFail('Usuário: bem-estar'));
     return () => { active = false; };
   }, [userId]);
 

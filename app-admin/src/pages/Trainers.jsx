@@ -13,6 +13,7 @@ import TrainerResultsCard from '../components/TrainerResultsCard';
 import EmptyState from '../components/EmptyState';
 import { Paged } from '../components/ShowMore';
 import PersonStat from '../components/PersonStat';
+import { softFail } from '../lib/softFail';
 
 const fmtDate = iso => (iso ? new Date(iso).toLocaleDateString('pt-BR') : '—');
 
@@ -159,7 +160,7 @@ function UpcomingAppointments() {
 
   useEffect(() => {
     let active = true;
-    fetchUpcomingAppointments(30).then(r => { if (active) setRows(r); }).catch(() => {});
+    fetchUpcomingAppointments(30).then(r => { if (active) setRows(r); }).catch(softFail('Personais: agenda'));
     return () => { active = false; };
   }, []);
 
@@ -216,15 +217,15 @@ export default function Trainers() {
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     // Atividade é complemento: se falhar, a lista de personais continua.
-    fetchTrainerActivity(30).then(a => { if (active) setActivity(a); }).catch(() => {});
+    fetchTrainerActivity(30).then(a => { if (active) setActivity(a); }).catch(softFail('Personais: atividade'));
     return () => { active = false; };
   }, []);
 
   // Números do link mudam com o período; se falhar, a lista continua.
   useEffect(() => {
     let active = true;
-    fetchTrainerInvites(days).then(i => { if (active) setInvites(i); }).catch(() => {});
-    fetchTrainerHealth(days).then(h => { if (active) setHealth(h); }).catch(() => {});
+    fetchTrainerInvites(days).then(i => { if (active) setInvites(i); }).catch(softFail('Personais: convites'));
+    fetchTrainerHealth(days).then(h => { if (active) setHealth(h); }).catch(softFail('Personais: saúde'));
     return () => { active = false; };
   }, [days]);
 

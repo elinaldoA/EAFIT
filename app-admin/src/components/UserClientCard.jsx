@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchUserClient, describeClient } from '../lib/behavior';
+import { softFail } from '../lib/softFail';
 
 // Retrato do último acesso do usuário (sistema, navegador, versão do app…),
 // útil no suporte. Sem registro ou com a consulta indisponível, não mostra nada.
@@ -9,7 +10,7 @@ export default function UserClientCard({ userId }) {
   useEffect(() => {
     if (!userId) return undefined;
     let active = true;
-    fetchUserClient(userId).then(c => { if (active) setClient(c); }).catch(() => {});
+    fetchUserClient(userId).then(c => { if (active) setClient(c); }).catch(softFail('Usuário: vínculo com personal'));
     return () => { active = false; };
   }, [userId]);
 

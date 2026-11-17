@@ -8,6 +8,7 @@ import { useTheme } from '../context/useTheme';
 import { ROLE_LABELS, AREA_LABELS, effectiveAreas } from '../lib/adminAccess';
 import { ACTION_LABEL } from '../lib/auditActions';
 import { fetchMyPrefs, savePrefs } from '../lib/digest';
+import { softFail } from '../lib/softFail';
 
 const MIN_PASSWORD = 8;
 
@@ -263,7 +264,7 @@ function EmailPrefsCard({ adminId }) {
   useEffect(() => {
     if (!adminId) return undefined;
     let active = true;
-    fetchMyPrefs(adminId).then(p => { if (active) setPrefs(p); }).catch(() => {});
+    fetchMyPrefs(adminId).then(p => { if (active) setPrefs(p); }).catch(softFail('Perfil: preferências'));
     return () => { active = false; };
   }, [adminId]);
 
@@ -335,7 +336,7 @@ function RecentActionsCard({ email }) {
   useEffect(() => {
     if (!email) return undefined;
     let active = true;
-    fetchMyActions(email).then(r => { if (active) setRows(r); }).catch(() => {});
+    fetchMyActions(email).then(r => { if (active) setRows(r); }).catch(softFail('Perfil: ações recentes'));
     return () => { active = false; };
   }, [email]);
 

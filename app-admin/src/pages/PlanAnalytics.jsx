@@ -8,6 +8,7 @@ import { fetchCardio } from '../lib/insights';
 import Loading from '../components/Loading';
 import HeatStrip from '../components/charts/HeatStrip';
 import TrainingPatternsCard from '../components/TrainingPatternsCard';
+import { softFail } from '../lib/softFail';
 
 const DIMENSIONS = [
   { key: 'meta', title: 'Por objetivo' },
@@ -68,7 +69,7 @@ function CardioCard() {
 
   useEffect(() => {
     let active = true;
-    fetchCardio(30).then(c => { if (active) setCardio(c); }).catch(() => {});
+    fetchCardio(30).then(c => { if (active) setCardio(c); }).catch(softFail('Planos: cardio'));
     return () => { active = false; };
   }, []);
 

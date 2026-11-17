@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import SeasonTheme from './components/SeasonTheme';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { useAdminAuth } from './context/useAdminAuth';
+import Loading from './components/Loading';
 import ConfirmProvider from './components/ConfirmProvider';
 import ProtectedRoute from './components/ProtectedRoute';
 import RequireArea from './components/RequireArea';
@@ -75,7 +76,7 @@ function AppShell() {
 
   return (
     <HashRouter>
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="page-loading"><Loading /></div>}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<ProtectedRoute />}>

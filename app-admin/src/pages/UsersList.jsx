@@ -12,6 +12,7 @@ import { METAS, NIVEIS } from '../lib/userDetailHelpers';
 
 const PAGE_SIZES = [25, 50, 100];
 import { toggleId, toggleAll, bulkAction, bulkNotify, summarize } from '../lib/bulkActions';
+import { softFail } from '../lib/softFail';
 
 const CSV_COLUMNS = [
   { key: 'nome', label: 'Nome' }, { key: 'sobrenome', label: 'Sobrenome' },
@@ -109,7 +110,7 @@ export default function UsersList() {
 
   useEffect(() => { setPage(0); }, [status, sort, nivel, meta]);
 
-  useEffect(() => { fetchSegments().then(setSegments).catch(() => {}); }, []);
+  useEffect(() => { fetchSegments().then(setSegments).catch(softFail('Usuários: segmentos')); }, []);
 
   function applyFilters(f = {}) {
     setSearchInput(f.search || '');

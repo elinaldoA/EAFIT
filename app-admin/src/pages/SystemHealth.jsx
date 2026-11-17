@@ -4,6 +4,7 @@ import { evaluateJobs, summarizeHttp, fetchHealth, formatBytes } from '../lib/he
 import { mapStorage, PURGE_DAYS, fetchPurgeStats, purgeOld } from '../lib/ops';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
+import { softFail } from '../lib/softFail';
 
 const STATE_BADGE = { ok: 'badge--ok', warn: 'badge--warning', bad: 'badge--danger' };
 const STATE_LABEL = { ok: 'ok', warn: 'atenção', bad: 'problema' };
@@ -25,7 +26,7 @@ function PurgeCard() {
   const [msg, setMsg] = useState('');
 
   const load = useCallback(() => {
-    Promise.resolve().then(() => fetchPurgeStats()).then(setRows).catch(() => {});
+    Promise.resolve().then(() => fetchPurgeStats()).then(setRows).catch(softFail('Saúde: dados antigos'));
   }, []);
   useEffect(() => { load(); }, [load]);
 

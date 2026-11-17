@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchUserAmbassador, kindLabel, SOURCE_LABELS } from '../lib/ambassadors';
 import { formatDate } from '../lib/userDetailHelpers';
+import { softFail } from '../lib/softFail';
 
 // Ficha do usuário: por qual embaixador ou influenciador a conta chegou. Sem vínculo (ou com a
 // consulta indisponível), não mostra nada.
@@ -10,7 +11,7 @@ export default function UserAmbassadorCard({ userId }) {
 
   useEffect(() => {
     let active = true;
-    if (userId) fetchUserAmbassador(userId).then(a => { if (active) setAmb(a); }).catch(() => {});
+    if (userId) fetchUserAmbassador(userId).then(a => { if (active) setAmb(a); }).catch(softFail('Usuário: embaixador'));
     return () => { active = false; };
   }, [userId]);
 

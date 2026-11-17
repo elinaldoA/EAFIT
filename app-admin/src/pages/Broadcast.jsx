@@ -7,6 +7,7 @@ import EmptyState from '../components/EmptyState';
 import MessageEditor from '../components/MessageEditor';
 import { useSearchParams } from 'react-router-dom';
 import { READY_SEGMENTS, fetchSegments, resolveSegment } from '../lib/segments';
+import { softFail } from '../lib/softFail';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -59,12 +60,12 @@ export default function Broadcast() {
   }, []);
 
   useEffect(() => {
-    loadTemplates().catch(() => {});
+    loadTemplates().catch(softFail('Notificações: modelos'));
   }, [loadTemplates]);
 
   useEffect(() => {
-    fetchUsers().then(setUsers).catch(() => {});
-    loadExtras().catch(() => {});
+    fetchUsers().then(setUsers).catch(softFail('Notificações: usuários'));
+    loadExtras().catch(softFail('Notificações: extras'));
   }, [loadExtras]);
 
   // Resolve o segmento na hora (a base muda) e usa os ids como destinatários.
@@ -91,7 +92,7 @@ export default function Broadcast() {
         setScope('segment');
         pickSegment(fromUrl, list);
       }
-    }).catch(() => {});
+    }).catch(softFail('Notificações: segmentos'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchUserTrainerInvite } from '../lib/trainers';
 import { formatDate } from '../lib/userDetailHelpers';
+import { softFail } from '../lib/softFail';
 
 // Ficha do usuário: se a conta chegou pelo link de divulgação de um personal.
 // Sem indicação (ou com a consulta indisponível), não mostra nada.
@@ -10,7 +11,7 @@ export default function UserTrainerInviteCard({ userId }) {
 
   useEffect(() => {
     let active = true;
-    if (userId) fetchUserTrainerInvite(userId).then(r => { if (active) setInv(r); }).catch(() => {});
+    if (userId) fetchUserTrainerInvite(userId).then(r => { if (active) setInv(r); }).catch(softFail('Usuário: convite de personal'));
     return () => { active = false; };
   }, [userId]);
 
