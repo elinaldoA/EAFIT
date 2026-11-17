@@ -5,6 +5,7 @@ import { useToast } from '../context/useToast';
 import { getModalRoot } from '../lib/modalRoot';
 import { fetchPhotos, addPhoto, deletePhoto } from '../lib/progressPhotos';
 import { fmtDate } from '../lib/utils';
+import { friendlyError } from '../lib/friendlyError';
 import { todayDate } from '../data/treinoData';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useDeferredRemoval } from '../lib/useDeferredRemoval';
@@ -88,7 +89,7 @@ export default function ProgressPhotos() {
       toast(t('✅ Foto adicionada'));
     } catch (err) {
       console.error('addPhoto:', err);
-      toast(`⚠️ ${err.message || t('Erro ao salvar foto')}`);
+      toast(`⚠️ ${friendlyError(err, t('Erro ao salvar foto'))}`);
     } finally {
       setSaving(false);
     }

@@ -298,4 +298,6 @@ export default {
   'Senha: máximo {MAX_PASSWORD} caracteres.': 'Password: at most {MAX_PASSWORD} characters.',
   'Sem conexão. Confira a internet e tente de novo.': 'No connection. Check your internet and try again.',
   'Não foi possível salvar. Tente de novo.': 'Could not save. Try again.',
+  'Não foi possível abrir a imagem.': 'Could not open the image.',
+  'Não foi possível atualizar a foto.': 'Could not update the photo.',
 };

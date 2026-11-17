@@ -29,3 +29,10 @@ describe('friendlyError', () => {
     expect(friendlyError(null, 'Erro específico')).toBe('Erro específico');
   });
 });
+
+describe('userError', () => {
+  it('mensagem escrita pelo app aparece como está', async () => {
+    const { userError } = await import('./friendlyError');
+    expect(friendlyError(userError('Imagem muito grande (máx. 5MB).'))).toBe('Imagem muito grande (máx. 5MB).');
+  });
+});

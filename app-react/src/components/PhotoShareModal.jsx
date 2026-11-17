@@ -7,6 +7,7 @@ import { useBackToClose } from '../hooks/useBackToClose';
 
 import { t } from '../lib/i18n';
 
+import { friendlyError } from '../lib/friendlyError';
 // Compartilhar numa foto da própria pessoa (treino ou corrida): tira a foto na
 // hora (câmera frontal) ou escolhe da galeria, escolhe quais dados aparecem e
 // compartilha. Quem usa passa como desenhar (`render(img, show)`, estável com
@@ -53,7 +54,7 @@ export default function PhotoShareModal({ title, subtitle, ariaLabel, previewAlt
     try {
       setImg(await loadImage(await fileToDataUrl(file)));
     } catch (err) {
-      toast(`⚠️ ${err.message}`);
+      toast(`⚠️ ${friendlyError(err, t('Não foi possível abrir a imagem.'))}`);
     }
   }
 

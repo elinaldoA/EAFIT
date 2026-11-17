@@ -85,14 +85,23 @@ describe('ProgressPhotos', () => {
     expect(screen.queryByPlaceholderText('Nota (opcional)')).toBeNull();
   });
 
-  it('erro ao salvar mostra a mensagem no toast e mantém o formulário', async () => {
-    h.photos.addPhoto.mockRejectedValue(new Error('Imagem muito grande'));
+  it('erro do app (imagem grande demais) mostra a mensagem no toast e mantém o formulário', async () => {
+    h.photos.addPhoto.mockRejectedValue(Object.assign(new Error('Imagem muito grande'), { userFacing: true }));
     render(<ProgressPhotos />);
     await waitFor(() => expect(screen.queryByTestId('loading')).toBeNull());
     fireEvent.click(screen.getByText('Adicionar'));
     upload(png());
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Imagem muito grande'));
     expect(screen.getByPlaceholderText('Nota (opcional)')).toBeTruthy();
+  });
+
+  it('erro cru do servidor não aparece em inglês no toast', async () => {
+    h.photos.addPhoto.mockRejectedValue(new Error('new row violates row-level security policy'));
+    render(<ProgressPhotos />);
+    await waitFor(() => expect(screen.queryByTestId('loading')).toBeNull());
+    fireEvent.click(screen.getByText('Adicionar'));
+    upload(png());
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Erro ao salvar foto'));
   });
 
   it('visualizador: navega entre fotos, respeita limites e fecha', async () => {

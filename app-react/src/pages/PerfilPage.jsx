@@ -34,6 +34,7 @@ import { weeklyKmGoal } from '../modules/corrida/runProfileStats';
 
 import { bodyErrors, BODY_FIELD_IDS, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
 import { t, decimal, locale } from '../lib/i18n';
+import { friendlyError } from '../lib/friendlyError';
 export default function PerfilPage({ active }) {
   const { user, updateProfile } = useAuth();
   const toast = useToast();
@@ -89,7 +90,7 @@ export default function PerfilPage({ active }) {
       setAvatarData(dataUrl);
       toast(t('✅ Foto de perfil atualizada'));
     } catch (err) {
-      toast(`⚠️ ${err.message}`);
+      toast(`⚠️ ${friendlyError(err, t('Não foi possível atualizar a foto.'))}`);
     } finally {
       setUploadingAvatar(false);
     }
