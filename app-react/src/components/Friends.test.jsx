@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, within, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {} }));
 
@@ -146,16 +146,31 @@ describe('Friends', () => {
     await waitFor(() => expect(h.api.removeFriendship).toHaveBeenCalledWith('f3'));
   });
 
-  it('remover amigo pede confirmação', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('remover amigo some na hora, avisa com Desfazer e só apaga no servidor depois de 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     await setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Remover' }));
-    expect(h.api.removeFriendship).not.toHaveBeenCalled();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Remover' }));
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: 'Remover' })).toBeNull();
+      expect(h.toast).toHaveBeenCalledWith('Bia removido dos amigos', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.removeFriendship).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.removeFriendship).toHaveBeenCalledWith('f1');
+    } finally { vi.useRealTimers(); }
+  });
 
-    confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Remover' }));
-    await waitFor(() => expect(h.api.removeFriendship).toHaveBeenCalledWith('f1'));
-    expect(h.toast).toHaveBeenCalledWith('Amigo removido');
+  it('Desfazer devolve o amigo e a exclusão nunca roda', async () => {
+    await setup();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Remover' }));
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: 'Remover' })).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.removeFriendship).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 
   it('amigo com atividade oculta aparece marcado', async () => {

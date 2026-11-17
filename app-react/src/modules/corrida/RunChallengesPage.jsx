@@ -11,6 +11,7 @@ import RunClubs from './Clubs';
 import { monthlyChallenges, challengeProgress, monthMedals } from './challenges';
 
 import { t, locale } from '../../lib/i18n';
+import { useDeferredRemoval } from '../../lib/useDeferredRemoval';
 const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 function MonthChallenges({ runs, today }) {
@@ -98,6 +99,7 @@ function RunFriends({ onChange }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
 
   const reload = useCallback(async () => {
     try {
@@ -113,6 +115,18 @@ function RunFriends({ onChange }) {
   async function act(fn, okMsg) {
     try { await fn(); if (okMsg) toast(okMsg); await reload(); onChange?.(); }
     catch (err) { toast(`❌ ${friendlyFriendError(err)}`); }
+  }
+
+  // Tira da tela na hora; a exclusão no servidor (sem volta) roda em 6s, a não ser que desfaça.
+  function handleRemoveFriend(f) {
+    removal.schedule(f.id, async () => {
+      try { await removeFriendship(f.id); } catch (err) { toast(`❌ ${friendlyFriendError(err)}`); }
+      await reload();
+      onChange?.();
+    });
+    toast(t('{name} removido dos amigos', { name: f.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(f.id) },
+    });
   }
 
   async function handleAdd() {
@@ -139,9 +153,10 @@ function RunFriends({ onChange }) {
   }
 
   if (!friends) return null;
-  const incoming = friends.filter(f => f.status === 'incoming');
-  const outgoing = friends.filter(f => f.status === 'outgoing');
-  const accepted = friends.filter(f => f.status === 'friend');
+  const shown = friends.filter(f => !removal.hidden.has(f.id));
+  const incoming = shown.filter(f => f.status === 'incoming');
+  const outgoing = shown.filter(f => f.status === 'outgoing');
+  const accepted = shown.filter(f => f.status === 'friend');
 
   return (
     <div className="dash-card">
@@ -199,7 +214,7 @@ function RunFriends({ onChange }) {
               <span>{f.name}{f.week === null ? t('· atividade oculta') : ''}</span>
               <button
                 type="button" className="btn btn--outline btn--sm"
-                onClick={() => { if (window.confirm(t('Remover {name} dos amigos?', { name: f.name }))) act(() => removeFriendship(f.id), t('Amigo removido')); }}
+                onClick={() => handleRemoveFriend(f)}
               >{t('Remover')}</button>
             </div>
           ))}

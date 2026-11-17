@@ -6,6 +6,7 @@ import {
   fetchMyFriendProfile, setShareActivity, requestFriend, respondFriend, removeFriendship,
   fetchMyFriends, fetchFeed, reactToEvent, REPORT_REASONS, reportFeedEvent,
 } from '../lib/friends';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import Loading from './Loading';
 
 import { t, nDias } from '../lib/i18n';
@@ -71,6 +72,7 @@ export default function Friends({ myWeek }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
 
   const reload = useCallback(async () => {
     try {
@@ -83,14 +85,26 @@ export default function Friends({ myWeek }) {
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
-  const incoming = (friends || []).filter(f => f.status === 'incoming');
-  const outgoing = (friends || []).filter(f => f.status === 'outgoing');
-  const accepted = (friends || []).filter(f => f.status === 'friend');
-  const ranking = useMemo(() => weeklyRanking(friends || [], myWeek), [friends, myWeek]);
+  const shown = useMemo(() => (friends || []).filter(f => !removal.hidden.has(f.id)), [friends, removal.hidden]);
+  const incoming = shown.filter(f => f.status === 'incoming');
+  const outgoing = shown.filter(f => f.status === 'outgoing');
+  const accepted = shown.filter(f => f.status === 'friend');
+  const ranking = useMemo(() => weeklyRanking(shown, myWeek), [shown, myWeek]);
 
   async function act(fn, okMsg) {
     try { await fn(); if (okMsg) toast(okMsg); await reload(); }
     catch (err) { toast(`❌ ${friendlyFriendError(err)}`); }
+  }
+
+  // Tira da tela na hora; a exclusão no servidor (sem volta) roda em 6s, a não ser que desfaça.
+  function handleRemoveFriend(f) {
+    removal.schedule(f.id, async () => {
+      try { await removeFriendship(f.id); } catch (err) { toast(`❌ ${friendlyFriendError(err)}`); }
+      await reload();
+    });
+    toast(t('{name} removido dos amigos', { name: f.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(f.id) },
+    });
   }
 
   async function handleAdd() {
@@ -206,7 +220,7 @@ export default function Friends({ myWeek }) {
                 <span>{f.name}{f.week === null ? t('· atividade oculta') : ''}</span>
                 <button
                   type="button" className="btn btn--outline btn--sm"
-                  onClick={() => { if (window.confirm(t('Remover {name} dos amigos?', { name: f.name }))) act(() => removeFriendship(f.id), t('Amigo removido')); }}
+                  onClick={() => handleRemoveFriend(f)}
                 >{t('Remover')}</button>
               </div>
             ))}
