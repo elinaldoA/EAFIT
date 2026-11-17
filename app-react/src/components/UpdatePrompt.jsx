@@ -8,7 +8,7 @@ const RELOAD_FALLBACK_MS = 5_000;
 // Pages serve sw.js por CDN com cache: logo após o deploy, uma checagem pode
 // pegar a versão ANTIGA do sw.js, que o navegador trata como "nova" e deixa
 // esperando — o aviso voltava logo após atualizar, em ciclo.
-const SUPPRESS_AFTER_UPDATE_MS = 10 * 60_000;
+const SUPPRESS_AFTER_UPDATE_MS = 3 * 60_000;
 const UPDATED_KEY = 'eafit_sw_updated_at';
 
 function recentlyUpdated() {

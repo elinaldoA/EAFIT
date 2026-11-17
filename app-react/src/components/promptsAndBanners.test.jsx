@@ -224,13 +224,13 @@ describe('UpdatePrompt', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('logo após atualizar fica suprimido por 10 minutos e depois volta', () => {
+  it('logo após atualizar fica suprimido por 3 minutos e depois volta', () => {
     vi.useFakeTimers();
     h.sw.needRefresh = true;
     localStorage.setItem('eafit_sw_updated_at', String(Date.now()));
     render(<UpdatePrompt />);
     expect(screen.queryByRole('alert')).toBeNull();
-    act(() => { vi.advanceTimersByTime(10 * 60_000 + 10); });
+    act(() => { vi.advanceTimersByTime(3 * 60_000 + 10); });
     expect(screen.getByRole('alert')).toBeTruthy();
   });
 
