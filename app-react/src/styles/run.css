@@ -30,7 +30,7 @@
 .run-live__clock {
   margin: var(--sp-4) 0 0;
   text-align: center;
-  font-size: clamp(3.5rem, 18vw, 5.5rem);
+  font-size: clamp(4.5rem, 24vw, 7.5rem);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -61,13 +61,13 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: var(--sp-3) var(--sp-1);
+  padding: var(--sp-4) var(--sp-1);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
 }
-.run-live__value { font-size: var(--fs-xl); font-weight: 800; font-variant-numeric: tabular-nums; }
-.run-live__label { font-size: var(--fs-xs); color: var(--text-muted); text-align: center; }
+.run-live__value { font-size: clamp(1.75rem, 8.5vw, 2.5rem); line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.run-live__label { font-size: var(--fs-sm); color: var(--text-muted); text-align: center; }
 
 .run-live__target { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); color: var(--text-muted); }
 .run-live__bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
@@ -387,7 +387,7 @@
 .run-splits__pace { text-align: right; }
 
 /* Subida e cadência (ao vivo, fim e histórico) */
-.run-live__extra { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-1) var(--sp-4); color: var(--text-muted); font-size: var(--fs-sm); }
+.run-live__extra { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-1) var(--sp-4); color: var(--text-muted); font-size: var(--fs-lg); }
 .run-item__extra { justify-content: flex-start; }
 
 /* Tênis (Shoes.jsx) */
@@ -416,7 +416,7 @@
   background: var(--surface);
 }
 .run-live__step-label { grid-column: 1; font-weight: 800; text-transform: uppercase; font-size: var(--fs-sm); letter-spacing: .04em; }
-.run-live__step-left { grid-column: 1; font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.run-live__step-left { grid-column: 1; font-size: 2.75rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .run-live__step-next { grid-column: 1; color: var(--text-muted); font-size: var(--fs-sm); }
 .run-live__step .btn { grid-column: 2; grid-row: 1 / span 3; }
 .run-live__step--work { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 14%, var(--surface)); }
@@ -427,7 +427,7 @@
 .run-live__step--done { display: block; text-align: center; font-weight: 700; color: var(--success); }
 
 .run-live__pace { display: flex; justify-content: center; align-items: baseline; gap: var(--sp-3); font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.run-live__pace strong { font-size: var(--fs-lg); color: var(--text); }
+.run-live__pace strong { font-size: 1.75rem; color: var(--text); }
 .run-live__pace--ok strong { color: var(--success); }
 .run-live__pace--slow strong,
 .run-live__pace--fast strong { color: var(--warning); }
@@ -542,8 +542,8 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2);
   background: #000; color: #5c5c5c; font-family: inherit;
 }
-.run-live__dark-clock { font-size: 4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.run-live__dark-km { font-size: 1.75rem; font-variant-numeric: tabular-nums; }
+.run-live__dark-clock { font-size: clamp(5rem, 28vw, 8rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+.run-live__dark-km { font-size: clamp(2.5rem, 14vw, 4rem); font-variant-numeric: tabular-nums; }
 .run-live__dark-hint { font-size: var(--fs-sm); color: #3a3a3a; }
 
 .run-trendbars { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
