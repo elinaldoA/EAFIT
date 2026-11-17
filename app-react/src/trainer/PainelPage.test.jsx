@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {} }));
 
@@ -106,33 +106,51 @@ describe('PainelPage', () => {
     await waitFor(() => expect(screen.queryByLabelText('Mensagem')).toBeNull());
   });
 
-  it('renovar plano: só quem tem plano vencendo/vencido, pede confirmação, renova e recarrega', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('renovar plano: só quem tem plano vencendo/vencido, sem confirmação, renova em 6s e recarrega', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     setup();
     await screen.findByText('⚡ Precisam de você');
     // Rafa (dor) não tem plano vencendo; Bruno (plano vencido, montado por mim) tem
     expect(screen.queryByRole('button', { name: 'Renovar plano de Rafa' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Renovar plano de Bruno' }));
-    await waitFor(() => expect(h.api.renewPlan).toHaveBeenCalledWith('c2'));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('✅ Plano renovado'));
+    const btn = screen.getByRole('button', { name: 'Renovar plano de Bruno' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(h.toast).toHaveBeenCalledWith('Renovando o plano de Bruno…', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.renewPlan).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.renewPlan).toHaveBeenCalledWith('c2');
+      expect(h.toast).toHaveBeenCalledWith('✅ Plano renovado');
+    } finally { vi.useRealTimers(); }
     await waitFor(() => expect(h.api.fetchRoster).toHaveBeenCalledTimes(2));
   });
 
-  it('renovar plano: recusar a confirmação não envia nada', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('renovar plano: Desfazer cancela e nada é enviado', async () => {
     setup();
     await screen.findByText('⚡ Precisam de você');
-    fireEvent.click(screen.getByRole('button', { name: 'Renovar plano de Bruno' }));
-    expect(h.api.renewPlan).not.toHaveBeenCalled();
+    const btn = screen.getByRole('button', { name: 'Renovar plano de Bruno' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.renewPlan).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Renovar plano de Bruno' }).disabled).toBe(false);
+    } finally { vi.useRealTimers(); }
   });
 
   it('renovar plano: erro mostra o motivo e não recarrega', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     h.api.renewPlan.mockRejectedValue(new Error('no_duration'));
     setup();
     await screen.findByText('⚡ Precisam de você');
-    fireEvent.click(screen.getByRole('button', { name: 'Renovar plano de Bruno' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('duração')));
+    const btn = screen.getByRole('button', { name: 'Renovar plano de Bruno' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('duração'));
+    } finally { vi.useRealTimers(); }
     expect(h.api.fetchRoster).toHaveBeenCalledTimes(1);
   });
 

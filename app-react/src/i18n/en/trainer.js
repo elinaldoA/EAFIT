@@ -140,7 +140,7 @@ export default {
   'Este plano não tem duração definida. Use "Editar / enviar novo treino".': 'This plan has no set duration. Use "Edit / send new workout".',
   'O aluno não tem plano ativo para renovar.': 'The client has no active plan to renew.',
   'Seu personal renovou seu plano "{name}" por mais {n} semanas. Bons treinos!': 'Your trainer renewed your plan "{name}" for {n} more weeks. Enjoy your training!',
-  'Renovar o plano de {name}? O mesmo treino recomeça hoje, pelo mesmo prazo, e o aluno é avisado.': 'Renew {name}’s plan? The same workout restarts today for the same duration, and the client is notified.',
+  'Renovando o plano de {name}…': 'Renewing {name}’s plan…',
   '✅ Plano renovado': '✅ Plan renewed',
   'Você não tem acesso a este recurso.': 'You don’t have access to this feature.',
   'Escreva a mensagem (até {MAX_MESSAGE} caracteres).': 'Write the message (up to {MAX_MESSAGE} characters).',

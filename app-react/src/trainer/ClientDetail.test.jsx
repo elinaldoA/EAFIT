@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {}, builder: vi.fn(), chat: vi.fn(), schedule: vi.fn() }));
 
@@ -294,15 +294,39 @@ describe('ClientDetail', () => {
     expect(screen.getByRole('button', { name: /Montar treino/ })).toBeTruthy();
   });
 
-  it('renovar plano: aparece com plano vencendo montado por mim, confirma, renova e recarrega a ficha', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('renovar plano: sem confirmação, avisa com Desfazer e só renova em 6s, recarregando a ficha', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     setup();
     await screen.findByText('Frequência');
     tab('Plano');
-    fireEvent.click(screen.getByRole('button', { name: /Renovar plano/ }));
-    await waitFor(() => expect(h.api.renewPlan).toHaveBeenCalledWith('c1'));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('✅ Plano renovado'));
+    const btn = screen.getByRole('button', { name: /Renovar plano/ });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Renovando…' }).disabled).toBe(true);
+      expect(h.toast).toHaveBeenCalledWith(expect.stringMatching(/^Renovando o plano de .*…$/), 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.renewPlan).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.renewPlan).toHaveBeenCalledWith('c1');
+      expect(h.toast).toHaveBeenCalledWith('✅ Plano renovado');
+    } finally { vi.useRealTimers(); }
     await waitFor(() => expect(h.api.fetchClientDetail).toHaveBeenCalledTimes(2));
+  });
+
+  it('renovar plano: Desfazer cancela e o aluno nunca é avisado', async () => {
+    setup();
+    await screen.findByText('Frequência');
+    tab('Plano');
+    const btn = screen.getByRole('button', { name: /Renovar plano/ });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: /Renovar plano/ }).disabled).toBe(false);
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.renewPlan).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 
   it('renovar plano: não aparece para plano em dia nem para plano que não é meu', async () => {

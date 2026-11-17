@@ -13,6 +13,7 @@ import Skeleton from '../components/Skeleton';
 import PartnerCampaignsCard from '../components/PartnerCampaignsCard';
 import MessageComposer from './MessageComposer';
 
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { t, locale } from '../lib/i18n';
 const QUEUE_PREVIEW = 6;
 
@@ -40,6 +41,7 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
   const [composing, setComposing] = useState(null); // id do aluno com a caixa de recado aberta
   const [reload, setReload] = useState(0);
   const [renewing, setRenewing] = useState(null);
+  const removal = useDeferredRemoval();
   const today = todayDate();
 
   useEffect(() => {
@@ -63,18 +65,25 @@ export default function PainelPage({ userName, onOpenClient, onNavigate, onQueue
 
   useEffect(() => { if (roster) onQueueLoaded?.(queue.filter(q => q.priority <= 2).length); }, [roster, queue, onQueueLoaded]);
 
-  async function handleRenew(client) {
-    if (!window.confirm(t('Renovar o plano de {name}? O mesmo treino recomeça hoje, pelo mesmo prazo, e o aluno é avisado.', { name: client.name }))) return;
+  // O botão fica em "Renovando…" por 6s com Desfazer; a renovação (que recomeça o
+  // treino e avisa o aluno) só roda depois, ou ao sair da tela. Desfeita, nada é enviado.
+  function handleRenew(client) {
+    const id = `renew_${client.id}`;
     setRenewing(client.id);
-    try {
-      await renewPlan(client.id);
-      toast(t('✅ Plano renovado'));
-      setReload(v => v + 1);
-    } catch (err) {
-      toast(`❌ ${friendlyPlanError(err)}`);
-    } finally {
-      setRenewing(null);
-    }
+    removal.schedule(id, async () => {
+      try {
+        await renewPlan(client.id);
+        toast(t('✅ Plano renovado'));
+        setReload(v => v + 1);
+      } catch (err) {
+        toast(`❌ ${friendlyPlanError(err)}`);
+      } finally {
+        setRenewing(null);
+      }
+    });
+    toast(t('Renovando o plano de {name}…', { name: client.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => { removal.undo(id); setRenewing(null); } },
+    });
   }
 
   async function handleShare() {

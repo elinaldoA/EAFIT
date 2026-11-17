@@ -1,5 +1,6 @@
 import { yesQuestions } from '../lib/parq';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { todayDate } from '../data/treinoData';
 import { useToast } from '../context/useToast';
 import { fmtDate, getDisplayName } from '../lib/utils';
@@ -74,6 +75,7 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
   const [building, setBuilding] = useState(false);
   const [version, setVersion] = useState(0);
   const [renewing, setRenewing] = useState(false);
+  const removal = useDeferredRemoval();
   const [reporting, setReporting] = useState(false);
   const [tab, setTab] = useState(TABS.some(x => x.key === initialTab) ? initialTab : 'resumo');
   const today = todayDate();
@@ -106,18 +108,24 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
     catch (err) { toast(`❌ ${friendlyTrainerError(err)}`); }
   }
 
-  async function handleRenew() {
-    if (!window.confirm(t('Renovar o plano de {name}? O mesmo treino recomeça hoje, pelo mesmo prazo, e o aluno é avisado.', { name: client.name }))) return;
+  // O botão fica em "Renovando…" por 6s com Desfazer; a renovação (que recomeça o
+  // treino e avisa o aluno) só roda depois, ou ao sair da tela. Desfeita, nada é enviado.
+  function handleRenew() {
     setRenewing(true);
-    try {
-      await renewPlan(client.id);
-      toast(t('✅ Plano renovado'));
-      setVersion(v => v + 1);
-    } catch (err) {
-      toast(`❌ ${friendlyPlanError(err)}`);
-    } finally {
-      setRenewing(false);
-    }
+    removal.schedule('renew', async () => {
+      try {
+        await renewPlan(client.id);
+        toast(t('✅ Plano renovado'));
+        setVersion(v => v + 1);
+      } catch (err) {
+        toast(`❌ ${friendlyPlanError(err)}`);
+      } finally {
+        setRenewing(false);
+      }
+    });
+    toast(t('Renovando o plano de {name}…', { name: client.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => { removal.undo('renew'); setRenewing(false); } },
+    });
   }
 
   async function handleReport() {
