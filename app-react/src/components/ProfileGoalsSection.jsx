@@ -7,7 +7,7 @@ export function WeeklyGoalSection({ weeklyGoal, setWeeklyGoal, onSave }) {
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="weeklyGoal">{t('Treinos por semana')}</label>
         <input
-          type="number" id="weeklyGoal" className="input input--sm" placeholder={String(DEFAULT_WEEKLY_GOAL)}
+          type="number" id="weeklyGoal" inputMode="numeric" className="input input--sm" placeholder={String(DEFAULT_WEEKLY_GOAL)}
           min="1" max="7" step="1" value={weeklyGoal} onChange={e => setWeeklyGoal(e.target.value)}
         />
       </div>
@@ -25,7 +25,7 @@ export function MacrosSection({ macroAgua, setMacroAgua, onSave, suggestedGoal =
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="macroAgua">{t('Meta de água (L)')}</label>
         <input
-          type="number" id="macroAgua" className="input input--sm" placeholder={String(suggestedGoal)}
+          type="number" id="macroAgua" inputMode="decimal" className="input input--sm" placeholder={String(suggestedGoal)}
           min="0" step="0.5" value={macroAgua} onChange={e => setMacroAgua(e.target.value)}
           aria-describedby="macroAguaHint"
         />

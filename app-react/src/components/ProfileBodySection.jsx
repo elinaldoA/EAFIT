@@ -31,7 +31,7 @@ export default function ProfileBodySection({
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileIdade">{t('Idade')}</label>
           <input
-            type="number" id={ID.idade} className="input input--sm" placeholder={t('Ex: 28')}
+            type="number" id={ID.idade} inputMode="numeric" className="input input--sm" placeholder={t('Ex: 28')}
             min="14" max="100" value={idade} {...invalidProps(ID.idade, errors.idade)} onChange={change('idade', setIdade)}
           />
           <FieldError id={ID.idade} message={errors.idade} />
@@ -41,7 +41,7 @@ export default function ProfileBodySection({
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profilePeso">{t('Peso (kg)')}</label>
           <input
-            type="number" id={ID.peso} className="input input--sm" placeholder={t('Ex: 85')}
+            type="number" id={ID.peso} inputMode="decimal" className="input input--sm" placeholder={t('Ex: 85')}
             min="30" max="300" step="0.1" value={peso} {...invalidProps(ID.peso, errors.peso)} onChange={change('peso', setPeso)}
           />
           <FieldError id={ID.peso} message={errors.peso} />
@@ -49,7 +49,7 @@ export default function ProfileBodySection({
         <div className="profile-field">
           <label className="profile-field__label" htmlFor="profileAltura">{t('Altura (cm)')}</label>
           <input
-            type="number" id={ID.altura} className="input input--sm" placeholder={t('Ex: 178')}
+            type="number" id={ID.altura} inputMode="numeric" className="input input--sm" placeholder={t('Ex: 178')}
             min="100" max="250" value={altura} {...invalidProps(ID.altura, errors.altura)} onChange={change('altura', setAltura)}
             onBlur={e => setAltura(heightToCm(e.target.value))}
           />
@@ -92,7 +92,7 @@ export default function ProfileBodySection({
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="profilePesoAlvo">{t('Peso alvo (kg)')}</label>
         <input
-          type="number" id={ID.pesoAlvo} className="input input--sm" placeholder={t('Ex: 80')}
+          type="number" id={ID.pesoAlvo} inputMode="decimal" className="input input--sm" placeholder={t('Ex: 80')}
           min="30" max="300" step="0.1" value={pesoAlvo} {...invalidProps(ID.pesoAlvo, errors.pesoAlvo)} onChange={change('pesoAlvo', setPesoAlvo)}
         />
         <FieldError id={ID.pesoAlvo} message={errors.pesoAlvo} />
