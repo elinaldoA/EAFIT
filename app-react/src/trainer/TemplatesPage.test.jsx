@@ -152,42 +152,60 @@ describe('TemplatesPage', () => {
     expect(screen.getByRole('button', { name: '📤 Enviar a alunos' }).disabled).toBe(true);
   });
 
-  it('enviar a alunos: escolhe quem recebe, confirma, envia e avisa por recado', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  async function openSend() {
     await setup();
     await waitFor(() => expect(screen.getByRole('button', { name: '📤 Enviar a alunos' }).disabled).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: '📤 Enviar a alunos' }));
+  }
 
+  it('enviar a alunos: escolhe quem recebe, sem confirmação, envia só em 6s e avisa por recado', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    await openSend();
     // sem ninguém escolhido o envio fica desabilitado
     expect(screen.getByRole('button', { name: 'Enviar para 0 aluno(s)' }).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Todos' }));
     expect(screen.getByRole('button', { name: 'Enviar para 2 aluno(s)' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Bruno' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar para 1 aluno(s)' }));
-
-    await waitFor(() => expect(h.api.assignPlanBulk).toHaveBeenCalledWith(['a'], expect.objectContaining({ ok: true, name: 'Hipertrofia A' })));
-    expect(h.sendMessage).toHaveBeenCalledWith(['a', 'b'], expect.stringContaining('Hipertrofia A'), 'treino');
-    expect(h.toast).toHaveBeenCalledWith('✅ Treino enviado para 2 aluno(s)');
+    const send = screen.getByRole('button', { name: 'Enviar para 1 aluno(s)' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(send);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Enviando…' }).disabled).toBe(true);
+      expect(h.toast).toHaveBeenCalledWith('Enviando "Hipertrofia A" para 1 aluno(s)…', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.assignPlanBulk).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.assignPlanBulk).toHaveBeenCalledWith(['a'], expect.objectContaining({ ok: true, name: 'Hipertrofia A' }));
+      expect(h.sendMessage).toHaveBeenCalledWith(['a', 'b'], expect.stringContaining('Hipertrofia A'), 'treino');
+      expect(h.toast).toHaveBeenCalledWith('✅ Treino enviado para 2 aluno(s)');
+    } finally { vi.useRealTimers(); }
   });
 
-  it('recusar a confirmação não envia', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
-    await setup();
-    await waitFor(() => expect(screen.getByRole('button', { name: '📤 Enviar a alunos' }).disabled).toBe(false));
-    fireEvent.click(screen.getByRole('button', { name: '📤 Enviar a alunos' }));
+  it('Desfazer cancela o envio e nenhum aluno é avisado', async () => {
+    await openSend();
     fireEvent.click(screen.getByRole('button', { name: 'Ana' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar para 1 aluno(s)' }));
-    expect(h.api.assignPlanBulk).not.toHaveBeenCalled();
+    const send = screen.getByRole('button', { name: 'Enviar para 1 aluno(s)' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(send);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: 'Enviar para 1 aluno(s)' }).disabled).toBe(false);
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.assignPlanBulk).not.toHaveBeenCalled();
+      expect(h.sendMessage).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 
   it('erro do servidor aparece na própria área de envio', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     h.api.assignPlanBulk.mockRejectedValue(new Error('not_authorized'));
-    await setup();
-    await waitFor(() => expect(screen.getByRole('button', { name: '📤 Enviar a alunos' }).disabled).toBe(false));
-    fireEvent.click(screen.getByRole('button', { name: '📤 Enviar a alunos' }));
+    await openSend();
     fireEvent.click(screen.getByRole('button', { name: 'Ana' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar para 1 aluno(s)' }));
+    const send = screen.getByRole('button', { name: 'Enviar para 1 aluno(s)' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(send);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+    } finally { vi.useRealTimers(); }
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
   });
 });

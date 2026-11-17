@@ -57,24 +57,32 @@ export default function TemplatesPage() {
     });
   }
 
-  async function handleSend(tpl) {
+  // Valida na hora, mas o envio (troca o plano ativo de cada aluno e avisa todos)
+  // só sai em 6s, ou ao sair da tela, a não ser que desfaça. Vai quem estava
+  // escolhido no clique; o seletor segue aberto para continuar.
+  function handleSend(tpl) {
     const payload = buildPlanPayload(draftFromPlan(templateToPlan(tpl)));
     if (!payload.ok) { setError(payload.error); return; }
     if (selected.length === 0) { setError(t('Escolha pelo menos um aluno.')); return; }
-    if (!window.confirm(t('Enviar "{name}" para {length} aluno(s)? Vira o plano ativo de cada um.', { name: tpl.name, length: selected.length }))) return;
+    const ids = [...selected];
     setBusy(true); setError('');
-    try {
-      const done = await assignPlanBulk(selected, payload);
-      // aviso aos alunos (melhor esforço: os treinos já foram enviados)
-      sendMessage(done, t('Seu personal montou um novo treino para você: "{name}". Bons treinos!', { name: payload.name }), 'treino')
-        .catch(err => console.warn('aviso de novo treino:', err));
-      toast(t('✅ Treino enviado para {length} aluno(s)', { length: done.length }));
-      setSendingId(null); setSelected([]);
-    } catch (err) {
-      setError(friendlyTemplateError(err));
-    } finally {
-      setBusy(false);
-    }
+    removal.schedule('send', async () => {
+      try {
+        const done = await assignPlanBulk(ids, payload);
+        // aviso aos alunos (melhor esforço: os treinos já foram enviados)
+        sendMessage(done, t('Seu personal montou um novo treino para você: "{name}". Bons treinos!', { name: payload.name }), 'treino')
+          .catch(err => console.warn('aviso de novo treino:', err));
+        toast(t('✅ Treino enviado para {length} aluno(s)', { length: done.length }));
+        setSendingId(null); setSelected([]);
+      } catch (err) {
+        setError(friendlyTemplateError(err));
+      } finally {
+        setBusy(false);
+      }
+    });
+    toast(t('Enviando "{name}" para {length} aluno(s)…', { name: tpl.name, length: ids.length }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => { removal.undo('send'); setBusy(false); } },
+    });
   }
 
   if (builder) {
