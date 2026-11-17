@@ -622,4 +622,5 @@ export default {
   'Meu mês de corrida': 'My month of running',
   '📤 Compartilhar meu mês': '📤 Share my month',
   '{v1} corridas · média de {v2}': '{v1} runs · average {v2}',
+  '1 corrida · {v1}': '1 run · {v1}',
 };

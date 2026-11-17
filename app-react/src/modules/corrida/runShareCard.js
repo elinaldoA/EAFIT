@@ -389,7 +389,8 @@ export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
   ].forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: 80, padX: 30, labelSize: 25 }));
 
   // Clima e ritmo (todas as corridas com clima, não só as do mês).
-  const wx = weatherBands(runs);
+  // No cartão, mesmo uma corrida com clima já aparece (na aba Você são precisas 3).
+  const wx = weatherBands(runs, 1);
   if (wx) {
     const top = boxY + 220 + 40;
     drawPanel(ctx, PAD_X, top, CONTENT_W, 90 + wx.bands.length * 64, 28);
@@ -403,7 +404,12 @@ export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
     ctx.textAlign = 'right';
     ctx.font = `600 24px ${FONT}`;
     ctx.fillStyle = MUTED;
-    ctx.fillText(t('{v1} corridas · média de {v2}', { v1: wx.total, v2: tempText(wx.avgTemp) }), PAD_X + CONTENT_W - 36, top + 52);
+    ctx.fillText(
+      wx.total === 1
+        ? t('1 corrida · {v1}', { v1: tempText(wx.avgTemp) })
+        : t('{v1} corridas · média de {v2}', { v1: wx.total, v2: tempText(wx.avgTemp) }),
+      PAD_X + CONTENT_W - 36, top + 52,
+    );
     wx.bands.forEach((b, i) => {
       const [icon, name, range] = BAND_ROWS[b.key]();
       const y0 = top + 112 + i * 64;

@@ -51,4 +51,10 @@ describe('cartão do mês para os stories', () => {
     await renderRunSummaryCard([{ run_date: '2026-11-02', distance_m: 5000, duration_s: 1800 }], '2026-11-17', 'ABC');
     expect(texts).not.toContain('CLIMA E RITMO');
   });
+
+  it('com 1 corrida com clima o bloco já aparece, no singular', async () => {
+    await renderRunSummaryCard([run('2026-11-02', 24)], '2026-11-17', 'ABC');
+    expect(texts).toContain('CLIMA E RITMO');
+    expect(texts).toContain('1 corrida · 24°C');
+  });
 });

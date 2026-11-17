@@ -37,4 +37,13 @@ describe('clima e ritmo', () => {
     const r = weatherBands([short, run(20, 30), run(21, 30)]);
     expect(r.bands[0]).toEqual({ key: 'ameno', runs: 3, pace: 360 });
   });
+
+  it('o mínimo pode ser menor (cartão do mês): com 1 corrida já agrupa, sem apontar a mais rápida', () => {
+    const r = weatherBands([run(20)], 1);
+    expect(r.total).toBe(1);
+    expect(r.bands).toEqual([{ key: 'ameno', runs: 1, pace: 360 }]);
+    expect(r.fastest).toBeNull();
+    expect(weatherBands([run(20)])).toBeNull(); // padrão continua 3
+    expect(weatherBands([], 1)).toBeNull();
+  });
 });

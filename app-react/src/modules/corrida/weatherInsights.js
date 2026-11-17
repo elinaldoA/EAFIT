@@ -15,12 +15,12 @@ export const BANDS = [
 
 export const bandOf = temp => BANDS.find(b => temp <= b.max).key;
 
-// null sem corridas com clima o bastante. Ritmo só de corridas de 1 km ou mais.
-export function weatherBands(runs) {
+// null sem corridas com clima o bastante (min; o padrão evita média enganosa). Ritmo só de corridas de 1 km ou mais.
+export function weatherBands(runs, min = MIN_WEATHER_RUNS) {
   const withWeather = runs
     .map(r => ({ w: cleanWeather(r.weather), pace: paceSeconds(r.duration_s, r.distance_m) }))
     .filter(x => x.w);
-  if (withWeather.length < MIN_WEATHER_RUNS) return null;
+  if (withWeather.length < Math.max(1, min)) return null;
   const bands = BANDS.map(b => {
     const mine = withWeather.filter(x => bandOf(x.w.t) === b.key);
     const paces = mine.map(x => x.pace).filter(p => p !== null);
