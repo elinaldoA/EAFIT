@@ -826,7 +826,6 @@ export default {
   '⚠️ Erro ao carregar fotos': '⚠️ Error loading photos',
   '✅ Foto adicionada': '✅ Photo added',
   'Erro ao salvar foto': 'Error saving photo',
-  'Excluir esta foto?': 'Delete this photo?',
   '🗑️ Foto excluída': '🗑️ Photo deleted',
   '⚠️ Erro ao excluir foto': '⚠️ Error deleting photo',
   '📷 Escolher foto': '📷 Choose photo',

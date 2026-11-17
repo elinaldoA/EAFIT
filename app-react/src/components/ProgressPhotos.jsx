@@ -7,6 +7,7 @@ import { fetchPhotos, addPhoto, deletePhoto } from '../lib/progressPhotos';
 import { fmtDate } from '../lib/utils';
 import { todayDate } from '../data/treinoData';
 import { useBackToClose } from '../hooks/useBackToClose';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import Loading from './Loading';
 import PhotoCompare from './PhotoCompare';
 
@@ -54,6 +55,8 @@ export default function ProgressPhotos() {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
+  const removal = useDeferredRemoval();
+  const shown = photos.filter(p => !removal.hidden.has(p.id));
 
   useEffect(() => {
     if (!user) return;
@@ -91,17 +94,22 @@ export default function ProgressPhotos() {
     }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm(t('Excluir esta foto?'))) return;
-    try {
-      await deletePhoto(id, user.id);
-      setPhotos(list => list.filter(p => p.id !== id));
-      setViewerIndex(null);
-      toast(t('🗑️ Foto excluída'));
-    } catch (err) {
-      console.error('deletePhoto:', err);
-      toast(t('⚠️ Erro ao excluir foto'));
-    }
+  // A foto some na hora; o arquivo é apagado de vez (sem volta) só em 6s,
+  // a não ser que desfaça. Erro: a foto continua na lista.
+  function handleDelete(id) {
+    setViewerIndex(null);
+    removal.schedule(id, async () => {
+      try {
+        await deletePhoto(id, user.id);
+        setPhotos(list => list.filter(p => p.id !== id));
+      } catch (err) {
+        console.error('deletePhoto:', err);
+        toast(t('⚠️ Erro ao excluir foto'));
+      }
+    });
+    toast(t('🗑️ Foto excluída'), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(id) },
+    });
   }
 
   return (
@@ -111,7 +119,7 @@ export default function ProgressPhotos() {
           <Loading />
         ) : (
           <>
-            {photos.map((p, i) => (
+            {shown.map((p, i) => (
               <button type="button" key={p.id} className="photo-thumb" onClick={() => setViewerIndex(i)}>
                 <img src={p.image_data} alt={t('Foto de {v1}', { v1: fmtDate(p.photo_date) })} />
                 <span className="photo-thumb__date">{fmtDate(p.photo_date)}</span>
@@ -125,7 +133,7 @@ export default function ProgressPhotos() {
         )}
       </div>
 
-      {photos.length >= 2 && (
+      {shown.length >= 2 && (
         <button type="button" className="btn btn--outline btn--sm" onClick={() => setComparing(true)}>
           {t('↔ Comparar antes e depois')}
         </button>
@@ -145,12 +153,12 @@ export default function ProgressPhotos() {
       )}
 
       {comparing && (
-        <PhotoCompare photos={photos} userId={user.id} onClose={() => setComparing(false)} />
+        <PhotoCompare photos={shown} userId={user.id} onClose={() => setComparing(false)} />
       )}
 
       {viewerIndex !== null && (
         <PhotoViewer
-          photos={photos} index={viewerIndex}
+          photos={shown} index={viewerIndex}
           onClose={() => setViewerIndex(null)}
           onNavigate={setViewerIndex}
           onDelete={handleDelete}

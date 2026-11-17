@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
   user: { id: 'u1' },
@@ -111,29 +111,51 @@ describe('ProgressPhotos', () => {
     expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
-  it('exclui após confirmar e fecha o visualizador', async () => {
+  it('excluir some na hora, sem confirmação, fecha o visualizador e só apaga no servidor em 6s', async () => {
     h.photos.fetchPhotos.mockResolvedValue(two);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirm = vi.spyOn(window, 'confirm');
     render(<ProgressPhotos />);
     fireEvent.click((await screen.findAllByRole('img'))[0]);
-    fireEvent.click(screen.getByText('🗑 Excluir'));
-    await waitFor(() => expect(h.photos.deletePhoto).toHaveBeenCalledWith('a', 'u1'));
-    expect(h.toast).toHaveBeenCalledWith('🗑️ Foto excluída');
-    expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.getAllByRole('img')).toHaveLength(1);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getByText('🗑 Excluir'));
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.getAllByRole('img')).toHaveLength(1);
+      expect(h.toast).toHaveBeenCalledWith('🗑️ Foto excluída', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.photos.deletePhoto).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.photos.deletePhoto).toHaveBeenCalledWith('a', 'u1');
+      expect(screen.getAllByRole('img')).toHaveLength(1);
+    } finally { vi.useRealTimers(); }
   });
 
-  it('cancelar a confirmação mantém a foto; erro vira toast', async () => {
+  it('Desfazer devolve a foto e ela nunca é apagada', async () => {
     h.photos.fetchPhotos.mockResolvedValue(two);
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     render(<ProgressPhotos />);
     fireEvent.click((await screen.findAllByRole('img'))[0]);
-    fireEvent.click(screen.getByText('🗑 Excluir'));
-    expect(h.photos.deletePhoto).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getByText('🗑 Excluir'));
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getAllByRole('img')).toHaveLength(2);
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.photos.deletePhoto).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('erro ao excluir vira toast e a foto continua na lista', async () => {
+    h.photos.fetchPhotos.mockResolvedValue(two);
     h.photos.deletePhoto.mockRejectedValue(new Error('x'));
-    fireEvent.click(screen.getByText('🗑 Excluir'));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Erro ao excluir foto'));
+    render(<ProgressPhotos />);
+    fireEvent.click((await screen.findAllByRole('img'))[0]);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getByText('🗑 Excluir'));
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith('⚠️ Erro ao excluir foto');
+    } finally { vi.useRealTimers(); }
+    expect(screen.getAllByRole('img')).toHaveLength(2);
   });
 });
 
