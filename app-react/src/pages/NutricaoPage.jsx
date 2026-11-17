@@ -202,8 +202,11 @@ export default function NutricaoPage({ active }) {
   }
 
   async function handleClearPlan() {
-    if (!window.confirm(t('Remover a dieta importada?'))) return;
+    const before = plan;
     setPlan(await savePlan(user.id, []));
+    toast(t('Dieta importada removida'), 6000, {
+      action: { label: t('Desfazer'), onClick: async () => setPlan(await savePlan(user.id, before)) },
+    });
   }
 
   function handleRegisterPlanMeal(m) {

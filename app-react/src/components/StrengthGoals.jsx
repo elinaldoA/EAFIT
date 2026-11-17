@@ -171,8 +171,12 @@ export default function StrengthGoals({ exercises, allTimeLogs }) {
   }
 
   async function handleRemove(goal) {
-    if (!window.confirm(t('Apagar a meta de {nome}?', { nome: tEx(goal.exercise) }))) return;
-    await save(goals.filter(g => g.id !== goal.id));
+    const before = readGoals(user);
+    const ok = await save(before.filter(g => g.id !== goal.id));
+    if (!ok) return;
+    toast(t('Meta de {nome} apagada', { nome: tEx(goal.exercise) }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => save(before) },
+    });
   }
 
   const handleAchieved = useRef(null);

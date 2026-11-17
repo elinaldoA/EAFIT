@@ -416,7 +416,7 @@ export default {
   'Adicionar ao dia · {meal}': 'Add to the day · {meal}',
   'Sua dieta': 'Your diet',
   'Dieta salva': 'Diet saved',
-  'Remover a dieta importada?': 'Remove the imported diet?',
+  'Dieta importada removida': 'Imported diet removed',
   '{meal} registrado': '{meal} logged',
   'sem macros': 'no macros',
   'Registrar {meal}': 'Log {meal}',
