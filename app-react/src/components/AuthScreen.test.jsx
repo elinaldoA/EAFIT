@@ -56,11 +56,17 @@ describe('AuthScreen', () => {
   it('e-mail sem formato válido não vai pro servidor', () => {
     render(<AuthScreen />);
     fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'ana@gmail' } });
-    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: '123456' } });
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: '12345678' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }));
     expect(screen.getByText('E-mail inválido.')).toBeTruthy();
     expect(auth.signup).not.toHaveBeenCalled();
+  });
+
+  it('o campo de senha do cadastro exige os mesmos 8 caracteres que o aviso e o servidor', () => {
+    render(<AuthScreen />);
+    expect(screen.getByLabelText('Senha').getAttribute('minlength')).toBe('8');
+    expect(screen.getByText('Mínimo de 8 caracteres.')).toBeTruthy();
   });
 
   it('aparelho que já teve conta abre em "Entrar", sem o convite', () => {

@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import logoMark from '../assets/app-icon.png';
 import PasswordInput from './PasswordInput';
+import { MIN_PASSWORD } from '../lib/passwordRules';
 import LanguageSwitch from './LanguageSwitch';
 import { isKnownUser } from '../lib/knownUser';
 import { recordVisit } from '../lib/pageVisits';
@@ -193,7 +194,7 @@ export default function AuthScreen() {
               value={password}
               onChange={setPassword}
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              minLength={mode === 'signup' ? 6 : undefined}
+              minLength={mode === 'signup' ? MIN_PASSWORD : undefined}
               hint={mode === 'signup' ? t('Mínimo de 8 caracteres.') : undefined}
             />
           )}

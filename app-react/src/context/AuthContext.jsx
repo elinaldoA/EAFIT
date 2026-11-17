@@ -16,9 +16,7 @@ import { noteFreshLogin } from '../lib/biometricLock';
 import { needsGoogleSignupFinish } from '../lib/googleAuth';
 
 import { t, lang } from '../lib/i18n';
-const MIN_PASSWORD = 8;
-// Limite do bcrypt no Supabase Auth: acima disso o servidor recusa a senha.
-const MAX_PASSWORD = 72;
+import { MIN_PASSWORD, MAX_PASSWORD } from '../lib/passwordRules';
 
 function passwordProblem(password) {
   if (password.length < MIN_PASSWORD) return t('Senha: mínimo {MIN_PASSWORD} caracteres.', { MIN_PASSWORD });
