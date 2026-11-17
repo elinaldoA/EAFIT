@@ -143,27 +143,6 @@
   cursor: pointer;
 }
 
-.rating-modal__options { display: flex; flex-direction: column; gap: var(--sp-2); }
-
-.rating-modal__option {
-  padding: var(--sp-3);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-3);
-  /* Sem cor explícita o Safari do iOS pinta o texto do botão de azul. */
-  color: var(--text);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-}
-
-.rating-modal__option--selected {
-  border-color: var(--primary);
-  background: var(--surface);
-  color: var(--primary-text);
-}
-
 /* Avaliação do app: reaproveita o painel do .rating-modal */
 .app-rating__text { margin: 0; font-size: var(--fs-md); line-height: 1.45; color: var(--text-muted); }
 
@@ -300,3 +279,11 @@
 .photo-share__preview { display: block; width: 100%; max-width: 280px; aspect-ratio: 9 / 16; object-fit: cover; margin: 0 auto var(--sp-3); border-radius: var(--r-lg); background: #09090d; }
 .photo-share__pick { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: 14px; }
 .photo-share__toggles { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+/* Nota do treino direto no resumo (cinco opções numa linha). */
+.summary-rating { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.summary-rating__opt {
+  min-height: 44px; padding: 6px 2px; border: 1px solid var(--border-2); border-radius: var(--r-md);
+  background: var(--surface-3); color: var(--text); font-family: inherit; font-size: var(--fs-xs); font-weight: 700; cursor: pointer;
+}
+.summary-rating__opt--on { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }

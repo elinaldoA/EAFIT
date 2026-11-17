@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 
 // Faz o botão/gesto "voltar" (Android, navegador) e a tecla Esc fecharem o
 // modal aberto em vez de sair do app. Cada modal empilha uma entrada no histórico ao montar; o
-// popstate fecha só o modal do topo — com modais aninhados (ex.: RatingModal
+// popstate fecha só o modal do topo — com modais aninhados (ex.: a foto do treino
 // por cima do WorkoutSummaryModal), um "voltar" fecha um de cada vez.
 //
 // Quando o modal é fechado pela própria UI (✕, backdrop, timer), a entrada

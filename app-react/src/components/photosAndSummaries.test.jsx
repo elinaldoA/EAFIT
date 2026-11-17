@@ -233,21 +233,20 @@ describe('WorkoutSummaryModal', () => {
     expect(screen.queryByText('Detalhes das séries')).toBeNull();
   });
 
-  it('avaliar: abre o seletor, grava no localStorage e chama onRate', () => {
+  it('avaliar com um toque, direto no resumo: grava no localStorage, chama onRate e marca a nota', () => {
     const onRate = vi.fn();
     render(<WorkoutSummaryModal summary={summary()} onClose={vi.fn()} onRate={onRate} />);
-    fireEvent.click(screen.getByText('Avaliar treino'));
-    fireEvent.click(screen.getByRole('button', { name: 'Bom' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Bom' }));
     expect(onRate).toHaveBeenCalledWith(4);
     expect(localStorage.getItem('treino_Segunda_rating')).toBe('4');
-    expect(screen.getByText('Avaliação: Bom')).toBeTruthy();
-    expect(screen.queryByText('Péssimo')).toBeNull();
+    expect(screen.getByRole('radio', { name: 'Bom' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
   });
 
   it('lê a avaliação já salva', () => {
     localStorage.setItem('treino_Segunda_rating', '5');
     render(<WorkoutSummaryModal summary={summary()} onClose={vi.fn()} onRate={vi.fn()} />);
-    expect(screen.getByText('Avaliação: Ótimo')).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Ótimo' }).getAttribute('aria-checked')).toBe('true');
   });
 
   it('compartilhar: baixou a imagem avisa; cancelamento é silencioso; erro avisa', async () => {

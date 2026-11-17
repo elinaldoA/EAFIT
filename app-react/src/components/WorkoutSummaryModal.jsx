@@ -6,7 +6,6 @@ import { getMuscleGroupsForDay } from '../data/treinoData';
 import { renderWorkoutSummaryCard, shareWorkoutSummary } from '../lib/shareCard';
 import { useToast } from '../context/useToast';
 import BodyAvatar from './BodyAvatar';
-import RatingModal from './RatingModal';
 import PushPrompt from './PushPrompt';
 import WorkoutPhotoShare from './WorkoutPhotoShare';
 import FriendsPrompt from './FriendsPrompt';
@@ -23,7 +22,6 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
   const weekPct = weekTotal ? Math.min(100, (weekDone / weekTotal) * 100) : 0;
   const toast = useToast();
   const [sharing, setSharing] = useState(false);
-  const [ratingModalOpen, setRatingModalOpen] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [rating, setRating] = useState(() => {
     const stored = localStorage.getItem(`treino_${day.dia}_rating`);
@@ -46,7 +44,6 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
     setRating(value);
     localStorage.setItem(`treino_${day.dia}_rating`, value);
     onRate(value);
-    setRatingModalOpen(false);
   }
 
   async function handleShare() {
@@ -81,10 +78,19 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
 
             <div className="summary-modal__body">
               <div className="summary-section">
-                <div className="summary-section__title">{t('Como foi esse treino?')}</div>
-                <button type="button" className="btn btn--outline btn--full" onClick={() => setRatingModalOpen(true)}>
-                  {rating ? t('Avaliação: {label}', { label: RATING_OPTIONS.find(opt => opt.value === rating)?.label }) : t('Avaliar treino')}
-                </button>
+                <div className="summary-section__title" id="summary-rating-title">{t('Como foi esse treino?')}</div>
+                {/* As cinco notas direto no resumo: antes um botão abria outra janela por cima só para isso. */}
+                <div className="summary-rating" role="radiogroup" aria-labelledby="summary-rating-title">
+                  {RATING_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value} type="button" role="radio" aria-checked={rating === opt.value}
+                      className={`summary-rating__opt${rating === opt.value ? ' summary-rating__opt--on' : ''}`}
+                      onClick={() => handleRate(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <PushPrompt />
@@ -161,9 +167,6 @@ export default function WorkoutSummaryModal({ summary, onClose, onRate }) {
         getModalRoot()
       )}
       {photoOpen && <WorkoutPhotoShare summary={summary} onClose={() => setPhotoOpen(false)} />}
-      {ratingModalOpen && (
-        <RatingModal value={rating} onSelect={handleRate} onClose={() => setRatingModalOpen(false)} />
-      )}
     </>
   );
 }

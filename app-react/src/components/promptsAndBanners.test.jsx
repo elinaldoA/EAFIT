@@ -32,12 +32,10 @@ vi.mock('virtual:pwa-register/react', () => ({
   },
 }));
 
-import RatingModal from './RatingModal';
 import PauseBanner from './PauseBanner';
 import PersonalMessages from './PersonalMessages';
 import PushPrompt from './PushPrompt';
 import UpdatePrompt from './UpdatePrompt';
-import { RATING_OPTIONS } from '../lib/ratingOptions';
 
 beforeEach(() => {
   localStorage.clear();
@@ -59,29 +57,6 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
   vi.restoreAllMocks();
-});
-
-describe('RatingModal', () => {
-  it('lista as opções, marca a escolhida e seleciona ao clicar', () => {
-    const onSelect = vi.fn();
-    const sel = RATING_OPTIONS[1];
-    render(<RatingModal value={sel.value} onSelect={onSelect} onClose={() => {}} />);
-    expect(screen.getByRole('dialog')).toBeTruthy();
-    const buttons = RATING_OPTIONS.map(o => screen.getByRole('button', { name: o.label }));
-    expect(buttons[1].getAttribute('aria-pressed')).toBe('true');
-    expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
-    fireEvent.click(buttons[0]);
-    expect(onSelect).toHaveBeenCalledWith(RATING_OPTIONS[0].value);
-  });
-
-  it('✕ e o fundo fecham', () => {
-    const onClose = vi.fn();
-    const { baseElement } = render(<RatingModal value={null} onSelect={() => {}} onClose={onClose} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Fechar' }));
-    expect(onClose).toHaveBeenCalledTimes(1);
-    fireEvent.click(baseElement.querySelector('.rating-modal__backdrop'));
-    expect(onClose).toHaveBeenCalledTimes(2);
-  });
 });
 
 describe('PauseBanner', () => {

@@ -889,8 +889,6 @@ export default {
   'Como foi o treino? Alguma observação pra próxima vez…': 'How was the workout? Any notes for next time…',
   '🏁 Pós-treino — Cardio + Abdômen': '🏁 Post-workout — Cardio + Abs',
   '🏁 Resumo do treino': '🏁 Workout summary',
-  'Avaliação: {label}': 'Rating: {label}',
-  'Avaliar treino': 'Rate workout',
   'Carga total': 'Total weight',
   'Meta da semana': 'Weekly goal',
   'Treinos concluídos': 'Workouts completed',

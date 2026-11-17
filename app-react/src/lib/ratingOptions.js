@@ -1,5 +1,5 @@
 import { t } from './i18n';
-// Escala da avaliação do treino (RatingModal / WorkoutSummaryModal).
+// Escala da avaliação do treino (WorkoutSummaryModal).
 export const RATING_OPTIONS = [
   { value: 1, label: t('Péssimo') },
   { value: 2, label: t('Ruim') },
