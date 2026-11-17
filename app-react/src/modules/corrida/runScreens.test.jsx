@@ -54,7 +54,7 @@ import { shareRunCard, shareRunSummary } from './runShareCard';
 import { todayDate } from '../../data/treinoData';
 import RunChallengesPage from './RunChallengesPage';
 import { speak } from '../../lib/voice';
-import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint } from './liveRun';
+import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint, markRunSeen } from './liveRun';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -183,6 +183,50 @@ describe('LiveRunHost: bateria', () => {
     expect(speak).toHaveBeenCalledWith('Bateria em 9 por cento. Finalize logo a corrida.', { queue: true });
     act(() => b.set(0.09, true));
     expect(screen.queryByText(/Bateria em/)).toBeNull();
+  });
+});
+
+describe('LiveRunHost: lembrete de corrida longa (sem leitura de bateria)', () => {
+  // Corrida que já tem `secs` s corridos e o app aberto agora (senão viraria "corrida interrompida").
+  const runningFor = secs => { const r = startRun({ gps: false, session: null }, Date.now() - secs * 1000); markRunSeen(r); return { ...r, updatedAt: Date.now() }; };
+  const tick = seconds => { for (let i = 0; i < seconds; i++) act(() => { vi.advanceTimersByTime(1000); }); };
+  beforeEach(() => { vi.useFakeTimers(); });
+  afterEach(() => { vi.useRealTimers(); delete navigator.getBattery; delete navigator.vibrate; });
+
+  it('aos 45 min lembra da tela escura, vibra, fala e some sozinho', () => {
+    navigator.vibrate = vi.fn();
+    act(() => { setLiveRun(runningFor(45 * 60 - 2)); });
+    render(<LiveRunHost />);
+    expect(screen.queryByText(/Corrida longa/)).toBeNull(); // ainda faltam 2 s
+    tick(3);
+    expect(screen.getByText('⏱️ Corrida longa: se a bateria estiver baixa, use a tela escura.')).toBeTruthy();
+    expect(navigator.vibrate).toHaveBeenCalledWith([400, 120, 400]);
+    expect(speak).toHaveBeenCalledWith('Corrida longa. Se a bateria estiver baixa, use a tela escura.', { queue: true });
+    act(() => { vi.advanceTimersByTime(21000); });
+    expect(screen.queryByText(/Corrida longa/)).toBeNull();
+  });
+
+  it('"Entendi" dispensa na hora', () => {
+    act(() => { setLiveRun(runningFor(45 * 60 - 1)); });
+    render(<LiveRunHost />);
+    tick(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Entendi' }));
+    expect(screen.queryByText(/Corrida longa/)).toBeNull();
+  });
+
+  it('corrida já passada dos 45 min ao abrir não avisa de imediato', () => {
+    act(() => { setLiveRun(runningFor(50 * 60)); });
+    render(<LiveRunHost />);
+    tick(3);
+    expect(screen.queryByText(/Corrida longa/)).toBeNull();
+  });
+
+  it('onde o navegador lê a bateria (Android) não mostra o lembrete', () => {
+    navigator.getBattery = vi.fn().mockResolvedValue({ level: 0.9, charging: false, addEventListener: () => {}, removeEventListener: () => {} });
+    act(() => { setLiveRun(runningFor(45 * 60 - 1)); });
+    render(<LiveRunHost />);
+    tick(3);
+    expect(screen.queryByText(/Corrida longa/)).toBeNull();
   });
 });
 

@@ -637,3 +637,4 @@
 
 /* Dica de bateria antes de começar (onde o app não lê a bateria) */
 .run-record__tip { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--surface-2); color: var(--text-muted); font-size: var(--fs-md); text-align: center; }
+.run-live__battery-actions { display: inline-flex; gap: var(--sp-1); }

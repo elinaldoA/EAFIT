@@ -7,6 +7,15 @@ import { t } from '../../lib/i18n';
 // O navegador deixa ler a bateria? Não no iPhone (Safari) nem no Firefox.
 export const batteryReadable = () => typeof navigator !== 'undefined' && typeof navigator.getBattery === 'function';
 
+// Onde não dá para ler a bateria, um lembrete a cada 45 min de corrida (tempo em movimento).
+export const NUDGE_EVERY_S = 45 * 60;
+
+// Quantos lembretes já "venceram" com `elapsedS` de corrida: 0 até 45 min, 1 até 90 min…
+export const nudgeBlock = elapsedS => Math.floor(Math.max(0, elapsedS) / NUDGE_EVERY_S);
+
+export const nudgeMessage = () => t('⏱️ Corrida longa: se a bateria estiver baixa, use a tela escura.');
+export const nudgeSpoken = () => t('Corrida longa. Se a bateria estiver baixa, use a tela escura.');
+
 export const LOW_PCT = 20;
 export const CRITICAL_PCT = 10;
 

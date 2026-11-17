@@ -632,4 +632,6 @@ export default {
   'Bateria em {v1} por cento. Finalize logo a corrida.': 'Battery at {v1} percent. Finish the run soon.',
   'Bateria em {v1} por cento.': 'Battery at {v1} percent.',
   "🔋 Confira a bateria antes de sair: o GPS gasta bastante e a corrida não continua com o celular desligado.": "🔋 Check your battery before heading out: GPS uses a lot, and the run can't continue with the phone off.",
+  "⏱️ Corrida longa: se a bateria estiver baixa, use a tela escura.": "⏱️ Long run: if your battery is low, use the dark screen.",
+  "Corrida longa. Se a bateria estiver baixa, use a tela escura.": "Long run. If your battery is low, use the dark screen.",
 };

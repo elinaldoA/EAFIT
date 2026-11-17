@@ -20,7 +20,7 @@ import { formatPace } from './runs';
 import { t } from '../../lib/i18n';
 import { buzz } from './haptics';
 import { useBattery } from './useBattery';
-import { batteryState, batterySpoken } from './battery';
+import { batteryState, batterySpoken, batteryReadable, nudgeBlock, nudgeSpoken } from './battery';
 import { VOICE_KEY, AUTOPAUSE_KEY, readPref, writePref } from './runPrefs';
 import InterruptedRun from './InterruptedRun';
 import LiveRunScreen from './LiveRunScreen';
@@ -193,6 +193,31 @@ export default function LiveRunHost() {
   }, [hrElapsedS, hrBpm, hrMaxBpm, running, voiceOn]);
   prefs.current.blockAutoPause = !!guided?.blockAutoPause;
 
+  // Sem leitura de bateria (iPhone): a cada 45 min de corrida, um lembrete para poupar bateria.
+  // Onde a bateria é lida (Android) o aviso real já cobre isso.
+  const [batteryNudge, setBatteryNudge] = useState(false);
+  const nudgeSeen = useRef(null);
+  const block = nudgeBlock(hrElapsedS);
+  useEffect(() => {
+    if (!hasRun) { nudgeSeen.current = null; setBatteryNudge(false); return; }
+    // Primeira leitura (ou corrida retomada já adiantada): só marca onde está, sem avisar.
+    if (nudgeSeen.current === null) { nudgeSeen.current = block; return; }
+    if (block > nudgeSeen.current && !batteryReadable()) {
+      setBatteryNudge(true);
+      buzz('battery');
+      if (voiceOn) speak(nudgeSpoken(), { queue: true });
+    }
+    nudgeSeen.current = Math.max(nudgeSeen.current, block);
+    // voiceOn só entra na fala
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [block, hasRun]);
+  // O lembrete some sozinho depois de um tempo, para não ficar tapando a tela.
+  useEffect(() => {
+    if (!batteryNudge) return undefined;
+    const id = setTimeout(() => setBatteryNudge(false), 20000);
+    return () => clearTimeout(id);
+  }, [batteryNudge]);
+
   if (!run) return null;
 
   const toggleVoice = () => {
@@ -233,7 +258,7 @@ export default function LiveRunHost() {
         ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={() => setFinishing(false)} />
         : (
           <LiveRunScreen
-            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided} battery={battery}
+            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided} battery={battery} batteryNudge={batteryNudge} onDismissNudge={() => setBatteryNudge(false)}
             autoPauseOn={autoPauseOn} onToggleAutoPause={toggleAutoPause}
             onFinish={() => { updateLiveRun(s => pauseRun(s)); setFinishing(true); }}
           />

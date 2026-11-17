@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { batteryState, batteryMessage, batterySpoken, batteryReadable } from './battery';
+import { batteryState, batteryMessage, batterySpoken, batteryReadable, nudgeBlock, nudgeMessage, nudgeSpoken, NUDGE_EVERY_S } from './battery';
 
 describe('bateria na corrida', () => {
   it('avisa em 20% ou menos e fica crítico em 10% ou menos', () => {
@@ -25,5 +25,13 @@ describe('bateria na corrida', () => {
     navigator.getBattery = () => Promise.resolve({});
     expect(batteryReadable()).toBe(true);
     delete navigator.getBattery;
+  });
+
+  it('o lembrete de corrida longa vence a cada 45 minutos', () => {
+    expect(NUDGE_EVERY_S).toBe(2700);
+    expect([0, 2699, 2700, 5399, 5400, 8100].map(nudgeBlock)).toEqual([0, 0, 1, 1, 2, 3]);
+    expect(nudgeBlock(-5)).toBe(0);
+    expect(nudgeMessage()).toBe('⏱️ Corrida longa: se a bateria estiver baixa, use a tela escura.');
+    expect(nudgeSpoken()).toMatch(/tela escura/);
   });
 });

@@ -11,7 +11,7 @@ import RouteDrawing from './RouteDrawing';
 import { buzz } from './haptics';
 import { startPosition, weatherShort, weatherDetail } from './weather';
 import { useStartWeather } from './useStartWeather';
-import { batteryState, batteryMessage } from './battery';
+import { batteryState, batteryMessage, nudgeMessage } from './battery';
 import { t } from '../../lib/i18n';
 
 // Tela da corrida em andamento: tempo, distância, ritmo, GPS, treino guiado e os botões (LiveRunHost.jsx).
@@ -47,7 +47,7 @@ function WorkoutStep({ guided }) {
   );
 }
 
-export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, heart, guided, battery, autoPauseOn, onToggleAutoPause, onFinish }) {
+export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleVoice, spm, heart, guided, battery, batteryNudge, onDismissNudge, autoPauseOn, onToggleAutoPause, onFinish }) {
   const el = elapsedMs(run, now);
   const totalS = Math.floor(el / 1000);
   const paused = isPaused(run);
@@ -95,6 +95,15 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
         <div className={`run-live__battery run-live__battery--${batteryState(battery.level, battery.charging)}`} role="alert">
           <span>{batteryMessage(batteryState(battery.level, battery.charging), battery.level)}</span>
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => setDark(true)}>{t('🌙 Tela escura')}</button>
+        </div>
+      )}
+      {batteryNudge && (
+        <div className="run-live__battery" role="status">
+          <span>{nudgeMessage()}</span>
+          <span className="run-live__battery-actions">
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { onDismissNudge(); setDark(true); }}>{t('🌙 Tela escura')}</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={onDismissNudge}>{t('Entendi')}</button>
+          </span>
         </div>
       )}
       {weather && (
