@@ -1,7 +1,7 @@
 // Aba Nutrição: diário por refeição, busca de alimentos e código de barras.
 export default {
   'Registro atualizado': 'Entry updated',
-  'Remover "{name}" do dia?': 'Remove "{name}" from the day?',
+  '"{name}" removido': '"{name}" removed',
   'Editando o registro. Os totais do dia acompanham.': 'Editing the entry. The day totals follow.',
   'Salvar': 'Save',
   'Refeição': 'Meal',

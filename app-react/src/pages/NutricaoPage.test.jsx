@@ -145,9 +145,15 @@ describe('NutricaoPage', () => {
     const log = document.querySelector('.meal-log');
     expect(log.textContent).toContain('Jantar');
     expect(log.textContent).toContain('Ovo');
+    const antes = readLocalTotals().kcal;
     fireEvent.click(screen.getByLabelText('Remover "Ovo"'));
+    expect(window.confirm).not.toHaveBeenCalled();
     expect(readLocalTotals().kcal).toBe(0);
     expect(screen.getByText(/Nada registrado hoje/)).toBeTruthy();
+    expect(mockToast).toHaveBeenCalledWith('"Ovo" removido', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+    act(() => mockToast.mock.calls.at(-1)[2].action.onClick());
+    expect(readLocalTotals().kcal).toBe(antes);
+    expect(document.querySelector('.meal-log').textContent).toContain('Jantar');
   });
 
   it('Zerar o dia zera na hora e o Desfazer do aviso devolve registros e totais', async () => {

@@ -286,11 +286,23 @@ export default function NutricaoPage({ active }) {
   }
 
   function handleDeleteEntry(e) {
-    if (!window.confirm(t('Remover "{name}" do dia?', { name: e.label }))) return;
-    if (user) removeEntry(user.id, todayDate(), e.id);
-    setEntries(readCachedEntries(todayDate()));
+    const date = todayDate();
+    const inStack = undoStack.find(x => x.entryId === e.id);
+    if (user) removeEntry(user.id, date, e.id);
+    setEntries(readCachedEntries(date));
     saveTotals(applyFood(totals, e, -1));
     setUndoStack(s => { const n = s.filter(x => x.entryId !== e.id); writeUndo(n); return n; });
+    toast(t('"{name}" removido', { name: e.label }), 6000, {
+      action: {
+        label: t('Desfazer'),
+        onClick: () => {
+          if (user) addEntry(user.id, date, e, e.meal, e.id);
+          setEntries(user ? readCachedEntries(date) : s => [...s, e]);
+          if (inStack) setUndoStack(s => { const n = [...s, inStack].slice(-10); writeUndo(n); return n; });
+          saveTotals(applyFood(readLocalTotals(), e, 1));
+        },
+      },
+    });
   }
 
   function handleEditFood(food) {
