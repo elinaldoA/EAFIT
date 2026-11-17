@@ -113,9 +113,13 @@ export default function HidratacaoPage({ active }) {
   }
 
   function handleResetWater() {
-    if (!window.confirm(t('Zerar a água registrada hoje?'))) return;
+    const before = water;
+    const stack = undoStack;
     setUndoStack([]);
     saveWater(0);
+    toast(t('Água de hoje zerada'), 6000, {
+      action: { label: t('Desfazer'), onClick: () => { setUndoStack(stack); saveWater(before); } },
+    });
   }
 
   const pct = goalMl ? Math.min(100, (water / goalMl) * 100) : 0;

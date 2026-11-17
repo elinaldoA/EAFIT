@@ -53,7 +53,7 @@ export default {
   'Squeeze': 'Squeeze bottle',
   '⚠️ Erro ao carregar dados de hidratação': '⚠️ Error loading hydration data',
   '🎉 Meta de hidratação do dia atingida!': "🎉 Today's hydration goal reached!",
-  'Zerar a água registrada hoje?': "Reset today's logged water?",
+  'Água de hoje zerada': "Today's water reset",
   '{v1}% da meta de água': '{v1}% of the water goal',
   'Hidratação hoje': 'Hydration today',
   'Meta batida! 🎉': 'Goal reached! 🎉',

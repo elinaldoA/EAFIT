@@ -30,6 +30,19 @@
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
+.toast--action.show { pointer-events: auto; }
+.toast__action {
+  margin-left: 14px;
+  min-height: 44px;
+  padding: 0 6px;
+  background: none;
+  border: 0;
+  color: var(--accent, var(--text));
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
 
 /* Com um modal aberto, o aviso sobe para o alto da tela: embaixo ele cobria o
    botão principal do modal (ex.: "Fechar" do resumo do treino). O modo treino
