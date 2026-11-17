@@ -52,6 +52,7 @@ function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSucc
       <div className="plan-row__main">
         <input
           className="input input--sm plan-row__name"
+          aria-label={t('Nome do plano')}
           value={name}
           onChange={e => setName(e.target.value)}
           onBlur={() => { if (name.trim() && name !== plan.name) onRename(name); }}
@@ -70,7 +71,7 @@ function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSucc
             {t('Duração do ciclo (semanas)')}
             <input
               className="input input--sm" type="number" inputMode="numeric" min="1" max="52" autoFocus
-              placeholder={t('Sem prazo')} value={weeks}
+              aria-label={t('Sem prazo')} placeholder={t('Sem prazo')} value={weeks}
               aria-invalid={weeksError ? 'true' : undefined}
               onChange={e => { setWeeks(e.target.value); setWeeksError(''); }}
               onKeyDown={e => { if (e.key === 'Enter') confirmActivate(); }}
@@ -129,7 +130,7 @@ function FocoInput({ initial, onSave }) {
   return (
     <input
       className="input input--sm"
-      placeholder={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')}
+      aria-label={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')} placeholder={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')}
       value={value}
       onChange={e => setValue(e.target.value)}
       onBlur={() => onSave(value)}
@@ -163,7 +164,7 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = 
     <div className="plan-ex-row">
       <MoveButtons canUp={canUp} canDown={canDown} onMove={onMove} />
       <div className="plan-ex-row__fields">
-        <input className="input input--sm plan-ex-row__name" placeholder={t('Exercício')} value={local.nome}
+        <input className="input input--sm plan-ex-row__name" aria-label={t('Exercício')} placeholder={t('Exercício')} value={local.nome}
           onChange={e => setLocal(l => ({ ...l, nome: e.target.value }))} onBlur={() => save('nome')} />
         {/* Rótulo em cima de cada campo: preenchido, "3 · 8-10 · 60s" não diz qual é qual. */}
         <div className="plan-ex-row__nums">
@@ -460,7 +461,7 @@ export default function PlanEditorModal({ onClose }) {
               {showNewPlanForm ? (
                 <div className="plan-new-form">
                   <input
-                    className="input input--sm" placeholder={t('Nome do novo plano')}
+                    className="input input--sm" aria-label={t('Nome do novo plano')} placeholder={t('Nome do novo plano')}
                     value={newPlanName} onChange={e => setNewPlanName(e.target.value)}
                   />
                   <div className="plan-new-form__actions">
@@ -477,7 +478,7 @@ export default function PlanEditorModal({ onClose }) {
 
           {tab === 'editar' && (
             <div className="plan-editor">
-              <select className="input input--sm" value={selectedPlanId || ''} onChange={e => setSelectedPlanId(e.target.value)}>
+              <select className="input input--sm" aria-label={t('Plano')} value={selectedPlanId || ''} onChange={e => setSelectedPlanId(e.target.value)}>
                 {shownPlans.map(p => <option key={p.id} value={p.id}>{p.name}{p.is_active ? ' (ativo)' : ''}</option>)}
               </select>
 

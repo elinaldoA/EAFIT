@@ -178,7 +178,7 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
               ))}
             </select>
           </div>
-          <input className="input input--sm" placeholder={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')} value={day.foco}
+          <input className="input input--sm" aria-label={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')} placeholder={t('Foco do dia (ex.: Peito / Ombro / Tríceps)')} value={day.foco}
             onChange={e => setDay(di, d => ({ ...d, foco: e.target.value }))} />
 
           {day.exercicios.map((ex, ei) => (
@@ -190,14 +190,14 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
                   onClick={() => setDay(di, d => ({ ...d, exercicios: moveItem(d.exercicios, ei, 1) }))}>▼</button>
               </div>
               <div className="plan-ex-row__fields">
-                <input className="input input--sm plan-ex-row__name" list={listId} placeholder={t('Exercício')} value={ex.nome}
+                <input className="input input--sm plan-ex-row__name" list={listId} aria-label={t('Exercício')} placeholder={t('Exercício')} value={ex.nome}
                   onChange={e => handleName(di, ei, e.target.value)} />
                 <div className="plan-ex-row__nums">
-                  <input className="input input--sm" placeholder={t('Séries')} value={ex.series} onChange={e => setEx(di, ei, { series: e.target.value })} />
-                  <input className="input input--sm" placeholder="Reps" value={ex.reps} onChange={e => setEx(di, ei, { reps: e.target.value })} />
-                  <input className="input input--sm" placeholder={t('Descanso')} value={ex.descanso} onChange={e => setEx(di, ei, { descanso: e.target.value })} />
+                  <input className="input input--sm" aria-label={t('Séries')} placeholder={t('Séries')} value={ex.series} onChange={e => setEx(di, ei, { series: e.target.value })} />
+                  <input className="input input--sm" aria-label={t('Repetições')} placeholder="Reps" value={ex.reps} onChange={e => setEx(di, ei, { reps: e.target.value })} />
+                  <input className="input input--sm" aria-label={t('Descanso')} placeholder={t('Descanso')} value={ex.descanso} onChange={e => setEx(di, ei, { descanso: e.target.value })} />
                 </div>
-                <input className="input input--sm" placeholder={t('Técnica / observação (opcional)')} value={ex.tecnica}
+                <input className="input input--sm" aria-label={t('Técnica / observação (opcional)')} placeholder={t('Técnica / observação (opcional)')} value={ex.tecnica}
                   onChange={e => setEx(di, ei, { tecnica: e.target.value })} />
                 <ExerciseExtras grupo={ex.grupo} aquecimento={ex.aquecimento} intensidade={ex.intensidade} onChange={patch => setEx(di, ei, patch)} />
               </div>

@@ -89,6 +89,7 @@ export default function DashTreinosTab({
         <div className="dash-card__title mb-0">{t('Visualização Anatômica')}</div>
         <select
           className="input input--sm"
+          aria-label={t('Visualização Anatômica')}
           style={{ width: 'auto', minWidth: '180px', maxWidth: '100%', padding: '4px 8px' }}
           value={selectedView}
           onChange={e => onViewChange(e.target.value)}

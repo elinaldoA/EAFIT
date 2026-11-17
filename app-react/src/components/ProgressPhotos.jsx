@@ -142,8 +142,8 @@ export default function ProgressPhotos() {
 
       {showForm && (
         <div className="photo-add-form">
-          <input className="input input--sm" type="date" value={date} max={todayDate()} onChange={e => setDate(e.target.value)} />
-          <input className="input input--sm" placeholder={t('Nota (opcional)')} value={note} onChange={e => setNote(e.target.value)} />
+          <input className="input input--sm" type="date" aria-label={t('Data da foto')} value={date} max={todayDate()} onChange={e => setDate(e.target.value)} />
+          <input className="input input--sm" aria-label={t('Nota (opcional)')} placeholder={t('Nota (opcional)')} value={note} onChange={e => setNote(e.target.value)} />
           <button
             type="button" className="btn btn--primary btn--sm"
             disabled={saving}

@@ -5,7 +5,7 @@ import { parseRestSeconds } from '../lib/utils';
 import { parsePlannedSeconds, toSeconds, formatSeconds } from '../lib/timedSets';
 import { playRestDoneSound } from '../lib/sound';
 
-import { t } from '../lib/i18n';
+import { t, tEx } from '../lib/i18n';
 // Série medida em segundos (prancha, hollow hold, L-sit...): campo de duração
 // no lugar de "reps", kg opcional (isometria com peso) e um cronômetro que
 // preenche a duração ao parar e avisa quando a meta do plano é atingida.
@@ -101,6 +101,7 @@ export default function TimedSetRow({ ex, n, day, bump, onRestStart, onSetDone, 
         <span className="set-row__label">{t('Série {n}', { n })}</span>
         <input
           className="set-row__carga" type="text" inputMode="decimal" placeholder="kg" autoComplete="off"
+          aria-label={t('Carga em kg, {nome}, série {n}', { nome: tEx(ex.nome), n })}
           value={carga} onChange={e => change('carga', e.target.value, setCarga)} onBlur={() => flush('carga', carga)}
           disabled={!started} title={disabledTitle}
         />

@@ -419,7 +419,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
           {notesOpen && (
             <textarea
               className="workout-notes__textarea"
-              placeholder={t('Como foi o treino? Alguma observação pra próxima vez…')}
+              aria-label={t('Como foi o treino? Alguma observação pra próxima vez…')} placeholder={t('Como foi o treino? Alguma observação pra próxima vez…')}
               value={notes} onChange={handleNotesInput} onBlur={handleNotesBlur}
             />
           )}

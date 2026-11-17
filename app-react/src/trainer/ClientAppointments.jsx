@@ -85,8 +85,8 @@ export default function ClientAppointments({ client }) {
         <select className="input input--sm" aria-label={t('Duração')} value={duration} onChange={e => setDuration(Number(e.target.value))}>
           {DURATIONS.map(d => <option key={d} value={d}>{d} min</option>)}
         </select>
-        <input className="input input--sm" placeholder={t('Local (opcional)')} maxLength={120} value={place} onChange={e => setPlace(e.target.value)} />
-        <input className="input input--sm" placeholder={t('Observação (opcional)')} maxLength={300} value={note} onChange={e => setNote(e.target.value)} />
+        <input className="input input--sm" aria-label={t('Local (opcional)')} placeholder={t('Local (opcional)')} maxLength={120} value={place} onChange={e => setPlace(e.target.value)} />
+        <input className="input input--sm" aria-label={t('Observação (opcional)')} placeholder={t('Observação (opcional)')} maxLength={300} value={note} onChange={e => setNote(e.target.value)} />
         {error && <p className="profile-field__hint text-error" role="alert">{error}</p>}
         <button type="button" className="btn btn--primary btn--full" disabled={busy || !when} onClick={handleCreate}>
           {busy ? t('Marcando…') : t('Marcar aula e avisar o aluno')}

@@ -198,12 +198,14 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
         <input
           className={`set-row__carga${saved ? ' saved' : ''}`}
           type="text" inputMode="decimal" placeholder="kg" autoComplete="off"
+          aria-label={t('Carga em kg, {nome}, série {n}', { nome: tEx(ex.nome), n })}
           value={carga} onChange={handleCargaInput} onBlur={handleCargaBlur}
           disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
         />
         <input
           className={`set-row__carga${saved ? ' saved' : ''}`}
           type="text" inputMode="numeric" placeholder="reps" autoComplete="off"
+          aria-label={t('Repetições, {nome}, série {n}', { nome: tEx(ex.nome), n })}
           value={reps} onChange={handleRepsInput} onBlur={handleRepsBlur}
           disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
         />
