@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "node scripts/test.mjs run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
