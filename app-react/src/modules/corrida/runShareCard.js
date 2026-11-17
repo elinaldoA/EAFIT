@@ -5,7 +5,7 @@ import { t, locale } from '../../lib/i18n';
 import { mapView, TILE_SIZE } from './route';
 import { tileSrc } from './mapStyle';
 import { weatherShort, weatherDetail, tempText } from './weather';
-import { monthSummary } from './runSummary';
+import { monthSummary, monthRuns } from './runSummary';
 import { weatherBands } from './weatherInsights';
 import { runTitle, paceSeconds, formatPace, formatClock, formatKm } from './runs';
 
@@ -388,9 +388,9 @@ export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
     [formatPace(sum.pace), t('ritmo /km')],
   ].forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: 80, padX: 30, labelSize: 25 }));
 
-  // Clima e ritmo (todas as corridas com clima, não só as do mês).
+  // Clima e ritmo só das corridas do mês.
   // No cartão, mesmo uma corrida com clima já aparece (na aba Você são precisas 3).
-  const wx = weatherBands(runs, 1);
+  const wx = weatherBands(monthRuns(runs, today), 1);
   if (wx) {
     const top = boxY + 220 + 40;
     drawPanel(ctx, PAD_X, top, CONTENT_W, 90 + wx.bands.length * 64, 28);

@@ -57,4 +57,11 @@ describe('cartão do mês para os stories', () => {
     expect(texts).toContain('CLIMA E RITMO');
     expect(texts).toContain('1 corrida · 24°C');
   });
+
+  it('o clima do cartão conta só as corridas do mês, não as de meses antigos', async () => {
+    const runs = [run('2026-11-02', 24), run('2026-10-05', 12), run('2026-10-06', 14), run('2026-09-01', 30)];
+    await renderRunSummaryCard(runs, '2026-11-17', 'ABC');
+    expect(texts).toContain('1 corrida · 24°C'); // as de outubro e setembro ficam de fora
+    expect(texts.some(x => /Frio|Calor/.test(x))).toBe(false);
+  });
 });

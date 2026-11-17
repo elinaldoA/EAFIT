@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { monthSummary } from './runSummary';
+import { monthSummary, monthRuns } from './runSummary';
 
 const run = (run_date, distance_m, duration_s) => ({ run_date, distance_m, duration_s });
 
@@ -19,5 +19,10 @@ describe('resumo do mês', () => {
 
   it('abaixo de 1 km no mês não inventa ritmo', () => {
     expect(monthSummary([run('2026-11-02', 600, 300)], '2026-11-17').pace).toBeNull();
+  });
+
+  it('monthRuns devolve só as corridas do mês, até hoje', () => {
+    const list = monthRuns([run('2026-11-02', 1, 1), run('2026-10-30', 1, 1), run('2026-11-25', 1, 1)], '2026-11-17');
+    expect(list.map(r => r.run_date)).toEqual(['2026-11-02']);
   });
 });
