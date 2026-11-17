@@ -10,7 +10,7 @@
   --border-2:     #3f3f46;
   --text:         #e4e4e7;
   --text-muted:   #a1a1aa;
-  --text-dim:     #71717a;
+  --text-dim:     #8f8f99;
   --primary:      #f97316;
   --primary-h:    #fb923c;
   --primary-glow: rgba(249,115,22,.18);
@@ -87,7 +87,7 @@
   --border-2:     #a1a1aa;
   --text:         #18181b;
   --text-muted:   #52525b;
-  --text-dim:     #71717a;
+  --text-dim:     #63636c;
   --primary-glow: rgba(249,115,22,.12);
   --primary-text: #c2410c;
   --focus-outline: var(--primary-text);
