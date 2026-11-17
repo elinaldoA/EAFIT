@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {}, sendMessage: vi.fn(), builder: vi.fn() }));
 
@@ -103,23 +103,46 @@ describe('TemplatesPage', () => {
     expect(props.initialPlan).toEqual(expect.objectContaining({ name: 'Hipertrofia A (cópia)', duration_weeks: 8 }));
   });
 
-  it('apagar pede confirmação e recarrega', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('apagar some na hora, sem confirmação, e só apaga no servidor em 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     await setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Apagar' }));
-    expect(h.api.deleteTemplate).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Apagar' }));
-    await waitFor(() => expect(h.api.deleteTemplate).toHaveBeenCalledWith('t1'));
-    await waitFor(() => expect(h.api.fetchTemplates).toHaveBeenCalledTimes(2));
+    const btn = screen.getByRole('button', { name: 'Apagar' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByText('Hipertrofia A')).toBeNull();
+      expect(h.toast).toHaveBeenCalledWith('Modelo "Hipertrofia A" apagado', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.deleteTemplate).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.deleteTemplate).toHaveBeenCalledWith('t1');
+    } finally { vi.useRealTimers(); }
   });
 
-  it('erro ao apagar avisa', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('Desfazer devolve o modelo e nada é apagado', async () => {
+    await setup();
+    const btn = screen.getByRole('button', { name: 'Apagar' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByText('Hipertrofia A')).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.deleteTemplate).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('erro ao apagar avisa e o modelo volta', async () => {
     h.api.deleteTemplate.mockRejectedValue(new Error('x'));
     await setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Apagar' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível apagar'));
+    const btn = screen.getByRole('button', { name: 'Apagar' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível apagar');
+    } finally { vi.useRealTimers(); }
+    expect(await screen.findByText('Hipertrofia A')).toBeTruthy();
   });
 
   it('sem alunos o botão de enviar fica desabilitado', async () => {

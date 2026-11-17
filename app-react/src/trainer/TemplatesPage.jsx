@@ -8,6 +8,7 @@ import {
 } from '../lib/trainerTemplates';
 import PlanBuilder from './PlanBuilder';
 import Loading from '../components/Loading';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 
 import { t, tFoco, locale, nExercicios } from '../lib/i18n';
 const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase(locale);
@@ -24,6 +25,7 @@ export default function TemplatesPage() {
   const [selected, setSelected] = useState([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
 
   const reload = useCallback(() => {
     fetchTemplates().then(setTemplates).catch(err => { console.error('fetchTemplates:', err); setTemplates([]); });
@@ -34,17 +36,25 @@ export default function TemplatesPage() {
     fetchClients().then(setClients).catch(err => console.error('fetchClients:', err));
   }, [reload]);
 
+  // Modelo apagado (ainda dentro dos 6s do Desfazer) já sai da lista.
+  const live = useMemo(() => (templates ? templates.filter(tpl => !removal.hidden.has(tpl.id)) : null), [templates, removal.hidden]);
   const visible = useMemo(() => {
     const q = fold(query.trim());
-    return (templates || []).filter(tpl => !q || fold(tpl.name).includes(q)
+    return (live || []).filter(tpl => !q || fold(tpl.name).includes(q)
       || (tpl.days || []).some(d => fold(d.foco).includes(q) || (d.exercicios || []).some(e => fold(e.nome).includes(q))));
-  }, [templates, query]);
+  }, [live, query]);
 
   const toggle = id => setSelected(s => (s.includes(id) ? s.filter(x => x !== id) : [...s, id]));
 
-  async function handleDelete(tpl) {
-    if (!window.confirm(t('Apagar o modelo "{name}"? Os treinos já enviados aos alunos não mudam.', { name: tpl.name }))) return;
-    try { await deleteTemplate(tpl.id); reload(); } catch { toast(t('❌ Não foi possível apagar')); }
+  // Some na hora; apaga no servidor em 6s (ou ao sair da tela), a não ser que desfaça.
+  function handleDelete(tpl) {
+    removal.schedule(tpl.id, async () => {
+      try { await deleteTemplate(tpl.id); } catch { toast(t('❌ Não foi possível apagar')); }
+      reload();
+    });
+    toast(t('Modelo "{name}" apagado', { name: tpl.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(tpl.id) },
+    });
   }
 
   async function handleSend(tpl) {
@@ -86,14 +96,14 @@ export default function TemplatesPage() {
         <button type="button" className="btn btn--primary btn--sm" onClick={() => setBuilder({ initialPlan: null })}>{t('+ Novo modelo')}</button>
       </div>
 
-      {templates && templates.length > 3 && (
+      {live && live.length > 3 && (
         <input type="search" className="input input--sm" placeholder={t('Buscar modelo, foco ou exercício')} aria-label={t('Buscar modelo')}
           value={query} onChange={e => setQuery(e.target.value)} />
       )}
 
       {!templates && <Loading />}
-      {templates && templates.length > 0 && visible.length === 0 && <p className="dash-empty">{t('Nenhum modelo encontrado.')}</p>}
-      {templates && templates.length === 0 && (
+      {live && live.length > 0 && visible.length === 0 && <p className="dash-empty">{t('Nenhum modelo encontrado.')}</p>}
+      {live && live.length === 0 && (
         <div className="dash-card"><p className="dash-empty">{t('Nenhum modelo ainda. Crie um aqui ou use "Salvar como modelo" ao montar o treino de um aluno.')}</p></div>
       )}
 

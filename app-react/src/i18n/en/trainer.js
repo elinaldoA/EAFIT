@@ -211,7 +211,7 @@ export default {
   '📤 Enviar treino para o aluno': '📤 Send workout to the client',
   '💾 Salvar como modelo': '💾 Save as template',
   '💾 Salvar modelo': '💾 Save template',
-  'Apagar o modelo "{name}"? Os treinos já enviados aos alunos não mudam.': 'Delete the template "{name}"? Workouts already sent to clients do not change.',
+  'Modelo "{name}" apagado': 'Template "{name}" deleted',
   'Escolha pelo menos um aluno.': 'Choose at least one client.',
   'Enviar "{name}" para {length} aluno(s)? Vira o plano ativo de cada um.': 'Send "{name}" to {length} client(s)? It becomes each one’s active plan.',
   '✅ Treino enviado para {length} aluno(s)': '✅ Workout sent to {length} client(s)',
