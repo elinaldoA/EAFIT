@@ -49,7 +49,7 @@
 .btn--ghost:hover:not(:disabled) { background: var(--border-2); }
 
 .btn--danger {
-  background: var(--error);
+  background: var(--error-solid);
   color: var(--on-accent);
 }
 .btn--danger:hover:not(:disabled) { background: var(--error-h); }

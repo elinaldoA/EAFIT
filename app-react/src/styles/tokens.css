@@ -25,6 +25,7 @@
   --success:      #4ade80;
   --warning:      #fbbf24;
   --error:        #ef4444;
+  --error-solid:  #dc2626; /* fundo de selo/botão com texto branco por cima (4,8:1); --error é claro demais p/ isso no tema escuro */
   --water:        #38bdf8;
   --water-h:      #7dd3fc;
   --error-h:      #dc2626;

@@ -6,7 +6,7 @@
 .trainer-badge {
   position: absolute; top: 4px; right: calc(50% - 22px);
   min-width: 16px; height: 16px; padding: 0 var(--sp-1); border-radius: var(--r-full);
-  background: var(--error); color: var(--on-accent); font-size: var(--fs-xs); font-weight: 800;
+  background: var(--error-solid); color: var(--on-accent); font-size: var(--fs-xs); font-weight: 800;
   display: grid; place-items: center;
 }
 .bottom-nav .nav-item { position: relative; }
