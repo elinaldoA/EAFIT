@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, within, act } from '@testing-library/react';
 
 const { mockToast, mockMarkPending, proteinLog, foods, weight } = vi.hoisted(() => ({
   mockToast: vi.fn(),
@@ -148,6 +148,22 @@ describe('NutricaoPage', () => {
     fireEvent.click(screen.getByLabelText('Remover "Ovo"'));
     expect(readLocalTotals().kcal).toBe(0);
     expect(screen.getByText(/Nada registrado hoje/)).toBeTruthy();
+  });
+
+  it('Zerar o dia zera na hora e o Desfazer do aviso devolve registros e totais', async () => {
+    window.confirm = vi.fn(() => true);
+    render(<NutricaoPage active />);
+    fireEvent.click(await screen.findByText('Ovo'));
+    const kcal = readLocalTotals().kcal;
+    expect(kcal).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText('Zerar o dia'));
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(readLocalTotals().kcal).toBe(0);
+    expect(screen.getByText(/Nada registrado hoje/)).toBeTruthy();
+    expect(mockToast).toHaveBeenCalledWith('Dia zerado', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+    act(() => mockToast.mock.calls.at(-1)[2].action.onClick());
+    expect(readLocalTotals().kcal).toBe(kcal);
+    expect(document.querySelector('.meal-log').textContent).toContain('Ovo');
   });
 
   it('editar um registro do diário acerta os totais do dia', async () => {

@@ -674,7 +674,7 @@ export default {
   'Nome (para salvar como atalho)': 'Name (to save as a shortcut)',
   'Limite de {n} atalhos atingido': 'Limit of {n} shortcuts reached',
   'Salvar como atalho': 'Save as shortcut',
-  'Zerar o que foi registrado hoje?': 'Reset everything logged today?',
+  'Dia zerado': 'Day reset',
   'Desfazer {label}': 'Undo {label}',
   '+ Outro alimento': '+ Other food',
   'Proteína (g)': 'Protein (g)',

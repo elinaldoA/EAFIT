@@ -333,12 +333,26 @@ export default function NutricaoPage({ active }) {
   }
 
   function handleReset() {
-    if (!window.confirm(t('Zerar o que foi registrado hoje?'))) return;
+    const prev = { entries, totals, undo: undoStack, date: todayDate() };
     setUndoStack([]);
     writeUndo([]);
-    if (user) entries.forEach(e => removeEntry(user.id, todayDate(), e.id));
+    if (user) prev.entries.forEach(e => removeEntry(user.id, prev.date, e.id));
     setEntries([]);
     saveTotals(EMPTY_TOTALS);
+    toast(t('Dia zerado'), 6000, {
+      action: {
+        label: t('Desfazer'),
+        onClick: () => {
+          if (user && prev.date === todayDate()) {
+            prev.entries.forEach(e => addEntry(user.id, prev.date, e, e.meal, e.id));
+            setEntries(readCachedEntries(prev.date));
+          } else setEntries(prev.entries);
+          setUndoStack(prev.undo);
+          writeUndo(prev.undo);
+          saveTotals(prev.totals);
+        },
+      },
+    });
   }
 
   const remaining = Math.max(0, goalG - protein);
