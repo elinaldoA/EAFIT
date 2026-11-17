@@ -63,6 +63,22 @@ describe('ToastProvider', () => {
     act(() => { vi.advanceTimersByTime(3000); });
     expect(box.classList.contains('show')).toBe(false);
   });
+
+  it('com ação mostra o botão, chama uma vez e fecha o aviso', () => {
+    const onUndo = vi.fn();
+    function WithAction() {
+      const toast = useToast();
+      return <button type="button" onClick={() => toast('Zerado', 2600, { action: { label: 'Desfazer', onClick: onUndo } })}>zerar</button>;
+    }
+    render(<ToastProvider><WithAction /></ToastProvider>);
+    const box = screen.getByRole('status');
+    fireEvent.click(screen.getByRole('button', { name: 'zerar' }));
+    act(() => { vi.advanceTimersByTime(2600); });
+    expect(box.classList.contains('show')).toBe(true); // com ação fica mais tempo
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }));
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    expect(box.classList.contains('show')).toBe(false);
+  });
 });
 
 describe('ThemeProvider', () => {
