@@ -256,7 +256,7 @@ describe('MonthlyRecap', () => {
     render(<MonthlyRecap userId="u1" allTimeLogs={[]} loadingLogs={false} />);
     expect(await screen.findByText(/Retrospectiva · outubro/)).toBeTruthy();
     expect(screen.getByText('8')).toBeTruthy();
-    expect(screen.getByText('4 dia(s)')).toBeTruthy();
+    expect(screen.getByText('4 dias')).toBeTruthy();
     expect(screen.getByText('Seg')).toBeTruthy();
     expect(screen.getByText('▲ 25% vs. mês anterior')).toBeTruthy();
     expect(h.recap.buildMonthlyRecap).toHaveBeenCalledWith(expect.objectContaining({ today: '2026-10-07', offset: 0 }));

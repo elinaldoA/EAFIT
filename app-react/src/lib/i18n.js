@@ -27,6 +27,13 @@ export const locale = LANGS.find(l => l.code === lang).locale;
 // Separador decimal do idioma do app: "2,8" em português, "2.8" em inglês.
 export const decimal = (text, language = lang) => (language === 'en' ? String(text) : String(text).replace('.', ','));
 
+// Contagens com plural de verdade (antes "1 dia(s)", "1 exercício(s)").
+export const nDias = n => (Number(n) === 1 ? t('1 dia') : t('{n} dias', { n }));
+export const nExercicios = n => (Number(n) === 1 ? t('1 exercício') : t('{n} exercícios', { n }));
+export const nSeries = n => (Number(n) === 1 ? t('1 série') : t('{n} séries', { n }));
+// "Faltam 3 dias" / "Falta 1 dia" / "Último dia" (desafios e turmas).
+export const diasRestantes = n => (Number(n) <= 0 ? t('Último dia') : Number(n) === 1 ? t('Falta 1 dia') : t('Faltam {n} dias', { n }));
+
 // Os dicionários em inglês pesam cerca de 400 KB: só quem usa o app em inglês
 // baixa. O await no topo segura os módulos que importam este arquivo até o
 // dicionário chegar, então t() continua síncrono (inclusive nas constantes de

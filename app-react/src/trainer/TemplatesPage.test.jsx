@@ -61,7 +61,7 @@ async function setup() {
 describe('TemplatesPage', () => {
   it('lista os modelos com o resumo', async () => {
     await setup();
-    expect(screen.getByText(/1 dia\(s\) · 1 exercício\(s\)/)).toBeTruthy();
+    expect(screen.getByText(/1 dia · 1 exercício/)).toBeTruthy();
   });
 
   it('sem modelos mostra a orientação; falha ao carregar também', async () => {

@@ -282,8 +282,8 @@ describe('ClientDetail', () => {
     setup();
     await screen.findByText('Frequência');
     tab('Plano');
-    expect(screen.getByText('5 dia(s) por semana', { exact: false })).toBeTruthy();
-    expect(screen.getByText('Vence em 3 dia(s)')).toBeTruthy();
+    expect(screen.getByText('5 dias por semana', { exact: false })).toBeTruthy();
+    expect(screen.getByText('Vence em 3 dias')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Editar \/ enviar novo treino/ })).toBeTruthy();
     cleanup();
     h.api.fetchClientDetail.mockResolvedValue({ ...DETAIL, plan: null });
@@ -330,7 +330,7 @@ describe('ClientDetail', () => {
     await screen.findByText('Frequência');
     tab('Plano');
     expect(screen.getByTestId('plan-history').textContent).toBe('1');
-    expect(screen.queryByText('Vence em 3 dia(s)')).toBeNull(); // prazo da carteira ficou velho
+    expect(screen.queryByText('Vence em 3 dias')).toBeNull(); // prazo da carteira ficou velho
   });
 
   it('voltar do editor volta à ficha, na mesma aba, sem recarregar', async () => {

@@ -56,7 +56,7 @@ describe('Challenges — lista', () => {
     ]);
     await setup();
     expect(screen.getByText('⭐ Outubro EAFIT')).toBeTruthy();
-    expect(screen.getByText(/Desafio oficial do EAFIT/).textContent).toMatch(/24 dia\(s\) restantes · 40 pessoa\(s\)/);
+    expect(screen.getByText(/Desafio oficial do EAFIT/).textContent).toMatch(/Faltam 24 dias · 40 pessoa\(s\)/);
     fireEvent.click(screen.getByText('Participar'));
     await waitFor(() => expect(h.api.joinChallenge).toHaveBeenCalledWith('OFI001'));
     expect(h.toast).toHaveBeenCalledWith('🎉 Você entrou no desafio!');
@@ -72,7 +72,7 @@ describe('Challenges — lista', () => {
   it('mostra título, dias restantes, pessoas e a minha posição', async () => {
     await setup();
     const head = screen.getByRole('button', { name: /Outubro firme/ });
-    expect(head.textContent).toMatch(/5 dia\(s\) restantes/);
+    expect(head.textContent).toMatch(/Faltam 5 dias/);
     expect(head.textContent).toMatch(/4 pessoa\(s\)/);
     expect(head.textContent).toMatch(/você em 2º \(3\)/);
   });

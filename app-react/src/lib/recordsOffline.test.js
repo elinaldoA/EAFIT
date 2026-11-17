@@ -95,7 +95,8 @@ describe('checkForNewPR — sem rede', () => {
 
   it('exercício sem histórico no servidor: depois da primeira série, a seguinte mais pesada bate', async () => {
     serverHas([]);
-    await checkForNewPR('u1', 'Rosca', 10, 10);
+    // A primeira é a marca inicial, não recorde (a Retrospectiva também não conta).
+    expect(await checkForNewPR('u1', 'Rosca', 10, 10)).toBeNull();
     goOffline();
     expect(await checkForNewPR('u1', 'Rosca', 12, 10)).not.toBeNull();
   });

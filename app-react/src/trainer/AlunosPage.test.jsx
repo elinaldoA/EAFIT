@@ -91,7 +91,7 @@ describe('AlunosPage', () => {
     expect(screen.getByText(/3\/4 treinos na semana/)).toBeTruthy();
     expect(screen.getByText('· 75%')).toBeTruthy();
     expect(screen.getByText(/Hipertrofia · Vence em 55 dias/)).toBeTruthy();
-    expect(screen.getByText(/Força · Vence em 3 dia\(s\)/)).toBeTruthy();
+    expect(screen.getByText(/Força · Vence em 3 dias/)).toBeTruthy();
     expect(screen.getByText(/📋 Sem plano/)).toBeTruthy();
     expect(screen.getByText('🩹 Dor relatada')).toBeTruthy();
     const ana = screen.getByText('Ana').closest('.client-row');

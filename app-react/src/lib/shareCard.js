@@ -9,7 +9,7 @@ import { getMuscleGroupsForDay } from '../data/treinoData';
 import { FRONT_MUSCLE_PATHS, BACK_MUSCLE_PATHS, BODY_VIEW_SIZE, MUSCLE_LABELS } from '../data/bodyMuscleMap';
 import bodyAnatomyImg from '../assets/anatomia.jpg';
 
-import { t, decimal, locale, tFoco } from './i18n';
+import { t, decimal, locale, tFoco, nDias } from './i18n';
 // Desenha os cards de compartilhamento num canvas offscreen (mesmo padrão de canvas
 // usado em lib/imageUtils.js para compressão de imagem) e retorna um Blob PNG pronto
 // pra compartilhar ou baixar.
@@ -1025,7 +1025,7 @@ export async function renderMonthlyRecapCard(recap, refCode = myRefCode()) {
     [formatMinutes(recap.minutes), t('de treino'), SKY],
     [`${recap.volume.toLocaleString(locale)} kg`, t('volume total'), EMERALD],
     [String(recap.prCount), t('recordes batidos'), VIOLET],
-    [recap.bestStreak ? `${recap.bestStreak} dia(s)` : '—', t('melhor sequência'), ORANGE],
+    [recap.bestStreak ? nDias(recap.bestStreak) : '—', t('melhor sequência'), ORANGE],
     [recap.favWeekday || '—', t('dia favorito'), SKY],
   ];
   let y = 430;

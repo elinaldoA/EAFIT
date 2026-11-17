@@ -50,7 +50,6 @@ export default {
   'há {d} dias': '{d} days ago',
 
   '{rank}º {name}': '#{rank} {name}',
-  '{n} dia(s)': '{n} day(s)',
   'Sem treino': 'No workout',
   '{nome} — quadro {n} de {total}': '{nome} — frame {n} of {total}',
   '≈ 1 copo de 200ml': '≈ 1 glass of 200ml',

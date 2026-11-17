@@ -8,7 +8,7 @@ import {
 } from '../lib/friends';
 import Loading from './Loading';
 
-import { t } from '../lib/i18n';
+import { t, nDias } from '../lib/i18n';
 const REASON_LABELS = () => ({ ofensivo: t('Ofensivo'), spam: t('Spam'), falso: t('Informação falsa'), outro: t('Outro motivo') });
 
 function FeedItem({ ev, onReact, onReport }) {
@@ -195,7 +195,7 @@ export default function Friends({ myWeek }) {
           <ol className="challenge__board">
             {ranking.map((r, i) => (
               <li key={i} className={r.isMe ? 'challenge__row challenge__row--me' : 'challenge__row'}>
-                <span>{t('{rank}º {name}', { rank: r.rank, name: r.name })}</span><strong>{t('{n} dia(s)', { n: r.week })}</strong>
+                <span>{t('{rank}º {name}', { rank: r.rank, name: r.name })}</span><strong>{nDias(r.week)}</strong>
               </li>
             ))}
           </ol>

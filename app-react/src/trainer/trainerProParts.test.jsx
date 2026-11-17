@@ -77,7 +77,7 @@ describe('ClientPlanHistory', () => {
     render(<ClientPlanHistory clientId="c1" />);
     expect(await screen.findByText('Hipertrofia 2')).toBeTruthy();
     expect(screen.getByText('Ativo')).toBeTruthy();
-    expect(screen.getByText(/4 dia\(s\) · por você/)).toBeTruthy();
+    expect(screen.getByText(/4 dias · por você/)).toBeTruthy();
     expect(screen.getByText(/pelo aluno ou pelo app · criado em/)).toBeTruthy();
   });
 

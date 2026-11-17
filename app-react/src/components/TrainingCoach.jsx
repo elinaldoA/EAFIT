@@ -11,8 +11,8 @@ function leadText(c) {
     case 'deload_week': return t('{n} semanas seguidas de treino puxado. Esta é a semana leve: cerca de 60% das cargas e foco na técnica.', { n: c.weeks });
     case 'deload_plateaus': return t('{n} exercícios de hoje estão parados há 3 treinos. Vale uma semana leve, com cerca de 60% das cargas.', { n: c.count });
     case 'ready': return c.energized
-      ? t('Energia alta e {n} exercício(s) prontos para subir carga. Dia de recorde.', { n: c.count })
-      : t('{n} exercício(s) prontos para subir carga hoje.', { n: c.count });
+      ? (c.count === 1 ? t('Energia alta e 1 exercício pronto para subir carga. Dia de recorde.') : t('Energia alta e {n} exercícios prontos para subir carga. Dia de recorde.', { n: c.count }))
+      : (c.count === 1 ? t('1 exercício pronto para subir carga hoje.') : t('{n} exercícios prontos para subir carga hoje.', { n: c.count }));
     case 'done': return t('Treino de hoje feito. Agora é recuperar: proteína, água e sono.');
     case 'catchup': return t('Hoje está livre e o treino de {dia} ({foco}) ficou para trás.', { dia: t(c.day.dia), foco: tFoco(c.day.foco) });
     default: return null;

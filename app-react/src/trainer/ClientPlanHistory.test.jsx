@@ -32,19 +32,19 @@ describe('ClientPlanHistory', () => {
     render(<ClientPlanHistory clientId="c1" />);
     expect(await screen.findByText('Hipertrofia A/B')).toBeTruthy();
     expect(h.fetchPlans).toHaveBeenCalledWith('c1');
-    expect(screen.getByText(/4 dia\(s\) · por você · 01\/10 → 26\/11/)).toBeTruthy();
-    expect(screen.getByText(/3 dia\(s\) · pelo aluno ou pelo app · 01\/08 → 29\/08/)).toBeTruthy();
+    expect(screen.getByText(/4 dias · por você · 01\/10 → 26\/11/)).toBeTruthy();
+    expect(screen.getByText(/3 dias · pelo aluno ou pelo app · 01\/08 → 29\/08/)).toBeTruthy();
   });
 
   it('plano sem datas mostra quando foi criado', async () => {
     render(<ClientPlanHistory clientId="c1" />);
-    expect(await screen.findByText(/1 dia\(s\) · por você · criado em 10\/07/)).toBeTruthy();
+    expect(await screen.findByText(/1 dia · por você · criado em 10\/07/)).toBeTruthy();
   });
 
   it('plano com início e sem fim mostra só o início', async () => {
     h.fetchPlans.mockResolvedValue([{ ...PLANS[0], end: null }]);
     render(<ClientPlanHistory clientId="c1" />);
-    const line = await screen.findByText(/4 dia\(s\) · por você · 01\/10/);
+    const line = await screen.findByText(/4 dias · por você · 01\/10/);
     expect(line.textContent).not.toContain('→');
   });
 

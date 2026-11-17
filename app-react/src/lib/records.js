@@ -279,6 +279,10 @@ export async function checkForNewPR(userId, exerciseName, carga, reps, exclude =
     localOneRm: keepLocal ? maxOf(cached?.localOneRm, newOneRm) : null,
   });
 
+  // Primeira série do exercício é a marca inicial, não recorde: "Novo recorde!"
+  // logo na estreia contradizia a Retrospectiva ("0 recordes batidos"), que já
+  // não conta o primeiro registro. O retrato acima fica guardado para a próxima.
+  if (bestCarga === null && bestOneRm === null) return null;
   if (isCargaPR || isOneRmPR) return { isCargaPR, isOneRmPR, carga: cargaNum, oneRm: newOneRm };
   return null;
 }

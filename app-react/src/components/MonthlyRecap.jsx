@@ -4,7 +4,7 @@ import { useToast } from '../context/useToast';
 import { buildMonthlyRecap, fetchRecapWorkouts, formatMinutes } from '../lib/monthlyRecap';
 import { shareMonthlyRecap } from '../lib/shareCard';
 
-import { t, locale } from '../lib/i18n';
+import { t, locale, nDias } from '../lib/i18n';
 // Retrospectiva do mês (este mês ou o anterior) no Dashboard: números simples
 // de ler e um cartão compartilhável. Volume e recordes vêm do histórico de
 // séries já carregado pelo Dashboard (allTimeLogs); enquanto ele carrega, esses
@@ -55,7 +55,7 @@ export default function MonthlyRecap({ userId, allTimeLogs, loadingLogs }) {
     { value: formatMinutes(recap.minutes), label: t('de treino') },
     { value: loadingLogs ? '…' : `${recap.volume.toLocaleString(locale)} kg`, label: t('volume (carga × reps)') },
     { value: loadingLogs ? '…' : recap.prCount, label: t('recordes batidos') },
-    { value: recap.bestStreak ? t('{n} dia(s)', { n: recap.bestStreak }) : '—', label: t('melhor sequência') },
+    { value: recap.bestStreak ? nDias(recap.bestStreak) : '—', label: t('melhor sequência') },
     { value: recap.favWeekday || '—', label: t('dia favorito') },
   ];
 

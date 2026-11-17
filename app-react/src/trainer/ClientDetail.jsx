@@ -27,7 +27,7 @@ import ClientTags from './ClientTags';
 import ClientProfileEdit from './ClientProfileEdit';
 import ClientPlanHistory from './ClientPlanHistory';
 
-import { t, decimal, tEx } from '../lib/i18n';
+import { t, decimal, tEx, nDias } from '../lib/i18n';
 const GOALS = {
   massa: t('Ganho de massa'), forca: t('Aumento de força'), emagrecer: t('Emagrecimento'),
   definicao: t('Definição muscular'), saude: t('Saúde e bem-estar'), resistencia: t('Resistência / Condicionamento'),
@@ -323,7 +323,7 @@ export default function ClientDetail({ client, onBack, onRemoved, initialTab }) 
               <div className="plan-current">
                 <strong>{detail.plan.name}</strong>
                 <span className="profile-field__hint m-0">
-                  {t('{n} dia(s) por semana', { n: detail.plan.days })}
+                  {t('{dias} por semana', { dias: nDias(detail.plan.days) })}
                   {client.planName && !client.legacy && version === 0 && <> · <span className={`plan-chip plan-chip--${plan.level}`}>{plan.label}</span></>}
                 </span>
                 {client.planName && !client.planByMe && !client.legacy && version === 0 && (

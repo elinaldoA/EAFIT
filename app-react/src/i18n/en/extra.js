@@ -19,7 +19,6 @@ export default {
   'Ex: 178': 'E.g. 178',
   'Ex: 80': 'E.g. 80',
   'Ex: P1A2B3': 'E.g. P1A2B3',
-  '{left} dia(s) restantes': '{left} day(s) left',
   'treinos': 'workouts',
   'de treino': 'of training',
   '{weekDone} de {weekTotal} treinos': '{weekDone} of {weekTotal} workouts',

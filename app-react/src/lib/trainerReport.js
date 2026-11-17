@@ -4,7 +4,7 @@ import { addDays } from './pause';
 import { weeklyCounts } from './trainerRoster';
 import { fmtDate } from './utils';
 
-import { t, decimal, tEx, locale } from './i18n';
+import { t, decimal, tEx, locale, nDias } from './i18n';
 // Relatório de acompanhamento do aluno em PDF, para o personal mostrar o
 // resultado (compartilhar pelo celular ou imprimir). Só traz o que é de
 // treino e corpo: sem e-mail, lesões, restrições nem contato de emergência,
@@ -213,7 +213,7 @@ export async function renderReportPdf(model) {
 
   if (model.plan) {
     heading(t('Plano atual'));
-    row(model.plan.name, t('{n} dia(s) por semana', { n: model.plan.days }));
+    row(model.plan.name, t('{dias} por semana', { dias: nDias(model.plan.days) }));
   }
 
   if (model.weight) {

@@ -15,8 +15,8 @@ const tpl = {
 
 describe('templateSummary', () => {
   it('conta dias, exercícios e semanas', () => {
-    expect(templateSummary(tpl)).toBe('2 dia(s) · 3 exercício(s) · 8 semanas');
-    expect(templateSummary({ days: [], weeks: null })).toBe('0 dia(s) · 0 exercício(s)');
+    expect(templateSummary(tpl)).toBe('2 dias · 3 exercícios · 8 semanas');
+    expect(templateSummary({ days: [], weeks: null })).toBe('0 dias · 0 exercícios');
   });
 });
 

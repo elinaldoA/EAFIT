@@ -140,6 +140,19 @@ describe('StrengthGoals', () => {
     expect(saved[0]).toMatchObject({ exercise: 'Supino Reto com Barra', target: 107.5 });
   });
 
+  it('com um exercício só, a nova meta já vem com ele e com a carga sugerida', () => {
+    render(<StrengthGoals exercises={['Supino Reto com Barra']} allTimeLogs={[{ exercise_name: 'Supino Reto com Barra', carga: 80, reps: 6 }]} />);
+    fireEvent.click(screen.getByText('+ Nova meta de carga'));
+    expect(screen.getByLabelText('Exercício').value).toBe('Supino Reto com Barra');
+    expect(screen.getByDisplayValue('107.5')).toBeTruthy();
+  });
+
+  it('com vários exercícios, a pessoa escolhe', () => {
+    render(<StrengthGoals exercises={['Supino Reto com Barra', 'Agachamento Livre']} allTimeLogs={[]} />);
+    fireEvent.click(screen.getByText('+ Nova meta de carga'));
+    expect(screen.getByLabelText('Exercício').value).toBe('');
+  });
+
   it('mostra a meta e marca como batida quando a carga chega lá', async () => {
     h.user = { id: 'u1', user_metadata: { strengthGoals: [{ id: 'g1', exercise: 'Supino Reto com Barra', target: 100, by: '2099-01-01', created: '2026-01-01' }] } };
     h.fetchExerciseSetsWithDates.mockResolvedValue([{ carga: 100, reps: 1, workout_date: '2026-10-20' }]);

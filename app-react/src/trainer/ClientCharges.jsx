@@ -6,7 +6,7 @@ import {
   chargeState, daysLate, chargeSummary, formatMoney, formatDue, formatDay, parseMoney, friendlyChargeError,
 } from '../lib/trainerCharges';
 
-import { t } from '../lib/i18n';
+import { t, nDias } from '../lib/i18n';
 
 // Cobranças de um aluno: o personal registra o que ele deve (uma ou várias
 // mensais), dá baixa ao receber (Pix, dinheiro... fora do app) e acompanha o
@@ -84,7 +84,7 @@ export default function ClientCharges({ client }) {
                 <strong>{c.description}</strong>
                 <small>
                   {st === 'paid' ? t('Pago em {v1} · {v2}', { v1: formatDay(c.paidAt), v2: METHOD_LABEL[c.method] || '' }) : t('Vence em {v1}', { v1: formatDue(c.due) })}
-                  {st === 'overdue' && ` · ${t('{n} dia(s) de atraso', { n: daysLate(c, today) })}`}
+                  {st === 'overdue' && ` · ${t('{dias} de atraso', { dias: nDias(daysLate(c, today)) })}`}
                 </small>
                 {c.note && <small className="appt__note">{c.note}</small>}
                 <span className={`appt__status appt__status--${st}`}>{STATE_LABEL[st]}</span>

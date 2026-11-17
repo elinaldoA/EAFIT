@@ -259,7 +259,7 @@ describe('PlanBuilder — ferramentas de montagem', () => {
     });
     setup({ client: CLIENT });
     await screen.findByDisplayValue('Supino Reto com Barra');
-    expect(screen.getByText('· 2 exercício(s), 7 série(s)')).toBeTruthy();
+    expect(screen.getByText('· 2 exercícios, 7 séries')).toBeTruthy();
     await waitFor(() => expect(screen.getByText('📊 Volume da semana (séries por grupo)')).toBeTruthy());
     await waitFor(() => {
       const rows = [...document.querySelectorAll('.volume-list li')].map(li => li.textContent);

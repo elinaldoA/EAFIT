@@ -192,7 +192,7 @@ describe('TreinoPage', () => {
         { exercise_name: 'Supino', carga: 60, reps: 10, workout_date: '2026-10-26' },
       ]);
       render(<TreinoPage />);
-      expect(await screen.findByText('1 exercício(s) prontos para subir carga hoje.')).toBeTruthy();
+      expect(await screen.findByText('1 exercício pronto para subir carga hoje.')).toBeTruthy();
       expect(screen.getByText('Supino: suba para 52,5 kg (fez 10 reps com 50 kg).')).toBeTruthy();
       expect(screen.getByText(/Volume da semana: 600kg/)).toBeTruthy();
       expect(screen.getByText(/\+20% vs\. o mesmo ponto/)).toBeTruthy();

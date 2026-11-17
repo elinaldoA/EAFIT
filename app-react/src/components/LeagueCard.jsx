@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '../context/useToast';
 import { DIVISIONS, MEDALS, fetchMyLeague, joinLeague, leaveLeague, monthLabel } from '../lib/league';
-import { t } from '../lib/i18n';
+import { t, nDias } from '../lib/i18n';
 
 // Liga do mês (Dashboard → Treinos). Some quando a liga está desligada no
 // painel ou a função ainda não foi publicada.
@@ -45,8 +45,8 @@ export default function LeagueCard() {
       <div className="dash-card__title">{t('🏅 Liga do mês')}</div>
       {div ? (
         <p className="challenge__meta">
-          {t('Divisão {emoji} {division} · você em {position}º de {size} · {days} dia(s) no mês', {
-            emoji: div.emoji, division: div.label, position: data.position, size: data.size, days: data.days,
+          {t('Divisão {emoji} {division} · você em {position}º de {size} · {dias} no mês', {
+            emoji: div.emoji, division: div.label, position: data.position, size: data.size, dias: nDias(data.days),
           })}
         </p>
       ) : <p className="challenge__meta">{t('Admins não entram na classificação.')}</p>}
@@ -55,7 +55,7 @@ export default function LeagueCard() {
           {data.top.map((r, i) => (
             <li key={i} className={r.me ? 'challenge__row challenge__row--me' : 'challenge__row'}>
               <span>{MEDALS[r.position] || `${r.position}º`} {r.name}{r.me ? t('(você)') : ''}</span>
-              <strong>{t('{n} dia(s)', { n: r.days })}</strong>
+              <strong>{nDias(r.days)}</strong>
             </li>
           ))}
         </ol>

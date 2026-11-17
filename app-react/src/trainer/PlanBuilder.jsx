@@ -11,7 +11,7 @@ import Loading from '../components/Loading';
 import PlanProgressionFields from '../components/PlanProgressionFields';
 import ExerciseExtras from '../components/ExerciseExtras';
 
-import { t } from '../lib/i18n';
+import { t, nExercicios, nSeries } from '../lib/i18n';
 // Montagem de treino: dias da semana, foco, exercícios (com sugestão da
 // biblioteca do app) e prazo. Com `client`, ao enviar vira o plano ativo do
 // aluno (RPC trainer_assign_plan; o plano anterior dele continua salvo) e dá
@@ -149,7 +149,7 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
         <div className="dash-card" key={day.dia}>
           <div className="dash-card__title-row">
             <div className="dash-card__title">
-              {day.dia} <span className="trainer-delta">· {t('{n} exercício(s), {s} série(s)', { n: day.exercicios.filter(e => e.nome.trim()).length, s: day.exercicios.reduce((n, e) => n + parseSeries(e.series), 0) })}</span>
+              {day.dia} <span className="trainer-delta">· {nExercicios(day.exercicios.filter(e => e.nome.trim()).length)}, {nSeries(day.exercicios.reduce((n, e) => n + parseSeries(e.series), 0))}</span>
             </div>
             <select className="input input--sm plan-copy" value="" aria-label={t('Copiar {dia} para', { dia: day.dia })}
               onChange={e => { if (e.target.value) setDraft(d => copyDay(d, day.dia, e.target.value)); }}>

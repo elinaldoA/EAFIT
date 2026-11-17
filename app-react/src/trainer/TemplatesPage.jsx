@@ -9,7 +9,7 @@ import {
 import PlanBuilder from './PlanBuilder';
 import Loading from '../components/Loading';
 
-import { t, tFoco, locale } from '../lib/i18n';
+import { t, tFoco, locale, nExercicios } from '../lib/i18n';
 const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase(locale);
 
 // Aba Modelos do personal: biblioteca de treinos prontos, que podem ser
@@ -105,7 +105,7 @@ export default function TemplatesPage() {
           <p className="profile-field__hint" style={{ margin: '4px 0 0' }}>{templateSummary(tpl)}</p>
           <ul className="tpl-days">
             {(tpl.days || []).map(d => (
-              <li key={d.dia}><strong>{t(d.dia).slice(0, 3)}</strong> {d.foco ? tFoco(d.foco) : t('{n} exercício(s)', { n: (d.exercicios || []).length })}</li>
+              <li key={d.dia}><strong>{t(d.dia).slice(0, 3)}</strong> {d.foco ? tFoco(d.foco) : nExercicios((d.exercicios || []).length)}</li>
             ))}
           </ul>
           <div className="challenge__actions">

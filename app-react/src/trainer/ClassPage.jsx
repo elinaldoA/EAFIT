@@ -9,7 +9,7 @@ import {
 } from '../lib/challenges';
 import { Leaderboard } from '../components/Challenges';
 
-import { t } from '../lib/i18n';
+import { t, diasRestantes } from '../lib/i18n';
 // Aba Turma do personal: cria desafios para os alunos (todos entram sozinhos),
 // acompanha o placar e encerra. O personal participa como coach, sem ranking.
 export default function ClassPage({ header }) {
@@ -79,7 +79,7 @@ export default function ClassPage({ header }) {
               <button type="button" className="challenge__head" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : c.id)}>
                 <span className="challenge__title">{c.title}</span>
                 <span className="challenge__meta">
-                  {status === 'encerrado' ? t('Encerrado') : status === 'futuro' ? t('Ainda não começou') : left === 0 ? t('Último dia') : t('{left} dia(s) restantes', { left })}
+                  {status === 'encerrado' ? t('Encerrado') : status === 'futuro' ? t('Ainda não começou') : diasRestantes(left)}
                   {' · '}{c.members} {t('aluno(s)')}
                 </span>
               </button>

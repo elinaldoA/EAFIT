@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fmtDate } from '../lib/utils';
 import { fetchClientPlans } from '../lib/trainerRoster';
 
-import { t } from '../lib/i18n';
+import { t, nDias } from '../lib/i18n';
 const author = p => (p.byMe ? t('por você') : t('pelo aluno ou pelo app'));
 
 // Ciclos de treino do aluno, do ativo para os mais antigos: quem montou,
@@ -29,7 +29,7 @@ export default function ClientPlanHistory({ clientId, version = 0 }) {
             <span>
               <strong>{p.name}</strong>
               <small>
-                {t('{n} dia(s)', { n: p.days })} · {author(p)} · {p.start
+                {nDias(p.days)} · {author(p)} · {p.start
                   ? `${fmtDate(p.start)}${p.end ? ` → ${fmtDate(p.end)}` : ''}`
                   : t('criado em {d}', { d: fmtDate(String(p.at).slice(0, 10)) })}
               </small>

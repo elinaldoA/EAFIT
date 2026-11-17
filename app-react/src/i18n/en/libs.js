@@ -225,7 +225,6 @@ export default {
   'Você atingiu o limite de 50 modelos. Apague algum para salvar outro.': 'You reached the limit of 50 templates. Delete one to save another.',
   'Nenhum dos alunos escolhidos está vinculado a você.': 'None of the chosen clients is linked to you.',
   'Escolha no máximo 50 alunos por envio.': 'Choose at most 50 clients per send.',
-  '{length} dia(s) · {exercises} exercício(s){weeks}': '{length} day(s) · {exercises} exercise(s){weeks}',
 
   // workoutPlans
   'Meu plano': 'My plan',

@@ -8,7 +8,7 @@ import {
 } from '../lib/challenges';
 import Loading from './Loading';
 
-import { t } from '../lib/i18n';
+import { t, nDias, diasRestantes } from '../lib/i18n';
 export function Leaderboard({ id }) {
   const [rows, setRows] = useState(null);
   useEffect(() => {
@@ -25,7 +25,7 @@ export function Leaderboard({ id }) {
       {rows.map((r, i) => (
         <li key={i} className={r.isMe ? 'challenge__row challenge__row--me' : 'challenge__row'}>
           <span>{r.rank}º {r.name}{r.isMe ? t('(você)') : ''}</span>
-          <strong>{t('{n} dia(s)', { n: r.score })}</strong>
+          <strong>{nDias(r.score)}</strong>
         </li>
       ))}
     </ol>
@@ -108,7 +108,7 @@ export default function Challenges() {
             <span className="challenge__title">⭐ {c.title}</span>
             <span className="challenge__meta">
               {t('Desafio oficial do EAFIT')}{' · '}
-              {challengeStatus(c, today) === 'futuro' ? t('Ainda não começou') : t('{left} dia(s) restantes', { left: daysLeft(c, today) })}
+              {challengeStatus(c, today) === 'futuro' ? t('Ainda não começou') : diasRestantes(daysLeft(c, today))}
               {' · '}{t('{n} pessoa(s)', { n: c.members })}
             </span>
           </div>
@@ -134,7 +134,7 @@ export default function Challenges() {
             <button type="button" className="challenge__head" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : c.id)}>
               <span className="challenge__title">{c.title}</span>
               <span className="challenge__meta">
-                {status === 'encerrado' ? t('Encerrado') : status === 'futuro' ? t('Ainda não começou') : left === 0 ? t('Último dia') : t('{left} dia(s) restantes', { left })}
+                {status === 'encerrado' ? t('Encerrado') : status === 'futuro' ? t('Ainda não começou') : diasRestantes(left)}
                 {' · '}{t('{n} pessoa(s)', { n: c.members })}{c.rank === null ? t('· você é o coach') : t('· você em {rank}º ({score})', { rank: c.rank, score: c.score })}
               </span>
             </button>

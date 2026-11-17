@@ -5,7 +5,7 @@ import {
   METHOD_LABEL, STATE_LABEL, fetchMyCharges, chargeState, daysLate, formatMoney, formatDue, formatDay,
 } from '../lib/trainerCharges';
 
-import { t } from '../lib/i18n';
+import { t, nDias } from '../lib/i18n';
 // Cobranças registradas pelo personal (somente leitura). Quem paga e como é
 // combinado entre os dois: o app não recebe pagamento. Sem cobrança, não mostra nada.
 export default function MyCharges() {
@@ -32,7 +32,7 @@ export default function MyCharges() {
               <strong>{c.description}</strong>
               <small>
                 {st === 'paid' ? t('Pago em {v1} · {v2}', { v1: formatDay(c.paidAt), v2: METHOD_LABEL[c.method] || '' }) : t('Vence em {v1}', { v1: formatDue(c.due) })}
-                {st === 'overdue' && ` · ${t('{n} dia(s) de atraso', { n: daysLate(c, today) })}`}
+                {st === 'overdue' && ` · ${t('{dias} de atraso', { dias: nDias(daysLate(c, today)) })}`}
               </small>
               {c.note && <small className="appt__note">{c.note}</small>}
               <span className={`appt__status appt__status--${st}`}>{STATE_LABEL[st]}</span>

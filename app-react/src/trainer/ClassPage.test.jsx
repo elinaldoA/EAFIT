@@ -48,7 +48,7 @@ describe('ClassPage', () => {
   it('lista os desafios com dias restantes e quantidade de alunos', async () => {
     await setup();
     const head = await screen.findByRole('button', { name: /Outubro firme/ });
-    expect(head.textContent).toMatch(/5 dia\(s\) restantes/);
+    expect(head.textContent).toMatch(/Faltam 5 dias/);
     expect(head.textContent).toMatch(/12 aluno\(s\)/);
   });
 

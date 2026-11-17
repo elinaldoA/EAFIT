@@ -1,6 +1,6 @@
 import { db } from './supabase';
 
-import { t } from './i18n';
+import { t, nDias, nExercicios } from './i18n';
 const ERRORS = {
   not_authorized: t('Sem permissão para essa ação.'),
   invalid_name: t('Dê um nome ao modelo (2 a 60 letras).'),
@@ -24,7 +24,7 @@ export function templateSummary(template) {
   const days = template.days || [];
   const exercises = days.reduce((n, d) => n + (d.exercicios || []).length, 0);
   const weeks = template.weeks ? ` · ${template.weeks} semanas` : '';
-  return t('{length} dia(s) · {exercises} exercício(s){weeks}', { length: days.length, exercises, weeks });
+  return t('{dias} · {exercicios}{weeks}', { dias: nDias(days.length), exercicios: nExercicios(exercises), weeks });
 }
 
 // Formato que draftFromPlan (lib/trainerPlan) entende.

@@ -45,7 +45,7 @@ describe('ClientCharges', () => {
     render(<ClientCharges client={CLIENT} />);
     expect(await screen.findByText('Mensalidade out')).toBeTruthy();
     expect(screen.getByText('Em atraso')).toBeTruthy();
-    expect(screen.getByText(/10 dia\(s\) de atraso/)).toBeTruthy();
+    expect(screen.getByText(/10 dias de atraso/)).toBeTruthy();
     expect(screen.getByText('Pix: 123')).toBeTruthy();
     expect(screen.getByText('Pago')).toBeTruthy();
     expect(h.api.fetchTrainerCharges).toHaveBeenCalledWith('c1');

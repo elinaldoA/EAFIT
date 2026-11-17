@@ -2,7 +2,7 @@ import { db } from './supabase';
 import { addDays } from './pause';
 import { clientAttention, sortClients, fetchClients } from './trainer';
 
-import { t, locale } from './i18n';
+import { t, locale, nDias } from './i18n';
 // Carteira do personal: a lista de alunos com plano, meta, etiquetas e os
 // últimos 14 dias, e as regras que o Painel e a lista usam para decidir quem
 // precisa de quê (plano vencendo, aderência, dor relatada...).
@@ -62,9 +62,9 @@ export function planStatus(client, today) {
   if (!client.planName) return { level: 'none', label: t('Sem plano'), daysLeft: null };
   if (!client.planEnd) return { level: 'ok', label: t('Sem prazo'), daysLeft: null };
   const left = daysBetween(today, client.planEnd);
-  if (left < 0) return { level: 'expired', label: t('Venceu há {n} dia(s)', { n: -left }), daysLeft: left };
+  if (left < 0) return { level: 'expired', label: t('Venceu há {dias}', { dias: nDias(-left) }), daysLeft: left };
   if (left <= PLAN_ENDING_DAYS) {
-    return { level: 'ending', label: left === 0 ? t('Vence hoje') : t('Vence em {n} dia(s)', { n: left }), daysLeft: left };
+    return { level: 'ending', label: left === 0 ? t('Vence hoje') : t('Vence em {dias}', { dias: nDias(left) }), daysLeft: left };
   }
   return { level: 'ok', label: t('Vence em {n} dias', { n: left }), daysLeft: left };
 }

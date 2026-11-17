@@ -225,7 +225,11 @@ export default function StrengthGoals({ exercises, allTimeLogs }) {
         ) : (
           activeCount < MAX_GOALS && (
             available.length > 0 ? (
-              <button type="button" className="btn btn--outline btn--sm btn--full" onClick={() => setAdding(true)}>{t('+ Nova meta de carga')}</button>
+              <button
+                type="button" className="btn btn--outline btn--sm btn--full"
+                // Só um exercício possível: já vem escolhido, com a carga sugerida.
+                onClick={() => { setAdding(true); if (available.length === 1) chooseExercise(available[0]); }}
+              >{t('+ Nova meta de carga')}</button>
             ) : (
               <p className="dash-empty">{t('Registre cargas na aba Treino para criar uma meta.')}</p>
             )
