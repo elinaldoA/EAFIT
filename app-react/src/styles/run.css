@@ -605,3 +605,8 @@
 .run-live__toggles .btn--sm,
 .run-live__step .btn--sm,
 .run-live__extra .btn--sm { min-height: var(--tap-min); padding: 10px 16px; font-size: var(--fs-sm); }
+
+/* Clima antes de começar */
+.run-record__weather { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; }
+.run-record__weather p { margin: 0; font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.run-record__advice { color: var(--warning); font-weight: 700; }

@@ -592,4 +592,10 @@ export default {
   'Contagem para começar a corrida': 'Countdown to start the run',
   'Já!': 'Go!',
   'Começar já': 'Start now',
+  '⚠️ Tempestade: melhor adiar a corrida ou treinar em local coberto.': '⚠️ Storm: better postpone the run or train indoors.',
+  '🥵 Muito quente: leve água, reduza o ritmo e evite o sol forte.': '🥵 Very hot: bring water, slow down and avoid the strong sun.',
+  '💧 Calor: beba água antes e diminua um pouco o ritmo.': '💧 Hot: drink water first and slow down a little.',
+  '🌧️ Chuva: cuidado com piso molhado e escorregadio.': '🌧️ Rain: watch out for wet, slippery ground.',
+  '💨 Vento forte: comece contra o vento para voltar com ele a favor.': '💨 Strong wind: start against the wind to come back with it behind you.',
+  '🧥 Frio: aqueça bem e use camadas de roupa.': '🧥 Cold: warm up well and dress in layers.',
 };

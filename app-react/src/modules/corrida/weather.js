@@ -41,9 +41,8 @@ export function parseWeather(json) {
 }
 
 // null em qualquer falha (sem internet, tempo esgotado, resposta estranha).
-export async function fetchWeather(route, fetcher = globalThis.fetch) {
-  const pos = startPosition(route);
-  if (!pos || typeof fetcher !== 'function') return null;
+export async function fetchWeatherAt(pos, fetcher = globalThis.fetch) {
+  if (!pos || !Number.isFinite(pos.lat) || !Number.isFinite(pos.lon) || typeof fetcher !== 'function') return null;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
@@ -54,6 +53,11 @@ export async function fetchWeather(route, fetcher = globalThis.fetch) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+// Clima do começo do percurso salvo (ao fechar a corrida).
+export function fetchWeather(route, fetcher = globalThis.fetch) {
+  return fetchWeatherAt(startPosition(route), fetcher);
 }
 
 // Condição pelo código WMO.
@@ -92,4 +96,18 @@ export function weatherText(weather) {
   if (w.w != null) parts.push(t('vento {v1} km/h', { v1: w.w }));
   if (w.h != null) parts.push(t('umidade {v1}%', { v1: w.h }));
   return parts.join(' · ');
+}
+
+// Dica curta para quem vai correr, pelo clima de agora; '' quando está tudo bem.
+export function weatherAdvice(weather) {
+  const w = cleanWeather(weather);
+  if (!w) return '';
+  const kind = weatherKind(w.c);
+  if (kind === 'storm') return t('⚠️ Tempestade: melhor adiar a corrida ou treinar em local coberto.');
+  if (w.t >= 32) return t('🥵 Muito quente: leve água, reduza o ritmo e evite o sol forte.');
+  if (w.t >= 28) return t('💧 Calor: beba água antes e diminua um pouco o ritmo.');
+  if (kind === 'rain') return t('🌧️ Chuva: cuidado com piso molhado e escorregadio.');
+  if (w.w != null && w.w >= 35) return t('💨 Vento forte: comece contra o vento para voltar com ele a favor.');
+  if (w.t <= 8) return t('🧥 Frio: aqueça bem e use camadas de roupa.');
+  return '';
 }

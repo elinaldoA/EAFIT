@@ -25,6 +25,8 @@ import { newMedals } from './challenges';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
 import { geoSupported, useGeoTracker } from './useGeoTracker';
 import { gpsStatusText } from './gpsStatus';
+import { weatherText, weatherAdvice } from './weather';
+import { useStartWeather } from './useStartWeather';
 import { useLiveRun } from './useLiveRun';
 import { GPS_KEY, readPref, writePref } from './runPrefs';
 
@@ -200,7 +202,12 @@ export default function RunHomePage() {
   // achar os satélites, e assim a corrida já começa com sinal. Para quando a
   // corrida começa (a tela ao vivo tem o próprio rastreio).
   const live = useLiveRun();
-  const warm = useGeoTracker({ active: gps && !live });
+  const [startPos, setStartPos] = useState(null);
+  const warm = useGeoTracker({
+    active: gps && !live,
+    onFix: ({ lat, lon }) => setStartPos(p => p || { lat, lon }),
+  });
+  const weather = useStartWeather(gps && !live ? startPos : null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -310,6 +317,12 @@ export default function RunHomePage() {
         </label>
         {gps && warm.status !== 'idle' && (
           <p className={`run-record__gps run-record__gps--${warm.status}`} role="status">{gpsStatusText(warm.status, warm.accuracy)}</p>
+        )}
+        {gps && weather && (
+          <div className="run-record__weather" role="status">
+            <p>{weatherText(weather)}</p>
+            {weatherAdvice(weather) && <p className="run-record__advice">{weatherAdvice(weather)}</p>}
+          </div>
         )}
         {!gpxOpen && !live && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGpxOpen(true); setManualOpen(false); setGuidedOpen(false); }}>

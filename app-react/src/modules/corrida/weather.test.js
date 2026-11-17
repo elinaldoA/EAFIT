@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { startPosition, weatherUrl, cleanWeather, parseWeather, fetchWeather, weatherKind, weatherText } from './weather';
+import { fetchWeatherAt, weatherAdvice, startPosition, weatherUrl, cleanWeather, parseWeather, fetchWeather, weatherKind, weatherText } from './weather';
 
 const route = [[[-2350123, -4660456, 0], [-2350000, -4660000, 60]]];
 
@@ -42,5 +42,24 @@ describe('clima da corrida', () => {
     expect(['0', '1', '3', '45', '63', '73', '81', '96'].map(c => weatherKind(Number(c)))).toEqual(['clear', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'rain', 'storm']);
     expect(weatherText({ t: 24, w: 12, h: 60, c: 0 })).toBe('☀️ 24°C · Céu limpo · vento 12 km/h · umidade 60%');
     expect(weatherText(null)).toBe('');
+  });
+
+  it('busca o clima de uma posição solta, sem percurso', async () => {
+    const ok = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ current: { temperature_2m: 30, weather_code: 1 } }) });
+    expect(await fetchWeatherAt({ lat: -23.5012, lon: -46.6045 }, ok)).toEqual({ t: 30, w: null, h: null, c: 1 });
+    expect(ok.mock.calls[0][0]).toContain('latitude=-23.5&longitude=-46.6');
+    expect(await fetchWeatherAt(null, ok)).toBeNull();
+    expect(await fetchWeatherAt({ lat: NaN, lon: 1 }, ok)).toBeNull();
+  });
+
+  it('dá a dica certa para o clima, e nenhuma quando está bom', () => {
+    expect(weatherAdvice({ t: 22, w: 10, c: 0 })).toBe('');
+    expect(weatherAdvice(null)).toBe('');
+    expect(weatherAdvice({ t: 29, c: 0 })).toMatch(/Calor/);
+    expect(weatherAdvice({ t: 33, c: 0 })).toMatch(/Muito quente/);
+    expect(weatherAdvice({ t: 20, c: 95 })).toMatch(/Tempestade/);
+    expect(weatherAdvice({ t: 20, c: 63 })).toMatch(/Chuva/);
+    expect(weatherAdvice({ t: 20, w: 40, c: 0 })).toMatch(/Vento forte/);
+    expect(weatherAdvice({ t: 5, c: 0 })).toMatch(/Frio/);
   });
 });
