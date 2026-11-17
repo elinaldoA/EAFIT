@@ -578,3 +578,11 @@
 /* Ranking de km da semana entre amigos */
 .run-ranking .challenge__row { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; padding: var(--sp-2) 8px; }
 .run-ranking .challenge__row strong { font-size: var(--fs-xl); }
+
+/* Amigos do EAFIT Run */
+.run-friends .friends__me { font-size: var(--fs-lg); }
+.run-friends .friends__code { font-size: 1.75rem; }
+.run-friends .friends__label { font-size: var(--fs-sm); font-weight: 700; }
+.run-friends .friends__row { font-size: var(--fs-xl); padding: var(--sp-2) 0; }
+.run-friends .friends__manage,
+.run-friends .friends__privacy { font-size: var(--fs-lg); }

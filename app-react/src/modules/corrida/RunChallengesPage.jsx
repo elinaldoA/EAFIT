@@ -159,7 +159,7 @@ function RunFriends({ onChange }) {
   const accepted = shown.filter(f => f.status === 'friend');
 
   return (
-    <div className="dash-card">
+    <div className="dash-card run-friends">
       <div className="dash-card__title">{t('👥 Amigos')}</div>
       {profile && (
         <div className="friends__me">
