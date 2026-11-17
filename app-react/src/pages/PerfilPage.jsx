@@ -13,7 +13,7 @@ import { fetchWeightLogs, upsertWeightLog } from '../lib/weightLog';
 import { saveAvatar } from '../lib/avatar';
 import { generatePlan } from '../data/workoutTemplates';
 import { computeImcBracket } from '../data/workoutAdjustments';
-import { createGeneratedPlan } from '../lib/workoutPlans';
+import { createGeneratedPlan, listPlans, undoGeneratedPlan } from '../lib/workoutPlans';
 import { useProfileData } from '../hooks/useProfileData';
 import CollapsibleCard from '../components/CollapsibleCard';
 import ProfileHeader from '../components/ProfileHeader';
@@ -108,10 +108,33 @@ export default function PerfilPage({ active }) {
     toast(t('✅ Dados pessoais salvos!'));
   }
 
+  // Devolve o plano que estava ativo e o gerado, para o aviso poder desfazer.
   async function generateAndActivatePlan() {
+    let previous = null;
+    try { previous = (await listPlans(user.id)).find(p => p.is_active) || null; } catch { /* sem o anterior, só não oferece desfazer */ }
     const generatedDays = await generatePlan({ peso: parseFloat(peso), altura: parseFloat(altura), meta, nivel, local });
-    await createGeneratedPlan(user.id, t('Plano gerado {v1}', { v1: new Date().toLocaleDateString(locale) }), generatedDays);
+    const generated = await createGeneratedPlan(user.id, t('Plano gerado {v1}', { v1: new Date().toLocaleDateString(locale) }), generatedDays);
     await refreshPlan();
+    return { previous, generated };
+  }
+
+  function announceGeneratedPlan({ previous, generated }) {
+    if (!previous || !generated?.id) { toast(t('✅ Novo treino gerado e ativado!')); return; }
+    toast(t('✅ Novo treino gerado e ativado!'), 6000, {
+      action: {
+        label: t('Desfazer'),
+        onClick: async () => {
+          try {
+            await undoGeneratedPlan(user.id, previous, generated.id);
+            await refreshPlan();
+            toast(t('↩️ Treino anterior de volta'));
+          } catch (err) {
+            console.error('undoGeneratedPlan:', err);
+            toast(t('⚠️ Não foi possível desfazer. Reative o plano em "Editar treino".'));
+          }
+        },
+      },
+    });
   }
 
   async function handleSave() {
@@ -160,8 +183,7 @@ export default function PerfilPage({ active }) {
     setImcInvite(false);
     setRegenerating(true);
     try {
-      await generateAndActivatePlan();
-      toast(t('✅ Novo treino gerado e ativado!'));
+      announceGeneratedPlan(await generateAndActivatePlan());
     } catch (err) {
       console.error('regeneratePlan:', err);
       toast(t('⚠️ Erro ao gerar novo treino'));
@@ -181,12 +203,10 @@ export default function PerfilPage({ active }) {
       return;
     }
     if (planByTrainer && !window.confirm(t('Seu plano atual foi montado pelo seu personal. Gerar um novo treino automático vai substituí-lo (ele continua salvo em "Editar treino"). Continuar?'))) return;
-    if (!window.confirm(t('Isso cria um novo plano de treino com base nos seus dados atuais e o ativa. Seus planos existentes continuam salvos e podem ser reativados em "Editar treino". Continuar?'))) return;
 
     setRegenerating(true);
     try {
-      await generateAndActivatePlan();
-      toast(t('✅ Novo treino gerado e ativado!'));
+      announceGeneratedPlan(await generateAndActivatePlan());
     } catch (err) {
       console.error('regeneratePlan:', err);
       toast(t('⚠️ Erro ao gerar novo treino'));

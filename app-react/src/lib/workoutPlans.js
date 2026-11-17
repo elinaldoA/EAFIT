@@ -392,6 +392,20 @@ export async function setActivePlan(userId, planId, durationWeeks = null) {
   if (error) throw error;
 }
 
+// Desfaz "Gerar treino novo": reativa o plano que estava ativo, com o prazo do
+// ciclo que ele tinha (setActivePlan sem prazo limpa as datas, então elas voltam
+// logo em seguida), e apaga o plano recém-gerado.
+export async function undoGeneratedPlan(userId, previous, generatedPlanId) {
+  await setActivePlan(userId, previous.id, null);
+  if (previous.start_date || previous.end_date || previous.duration_weeks) {
+    const { error } = await db.from('workout_plans')
+      .update({ start_date: previous.start_date, end_date: previous.end_date, duration_weeks: previous.duration_weeks })
+      .eq('id', previous.id).eq('user_id', userId);
+    if (error) throw error;
+  }
+  if (generatedPlanId) await deletePlan(generatedPlanId, userId);
+}
+
 // next_plan_id: plano ativado automaticamente quando o ciclo termina bem
 // (progressão). regression_plan_id: ativado quando o ciclo termina
 // estagnado/negativo (recuperação/deload). Ambos opcionais e independentes.

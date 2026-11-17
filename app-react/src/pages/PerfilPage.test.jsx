@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 
 const { auth, workout, appConfig, mockToast, weight, plans, templates, invite } = vi.hoisted(() => ({
   auth: {},
@@ -8,7 +8,7 @@ const { auth, workout, appConfig, mockToast, weight, plans, templates, invite } 
   appConfig: { config: { flags: {} } },
   mockToast: vi.fn(),
   weight: { fetchWeightLogs: vi.fn(), upsertWeightLog: vi.fn() },
-  plans: { createGeneratedPlan: vi.fn() },
+  plans: { createGeneratedPlan: vi.fn(), listPlans: vi.fn(), undoGeneratedPlan: vi.fn() },
   templates: { generatePlan: vi.fn() },
   invite: { shareInvite: vi.fn() },
 }));
@@ -121,7 +121,9 @@ beforeEach(() => {
   Object.assign(workout, { markPending: vi.fn(), refreshPlan: vi.fn().mockResolvedValue(undefined), planByTrainer: false });
   weight.fetchWeightLogs.mockResolvedValue([]);
   weight.upsertWeightLog.mockResolvedValue(undefined);
-  plans.createGeneratedPlan.mockResolvedValue(undefined);
+  plans.createGeneratedPlan.mockResolvedValue({ id: 'new' });
+  plans.listPlans.mockResolvedValue([{ id: 'old', is_active: true, start_date: '2026-09-01', end_date: '2026-10-27', duration_weeks: 8 }]);
+  plans.undoGeneratedPlan.mockResolvedValue(undefined);
   templates.generatePlan.mockResolvedValue([{ dia: 'Segunda' }]);
   invite.shareInvite.mockResolvedValue('shared');
 });
@@ -239,7 +241,7 @@ describe('PerfilPage', () => {
       expect(weight.upsertWeightLog).toHaveBeenCalledWith('u1', '2026-10-07', 80);
       expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
       fireEvent.click(screen.getByText('aceitar convite'));
-      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!', 6000, expect.anything()));
       expect(confirm).not.toHaveBeenCalled();
       expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 80, altura: 175, meta: 'massa', nivel: 'intermediario', local: 'academia' });
       expect(plans.createGeneratedPlan).toHaveBeenCalledWith('u1', expect.any(String), [{ dia: 'Segunda' }]);
@@ -319,21 +321,42 @@ describe('PerfilPage', () => {
       expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
     });
 
-    it('cancelando a confirmação não cria plano', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('gera na hora, sem confirmação, com aviso e Desfazer', async () => {
+      const confirm = vi.spyOn(window, 'confirm');
       render(<PerfilPage active />);
       fireEvent.click(screen.getByText('gerar treino'));
-      expect(plans.createGeneratedPlan).not.toHaveBeenCalled();
-    });
-
-    it('confirmando gera, ativa e recarrega o plano', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-      render(<PerfilPage active />);
-      fireEvent.click(screen.getByText('gerar treino'));
-      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) })));
+      expect(confirm).not.toHaveBeenCalled();
       expect(templates.generatePlan).toHaveBeenCalledWith({ peso: 70, altura: 175, meta: 'massa', nivel: 'intermediario', local: 'academia' });
       expect(plans.createGeneratedPlan).toHaveBeenCalledWith('u1', expect.any(String), [{ dia: 'Segunda' }]);
       expect(workout.refreshPlan).toHaveBeenCalled();
+    });
+
+    it('Desfazer reativa o plano anterior com as datas dele, apaga o gerado e recarrega', async () => {
+      render(<PerfilPage active />);
+      fireEvent.click(screen.getByText('gerar treino'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!', 6000, expect.anything()));
+      workout.refreshPlan.mockClear();
+      await act(async () => { await mockToast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(plans.undoGeneratedPlan).toHaveBeenCalledWith('u1', expect.objectContaining({ id: 'old', end_date: '2026-10-27' }), 'new');
+      expect(workout.refreshPlan).toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledWith('↩️ Treino anterior de volta');
+    });
+
+    it('falha ao desfazer avisa onde reativar o plano', async () => {
+      plans.undoGeneratedPlan.mockRejectedValue(new Error('x'));
+      render(<PerfilPage active />);
+      fireEvent.click(screen.getByText('gerar treino'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!', 6000, expect.anything()));
+      await act(async () => { await mockToast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(mockToast).toHaveBeenCalledWith('⚠️ Não foi possível desfazer. Reative o plano em "Editar treino".');
+    });
+
+    it('sem plano ativo anterior, avisa sem Desfazer', async () => {
+      plans.listPlans.mockResolvedValue([]);
+      render(<PerfilPage active />);
+      fireEvent.click(screen.getByText('gerar treino'));
+      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('✅ Novo treino gerado e ativado!'));
     });
 
     it('plano do personal pede uma confirmação extra', () => {

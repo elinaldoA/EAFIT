@@ -13,7 +13,7 @@ vi.mock('./supabase', () => ({ db: mockDb }));
 // histórico de séries/peso/aderência que evaluateCycleEvolution.test.js já cobre.
 vi.mock('./planEvolution', () => ({ evaluateCycleEvolution: vi.fn() }));
 
-import { adjustNivelForVerdict, autoGenerateNextCycle, fetchActivePlan, createGeneratedPlan, setActivePlan, isMissingRpc } from './workoutPlans';
+import { adjustNivelForVerdict, autoGenerateNextCycle, fetchActivePlan, createGeneratedPlan, setActivePlan, undoGeneratedPlan, isMissingRpc } from './workoutPlans';
 import { evaluateCycleEvolution } from './planEvolution';
 import { todayDate } from '../data/treinoData';
 
@@ -358,6 +358,16 @@ describe('banco sem as RPCs de plano (migration não aplicada)', () => {
     const writes = recordWrites();
     await setActivePlan('u1', 'p2', null);
     expect(writes.map(w => w[2])).toEqual([{ is_active: false }, { is_active: true, start_date: null, end_date: null, duration_weeks: null }]);
+  });
+
+  it('undoGeneratedPlan reativa o anterior, devolve o prazo do ciclo e apaga o gerado', async () => {
+    mockDb.rpc.mockResolvedValue({ data: null, error: MISSING });
+    const writes = recordWrites();
+    await undoGeneratedPlan('u1', { id: 'old', start_date: '2026-09-01', end_date: '2026-10-27', duration_weeks: 8 }, 'new');
+    const updates = writes.filter(w => w[0] === 'workout_plans' && w[1] === 'update').map(w => w[2]);
+    expect(updates.at(-1)).toEqual({ start_date: '2026-09-01', end_date: '2026-10-27', duration_weeks: 8 });
+    expect(updates).toContainEqual({ is_active: true, start_date: null, end_date: null, duration_weeks: null });
+    expect(writes).toContainEqual(['workout_plans', 'delete']);
   });
 
   it('outros erros da RPC continuam sendo lançados', async () => {
