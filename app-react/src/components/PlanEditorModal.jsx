@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { trackFeature } from '../lib/tracking';
 import { createPortal } from 'react-dom';
 import { getModalRoot } from '../lib/modalRoot';
@@ -11,6 +11,7 @@ import {
   fetchPlanDays, updatePlanDay, addExercise, updateExercise, deleteExercise, reorderExercises,
 } from '../lib/workoutPlans';
 import { useBackToClose } from '../hooks/useBackToClose';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import Loading from './Loading';
 import ExerciseExtras from './ExerciseExtras';
 import PlanProgressionFields from './PlanProgressionFields';
@@ -169,6 +170,7 @@ export default function PlanEditorModal({ onClose }) {
 
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [days, setDays] = useState([]);
+  const removal = useDeferredRemoval();
   const [loadingDays, setLoadingDays] = useState(false);
   const [selectedDay, setSelectedDay] = useState('Segunda');
 
@@ -224,7 +226,13 @@ export default function PlanEditorModal({ onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlanId]);
 
-  const day = days.find(d => d.dia === selectedDay);
+  const rawDay = days.find(d => d.dia === selectedDay);
+  // Exercício removido some já; o servidor só apaga em 6s (a não ser que desfaça).
+  const day = useMemo(() => (rawDay ? {
+    ...rawDay,
+    exercicios: rawDay.exercicios.filter(e => !removal.hidden.has(e.id)),
+    pos: rawDay.pos.filter(e => !removal.hidden.has(e.id)),
+  } : rawDay), [rawDay, removal.hidden]);
 
   async function handleCreatePlan(copy) {
     const name = newPlanName.trim();
@@ -351,17 +359,22 @@ export default function PlanEditorModal({ onClose }) {
     }
   }
 
-  // Um toque sem querer apagava o exercício na hora, com séries, técnica e o resto.
-  async function handleDeleteExercise(ex) {
+  // Um toque sem querer apagava o exercício na hora, com séries, técnica e o
+  // resto: some da tela, avisa com Desfazer e só apaga no servidor em 6s.
+  function handleDeleteExercise(ex) {
     const nome = ex.nome?.trim();
-    if (!window.confirm(nome ? t('Remover "{nome}" deste dia?', { nome }) : t('Remover este exercício do dia?'))) return;
-    try {
-      await deleteExercise(ex.id);
-      await reloadDays();
-    } catch (err) {
-      console.error('deleteExercise:', err);
-      toast(t('⚠️ Erro ao remover exercício'));
-    }
+    removal.schedule(ex.id, async () => {
+      try {
+        await deleteExercise(ex.id);
+      } catch (err) {
+        console.error('deleteExercise:', err);
+        toast(t('⚠️ Erro ao remover exercício'));
+      }
+      try { await reloadDays(); } catch (err) { console.error('reloadDays:', err); }
+    });
+    toast(nome ? t('"{nome}" removido do dia', { nome }) : t('Exercício removido do dia'), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(ex.id) },
+    });
   }
 
   async function handleMove(isPost, id, direction) {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, within, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
   refreshPlan: vi.fn(),
@@ -276,20 +276,31 @@ describe('PlanEditorModal — editar dia', () => {
     ));
   });
 
-  it('remove um exercício depois de confirmar, dizendo qual', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('remover some na hora, sem confirmação, dizendo qual, e só apaga no servidor em 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     await openEditor();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
-    expect(confirm).toHaveBeenCalledWith('Remover "Supino" deste dia?');
-    await waitFor(() => expect(h.api.deleteExercise).toHaveBeenCalledWith('e1'));
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByDisplayValue('Supino')).toBeNull();
+      expect(h.toast).toHaveBeenCalledWith('"Supino" removido do dia', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.deleteExercise).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.deleteExercise).toHaveBeenCalledWith('e1');
+    } finally { vi.useRealTimers(); }
   });
 
-  it('recusar a confirmação não remove o exercício', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('Desfazer devolve o exercício e nada é apagado', async () => {
     await openEditor();
-    fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
-    expect(h.api.deleteExercise).not.toHaveBeenCalled();
-    expect(screen.getByDisplayValue('Supino')).toBeTruthy();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByDisplayValue('Supino')).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.deleteExercise).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 
   it('séries, repetições e descanso têm rótulo (preenchidos, o placeholder some)', async () => {
@@ -315,11 +326,14 @@ describe('PlanEditorModal — editar dia', () => {
 
   it('erros viram toast e não derrubam o editor', async () => {
     await openEditor();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     h.api.deleteExercise.mockRejectedValue(new Error('falhou'));
-    fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('⚠️ Erro ao remover exercício'));
-    expect(screen.getByDisplayValue('Supino')).toBeTruthy();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Remover exercício' })[0]);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith('⚠️ Erro ao remover exercício');
+    } finally { vi.useRealTimers(); }
+    expect(await screen.findByDisplayValue('Supino')).toBeTruthy();
   });
 
   it('o seletor de plano carrega os dias do outro plano', async () => {
