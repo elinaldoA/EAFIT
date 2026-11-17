@@ -106,12 +106,12 @@ async function drawMap(ctx, run) {
 function drawBigDistance(ctx, run) {
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffffff';
-  ctx.font = `900 220px ${FONT}`;
-  ctx.fillText(formatKm(run.distance_m), CARD_WIDTH / 2, MAP_Y + MAP_H / 2 + 40);
-  ctx.font = `800 44px ${FONT}`;
+  fitFont(ctx, formatKm(run.distance_m), CONTENT_W - 60, 300, 900, 120);
+  ctx.fillText(formatKm(run.distance_m), CARD_WIDTH / 2, MAP_Y + MAP_H / 2 + 50);
+  ctx.font = `800 56px ${FONT}`;
   ctx.fillStyle = ORANGE_LIGHT;
   setTracking(ctx, 6);
-  ctx.fillText('KM', CARD_WIDTH / 2, MAP_Y + MAP_H / 2 + 130);
+  ctx.fillText('KM', CARD_WIDTH / 2, MAP_Y + MAP_H / 2 + 150);
   setTracking(ctx, 0);
 }
 
@@ -175,7 +175,7 @@ export async function renderRunCard(run, refCode = myRefCode()) {
     [formatPace(paceSeconds(run.duration_s, run.distance_m)), t('ritmo /km')],
     [formatClock(run.duration_s), t('tempo')],
   ];
-  stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 200, value, label));
+  stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 240, value, label, undefined, { maxSize: 96, padX: 28, labelSize: 28 }));
 
   await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
@@ -261,7 +261,7 @@ export async function renderRunPhotoCard(run, img, show = {}) {
   ].filter(Boolean);
   const hasTrace = on('percurso') && Array.isArray(run.route) && run.route.length > 0;
 
-  const rowH = 140;
+  const rowH = 170;
   const gridTop = CARD_HEIGHT - 170 - 3 * rowH;
   const shadeTop = gridTop - 420;
   const bottom = ctx.createLinearGradient(0, shadeTop, 0, CARD_HEIGHT);
@@ -289,12 +289,12 @@ export async function renderRunPhotoCard(run, img, show = {}) {
   stats.forEach(([value, label], i) => {
     const y = gridTop + i * rowH;
     ctx.fillStyle = '#ffffff';
-    fitFont(ctx, value, colW - 10, 84, 900, 40);
-    ctx.fillText(value, PAD_X, y + 74);
-    ctx.font = `700 24px ${FONT}`;
+    fitFont(ctx, value, colW - 10, 112, 900, 40);
+    ctx.fillText(value, PAD_X, y + 100);
+    ctx.font = `700 30px ${FONT}`;
     ctx.fillStyle = MUTED;
     setTracking(ctx, 2.5);
-    ctx.fillText(String(label).toUpperCase(), PAD_X, y + 112);
+    ctx.fillText(String(label).toUpperCase(), PAD_X, y + 142);
     setTracking(ctx, 0);
   });
   if (hasTrace) drawTrace(ctx, run, CARD_WIDTH - PAD_X - traceW, gridTop - 20, traceW, traceW);

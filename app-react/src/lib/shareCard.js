@@ -151,7 +151,9 @@ function wrapLines(ctx, text, maxW, maxLines) {
   return kept;
 }
 
-function drawStatBox(ctx, x, y, w, h, value, label, accent = ORANGE) {
+// opts (opcional): maxSize do valor, padX lateral e labelSize; o padrão é o dos cards de treino.
+function drawStatBox(ctx, x, y, w, h, value, label, accent = ORANGE, opts = {}) {
+  const { maxSize = 68, padX = 36, labelSize = 22 } = opts;
   drawPanel(ctx, x, y, w, h, 28);
 
   ctx.save();
@@ -161,16 +163,15 @@ function drawStatBox(ctx, x, y, w, h, value, label, accent = ORANGE) {
   ctx.fillRect(x, y, 8, h);
   ctx.restore();
 
-  const padX = 36;
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
-  fitFont(ctx, value, w - padX * 2, 68, 800, 34);
+  fitFont(ctx, value, w - padX * 2, maxSize, 800, 34);
   ctx.fillText(value, x + padX, y + h / 2 + 8);
 
-  ctx.font = `700 22px ${FONT}`;
+  ctx.font = `700 ${labelSize}px ${FONT}`;
   ctx.fillStyle = MUTED;
   setTracking(ctx, 2.5);
-  ctx.fillText(String(label).toUpperCase(), x + padX, y + h / 2 + 52);
+  ctx.fillText(String(label).toUpperCase(), x + padX, y + h / 2 + 8 + Math.round(maxSize * 0.65));
   setTracking(ctx, 0);
 }
 
