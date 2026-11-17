@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { fetchAllRows } from './paged';
 
 export const PAGE_SIZE = 50;
 
@@ -15,9 +16,8 @@ export async function fetchUsers() {
 // separa "desativado" de "banido". Falha aqui não derruba a lista.
 export async function fetchDeactivatedIds() {
   try {
-    const { data, error } = await db.from('account_deactivations').select('user_id');
-    if (error) return new Set();
-    return new Set((data || []).map(r => r.user_id));
+    const rows = await fetchAllRows(() => db.from('account_deactivations').select('user_id').order('user_id'));
+    return new Set(rows.map(r => r.user_id));
   } catch {
     return new Set();
   }

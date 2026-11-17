@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useConfirm } from '../context/confirmContext';
+import { fetchAllRows } from '../lib/paged';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../lib/supabase';
 import { useAdminAuth } from '../context/useAdminAuth';
@@ -54,7 +55,7 @@ export default function UserDetail() {
     setLoading(true);
     setError('');
     try {
-      const [{ data: userRows, error: userErr }, plan, w, wa, we, allWorkoutIds, disc, ach, photos, push, deact, pr, ne, nf] = await Promise.all([
+      const [{ data: userRows, error: userErr }, plan, w, wa, we, disc, ach, photos, push, deact, pr, ne, nf] = await Promise.all([
         db.rpc('admin_get_user', { target: id }),
         db.from('workout_plans')
           .select('id, name, start_date, end_date, duration_weeks, plan_days(id, dia, foco, order_index, plan_exercises(id, nome, series, reps, descanso, tecnica, grupo, aquecimento, is_post_workout, order_index))')
@@ -62,7 +63,6 @@ export default function UserDetail() {
         db.from('workouts').select('id, workout_date, day_of_week, completed, duration_seconds').eq('user_id', id).order('workout_date', { ascending: false }).limit(20),
         db.from('water_logs').select('id, log_date, amount_ml').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
         db.from('weight_logs').select('id, log_date, weight').eq('user_id', id).order('log_date', { ascending: false }).limit(20),
-        db.from('workouts').select('id').eq('user_id', id),
         db.from('exercise_discomfort').select('id, exercise_name, log_date, severity, note').eq('user_id', id).order('log_date', { ascending: false }).limit(30),
         db.from('achievements').select('id, badge_id, unlocked_at').eq('user_id', id).order('unlocked_at', { ascending: false }),
         db.from('progress_photos').select('id, photo_date, image_data, storage_path, note').eq('user_id', id).order('photo_date', { ascending: false }).limit(12),
@@ -74,15 +74,14 @@ export default function UserDetail() {
       ]);
       if (userErr) throw userErr;
 
-      const allIds = (allWorkoutIds.data || []).map(x => x.id);
-      let personalRecordsComputed = [];
-      if (allIds.length) {
-        const { data: allSets, error: setsErr } = await db
-          .from('exercise_sets').select('exercise_name, carga, reps')
-          .in('workout_id', allIds).eq('completed', true).not('carga', 'is', null);
-        if (setsErr) throw setsErr;
-        personalRecordsComputed = computePersonalRecords(allSets || []);
-      }
+      // Todas as séries concluídas do aluno, em páginas: um aluno antigo passa de 1.000
+      // séries (o corte do servidor derrubava recordes) e a lista de ids de treino na URL
+      // (.in) estourava o tamanho permitido.
+      const allSets = await fetchAllRows(() => db
+        .from('exercise_sets').select('exercise_name, carga, reps, workouts!inner(user_id)')
+        .eq('workouts.user_id', id).eq('completed', true).not('carga', 'is', null)
+        .order('id'));
+      const personalRecordsComputed = computePersonalRecords(allSets);
       const row = userRows?.[0];
       if (!row) throw new Error('Usuário não encontrado.');
       setDetail(row);

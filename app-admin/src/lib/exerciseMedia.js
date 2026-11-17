@@ -1,4 +1,5 @@
 import { db } from './supabase';
+import { fetchAllRows } from './paged';
 import { fetchAllLibraryRows } from './exerciseLibrary';
 // Demonstração padrão que o app já mostra sem mídia própria (vídeo curto ou 2
 // quadros) — mesma fonte do app, pra não divergir.
@@ -72,10 +73,9 @@ export function publicUrl(path) {
 export async function fetchMediaScreen() {
   const [lib, media] = await Promise.all([
     fetchAllLibraryRows('nome, grupo_muscular'),
-    db.from('exercise_media').select('nome, storage_path, media_type, updated_at'),
+    fetchAllRows(() => db.from('exercise_media').select('nome, storage_path, media_type, updated_at').order('nome')),
   ]);
-  if (media.error) throw media.error;
-  return buildRows(lib, media.data);
+  return buildRows(lib, media);
 }
 
 async function audit(adminId, action, details) {
@@ -115,10 +115,9 @@ let customMapPromise = null;
 export function loadCustomMediaMap() {
   if (!customMapPromise) {
     customMapPromise = (async () => {
-      const { data, error } = await db.from('exercise_media').select('nome, storage_path, media_type');
-      if (error) throw error;
+      const data = await fetchAllRows(() => db.from('exercise_media').select('nome, storage_path, media_type').order('nome'));
       const map = {};
-      (data || []).forEach(r => {
+      data.forEach(r => {
         if (r?.nome && r.storage_path) map[normalizeName(r.nome)] = { url: publicUrl(r.storage_path), type: r.media_type === 'video' ? 'video' : 'imagem' };
       });
       return map;
