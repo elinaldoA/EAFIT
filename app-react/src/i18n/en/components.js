@@ -1058,4 +1058,5 @@ export default {
   'Data da foto': 'Photo date',
   'Carga em kg, {nome}, série {n}': 'Weight in kg, {nome}, set {n}',
   'Repetições, {nome}, série {n}': 'Reps, {nome}, set {n}',
+  'Marcar a série {n} de {nome} como feita': 'Mark set {n} of {nome} as done',
 };

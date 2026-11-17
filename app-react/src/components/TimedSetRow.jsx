@@ -113,7 +113,8 @@ export default function TimedSetRow({ ex, n, day, bump, onRestStart, onSetDone, 
         />
         <button
           type="button" className={`set-row__check${done ? ' set-row__check--done' : ''}`}
-          aria-pressed={done} onClick={handleCheck} disabled={!started} title={disabledTitle}
+          aria-pressed={done} onClick={handleCheck} disabled={!started}
+          title={started ? t('Marcar a série {n} de {nome} como feita', { n, nome: tEx(ex.nome) }) : disabledTitle}
         >✓</button>
       </div>
       <div className="set-row__timer">

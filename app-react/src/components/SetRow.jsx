@@ -214,7 +214,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
           className={`set-row__check${done ? ' set-row__check--done' : ''}`}
           aria-pressed={done}
           onClick={handleCheck}
-          disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
+          disabled={!started} title={started ? t('Marcar a série {n} de {nome} como feita', { n, nome: tEx(ex.nome) }) : t('Inicie o treino para registrar as séries')}
         >✓</button>
       </div>
       {done && (
