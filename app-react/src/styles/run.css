@@ -645,3 +645,5 @@
 .run-quick__wx { font-weight: 600; padding-left: var(--sp-3); border-left: 1px solid color-mix(in srgb, var(--on-primary) 45%, transparent); font-variant-numeric: tabular-nums; }
 
 .run-quick__free { align-self: center; margin-top: calc(var(--sp-2) * -1); }
+
+.run-countdown__note { margin: 0; max-width: 28rem; padding: 0 var(--sp-4); text-align: center; color: var(--text-muted); font-size: var(--fs-base); }

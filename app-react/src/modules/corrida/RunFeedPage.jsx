@@ -19,7 +19,8 @@ import { useStartWeather } from './useStartWeather';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import StartCountdown from './StartCountdown';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
-import { geoSupported } from './useGeoTracker';
+import { geoSupported, useGeoTracker } from './useGeoTracker';
+import { gpsStatusText } from './gpsStatus';
 import { requestMotionPermission } from './cadence';
 import { GPS_KEY, readPref } from './runPrefs';
 
@@ -127,6 +128,9 @@ export default function RunFeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [mine, setMine] = useState([]);
   const [countdown, setCountdown] = useState(null); // { session } enquanto conta 3-2-1
+  // O GPS já começa a procurar sinal durante a contagem 3-2-1 (a tela ao vivo assume em seguida).
+  const gpsWanted = readPref(GPS_KEY) && geoSupported();
+  const warm = useGeoTracker({ active: !!countdown && gpsWanted });
   // Clima no botão de começar: sem GPS aqui, usa o lugar onde a última corrida começou
   // (onde a pessoa costuma correr). Só a posição arredondada a 0,1° vai ao serviço de clima.
   const homePos = useMemo(() => {
@@ -234,7 +238,7 @@ export default function RunFeedPage() {
   const hasFriendsRuns = feed.some(r => !r.isMe);
   return (
     <section id="page-inicio" className="page active">
-      {countdown && <StartCountdown onCancel={() => setCountdown(null)} onDone={launch} />}
+      {countdown && <StartCountdown onCancel={() => setCountdown(null)} onDone={launch} note={gpsWanted ? gpsStatusText(warm.status, warm.accuracy) : ''} />}
       {/* Atalho para começar: sem corridas o estado vazio abaixo já tem o botão de gravar. */}
       {feed.length > 0 && (
         <>

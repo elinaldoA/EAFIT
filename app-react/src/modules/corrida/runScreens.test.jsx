@@ -733,6 +733,44 @@ describe('RunFeedPage (aba Início)', () => {
     });
   });
 
+  describe('GPS durante a contagem do botão rápido', () => {
+    let watch;
+    beforeEach(() => {
+      watch = { watchPosition: vi.fn(() => 5), clearWatch: vi.fn() };
+      Object.defineProperty(navigator, 'geolocation', { configurable: true, value: watch });
+    });
+    afterEach(() => { delete navigator.geolocation; });
+
+    it('começa a procurar o sinal ao tocar e mostra o estado na contagem', async () => {
+      h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+      render(<RunFeedPage />);
+      await screen.findByText('Corrida da manhã');
+      expect(watch.watchPosition).not.toHaveBeenCalled(); // só na contagem: ficar na tela não liga o GPS
+      fireEvent.click(screen.getByRole('button', { name: '▶ Começar corrida' }));
+      expect(watch.watchPosition).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/Procurando GPS/)).toBeTruthy();
+    });
+
+    it('cancelar a contagem solta o GPS', async () => {
+      h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+      render(<RunFeedPage />);
+      await screen.findByText('Corrida da manhã');
+      fireEvent.click(screen.getByRole('button', { name: '▶ Começar corrida' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+      expect(watch.clearWatch).toHaveBeenCalledWith(5);
+    });
+
+    it('com o GPS desligado na aba Gravar a contagem não liga o GPS', async () => {
+      localStorage.setItem('eafit_run_gps', 'off');
+      h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+      render(<RunFeedPage />);
+      await screen.findByText('Corrida da manhã');
+      fireEvent.click(screen.getByRole('button', { name: '▶ Começar corrida' }));
+      expect(watch.watchPosition).not.toHaveBeenCalled();
+      expect(screen.queryByText(/Procurando GPS/)).toBeNull();
+    });
+  });
+
   it('cancelar a contagem do botão rápido não inicia nada', async () => {
     h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
     render(<RunFeedPage />);
