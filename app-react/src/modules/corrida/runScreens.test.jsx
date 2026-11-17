@@ -218,6 +218,13 @@ describe('correr de novo (fantasma)', () => {
     expect(getLiveRun().ghost).toMatchObject({ id: 'fast', duration_s: 1500 });
   });
 
+  it('no histórico: a linha da corrida já mostra o clima, sem abrir', async () => {
+    h.fetchRuns.mockResolvedValue([{ ...past('slow', 1800, -2300000), weather: { t: 24, w: 12, h: 60, c: 0 } }, past('fast', 1500, -2300050)]);
+    render(<RunHistoryPage />);
+    await screen.findByRole('button', { name: /Parque lento/ });
+    expect(screen.getAllByText('☀️ 24°C')).toHaveLength(1); // só a corrida que tem clima
+  });
+
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
     h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
     render(<RunHistoryPage />);

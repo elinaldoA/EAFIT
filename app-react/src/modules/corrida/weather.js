@@ -111,3 +111,12 @@ export function weatherAdvice(weather) {
   if (w.t <= 8) return t('🧥 Frio: aqueça bem e use camadas de roupa.');
   return '';
 }
+
+// Versão curta para a lista: "☀️ 24°C" (em inglês, °F); '' sem clima.
+export function weatherShort(weather) {
+  const w = cleanWeather(weather);
+  if (!w) return '';
+  const kind = LABEL[weatherKind(w.c)];
+  const unit = lang === 'en' ? `${Math.round(w.t * 9 / 5 + 32)}°F` : `${w.t}°C`;
+  return `${kind ? `${kind[0]} ` : '🌡️ '}${unit}`;
+}

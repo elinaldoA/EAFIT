@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fetchWeatherAt, weatherAdvice, startPosition, weatherUrl, cleanWeather, parseWeather, fetchWeather, weatherKind, weatherText } from './weather';
+import { weatherShort, fetchWeatherAt, weatherAdvice, startPosition, weatherUrl, cleanWeather, parseWeather, fetchWeather, weatherKind, weatherText } from './weather';
 
 const route = [[[-2350123, -4660456, 0], [-2350000, -4660000, 60]]];
 
@@ -61,5 +61,12 @@ describe('clima da corrida', () => {
     expect(weatherAdvice({ t: 20, c: 63 })).toMatch(/Chuva/);
     expect(weatherAdvice({ t: 20, w: 40, c: 0 })).toMatch(/Vento forte/);
     expect(weatherAdvice({ t: 5, c: 0 })).toMatch(/Frio/);
+  });
+
+  it('resumo curto para a lista do histórico', () => {
+    expect(weatherShort({ t: 24, w: 12, h: 60, c: 0 })).toBe('☀️ 24°C');
+    expect(weatherShort({ t: 18, c: 61 })).toBe('🌧️ 18°C');
+    expect(weatherShort({ t: 18 })).toBe('🌡️ 18°C');
+    expect(weatherShort(null)).toBe('');
   });
 });

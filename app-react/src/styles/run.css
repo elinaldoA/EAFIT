@@ -610,3 +610,5 @@
 .run-record__weather { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; }
 .run-record__weather p { margin: 0; font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
 .run-record__advice { color: var(--warning); font-weight: 700; }
+
+.run-item__wx { white-space: nowrap; }

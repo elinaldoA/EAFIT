@@ -19,7 +19,7 @@ import RunPhotoShare from './RunPhotoShare';
 import EditRunForm from './EditRunForm';
 import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
-import { weatherText } from './weather';
+import { weatherText, weatherShort } from './weather';
 import { hrText } from './heartRate';
 import { gradeAdjustedPace } from './elevation';
 import HrZones from './HrZones';
@@ -83,6 +83,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
           <strong>{runTitle(run)}{run.visibility === 'privado' ? ' 🔒' : ''}</strong>
           <span>{t('{v1} km', { v1: formatKm(run.distance_m) })}</span>
           <span>{formatClock(run.duration_s)} · {formatPace(pace)}/km</span>
+          {run.weather && weatherShort(run.weather) && <span className="run-item__wx">{weatherShort(run.weather)}</span>}
         </span>
         <span className="run-item__kind">{SESSION_TITLE[run.kind] || SESSION_TITLE.livre}{run.pending ? ' · 📶' : ''}</span>
       </button>
