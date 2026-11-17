@@ -19,6 +19,7 @@ export const AREA_LABELS = {
   content: 'Conteúdo (exercícios, desafios, ligas, landing)',
   settings: 'Configurações do app',
   marketing: 'Marketing (redes sociais: publicar e responder)',
+  admins: 'Sistema (administradores, termos e limpeza de dados)',
 };
 
 export const ROLE_AREAS = {

@@ -95,7 +95,7 @@ function AppShell() {
             <Route path="/automacoes" element={<AutoNotifications />} />
             <Route path="/configuracoes" element={<RequireArea area="settings"><AppSettings /></RequireArea>} />
             <Route path="/experimentos" element={<Experiments />} />
-            <Route path="/saude" element={<SystemHealth />} />
+            <Route path="/saude" element={<RequireArea area="admins"><SystemHealth /></RequireArea>} />
             <Route path="/custos" element={<Costs />} />
             <Route path="/relatorios" element={<DigestAlerts />} />
             <Route path="/segmentos" element={<RequireArea area="segments"><Segments /></RequireArea>} />
@@ -112,7 +112,7 @@ function AppShell() {
             <Route path="/marketing-contas" element={<RequireArea area="marketing"><MarketingAccounts /></RequireArea>} />
             <Route path="/conteudo" element={<RequireArea area="content"><Templates /></RequireArea>} />
             <Route path="/auditoria" element={<AuditLog />} />
-            <Route path="/erros" element={<ClientErrors />} />
+            <Route path="/erros" element={<RequireArea area="admins"><ClientErrors /></RequireArea>} />
             <Route path="/seguranca" element={<Safety />} />
             <Route path="/personais" element={<RequireArea area="users"><Trainers /></RequireArea>} />
             <Route path="/verificacao-cref" element={<TrainerVerification />} />
@@ -125,14 +125,14 @@ function AppShell() {
             <Route path="/ranking-conteudo" element={<ContentRanking />} />
             <Route path="/desafios" element={<RequireArea area="content"><Challenges /></RequireArea>} />
             <Route path="/ligas" element={<RequireArea area="content"><Leagues /></RequireArea>} />
-            <Route path="/amigos" element={<SocialFeed />} />
-            <Route path="/moderacao" element={<Moderation />} />
+            <Route path="/amigos" element={<RequireArea area="users"><SocialFeed /></RequireArea>} />
+            <Route path="/moderacao" element={<RequireArea area="users"><Moderation /></RequireArea>} />
             <Route path="/bem-estar" element={<Wellbeing />} />
             <Route path="/conquistas" element={<Achievements />} />
-            <Route path="/admins" element={<Admins />} />
+            <Route path="/admins" element={<RequireArea area="admins"><Admins /></RequireArea>} />
             <Route path="/exclusoes" element={<AccountDeletions />} />
-            <Route path="/lgpd" element={<PrivacyRequests />} />
-            <Route path="/termos" element={<Legal />} />
+            <Route path="/lgpd" element={<RequireArea area="users"><PrivacyRequests /></RequireArea>} />
+            <Route path="/termos" element={<RequireArea area="admins"><Legal /></RequireArea>} />
             <Route path="/perfil" element={<Profile />} />
           </Route>
         </Route>
