@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import { Link } from 'react-router-dom';
 import {
   TITLE_MAX, DURATION_OPTIONS, STATUS_LABEL, STATUS_BADGE,
@@ -118,6 +119,7 @@ function OfficialChallengeForm({ onCreated }) {
 }
 
 export default function Challenges() {
+  const confirm = useConfirm();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -138,7 +140,7 @@ export default function Challenges() {
   useEffect(() => { load(); }, [load]);
 
   async function handleDelete(c) {
-    if (!window.confirm(`Apagar o desafio "${c.title}"? Ele some do app de todos os ${c.members} participante(s).`)) return;
+    if (!await confirm({ title: 'Apagar desafio', message: `Apagar o desafio "${c.title}"? Ele some do app de todos os ${c.members} participante(s). Não dá para desfazer.`, confirmLabel: 'Apagar desafio', danger: true })) return;
     setMsg('');
     try {
       await deleteChallenge(c.id);

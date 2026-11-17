@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/supabase';
 import { useAdminAuth } from '../context/useAdminAuth';
@@ -122,6 +123,7 @@ export default function Profile() {
 }
 
 function SecurityCard({ updatePassword }) {
+  const ask = useConfirm();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
@@ -151,7 +153,7 @@ function SecurityCard({ updatePassword }) {
   }
 
   async function handleSignOutOthers() {
-    if (!window.confirm('Encerrar o acesso ao painel em todos os outros navegadores e celulares? Este continua conectado.')) return;
+    if (!await ask({ title: 'Encerrar outras sessões', message: 'Encerrar o acesso ao painel em todos os outros navegadores e celulares? Este continua conectado.', confirmLabel: 'Encerrar sessões', danger: true })) return;
     setOthersMsg('');
     try {
       const { error } = await db.auth.signOut({ scope: 'others' });

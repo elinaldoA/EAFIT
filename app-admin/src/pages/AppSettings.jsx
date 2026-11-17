@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
   KNOWN_FLAGS, SPORT_MODULES, toggleModule, fetchModuleStats, fetchModuleBetaUsers, setModuleBeta, searchBetaCandidates, BANNER_LEVELS, fetchSettings, saveSetting, isValidLink, isValidMovedUrl, nextBannerVersion, bannerWindow,
@@ -15,6 +16,7 @@ function SectionMessage({ msg }) {
 }
 
 function MaintenanceCard({ saved, adminId, onSaved }) {
+  const confirm = useConfirm();
   const [draft, setDraft] = useState(saved);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -22,7 +24,7 @@ function MaintenanceCard({ saved, adminId, onSaved }) {
 
   async function handleSave() {
     if (draft.enabled && !saved.enabled
-      && !window.confirm('Ligar a manutenção BLOQUEIA o app para todos os usuários, inclusive quem está usando agora. Continuar?')) return;
+      && !await confirm({ title: 'Ligar a manutenção', message: 'Ligar a manutenção BLOQUEIA o app para todos os usuários, inclusive quem está usando agora.', confirmLabel: 'Ligar manutenção', danger: true, requireText: 'MANUTENÇÃO' })) return;
     setBusy(true);
     setMsg('');
     try {
@@ -349,6 +351,7 @@ function FlagsCard({ saved, adminId, onSaved }) {
 }
 
 function MovedCard({ saved, adminId, onSaved }) {
+  const confirm = useConfirm();
   const [draft, setDraft] = useState(saved);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -358,7 +361,7 @@ function MovedCard({ saved, adminId, onSaved }) {
 
   async function handleSave() {
     if (draft.enabled && !saved.enabled
-      && !window.confirm('Ligar a mudança de endereço BLOQUEIA o app para quem abrir por qualquer endereço diferente do novo. Confirme que o endereço novo já está no ar. Continuar?')) return;
+      && !await confirm({ title: 'Ligar a mudança de endereço', message: 'Ligar a mudança de endereço BLOQUEIA o app para quem abrir por qualquer endereço diferente do novo. Confirme que o endereço novo já está no ar.', confirmLabel: 'Ligar mudança', danger: true, requireText: 'MUDAR' })) return;
     setBusy(true);
     setMsg('');
     try {

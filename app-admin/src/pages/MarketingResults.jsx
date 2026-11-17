@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import {
   KIND_LABEL, MEDIUM_LABEL, PLATFORMS, averageByKind, conversionRate, deleteExternalPost, editExternalPost, fetchAccounts, fetchContentConversion, fetchConversion, fetchMetrics,
   postScore, refreshMetrics,
@@ -29,6 +30,7 @@ const firstLine = text => (String(text || '').split('\n')[0] || '(sem legenda)')
 // Marketing → Resultados: o que cada post rendeu (alcance, curtidas, salvos) e
 // quantos cadastros vieram de cada tipo de link das redes.
 export default function MarketingResults() {
+  const confirm = useConfirm();
   const [days, setDays] = useState(30);
   const [platform, setPlatform] = useState('');
   const [sort, setSort] = useState('score');
@@ -84,7 +86,7 @@ export default function MarketingResults() {
 
   async function handleDelete(m) {
     const net = PLATFORMS[accountById.get(m.account_id)?.platform]?.label || 'a rede';
-    if (!window.confirm(`Excluir este post no ${net}? Ele some da rede, com curtidas e comentários. Não dá para desfazer.`)) return;
+    if (!await confirm({ title: 'Excluir post na rede', message: `Excluir este post no ${net}? Ele some da rede, com curtidas e comentários. Não dá para desfazer.`, confirmLabel: 'Excluir post', danger: true })) return;
     const key = `${m.account_id}-${m.external_id}`;
     setRowBusy(key);
     setMsg('');

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import { Link } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import Loading from '../components/Loading';
@@ -254,6 +255,7 @@ function Results({ survey }) {
 
 // Acompanhamento → Pesquisas.
 export default function Surveys() {
+  const confirm = useConfirm();
   const [items, setItems] = useState(null);
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(null);
@@ -272,7 +274,7 @@ export default function Surveys() {
   }
 
   async function remove(s) {
-    if (!window.confirm(`Apagar a pesquisa "${s.question}" e as ${s.answers} resposta(s)?`)) return;
+    if (!await confirm({ title: 'Apagar pesquisa', message: `Apagar a pesquisa "${s.question}" e as ${s.answers} resposta(s)? Não dá para desfazer.`, confirmLabel: 'Apagar pesquisa', danger: true })) return;
     try { await deleteSurvey(s.id); if (openId === s.id) setOpenId(null); load(); } catch (err) { setError(err.message); }
   }
 

@@ -192,9 +192,13 @@ export default function UserDetail() {
   // tornar personal sozinho.
   async function handleToggleTrainer() {
     const makeTrainer = !trainerCode;
-    if (!window.confirm(makeTrainer
-      ? 'Liberar o ambiente de Personal Trainer para este usuário?'
-      : 'Remover o acesso de Personal Trainer? Os vínculos com alunos serão encerrados.')) return;
+    if (!await confirm({
+      title: makeTrainer ? 'Liberar Personal Trainer' : 'Remover Personal Trainer',
+      message: makeTrainer
+        ? 'Liberar o ambiente de Personal Trainer para este usuário?'
+        : 'Remover o acesso de Personal Trainer? Os vínculos com alunos serão encerrados.',
+      confirmLabel: makeTrainer ? 'Liberar' : 'Remover acesso', danger: !makeTrainer,
+    })) return;
     setBusy(true);
     setActionMsg('');
     try {
