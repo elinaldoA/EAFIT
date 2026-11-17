@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { todayDate } from '../../data/treinoData';
 import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
@@ -14,7 +14,8 @@ import RunComments from './RunComments';
 import PushPrompt from '../../components/PushPrompt';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
-import { weatherText } from './weather';
+import { weatherText, weatherShort, startPosition } from './weather';
+import { useStartWeather } from './useStartWeather';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import StartCountdown from './StartCountdown';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
@@ -126,6 +127,13 @@ export default function RunFeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [mine, setMine] = useState([]);
   const [countdown, setCountdown] = useState(false);
+  // Clima no botão de começar: sem GPS aqui, usa o lugar onde a última corrida começou
+  // (onde a pessoa costuma correr). Só a posição arredondada a 0,1° vai ao serviço de clima.
+  const homePos = useMemo(() => {
+    for (const r of mine) { const p = startPosition(r.route); if (p) return p; }
+    return null;
+  }, [mine]);
+  const weather = useStartWeather(homePos);
   const feedRef = useRef(null);
   feedRef.current = feed;
 
@@ -223,6 +231,7 @@ export default function RunFeedPage() {
       {feed.length > 0 && (
         <button type="button" className="btn btn--primary btn--full run-quick" onClick={quickStart}>
           {t('▶ Começar corrida')}
+          {weather && <span className="run-quick__wx">{weatherShort(weather)}</span>}
         </button>
       )}
       <WeekSummary runs={mine} />

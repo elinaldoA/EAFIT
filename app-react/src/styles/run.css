@@ -640,3 +640,6 @@
 .run-live__battery-actions { display: inline-flex; gap: var(--sp-1); }
 
 .run-quick { min-height: 52px; font-size: var(--fs-lg); }
+
+.run-quick { display: flex; align-items: center; justify-content: center; gap: var(--sp-3); }
+.run-quick__wx { font-weight: 600; padding-left: var(--sp-3); border-left: 1px solid color-mix(in srgb, var(--on-primary) 45%, transparent); font-variant-numeric: tabular-nums; }

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, act, waitFor, within } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
   user: { id: 'u1', user_metadata: {} },
@@ -564,6 +564,29 @@ describe('RunFeedPage (aba Início)', () => {
     fireEvent.click(screen.getByRole('button', { name: '▶ Começar corrida' }));
     fireEvent.click(screen.getByRole('button', { name: 'Começar já' }));
     expect(getLiveRun().gps).toBe(false);
+  });
+
+  it('o botão rápido mostra o clima do lugar onde a última corrida começou', async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ current: { temperature_2m: 26, weather_code: 0 } }) });
+    vi.stubGlobal('fetch', fetcher);
+    h.fetchRuns.mockResolvedValue([{ client_id: 'x', run_date: '2026-10-01', started_at: '2026-10-01T10:00:00.000Z', duration_s: 1800, distance_m: 5000, splits: [], kind: 'livre', route: [[[-2350000, -4660000, 0], [-2350050, -4659950, 60]]] }]);
+    h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+    render(<RunFeedPage />);
+    const btn = await screen.findByRole('button', { name: /▶ Começar corrida/ });
+    expect(await within(btn).findByText('☀️ 26°C')).toBeTruthy();
+    expect(fetcher.mock.calls[0][0]).toContain('latitude=-23.5&longitude=-46.6');
+  });
+
+  it('sem corrida anterior com percurso o botão fica sem clima, sem pedir o clima', async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal('fetch', fetcher);
+    h.fetchRuns.mockResolvedValue([]);
+    h.fetchRunFeed.mockResolvedValueOnce([friendRun]);
+    render(<RunFeedPage />);
+    const btn = await screen.findByRole('button', { name: '▶ Começar corrida' });
+    await act(async () => {});
+    expect(btn.textContent).toBe('▶ Começar corrida');
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it('cancelar a contagem do botão rápido não inicia nada', async () => {
