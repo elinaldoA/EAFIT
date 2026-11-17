@@ -8,6 +8,7 @@ import { STEP_LABEL, formatAmount, describeWorkout, normalizeWorkout } from './w
 import { decimal, paceSeconds, formatPace, formatClock, formatKm } from './runs';
 import { SESSION_TITLE, describeSession } from './program';
 import RouteDrawing from './RouteDrawing';
+import { buzz } from './haptics';
 import { t } from '../../lib/i18n';
 
 // Tela da corrida em andamento: tempo, distância, ritmo, GPS, treino guiado e os botões (LiveRunHost.jsx).
@@ -177,8 +178,8 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
 
       <div className="run-live__actions">
         {paused
-          ? <button type="button" className="btn btn--primary run-live__btn" onClick={() => updateLiveRun(r => resumeRun(r))}>{t('▶ Continuar')}</button>
-          : <button type="button" className="btn btn--ghost run-live__btn" onClick={() => updateLiveRun(r => pauseRun(r))}>{t('⏸ Pausar')}</button>}
+          ? <button type="button" className="btn btn--primary run-live__btn" onClick={() => { buzz('resume'); updateLiveRun(r => resumeRun(r)); }}>{t('▶ Continuar')}</button>
+          : <button type="button" className="btn btn--ghost run-live__btn" onClick={() => { buzz('pause'); updateLiveRun(r => pauseRun(r)); }}>{t('⏸ Pausar')}</button>}
         <button type="button" className="btn btn--primary run-live__btn" onClick={onFinish}>{t('🏁 Finalizar')}</button>
       </div>
     </div>

@@ -600,3 +600,8 @@
 /* Perfil de corrida: campos numéricos das metas e da frequência máxima */
 .input.run-num { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; min-height: 56px; }
 .run-num::placeholder { font-weight: 400; }
+
+/* Botões da tela ao vivo: dedos suados e em movimento pedem alvo maior */
+.run-live__toggles .btn--sm,
+.run-live__step .btn--sm,
+.run-live__extra .btn--sm { min-height: var(--tap-min); padding: 10px 16px; font-size: var(--fs-sm); }
