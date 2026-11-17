@@ -44,6 +44,26 @@ export function startRun({ gps = false, session = null, ghost = null } = {}, now
 
 export const isPaused = s => !!s && s.segmentStart == null;
 
+// ---- Parcial manual (lap) ---------------------------------------------------
+// A pessoa toca em "Parcial" quando quer marcar uma volta (além dos km). Cada
+// marca guarda o tempo e a distância acumulados; o tempo e a distância da volta
+// saem da diferença para a marca anterior (lapsOf). Só vale durante a corrida:
+// não vai para o servidor.
+export function addLap(s, now = Date.now()) {
+  if (!s || isPaused(s)) return s;
+  const laps = [...(s.laps || []), { ms: elapsedMs(s, now), m: s.meters }];
+  return { ...s, laps, updatedAt: now };
+}
+
+// [{ n, seconds, meters }] de cada volta, na ordem; a última marca até agora não conta como volta.
+export function lapsOf(s) {
+  const marks = s?.laps || [];
+  return marks.map((mark, i) => {
+    const prev = marks[i - 1] || { ms: 0, m: 0 };
+    return { n: i + 1, seconds: Math.round((mark.ms - prev.ms) / 1000), meters: Math.max(0, mark.m - prev.m) };
+  });
+}
+
 export function elapsedMs(s, now = Date.now()) {
   if (!s) return 0;
   return s.activeMs + (s.segmentStart != null ? Math.max(0, now - s.segmentStart) : 0);

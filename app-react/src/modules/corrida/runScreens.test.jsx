@@ -134,6 +134,32 @@ describe('LiveRunHost', () => {
   });
 });
 
+describe('LiveRunHost: parcial manual', () => {
+  it('o botão marca a volta, mostra na lista e fala o tempo e a distância', async () => {
+    const t0 = Date.now() - 250_000;
+    let r = startRun({ gps: true }, t0);
+    r = setDistance(r, 900, t0 + 240_000);
+    act(() => { setLiveRun({ ...r, updatedAt: Date.now() }); });
+    markRunSeen(r);
+    render(<LiveRunHost />);
+    expect(screen.queryByLabelText('Parciais marcadas')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '⏱ Marcar parcial' }));
+    const list = await screen.findByLabelText('Parciais marcadas');
+    expect(within(list).getByText(/Parcial 1: 4:1\d · 0,90 km/)).toBeTruthy();
+    expect(getLiveRun().laps).toHaveLength(1);
+    expect(speak).toHaveBeenCalledWith(expect.stringMatching(/^Parcial 1\. 4 minutos e 1\d segundos\. 0,90 quilômetro/), { queue: true });
+    fireEvent.click(screen.getByRole('button', { name: '⏱ Marcar parcial' }));
+    expect(getLiveRun().laps).toHaveLength(2);
+  });
+
+  it('com a corrida pausada não há botão de parcial', () => {
+    act(() => { setLiveRun(startRun({ gps: false }, Date.now() - 5000)); });
+    render(<LiveRunHost />);
+    fireEvent.click(screen.getByRole('button', { name: /Pausar/ }));
+    expect(screen.queryByRole('button', { name: '⏱ Marcar parcial' })).toBeNull();
+  });
+});
+
 describe('LiveRunHost: bateria', () => {
   const battery = (level, charging = false) => {
     const ls = {};

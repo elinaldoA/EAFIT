@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { gpsStatusText } from './gpsStatus';
-import { elapsedMs, isPaused, pauseRun, resumeRun, splitsOf, updateLiveRun, isPersistFailing } from './liveRun';
+import { elapsedMs, isPaused, pauseRun, resumeRun, splitsOf, updateLiveRun, isPersistFailing, addLap, lapsOf } from './liveRun';
 import { elevationGain } from './elevation';
 import { hrSupported } from './heartRate';
 import GhostBar from './GhostBar';
@@ -9,6 +9,7 @@ import { decimal, paceSeconds, formatPace, formatClock, formatKm } from './runs'
 import { SESSION_TITLE, describeSession } from './program';
 import RouteDrawing from './RouteDrawing';
 import { buzz } from './haptics';
+import { speak } from '../../lib/voice';
 import { startPosition, weatherShort, weatherDetail } from './weather';
 import { useStartWeather } from './useStartWeather';
 import { batteryState, batteryMessage, nudgeMessage } from './battery';
@@ -55,6 +56,18 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
   const splits = splitsOf(run.kmMarks);
   const lastSplit = splits.length ? splits[splits.length - 1] : null;
   const [dark, setDark] = useState(false);
+  const laps = lapsOf(run);
+  // Marca uma volta agora: vibra e, com a voz ligada, diz o tempo e a distância da volta.
+  function markLap() {
+    const next = addLap(run);
+    if (next === run) return;
+    updateLiveRun(r => addLap(r));
+    buzz('resume');
+    if (voiceOn) {
+      const lap = lapsOf(next).at(-1);
+      speak(t('Parcial {v1}. {v2} minutos e {v3} segundos. {v4} quilômetro(s).', { v1: lap.n, v2: Math.floor(lap.seconds / 60), v3: lap.seconds % 60, v4: formatKm(lap.meters) }), { queue: true });
+    }
+  }
   // Clima de onde a corrida começou (só com GPS: precisa do percurso); busca de novo a cada 20 min.
   const firstPos = run.gps ? startPosition(run.route) : null;
   const weather = useStartWeather(firstPos);
@@ -201,6 +214,18 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
             <li key={splits.length - 3 + i}>{t('Km {v1}', { v1: Math.max(1, splits.length - 2) + i })}: {formatPace(sec)}</li>
           ))}
         </ol>
+      )}
+
+      {laps.length > 0 && (
+        <ol className="run-live__splits run-live__laps" aria-label={t('Parciais marcadas')}>
+          {laps.slice(-3).map(l => (
+            <li key={l.n}>{t('Parcial {v1}', { v1: l.n })}: {formatClock(l.seconds)} · {t('{v1} km', { v1: formatKm(l.meters) })}</li>
+          ))}
+        </ol>
+      )}
+
+      {!paused && (
+        <button type="button" className="btn btn--outline btn--full run-live__lap" onClick={markLap}>{t('⏱ Marcar parcial')}</button>
       )}
 
       <div className="run-live__actions">

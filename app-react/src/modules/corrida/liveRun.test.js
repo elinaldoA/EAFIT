@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   startRun, pauseRun, resumeRun, elapsedMs, isPaused, setDistance, splitsOf, finishRun,
   getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS, isPersistFailing, restoreLiveRun, setLiveRunMirror, MIRROR_EVERY_MS,
-  autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps,
+  autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps, addLap, lapsOf,
 } from './liveRun';
 
 const T0 = new Date(2026, 10, 5, 7, 0, 0).getTime();
@@ -267,5 +267,34 @@ describe('subida por km na corrida ao vivo', () => {
     const old = { ...startRun({ gps: true }, T0), kmMarks: [300_000], meters: 1100 };
     const s = setDistance(old, 2100, T0 + 600_000);
     expect(s.kmElev).toHaveLength(2);
+  });
+});
+
+describe('parcial manual (lap)', () => {
+  it('cada marca guarda o tempo e a distância; a volta é a diferença para a anterior', () => {
+    let s = startRun({ gps: true }, T0);
+    s = setDistance(s, 800, T0 + 240_000);
+    s = addLap(s, T0 + 240_000);
+    s = setDistance(s, 1700, T0 + 500_000);
+    s = addLap(s, T0 + 500_000);
+    expect(lapsOf(s)).toEqual([
+      { n: 1, seconds: 240, meters: 800 },
+      { n: 2, seconds: 260, meters: 900 },
+    ]);
+  });
+
+  it('não marca com a corrida pausada e a pausa não entra no tempo da volta', () => {
+    let s = startRun({ gps: false }, T0);
+    s = pauseRun(s, T0 + 60_000);
+    expect(addLap(s, T0 + 90_000)).toBe(s); // pausada: nada muda
+    s = resumeRun(s, T0 + 120_000); // 60 s parado
+    s = addLap(s, T0 + 180_000); // 60 s + 60 s correndo
+    expect(lapsOf(s)[0].seconds).toBe(120);
+  });
+
+  it('corrida sem marcas ou antiga (sem o campo) não tem voltas', () => {
+    expect(lapsOf(startRun({}, T0))).toEqual([]);
+    expect(lapsOf(null)).toEqual([]);
+    expect(addLap(null)).toBeNull();
   });
 });
