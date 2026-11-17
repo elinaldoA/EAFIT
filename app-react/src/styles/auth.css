@@ -76,7 +76,7 @@
   text-decoration: none;
 }
 .auth-logo__more:hover { text-decoration: underline; }
-.auth-logo__more:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: var(--r-xs); }
+.auth-logo__more:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; border-radius: var(--r-xs); }
 
 .auth-invite {
   margin-top: 10px;
@@ -253,7 +253,7 @@ h1.auth-logo__name { margin: 0; }
 .auth-tabs__tab:focus-visible,
 .auth-form__link:focus-visible,
 .password-input__toggle:focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--focus-outline);
   outline-offset: 2px;
 }
 

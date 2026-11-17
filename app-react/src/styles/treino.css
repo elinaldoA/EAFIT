@@ -753,7 +753,7 @@
 .first-steps__label { display: flex; flex-direction: column; }
 .first-steps__label small { color: var(--text-muted); font-size: var(--fs-xs); }
 .first-steps__item--done .first-steps__label { text-decoration: line-through; color: var(--text-muted); }
-.first-steps__close:focus-visible, .first-steps__item > button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.first-steps__close:focus-visible, .first-steps__item > button:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
 
 /* ── Check-in diário ── */
 .checkin {

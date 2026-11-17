@@ -17,6 +17,8 @@
   /* Cor de destaque usada como cor de TEXTO. No escuro é o próprio --primary;
      no claro é escurecida (fim do arquivo): laranja sobre branco fica em ~2,8:1. */
   --primary-text: var(--primary);
+  /* Contorno de foco do teclado (--focus-ring, abaixo, é a sombra): no escuro o laranja claro (≥ 6:1); no claro, o laranja escurecido (≥ 4:1). */
+  --focus-outline: var(--primary-h);
   /* Laranja mais saturado, só para as telas de descanso (chama atenção a distância) */
   --rest-accent:  #ff6a00;
   --rest-accent-glow: rgba(255,106,0,.42);
@@ -87,6 +89,7 @@
   --text-dim:     #71717a;
   --primary-glow: rgba(249,115,22,.12);
   --primary-text: #c2410c;
+  --focus-outline: var(--primary-text);
   --success:      #16a34a;
   --warning:      #d97706;
   --error:        #dc2626;

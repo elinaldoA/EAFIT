@@ -317,7 +317,7 @@
 
 /* ---- Mapa em tela cheia (RouteDrawing.jsx) ---- */
 .run-map--tap { cursor: zoom-in; }
-.run-map--tap:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.run-map--tap:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
 .run-map-full {
   position: fixed;
   inset: 0;

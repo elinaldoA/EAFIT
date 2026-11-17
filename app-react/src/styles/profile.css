@@ -373,7 +373,7 @@ button.profile-section__title {
   border: 2px solid var(--border); border-radius: var(--radius-md, 12px);
 }
 .sport-card:hover { border-color: var(--primary); }
-.sport-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.sport-card:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
 .sport-card--on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--surface)); }
 .sport-card__icon { font-size: 28px; line-height: 1; }
 .sport-card__name { font-size: 16px; }

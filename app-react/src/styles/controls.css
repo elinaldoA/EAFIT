@@ -136,7 +136,7 @@
 
 /* Foco visível só na navegação por teclado (não aparece no toque). */
 :where(button, a, input, select, textarea, [role="button"]):focus-visible {
-  outline: 2px solid var(--primary);
+  outline: 2px solid var(--focus-outline);
   outline-offset: 2px;
 }
 
