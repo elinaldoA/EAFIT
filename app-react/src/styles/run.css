@@ -299,9 +299,11 @@
   border-radius: var(--r-md);
 }
 .run-challenge--done { border-color: var(--success); }
-.run-challenge__icon { font-size: 1.8rem; text-align: center; }
+.run-challenge__icon { font-size: 2.5rem; text-align: center; }
 .run-challenge__main { display: flex; flex-direction: column; gap: 6px; }
-.run-challenge__meta { font-size: var(--fs-xs); color: var(--text-muted); }
+.run-challenge__meta { font-size: var(--fs-lg); font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.run-challenge__main strong { font-size: var(--fs-lg); }
+.run-challenge .run-live__bar { height: 12px; }
 
 /* ---- Aba Você ---- */
 .run-periods { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); margin-bottom: var(--sp-3); }
@@ -463,9 +465,9 @@
 
 /* Medalhas (aba Desafios) */
 .run-medals { display: flex; flex-direction: column; gap: var(--sp-3); }
-.run-medals__label { font-size: var(--fs-sm); font-weight: 700; }
+.run-medals__label { font-size: var(--fs-lg); font-weight: 700; }
 .run-medals__list { margin: var(--sp-1) 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.run-medal { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); font-size: var(--fs-sm); }
+.run-medal { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); font-size: var(--fs-lg); }
 
 /* Importar GPX (GpxImport.jsx) */
 .run-gpx__file { display: none; }
@@ -484,7 +486,7 @@
 
 /* Meta por prova */
 .run-race { display: grid; gap: 8px; margin-top: 12px; }
-.run-race__count { margin: 0; font-size: var(--fs-lg, 1.1rem); font-weight: 700; }
+.run-race__count { margin: 0; font-size: var(--fs-xl); font-weight: 700; }
 .run-race__advice { display: grid; gap: 6px; justify-items: start; }
 
 /* Aba Você: carga da semana, tendência e conquistas */
@@ -499,8 +501,8 @@
 .run-badge--on { opacity: 1; border-color: var(--primary); }
 .run-badge__icon { grid-row: span 2; font-size: 1.5rem; filter: grayscale(1); }
 .run-badge--on .run-badge__icon { filter: none; }
-.run-badge__title { font-size: 13px; font-weight: 700; line-height: 1.2; }
-.run-badge__state { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.run-badge__title { font-size: 15px; font-weight: 700; line-height: 1.2; }
+.run-badge__state { font-size: 14px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .run-badge--on .run-badge__state { color: var(--primary-text); font-weight: 600; }
 .run-badge__bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: rgba(128,128,128,.25); margin-top: 6px; overflow: hidden; }
 .run-badge__bar > span { display: block; height: 100%; background: var(--primary); }
@@ -508,7 +510,8 @@
 /* Metas de km (semana, mês, ano) */
 .run-goals { gap: var(--sp-3); }
 .run-goal__head { display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
-.run-goal__head span { color: var(--text-muted); font-size: 13px; }
+.run-goal__head span { color: var(--text-muted); font-size: var(--fs-lg); }
+.run-goal__head strong { font-size: var(--fs-lg); }
 .run-goal__bar { height: 8px; border-radius: 4px; background: rgba(128,128,128,.25); overflow: hidden; margin: 6px 0 2px; }
 .run-goal__bar > span { display: block; height: 100%; background: var(--primary); }
 
@@ -571,3 +574,7 @@
 }
 .run-countdown__n { font-size: 9rem; font-weight: 800; line-height: 1; color: var(--primary); }
 .run-countdown__actions { display: flex; gap: var(--sp-3); }
+
+/* Ranking de km da semana entre amigos */
+.run-ranking .challenge__row { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; padding: var(--sp-2) 8px; }
+.run-ranking .challenge__row strong { font-size: var(--fs-xl); }
