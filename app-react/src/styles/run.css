@@ -30,14 +30,14 @@
 .run-live__clock {
   margin: var(--sp-4) 0 0;
   text-align: center;
-  font-size: clamp(4.5rem, 24vw, 7.5rem);
+  font-size: clamp(4rem, 21vw, 6.5rem);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   line-height: 1;
   color: var(--text);
 }
 .run-live__clock--paused { color: var(--text-dim); }
-.run-live__clock--small { font-size: clamp(3.5rem, 18vw, 5rem); margin: 0; }
+.run-live__clock--small { font-size: clamp(3rem, 14vw, 3.75rem); margin: 0; }
 .run-live__paused { text-align: center; color: var(--warning); font-weight: 700; text-transform: uppercase; font-size: var(--fs-sm); }
 .run-live__paused--auto { text-transform: none; }
 .run-live__toggles { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-1); }
@@ -66,7 +66,7 @@
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
 }
-.run-live__value { font-size: clamp(1.75rem, 8.5vw, 2.5rem); line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.run-live__value { font-size: clamp(1.5rem, 7vw, 1.875rem); line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums; }
 .run-live__label { font-size: var(--fs-sm); color: var(--text-muted); text-align: center; }
 
 .run-live__target { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); color: var(--text-muted); }
@@ -146,23 +146,23 @@
 .run-records { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); }
 @media (max-width: 380px) { .run-records { grid-template-columns: repeat(2, 1fr); } }
 
-.run-stats .stat-card__value { font-size: clamp(1.5rem, 7vw, 2rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.run-stats .stat-card__value { font-size: clamp(1.375rem, 6vw, 1.75rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .run-stats .stat-card__label { font-size: var(--fs-sm); }
-.run-records.run-stats .stat-card__value { font-size: clamp(1.125rem, 5vw, 1.5rem); }
-.run-item__main strong { font-size: var(--fs-xl); }
-.run-item__date { font-size: var(--fs-lg); font-weight: 700; }
+.run-records.run-stats .stat-card__value { font-size: clamp(1rem, 4.5vw, 1.25rem); }
+.run-item__main strong { font-size: var(--fs-lg); }
+.run-item__date { font-size: var(--fs-base); font-weight: 700; }
 
 .run-weeks { flex-direction: row; align-items: flex-end; justify-content: space-between; height: 170px; gap: 4px; }
 .run-weeks__col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; }
 .run-weeks__bar { width: 70%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--primary); }
-.run-weeks__value, .run-weeks__label { font-size: 12px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.run-weeks__value, .run-weeks__label { font-size: 11px; color: var(--text-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 .run-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
 .run-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
 .run-item__head {
   width: 100%;
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 60px 1fr auto;
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-3);
@@ -173,9 +173,9 @@
 }
 .run-item__date { color: var(--text-muted); }
 .run-item__main { display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
-.run-item__main span { font-size: var(--fs-lg); color: var(--text-muted); }
+.run-item__main span { font-size: var(--fs-base); color: var(--text-muted); }
 .run-item__kind { font-size: var(--fs-sm); color: var(--primary-text); font-weight: 700; text-align: right; }
-.run-item__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-lg); }
+.run-item__body { display: flex; flex-direction: column; gap: var(--sp-2); padding: 0 var(--sp-3) var(--sp-3); font-size: var(--fs-base); }
 .run-item__body p { margin: 0; }
 .run-item__edit { display: flex; flex-direction: column; gap: var(--sp-2); }
 .run-item__notes { color: var(--text-muted); white-space: pre-wrap; }
@@ -206,8 +206,8 @@
 }
 .run-route__casing { fill: none; stroke: var(--bg); stroke-opacity: .55; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
 .run-route__line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
-.run-route__km circle { fill: var(--surface); stroke: var(--text); stroke-width: 1.5; r: 11px; }
-.run-route__km text { fill: var(--text); font-size: 12px; font-weight: 800; }
+.run-route__km circle { fill: var(--surface); stroke: var(--text); stroke-width: 1.5; r: 9.5px; }
+.run-route__km text { fill: var(--text); font-size: 10.5px; font-weight: 800; }
 .run-map__legend {
   position: absolute; left: 4px; bottom: 3px;
   display: inline-flex; align-items: center; gap: 3px;
@@ -223,7 +223,7 @@
 /* ---- Aba Gravar ---- */
 .run-record { align-items: center; text-align: center; gap: var(--sp-3); }
 .run-record__week { display: flex; gap: var(--sp-5); font-size: var(--fs-sm); color: var(--text-muted); }
-.run-record__week strong { color: var(--text); font-size: 1.75rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.run-record__week strong { color: var(--text); font-size: 1.375rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .run-record__start {
   width: 168px;
   height: 168px;
@@ -270,7 +270,7 @@
 .run-card__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
 .run-card__stats div { display: flex; flex-direction: column; }
 .run-card__stats span { font-size: var(--fs-sm); color: var(--text-muted); }
-.run-card__stats strong { font-size: clamp(1.25rem, 6vw, 1.75rem); font-variant-numeric: tabular-nums; }
+.run-card__stats strong { font-size: clamp(1.125rem, 5vw, 1.5rem); font-variant-numeric: tabular-nums; }
 .run-card__foot { display: flex; justify-content: flex-start; gap: var(--sp-2); }
 .run-card__kudos {
   min-height: var(--tap-min);
@@ -299,11 +299,11 @@
   border-radius: var(--r-md);
 }
 .run-challenge--done { border-color: var(--success); }
-.run-challenge__icon { font-size: 2.5rem; text-align: center; }
+.run-challenge__icon { font-size: 2.1rem; text-align: center; }
 .run-challenge__main { display: flex; flex-direction: column; gap: 6px; }
-.run-challenge__meta { font-size: var(--fs-lg); font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.run-challenge__main strong { font-size: var(--fs-lg); }
-.run-challenge .run-live__bar { height: 12px; }
+.run-challenge__meta { font-size: var(--fs-md); font-weight: 700; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.run-challenge__main strong { font-size: var(--fs-base); }
+.run-challenge .run-live__bar { height: 10px; }
 
 /* ---- Aba Você ---- */
 .run-periods { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); margin-bottom: var(--sp-3); }
@@ -313,7 +313,7 @@
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
 }
 .run-periods__item span { font-size: var(--fs-sm); color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
-.run-periods__item strong { font-size: clamp(1.5rem, 7vw, 2rem); color: var(--primary-text); font-variant-numeric: tabular-nums; }
+.run-periods__item strong { font-size: clamp(1.375rem, 6vw, 1.625rem); color: var(--primary-text); font-variant-numeric: tabular-nums; }
 .run-periods__item small { font-size: var(--fs-sm); color: var(--text-muted); }
 
 /* ---- Zonas de privacidade (aba Você) ---- */
@@ -342,8 +342,8 @@
 .run-map--full:active { cursor: grabbing; }
 .run-map--full .run-route__line { stroke-width: 5; }
 .run-map--full .run-route__casing { stroke-width: 9; }
-.run-map--full .run-route__km circle { r: 14px; }
-.run-map--full .run-route__km text { font-size: 15px; }
+.run-map--full .run-route__km circle { r: 12.5px; }
+.run-map--full .run-route__km text { font-size: 13.5px; }
 .run-map--full .run-map__legend,
 .run-map--full .run-map__credit {
   bottom: calc(10px + env(safe-area-inset-bottom, 0px));
@@ -387,7 +387,7 @@
 
 /* Ritmo por km em barras (SplitBars.jsx) */
 .run-splits { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
-.run-splits__row { display: grid; grid-template-columns: 2ch 1fr 5ch; align-items: center; gap: var(--sp-2); font-size: var(--fs-lg); }
+.run-splits__row { display: grid; grid-template-columns: 2ch 1fr 5ch; align-items: center; gap: var(--sp-2); font-size: var(--fs-base); }
 .run-splits__km { color: var(--text-dim); text-align: right; }
 .run-splits__track { height: 10px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
 .run-splits__bar { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--primary) 55%, transparent); }
@@ -396,20 +396,20 @@
 .run-splits__pace { text-align: right; }
 
 /* Subida e cadência (ao vivo, fim e histórico) */
-.run-live__extra { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-1) var(--sp-4); color: var(--text-muted); font-size: var(--fs-lg); }
+.run-live__extra { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-1) var(--sp-4); color: var(--text-muted); font-size: var(--fs-base); }
 .run-item__extra { justify-content: flex-start; }
 
 /* Tênis (Shoes.jsx) */
 .run-shoes { margin: 0 0 var(--sp-2); padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
 .run-shoe { display: flex; flex-direction: column; gap: var(--sp-2); }
-.run-shoe__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-xl); }
+.run-shoe__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-lg); }
 .run-shoe__head span { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.run-shoe__bar { height: 12px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
+.run-shoe__bar { height: 10px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
 .run-shoe__bar span { display: block; height: 100%; background: var(--success); border-radius: inherit; }
 .run-shoe--warn .run-shoe__bar span { background: var(--warning); }
 .run-shoe--over .run-shoe__bar span { background: var(--error); }
 .run-shoe--retired { opacity: .6; }
-.run-shoe__warn { margin: 0; font-size: var(--fs-lg); color: var(--warning); }
+.run-shoe__warn { margin: 0; font-size: var(--fs-base); color: var(--warning); }
 .run-shoe--over .run-shoe__warn { color: var(--error); }
 .run-shoe__actions { display: flex; gap: var(--sp-2); }
 
@@ -425,7 +425,7 @@
   background: var(--surface);
 }
 .run-live__step-label { grid-column: 1; font-weight: 800; text-transform: uppercase; font-size: var(--fs-sm); letter-spacing: .04em; }
-.run-live__step-left { grid-column: 1; font-size: 2.75rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.run-live__step-left { grid-column: 1; font-size: 2.375rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .run-live__step-next { grid-column: 1; color: var(--text-muted); font-size: var(--fs-sm); }
 .run-live__step .btn { grid-column: 2; grid-row: 1 / span 3; }
 .run-live__step--work { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 14%, var(--surface)); }
@@ -436,7 +436,7 @@
 .run-live__step--done { display: block; text-align: center; font-weight: 700; color: var(--success); }
 
 .run-live__pace { display: flex; justify-content: center; align-items: baseline; gap: var(--sp-3); font-size: var(--fs-sm); color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.run-live__pace strong { font-size: 1.75rem; color: var(--text); }
+.run-live__pace strong { font-size: 1.4rem; color: var(--text); }
 .run-live__pace--ok strong { color: var(--success); }
 .run-live__pace--slow strong,
 .run-live__pace--fast strong { color: var(--warning); }
@@ -458,22 +458,22 @@
 /* Resumo da semana passada (aba Início) */
 .run-summary { display: flex; flex-direction: column; gap: 2px; }
 .run-summary__label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; color: var(--primary-text); font-weight: 800; }
-.run-summary strong { font-size: var(--fs-xl); }
+.run-summary strong { font-size: 1.15rem; }
 .run-summary__meta { color: var(--text-muted); font-size: var(--fs-sm); }
 .run-summary__up { color: var(--success); }
 .run-summary__down { color: var(--text-muted); }
 
 /* Medalhas (aba Desafios) */
 .run-medals { display: flex; flex-direction: column; gap: var(--sp-3); }
-.run-medals__label { font-size: var(--fs-lg); font-weight: 700; }
+.run-medals__label { font-size: var(--fs-base); font-weight: 700; }
 .run-medals__list { margin: var(--sp-1) 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.run-medal { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); font-size: var(--fs-lg); }
+.run-medal { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); font-size: var(--fs-lg); }
 
 /* Importar GPX (GpxImport.jsx) */
 .run-gpx__file { display: none; }
 .run-gpx__summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); text-align: center; }
 .run-gpx__summary span { display: block; font-size: var(--fs-xs); color: var(--text-muted); }
-.run-gpx__summary strong { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; }
+.run-gpx__summary strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 
 /* Clubes de corrida */
 .run-club { border-top: 1px solid var(--border); padding: 10px 0; }
@@ -486,13 +486,13 @@
 
 /* Meta por prova */
 .run-race { display: grid; gap: 8px; margin-top: 12px; }
-.run-race__count { margin: 0; font-size: var(--fs-xl); font-weight: 700; }
+.run-race__count { margin: 0; font-size: 1.15rem; font-weight: 700; }
 .run-race__advice { display: grid; gap: 6px; justify-items: start; }
 
 /* Aba Você: carga da semana, tendência e conquistas */
 .run-load__numbers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); text-align: center; }
-.run-load__numbers strong { display: block; font-size: clamp(1.5rem, 7vw, 2rem); font-variant-numeric: tabular-nums; }
-.run-load__numbers small { color: var(--text-muted); font-size: 13px; }
+.run-load__numbers strong { display: block; font-size: clamp(1.375rem, 6vw, 1.625rem); font-variant-numeric: tabular-nums; }
+.run-load__numbers small { color: var(--text-muted); font-size: 12px; }
 .run-load__msg { margin: var(--sp-2) 0 0; font-weight: 600; }
 .run-load--high { border-color: var(--warning, #e0a100); }
 .run-trend { margin: var(--sp-2) 0 0; font-size: 13px; }
@@ -501,8 +501,8 @@
 .run-badge--on { opacity: 1; border-color: var(--primary); }
 .run-badge__icon { grid-row: span 2; font-size: 1.5rem; filter: grayscale(1); }
 .run-badge--on .run-badge__icon { filter: none; }
-.run-badge__title { font-size: 15px; font-weight: 700; line-height: 1.2; }
-.run-badge__state { font-size: 14px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.run-badge__title { font-size: 14px; font-weight: 700; line-height: 1.2; }
+.run-badge__state { font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .run-badge--on .run-badge__state { color: var(--primary-text); font-weight: 600; }
 .run-badge__bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: rgba(128,128,128,.25); margin-top: 6px; overflow: hidden; }
 .run-badge__bar > span { display: block; height: 100%; background: var(--primary); }
@@ -510,18 +510,18 @@
 /* Metas de km (semana, mês, ano) */
 .run-goals { gap: var(--sp-3); }
 .run-goal__head { display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
-.run-goal__head span { color: var(--text-muted); font-size: var(--fs-lg); }
+.run-goal__head span { color: var(--text-muted); font-size: var(--fs-md); }
 
 .run-goal__bar { height: 8px; border-radius: 4px; background: rgba(128,128,128,.25); overflow: hidden; margin: 6px 0 2px; }
 .run-goal__bar > span { display: block; height: 100%; background: var(--primary); }
 
 /* Fantasma (correr de novo contra uma corrida anterior) */
-.run-live__ghost-result { margin: var(--sp-2) 0; text-align: center; font-weight: 700; font-size: var(--fs-xl); }
+.run-live__ghost-result { margin: var(--sp-2) 0; text-align: center; font-weight: 700; font-size: 1.15rem; }
 
 /* Colunas largas do ritmo por km: resultado dos tiros e subida/descida por km */
 .run-splits--wide .run-splits__row { grid-template-columns: 2ch 1fr auto; }
 .run-splits--elev .run-splits__row { grid-template-columns: 2ch 1fr 4.5ch auto; }
-.run-splits__elev { min-width: 9ch; text-align: right; color: var(--text-muted); font-size: 14px; white-space: nowrap; }
+.run-splits__elev { min-width: 9ch; text-align: right; color: var(--text-muted); font-size: 13px; white-space: nowrap; }
 .run-route { display: flex; gap: var(--sp-3); align-items: center; }
 .run-route__map { flex: 0 0 96px; }
 .run-route__info { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sm); min-width: 0; }
@@ -541,8 +541,8 @@
 .run-zones__seg--3 { background: #f0c030; }
 .run-zones__seg--4 { background: #f08a24; }
 .run-zones__seg--5 { background: #d9453b; }
-.run-zones__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-lg); }
-.run-zones__list li { display: grid; grid-template-columns: 12px 1fr auto 5.5rem; gap: var(--sp-2); align-items: center; }
+.run-zones__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-base); }
+.run-zones__list li { display: grid; grid-template-columns: 12px 1fr auto 5rem; gap: var(--sp-2); align-items: center; }
 .run-zones__list small { text-align: right; opacity: .7; }
 .run-zones__dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
@@ -552,8 +552,8 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2);
   background: #000; color: #5c5c5c; font-family: inherit;
 }
-.run-live__dark-clock { font-size: clamp(5rem, 28vw, 8rem); font-weight: 700; font-variant-numeric: tabular-nums; }
-.run-live__dark-km { font-size: clamp(2.5rem, 14vw, 4rem); font-variant-numeric: tabular-nums; }
+.run-live__dark-clock { font-size: clamp(4.5rem, 22vw, 6rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+.run-live__dark-km { font-size: clamp(2.125rem, 10vw, 2.75rem); font-variant-numeric: tabular-nums; }
 .run-live__dark-hint { font-size: var(--fs-sm); color: #3a3a3a; }
 
 .run-trendbars { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
@@ -576,29 +576,29 @@
 .run-countdown__actions { display: flex; gap: var(--sp-3); }
 
 /* Ranking de km da semana entre amigos */
-.run-ranking .challenge__row { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; padding: var(--sp-2) 8px; }
-.run-ranking .challenge__row strong { font-size: var(--fs-xl); }
+.run-ranking .challenge__row { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; padding: var(--sp-2) 8px; }
+.run-ranking .challenge__row strong { font-size: var(--fs-lg); }
 
 /* Amigos do EAFIT Run */
-.run-friends .friends__me { font-size: var(--fs-lg); }
-.run-friends .friends__code { font-size: 1.75rem; }
+.run-friends .friends__me { font-size: var(--fs-base); }
+.run-friends .friends__code { font-size: 1.4rem; }
 .run-friends .friends__label { font-size: var(--fs-sm); font-weight: 700; }
-.run-friends .friends__row { font-size: var(--fs-xl); padding: var(--sp-2) 0; }
+.run-friends .friends__row { font-size: var(--fs-lg); padding: var(--sp-2) 0; }
 .run-friends .friends__manage,
-.run-friends .friends__privacy { font-size: var(--fs-lg); }
+.run-friends .friends__privacy { font-size: var(--fs-base); }
 
 /* Clubes: nome, membros, código, meta do mês e hints com números */
-.run-club__head strong { font-size: var(--fs-xl); }
-.run-club__head .run-challenge__meta { font-size: var(--fs-lg); }
-.run-club .friends__me { font-size: var(--fs-lg); }
-.run-club .friends__code { font-size: 1.75rem; }
-.run-goal__head strong { font-size: var(--fs-xl); }
-.run-goal__head span { font-size: var(--fs-xl); font-weight: 700; color: var(--text); }
-.run-goal__bar { height: 12px; border-radius: 6px; }
-.run-goal .profile-field__hint { font-size: var(--fs-lg); }
+.run-club__head strong { font-size: var(--fs-lg); }
+.run-club__head .run-challenge__meta { font-size: var(--fs-md); }
+.run-club .friends__me { font-size: var(--fs-base); }
+.run-club .friends__code { font-size: 1.4rem; }
+.run-goal__head strong { font-size: var(--fs-lg); }
+.run-goal__head span { font-size: var(--fs-lg); font-weight: 700; color: var(--text); }
+.run-goal__bar { height: 10px; border-radius: 6px; }
+.run-goal .profile-field__hint { font-size: var(--fs-base); }
 
 /* Perfil de corrida: campos numéricos das metas e da frequência máxima */
-.input.run-num { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; min-height: 56px; }
+.input.run-num { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; min-height: 48px; }
 .run-num::placeholder { font-weight: 400; }
 
 /* Botões da tela ao vivo: dedos suados e em movimento pedem alvo maior */
@@ -608,5 +608,5 @@
 
 /* Clima antes de começar */
 .run-record__weather { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; }
-.run-record__weather p { margin: 0; font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.run-record__weather p { margin: 0; font-size: var(--fs-md); font-variant-numeric: tabular-nums; }
 .run-record__advice { color: var(--warning); font-weight: 700; }
