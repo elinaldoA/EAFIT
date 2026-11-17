@@ -628,3 +628,5 @@
 .run-wx__row--best { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent); }
 .run-wx__name small { color: var(--text-muted); margin-left: 4px; }
 .run-wx__runs { color: var(--text-muted); font-size: var(--fs-md); }
+
+.run-periods__share { align-self: flex-start; margin: calc(var(--sp-1) * -1) 0 var(--sp-3); }

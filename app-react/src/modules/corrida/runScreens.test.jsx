@@ -25,7 +25,7 @@ vi.mock('../../hooks/useWakeLock', () => ({ useWakeLock: () => {} }));
 vi.mock('../../hooks/useBackToClose', () => ({ useBackToClose: () => {} }));
 vi.mock('../../lib/voice', () => ({ speak: vi.fn(), cancelSpeech: vi.fn() }));
 vi.mock('../../lib/tracking', () => ({ trackEvent: vi.fn() }));
-vi.mock('./runShareCard', () => ({ renderRunCard: vi.fn(async () => 'blob'), shareRunCard: vi.fn(async () => 'shared') }));
+vi.mock('./runShareCard', () => ({ renderRunCard: vi.fn(async () => 'blob'), shareRunCard: vi.fn(async () => 'shared'), renderRunSummaryCard: vi.fn(async () => 'blob'), shareRunSummary: vi.fn(async () => 'shared') }));
 vi.mock('./runs', async (orig) => ({
   ...(await orig()),
   saveRun: (...a) => h.saveRun(...a),
@@ -50,7 +50,7 @@ import LiveRunHost from './LiveRunHost';
 import RunHomePage from './RunHomePage';
 import RunHistoryPage from './RunHistoryPage';
 import RunFeedPage from './RunFeedPage';
-import { shareRunCard } from './runShareCard';
+import { shareRunCard, shareRunSummary } from './runShareCard';
 import { todayDate } from '../../data/treinoData';
 import RunChallengesPage from './RunChallengesPage';
 import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint } from './liveRun';
@@ -297,6 +297,19 @@ describe('correr de novo (fantasma)', () => {
     expect(document.querySelectorAll('.run-wx__row')).toHaveLength(3);
     expect(document.querySelectorAll('.run-wx__row--best')).toHaveLength(1);
     expect(document.querySelector('.run-wx__row--best').textContent).toContain('Ameno');
+  });
+
+  it('na aba Você: compartilha o cartão do mês só quando há corrida no mês', async () => {
+    h.fetchRuns.mockResolvedValue([{ ...past('a', 1800, -2300000), run_date: todayDate() }]);
+    const first = render(<RunHistoryPage />);
+    const btn = await screen.findByRole('button', { name: '📤 Compartilhar meu mês' });
+    await act(async () => { fireEvent.click(btn); });
+    expect(shareRunSummary).toHaveBeenCalledTimes(1);
+    first.unmount();
+    h.fetchRuns.mockResolvedValue([{ ...past('b', 1800, -2300000), run_date: '2020-01-01' }]);
+    render(<RunHistoryPage />);
+    await screen.findByText('Semana'); // a aba já carregou
+    expect(screen.queryByRole('button', { name: '📤 Compartilhar meu mês' })).toBeNull();
   });
 
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {

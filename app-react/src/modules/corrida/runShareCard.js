@@ -1,10 +1,12 @@
 import { cardKit, coverRect } from '../../lib/shareCard';
 import { myRefCode } from '../../lib/myRef';
 import { trackFeature } from '../../lib/tracking';
-import { t } from '../../lib/i18n';
+import { t, locale } from '../../lib/i18n';
 import { mapView, TILE_SIZE } from './route';
 import { tileSrc } from './mapStyle';
-import { weatherShort, weatherDetail } from './weather';
+import { weatherShort, weatherDetail, tempText } from './weather';
+import { monthSummary } from './runSummary';
+import { weatherBands } from './weatherInsights';
 import { runTitle, paceSeconds, formatPace, formatClock, formatKm } from './runs';
 
 // Card 9:16 de uma corrida para os stories e o status: mapa com o percurso
@@ -117,7 +119,7 @@ function drawBigDistance(ctx, run) {
 }
 
 // Topo: marca + data.
-async function drawBrandBar(ctx, run) {
+async function drawBrandBar(ctx, run, label = t('Corrida')) {
   const size = 84;
   const y = 70;
   const hasLogo = await drawLogo(ctx, PAD_X, y, size);
@@ -133,7 +135,7 @@ async function drawBrandBar(ctx, run) {
   setTracking(ctx, 0);
   ctx.font = `600 24px ${FONT}`;
   ctx.fillStyle = MUTED;
-  ctx.fillText(t('Corrida'), tx, y + 74);
+  ctx.fillText(label, tx, y + 74);
   const when = run.started_at ? new Date(run.started_at) : new Date(`${run.run_date}T12:00:00`);
   ctx.textAlign = 'right';
   ctx.font = `700 26px ${FONT}`;
@@ -332,4 +334,97 @@ export async function shareRunPhoto(run, blob) {
   trackFeature('share_run_photo');
   const text = t('{v1} km de corrida no EAFIT Run 🏃 Corra com a gente: {v2}', { v1: formatKm(run.distance_m), v2: cardUrl(myRefCode()) });
   return shareImageBlob(blob, 'minha-corrida.jpg', t('Minha corrida'), text);
+}
+
+const BAND_ROWS = {
+  frio: () => ['🥶', t('Frio'), `≤ ${tempText(15)}`],
+  ameno: () => ['🌤️', t('Ameno'), `${tempText(16)}–${tempText(27)}`],
+  calor: () => ['🥵', t('Calor'), `≥ ${tempText(28)}`],
+};
+
+// Card 9:16 do mês para os stories: km, corridas, tempo e ritmo médio, com
+// "clima e ritmo" quando há corridas com clima o bastante. Sem mapa nem percurso.
+export async function renderRunSummaryCard(runs, today, refCode = myRefCode()) {
+  const sum = monthSummary(runs, today);
+  if (!sum) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+  drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
+  await drawBrandBar(ctx, { started_at: new Date().toISOString() }, t('Resumo do mês'));
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `800 30px ${FONT}`;
+  setTracking(ctx, 4);
+  ctx.fillText(t('MEU MÊS DE CORRIDA'), PAD_X, 250);
+  setTracking(ctx, 0);
+  const [y, m] = sum.month.split('-').map(Number);
+  const monthName = new Date(y, m - 1, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  ctx.fillStyle = '#ffffff';
+  fitFont(ctx, monthName, CONTENT_W, 76, 900, 44);
+  ctx.fillText(monthName.charAt(0).toUpperCase() + monthName.slice(1), PAD_X, 345);
+
+  // Distância do mês em destaque.
+  drawPanel(ctx, PAD_X, MAP_Y, CONTENT_W, 480, 36);
+  const km = formatKm(sum.meters, 1);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  fitFont(ctx, km, CONTENT_W - 60, 260, 900, 120);
+  ctx.fillText(km, CARD_WIDTH / 2, MAP_Y + 270);
+  ctx.font = `800 50px ${FONT}`;
+  ctx.fillStyle = ORANGE_LIGHT;
+  setTracking(ctx, 6);
+  ctx.fillText(t('KM NO MÊS'), CARD_WIDTH / 2, MAP_Y + 370);
+  setTracking(ctx, 0);
+
+  const gap = 22;
+  const boxW = (CONTENT_W - gap * 2) / 3;
+  const boxY = MAP_Y + 480 + 40;
+  [
+    [String(sum.count), t('corridas')],
+    [formatClock(sum.seconds), t('tempo')],
+    [formatPace(sum.pace), t('ritmo /km')],
+  ].forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: 80, padX: 30, labelSize: 25 }));
+
+  // Clima e ritmo (todas as corridas com clima, não só as do mês).
+  const wx = weatherBands(runs);
+  if (wx) {
+    const top = boxY + 220 + 40;
+    drawPanel(ctx, PAD_X, top, CONTENT_W, 90 + wx.bands.length * 64, 28);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = ORANGE_LIGHT;
+    ctx.font = `800 26px ${FONT}`;
+    setTracking(ctx, 3);
+    ctx.fillText(t('CLIMA E RITMO'), PAD_X + 36, top + 52);
+    setTracking(ctx, 0);
+    wx.bands.forEach((b, i) => {
+      const [icon, name, range] = BAND_ROWS[b.key]();
+      const y0 = top + 112 + i * 64;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = wx.fastest === b.key ? ORANGE_LIGHT : '#ffffff';
+      ctx.font = `700 32px ${FONT}`;
+      ctx.fillText(`${icon} ${name}`, PAD_X + 36, y0);
+      ctx.font = `600 24px ${FONT}`;
+      ctx.fillStyle = MUTED;
+      ctx.fillText(range, PAD_X + 290, y0);
+      ctx.textAlign = 'right';
+      ctx.font = `800 34px ${FONT}`;
+      ctx.fillStyle = wx.fastest === b.key ? ORANGE_LIGHT : '#ffffff';
+      ctx.fillText(b.pace === null ? '–' : `${formatPace(b.pace)}/km`, PAD_X + CONTENT_W - 36, y0);
+    });
+  }
+
+  await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+export async function shareRunSummary(runs, today, prepared) {
+  trackFeature('share_run_summary');
+  const refCode = myRefCode();
+  const blob = (await prepared) || await renderRunSummaryCard(runs, today, refCode);
+  const sum = monthSummary(runs, today);
+  const text = t('{v1} km de corrida neste mês no EAFIT Run 🏃 Corra com a gente: {v2}', { v1: formatKm(sum?.meters || 0, 1), v2: cardUrl(refCode) });
+  return shareImageBlob(blob, 'meu-mes-de-corrida.png', t('Meu mês de corrida'), text);
 }

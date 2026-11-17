@@ -614,4 +614,11 @@ export default {
   '{v1} corridas com clima · média de {v2}': '{v1} runs with weather · average {v2}',
   'Você corre mais rápido na faixa destacada.': 'You run faster in the highlighted range.',
   '{v1} corrida(s)': '{v1} run(s)',
+  'Resumo do mês': 'Month summary',
+  'MEU MÊS DE CORRIDA': 'MY MONTH OF RUNNING',
+  'KM NO MÊS': 'KM THIS MONTH',
+  'CLIMA E RITMO': 'WEATHER AND PACE',
+  '{v1} km de corrida neste mês no EAFIT Run 🏃 Corra com a gente: {v2}': '{v1} km run this month on EAFIT Run 🏃 Run with us: {v2}',
+  'Meu mês de corrida': 'My month of running',
+  '📤 Compartilhar meu mês': '📤 Share my month',
 };

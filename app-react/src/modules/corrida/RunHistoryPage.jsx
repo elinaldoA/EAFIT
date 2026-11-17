@@ -14,8 +14,9 @@ import RunShoes from './Shoes';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
-import { renderRunCard, shareRunCard } from './runShareCard';
+import { renderRunCard, shareRunCard, renderRunSummaryCard, shareRunSummary } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
+import { monthSummary } from './runSummary';
 import { PERIODS, kindsIn, filterRuns, readFilters, writeFilters } from './runFilter';
 import EditRunForm from './EditRunForm';
 import RunInsights from './RunInsights';
@@ -158,6 +159,31 @@ function RunItem({ run, runs, shoe, onDelete }) {
 
 // Aba Você do EAFIT Run: km da semana, do mês e do ano, totais, recordes, km
 // por semana e a lista das suas corridas (inclusive as que ainda estão no aparelho).
+// Cartão do mês para os stories. A imagem começa a ser desenhada no primeiro toque.
+function SummaryShare({ runs, today }) {
+  const toast = useToast();
+  const [sharing, setSharing] = useState(false);
+  const prepared = useRef(null);
+  const prepare = () => { if (!prepared.current) prepared.current = renderRunSummaryCard(runs, today).catch(() => null); };
+  async function handle() {
+    prepare();
+    setSharing(true);
+    try {
+      const result = await shareRunSummary(runs, today, prepared.current);
+      if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
+    } catch (err) {
+      if (err?.name !== 'AbortError') toast(t('⚠️ Não foi possível gerar a imagem'));
+    } finally {
+      setSharing(false);
+    }
+  }
+  return (
+    <button type="button" className="btn btn--outline btn--sm run-periods__share" disabled={sharing} onPointerDown={prepare} onFocus={prepare} onClick={handle}>
+      {sharing ? t('Gerando imagem…') : t('📤 Compartilhar meu mês')}
+    </button>
+  );
+}
+
 export default function RunHistoryPage() {
   const { user } = useAuth();
   const toast = useToast();
@@ -254,6 +280,7 @@ export default function RunHistoryPage() {
           </div>
         ))}
       </div>
+      {monthSummary(runs, today) && <SummaryShare runs={runs} today={today} />}
 
       <div className="dash-card">
         <div className="summary-stats run-stats">
