@@ -37,7 +37,9 @@
   padding: 0 6px;
   background: none;
   border: 0;
-  color: var(--accent, var(--text));
+  /* A cor do texto do aviso (sublinhado marca a ação): 11,7:1 no escuro e 14:1 no
+     claro sobre o fundo do aviso. O laranja do tema ficaria em 4,1:1 no claro. */
+  color: var(--text);
   font: inherit;
   font-weight: 700;
   text-decoration: underline;
