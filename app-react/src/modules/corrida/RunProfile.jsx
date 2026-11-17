@@ -36,7 +36,7 @@ export function RunGoalSection({ meta, updateProfile, toast }) {
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="runWeeklyKm">{t('Quilômetros por semana')}</label>
         <input
-          type="number" id="runWeeklyKm" inputMode="decimal" className="input input--sm" placeholder="20"
+          type="number" id="runWeeklyKm" inputMode="decimal" className="input input--sm run-num" placeholder="20"
           min="1" max="300" step="0.5" value={value} onChange={e => setValue(e.target.value)}
           aria-describedby="runWeeklyKmHint"
         />
@@ -45,14 +45,14 @@ export function RunGoalSection({ meta, updateProfile, toast }) {
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="runMonthlyKm">{t('Quilômetros por mês')}</label>
         <input
-          type="number" id="runMonthlyKm" inputMode="decimal" className="input input--sm" placeholder="80"
+          type="number" id="runMonthlyKm" inputMode="decimal" className="input input--sm run-num" placeholder="80"
           min="1" max={MAX_MONTHLY_KM} step="0.5" value={month} onChange={e => setMonth(e.target.value)}
         />
       </div>
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="runYearlyKm">{t('Quilômetros por ano')}</label>
         <input
-          type="number" id="runYearlyKm" inputMode="numeric" className="input input--sm" placeholder="1000"
+          type="number" id="runYearlyKm" inputMode="numeric" className="input input--sm run-num" placeholder="1000"
           min="1" max={MAX_YEARLY_KM} step="1" value={year} onChange={e => setYear(e.target.value)}
         />
         <p className="profile-field__hint">{t('O progresso das metas de mês e ano aparece na aba Você.')}</p>
@@ -60,7 +60,7 @@ export function RunGoalSection({ meta, updateProfile, toast }) {
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="runHrMax">{t('Frequência cardíaca máxima (bpm)')}</label>
         <input
-          type="number" id="runHrMax" inputMode="numeric" className="input input--sm" placeholder={String(maxHeartRate({ idade: meta?.idade }) ?? 190)}
+          type="number" id="runHrMax" inputMode="numeric" className="input input--sm run-num" placeholder={String(maxHeartRate({ idade: meta?.idade }) ?? 190)}
           min="120" max="230" step="1" value={hrMax} onChange={e => setHrMax(e.target.value)}
         />
         <p className="profile-field__hint">{t('Usada nas zonas de esforço com a cinta cardíaca. Em branco, o app usa 220 menos a sua idade.')}</p>

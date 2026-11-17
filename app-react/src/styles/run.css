@@ -402,14 +402,14 @@
 /* Tênis (Shoes.jsx) */
 .run-shoes { margin: 0 0 var(--sp-2); padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
 .run-shoe { display: flex; flex-direction: column; gap: var(--sp-2); }
-.run-shoe__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-sm); }
+.run-shoe__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-xl); }
 .run-shoe__head span { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.run-shoe__bar { height: 8px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
+.run-shoe__bar { height: 12px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
 .run-shoe__bar span { display: block; height: 100%; background: var(--success); border-radius: inherit; }
 .run-shoe--warn .run-shoe__bar span { background: var(--warning); }
 .run-shoe--over .run-shoe__bar span { background: var(--error); }
 .run-shoe--retired { opacity: .6; }
-.run-shoe__warn { margin: 0; font-size: var(--fs-sm); color: var(--warning); }
+.run-shoe__warn { margin: 0; font-size: var(--fs-lg); color: var(--warning); }
 .run-shoe--over .run-shoe__warn { color: var(--error); }
 .run-shoe__actions { display: flex; gap: var(--sp-2); }
 
@@ -596,3 +596,7 @@
 .run-goal__head span { font-size: var(--fs-xl); font-weight: 700; color: var(--text); }
 .run-goal__bar { height: 12px; border-radius: 6px; }
 .run-goal .profile-field__hint { font-size: var(--fs-lg); }
+
+/* Perfil de corrida: campos numéricos das metas e da frequência máxima */
+.input.run-num { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; min-height: 56px; }
+.run-num::placeholder { font-weight: 400; }
