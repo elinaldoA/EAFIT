@@ -199,8 +199,8 @@
 }
 .run-route__casing { fill: none; stroke: var(--bg); stroke-opacity: .55; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
 .run-route__line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
-.run-route__km circle { fill: var(--surface); stroke: var(--text); stroke-width: 1.5; }
-.run-route__km text { fill: var(--text); font-size: 9px; font-weight: 800; }
+.run-route__km circle { fill: var(--surface); stroke: var(--text); stroke-width: 1.5; r: 11px; }
+.run-route__km text { fill: var(--text); font-size: 12px; font-weight: 800; }
 .run-map__legend {
   position: absolute; left: 4px; bottom: 3px;
   display: inline-flex; align-items: center; gap: 3px;
@@ -333,8 +333,8 @@
 .run-map--full:active { cursor: grabbing; }
 .run-map--full .run-route__line { stroke-width: 5; }
 .run-map--full .run-route__casing { stroke-width: 9; }
-.run-map--full .run-route__km circle { r: 11px; }
-.run-map--full .run-route__km text { font-size: 12px; }
+.run-map--full .run-route__km circle { r: 14px; }
+.run-map--full .run-route__km text { font-size: 15px; }
 .run-map--full .run-map__legend,
 .run-map--full .run-map__credit {
   bottom: calc(10px + env(safe-area-inset-bottom, 0px));
