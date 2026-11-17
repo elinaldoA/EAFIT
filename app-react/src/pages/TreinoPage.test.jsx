@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 
 const { workout, mockToast, deleteChain, surveys, clock, history } = vi.hoisted(() => ({
   surveys: { fetchPendingSurvey: vi.fn() },
@@ -143,51 +143,61 @@ describe('TreinoPage', () => {
       localStorage.setItem('theme', 'dark');
     });
 
-    it('a confirmação diz que as sessões concluídas somem do Histórico e quantas são', () => {
-      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('limpar não pede confirmação e o aviso diz quantos treinos concluídos saíram', () => {
+      const confirm = vi.spyOn(window, 'confirm');
       render(<TreinoPage />);
       fireEvent.click(screen.getByText('Limpar'));
-      expect(confirm).toHaveBeenCalledWith(expect.stringMatching(/também os treinos já concluídos \(1 dia\), inclusive do Histórico/));
+      expect(confirm).not.toHaveBeenCalled();
+      expect(mockToast).toHaveBeenCalledWith('🧹 Semana apagada, inclusive os treinos concluídos (1 dia)', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
     });
 
-    it('sem treino concluído, a pergunta é só sobre checks e cargas', () => {
+    it('sem treino concluído, o aviso fala só de checks e cargas', () => {
       localStorage.removeItem('treino_Segunda');
-      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
       render(<TreinoPage />);
       fireEvent.click(screen.getByText('Limpar'));
-      expect(confirm).toHaveBeenCalledWith('Limpar os checks e as cargas marcados nesta semana? Não dá para desfazer.');
+      expect(mockToast).toHaveBeenCalledWith('🧹 Checks e cargas limpos', 6000, expect.anything());
     });
 
-    it('cancelando a confirmação não apaga nada', () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
+    it('apaga o cache na hora e remove os treinos da semana no servidor só em 6s, ressincronizando', async () => {
       render(<TreinoPage />);
-      fireEvent.click(screen.getByText('Limpar'));
-      expect(localStorage.getItem('treino_Segunda')).toBe('true');
-      expect(deleteChain.in).not.toHaveBeenCalled();
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        fireEvent.click(screen.getByText('Limpar'));
+        expect(localStorage.getItem('treino_Segunda')).toBeNull();
+        expect(localStorage.getItem('set_Supino_1_done')).toBeNull();
+        expect(localStorage.getItem('theme')).toBe('dark');
+        expect(deleteChain.in).not.toHaveBeenCalled();
+        await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+        expect(deleteChain.eq).toHaveBeenCalledWith('user_id', 'u1');
+        expect(deleteChain.in.mock.calls[0][1]).toHaveLength(2);
+        expect(workout.syncNow).toHaveBeenCalled();
+      } finally { vi.useRealTimers(); }
     });
 
-    it('confirmando apaga o cache, remove os treinos da semana no servidor e ressincroniza', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
+    it('Desfazer devolve checks e cargas e o servidor nunca é tocado', async () => {
       render(<TreinoPage />);
-      fireEvent.click(screen.getByText('Limpar'));
-
-      await waitFor(() => expect(mockToast).toHaveBeenCalledWith('🧹 Checks e cargas limpos'));
-      expect(localStorage.getItem('treino_Segunda')).toBeNull();
-      expect(localStorage.getItem('set_Supino_1_done')).toBeNull();
-      expect(localStorage.getItem('theme')).toBe('dark');
-      expect(deleteChain.eq).toHaveBeenCalledWith('user_id', 'u1');
-      expect(deleteChain.in.mock.calls[0][1]).toHaveLength(2);
-      expect(workout.syncNow).toHaveBeenCalled();
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        fireEvent.click(screen.getByText('Limpar'));
+        act(() => { mockToast.mock.calls.at(-1)[2].action.onClick(); });
+        expect(localStorage.getItem('treino_Segunda')).toBe('true');
+        expect(localStorage.getItem('set_Supino_1_done')).toBe('true');
+        await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+        expect(deleteChain.in).not.toHaveBeenCalled();
+        expect(workout.syncNow).not.toHaveBeenCalled();
+      } finally { vi.useRealTimers(); }
     });
 
     it('falha no servidor: limpa só o local e avisa', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       deleteChain.result = { error: new Error('rede') };
       render(<TreinoPage />);
-      fireEvent.click(screen.getByText('Limpar'));
-
-      await waitFor(() => expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('falhou ao sincronizar')));
-      expect(workout.syncNow).not.toHaveBeenCalled();
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        fireEvent.click(screen.getByText('Limpar'));
+        await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+        expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('falhou ao sincronizar'));
+        expect(workout.syncNow).not.toHaveBeenCalled();
+      } finally { vi.useRealTimers(); }
     });
   });
 

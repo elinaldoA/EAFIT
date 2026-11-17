@@ -155,8 +155,7 @@ export default {
   'Conta': 'Account',
 
   // TreinoPage
-  'Apagar o treino desta semana? Isso remove os checks e as cargas e também os treinos já concluídos ({dias}), inclusive do Histórico. Não dá para desfazer.': 'Delete the training from this week? This removes the checks and weights and also the workouts already completed ({dias}), including from History. This cannot be undone.',
-  'Limpar os checks e as cargas marcados nesta semana? Não dá para desfazer.': 'Clear the checks and weights marked this week? This cannot be undone.',
+  '🧹 Semana apagada, inclusive os treinos concluídos ({dias})': '🧹 Week deleted, including completed workouts ({dias})',
   'Limpar a semana': 'Clear the week',
 
   '🧹 Checks e cargas limpos': '🧹 Checks and weights cleared',

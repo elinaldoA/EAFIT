@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { todayName, todayDate } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
@@ -48,6 +49,7 @@ export default function TreinoPage() {
   const loading = syncStatus === 'loading';
   const [_tick, setTick] = useState(0);
   const bump = () => setTick(t => t + 1);
+  const resetRemoval = useDeferredRemoval();
   const [restSession, setRestSession] = useState(null);
   const restKey = useRef(0);
   const [showPlanEditor, setShowPlanEditor] = useState(false);
@@ -153,30 +155,43 @@ export default function TreinoPage() {
     />
   );
 
-  async function handleReset() {
-    // Apaga também as sessões da semana no servidor (somem do Histórico): a pergunta
-    // diz isso e quantos treinos concluídos vão junto, em vez de só "checks e cargas".
+  // Limpa a tela na hora, guardando uma cópia dos checks e cargas; a exclusão no
+  // servidor (sessões da semana, que somem do Histórico, sem volta) só roda em 6s
+  // ou ao sair da tela, a não ser que desfaça (devolve a cópia).
+  function handleReset() {
     const doneDays = activePlanDays.filter(d => isDayDone(d.dia)).length;
-    const question = doneDays > 0
-      ? t('Apagar o treino desta semana? Isso remove os checks e as cargas e também os treinos já concluídos ({dias}), inclusive do Histórico. Não dá para desfazer.', { dias: nDias(doneDays) })
-      : t('Limpar os checks e as cargas marcados nesta semana? Não dá para desfazer.');
-    if (!window.confirm(question)) return;
-    Object.keys(localStorage).forEach(k => {
-      if (['treino_', 'carga_', 'set_', 'warm_', 'hr_'].some(p => k.startsWith(p))) localStorage.removeItem(k);
-    });
+    const isWeekKey = k => ['treino_', 'carga_', 'set_', 'warm_', 'hr_'].some(p => k.startsWith(p));
+    const snapshot = Object.keys(localStorage).filter(isWeekKey).map(k => [k, localStorage.getItem(k)]);
+    snapshot.forEach(([k]) => localStorage.removeItem(k));
     bump();
+    const id = `reset_${Date.now()}`;
     if (user) {
-      try {
-        const dates = activePlanDays.map(d => getDateForWeekday(d.dia));
-        const { error } = await db.from('workouts').delete().eq('user_id', user.id).in('workout_date', dates);
-        if (error) throw error;
-        await syncNow();
-        toast(t('🧹 Checks e cargas limpos'));
-      } catch (err) {
-        console.error('resetWorkouts:', err);
-        toast(t('⚠️ Limpou localmente, mas falhou ao sincronizar com o servidor — pode voltar ao reabrir o app'));
-      }
+      const dates = activePlanDays.map(d => getDateForWeekday(d.dia));
+      resetRemoval.schedule(id, async () => {
+        try {
+          const { error } = await db.from('workouts').delete().eq('user_id', user.id).in('workout_date', dates);
+          if (error) throw error;
+          await syncNow();
+        } catch (err) {
+          console.error('resetWorkouts:', err);
+          toast(t('⚠️ Limpou localmente, mas falhou ao sincronizar com o servidor — pode voltar ao reabrir o app'));
+        }
+      });
     }
+    toast(
+      doneDays > 0 ? t('🧹 Semana apagada, inclusive os treinos concluídos ({dias})', { dias: nDias(doneDays) }) : t('🧹 Checks e cargas limpos'),
+      6000,
+      {
+        action: {
+          label: t('Desfazer'),
+          onClick: () => {
+            resetRemoval.undo(id);
+            snapshot.forEach(([k, v]) => localStorage.setItem(k, v));
+            bump();
+          },
+        },
+      },
+    );
   }
 
   return (
