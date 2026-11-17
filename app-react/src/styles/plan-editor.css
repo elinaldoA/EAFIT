@@ -113,6 +113,21 @@
   color: var(--text-dim);
 }
 
+.plan-row__activate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border: 1px dashed var(--border-2);
+  border-radius: var(--r-md);
+}
+
+.plan-row__activate-actions {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
 .plan-row__successors {
   display: flex;
   gap: var(--sp-2);

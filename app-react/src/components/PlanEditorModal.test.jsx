@@ -132,33 +132,38 @@ describe('PlanEditorModal — planos', () => {
     await waitFor(() => expect(h.refreshPlan).toHaveBeenCalled(), { timeout: 15000 });
   });
 
-  it('ativar pergunta a duração do ciclo e ativa', async () => {
-    vi.spyOn(window, 'prompt').mockReturnValue('8');
+  it('ativar abre a duração do ciclo na própria linha (sem janela do navegador) e ativa', async () => {
+    const prompt = vi.spyOn(window, 'prompt');
     setup();
     await screen.findByDisplayValue('Força');
     fireEvent.click(screen.getByRole('button', { name: 'Ativar' }));
+    fireEvent.change(screen.getByLabelText('Duração do ciclo (semanas)'), { target: { value: '8' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar este plano' }));
     await waitFor(() => expect(h.api.setActivePlan).toHaveBeenCalledWith('u1', 'p2', 8));
+    expect(prompt).not.toHaveBeenCalled();
     expect(h.refreshPlan).toHaveBeenCalled();
     expect(h.toast).toHaveBeenCalledWith('✅ Plano ativado');
   });
 
-  it('ativar sem prazo manda null; cancelar o prompt não faz nada; duração inválida avisa', async () => {
-    const prompt = vi.spyOn(window, 'prompt');
+  it('ativar sem prazo manda null; cancelar não faz nada; duração inválida mostra o erro junto do campo', async () => {
     setup();
     await screen.findByDisplayValue('Força');
-    const ativar = screen.getByRole('button', { name: 'Ativar' });
-
-    prompt.mockReturnValue(null);
-    fireEvent.click(ativar);
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.queryByLabelText('Duração do ciclo (semanas)')).toBeNull();
     expect(h.api.setActivePlan).not.toHaveBeenCalled();
 
-    prompt.mockReturnValue('abc');
-    fireEvent.click(ativar);
-    expect(h.toast).toHaveBeenCalledWith('⚠️ Duração inválida');
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar' }));
+    const campo = screen.getByLabelText('Duração do ciclo (semanas)');
+    fireEvent.change(campo, { target: { value: '99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar este plano' }));
+    expect(screen.getByRole('alert').textContent).toMatch(/de 1 a 52 semanas/);
+    expect(campo.getAttribute('aria-invalid')).toBe('true');
     expect(h.api.setActivePlan).not.toHaveBeenCalled();
 
-    prompt.mockReturnValue('');
-    fireEvent.click(ativar);
+    fireEvent.change(campo, { target: { value: '' } });
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Ativar este plano' }));
     await waitFor(() => expect(h.api.setActivePlan).toHaveBeenCalledWith('u1', 'p2', null));
   });
 

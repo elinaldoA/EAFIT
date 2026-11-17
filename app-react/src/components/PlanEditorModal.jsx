@@ -22,6 +22,27 @@ const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado',
 function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSuccessors, onUpdateProgression }) {
   const [name, setName] = useState(plan.name);
   useEffect(() => { setName(plan.name); }, [plan.name]);
+  // Ativar pergunta a duração do ciclo aqui mesmo (antes era a janelinha do navegador, sem validação).
+  const [activating, setActivating] = useState(false);
+  const [weeks, setWeeks] = useState('');
+  const [weeksError, setWeeksError] = useState('');
+
+  function openActivate() {
+    setWeeks(plan.duration_weeks != null ? String(plan.duration_weeks) : '');
+    setWeeksError('');
+    setActivating(true);
+  }
+
+  function confirmActivate() {
+    const raw = weeks.trim();
+    const n = raw ? Number(raw) : null;
+    if (raw && (!Number.isInteger(n) || n < 1 || n > 52)) {
+      setWeeksError(t('Informe de 1 a 52 semanas, ou deixe em branco para sem prazo.'));
+      return;
+    }
+    setActivating(false);
+    onSetActive(n);
+  }
 
   const daysLeft = plan.end_date ? daysUntil(plan.end_date) : null;
   const otherPlans = allPlans.filter(p => p.id !== plan.id);
@@ -38,10 +59,30 @@ function PlanRow({ plan, allPlans, onSetActive, onRename, onDelete, onUpdateSucc
         {plan.is_active ? (
           <span className="plan-row__badge">{t('Ativo')}</span>
         ) : (
-          <button type="button" className="btn btn--outline btn--sm" onClick={onSetActive}>{t('Ativar')}</button>
+          <button type="button" className="btn btn--outline btn--sm" aria-expanded={activating} onClick={() => (activating ? setActivating(false) : openActivate())}>{t('Ativar')}</button>
         )}
         <button type="button" className="plan-row__del" onClick={onDelete} aria-label={t('Excluir plano')} title={t('Excluir plano')}>🗑️</button>
       </div>
+
+      {activating && !plan.is_active && (
+        <div className="plan-row__activate">
+          <label className="plan-row__successor-field">
+            {t('Duração do ciclo (semanas)')}
+            <input
+              className="input input--sm" type="number" inputMode="numeric" min="1" max="52" autoFocus
+              placeholder={t('Sem prazo')} value={weeks}
+              aria-invalid={weeksError ? 'true' : undefined}
+              onChange={e => { setWeeks(e.target.value); setWeeksError(''); }}
+              onKeyDown={e => { if (e.key === 'Enter') confirmActivate(); }}
+            />
+          </label>
+          {weeksError && <p className="profile-field__hint text-error" role="alert">{weeksError}</p>}
+          <div className="plan-row__activate-actions">
+            <button type="button" className="btn btn--primary btn--sm" onClick={confirmActivate}>{t('Ativar este plano')}</button>
+            <button type="button" className="btn btn--outline btn--sm" onClick={() => setActivating(false)}>{t('Cancelar')}</button>
+          </div>
+        </div>
+      )}
 
       {plan.end_date && (
         <p className="plan-row__cycle">
@@ -250,20 +291,7 @@ export default function PlanEditorModal({ onClose }) {
     }
   }
 
-  async function handleSetActive(planId) {
-    const plan = plans.find(p => p.id === planId);
-    const input = window.prompt(
-      t('Duração deste ciclo em semanas (deixe em branco para sem prazo):'),
-      plan?.duration_weeks ?? ''
-    );
-    if (input === null) return;
-
-    const weeks = input.trim() ? parseInt(input, 10) : null;
-    if (input.trim() && (!Number.isFinite(weeks) || weeks <= 0)) {
-      toast(t('⚠️ Duração inválida'));
-      return;
-    }
-
+  async function handleSetActive(planId, weeks) {
     try {
       await setActivePlan(user.id, planId, weeks);
       await loadPlans(planId);
@@ -421,7 +449,7 @@ export default function PlanEditorModal({ onClose }) {
               {loadingPlans ? <Loading /> : shownPlans.map(p => (
                 <PlanRow
                   key={p.id} plan={p} allPlans={shownPlans}
-                  onSetActive={() => handleSetActive(p.id)}
+                  onSetActive={weeks => handleSetActive(p.id, weeks)}
                   onRename={name => handleRename(p.id, name)}
                   onDelete={() => handleDeletePlan(p.id)}
                   onUpdateSuccessors={patch => handleUpdateSuccessors(p.id, patch)}
