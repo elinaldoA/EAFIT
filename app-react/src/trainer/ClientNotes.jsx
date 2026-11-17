@@ -3,6 +3,7 @@ import { useToast } from '../context/useToast';
 import { fmtDate } from '../lib/utils';
 import { fetchNotes, addNote, deleteNote, friendlyInsightError } from '../lib/trainerInsights';
 
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { t } from '../lib/i18n';
 // Anotações privadas do personal sobre o aluno (lesões, combinados…). O aluno
 // nunca vê isto.
@@ -12,6 +13,7 @@ export default function ClientNotes({ clientId }) {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
 
   const reload = useCallback(() => {
     fetchNotes(clientId).then(setNotes).catch(err => { console.error('fetchNotes:', err); setNotes([]); });
@@ -27,9 +29,16 @@ export default function ClientNotes({ clientId }) {
     finally { setBusy(false); }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm(t('Apagar esta anotação?'))) return;
-    try { await deleteNote(id); reload(); } catch { toast(t('❌ Não foi possível apagar')); }
+  // Some na hora; apaga no servidor em 6s (ou ao sair da tela), a não ser que
+  // desfaça — assim a anotação volta com a data e o texto de antes.
+  function handleDelete(id) {
+    removal.schedule(id, async () => {
+      try { await deleteNote(id); } catch { toast(t('❌ Não foi possível apagar')); }
+      reload();
+    });
+    toast(t('Anotação apagada'), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(id) },
+    });
   }
 
   return (
@@ -43,7 +52,7 @@ export default function ClientNotes({ clientId }) {
         {busy ? t('Salvando…') : t('Salvar anotação')}
       </button>
 
-      {(notes || []).map(n => (
+      {(notes || []).filter(n => !removal.hidden.has(n.id)).map(n => (
         <div className="sent-msg" key={n.id}>
           <div className="sent-msg__head">
             <small>{fmtDate(String(n.at).slice(0, 10))}</small>

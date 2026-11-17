@@ -98,7 +98,7 @@ export default {
   'Recado sobre a meta (opcional)': 'Message about the goal (optional)',
   'Ex: foco em constância neste ciclo': 'E.g. focus on consistency this cycle',
   'Salvar e enviar ao aluno': 'Save and send to the client',
-  'Apagar esta anotação?': 'Delete this note?',
+  'Anotação apagada': 'Note deleted',
   '📝 Anotações privadas': '📝 Private notes',
   'Só você vê. Use para lesões, combinados e observações.': 'Only you can see this. Use it for injuries, agreements and remarks.',
   'Nova anotação': 'New note',
