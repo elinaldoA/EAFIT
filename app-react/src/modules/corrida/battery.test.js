@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { batteryState, batteryMessage, batterySpoken } from './battery';
+import { batteryState, batteryMessage, batterySpoken, batteryReadable } from './battery';
 
 describe('bateria na corrida', () => {
   it('avisa em 20% ou menos e fica crítico em 10% ou menos', () => {
@@ -18,5 +18,12 @@ describe('bateria na corrida', () => {
     expect(batteryMessage('critical', 8)).toMatch(/finalize logo/);
     expect(batterySpoken('low', 18)).toBe('Bateria em 18 por cento.');
     expect(batterySpoken('critical', 8)).toMatch(/Finalize logo/);
+  });
+
+  it('sabe se o navegador deixa ler a bateria', () => {
+    expect(batteryReadable()).toBe(false); // sem getBattery (como no iPhone)
+    navigator.getBattery = () => Promise.resolve({});
+    expect(batteryReadable()).toBe(true);
+    delete navigator.getBattery;
   });
 });

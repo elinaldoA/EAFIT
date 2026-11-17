@@ -4,6 +4,9 @@ import { t } from '../../lib/i18n';
 // (tela escura, voz) ou deixar o celular carregando. Só vale onde o navegador
 // expõe a bateria (Chrome no Android); no iPhone e no Firefox não há aviso.
 
+// O navegador deixa ler a bateria? Não no iPhone (Safari) nem no Firefox.
+export const batteryReadable = () => typeof navigator !== 'undefined' && typeof navigator.getBattery === 'function';
+
 export const LOW_PCT = 20;
 export const CRITICAL_PCT = 10;
 

@@ -5,6 +5,8 @@
 export const VOICE_KEY = 'eafit_run_voice';
 export const AUTOPAUSE_KEY = 'eafit_run_autopause';
 export const GPS_KEY = 'eafit_run_gps';
+// Dica "confira a bateria" antes de começar (só onde o navegador não lê a bateria, ex.: iPhone).
+export const BATTERY_TIP_KEY = 'eafit_run_battery_tip';
 
 export function readPref(key) {
   try { return localStorage.getItem(key) !== 'off'; } catch { return true; }

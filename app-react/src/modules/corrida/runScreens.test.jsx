@@ -420,6 +420,24 @@ describe('RunHomePage (aba Gravar)', () => {
     expect(getLiveRun()).toBeNull();
   });
 
+  it('sem leitura de bateria (iPhone) lembra de conferir a bateria e some com "Entendi" para sempre', () => {
+    const first = render(<RunHomePage />);
+    expect(screen.getByText(/Confira a bateria antes de sair/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Entendi' }));
+    expect(screen.queryByText(/Confira a bateria antes de sair/)).toBeNull();
+    first.unmount();
+    render(<RunHomePage />); // próxima visita
+    expect(screen.queryByText(/Confira a bateria antes de sair/)).toBeNull();
+  });
+
+  it('onde o navegador lê a bateria (Chrome no Android) não mostra a dica, pois o aviso é real', () => {
+    navigator.getBattery = vi.fn().mockResolvedValue({ level: 1, charging: false, addEventListener: () => {}, removeEventListener: () => {} });
+    try {
+      render(<RunHomePage />);
+      expect(screen.queryByText(/Confira a bateria antes de sair/)).toBeNull();
+    } finally { delete navigator.getBattery; }
+  });
+
   it('o programa é opcional: abre a montagem e salva na conta', async () => {
     render(<RunHomePage />);
     expect(screen.queryByText('Monte seu programa de corrida')).toBeNull();

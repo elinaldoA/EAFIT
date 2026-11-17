@@ -28,7 +28,8 @@ import { gpsStatusText } from './gpsStatus';
 import { weatherText, weatherAdvice } from './weather';
 import { useStartWeather } from './useStartWeather';
 import { useLiveRun } from './useLiveRun';
-import { GPS_KEY, readPref, writePref } from './runPrefs';
+import { GPS_KEY, BATTERY_TIP_KEY, readPref, writePref } from './runPrefs';
+import { batteryReadable } from './battery';
 
 import { t } from '../../lib/i18n';
 const WEEKDAYS = [t('Seg'), t('Ter'), t('Qua'), t('Qui'), t('Sex'), t('Sáb'), t('Dom')];
@@ -198,6 +199,8 @@ export default function RunHomePage() {
   const [busy, setBusy] = useState(false);
   const [countdown, setCountdown] = useState(null); // { start } enquanto conta 3-2-1
   const [gps, setGps] = useState(() => readPref(GPS_KEY) && geoSupported());
+  // Onde o app não consegue ler a bateria (iPhone), lembra de conferir antes de sair; some com "Entendi".
+  const [batteryTip, setBatteryTip] = useState(() => readPref(BATTERY_TIP_KEY) && !batteryReadable());
   // Aquece o GPS antes do Começar: o celular leva de segundos a um minuto para
   // achar os satélites, e assim a corrida já começa com sinal. Para quando a
   // corrida começa (a tela ao vivo tem o próprio rastreio).
@@ -322,6 +325,12 @@ export default function RunHomePage() {
           <div className="run-record__weather" role="status">
             <p>{weatherText(weather)}</p>
             {weatherAdvice(weather) && <p className="run-record__advice">{weatherAdvice(weather)}</p>}
+          </div>
+        )}
+        {batteryTip && !live && (
+          <div className="run-record__tip" role="note">
+            <span>{t('🔋 Confira a bateria antes de sair: o GPS gasta bastante e a corrida não continua com o celular desligado.')}</span>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { writePref(BATTERY_TIP_KEY, false); setBatteryTip(false); }}>{t('Entendi')}</button>
           </div>
         )}
         {!gpxOpen && !live && (
