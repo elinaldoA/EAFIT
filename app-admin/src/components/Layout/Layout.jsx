@@ -9,6 +9,7 @@ import { isHidden } from '../../lib/adminAccess';
 import EmptyState from '../EmptyState';
 import Loading from '../Loading';
 import ErrorBoundary from '../ErrorBoundary';
+import IdleSessionGuard from '../IdleSessionGuard';
 
 const COLLAPSED_KEY = 'sidebarCollapsed';
 
@@ -64,6 +65,7 @@ function Shell() {
 
   return (
     <div className="shell">
+      <IdleSessionGuard />
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
       <div className="shell__main">
         <Topbar menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />

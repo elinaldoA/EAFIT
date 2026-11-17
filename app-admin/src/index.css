@@ -1609,3 +1609,7 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 .split__track span:last-child { border-radius: 0 4px 4px 0; }
 .split__track span:only-child { border-radius: 4px; }
 .split .donut__legend { min-width: 0; }
+
+/* Aviso de sessão expirando (IdleSessionGuard) */
+.idle-warning { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .55); }
+.idle-warning__box { max-width: 420px; width: 100%; padding: 20px; border-radius: 12px; background: var(--card, #fff); color: inherit; box-shadow: 0 10px 40px rgba(0, 0, 0, .4); }
