@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {} }));
 
@@ -87,28 +87,50 @@ describe('ClientAppointments', () => {
     await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/no futuro/));
   });
 
-  it('cancelar pede confirmação e recarrega; só aparece em aulas ativas', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('cancelar: só aparece em aulas ativas, marca como cancelada na hora, sem confirmação, e só vai ao servidor em 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     h.api.fetchTrainerAppointments.mockResolvedValue([APPT, { ...APPT, id: 'a2', status: 'cancelled' }, { ...APPT, id: 'a3', status: 'declined' }]);
     render(<ClientAppointments client={CLIENT} />);
     await screen.findAllByText(/Academia/);
     const cancels = screen.getAllByRole('button', { name: 'Cancelar' });
     expect(cancels).toHaveLength(1);
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(cancels[0]);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: 'Cancelar' })).toBeNull();
+      expect(screen.getAllByText('Cancelada')).toHaveLength(2);
+      expect(h.toast).toHaveBeenCalledWith(expect.stringMatching(/^Aula de .* cancelada$/), 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.cancelAppointment).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.cancelAppointment).toHaveBeenCalledWith(expect.objectContaining({ id: 'a1' }));
+    } finally { vi.useRealTimers(); }
+  });
 
-    fireEvent.click(cancels[0]);
-    expect(h.api.cancelAppointment).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
-    fireEvent.click(cancels[0]);
-    await waitFor(() => expect(h.api.cancelAppointment).toHaveBeenCalledWith(expect.objectContaining({ id: 'a1' })));
-    expect(h.toast).toHaveBeenCalledWith('Aula cancelada');
+  it('Desfazer devolve a aula e o aluno nunca é avisado', async () => {
+    render(<ClientAppointments client={CLIENT} />);
+    await screen.findByText(/Academia/);
+    const btn = screen.getByRole('button', { name: 'Cancelar' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: 'Cancelar' })).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.cancelAppointment).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 
   it('erro ao cancelar avisa com toast', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     h.api.cancelAppointment.mockRejectedValue(new Error('not_found'));
     render(<ClientAppointments client={CLIENT} />);
     await screen.findByText(/Academia/);
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    await waitFor(() => expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('❌')));
+    const btn = screen.getByRole('button', { name: 'Cancelar' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.toast).toHaveBeenCalledWith(expect.stringContaining('❌'));
+    } finally { vi.useRealTimers(); }
   });
 });

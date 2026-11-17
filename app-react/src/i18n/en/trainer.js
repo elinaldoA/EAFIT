@@ -54,7 +54,7 @@ export default {
   // ClientAppointments
   'Escolha a data e a hora.': 'Choose the date and time.',
   '📅 Aula marcada. O aluno foi avisado': '📅 Class scheduled. The client was notified',
-  'Cancelar a aula de {v1}?': 'Cancel the class on {v1}?',
+  'Aula de {v1} cancelada': 'Class on {v1} canceled',
   '📅 Aulas com {name}': '📅 Classes with {name}',
   'Nenhuma aula marcada.': 'No classes scheduled.',
   'Marcar nova aula': 'Schedule a new class',

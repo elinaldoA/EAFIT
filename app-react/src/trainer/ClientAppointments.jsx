@@ -5,6 +5,7 @@ import {
   localInputToIso, formatWhen, friendlyAppointmentError,
 } from '../lib/trainerAppointments';
 
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { t } from '../lib/i18n';
 // Aulas marcadas com um aluno: o personal agenda (o aluno recebe notificação e
 // confirma ou recusa no app) e acompanha o status de cada uma.
@@ -17,6 +18,7 @@ export default function ClientAppointments({ client }) {
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
 
   const load = useCallback(() => {
     fetchTrainerAppointments(client.id)
@@ -42,10 +44,17 @@ export default function ClientAppointments({ client }) {
     }
   }
 
-  async function handleCancel(a) {
-    if (!window.confirm(t('Cancelar a aula de {v1}?', { v1: formatWhen(a.starts) }))) return;
-    try { await cancelAppointment(a); toast(t('Aula cancelada')); load(); }
-    catch (err) { toast(`❌ ${friendlyAppointmentError(err)}`); }
+  // A aula já aparece como cancelada; o cancelamento (e o aviso ao aluno) só vão
+  // ao servidor em 6s ou ao sair da tela, a não ser que desfaça. O aluno não
+  // recebe nada de uma aula que voltou.
+  function handleCancel(a) {
+    removal.schedule(a.id, async () => {
+      try { await cancelAppointment(a); } catch (err) { toast(`❌ ${friendlyAppointmentError(err)}`); }
+      load();
+    });
+    toast(t('Aula de {v1} cancelada', { v1: formatWhen(a.starts) }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(a.id) },
+    });
   }
 
   return (
@@ -53,19 +62,22 @@ export default function ClientAppointments({ client }) {
       <div className="dash-card__title">{t('📅 Aulas com {name}', { name: client.name })}</div>
 
       {rows && rows.length === 0 && <p className="dash-empty">{t('Nenhuma aula marcada.')}</p>}
-      {(rows || []).map(a => (
-        <div className="appt" key={a.id}>
-          <div>
-            <strong>{formatWhen(a.starts)}</strong> · {a.duration} min
-            {a.place && <small> · {a.place}</small>}
-            {a.note && <small className="appt__note">{a.note}</small>}
-            <span className={`appt__status appt__status--${a.status}`}>{STATUS_LABEL[a.status]}</span>
+      {(rows || []).map(row => {
+        const a = removal.hidden.has(row.id) ? { ...row, status: 'cancelled' } : row;
+        return (
+          <div className="appt" key={a.id}>
+            <div>
+              <strong>{formatWhen(a.starts)}</strong> · {a.duration} min
+              {a.place && <small> · {a.place}</small>}
+              {a.note && <small className="appt__note">{a.note}</small>}
+              <span className={`appt__status appt__status--${a.status}`}>{STATUS_LABEL[a.status]}</span>
+            </div>
+            {['pending', 'confirmed'].includes(a.status) && (
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleCancel(a)}>{t('Cancelar')}</button>
+            )}
           </div>
-          {['pending', 'confirmed'].includes(a.status) && (
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleCancel(a)}>{t('Cancelar')}</button>
-          )}
-        </div>
-      ))}
+        );
+      })}
 
       <div className="appt-form">
         <span className="profile-field__label">{t('Marcar nova aula')}</span>
