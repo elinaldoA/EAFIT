@@ -50,7 +50,7 @@ import RunHomePage from './RunHomePage';
 import RunHistoryPage from './RunHistoryPage';
 import RunFeedPage from './RunFeedPage';
 import RunChallengesPage from './RunChallengesPage';
-import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache } from './liveRun';
+import { setLiveRun, startRun, setDistance, getLiveRun, resetLiveRunCache, addRoutePoint } from './liveRun';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -59,8 +59,10 @@ beforeEach(() => {
   h.user = { id: 'u1', user_metadata: {} };
   h.shoes = [];
   h.comments = [];
+  // Nenhum teste fala com o Open-Meteo de verdade.
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
 });
-afterEach(() => { cleanup(); act(() => { setLiveRun(null); }); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); act(() => { setLiveRun(null); }); });
 
 describe('LiveRunHost', () => {
   it('sem corrida não mostra nada', () => {
@@ -120,6 +122,23 @@ describe('LiveRunHost', () => {
     expect(getLiveRun()).not.toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Toque de novo para descartar' }));
     expect(getLiveRun()).toBeNull();
+  });
+});
+
+describe('LiveRunHost: clima', () => {
+  it('mostra o clima de onde a corrida começou, com vento e umidade', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ current: { temperature_2m: 24, weather_code: 0, wind_speed_10m: 12, relative_humidity_2m: 60 } }) }));
+    act(() => { setLiveRun(addRoutePoint(startRun({ gps: true, session: null }), -23.5, -46.6)); });
+    render(<LiveRunHost />);
+    expect(await screen.findByText('☀️ 24°C')).toBeTruthy();
+    expect(screen.getByText('vento 12 km/h · umidade 60%')).toBeTruthy();
+  });
+
+  it('sem GPS ou sem internet não mostra clima', async () => {
+    act(() => { setLiveRun(startRun({ gps: false, session: null })); });
+    render(<LiveRunHost />);
+    await act(async () => {});
+    expect(document.querySelector('.run-live__weather')).toBeNull();
   });
 });
 

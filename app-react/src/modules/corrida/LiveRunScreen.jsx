@@ -9,6 +9,8 @@ import { decimal, paceSeconds, formatPace, formatClock, formatKm } from './runs'
 import { SESSION_TITLE, describeSession } from './program';
 import RouteDrawing from './RouteDrawing';
 import { buzz } from './haptics';
+import { startPosition, weatherShort, weatherDetail } from './weather';
+import { useStartWeather } from './useStartWeather';
 import { t } from '../../lib/i18n';
 
 // Tela da corrida em andamento: tempo, distância, ritmo, GPS, treino guiado e os botões (LiveRunHost.jsx).
@@ -52,6 +54,9 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
   const splits = splitsOf(run.kmMarks);
   const lastSplit = splits.length ? splits[splits.length - 1] : null;
   const [dark, setDark] = useState(false);
+  // Clima de onde a corrida começou (só com GPS: precisa do percurso); busca de novo a cada 20 min.
+  const firstPos = run.gps ? startPosition(run.route) : null;
+  const weather = useStartWeather(firstPos);
   const gain = run.gps ? elevationGain(run.elev) : null;
   const s = run.session;
   const target = s?.minutes ? { done: el / 60000, total: s.minutes, label: t('{v1} de {v2} min', { v1: Math.floor(el / 60000), v2: s.minutes }) }
@@ -85,6 +90,12 @@ export default function LiveRunScreen({ run, now, geo, phase, voiceOn, onToggleV
         <strong>{SESSION_TITLE[s?.type || 'livre']}</strong>
         {s && <span>{sessionText(s)}</span>}
       </div>
+      {weather && (
+        <div className="run-live__weather" aria-label={t('Clima')}>
+          <span>{weatherShort(weather)}</span>
+          {weatherDetail(weather) && <span>{weatherDetail(weather)}</span>}
+        </div>
+      )}
 
       <div className={`run-live__clock${paused ? ' run-live__clock--paused' : ''}`} aria-live="off">{formatClock(totalS)}</div>
       {paused && (
