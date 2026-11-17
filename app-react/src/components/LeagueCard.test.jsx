@@ -64,12 +64,24 @@ describe('LeagueCard', () => {
 
   it('mostra o ranking, o mês passado e sai da liga', async () => {
     h.api.fetchMyLeague.mockResolvedValue(MEMBER);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirm = vi.spyOn(window, 'confirm');
     render(<LeagueCard />);
     expect(await screen.findByText(/🥇 Bia/)).toBeTruthy();
     expect(screen.getByText(/Ana\(você\)|Ana \(você\)/)).toBeTruthy();
     expect(screen.getByText(/Mês passado \(09\/2026\): 1º na divisão Bronze/)).toBeTruthy();
     fireEvent.click(screen.getByText('Sair da liga'));
     await waitFor(() => expect(h.api.leaveLeague).toHaveBeenCalled());
+    expect(confirm).not.toHaveBeenCalled();
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('Você saiu da liga', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) })));
+  });
+
+  it('Desfazer do aviso volta para a liga', async () => {
+    h.api.fetchMyLeague.mockResolvedValue(MEMBER);
+    render(<LeagueCard />);
+    fireEvent.click(await screen.findByText('Sair da liga'));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('Você saiu da liga', 6000, expect.anything()));
+    h.toast.mock.calls.at(-1)[2].action.onClick();
+    await waitFor(() => expect(h.api.joinLeague).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(h.toast).toHaveBeenCalledWith('🏅 Você voltou para a liga!'));
   });
 });

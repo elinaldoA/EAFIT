@@ -1016,7 +1016,7 @@ export default {
   'Admins não entram na classificação.': 'Admins are not ranked.',
   'Mês passado ({month}): {position}º na divisão {division}': 'Last month ({month}): #{position} in the {division} division',
   'A divisão de cada mês sai dos dias treinados no mês anterior: Ouro 14+, Prata 8 a 13, Bronze o resto.': 'Each month’s division comes from the days trained the month before: Gold 14+, Silver 8 to 13, Bronze the rest.',
-  'Sair da liga? Você some do ranking deste mês.': 'Leave the league? You will be removed from this month’s ranking.',
+  '🏅 Você voltou para a liga!': '🏅 You are back in the league!',
   'Você saiu da liga': 'You left the league',
   'Sair da liga': 'Leave the league',
   'Liga {division} · {position}º': '{division} league · #{position}',

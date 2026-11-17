@@ -15,9 +15,9 @@ export default function LeagueCard() {
   }, []);
   useEffect(() => { reload(); }, [reload]);
 
-  async function run(fn, msg) {
+  async function run(fn, msg, opts) {
     setBusy(true);
-    try { await fn(); toast(msg); await reload(); } catch { toast(t('Não foi possível concluir. Tente de novo.')); } finally { setBusy(false); }
+    try { await fn(); if (opts) toast(msg, 6000, opts); else toast(msg); await reload(); } catch { toast(t('Não foi possível concluir. Tente de novo.')); } finally { setBusy(false); }
   }
 
   if (!data?.enabled) return null;
@@ -70,7 +70,10 @@ export default function LeagueCard() {
       <p className="challenge__meta">{t('A divisão de cada mês sai dos dias treinados no mês anterior: Ouro 14+, Prata 8 a 13, Bronze o resto.')}</p>
       <div className="challenge__actions">
         <button type="button" className="btn btn--ghost btn--sm" disabled={busy}
-          onClick={() => window.confirm(t('Sair da liga? Você some do ranking deste mês.')) && run(leaveLeague, t('Você saiu da liga'))}>
+          onClick={() => run(leaveLeague, t('Você saiu da liga'), {
+            // Entrar de novo devolve tudo: a divisão sai dos dias treinados, não da participação.
+            action: { label: t('Desfazer'), onClick: () => run(joinLeague, t('🏅 Você voltou para a liga!')) },
+          })}>
           {t('Sair da liga')}
         </button>
       </div>
