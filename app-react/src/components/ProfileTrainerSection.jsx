@@ -9,6 +9,7 @@ import {
   normalizeTrainerCode, friendlyTrainerError, fetchMyTrainer, linkTrainer, unlinkTrainer,
 } from '../lib/trainer';
 
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { t, decimal } from '../lib/i18n';
 // Perfil → Meu personal: o aluno entra com o código do personal (autorizando o
 // acompanhamento) ou encerra o vínculo quando quiser.
@@ -22,6 +23,7 @@ export default function ProfileTrainerSection({ toast, onChange }) {
   const [sharePhotos, setShare] = useState(false);
   // A leitura do servidor pode chegar depois do primeiro toque: não sobrescreve a escolha.
   const shareTouched = useRef(false);
+  const removal = useDeferredRemoval();
 
   useEffect(() => {
     let active = true;
@@ -48,18 +50,26 @@ export default function ProfileTrainerSection({ toast, onChange }) {
     }
   }
 
-  async function handleUnlink() {
-    if (!window.confirm(t('Encerrar o vínculo? Seu personal deixa de ver seus dados.'))) return;
-    setBusy(true);
-    try {
-      await unlinkTrainer();
-      setTrainer(null); onChange?.(null);
-      toast(t('Vínculo encerrado'));
-    } catch {
-      toast(t('❌ Não foi possível encerrar agora'));
-    } finally {
-      setBusy(false);
-    }
+  // O aluno deixa de ver o personal na hora; o vínculo só é encerrado no servidor
+  // em 6s (ou ao sair da tela), a não ser que desfaça. Antes o personal já deixa
+  // de ver os dados do aluno ao ser encerrado, e rever o vínculo exigiria o código dele.
+  function handleUnlink() {
+    const previous = trainer;
+    setTrainer(null); onChange?.(null);
+    removal.schedule('unlink', async () => {
+      try {
+        await unlinkTrainer();
+      } catch {
+        toast(t('❌ Não foi possível encerrar agora'));
+        setTrainer(previous); onChange?.(previous);
+      }
+    });
+    toast(t('Vínculo encerrado'), 6000, {
+      action: {
+        label: t('Desfazer'),
+        onClick: () => { removal.undo('unlink'); setTrainer(previous); onChange?.(previous); },
+      },
+    });
   }
 
   // histórico de recados do personal; abrir esta seção marca tudo como lido

@@ -484,19 +484,53 @@ describe('ProfileTrainerSection', () => {
     expect(screen.getByRole('checkbox').checked).toBe(true);
   });
 
-  it('encerrar vínculo pede confirmação', async () => {
+  it('encerrar vínculo some na hora, sem confirmação, e só encerra no servidor em 6s', async () => {
     h.tr.fetchMyTrainer.mockResolvedValue({ name: 'Carlos' });
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(window, 'confirm');
     const onChange = vi.fn();
     render(<ProfileTrainerSection toast={toast} onChange={onChange} />);
-    fireEvent.click(await screen.findByText('Encerrar vínculo'));
-    expect(h.tr.unlinkTrainer).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByText('Encerrar vínculo'));
-    await waitFor(() => expect(h.tr.unlinkTrainer).toHaveBeenCalled());
-    expect(onChange).toHaveBeenLastCalledWith(null);
-    expect(toast).toHaveBeenCalledWith('Vínculo encerrado');
-    expect(await screen.findByLabelText('Código do personal')).toBeTruthy();
+    const btn = await screen.findByText('Encerrar vínculo');
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(onChange).toHaveBeenLastCalledWith(null);
+      expect(toast).toHaveBeenCalledWith('Vínculo encerrado', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(await screen.findByLabelText('Código do personal')).toBeTruthy();
+      expect(h.tr.unlinkTrainer).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.tr.unlinkTrainer).toHaveBeenCalledTimes(1);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('Desfazer devolve o personal e o vínculo nunca é encerrado', async () => {
+    h.tr.fetchMyTrainer.mockResolvedValue({ name: 'Carlos' });
+    const onChange = vi.fn();
+    render(<ProfileTrainerSection toast={toast} onChange={onChange} />);
+    const btn = await screen.findByText('Encerrar vínculo');
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(await screen.findByText('Encerrar vínculo')).toBeTruthy();
+      expect(onChange).toHaveBeenLastCalledWith({ name: 'Carlos' });
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.tr.unlinkTrainer).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('falha ao encerrar avisa e o personal volta', async () => {
+    h.tr.fetchMyTrainer.mockResolvedValue({ name: 'Carlos' });
+    h.tr.unlinkTrainer.mockRejectedValue(new Error('x'));
+    render(<ProfileTrainerSection toast={toast} />);
+    const btn = await screen.findByText('Encerrar vínculo');
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(toast).toHaveBeenCalledWith('❌ Não foi possível encerrar agora');
+    } finally { vi.useRealTimers(); }
+    expect(await screen.findByText('Encerrar vínculo')).toBeTruthy();
   });
 
   it('falha ao buscar personal cai no formulário', async () => {

@@ -795,7 +795,6 @@ export default {
   // Personal (lado aluno)
   'Digite o código do seu personal.': "Enter your trainer's code.",
   '🤝 Vinculado ao seu personal': '🤝 Linked to your trainer',
-  'Encerrar o vínculo? Seu personal deixa de ver seus dados.': 'End the link? Your trainer will no longer see your data.',
   'Vínculo encerrado': 'Link ended',
   '❌ Não foi possível encerrar agora': '❌ Could not end the link right now',
   '📸 Fotos compartilhadas com seu personal': '📸 Photos shared with your trainer',
