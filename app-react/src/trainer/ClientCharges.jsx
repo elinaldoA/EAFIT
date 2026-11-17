@@ -6,6 +6,7 @@ import {
   chargeState, daysLate, chargeSummary, formatMoney, formatDue, formatDay, parseMoney, friendlyChargeError,
 } from '../lib/trainerCharges';
 
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { t, nDias } from '../lib/i18n';
 
 // Cobranças de um aluno: o personal registra o que ele deve (uma ou várias
@@ -22,6 +23,7 @@ export default function ClientCharges({ client }) {
   const [method, setMethod] = useState('pix');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const removal = useDeferredRemoval();
   const today = todayDate();
 
   const load = useCallback(() => {
@@ -32,8 +34,10 @@ export default function ClientCharges({ client }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const summary = useMemo(() => chargeSummary(rows || [], today), [rows, today]);
-  const visible = (rows || []).filter(c => c.status !== 'cancelled');
+  // Cobrança cancelada (ainda dentro dos 6s do Desfazer) já sai da lista e dos totais.
+  const live = useMemo(() => (rows || []).filter(c => !removal.hidden.has(c.id)), [rows, removal.hidden]);
+  const summary = useMemo(() => chargeSummary(live, today), [live, today]);
+  const visible = live.filter(c => c.status !== 'cancelled');
   const cents = parseMoney(amount);
 
   async function handleCreate() {
@@ -56,9 +60,16 @@ export default function ClientCharges({ client }) {
     load();
   }
 
+  // Some na hora; o cancelamento só vai ao servidor em 6s (ou ao sair da tela),
+  // a não ser que desfaça. Nada muda para o aluno enquanto isso.
   function handleCancel(c) {
-    if (!window.confirm(t('Cancelar a cobrança "{v1}" de {v2}?', { v1: c.description, v2: formatMoney(c.amount) }))) return;
-    act(() => cancelCharge(c.id), t('Cobrança cancelada'));
+    removal.schedule(c.id, async () => {
+      try { await cancelCharge(c.id); } catch (err) { toast(`❌ ${friendlyChargeError(err)}`); }
+      load();
+    });
+    toast(t('Cobrança "{v1}" de {v2} cancelada', { v1: c.description, v2: formatMoney(c.amount) }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => removal.undo(c.id) },
+    });
   }
 
   return (
@@ -66,7 +77,7 @@ export default function ClientCharges({ client }) {
       <div className="dash-card__title">{t('💰 Cobrança de {name}', { name: client.name })}</div>
       <p className="profile-field__hint m-0">{t('Controle manual: o app não recebe nem repassa dinheiro. Registre aqui o que combinou com o aluno e dê baixa quando receber.')}</p>
 
-      {rows && rows.length > 0 && (
+      {rows && live.length > 0 && (
         <div className="recap__grid">
           <div className="recap__stat"><span className={`recap__value${summary.overdue ? ' kpi__value--warn' : ''}`}>{formatMoney(summary.overdue)}</span><span className="recap__label">{t('em atraso')}</span></div>
           <div className="recap__stat"><span className="recap__value">{formatMoney(summary.upcoming)}</span><span className="recap__label">{t('a receber')}</span></div>

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {} }));
 
@@ -117,14 +117,34 @@ describe('ClientCharges', () => {
     await waitFor(() => expect(h.api.reopenCharge).toHaveBeenCalledWith('h2'));
   });
 
-  it('cancelar pede confirmação', async () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+  it('cancelar some na hora, sem confirmação, e só cancela no servidor em 6s', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     render(<ClientCharges client={CLIENT} />);
     await screen.findByText('Mensalidade out');
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    expect(h.api.cancelCharge).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    await waitFor(() => expect(h.api.cancelCharge).toHaveBeenCalledWith('h1'));
-    expect(confirm).toHaveBeenCalledTimes(2);
+    const btn = screen.getByRole('button', { name: 'Cancelar' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.queryByText('Mensalidade out')).toBeNull();
+      expect(h.toast).toHaveBeenCalledWith(expect.stringMatching(/^Cobrança "Mensalidade out" de .* cancelada$/), 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.cancelCharge).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.cancelCharge).toHaveBeenCalledWith('h1');
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('Desfazer devolve a cobrança e nada é cancelado', async () => {
+    render(<ClientCharges client={CLIENT} />);
+    await screen.findByText('Mensalidade out');
+    const btn = screen.getByRole('button', { name: 'Cancelar' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByText('Mensalidade out')).toBeTruthy();
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.cancelCharge).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); }
   });
 });
