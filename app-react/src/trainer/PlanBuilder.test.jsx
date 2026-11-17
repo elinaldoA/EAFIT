@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({ toast: vi.fn(), api: {}, sendMessage: vi.fn() }));
 
@@ -78,26 +78,57 @@ describe('PlanBuilder — com aluno', () => {
     expect((await screen.findByLabelText('Nome do plano')).value).toBe('');
   });
 
-  it('enviar valida, confirma, envia o plano, avisa por recado e fecha', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('enviar: sem confirmação, avisa com Desfazer e só envia o plano em 6s, avisando por recado e fechando', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
     const { onSent } = setup({ client: CLIENT });
     await screen.findByLabelText('Nome do plano');
-    fireEvent.click(screen.getByRole('button', { name: '📤 Enviar treino para o aluno' }));
-    await waitFor(() => expect(h.api.assignPlan).toHaveBeenCalledWith('c1', expect.objectContaining({
-      ok: true, name: 'Hipertrofia', weeks: 8,
-      days: [expect.objectContaining({ dia: 'Segunda', foco: 'Peito' })],
-    })));
-    expect(h.sendMessage).toHaveBeenCalledWith(['c1'], expect.stringContaining('Hipertrofia'), 'treino');
-    expect(h.toast).toHaveBeenCalledWith('✅ Treino enviado para o aluno');
-    expect(onSent).toHaveBeenCalledTimes(1);
+    const btn = screen.getByRole('button', { name: '📤 Enviar treino para o aluno' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: 'Enviando…' }).disabled).toBe(true);
+      expect(h.toast).toHaveBeenCalledWith(expect.stringMatching(/^Enviando o treino para .*…$/), 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
+      expect(h.api.assignPlan).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.assignPlan).toHaveBeenCalledWith('c1', expect.objectContaining({
+        ok: true, name: 'Hipertrofia', weeks: 8,
+        days: [expect.objectContaining({ dia: 'Segunda', foco: 'Peito' })],
+      }));
+      expect(h.sendMessage).toHaveBeenCalledWith(['c1'], expect.stringContaining('Hipertrofia'), 'treino');
+      expect(h.toast).toHaveBeenCalledWith('✅ Treino enviado para o aluno');
+      expect(onSent).toHaveBeenCalledTimes(1);
+    } finally { vi.useRealTimers(); }
   });
 
-  it('recusar a confirmação não envia', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
+  it('Desfazer cancela o envio, mantém o rascunho e o aluno nunca é avisado', async () => {
+    const { onSent } = setup({ client: CLIENT });
+    await screen.findByLabelText('Nome do plano');
+    const btn = screen.getByRole('button', { name: '📤 Enviar treino para o aluno' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      act(() => { h.toast.mock.calls.at(-1)[2].action.onClick(); });
+      expect(screen.getByRole('button', { name: '📤 Enviar treino para o aluno' }).disabled).toBe(false);
+      await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+      expect(h.api.assignPlan).not.toHaveBeenCalled();
+      expect(h.sendMessage).not.toHaveBeenCalled();
+      expect(onSent).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Nome do plano').value).toBe('Hipertrofia');
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('o que for editado durante os 6s também vai no envio', async () => {
     setup({ client: CLIENT });
     await screen.findByLabelText('Nome do plano');
-    fireEvent.click(screen.getByRole('button', { name: '📤 Enviar treino para o aluno' }));
-    expect(h.api.assignPlan).not.toHaveBeenCalled();
+    const btn = screen.getByRole('button', { name: '📤 Enviar treino para o aluno' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      fireEvent.change(screen.getByLabelText('Nome do plano'), { target: { value: 'Hipertrofia 2' } });
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+      expect(h.api.assignPlan).toHaveBeenCalledWith('c1', expect.objectContaining({ name: 'Hipertrofia 2' }));
+    } finally { vi.useRealTimers(); }
   });
 
   it('plano inválido mostra o erro e não envia', async () => {
@@ -113,11 +144,15 @@ describe('PlanBuilder — com aluno', () => {
   });
 
   it('erro do servidor aparece e mantém o rascunho', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     h.api.assignPlan.mockRejectedValue(new Error('not_authorized'));
     const { onSent } = setup({ client: CLIENT });
     await screen.findByLabelText('Nome do plano');
-    fireEvent.click(screen.getByRole('button', { name: '📤 Enviar treino para o aluno' }));
+    const btn = screen.getByRole('button', { name: '📤 Enviar treino para o aluno' });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fireEvent.click(btn);
+      await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
+    } finally { vi.useRealTimers(); }
     await waitFor(() => expect(screen.getByRole('alert').textContent).toMatch(/vínculo ativo/));
     expect(onSent).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Nome do plano').value).toBe('Hipertrofia');

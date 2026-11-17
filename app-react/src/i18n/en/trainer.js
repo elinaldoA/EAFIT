@@ -136,7 +136,7 @@ export default {
   'Nenhum recado enviado ainda.': 'No messages sent yet.',
   'Carregar o modelo substitui o que você montou até agora. Continuar?': 'Loading the template replaces what you have built so far. Continue?',
   '💾 Modelo salvo': '💾 Template saved',
-  'Enviar este treino para {name}? Ele passa a ser o plano ativo do aluno.': 'Send this workout to {name}? It becomes the client’s active plan.',
+  'Enviando o treino para {name}…': 'Sending the workout to {name}…',
   'Este plano não tem duração definida. Use "Editar / enviar novo treino".': 'This plan has no set duration. Use "Edit / send new workout".',
   'O aluno não tem plano ativo para renovar.': 'The client has no active plan to renew.',
   'Seu personal renovou seu plano "{name}" por mais {n} semanas. Bons treinos!': 'Your trainer renewed your plan "{name}" for {n} more weeks. Enjoy your training!',

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useToast } from '../context/useToast';
 import { sendMessage } from '../lib/trainerMessages';
 import { fetchLibrary } from '../lib/exerciseSwap';
@@ -11,6 +11,7 @@ import Loading from '../components/Loading';
 import PlanProgressionFields from '../components/PlanProgressionFields';
 import ExerciseExtras from '../components/ExerciseExtras';
 
+import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { t, nExercicios, nSeries } from '../lib/i18n';
 // Montagem de treino: dias da semana, foco, exercícios (com sugestão da
 // biblioteca do app) e prazo. Com `client`, ao enviar vira o plano ativo do
@@ -25,6 +26,10 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
   const [library, setLibrary] = useState([]);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const removal = useDeferredRemoval();
+  // O que vai é o rascunho de quando o envio sai (6s depois), com o que foi editado nesse intervalo.
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const [templates, setTemplates] = useState([]);
   const clientId = client?.id;
 
@@ -85,23 +90,31 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
     }
   }
 
-  async function handleSend() {
-    const payload = buildPlanPayload(draft);
-    if (!payload.ok) { setError(payload.error); return; }
-    if (!window.confirm(t('Enviar este treino para {name}? Ele passa a ser o plano ativo do aluno.', { name: client.name }))) return;
+  // Valida na hora, mas o envio (que troca o plano ativo do aluno e o avisa) só
+  // sai em 6s, ou ao sair da tela, a não ser que desfaça: o rascunho segue aqui.
+  function handleSend() {
+    const check = buildPlanPayload(draft);
+    if (!check.ok) { setError(check.error); return; }
     setSending(true); setError('');
-    try {
-      await assignPlan(client.id, payload);
-      // aviso ao aluno (melhor esforço: o treino já foi enviado)
-      sendMessage([client.id], t('Seu personal montou um novo treino para você: "{name}". Bons treinos!', { name: payload.name }), 'treino')
-        .catch(err => console.warn('aviso de novo treino:', err));
-      toast(t('✅ Treino enviado para o aluno'));
-      onSent();
-    } catch (err) {
-      setError(friendlyPlanError(err));
-    } finally {
-      setSending(false);
-    }
+    removal.schedule('send', async () => {
+      try {
+        const payload = buildPlanPayload(draftRef.current);
+        if (!payload.ok) { setError(payload.error); return; }
+        await assignPlan(client.id, payload);
+        // aviso ao aluno (melhor esforço: o treino já foi enviado)
+        sendMessage([client.id], t('Seu personal montou um novo treino para você: "{name}". Bons treinos!', { name: payload.name }), 'treino')
+          .catch(err => console.warn('aviso de novo treino:', err));
+        toast(t('✅ Treino enviado para o aluno'));
+        onSent();
+      } catch (err) {
+        setError(friendlyPlanError(err));
+      } finally {
+        setSending(false);
+      }
+    });
+    toast(t('Enviando o treino para {name}…', { name: client.name }), 6000, {
+      action: { label: t('Desfazer'), onClick: () => { removal.undo('send'); setSending(false); } },
+    });
   }
 
   return (
