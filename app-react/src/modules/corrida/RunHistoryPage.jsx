@@ -10,6 +10,7 @@ import {
 import SplitBars from './SplitBars';
 import { downloadGpx } from './gpx';
 import { downloadTcx } from './tcx';
+import { downloadRunsCsv } from './runExport';
 import RunShoes from './Shoes';
 import { SESSION_TITLE } from './program';
 import RouteDrawing from './RouteDrawing';
@@ -368,6 +369,10 @@ export default function RunHistoryPage() {
           </ul>
         )}
       </div>
+
+      <button type="button" className="btn btn--ghost btn--sm run-export" onClick={() => { downloadRunsCsv(runs); toast(t('📥 Planilha das suas corridas baixada')); }}>
+        {t('📥 Exportar todas as corridas (planilha)')}
+      </button>
 
       <RunShoes userId={user.id} shoes={shoes} runs={runs} onChange={loadShoes} />
 

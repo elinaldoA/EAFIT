@@ -605,6 +605,31 @@ describe('correr de novo (fantasma)', () => {
     expect(shareRunSummary).toHaveBeenCalledWith(expect.any(Array), expect.any(String), expect.anything(), 80);
   });
 
+  it('na aba Você: exportar todas as corridas baixa a planilha', async () => {
+    h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
+    const created = [];
+    const origCreate = URL.createObjectURL;
+    const origRevoke = URL.revokeObjectURL;
+    URL.createObjectURL = vi.fn(blob => { created.push(blob); return 'blob:csv'; });
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      render(<RunHistoryPage />);
+      fireEvent.click(await screen.findByRole('button', { name: '📥 Exportar todas as corridas (planilha)' }, { timeout: 3000 }));
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(created).toHaveLength(1);
+      expect(created[0].type).toMatch(/text\/csv/);
+      const text = await created[0].text();
+      expect(text).toContain('Parque lento');
+      expect(text).toContain('Parque rápido');
+      expect(h.toast).toHaveBeenCalledWith('📥 Planilha das suas corridas baixada');
+    } finally {
+      click.mockRestore();
+      URL.createObjectURL = origCreate;
+      URL.revokeObjectURL = origRevoke;
+    }
+  });
+
   it('a corrida mais rápida da rota não oferece "melhor": só contra ela mesma', async () => {
     h.fetchRuns.mockResolvedValue([past('slow', 1800, -2300000), past('fast', 1500, -2300050)]);
     render(<RunHistoryPage />);
