@@ -51,6 +51,10 @@
       .boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #0e0e12; color: #e4e4e7; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
       .boot img { width: 88px; height: 88px; border-radius: 22px; }
       .boot__name { font-size: 22px; font-weight: 800; letter-spacing: .12em; }
+      /* A splash segue o tema do sistema (fundo escuro ou claro), não o do app. O "EA"
+         do Wordmark usa a cor de texto do app (--text) e ficava escuro sobre o fundo
+         escuro: aqui ele herda a cor da própria splash. */
+      .boot .boot__name .wordmark__ea { color: inherit; -webkit-text-fill-color: currentColor; }
       .boot .dumbbell { width: 88px; line-height: 0; color: #a1a1aa; }
       .boot .dumbbell svg { width: 100%; height: auto; overflow: visible; animation: boot-lift 1.8s ease-in-out infinite; }
       @keyframes boot-lift { 0%, 35% { transform: rotate(0); } 50%, 85% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
