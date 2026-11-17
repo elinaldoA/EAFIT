@@ -6,6 +6,7 @@ import {
   stepAnnouncement, rollingPace, pushSample, paceAlert, paceStatus,
 } from './workout';
 import { repResult } from './intervals';
+import { buzz } from './haptics';
 
 // Treino guiado da corrida ao vivo (workout.js): acompanha a etapa do
 // intervalado, avisa por voz cada troca e confere o ritmo alvo. A posição
@@ -26,6 +27,7 @@ export function useGuidedWorkout(run, now, voiceOn) {
   const voice = useRef(voiceOn);
   voice.current = voiceOn;
   const say = text => { if (voice.current) speak(text, { queue: true }); };
+  const announceStep = text => { buzz('step'); say(text); };
 
   // Começa na primeira etapa e avança quando ela termina.
   useEffect(() => {
@@ -34,7 +36,7 @@ export function useGuidedWorkout(run, now, voiceOn) {
     if (!cur) return;
     if (!cur.workoutPos) {
       updateLiveRun(s => (s && !s.workoutPos ? { ...s, workoutPos: startPosition() } : s));
-      say(stepAnnouncement(steps[0], workout.reps));
+      announceStep(stepAnnouncement(steps[0], workout.reps));
       return;
     }
     const next = advanceWorkout(cur.workoutPos, steps, elapsedS, meters);
@@ -45,7 +47,7 @@ export function useGuidedWorkout(run, now, voiceOn) {
         ...s, workoutPos: next,
         reps: result && !(s.reps || []).some(r => r.rep === result.rep) ? [...(s.reps || []), result] : s.reps,
       } : s));
-      say(stepAnnouncement(steps[next.index], workout.reps));
+      announceStep(stepAnnouncement(steps[next.index], workout.reps));
     }
     // say só fala; muda a cada render sem mudar o efeito.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,7 +85,7 @@ export function useGuidedWorkout(run, now, voiceOn) {
     if (!cur?.workoutPos) return;
     const next = skipStep(cur.workoutPos, steps, elapsedS, meters);
     updateLiveRun(s => (s ? { ...s, workoutPos: next } : s));
-    say(stepAnnouncement(steps[next.index], workout.reps));
+    announceStep(stepAnnouncement(steps[next.index], workout.reps));
   };
 
   return {

@@ -18,6 +18,7 @@ import { ghostGapS } from './ghost';
 import { spoken } from './workout';
 import { formatPace } from './runs';
 import { t } from '../../lib/i18n';
+import { buzz } from './haptics';
 import { VOICE_KEY, AUTOPAUSE_KEY, readPref, writePref } from './runPrefs';
 import InterruptedRun from './InterruptedRun';
 import LiveRunScreen from './LiveRunScreen';
@@ -74,9 +75,11 @@ export default function LiveRunHost() {
     motion.current = step.motion;
     if (step.action?.type === 'pause' && prefs.current.autoPauseOn && !prefs.current.blockAutoPause) {
       updateLiveRun(s => autoPauseRun(s, step.action.at));
+      buzz('pause');
       if (prefs.current.voiceOn) speak(t('Pausa automática.'));
     } else if (step.action?.type === 'resume') {
       updateLiveRun(s => autoResumeRun(s));
+      buzz('resume');
       if (prefs.current.voiceOn) speak(t('Corrida retomada.'));
     }
   }
@@ -126,6 +129,7 @@ export default function LiveRunHost() {
   const spokenKm = useRef(kmCount);
   useEffect(() => {
     if (!run) { spokenKm.current = 0; return; }
+    if (kmCount > spokenKm.current) buzz('km');
     if (kmCount > spokenKm.current && voiceOn) {
       const splits = splitsOf(run.kmMarks);
       const totalS = Math.round(run.kmMarks[kmCount - 1] / 1000);
@@ -143,6 +147,7 @@ export default function LiveRunHost() {
   const lastPhase = useRef(null);
   useEffect(() => {
     if (!phaseName) { lastPhase.current = null; return; }
+    if (lastPhase.current && lastPhase.current !== phaseName) buzz(phaseName === 'run' ? 'run' : phaseName === 'walk' ? 'walk' : 'done');
     if (lastPhase.current && lastPhase.current !== phaseName && voiceOn) {
       speak(phaseName === 'run' ? t('Corra!') : phaseName === 'walk' ? t('Caminhe.') : t('Tempo completo. Ótimo trabalho!'));
     }
