@@ -39,10 +39,15 @@ describe('HealthScreen', () => {
     render(<HealthScreen />);
     const save = screen.getByRole('button', { name: 'Salvar respostas' });
     expect(save.disabled).toBe(true);
+    expect(screen.getByText('Faltam responder 7 perguntas.')).toBeTruthy();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Não' })[0]);
+    expect(screen.getByText('Faltam responder 6 perguntas.')).toBeTruthy();
     answerAll(false);
     expect(save.disabled).toBe(true);
+    expect(screen.getByText('Marque a autorização acima para salvar.')).toBeTruthy();
     fireEvent.click(screen.getByRole('checkbox'));
     expect(save.disabled).toBe(false);
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('grava as respostas e avisa quando há alerta', async () => {

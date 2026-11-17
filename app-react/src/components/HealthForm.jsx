@@ -15,6 +15,11 @@ export default function HealthForm({ meta = {}, updateProfile, onSaved, onSkip }
   const [error, setError] = useState('');
   const questions = parqQuestions();
   const ready = allAnswered(answers) && consent;
+  // Botão desabilitado sem explicação deixava a pessoa sem saber o que faltava.
+  const missing = answers.filter(a => typeof a !== 'boolean').length;
+  const hint = missing === 1 ? t('Falta responder 1 pergunta.')
+    : missing > 1 ? t('Faltam responder {n} perguntas.', { n: missing })
+    : !consent ? t('Marque a autorização acima para salvar.') : '';
 
   function setAnswer(i, value) {
     setAnswers(a => a.map((x, j) => (j === i ? value : x)));
@@ -75,6 +80,7 @@ export default function HealthForm({ meta = {}, updateProfile, onSaved, onSkip }
       <button type="button" className="btn btn--primary btn--full" disabled={!ready || busy} onClick={handleSave}>
         {busy ? t('Salvando…') : t('Salvar respostas')}
       </button>
+      {!ready && hint && <p className="profile-field__hint" role="status">{hint}</p>}
       {onSkip && (
         <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={handleSkip}>{t('Pular por agora')}</button>
       )}

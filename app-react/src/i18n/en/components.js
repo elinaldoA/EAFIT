@@ -528,6 +528,10 @@ export default {
   'Repetições': 'Reps',
   '✅ Registrada no {meal}': '✅ Logged as {meal}',
   'Refeição desfeita': 'Meal removed',
+  'Falta responder 1 pergunta.': '1 question left to answer.',
+  'Faltam responder {n} perguntas.': '{n} questions left to answer.',
+  'Marque a autorização acima para salvar.': 'Tick the consent above to save.',
+
   'Divisão {emoji} {division} · você em {position}º de {size} · {dias} no mês': '{emoji} {division} division · you are #{position} of {size} · {dias} this month',
   '{dias} de atraso': '{dias} late',
   'Energia alta e 1 exercício pronto para subir carga. Dia de recorde.': 'High energy and 1 exercise ready to go up in weight. Record day.',

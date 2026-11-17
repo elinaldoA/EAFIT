@@ -282,6 +282,7 @@ body.modal-open { overflow: hidden; }
 .maintenance { z-index: 2000; padding: var(--sp-5); text-align: center; }
 .maintenance__title { margin: var(--sp-1) 0 0; font-size: var(--fs-xl); }
 .maintenance__text { margin: 0; max-width: 32ch; font-size: var(--fs-md); line-height: 1.45; opacity: .8; }
+.maintenance__text a { color: var(--primary-text); text-decoration: underline; }
 
 /* Trava de biometria (BiometricLockScreen): por cima de tudo, até dos modais. */
 .bio-lock { z-index: 10001; gap: 14px; padding: var(--sp-5); text-align: center; overflow-y: auto; background: var(--bg); color: var(--text); }
@@ -331,9 +332,11 @@ body.modal-open { overflow: hidden; }
 .health-q__text { margin: 0 0 var(--sp-1); font-size: var(--fs-sm); line-height: 1.4; }
 .health-q__opts { display: flex; gap: var(--sp-2); }
 .health-q__opt {
-  flex: 1; height: 36px; border-radius: var(--r-sm); border: 1px solid var(--border-2);
-  background: var(--bg); color: var(--text-dim); cursor: pointer;
+  /* Texto normal e 44px de altura: em --text-dim e 36px parecia desabilitado. */
+  flex: 1; min-height: 44px; border-radius: var(--r-sm); border: 1px solid var(--border-2);
+  background: var(--bg); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;
 }
 .health-q__opt--on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .health-form__consent { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-xs); line-height: 1.4; }
+.health-form__consent a { color: var(--primary-text); text-decoration: underline; }
 .health-alert { margin: 0; max-width: 40ch; font-size: var(--fs-sm); line-height: 1.45; color: var(--warning, var(--primary)); }
