@@ -277,6 +277,26 @@ describe('LiveRunHost: clima', () => {
     expect(screen.queryByRole('dialog', { name: 'Corrida salva' })).toBeNull();
   });
 
+  it('se a consulta de clima ao salvar falhar, a corrida salva fica com o clima que a tela já mostrava', async () => {
+    let calls = 0;
+    // As telas ao vivo e de resumo buscam o clima (2 consultas); a de salvar falha.
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      calls += 1;
+      if (calls > 2) throw new Error('sem rede');
+      return { ok: true, json: async () => ({ current: { temperature_2m: 22, weather_code: 0 } }) };
+    }));
+    act(() => { setLiveRun(addRoutePoint(startRun({ gps: true, session: null }), -23.5, -46.6)); });
+    render(<LiveRunHost />);
+    await screen.findByText('☀️ 22°C');
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar/ }));
+    await screen.findByText('☀️ 22°C');
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Salvar corrida' })); });
+    await waitFor(() => expect(h.saveRun).toHaveBeenCalled());
+    expect(h.saveRun.mock.calls[0][1].weather).toEqual({ t: 22, w: null, h: null, c: 0 });
+    const dialog = await screen.findByRole('dialog', { name: 'Corrida salva' });
+    expect(within(dialog).getByText(/☀️ 22°C/)).toBeTruthy();
+  });
+
   it('descartar a corrida não abre a tela "Corrida salva"', async () => {
     act(() => { setLiveRun(startRun({ gps: false, session: null })); });
     render(<LiveRunHost />);
