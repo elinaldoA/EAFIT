@@ -14,7 +14,7 @@ const { dbMock, calls } = vi.hoisted(() => {
 });
 vi.mock('./supabase', () => ({ db: dbMock }));
 
-import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from './nutritionFoods';
+import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, restoreCustomFood, readCachedFoods } from './nutritionFoods';
 import { queueSize } from './syncQueue';
 
 const food = { name: ' Tapioca ', g: 2, kcal: 140, carbs: 30, fat: 1 };
@@ -64,6 +64,15 @@ describe('nutritionFoods', () => {
     expect(list).toEqual([]);
     expect(readCachedFoods('u1')).toEqual([]);
     expect(queueSize()).toBe(1);
+  });
+
+  it('restoreCustomFood devolve o atalho apagado com o mesmo id e ícone', async () => {
+    const [created] = await createCustomFood('u1', food);
+    await deleteCustomFood('u1', created.id);
+    const list = await restoreCustomFood('u1', { ...created, icon: '🥖' });
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ id: created.id, label: 'Tapioca', kcal: 140, icon: '🥖' });
+    expect(calls.upsert.at(-1)).toMatchObject({ id: created.id, icon: '🥖' });
   });
 
   it('editar o mesmo atalho várias vezes offline mantém uma só operação', async () => {

@@ -665,7 +665,7 @@ export default {
   'Dia': 'Day',
   '⚠️ Não foi possível salvar o atalho': '⚠️ Could not save the shortcut',
   '⚠️ Não foi possível apagar o atalho': '⚠️ Could not delete the shortcut',
-  'Apagar o atalho "{name}"?': 'Delete the shortcut "{name}"?',
+  'Atalho "{name}" apagado': 'Shortcut "{name}" deleted',
   'Apagar o atalho "{name}"': 'Delete the shortcut "{name}"',
   'Ver menos': 'Show less',
   'Ver todos ({n})': 'Show all ({n})',

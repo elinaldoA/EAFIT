@@ -89,3 +89,10 @@ export async function deleteCustomFood(userId, id) {
   }
   return next.map(foodFromRow);
 }
+
+// Devolve um atalho apagado (Desfazer), com o mesmo id e o mesmo ícone.
+export async function restoreCustomFood(userId, food) {
+  const row = { ...rowFromFood(userId, food.id, { name: food.label, g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat }), icon: food.icon || null };
+  const rest = readCachedRows(userId).filter(r => r.id !== food.id);
+  return saveOrQueue(userId, row, [...rest, row]);
+}

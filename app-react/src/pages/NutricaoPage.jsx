@@ -12,7 +12,7 @@ import { buildProteinSeries, proteinStats } from '../lib/proteinStats';
 import { fetchWeightLogs } from '../lib/weightLog';
 import { buildNutritionSeries, kcalWeekSummary, weightRatePerWeek, nutritionReading, estimateTdee } from '../lib/nutritionInsights';
 import { computeNutritionGoals, goalKcalFactor, MIN_KCAL, nutritionProfile } from '../lib/nutritionGoals';
-import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, readCachedFoods } from '../lib/nutritionFoods';
+import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, restoreCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS } from '../lib/foodShortcuts';
 import { MEALS, mealForHour, readCachedEntries, fetchEntries, fetchEntriesRange, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
 import { dayPace, mealHabit, proteinSpread, suggestedKcal } from '../lib/nutritionCoach';
@@ -335,9 +335,21 @@ export default function NutricaoPage({ active }) {
   }
 
   async function handleDeleteFood(food) {
-    if (!window.confirm(t('Apagar o atalho "{name}"?', { name: food.label }))) return;
     try {
       setMyFoods(await deleteCustomFood(user.id, food.id));
+      toast(t('Atalho "{name}" apagado', { name: food.label }), 6000, {
+        action: {
+          label: t('Desfazer'),
+          onClick: async () => {
+            try {
+              setMyFoods(await restoreCustomFood(user.id, food));
+            } catch (err) {
+              console.error('restoreCustomFood:', err);
+              toast(t('⚠️ Não foi possível salvar o atalho'));
+            }
+          },
+        },
+      });
     } catch (err) {
       console.error('deleteCustomFood:', err);
       toast(t('⚠️ Não foi possível apagar o atalho'));

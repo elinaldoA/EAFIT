@@ -12,7 +12,7 @@ const { mockToast, mockMarkPending, proteinLog, foods, weight } = vi.hoisted(() 
     readLocalTotals: undefined,
     writeLocalTotals: undefined,
   },
-  foods: { fetchCustomFoods: vi.fn(), createCustomFood: vi.fn(), updateCustomFood: vi.fn(), deleteCustomFood: vi.fn(), readCachedFoods: vi.fn() },
+  foods: { fetchCustomFoods: vi.fn(), createCustomFood: vi.fn(), updateCustomFood: vi.fn(), deleteCustomFood: vi.fn(), restoreCustomFood: vi.fn(), readCachedFoods: vi.fn() },
   weight: { fetchWeightLogs: vi.fn() },
 }));
 
@@ -118,6 +118,23 @@ describe('NutricaoPage', () => {
     fireEvent.click(screen.getByText('Adicionar'));
     await waitFor(() => expect(foods.createCustomFood).toHaveBeenCalledWith('u1', expect.objectContaining({ name: 'Tapioca', kcal: 140 })));
     await waitFor(() => expect(readLocalTotals().kcal).toBe(140));
+  });
+
+  it('apagar um atalho próprio é na hora e o Desfazer do aviso o devolve', async () => {
+    window.confirm = vi.fn(() => true);
+    const mine = { id: 'f1', custom: true, icon: '🍽️', label: 'Tapioca', g: 2, kcal: 140, carbs: 30, fat: 1 };
+    foods.fetchCustomFoods.mockResolvedValue([mine]);
+    foods.readCachedFoods.mockReturnValue([mine]);
+    foods.deleteCustomFood.mockResolvedValue([]);
+    foods.restoreCustomFood.mockResolvedValue([mine]);
+    render(<NutricaoPage active />);
+    fireEvent.click(await screen.findByText('Gerenciar meus atalhos'));
+    fireEvent.click(screen.getByLabelText('Apagar o atalho "Tapioca"'));
+    await waitFor(() => expect(foods.deleteCustomFood).toHaveBeenCalledWith('u1', 'f1'));
+    expect(window.confirm).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockToast).toHaveBeenCalledWith('Atalho "Tapioca" apagado', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) })));
+    act(() => { mockToast.mock.calls.at(-1)[2].action.onClick(); });
+    await waitFor(() => expect(foods.restoreCustomFood).toHaveBeenCalledWith('u1', mine));
   });
 
   it('editar um atalho próprio atualiza o atalho e não mexe no dia', async () => {
