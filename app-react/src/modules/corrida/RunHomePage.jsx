@@ -10,6 +10,7 @@ import {
 } from './program';
 import { suggestedPace } from './runReadings';
 import RunRace from './RunRace';
+import RunEvents from './RunEvents';
 import MyRoutes from './MyRoutes';
 import ProgramCalendar from './ProgramCalendar';
 import {
@@ -403,6 +404,7 @@ export default function RunHomePage() {
       )}
 
       <RunRace runs={runs} today={today} onProgram={saveProgram} />
+      <RunEvents today={today} />
       <MyRoutes runs={runs} onRunAgainst={runAgainst} />
     </section>
   );

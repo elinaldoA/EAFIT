@@ -24,6 +24,7 @@ const AppSettings = lazy(() => import('./pages/AppSettings'));
 const Experiments = lazy(() => import('./pages/Experiments'));
 const ExerciseLibrary = lazy(() => import('./pages/ExerciseLibrary'));
 const FoodCatalog = lazy(() => import('./pages/FoodCatalog'));
+const RunEvents = lazy(() => import('./pages/RunEvents'));
 const PlanAnalytics = lazy(() => import('./pages/PlanAnalytics'));
 const Behavior = lazy(() => import('./pages/Behavior'));
 const Campaigns = lazy(() => import('./pages/Campaigns'));
@@ -125,6 +126,7 @@ function AppShell() {
             <Route path="/landing" element={<RequireArea area="content"><LandingEditor /></RequireArea>} />
             <Route path="/biblioteca" element={<RequireArea area="content"><ExerciseLibrary /></RequireArea>} />
             <Route path="/alimentos" element={<RequireArea area="content"><FoodCatalog /></RequireArea>} />
+            <Route path="/provas-corrida" element={<RequireArea area="content"><RunEvents /></RequireArea>} />
             <Route path="/demonstracoes" element={<RequireArea area="content"><ExerciseMedia /></RequireArea>} />
             <Route path="/ranking-conteudo" element={<ContentRanking />} />
             <Route path="/desafios" element={<RequireArea area="content"><Challenges /></RequireArea>} />
