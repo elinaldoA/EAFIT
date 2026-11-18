@@ -140,7 +140,7 @@ export default function Challenges() {
   useEffect(() => { load(); }, [load]);
 
   async function handleDelete(c) {
-    if (!await confirm({ title: 'Apagar desafio', message: `Apagar o desafio "${c.title}"? Ele some do app de todos os ${c.members} participante(s). Não dá para desfazer.`, confirmLabel: 'Apagar desafio', danger: true })) return;
+    if (!await confirm({ title: 'Apagar desafio', message: `Apagar o desafio "${c.title}"? Ele some do app de todos os ${c.members} participante(s). Não dá para desfazer.`, confirmLabel: 'Apagar desafio', danger: true, reauth: true })) return;
     setMsg('');
     try {
       await deleteChallenge(c.id);

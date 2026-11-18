@@ -90,7 +90,7 @@ function TrainerClients({ trainerId }) {
   // Encerra o vínculo (o mesmo que o aluno faz pelo app): o personal deixa de
   // ver os dados dele. Fica na auditoria.
   async function handleRevoke(r) {
-    if (!await confirm({ title: 'Encerrar vínculo', message: `Encerrar o vínculo com ${r.name}? O personal deixa de ver o treino e os dados desse aluno.`, confirmLabel: 'Encerrar vínculo', danger: true })) return;
+    if (!await confirm({ title: 'Encerrar vínculo', message: `Encerrar o vínculo com ${r.name}? O personal deixa de ver o treino e os dados desse aluno.`, confirmLabel: 'Encerrar vínculo', danger: true, reauth: true })) return;
     const { error: err } = await db.rpc('admin_revoke_trainer_link', { p_trainer: trainerId, p_client: r.userId });
     if (err) { setError(err.message); return; }
     setRows(prev => prev.filter(x => x.userId !== r.userId));

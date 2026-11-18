@@ -401,6 +401,10 @@ Deno.serve(async (req) => {
       }
       case 'deleteExternal': {
         if (typeof body.accountId !== 'string' || typeof body.externalId !== 'string') return json({ error: 'Faltam dados do post.' }, 400);
+        // Apagar na rede não tem volta: exige o código do autenticador recente (ver
+        // recent_mfa no banco), como as outras ações destrutivas do painel.
+        const { error: mfaErr } = await callerClient.rpc('require_recent_mfa');
+        if (mfaErr) return json({ error: 'reauth_required: confirme o código do autenticador e tente de novo' }, 403);
         const { account, token } = await loadExternal(body.accountId, body.externalId);
         try {
           await deletePublished(makeApi(fetch, baseFor(account.platform), token), body.externalId);

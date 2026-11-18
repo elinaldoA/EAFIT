@@ -24,7 +24,7 @@ function MaintenanceCard({ saved, adminId, onSaved }) {
 
   async function handleSave() {
     if (draft.enabled && !saved.enabled
-      && !await confirm({ title: 'Ligar a manutenção', message: 'Ligar a manutenção BLOQUEIA o app para todos os usuários, inclusive quem está usando agora.', confirmLabel: 'Ligar manutenção', danger: true, requireText: 'MANUTENÇÃO' })) return;
+      && !await confirm({ title: 'Ligar a manutenção', message: 'Ligar a manutenção BLOQUEIA o app para todos os usuários, inclusive quem está usando agora.', confirmLabel: 'Ligar manutenção', danger: true, requireText: 'MANUTENÇÃO', reauth: true })) return;
     setBusy(true);
     setMsg('');
     try {
@@ -362,7 +362,7 @@ function MovedCard({ saved, adminId, onSaved }) {
 
   async function handleSave() {
     if (draft.enabled && !saved.enabled
-      && !await confirm({ title: 'Ligar a mudança de endereço', message: 'Ligar a mudança de endereço BLOQUEIA o app para quem abrir por qualquer endereço diferente do novo. Confirme que o endereço novo já está no ar.', confirmLabel: 'Ligar mudança', danger: true, requireText: 'MUDAR' })) return;
+      && !await confirm({ title: 'Ligar a mudança de endereço', message: 'Ligar a mudança de endereço BLOQUEIA o app para quem abrir por qualquer endereço diferente do novo. Confirme que o endereço novo já está no ar.', confirmLabel: 'Ligar mudança', danger: true, requireText: 'MUDAR', reauth: true })) return;
     setBusy(true);
     setMsg('');
     try {

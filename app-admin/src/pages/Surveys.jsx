@@ -274,7 +274,7 @@ export default function Surveys() {
   }
 
   async function remove(s) {
-    if (!await confirm({ title: 'Apagar pesquisa', message: `Apagar a pesquisa "${s.question}" e as ${s.answers} resposta(s)? Não dá para desfazer.`, confirmLabel: 'Apagar pesquisa', danger: true })) return;
+    if (!await confirm({ title: 'Apagar pesquisa', message: `Apagar a pesquisa "${s.question}" e as ${s.answers} resposta(s)? Não dá para desfazer.`, confirmLabel: 'Apagar pesquisa', danger: true, reauth: true })) return;
     try { await deleteSurvey(s.id); if (openId === s.id) setOpenId(null); load(); } catch (err) { setError(err.message); }
   }
 

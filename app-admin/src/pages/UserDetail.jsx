@@ -196,7 +196,7 @@ export default function UserDetail() {
       message: makeTrainer
         ? 'Liberar o ambiente de Personal Trainer para este usuário?'
         : 'Remover o acesso de Personal Trainer? Os vínculos com alunos serão encerrados.',
-      confirmLabel: makeTrainer ? 'Liberar' : 'Remover acesso', danger: !makeTrainer,
+      confirmLabel: makeTrainer ? 'Liberar' : 'Remover acesso', danger: !makeTrainer, reauth: !makeTrainer,
     })) return;
     setBusy(true);
     setActionMsg('');

@@ -86,7 +86,7 @@ export default function MarketingResults() {
 
   async function handleDelete(m) {
     const net = PLATFORMS[accountById.get(m.account_id)?.platform]?.label || 'a rede';
-    if (!await confirm({ title: 'Excluir post na rede', message: `Excluir este post no ${net}? Ele some da rede, com curtidas e comentários. Não dá para desfazer.`, confirmLabel: 'Excluir post', danger: true })) return;
+    if (!await confirm({ title: 'Excluir post na rede', message: `Excluir este post no ${net}? Ele some da rede, com curtidas e comentários. Não dá para desfazer.`, confirmLabel: 'Excluir post', danger: true, reauth: true })) return;
     const key = `${m.account_id}-${m.external_id}`;
     setRowBusy(key);
     setMsg('');
