@@ -18,7 +18,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { makeWav } from './marketing-reels-audio.mjs';
 import { FPS, H, STORY_DROP, STORY_DURATION, W, drawStoryFrame } from '../src/lib/reelRender.js';
 
@@ -206,7 +206,7 @@ const SHIFTS = [0, 2, 3, 5, 7, -2]; // transposição da trilha original por var
 // Trilha licenciada (opcional): app-admin/music/song.mp3, fora do site e do git.
 // Cada story usa um trecho de 8 s diferente, começando de forma que uma batida
 // forte caia no "drop" do visual (STORY_DROP). Sem o arquivo, usa a trilha original.
-const SONG = process.env.SONG || join(root, 'app-admin', 'music', 'song.mp3');
+export const SONG = process.env.SONG || join(root, 'app-admin', 'music', 'song.mp3');
 const HOP = 512;
 const AN_SR = 11025;
 
@@ -225,7 +225,7 @@ function decodeMono(file) {
 }
 
 // Instantes (s) das batidas mais fortes: aumento de energia entre janelas curtas.
-async function strongOnsets(file, count) {
+export async function strongOnsets(file, count, drop = STORY_DROP, dur = STORY_DURATION) {
   const pcm = await decodeMono(file);
   const frames = Math.floor(pcm.length / HOP);
   const energy = new Float32Array(frames);
@@ -241,7 +241,7 @@ async function strongOnsets(file, count) {
     for (let k = 1; k <= 8; k += 1) avg += energy[i - k];
     avg /= 8;
     const t = (i * HOP) / AN_SR;
-    if (t > STORY_DROP && t < total - (STORY_DURATION - STORY_DROP) - 0.2) flux.push({ t, v: Math.max(0, energy[i] - avg) });
+    if (t > drop && t < total - (dur - drop) - 0.2) flux.push({ t, v: Math.max(0, energy[i] - avg) });
   }
   const chosen = [];
   for (const o of flux.sort((a, b) => b.v - a.v)) {
@@ -250,7 +250,7 @@ async function strongOnsets(file, count) {
   }
   // Se a música é curta para tantos trechos, repete os mesmos em outra ordem.
   const times = chosen.map(c => c.t).sort((a, b) => a - b);
-  return Array.from({ length: count }, (_, i) => times[(i * 7) % times.length] - STORY_DROP);
+  return Array.from({ length: count }, (_, i) => times[(i * 7) % times.length] - drop);
 }
 
 async function render(file, story, print) {
@@ -391,4 +391,4 @@ async function main() {
   );
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

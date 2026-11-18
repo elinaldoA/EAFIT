@@ -12,11 +12,12 @@
 // (corrida-*.jpg, story-corrida-*.mp4, reel-corrida-*.mp4).
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { makeWav } from './marketing-reels-audio.mjs';
+import { SONG, strongOnsets } from './marketing-stories.mjs';
 import { printArt, slideArt } from './marketing-autopost-content.mjs';
 import {
   DURATION, FPS, H, STORY_DROP, STORY_DURATION, W, drawReelFrame, drawStoryFrame,
@@ -93,14 +94,20 @@ const REELS = [
   },
 ];
 
-export async function renderVideo(file, seconds, audioWav, drawFrame, img) {
+// `audio`: caminho de um WAV ou { song, start } (trecho do song.mp3, com volume normalizado).
+export async function renderVideo(file, seconds, audio, drawFrame, img) {
+  const song = typeof audio === 'object';
+  const audioIn = song ? ['-ss', audio.start.toFixed(3), '-t', String(seconds), '-i', audio.song] : ['-i', audio];
+  const af = song
+    ? `loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,afade=t=in:d=0.12,afade=t=out:st=${seconds - 0.8}:d=0.8,apad`
+    : 'aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,apad';
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
   const ff = spawn('ffmpeg', [
     '-y', '-loglevel', 'error',
     '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(FPS), '-i', '-',
-    '-i', audioWav,
-    '-af', 'aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,apad',
+    ...audioIn,
+    '-af', af,
     '-t', String(seconds), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '24', '-preset', 'medium', '-profile:v', 'high',
     '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-movflags', '+faststart', join(OUT, file),
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
@@ -116,6 +123,23 @@ export async function renderVideo(file, seconds, audioWav, drawFrame, img) {
   }
   ff.stdin.end();
   await done;
+}
+
+// Trilha: o song.mp3 do projeto (app-admin/music, fora do git), com um trecho diferente por
+// vídeo e uma batida forte caindo na entrada do print (story) ou na troca de cena (Reel).
+// SONG_OFF=1 usa a trilha sintetizada.
+export async function audioPlan(offset = 0) {
+  if (process.env.SONG_OFF === '1' || !existsSync(SONG)) {
+    console.log('Trilha sintetizada (sem song.mp3)');
+    return { story: () => null, reel: () => null };
+  }
+  console.log(`Trilha: ${SONG}`);
+  const st = await strongOnsets(SONG, 24, STORY_DROP, STORY_DURATION);
+  const rl = await strongOnsets(SONG, 24, 3.4, DURATION);
+  return {
+    story: (i) => ({ song: SONG, start: st[(i + offset) % st.length] }),
+    reel: (i) => ({ song: SONG, start: rl[(i + offset) % rl.length] }),
+  };
 }
 
 export const SHIFTS = [0, 2, 3, 5, 7, -2];
@@ -147,17 +171,19 @@ async function images() {
 }
 
 async function videos() {
-  for (const [key, title, sub, print, variant] of STORIES) {
-    const audio = join(tmpdir(), `eafit-story-corrida-v${variant}.wav`);
-    writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
+  const plan = await audioPlan(0);
+  for (const [i, [key, title, sub, print, variant]] of STORIES.entries()) {
+    const audio = plan.story(i) || join(tmpdir(), `eafit-story-corrida-v${variant}.wav`);
+    if (typeof audio === 'string') writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
     const img = await loadImage(readFileSync(join(PRINTS, `${print}.webp`)));
     const story = { pill: 'EAFIT RUN', title, sub, variant };
     await renderVideo(`story-${key}.mp4`, STORY_DURATION, audio, (ctx, im, t) => drawStoryFrame(ctx, story, im, t), img);
     console.log('ok', `story-${key}.mp4`);
   }
-  const audio = join(tmpdir(), 'eafit-reel-corrida.wav');
-  writeFileSync(audio, makeWav(DURATION, { style: 'run', bpm: 140, sweeps: [3.4, 9.6] }));
-  for (const reel of REELS) {
+  const wav = join(tmpdir(), 'eafit-reel-corrida.wav');
+  writeFileSync(wav, makeWav(DURATION, { style: 'run', bpm: 140, sweeps: [3.4, 9.6] }));
+  for (const [i, reel] of REELS.entries()) {
+    const audio = plan.reel(i) || wav;
     const img = await loadImage(readFileSync(join(PRINTS, `${reel.print}.webp`)));
     await renderVideo(`reel-${reel.key}.mp4`, DURATION, audio, (ctx, im, t) => drawReelFrame(ctx, reel, im, t), img);
     console.log('ok', `reel-${reel.key}.mp4`);

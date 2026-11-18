@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { makeWav } from './marketing-reels-audio.mjs';
 import { printArt, slideArt } from './marketing-autopost-content.mjs';
-import { renderVideo, SHIFTS } from './marketing-corrida-launch.mjs';
+import { audioPlan, renderVideo, SHIFTS } from './marketing-corrida-launch.mjs';
 import { DURATION, STORY_DROP, STORY_DURATION, drawReelFrame, drawStoryFrame } from '../src/lib/reelRender.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -110,17 +110,19 @@ async function main() {
     files.push(last);
     rows[c.key] = { key: `${c.key}-feed`, format: 'feed', caption: c.caption, media: imgs(files) };
   }
-  for (const [key, title, sub, print, variant] of STORIES) {
-    const audio = join(tmpdir(), `eafit-story-corrida-v${variant}.wav`);
-    writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
+  const plan = await audioPlan(3); // trechos diferentes dos do lançamento
+  for (const [i, [key, title, sub, print, variant]] of STORIES.entries()) {
+    const audio = plan.story(i) || join(tmpdir(), `eafit-story-corrida-v${variant}.wav`);
+    if (typeof audio === 'string') writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
     const img = await loadImage(readFileSync(join(PRINTS, `${print}.webp`)));
     const story = { pill: 'EM BREVE', title, sub, variant, cta: 'EM BREVE · FIQUE DE OLHO' };
     await renderVideo(`story-${key}.mp4`, STORY_DURATION, audio, (ctx, im, t) => drawStoryFrame(ctx, story, im, t), img);
     console.log('ok', `story-${key}.mp4`);
   }
-  const audio = join(tmpdir(), 'eafit-reel-corrida.wav');
-  writeFileSync(audio, makeWav(DURATION, { style: 'run', bpm: 140, sweeps: [3.4, 9.6] }));
-  for (const reel of REELS) {
+  const wav = join(tmpdir(), 'eafit-reel-corrida.wav');
+  writeFileSync(wav, makeWav(DURATION, { style: 'run', bpm: 140, sweeps: [3.4, 9.6] }));
+  for (const [i, reel] of REELS.entries()) {
+    const audio = plan.reel(i) || wav;
     const img = await loadImage(readFileSync(join(PRINTS, `${reel.print}.webp`)));
     await renderVideo(`reel-${reel.key}.mp4`, DURATION, audio, (ctx, im, t) => drawReelFrame(ctx, reel, im, t), img);
     console.log('ok', `reel-${reel.key}.mp4`);
