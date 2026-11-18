@@ -10,7 +10,7 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { drawPhone } from '../src/lib/reelRender.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -406,7 +406,7 @@ function footer(ctx, w, h, label = 'eafit.com.br') {
   ctx.fillText(label, w / 2, h - 80);
 }
 
-async function printArt(item, format, footerLabel = 'Comece agora · eafit.com.br') {
+export async function printArt(item, format, footerLabel = 'Comece agora · eafit.com.br') {
   const [w, h] = SIZES[format];
   const canvas = createCanvas(w, h);
   const ctx = canvas.getContext('2d');
@@ -434,7 +434,7 @@ async function printArt(item, format, footerLabel = 'Comece agora · eafit.com.b
   return canvas.toBuffer('image/jpeg', 90);
 }
 
-function slideArt(lines, { big = false, number = null, small = '' } = {}) {
+export function slideArt(lines, { big = false, number = null, small = '' } = {}) {
   const [w, h] = SIZES.feed;
   const canvas = createCanvas(w, h);
   const ctx = canvas.getContext('2d');
@@ -523,4 +523,4 @@ async function main() {
   console.log(`${position} itens, artes em ${OUT}`);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

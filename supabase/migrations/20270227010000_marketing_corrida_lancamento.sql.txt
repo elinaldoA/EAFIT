@@ -1,0 +1,58 @@
+-- Itens da fila do autopost: lançamento do módulo Corrida (EAFIT Run).
+-- Gerado por app-admin/scripts/marketing-corrida-launch.mjs. NÃO aplicar antes de o
+-- módulo estar liberado para todos (Configurações do app > Módulos).
+insert into public.marketing_autopost_queue (position, key, format, caption, media)
+select (select coalesce(max(position), 0) from public.marketing_autopost_queue) + v.n, v.key, v.format, v.caption, v.media::jsonb
+from (values
+  (1, 'corrida-inicio-feed', 'feed', 'Chegou o EAFIT Run. 🏃
+Grave a corrida com GPS, veja o mapa, o ritmo e o tempo e receba aplausos de quem corre com você.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-inicio-feed.jpg"}]'),
+  (2, 'corrida-lancamento-story', 'story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-corrida-lancamento.mp4"}]'),
+  (3, 'corrida-lancamento-reel', 'reel', 'Corrida, mapa e amigos no mesmo app. 🏃
+O EAFIT Run grava o seu percurso e mostra o ritmo de cada quilômetro.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/reel-corrida-lancamento.mp4"}]'),
+  (4, 'corrida-motivos-feed', 'feed', 'Cinco motivos para gravar a sua próxima corrida no EAFIT Run. 🏃
+Salve este post e mande para o seu parceiro de corrida.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-motivos-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-motivos-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-motivos-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-motivos-4.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-motivos-5.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-motivos-6.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-motivos-7.jpg"}]'),
+  (5, 'corrida-ao-vivo-feed', 'feed', 'Corrida gravada enquanto você corre. 📍
+O app mostra tempo, distância, ritmo e o tempo de cada quilômetro, e pode avisar por voz a cada km.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-ao-vivo-feed.jpg"}]'),
+  (6, 'corrida-ao-vivo-story', 'story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-corrida-ao-vivo.mp4"}]'),
+  (7, 'corrida-5k-reel', 'reel', 'Primeiros 5 km sem improviso. 👟
+Escolha o objetivo e o seu nível e o app monta as semanas, com corrida, descanso e força para corredor.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/reel-corrida-5k.mp4"}]'),
+  (8, 'corrida-5k-feed', 'feed', 'Começar a correr não precisa ser difícil. 👟
+Salve estes passos e comece do seu jeito. No EAFIT Run, o programa de 5K diz qual corrida fazer em cada dia.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-5k-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-5k-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-5k-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-5k-4.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-5k-5.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-5k-6.jpg"}]'),
+  (9, 'corrida-desafios-feed', 'feed', 'Todo mês um desafio novo. 🏅
+Corra os km do mês, feche as corridas da semana e dispute o ranking de km com os amigos.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-desafios-feed.jpg"}]'),
+  (10, 'corrida-desafios-story', 'story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-corrida-desafios.mp4"}]'),
+  (11, 'corrida-amigos-reel', 'reel', 'Com amigo junto, fica mais difícil faltar. 👊
+Adicione os amigos pelo código, veja as corridas deles e dispute os km da semana.
+
+Comece agora. Link na bio 👇
+
+#corrida #corridaderua #running #treino #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/reel-corrida-amigos.mp4"}]')
+) as v(n, key, format, caption, media);
