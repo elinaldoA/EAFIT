@@ -19,7 +19,14 @@ import { preferredSport, clearSportPref } from '../lib/sportPreference';
 import { t } from '../lib/i18n';
 import Wordmark from './Wordmark';
 // Na ordem da tela: o foco vai para o primeiro com erro.
-const FIELD_IDS = { nome: 'onbNome', sexo: 'onbSexo', idade: 'onbIdade', peso: 'onbPeso', altura: 'onbAltura' };
+const FIELD_IDS = { nome: 'onbNome', sexo: 'onbSexo', idade: 'onbIdade', peso: 'onbPeso', altura: 'onbAltura', nivel: 'onbNivel' };
+
+// Campos validados em cada passo. Esporte sem plano de musculação (ex.: EAFIT
+// Run) não tem o passo "Seu treino": o nível vai para o passo do corpo.
+const STEP_FIELDS = {
+  plan: [['nome', 'sexo', 'idade'], ['peso', 'altura'], ['nivel']],
+  noPlan: [['nome', 'sexo', 'idade'], ['peso', 'altura', 'nivel']],
+};
 
 export default function OnboardingScreen() {
   const { user, updateProfile } = useAuth();
@@ -32,7 +39,8 @@ export default function OnboardingScreen() {
   const [peso, setPeso] = useState('');
   const [altura, setAltura] = useState('');
   const [meta, setMeta] = useState('massa');
-  const [nivel, setNivel] = useState('intermediario');
+  // Sem nível pré-marcado: quem é iniciante e não olha recebia um plano pesado demais.
+  const [nivel, setNivel] = useState('');
   const [local, setLocal] = useState('academia');
   // Esporte = versão do app (modules/registry.js); só pergunta com mais de um liberado.
   // A pergunta de esporte só existe com o módulo liberado para todos (`released`);
@@ -49,6 +57,10 @@ export default function OnboardingScreen() {
   }
   // Módulo sem plano de musculação (ex.: EAFIT Run): sem objetivo, local nem treino gerado.
   const usesPlan = available.find(m => m.id === esporte)?.workoutPlan !== false;
+  const stepFields = usesPlan ? STEP_FIELDS.plan : STEP_FIELDS.noPlan;
+  const total = stepFields.length;
+  const [step, setStep] = useState(0);
+  const last = step >= total - 1;
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   // Erros por campo, mostrados junto de cada um. Mexer no campo apaga o erro dele.
@@ -57,14 +69,65 @@ export default function OnboardingScreen() {
   // Plano já semeado nesta tela: se só o salvamento do perfil falhar, tentar
   // de novo não cria um segundo plano.
   const seeded = useRef(false);
+  const titleRef = useRef(null);
+  const mounted = useRef(false);
+  // Erro achado em outro passo: o foco vai para o campo depois de a tela trocar.
+  const focusErrors = useRef(null);
 
   // Métrica do painel: até onde cada pessoa chega no preenchimento.
   useEffect(() => { trackEvent('onboarding', 'view'); }, []);
   useEffect(() => {
-    Object.entries({ nome, sexo, idade, peso, altura }).forEach(([field, value]) => {
+    Object.entries({ nome, sexo, idade, peso, altura, nivel }).forEach(([field, value]) => {
       if (value) trackEvent('onboarding', field);
     });
-  }, [nome, sexo, idade, peso, altura]);
+  }, [nome, sexo, idade, peso, altura, nivel]);
+
+  // Trocou de passo: foca o primeiro erro (se veio de um envio) ou o título do passo.
+  useEffect(() => {
+    if (focusErrors.current) {
+      focusFirstError(focusErrors.current, FIELD_IDS);
+      focusErrors.current = null;
+    } else if (mounted.current) {
+      titleRef.current?.focus();
+    }
+    mounted.current = true;
+  }, [step]);
+
+  // Erros de todos os campos (alturaCm já em centímetros).
+  function allErrors(alturaCm) {
+    return {
+      ...(!cleanName(nome) && { nome: t('Diga como podemos te chamar.') }),
+      ...bodyErrors({ sexo, idade, peso, altura: alturaCm }, { onboarding: true }),
+      ...(!nivel && { nivel: t('Escolha o seu nível de experiência.') }),
+    };
+  }
+
+  function goNext() {
+    const alturaCm = heightToCm(altura);
+    if (alturaCm !== altura) setAltura(alturaCm);
+    const found = allErrors(alturaCm);
+    const own = Object.fromEntries(Object.entries(found).filter(([field]) => stepFields[step].includes(field)));
+    const fields = Object.keys(own);
+    const noSport = step === 0 && !esporte;
+    setErrors(own);
+    if (noSport) {
+      trackEvent('onboarding', 'erro_esporte');
+      setMsg(t('Escolha o seu esporte para continuar.'));
+    } else {
+      setMsg('');
+    }
+    fields.forEach(field => trackEvent('onboarding', `erro_${field}`));
+    if (fields.length) focusFirstError(own, FIELD_IDS);
+    if (fields.length || noSport) return;
+    trackEvent('onboarding', `passo_${step + 2}`);
+    setStep(step + 1);
+  }
+
+  function goBack() {
+    setMsg('');
+    setErrors({});
+    setStep(Math.max(0, step - 1));
+  }
 
   async function handleSubmit() {
     trackEvent('onboarding', 'submit');
@@ -78,22 +141,28 @@ export default function OnboardingScreen() {
     if (!esporte) {
       trackEvent('onboarding', 'erro_esporte');
       setMsg(t('Escolha o seu esporte para continuar.'));
+      setStep(0);
       return;
     }
 
-    const nomeLimpo = cleanName(nome);
-    const found = {
-      ...(!nomeLimpo && { nome: t('Diga como podemos te chamar.') }),
-      ...bodyErrors({ sexo, idade, peso, altura: alturaCm }, { onboarding: true }),
-    };
+    // Confere tudo de novo: se algo ficou inválido num passo anterior, volta a ele.
+    const found = allErrors(alturaCm);
     const fields = Object.keys(found);
-    setErrors(found);
     if (fields.length) {
+      const target = stepFields.findIndex(group => group.some(f => found[f]));
+      const own = Object.fromEntries(Object.entries(found).filter(([field]) => stepFields[target].includes(field)));
       fields.forEach(field => trackEvent('onboarding', `erro_${field}`));
+      setErrors(own);
       setMsg('');
-      focusFirstError(found, FIELD_IDS);
+      if (target === step) {
+        focusFirstError(own, FIELD_IDS);
+      } else {
+        focusErrors.current = own;
+        setStep(target);
+      }
       return;
     }
+    setErrors({});
 
     setBusy(true);
     setMsg('');
@@ -110,7 +179,7 @@ export default function OnboardingScreen() {
         seeded.current = true;
       }
 
-      const { error } = await updateProfile({ nome: nomeLimpo, sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, esporte });
+      const { error } = await updateProfile({ nome: cleanName(nome), sexo, idade: idadeNum, peso: pesoNum, altura: alturaNum, meta, nivel, local, esporte });
       if (error) throw error;
       // O peso do cadastro é o primeiro ponto do gráfico da Evolução (antes ia só
       // para o perfil, e a aba Corpo dizia "Nenhum peso registrado" para quem tinha
@@ -129,6 +198,20 @@ export default function OnboardingScreen() {
     }
   }
 
+  const titles = usesPlan ? [t('Sobre você'), t('Seu corpo'), t('Seu treino')] : [t('Sobre você'), t('Seu corpo')];
+  const nivelField = (
+    <div className="profile-field">
+      <label className="profile-field__label" htmlFor={FIELD_IDS.nivel}>{t('Nível de experiência')}</label>
+      <select id={FIELD_IDS.nivel} className="input" value={nivel} {...invalidProps(FIELD_IDS.nivel, errors.nivel)} onChange={e => { setNivel(e.target.value); clearError('nivel'); }}>
+        <option value="" disabled>{t('Selecione')}</option>
+        <option value="iniciante">{t('Iniciante')}</option>
+        <option value="intermediario">{t('Intermediário')}</option>
+        <option value="avancado">{t('Avançado')}</option>
+      </select>
+      <FieldError id={FIELD_IDS.nivel} message={errors.nivel} />
+    </div>
+  );
+
   return (
     <div className="auth-screen">
       <div className="auth-inner">
@@ -137,89 +220,103 @@ export default function OnboardingScreen() {
           <div className="auth-logo__name"><Wordmark /></div>
           <p className="auth-logo__tagline">{usesPlan ? t('Vamos montar seu treino personalizado') : t('Conte um pouco sobre você')}</p>
         </div>
-        <form className="auth-form" onSubmit={e => { e.preventDefault(); handleSubmit(); }} noValidate>
-          <SportPicker id="onbSport" value={esporte} onChange={pickSport} modules={sports} />
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor={FIELD_IDS.nome}>{t('Como podemos te chamar?')}</label>
-            <input
-              type="text" id={FIELD_IDS.nome} className="input" placeholder={t('Seu primeiro nome')}
-              autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" maxLength={NAME_MAX}
-              value={nome} {...invalidProps(FIELD_IDS.nome, errors.nome)}
-              onChange={e => { setNome(e.target.value); clearError('nome'); }}
-            />
-            <FieldError id={FIELD_IDS.nome} message={errors.nome} />
+        <form className="auth-form" onSubmit={e => { e.preventDefault(); if (last) handleSubmit(); else goNext(); }} noValidate>
+          <div className="onb-progress">
+            <div className="onb-progress__bar" aria-hidden="true"><i style={{ width: `${((step + 1) / total) * 100}%` }} /></div>
+            <p className="onb-progress__label" aria-live="polite">{t('Passo {n} de {total}', { n: step + 1, total })}</p>
           </div>
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbSexo">{t('Sexo biológico')}</label>
-            <select id="onbSexo" className="input" value={sexo} {...invalidProps(FIELD_IDS.sexo, errors.sexo)} onChange={e => { setSexo(e.target.value); clearError('sexo'); }}>
-              <option value="" disabled>{t('Selecione')}</option>
-              <option value="M">{t('Masculino')}</option>
-              <option value="F">{t('Feminino')}</option>
-            </select>
-            <FieldError id={FIELD_IDS.sexo} message={errors.sexo} />
-          </div>
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbIdade">{t('Idade')}</label>
-            <input
-              type="number" id="onbIdade" inputMode="numeric" enterKeyHint="next" className="input" placeholder={t('Ex: 28')}
-              min="14" max="100" value={idade} {...invalidProps(FIELD_IDS.idade, errors.idade)}
-              onChange={e => { setIdade(e.target.value); clearError('idade'); }}
-            />
-            <FieldError id={FIELD_IDS.idade} message={errors.idade} />
-          </div>
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbPeso">{t('Peso (kg)')}</label>
-            <input
-              type="number" id="onbPeso" inputMode="decimal" enterKeyHint="next" className="input" placeholder={t('Ex: 85')}
-              min="30" max="300" step="0.1" value={peso} {...invalidProps(FIELD_IDS.peso, errors.peso)}
-              onChange={e => { setPeso(e.target.value); clearError('peso'); }}
-            />
-            <FieldError id={FIELD_IDS.peso} message={errors.peso} />
-          </div>
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbAltura">{t('Altura (cm)')}</label>
-            <input
-              type="number" id="onbAltura" inputMode="numeric" enterKeyHint="go" className="input" placeholder={t('Ex: 178')}
-              min="100" max="250" value={altura} {...invalidProps(FIELD_IDS.altura, errors.altura)}
-              onChange={e => { setAltura(e.target.value); clearError('altura'); }}
-              onBlur={e => setAltura(heightToCm(e.target.value))}
-            />
-            <FieldError id={FIELD_IDS.altura} message={errors.altura} />
-          </div>
-          {usesPlan && (
-            <div className="profile-field">
-              <label className="profile-field__label" htmlFor="onbMeta">{t('Objetivo principal')}</label>
-              <select id="onbMeta" className="input" value={meta} onChange={e => setMeta(e.target.value)}>
-                <option value="massa">{t('Ganho de massa')}</option>
-                <option value="forca">{t('Aumento de força')}</option>
-                <option value="emagrecer">{t('Emagrecimento')}</option>
-                <option value="definicao">{t('Definição muscular')}</option>
-                <option value="saude">{t('Saúde e bem-estar')}</option>
-                <option value="resistencia">{t('Resistência / Condicionamento')}</option>
-              </select>
-            </div>
+          <h2 className="onb-step__title" ref={titleRef} tabIndex={-1}>{titles[step]}</h2>
+          {step === 0 && (
+            <>
+              <SportPicker id="onbSport" value={esporte} onChange={pickSport} modules={sports} />
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor={FIELD_IDS.nome}>{t('Como podemos te chamar?')}</label>
+                <input
+                  type="text" id={FIELD_IDS.nome} className="input" placeholder={t('Seu primeiro nome')}
+                  autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" maxLength={NAME_MAX}
+                  value={nome} {...invalidProps(FIELD_IDS.nome, errors.nome)}
+                  onChange={e => { setNome(e.target.value); clearError('nome'); }}
+                />
+                <FieldError id={FIELD_IDS.nome} message={errors.nome} />
+              </div>
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor="onbSexo">{t('Sexo biológico')}</label>
+                <select id="onbSexo" className="input" value={sexo} {...invalidProps(FIELD_IDS.sexo, errors.sexo)} onChange={e => { setSexo(e.target.value); clearError('sexo'); }}>
+                  <option value="" disabled>{t('Selecione')}</option>
+                  <option value="M">{t('Masculino')}</option>
+                  <option value="F">{t('Feminino')}</option>
+                </select>
+                <FieldError id={FIELD_IDS.sexo} message={errors.sexo} />
+              </div>
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor="onbIdade">{t('Idade')}</label>
+                <input
+                  type="number" id="onbIdade" inputMode="numeric" enterKeyHint="next" className="input" placeholder={t('Ex: 28')}
+                  min="14" max="100" value={idade} {...invalidProps(FIELD_IDS.idade, errors.idade)}
+                  onChange={e => { setIdade(e.target.value); clearError('idade'); }}
+                />
+                <FieldError id={FIELD_IDS.idade} message={errors.idade} />
+              </div>
+            </>
           )}
-          <div className="profile-field">
-            <label className="profile-field__label" htmlFor="onbNivel">{t('Nível de experiência')}</label>
-            <select id="onbNivel" className="input" value={nivel} onChange={e => setNivel(e.target.value)}>
-              <option value="iniciante">{t('Iniciante')}</option>
-              <option value="intermediario">{t('Intermediário')}</option>
-              <option value="avancado">{t('Avançado')}</option>
-            </select>
-          </div>
-          {usesPlan && (
-            <div className="profile-field">
-              <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
-              <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
-                <option value="academia">{t('Academia')}</option>
-                <option value="condominio">{t('Academia do condomínio')}</option>
-                <option value="casa">{t('Em casa')}</option>
-              </select>
-            </div>
+          {step === 1 && (
+            <>
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor="onbPeso">{t('Peso (kg)')}</label>
+                <input
+                  type="number" id="onbPeso" inputMode="decimal" enterKeyHint="next" className="input" placeholder={t('Ex: 85')}
+                  min="30" max="300" step="0.1" value={peso} {...invalidProps(FIELD_IDS.peso, errors.peso)}
+                  onChange={e => { setPeso(e.target.value); clearError('peso'); }}
+                />
+                <FieldError id={FIELD_IDS.peso} message={errors.peso} />
+              </div>
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor="onbAltura">{t('Altura (cm)')}</label>
+                <input
+                  type="number" id="onbAltura" inputMode="numeric" enterKeyHint={last ? 'go' : 'next'} className="input" placeholder={t('Ex: 178')}
+                  min="100" max="250" value={altura} {...invalidProps(FIELD_IDS.altura, errors.altura)}
+                  onChange={e => { setAltura(e.target.value); clearError('altura'); }}
+                  onBlur={e => setAltura(heightToCm(e.target.value))}
+                />
+                <FieldError id={FIELD_IDS.altura} message={errors.altura} />
+              </div>
+              {!usesPlan && nivelField}
+            </>
           )}
-          <button type="submit" className="btn btn--primary btn--full" disabled={busy}>
-            {busy ? (usesPlan ? t('Gerando seu plano…') : t('Salvando…')) : usesPlan ? t('Gerar meu treino') : t('Começar')}
-          </button>
+          {step === 2 && usesPlan && (
+            <>
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor="onbMeta">{t('Objetivo principal')}</label>
+                <select id="onbMeta" className="input" value={meta} onChange={e => setMeta(e.target.value)}>
+                  <option value="massa">{t('Ganho de massa')}</option>
+                  <option value="forca">{t('Aumento de força')}</option>
+                  <option value="emagrecer">{t('Emagrecimento')}</option>
+                  <option value="definicao">{t('Definição muscular')}</option>
+                  <option value="saude">{t('Saúde e bem-estar')}</option>
+                  <option value="resistencia">{t('Resistência / Condicionamento')}</option>
+                </select>
+              </div>
+              {nivelField}
+              <div className="profile-field">
+                <label className="profile-field__label" htmlFor="onbLocal">{t('Onde você treina')}</label>
+                <select id="onbLocal" className="input" value={local} onChange={e => setLocal(e.target.value)}>
+                  <option value="academia">{t('Academia')}</option>
+                  <option value="condominio">{t('Academia do condomínio')}</option>
+                  <option value="casa">{t('Em casa')}</option>
+                </select>
+              </div>
+            </>
+          )}
+          <div className="onb-actions">
+            {step > 0 && (
+              <button type="button" className="btn btn--outline" disabled={busy} onClick={goBack}>{t('Voltar')}</button>
+            )}
+            <button type="submit" className="btn btn--primary" disabled={busy}>
+              {last
+                ? (busy ? (usesPlan ? t('Gerando seu plano…') : t('Salvando…')) : usesPlan ? t('Gerar meu treino') : t('Começar'))
+                : t('Próximo passo')}
+            </button>
+          </div>
           <p className="auth-form__msg auth-form__msg--error" role="alert">
             {Object.values(errors).some(Boolean) ? t('Corrija os campos marcados acima.') : msg}
           </p>

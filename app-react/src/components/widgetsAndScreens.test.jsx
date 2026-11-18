@@ -370,14 +370,21 @@ describe('PasswordRecoveryScreen', () => {
 });
 
 describe('OnboardingScreen', () => {
-  const fill = ({ nome = 'Ana', sexo = 'M', idade = '30', peso = '80', altura = '180' } = {}) => {
+  const advance = () => fireEvent.click(document.querySelector('button[type="submit"]'));
+  // Preenche passo a passo. Se um passo trava por erro, para nele (como a pessoa veria).
+  const fill = ({ nome = 'Ana', sexo = 'M', idade = '30', peso = '80', altura = '180', nivel = 'intermediario' } = {}) => {
     fireEvent.change(screen.getByLabelText('Como podemos te chamar?'), { target: { value: nome } });
     fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: sexo } });
     fireEvent.change(screen.getByLabelText('Idade'), { target: { value: idade } });
+    advance();
+    if (!screen.queryByLabelText('Peso (kg)')) return;
     fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: peso } });
     fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: altura } });
+    advance();
+    if (!screen.queryByLabelText('Nível de experiência')) return;
+    fireEvent.change(screen.getByLabelText('Nível de experiência'), { target: { value: nivel } });
   };
-  const submit = () => fireEvent.click(screen.getByText('Gerar meu treino'));
+  const submit = advance;
 
   it.each([
     [{ nome: '   ' }, 'Como podemos te chamar?', 'Diga como podemos te chamar.'],
@@ -396,14 +403,13 @@ describe('OnboardingScreen', () => {
     expect(h.tpl.generatePlan).not.toHaveBeenCalled();
   });
 
-  it('mostra todos os erros de uma vez, leva ao primeiro e cada um some ao mexer no campo', () => {
+  it('mostra os erros do passo de uma vez, leva ao primeiro e cada um some ao mexer no campo', () => {
     render(<OnboardingScreen />);
     fill({ sexo: '', idade: '3', peso: '850' });
     submit();
     expect(screen.getByText('Selecione o sexo biológico.')).toBeTruthy();
     expect(screen.getByText('Informe uma idade válida (14–100).')).toBeTruthy();
-    expect(screen.getByText('Informe um peso entre 30 e 300 kg.')).toBeTruthy();
-    expect(screen.queryByText('Informe a altura entre 100 e 250 cm.')).toBeNull();
+    expect(screen.queryByLabelText('Peso (kg)')).toBeNull(); // trava no passo 1
     expect(document.activeElement).toBe(screen.getByLabelText('Sexo biológico'));
 
     fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: 'F' } });
@@ -411,10 +417,15 @@ describe('OnboardingScreen', () => {
     expect(screen.queryByText('Selecione o sexo biológico.')).toBeNull();
     expect(screen.queryByText('Informe uma idade válida (14–100).')).toBeNull();
     expect(screen.getByLabelText('Idade').getAttribute('aria-invalid')).toBeNull();
-    expect(screen.getByText('Corrija os campos marcados acima.')).toBeTruthy();
-
-    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '85' } });
     expect(screen.queryByText('Corrija os campos marcados acima.')).toBeNull();
+
+    submit();
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '850' } });
+    submit();
+    expect(screen.getByText('Informe um peso entre 30 e 300 kg.')).toBeTruthy();
+    expect(screen.getByText('Informe a altura entre 100 e 250 cm.')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '85' } });
+    expect(screen.queryByText('Informe um peso entre 30 e 300 kg.')).toBeNull();
   });
 
   it('salva o nome sem espaços sobrando; quem entrou com o Google já vem com o primeiro nome', async () => {
@@ -436,6 +447,8 @@ describe('OnboardingScreen', () => {
 
   it('altura digitada em metros vira centímetros ao sair do campo', () => {
     render(<OnboardingScreen />);
+    fill();
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar' }));
     const field = screen.getByLabelText('Altura (cm)');
     // o campo é type=number: o navegador entrega a vírgula como ponto
     fireEvent.change(field, { target: { value: '1.78' } });
