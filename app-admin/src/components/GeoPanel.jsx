@@ -1,9 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  fetchVisitGeo, fetchAppGeo, fetchUserGeo, fetchUserGeoRetention, retentionByUf, resolveGeoNow, fetchGeoCompare, fetchUserGeoCompare, compareUsers, conversionPrev, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
-  compareGeo, conversionByUf, sortConversion, REGIONS, groupByRegion, regionTrends, rangeFromDates, monthRange, rangeStart, todaySp, trend, trendLabel, demographics, countryName, flag, cityKey, UF_NAMES,
+  retentionByUf, resolveGeoNow, compareUsers, conversionPrev, fetchGeoDaily, dailySeries, fetchGeoAudience, audience, fetchGeoHours, hourSeries, newPlaces, selectAccessRows, splitSiteApp, summarizeGeo,
+  compareGeo, conversionByUf, sortConversion, REGIONS, groupByRegion, regionTrends, rangeFromDates, monthRange, rangeStart, todaySp, trend, demographics, countryName, flag, UF_NAMES,
 } from '../lib/geo';
-import { toCsv, downloadCsv } from '../lib/csv';
 import PeriodChart from './PeriodChart';
 import Donut from './charts/Donut';
 import BrazilMap from './BrazilMap';
@@ -12,91 +11,11 @@ import RetentionTable from './RetentionTable';
 import ConversionTable from './ConversionTable';
 import { CitiesTab, CountriesTab } from './GeoTables';
 import { Trend, Bars } from './GeoParts';
+import { VIEWS, PERIODS, MODES, CITIES_PREVIEW, CITIES_MAX, STATES_PREVIEW, fold, spanKey, TODAY_ONLY, dataKey, compareKey, kindOf, isTableMode, dailyKey, audienceKey, hoursKey, loadCompare, loadFor, readPrefs, PREFS_KEY, fmtFull, fmtDay } from './geoPanel/config';
+import { exportGeoCsv } from './geoPanel/exportCsv';
 
 const WorldMap = lazy(() => import('./WorldMap'));
 
-const VIEWS = [
-  { key: 'brasil', label: 'Brasil' },
-  { key: 'mundo', label: 'Mundo' },
-];
-
-const PERIODS = [
-  { days: 7, label: '7 dias' },
-  { days: 30, label: '30 dias' },
-  { days: 90, label: '90 dias' },
-];
-
-const MODES = [
-  { key: 'tudo', label: 'Tudo', unit: 'acessos', note: 'Visitas ao site e acessos ao app (1 por navegador ou conta por dia).' },
-  { key: 'site', label: 'Site', unit: 'visitas', note: 'Visitas à página de apresentação (1 por navegador por dia).' },
-  { key: 'app', label: 'App', unit: 'acessos', note: 'Tela de login de quem chega sem sessão e dias de uso de quem está logado (1 por navegador ou conta por dia).' },
-  { key: 'contas', label: 'Contas', unit: 'contas', note: 'Contas que abriram o app no período, pelo último acesso. A seta compara com os dias anteriores pelos dias de uso (uma conta conta uma vez por lugar).' },
-  { key: 'retencao', label: 'Retenção', unit: 'estados', note: 'Por estado, pelo último acesso de cada conta: contas, novas no período, ativas no período e retenção (das contas criadas antes do período, quantas voltaram a abrir o app nele).' },
-  { key: 'conversao', label: 'Conversão', unit: 'estados', note: 'Por estado: visitas ao site (1 por navegador por dia) × contas que abriram o app no período. Não é taxa de cadastro: mede contas ativas a cada 100 visitas, e as duas contagens não são da mesma coorte.' },
-];
-
-const CITIES_PREVIEW = 10;
-const CITIES_MAX = 200; // "Ver todas" não despeja milhares de linhas; a busca acha o resto
-const STATES_PREVIEW = 8;
-
-// Busca sem diferenciar maiúsculas nem acentos ("sao paulo" acha "São Paulo").
-const fold = s => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-// Chaves do cache: Tudo, Site e App saem das mesmas consultas (visitas + app),
-// então trocar entre eles não consulta de novo. `round` muda no "Atualizar".
-// Período na chave do cache: "30" (termina hoje) ou "30@2026-10-31".
-const spanKey = (days, end) => (end ? `${days}@${end}` : String(days));
-// Modos que olham o último acesso de cada conta: só valem para períodos até hoje.
-const TODAY_ONLY = ['contas', 'conversao', 'retencao'];
-const dataKey = (round, mode, days) => `${round}:${mode === 'contas' || mode === 'conversao' || mode === 'retencao' ? mode : 'acessos'}:${days}`;
-const compareKey = (round, days, kind = 'acessos') => `${round}:comparar:${kind}:${days}`;
-// Retenção é só uma tabela por estado: não tem comparação nem gráficos.
-const kindOf = mode => (mode === 'retencao' ? null : mode === 'contas' || mode === 'conversao' ? mode : 'acessos');
-const isTableMode = mode => mode === 'conversao' || mode === 'retencao';
-const dailyKey = (round, days) => `${round}:diario:${days}`;
-const audienceKey = (round, days) => `${round}:origem:${days}`;
-const hoursKey = (round, days) => `${round}:horas:${days}`;
-
-async function loadAccess(days, end) {
-  const [visits, app] = await Promise.all([fetchVisitGeo(days, end), fetchAppGeo(days, end)]);
-  return { visits, app };
-}
-
-async function loadConversion(days) {
-  const [visits, users] = await Promise.all([fetchVisitGeo(days), fetchUserGeo(days)]);
-  return { visits, users };
-}
-
-// Comparação com o período anterior de cada modo.
-const loadCompare = (mode, days, end) => {
-  if (mode === 'contas') return fetchUserGeoCompare(days);
-  if (mode === 'conversao') return Promise.all([fetchGeoCompare(days), fetchUserGeoCompare(days)]).then(([visits, users]) => ({ visits, users }));
-  return fetchGeoCompare(days, end);
-};
-
-const loadFor = (mode, days, end) => {
-  if (mode === 'contas') return fetchUserGeo(days);
-  if (mode === 'conversao') return loadConversion(days);
-  if (mode === 'retencao') return fetchUserGeoRetention(days);
-  return loadAccess(days, end);
-};
-
-// Lembra modo, período e visão entre visitas ao painel (só conveniência: se o
-// armazenamento falhar ou vier algo estranho, volta ao padrão).
-const PREFS_KEY = 'admin.geo.prefs';
-function readPrefs() {
-  const out = { days: 30, mode: 'tudo', view: 'brasil' };
-  try {
-    const p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
-    if (Number.isInteger(p.days) && p.days >= 1 && p.days <= 366) out.days = p.days;
-    if (MODES.some(m => m.key === p.mode)) out.mode = p.mode;
-    if (VIEWS.some(v => v.key === p.view)) out.view = p.view;
-  } catch { /* sem armazenamento: usa o padrão */ }
-  return out;
-}
-
-const fmtFull = day => day.split('-').reverse().join('/');
-const fmtDay = day => day.split('-').reverse().slice(0, 2).join('/');
 
 // Dashboard → Localização: de onde vêm as visitas e onde estão as contas.
 export default function GeoPanel() {
@@ -274,53 +193,7 @@ export default function GeoPanel() {
     try { await resolveGeoNow(); setResolving('done'); } catch { setResolving('error'); }
   };
 
-  const exportCsv = () => {
-    if (isRetention) {
-      downloadCsv(`localizacao_retencao_${shownDays}d.csv`, toCsv(retention.map(r => ({ ...r, retention: r.retention ?? '' })), [
-        { key: 'label', label: 'Estado' }, { key: 'total', label: 'Contas' }, { key: 'novas', label: 'Novas no período' },
-        { key: 'ativas', label: 'Ativas no período' }, { key: 'antigas', label: 'Contas criadas antes do período' },
-        { key: 'antigasAtivas', label: 'Dessas, ativas no período' }, { key: 'retention', label: 'Retenção %' },
-      ]));
-      return;
-    }
-    if (isConversion) {
-      downloadCsv(`localizacao_conversao_${shownDays}d.csv`, toCsv(conversion.map(c => ({ ...c, rate: c.rate ?? '', prevRate: convPrev?.get(c.uf)?.rate ?? '' })), [
-        { key: 'label', label: 'Estado' }, { key: 'visits', label: 'Visitas ao site' },
-        { key: 'users', label: 'Contas' }, { key: 'rate', label: 'Contas por 100 visitas' },
-        ...(convPrev ? [{ key: 'prevRate', label: `Contas por 100 visitas (${shownDays} dias anteriores)` }] : []),
-      ]));
-      return;
-    }
-    const withTrend = (map, key) => {
-      const v = map?.get(key);
-      return { anterior: v ? v.prev : '', variacao: trendLabel(trend(v)) };
-    };
-    const out = [
-      ...(view === 'brasil' && !uf ? regions.map(r => ({ tipo: 'Região', nome: r.label, total: r.total, pct: r.pct, ...withTrend(regionCmp, r.region) })) : []),
-      ...summary.states.map(s => ({ tipo: 'Estado', nome: s.label, total: s.total, pct: s.pct, ...withTrend(cmp?.byUf, s.uf) })),
-      ...summary.countries.map(c => ({ tipo: 'País', nome: c.label, total: c.total, pct: c.pct, ...withTrend(cmp?.byCountry, c.code) })),
-      ...summary.cities.map(c => ({
-        tipo: 'Cidade', nome: [c.city, c.place, c.country].filter(Boolean).join(' · '), total: c.total, pct: cityPct(c.total),
-        ...withTrend(cmp?.byCity, cityKey(c)),
-      })),
-      ...(demo ? [
-        ...demo.sexo.map(x => ({ tipo: 'Sexo', nome: x.label, total: x.total, pct: x.pct })),
-        ...demo.faixa.map(x => ({ tipo: 'Faixa etária', nome: x.label, total: x.total, pct: x.pct })),
-      ] : []),
-      ...(daily ? daily.map(d => ({ tipo: 'Dia', nome: fmtDay(d.day), total: d.total })) : []),
-      ...(hours ? hours.map(h => ({ tipo: 'Horário (Brasília)', nome: `${h.hour}h`, total: h.total })) : []),
-      ...(aud?.total > 0 ? [
-        ...aud.source.map(x => ({ tipo: 'Origem', nome: x.label, total: x.total, pct: x.pct })),
-        ...aud.device.map(x => ({ tipo: 'Aparelho', nome: x.label, total: x.total, pct: x.pct })),
-      ] : []),
-    ];
-    const columns = [
-      { key: 'tipo', label: 'Tipo' }, { key: 'nome', label: 'Local' }, { key: 'total', label: current.unit }, { key: 'pct', label: '%' },
-      ...(cmp ? [{ key: 'anterior', label: `${shownDays} dias anteriores` }, { key: 'variacao', label: 'Variação' }] : []),
-    ];
-    const suffix = placeName ? `_${(uf || country || region).toLowerCase()}` : '';
-    downloadCsv(`localizacao_${shownMode}_${shownDays}d${shownEnd ? `_ate_${shownEnd}` : ''}${suffix}.csv`, toCsv(out, columns));
-  };
+  const exportCsv = () => exportGeoCsv({ isRetention, isConversion, shownDays, shownEnd, shownMode, retention, conversion, convPrev, view, uf, country, region, regions, summary, regionCmp, cmp, demo, daily, hours, aud, cityPct, current, placeName });
 
   return (
     <div className="stack">
