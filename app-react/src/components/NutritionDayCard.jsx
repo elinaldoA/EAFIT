@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { t, locale } from '../lib/i18n';
 import { pctOfGoal } from '../lib/nutritionTotals';
 
@@ -77,6 +78,11 @@ export default function NutritionDayCard({ totals, goals, micros, status, hint }
   });
   const kcalPct = pctOfGoal(totals.kcal, goals.kcal);
   const kcalOver = goals.kcal && totals.kcal > goals.kcal;
+  // Fibras, sódio, açúcares e gordura saturada ficam recolhidos; abrem sozinhos
+  // quando algum teto (sódio, açúcares, saturada) já foi passado.
+  const overLimit = !!micros && (micros.sodium > goals.sodium || micros.sugar > goals.sugar || micros.satFat > goals.satFat);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const showMore = moreOpen || overLimit;
 
   return (
     <div className="dash-card nutri-day">
@@ -101,12 +107,19 @@ export default function NutritionDayCard({ totals, goals, micros, status, hint }
           <Row key={m.key} k={m.key} dot label={m.label} value={m.value} text={fmt(m.value)} goal={m.goal} unit="g"
             note={kcalFromMacros ? t('{pct}% das kcal', { pct: m.share }) : null} />
         ))}
+      </ul>
+      <button type="button" className="link-btn nutri-day__more" aria-expanded={showMore} onClick={() => setMoreOpen(o => !o)}>
+        {showMore ? t('Menos nutrientes') : t('Mais nutrientes')}
+      </button>
+      {showMore && (
+      <ul className="nutri-day__rows">
         <Row k="fiber" label={t('Fibras')} value={micros?.fiber || 0} text={micros ? fmtDec(micros.fiber) : '—'} goal={goals.fiber} unit="g" />
         <Row k="sodium" label={t('Sódio')} value={micros?.sodium || 0} text={micros ? fmt(micros.sodium) : '—'} goal={goals.sodium} unit="mg" limit />
         {micros?.sugar != null && <Row k="sugar" label={t('Açúcares')} value={micros.sugar} text={fmtDec(micros.sugar)} goal={goals.sugar} unit="g" limit />}
         {micros?.satFat != null && <Row k="satFat" label={t('Gordura saturada')} value={micros.satFat} text={fmtDec(micros.satFat)} goal={goals.satFat} unit="g" limit />}
       </ul>
-      {micros?.partial && (
+      )}
+      {showMore && micros?.partial && (
         <p className="nutri-day__note">{t('Fibras, sódio, açúcares e gordura saturada só contam os alimentos que trazem esse dado (TACO, produtos lidos pelo código de barras e itens do catálogo); atalhos e valores digitados não.')}</p>
       )}
     </div>

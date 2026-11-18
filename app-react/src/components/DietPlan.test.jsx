@@ -11,7 +11,7 @@ describe('DietPlan', () => {
   it('importa o texto, mostra a prévia e salva', async () => {
     const onSave = vi.fn();
     render(<DietPlan plan={[]} onSave={onSave} onClear={() => {}} onRegister={() => {}} />);
-    fireEvent.click(screen.getByText('Importar dieta'));
+    fireEvent.click(screen.getByText('📋 Tenho uma dieta do nutricionista'));
     fireEvent.change(screen.getByLabelText('Cole a dieta aqui'), { target: { value: 'Almoço\nArroz 150g - 195 kcal - 4g prot' } });
     fireEvent.click(screen.getByText('Ler a dieta'));
     expect(screen.getByText('Arroz')).toBeTruthy();
@@ -22,7 +22,7 @@ describe('DietPlan', () => {
 
   it('avisa quando o texto não tem refeições', () => {
     render(<DietPlan plan={[]} onSave={() => {}} onClear={() => {}} onRegister={() => {}} />);
-    fireEvent.click(screen.getByText('Importar dieta'));
+    fireEvent.click(screen.getByText('📋 Tenho uma dieta do nutricionista'));
     fireEvent.change(screen.getByLabelText('Cole a dieta aqui'), { target: { value: 'oi' } });
     fireEvent.click(screen.getByText('Ler a dieta'));
     expect(screen.getByRole('alert')).toBeTruthy();

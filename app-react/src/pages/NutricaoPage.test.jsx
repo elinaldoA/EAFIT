@@ -29,7 +29,7 @@ vi.mock('../lib/nutritionFoods', () => foods);
 vi.mock('../lib/supabase', () => ({
   db: {
     from: () => ({
-      select: () => ({ eq: () => ({ eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }), gte: () => ({ order: () => Promise.resolve({ data: pastRows, error: null }) }) }) }),
+      select: () => ({ order: () => ({ limit: () => Promise.resolve({ data: [], error: null }) }), eq: () => ({ eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }), gte: () => ({ order: () => Promise.resolve({ data: pastRows, error: null }) }) }) }),
       upsert: () => Promise.resolve({ error: null }),
       delete: () => ({ eq: () => ({ eq: () => Promise.resolve({ error: null }) }) }),
     }),
@@ -83,8 +83,8 @@ describe('NutricaoPage', () => {
     await screen.findByText('Ovo');
     const labels = () => [...document.querySelectorAll('.water-quick__label')].map(e => e.textContent);
     const before = labels();
-    fireEvent.click(screen.getAllByText('Banana')[0]);
-    fireEvent.click(screen.getAllByText('Banana')[0]);
+    fireEvent.click(screen.getAllByText('Pão')[0]);
+    fireEvent.click(screen.getAllByText('Pão')[0]);
     expect(labels()).toEqual(before);
   });
 
@@ -217,6 +217,8 @@ describe('NutricaoPage', () => {
     expect(document.querySelector('.meal-log').textContent).toContain('Arroz branco cozido 200g');
     // Arroz da TACO traz fibra e sódio: entram no card do dia, junto dos macros.
     const card = document.querySelector('.nutri-day');
+    expect(card.textContent).not.toContain('Fibras');
+    fireEvent.click(screen.getByText('Mais nutrientes'));
     expect(card.textContent).toContain('Fibras3,2');
     expect(screen.getByRole('progressbar', { name: 'Sódio' })).toBeTruthy();
     // A pizza só tem fatia para macro com calorias (o arroz não tem gordura).
@@ -333,8 +335,9 @@ describe('NutricaoPage', () => {
       at(18);
       render(<NutricaoPage active />);
       await screen.findByText('Ovo');
-      expect(screen.getByText(/Para fechar a proteína de hoje/)).toBeTruthy();
-      const btn = document.querySelector('.close-protein button');
+      expect(screen.getByText(/ver o que fecha a meta/)).toBeTruthy();
+      fireEvent.click(screen.getByText(/ver o que fecha a meta/));
+      const btn = document.querySelector('.close-protein .water-actions button');
       fireEvent.click(btn);
       expect(readLocalTotals().protein).toBeGreaterThan(0);
     });
@@ -343,7 +346,7 @@ describe('NutricaoPage', () => {
       at(9);
       render(<NutricaoPage active />);
       await screen.findByText('Ovo');
-      expect(screen.queryByText(/Para fechar a proteína de hoje/)).toBeNull();
+      expect(screen.queryByText(/ver o que fecha a meta/)).toBeNull();
     });
 
     it('repete a refeição de ontem e abre a busca com os alimentos de sempre', async () => {
