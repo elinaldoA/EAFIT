@@ -893,6 +893,8 @@ textarea.input { resize: vertical; min-height: 120px; }
    (app-react/src/styles/season.css): tokens em roxo noturno, laranja como
    abóbora, lua no topo das páginas, morcegos, aranha e névoa.
 ============================================================ */
+/* Espaço reservado enquanto a faixa de temporada não chega (evita o pulo do layout) */
+.season-wait body::before { content: ''; display: block; height: var(--season-h, 0); }
 .season-bar {
   background: linear-gradient(100deg, rgba(168, 85, 247, .18), var(--primary-glow));
   border-bottom: 1px solid rgba(168, 85, 247, .55);

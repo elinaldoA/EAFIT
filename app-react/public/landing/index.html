@@ -34,6 +34,16 @@
     // escolhido (mesma chave "theme" do app), pra página não piscar.
     (function (root) {
       root.classList.add('js');
+      // Faixa de temporada: reserva o espaço dela (altura medida na visita
+      // anterior) para a página não pular quando ela entrar.
+      try {
+        var sb = JSON.parse(localStorage.getItem('eafit_season_bar') || 'null');
+        var d = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+        if (sb && sb.h > 0 && sb.until >= d && localStorage.getItem('eafit_season_banner_site') !== sb.id) {
+          root.style.setProperty('--season-h', sb.h + 'px');
+          root.classList.add('season-wait');
+        }
+      } catch (e) { /* sem reserva */ }
       try {
         var t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t);
@@ -163,12 +173,12 @@
             <div class="phone__screen phone__screen--shots" aria-hidden="true">
               <!-- prints reais do app com dados de demonstração (usuária fictícia "Ana") -->
               <div class="m-status m-status--over"><span>9:41</span><i></i></div>
-              <div class="scr scr--shot is-active" id="scr-0"><img src="/img/app/ao-vivo.webp" data-src-en="/img/app/ao-vivo-en.webp" alt="" width="580" height="1255" decoding="async" fetchpriority="high" /></div>
-              <div class="scr scr--shot" id="scr-1"><img src="/img/app/treino.webp" data-src-en="/img/app/treino-en.webp" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
-              <div class="scr scr--shot" id="scr-2"><img src="/img/app/historico.webp" data-src-en="/img/app/historico-en.webp" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
-              <div class="scr scr--shot" id="scr-3"><img src="/img/app/agua.webp" data-src-en="/img/app/agua-en.webp" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
-              <div class="scr scr--shot" id="scr-4"><img src="/img/app/nutricao.webp" data-src-en="/img/app/nutricao-en.webp" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
-              <div class="scr scr--shot" id="scr-5"><img src="/img/app/evolucao.webp" data-src-en="/img/app/evolucao-en.webp" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
+              <div class="scr scr--shot is-active" id="scr-0"><img src="/img/app/ao-vivo.webp" srcset="/img/app/ao-vivo-sm.webp 330w, /img/app/ao-vivo.webp 580w" sizes="270px" data-src-en="/img/app/ao-vivo-en.webp" data-srcset-en="/img/app/ao-vivo-en-sm.webp 330w, /img/app/ao-vivo-en.webp 580w" alt="" width="580" height="1255" decoding="async" fetchpriority="high" /></div>
+              <div class="scr scr--shot" id="scr-1"><img src="/img/app/treino.webp" srcset="/img/app/treino-sm.webp 330w, /img/app/treino.webp 580w" sizes="270px" data-src-en="/img/app/treino-en.webp" data-srcset-en="/img/app/treino-en-sm.webp 330w, /img/app/treino-en.webp 580w" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
+              <div class="scr scr--shot" id="scr-2"><img src="/img/app/historico.webp" srcset="/img/app/historico-sm.webp 330w, /img/app/historico.webp 580w" sizes="270px" data-src-en="/img/app/historico-en.webp" data-srcset-en="/img/app/historico-en-sm.webp 330w, /img/app/historico-en.webp 580w" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
+              <div class="scr scr--shot" id="scr-3"><img src="/img/app/agua.webp" srcset="/img/app/agua-sm.webp 330w, /img/app/agua.webp 580w" sizes="270px" data-src-en="/img/app/agua-en.webp" data-srcset-en="/img/app/agua-en-sm.webp 330w, /img/app/agua-en.webp 580w" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
+              <div class="scr scr--shot" id="scr-4"><img src="/img/app/nutricao.webp" srcset="/img/app/nutricao-sm.webp 330w, /img/app/nutricao.webp 580w" sizes="270px" data-src-en="/img/app/nutricao-en.webp" data-srcset-en="/img/app/nutricao-en-sm.webp 330w, /img/app/nutricao-en.webp 580w" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
+              <div class="scr scr--shot" id="scr-5"><img src="/img/app/evolucao.webp" srcset="/img/app/evolucao-sm.webp 330w, /img/app/evolucao.webp 580w" sizes="270px" data-src-en="/img/app/evolucao-en.webp" data-srcset-en="/img/app/evolucao-en-sm.webp 330w, /img/app/evolucao-en.webp 580w" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
             </div>
           </div>
 
@@ -287,8 +297,8 @@
             <div class="phone" role="img" aria-label="Prévia da aba Nutrição do app EAFIT">
               <div class="phone__screen phone__screen--shots" aria-hidden="true">
                 <div class="m-status m-status--over"><span>9:41</span><i></i></div>
-                <div class="scr scr--shot is-active" id="nscr-0"><img src="/img/app/nutricao-diario.webp" data-src-en="/img/app/nutricao-diario-en.webp" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
-                <div class="scr scr--shot" id="nscr-1"><img src="/img/app/nutricao.webp" data-src-en="/img/app/nutricao-en.webp" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
+                <div class="scr scr--shot is-active" id="nscr-0"><img src="/img/app/nutricao-diario.webp" srcset="/img/app/nutricao-diario-sm.webp 330w, /img/app/nutricao-diario.webp 580w" sizes="270px" data-src-en="/img/app/nutricao-diario-en.webp" data-srcset-en="/img/app/nutricao-diario-en-sm.webp 330w, /img/app/nutricao-diario-en.webp 580w" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
+                <div class="scr scr--shot" id="nscr-1"><img src="/img/app/nutricao.webp" srcset="/img/app/nutricao-sm.webp 330w, /img/app/nutricao.webp 580w" sizes="270px" data-src-en="/img/app/nutricao-en.webp" data-srcset-en="/img/app/nutricao-en-sm.webp 330w, /img/app/nutricao-en.webp 580w" alt="" width="580" height="1255" decoding="async" loading="lazy" /></div>
               </div>
             </div>
             <div class="screen-tabs" role="tablist" aria-label="Telas da aba Nutrição">

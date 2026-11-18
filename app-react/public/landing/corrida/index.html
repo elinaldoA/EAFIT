@@ -37,6 +37,16 @@
     // escolhido (mesma chave "theme" do app), pra página não piscar.
     (function (root) {
       root.classList.add('js');
+      // Faixa de temporada: reserva o espaço dela (altura medida na visita
+      // anterior) para a página não pular quando ela entrar.
+      try {
+        var sb = JSON.parse(localStorage.getItem('eafit_season_bar') || 'null');
+        var d = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+        if (sb && sb.h > 0 && sb.until >= d && localStorage.getItem('eafit_season_banner_site') !== sb.id) {
+          root.style.setProperty('--season-h', sb.h + 'px');
+          root.classList.add('season-wait');
+        }
+      } catch (e) { /* sem reserva */ }
       try {
         var t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') root.setAttribute('data-theme', t);

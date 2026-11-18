@@ -884,9 +884,9 @@
   function seasonToday() {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
   }
-  function showSeasonBanner(theme, year) {
+  function showSeasonBanner(theme, year, seasonUntil) {
     var id = theme + '-' + year;
-    try { if (localStorage.getItem(SEASON_BANNER_KEY) === id) return; } catch { /* sem storage: mostra */ }
+    try { if (localStorage.getItem(SEASON_BANNER_KEY) === id) { document.documentElement.classList.remove('season-wait'); return; } } catch { /* sem storage: mostra */ }
     var nav = document.querySelector('header.nav');
     if (!nav) return;
     var bar = document.createElement('div');
@@ -903,6 +903,11 @@
       bar.remove();
     });
     nav.parentNode.insertBefore(bar, nav);
+    document.documentElement.classList.remove('season-wait');
+    // Guarda a altura para reservar o espaço na próxima visita (head de cada página).
+    try {
+      localStorage.setItem('eafit_season_bar', JSON.stringify({ id: id, h: Math.round(bar.getBoundingClientRect().height), until: seasonUntil }));
+    } catch { /* sem storage */ }
   }
   // Efeitos por cima da página (assets/site.css), sem toque e escondidos do
   // leitor de tela: morcegos, aranha e névoa no Dia das Bruxas; nos outros
@@ -976,7 +981,7 @@
     .then(function (r) { return r.ok ? r.json() : []; })
     .then(function (rows) {
       var v = rows && rows[0] && rows[0].value;
-      if (!v || v.enabled !== true) return;
+      if (!v || v.enabled !== true) { document.documentElement.classList.remove('season-wait'); return; }
       // Lista de períodos, ou o formato antigo de um tema só
       var periods = Array.isArray(v.periods) ? v.periods : [v];
       var day = /^\d{4}-\d{2}-\d{2}$/;
@@ -985,13 +990,13 @@
         return x && SEASONS[x.theme] && day.test(x.startsOn || '') && day.test(x.endsOn || '')
           && today >= x.startsOn && today <= x.endsOn;
       })[0];
-      if (!p) return;
+      if (!p) { document.documentElement.classList.remove('season-wait'); return; }
       document.documentElement.setAttribute('data-season', p.theme);
       if (p.theme !== 'halloween') document.documentElement.setAttribute('data-season-style', 'soft');
-      showSeasonBanner(p.theme, p.startsOn.slice(0, 4));
+      showSeasonBanner(p.theme, p.startsOn.slice(0, 4), p.endsOn);
       showSeasonFx(p.theme);
     })
-    .catch(function () { /* sem tema: site como sempre */ });
+    .catch(function () { document.documentElement.classList.remove('season-wait'); /* sem tema: site como sempre */ });
 })();
 
 // Seletor de idioma e tradução do texto da página (dicionário em i18n-en.js).
@@ -1065,6 +1070,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function translateImages(root) {
     root.querySelectorAll('img[data-src-en]').forEach(function (img) {
       img.src = img.getAttribute('data-src-en');
+      var ss = img.getAttribute('data-srcset-en');
+      if (ss) { img.srcset = ss; img.removeAttribute('data-srcset-en'); }
       img.removeAttribute('data-src-en');
     });
   }
