@@ -656,3 +656,38 @@
 .run-live__finish--holding::after { width: 100%; transition: width 700ms linear; }
 
 .run-export { align-self: flex-start; margin-bottom: var(--sp-3); }
+
+/* ---- Aba Gravar: próximas corridas perto de você (RunEvents.jsx) ---- */
+.run-events__where { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.run-events__where .input { width: auto; flex: 1 1 9rem; min-width: 0; }
+.run-events__where .btn { flex: 0 0 auto; }
+.run-events__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
+.run-event {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.run-event__date {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: var(--sp-2) 0;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--r-md);
+  line-height: 1.1;
+}
+.run-event__date strong { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; }
+.run-event__date span { font-size: var(--fs-xs); font-weight: 700; letter-spacing: .5px; color: var(--primary); }
+.run-event__body { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.run-event__name { font-size: var(--fs-base); line-height: 1.25; overflow-wrap: anywhere; }
+.run-event__body .profile-field__hint { margin: 0; }
+.run-event .run-challenge__meta { font-size: var(--fs-sm); font-weight: 600; }
+.run-event .run-chip { min-height: 36px; padding: 0 var(--sp-3); font-size: var(--fs-sm); }
+.run-event__actions { justify-content: flex-start; margin-top: 2px; }
+@media (max-width: 360px) {
+  .run-event { grid-template-columns: 48px minmax(0, 1fr); gap: var(--sp-2); }
+}
