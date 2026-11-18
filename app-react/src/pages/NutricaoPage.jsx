@@ -39,7 +39,7 @@ const RECENT_DAYS = 60;
 const CLOSE_FROM_HOUR = 16;
 const CLOSE_MIN_PROTEIN = 10;
 // Duas fileiras de atalhos; o resto fica em "Ver todos".
-const VISIBLE_FOODS = 4;
+const VISIBLE_FOODS = 8;
 
 const fmt = n => n.toLocaleString(locale);
 const EMPTY_CUSTOM = { name: '', g: '', kcal: '', carbs: '', fat: '' };
@@ -85,7 +85,6 @@ export default function NutricaoPage({ active }) {
   const [meal, setMeal] = useState(() => mealForHour(new Date().getHours()));
   const [searchOpen, setSearchOpen] = useState(false);
   const [textOpen, setTextOpen] = useState(false);
-  const [closeOpen, setCloseOpen] = useState(false);
   const [fixOpen, setFixOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [custom, setCustom] = useState(EMPTY_CUSTOM);
@@ -468,7 +467,7 @@ export default function NutricaoPage({ active }) {
       )}
 
       <div className="section-group">
-        {plan.length > 0 && <div className="section-group__label">{t('Sua dieta')}</div>}
+        <div className="section-group__label">{t('Sua dieta')}</div>
         <DietPlan foods={foodList} plan={plan} onSave={handleSavePlan} onClear={handleClearPlan} onRegister={handleRegisterPlanMeal} />
       </div>
 
@@ -495,16 +494,14 @@ export default function NutricaoPage({ active }) {
         </div>
         {closing.length > 0 && (
           <div className="close-protein">
-            <button type="button" className="link-btn" aria-expanded={closeOpen} onClick={() => setCloseOpen(o => !o)}>
-              {t('Faltam {g} g de proteína · ver o que fecha a meta', { g: fmt(remaining) })} {closeOpen ? '▴' : '▾'}
-            </button>
-            {closeOpen && <div className="water-actions">
+            <p className="dash-card__subtitle">{t('Para fechar a proteína de hoje (faltam {g} g):', { g: fmt(remaining) })}</p>
+            <div className="water-actions">
               {closing.map(s => (
                 <button key={s.food.id} type="button" className="btn btn--ghost btn--sm" onClick={() => handleAdd(portionFood(s))}>
                   {s.food.icon} {s.n > 1 ? `${s.n}× ` : ''}{s.food.label} · +{fmt(s.g)} g · {fmt(s.kcal)} kcal
                 </button>
               ))}
-            </div>}
+            </div>
           </div>
         )}
         {repeatItems.length > 0 && (

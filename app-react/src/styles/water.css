@@ -337,5 +337,3 @@
 .free-meal textarea { width: 100%; box-sizing: border-box; min-height: 64px; border-radius: var(--r-lg); border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: var(--fs-md); padding: var(--sp-2) 10px; resize: vertical; }
 .free-meal__preview { display: grid; gap: var(--sp-1); }
 .free-meal__preview p { margin: 0; }
-.nutri-day__more, .diet-plan__link { justify-self: start; margin: var(--sp-1) 0; }
-.diet-plan__link { display: block; padding: var(--sp-1) 0; }

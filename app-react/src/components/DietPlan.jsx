@@ -76,15 +76,6 @@ export default function DietPlan({ plan, onSave, onClear, onRegister, foods }) {
   const unknown = preview ? preview.meals.reduce((n, m) => n + m.items.filter(i => i.unknown).length, 0) : 0;
   const estimated = preview ? preview.meals.some(m => m.items.some(i => i.estimated)) : false;
 
-  // Sem dieta salva, só um link: o card inteiro (e o título da seção) só aparece ao abrir a importação.
-  if (plan.length === 0 && !open) {
-    return (
-      <button type="button" className="link-btn diet-plan__link" aria-expanded="false" onClick={() => setOpen(true)}>
-        {t('📋 Tenho uma dieta do nutricionista')}
-      </button>
-    );
-  }
-
   return (
     <div className="dash-card diet-plan">
       {plan.length > 0 && !open && (
