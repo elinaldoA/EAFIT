@@ -20,7 +20,22 @@ export default function StartCountdown({ onDone, onCancel, note = '' }) {
 
   return (
     <div className="run-countdown" role="dialog" aria-modal="true" aria-label={t('Contagem para começar a corrida')}>
-      <div className="run-countdown__n" role="status" aria-live="assertive">{n > 0 ? n : t('Já!')}</div>
+      <svg className="run-countdown__runner" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <g className="run-countdown__ground">
+          <line x1="0" y1="112" x2="120" y2="112" />
+        </g>
+        <g className="run-countdown__body">
+          <line className="run-countdown__limb run-countdown__leg-a" x1="60" y1="70" x2="60" y2="102" />
+          <line className="run-countdown__limb run-countdown__leg-b" x1="60" y1="70" x2="60" y2="102" />
+          <g transform="rotate(10 60 70)">
+            <line x1="60" y1="70" x2="60" y2="42" />
+            <circle cx="60" cy="31" r="9" fill="currentColor" stroke="none" />
+            <line className="run-countdown__limb run-countdown__arm-a" x1="60" y1="46" x2="60" y2="68" />
+            <line className="run-countdown__limb run-countdown__arm-b" x1="60" y1="46" x2="60" y2="68" />
+          </g>
+        </g>
+      </svg>
+      <div key={n} className="run-countdown__n" role="status" aria-live="assertive">{n > 0 ? n : t('Já!')}</div>
       {note && <p className="run-countdown__note" role="status">{note}</p>}
       <div className="run-countdown__actions">
         <button type="button" className="btn btn--ghost" onClick={onCancel}>{t('Cancelar')}</button>
