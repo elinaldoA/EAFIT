@@ -1,8 +1,8 @@
 -- Itens da fila do autopost (entram NA FRENTE da fila pendente, para sair nos próximos disparos): lançamento do módulo Corrida (EAFIT Run).
 -- Gerado por app-admin/scripts/marketing-corrida-launch.mjs. NÃO aplicar antes de o
 -- módulo estar liberado para todos (Configurações do app > Módulos).
-insert into public.marketing_autopost_queue (position, key, format, caption, media)
-select (select coalesce(min(position), 1) from public.marketing_autopost_queue where posted_at is null and skipped_at is null) - 12 + v.n, v.key, v.format, v.caption, v.media::jsonb
+insert into public.marketing_autopost_queue (position, key, format, caption, media, requires_module)
+select (select coalesce(min(position), 1) from public.marketing_autopost_queue where posted_at is null and skipped_at is null) - 12 + v.n, v.key, v.format, v.caption, v.media::jsonb, 'corrida'
 from (values
   (1, 'corrida-inicio-feed', 'feed', 'Chegou o EAFIT Run. 🏃
 Grave a corrida com GPS, veja o mapa, o ritmo e o tempo e receba aplausos de quem corre com você.

@@ -226,8 +226,8 @@ function writeSql(byKey) {
   const sql = `-- Itens da fila do autopost: lançamento do módulo Corrida (EAFIT Run).
 -- Gerado por app-admin/scripts/marketing-corrida-launch.mjs. NÃO aplicar antes de o
 -- módulo estar liberado para todos (Configurações do app > Módulos).
-insert into public.marketing_autopost_queue (position, key, format, caption, media)
-select (select coalesce(min(position), 1) from public.marketing_autopost_queue where posted_at is null and skipped_at is null) - ${items.length + 1} + v.n, v.key, v.format, v.caption, v.media::jsonb
+insert into public.marketing_autopost_queue (position, key, format, caption, media, requires_module)
+select (select coalesce(min(position), 1) from public.marketing_autopost_queue where posted_at is null and skipped_at is null) - ${items.length + 1} + v.n, v.key, v.format, v.caption, v.media::jsonb, 'corrida'
 from (values
 ${values.join(',\n')}
 ) as v(n, key, format, caption, media);
