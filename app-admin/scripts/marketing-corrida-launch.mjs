@@ -125,13 +125,13 @@ export async function renderVideo(file, seconds, audio, drawFrame, img) {
   await done;
 }
 
-// Trilha: faixas de app-admin/music (fora do git). Usa corrida-*.mp3 (ex.: corrida-1.mp3 e
+// Trilha: faixas de app-admin/music (fora do git). Usa song-2.mp3 e corrida-*.mp3 (ex.: corrida-1.mp3 e
 // corrida-2.mp3, do Pixabay), alternando entre elas a cada vídeo; sem elas, o song.mp3.
 // Cada vídeo pega um trecho diferente, com uma batida forte na entrada do print (story) ou na
 // troca de cena (Reel). SONG_OFF=1 usa a trilha sintetizada.
 export async function audioPlan(offset = 0) {
   const dir = dirname(SONG);
-  const songs = existsSync(dir) ? readdirSync(dir).filter((f) => /^corrida-.*\.mp3$/i.test(f)).sort().map((f) => join(dir, f)) : [];
+  const songs = existsSync(dir) ? readdirSync(dir).filter((f) => /^(corrida-.*|song-2)\.mp3$/i.test(f)).sort().map((f) => join(dir, f)) : [];
   if (!songs.length && existsSync(SONG)) songs.push(SONG);
   if (process.env.SONG_OFF === '1' || !songs.length) {
     console.log('Trilha sintetizada (sem mp3)');
