@@ -309,7 +309,7 @@ export default function UsersList() {
       {!loading && !error && (
         <>
           {pager}
-          <div className="table-wrap"><table className="resp-table users-table">
+          <div className="table-wrap"><table className="resp-table users-table" aria-label="Usuários">
             <thead>
               <tr>
                 <th scope="col">

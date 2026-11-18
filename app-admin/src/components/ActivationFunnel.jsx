@@ -108,7 +108,7 @@ export default function ActivationFunnel() {
               <h3 className="dash-group__title">De onde vieram as visitas</h3>
               {sources.length ? (
                 <div className="table-wrap">
-                  <table className="source-table">
+                  <table className="source-table" aria-label="De onde vieram as visitas">
                     <thead>
                       <tr><th scope="col">Origem</th><th scope="col">Landing</th><th scope="col">Tela de acesso</th><th scope="col">Total</th></tr>
                     </thead>
@@ -139,7 +139,7 @@ export default function ActivationFunnel() {
                     </p>
                   )}
                   <div className="table-wrap">
-                    <table className="source-table">
+                    <table className="source-table" aria-label="De qual sistema acessam">
                       <thead>
                         <tr><th scope="col">Sistema</th><th scope="col">Landing</th><th scope="col">Tela de acesso</th><th scope="col">Total</th><th scope="col">%</th></tr>
                       </thead>
@@ -165,7 +165,7 @@ export default function ActivationFunnel() {
             <h3 className="dash-group__title">O que fazem na landing</h3>
             {events && (events.clicks.length || events.reach.length || events.installClicks || events.installed) ? (
               <div className="table-wrap">
-                <table className="source-table">
+                <table className="source-table" aria-label="O que fazem na landing">
                   <thead>
                     <tr><th scope="col">Evento</th><th scope="col">Sessões</th></tr>
                   </thead>

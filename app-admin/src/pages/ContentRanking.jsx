@@ -19,7 +19,7 @@ function RankTable({ title, rows, cols, empty, note }) {
       <h2 className="section-title">{title}</h2>
       {rows.length === 0 ? <p className="card-note" style={{ marginTop: 0 }}>{empty}</p> : (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label={title}>
             <thead><tr><th scope="col">Exercício</th>{cols.map(c => <th key={c.label} scope="col">{c.label}</th>)}</tr></thead>
             <tbody>
               {rows.map(r => (
@@ -130,7 +130,7 @@ export default function ContentRanking() {
             <h2 className="section-title">Planos</h2>
             {data.plans.length === 0 ? <EmptyState icon="📋" label="Nenhum plano começado no período." /> : (
               <div className="table-wrap">
-                <table className="resp-table">
+                <table className="resp-table" aria-label="Planos">
                   <thead><tr><th scope="col">Plano</th><th scope="col">Planos</th><th scope="col">Pessoas</th><th scope="col">Do personal</th><th scope="col">Aderência</th><th scope="col">Terminados</th><th scope="col">Chegaram ao fim treinando</th></tr></thead>
                   <tbody>
                     {data.plans.map(p => (

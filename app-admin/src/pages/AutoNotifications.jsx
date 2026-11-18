@@ -257,7 +257,7 @@ export default function AutoNotifications() {
         <h2 className="section-title">Últimos envios</h2>
         {!log.recent.length ? <p className="card-note">Nenhum envio automático registrado ainda.</p> : (
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Últimos envios">
               <thead><tr><th scope="col">Quando</th><th scope="col">Tipo</th><th scope="col">Mensagem</th><th scope="col"></th></tr></thead>
               <tbody>
                 {log.recent.map(n => (

@@ -55,7 +55,7 @@ export default function Safety() {
 
       {!loading && !error && (
         <>
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Segurança">
             <thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Exercício</th><th scope="col">Severidade</th><th scope="col">Nota</th><th scope="col">Resposta automática</th></tr></thead>
             <tbody>
               {rows.map(r => (

@@ -79,7 +79,7 @@ function AtRiskCard() {
 
       {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Em risco de abandono">
             <thead>
               <tr>
                 <th scope="col">Usuário</th><th scope="col">Último treino</th><th scope="col">Sem treinar</th><th scope="col">Treinos</th><th scope="col">Fim do plano</th><th scope="col"></th>
@@ -146,7 +146,7 @@ function ExpiringPlansCard() {
 
       {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Planos vencidos ou vencendo">
             <thead>
               <tr><th scope="col">Usuário</th><th scope="col">Plano</th><th scope="col">Vence em</th><th scope="col">Situação</th><th scope="col">Próximo plano</th><th scope="col"></th></tr>
             </thead>

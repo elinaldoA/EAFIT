@@ -64,7 +64,7 @@ export default function Segments() {
           <EmptyState icon="🎯" label="Nenhum segmento salvo ainda." />
         ) : (
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Segmentos">
               <thead><tr><th scope="col">Segmento</th><th scope="col">Critérios</th><th scope="col">Usuários hoje</th><th scope="col">Criado em</th><th scope="col"></th></tr></thead>
               <tbody>
                 {segments.map(s => (

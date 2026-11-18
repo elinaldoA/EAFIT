@@ -131,7 +131,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
 
       <section>
         <h2 className="section-title">Peso</h2>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Peso">
           <thead><tr><th scope="col">Data</th><th scope="col">Peso (kg)</th></tr></thead>
           <tbody>
             {weightLogs.map(w => (
@@ -144,7 +144,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
 
       <section>
         <h2 className="section-title">Água</h2>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Água">
           <thead><tr><th scope="col">Data</th><th scope="col">ml</th></tr></thead>
           <tbody>
             {waterLogs.map(w => (
@@ -157,7 +157,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
 
       <section>
         <h2 className="section-title">Nutrição</h2>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Nutrição">
           <thead><tr><th scope="col">Data</th><th scope="col">Proteína (g)</th><th scope="col">kcal</th><th scope="col">Carbo (g)</th><th scope="col">Gordura (g)</th></tr></thead>
           <tbody>
             {proteinLogs.map(w => (
@@ -173,7 +173,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
 
       <section>
         <h2 className="section-title">Diário por refeição</h2>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Diário por refeição">
           <thead><tr><th scope="col">Data</th><th scope="col">Refeição</th><th scope="col">Alimento</th><th scope="col">Proteína (g)</th><th scope="col">kcal</th></tr></thead>
           <tbody>
             {nutritionEntries.map(e => (
@@ -189,7 +189,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
 
       <section>
         <h2 className="section-title">Atalhos de alimentos próprios</h2>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Atalhos de alimentos próprios">
           <thead><tr><th scope="col">Alimento</th><th scope="col">Proteína (g)</th><th scope="col">kcal</th><th scope="col">Carbo (g)</th><th scope="col">Gordura (g)</th></tr></thead>
           <tbody>
             {nutritionFoods.map(f => (

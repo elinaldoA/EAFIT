@@ -105,7 +105,7 @@ export default function Support() {
         <Paged items={items} size={30} resetKey={view} label="Ver mais">
           {visible => (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Central de suporte">
             <thead><tr><th scope="col">Há</th><th scope="col">De</th><th scope="col">Assunto</th><th scope="col">Mensagem</th><th scope="col">Situação</th><th scope="col">Responsável</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>
               {visible.map(i => {

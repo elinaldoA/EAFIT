@@ -108,7 +108,7 @@ export default function ClientErrors() {
 
       {!loading && !error && (
         <>
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Erros do app">
             <thead>
               <tr><th scope="col">Quando</th><th scope="col">Tipo</th><th scope="col">Mensagem</th><th scope="col">Tela</th><th scope="col">Usuário</th><th scope="col">Detalhes</th></tr>
             </thead>

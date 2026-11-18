@@ -88,7 +88,7 @@ export default function Leagues() {
               <Paged items={g.rows} size={50} resetKey={month} label="Ver mais participantes">
                 {visible => (
               <div className="table-wrap">
-                <table className="resp-table">
+                <table className="resp-table" aria-label="Ligas">
                   <thead><tr><th scope="col">Posição</th><th scope="col">Participante</th><th scope="col">Dias no mês</th></tr></thead>
                   <tbody>
                     {visible.map(r => (

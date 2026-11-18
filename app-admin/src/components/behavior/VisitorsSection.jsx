@@ -164,7 +164,7 @@ export default function VisitorsSection({ days }) {
                 ? <p className="card-note" style={{ marginTop: 0 }}>Ninguém deixou de converter no período.</p>
                 : (
                   <div className="table-wrap">
-                    <table className="resp-table">
+                    <table className="resp-table" aria-label="Mais recentes">
                       <thead>
                         <tr><th scope="col">Navegador</th><th scope="col">Primeira visita</th><th scope="col">Última</th><th scope="col">Dias</th><th scope="col">Origem</th><th scope="col">Aparelho</th><th scope="col">Parou em</th><th scope="col">Último erro</th></tr>
                       </thead>

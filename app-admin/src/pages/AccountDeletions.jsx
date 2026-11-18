@@ -54,7 +54,7 @@ export default function AccountDeletions() {
           )}
 
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Exclusões de conta">
               <thead><tr><th scope="col">Quando</th><th scope="col">Quem pediu</th><th scope="col">Tempo de conta</th><th scope="col">Treinos registrados</th></tr></thead>
               <tbody>
                 {data.rows.map(r => (

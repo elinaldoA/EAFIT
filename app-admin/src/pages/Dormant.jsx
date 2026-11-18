@@ -169,7 +169,7 @@ export default function Dormant() {
         <Paged items={people} size={50} resetKey={String(days)} label="Ver mais pessoas">
           {visible => (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Sumidos">
             <thead>
               <tr>
                 <th scope="col">

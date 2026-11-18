@@ -31,7 +31,7 @@ export default function UserWellbeingCard({ userId }) {
       {data.checkins.length > 0 && (
         <section>
           <h2 className="section-title">Check-in diário</h2>
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Check-in diário">
             <thead><tr><th scope="col">Data</th><th scope="col">Energia</th><th scope="col">Sono</th><th scope="col">Humor</th></tr></thead>
             <tbody>
               {data.checkins.map(c => (
@@ -50,7 +50,7 @@ export default function UserWellbeingCard({ userId }) {
       {data.measures.length > 0 && (
         <section>
           <h2 className="section-title">Medidas corporais (cm)</h2>
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Medidas corporais (cm)">
             <thead><tr><th scope="col">Data</th>{MEASURES.map(([key, label]) => <th key={key} scope="col">{label}</th>)}</tr></thead>
             <tbody>
               {data.measures.map(m => (

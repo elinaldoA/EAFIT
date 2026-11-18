@@ -135,7 +135,7 @@ function Results({ experiment }) {
   return (
     <>
       <div className="table-wrap">
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Experimentos">
           <thead>
             <tr>
               <th scope="col">Variante</th><th scope="col">Pessoas</th><th scope="col">Abriram o app</th><th scope="col">Treinaram</th><th scope="col">Diferença</th><th scope="col">Dias/semana</th>

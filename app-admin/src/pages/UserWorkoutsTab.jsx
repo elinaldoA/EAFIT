@@ -170,7 +170,7 @@ export default function UserWorkoutsTab({
           <h2 className="section-title">Histórico de treinos (últimos 20)</h2>
           <button className="btn btn--small" onClick={onExportTreinos} disabled={workouts.length === 0}>Exportar CSV</button>
         </div>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Histórico de treinos (últimos 20)">
           <thead><tr><th scope="col">Data</th><th scope="col">Dia</th><th scope="col">Concluído</th><th scope="col">Duração</th><th scope="col"></th></tr></thead>
           <tbody>
             {workouts.map(w => (
@@ -218,7 +218,7 @@ export default function UserWorkoutsTab({
 
       <section>
         <h2 className="section-title">Recordes pessoais</h2>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Recordes pessoais">
           <thead><tr><th scope="col">Exercício</th><th scope="col">Carga máxima</th><th scope="col">1RM estimado</th></tr></thead>
           <tbody>
             {personalRecords.map(p => (
@@ -235,7 +235,7 @@ export default function UserWorkoutsTab({
 
       <section>
         <h2 className="section-title">Registros de dor/desconforto</h2>
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Registros de dor/desconforto">
           <thead><tr><th scope="col">Data</th><th scope="col">Exercício</th><th scope="col">Severidade</th><th scope="col">Nota</th></tr></thead>
           <tbody>
             {discomfortLogs.map(d => (

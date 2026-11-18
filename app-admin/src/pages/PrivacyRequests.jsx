@@ -158,7 +158,7 @@ export default function PrivacyRequests() {
         <Paged items={items} size={40} label="Ver mais pedidos">
           {visible => (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Pedidos LGPD">
             <thead><tr><th scope="col">Recebido</th><th scope="col">Quem</th><th scope="col">Pedido</th><th scope="col">Prazo</th><th scope="col">Situação</th><th scope="col">Notas</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>{visible.map(r => <RequestRow key={`${r.id}-${r.status}-${r.notes}`} req={r} onChanged={load} />)}</tbody>
           </table>

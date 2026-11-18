@@ -153,7 +153,7 @@ export default function Legal() {
         <h2 className="section-title">Histórico de versões</h2>
         {versions.length === 0 ? <EmptyState icon="📄" label="Nenhuma versão registrada ainda." /> : (
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Histórico de versões">
               <thead><tr><th scope="col">Documento</th><th scope="col">Versão</th><th scope="col">Em vigor desde</th><th scope="col">O que mudou</th></tr></thead>
               <tbody>
                 {versions.map(v => (

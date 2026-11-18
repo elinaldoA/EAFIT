@@ -93,7 +93,7 @@ export default function MarketingAccounts() {
       {accounts && accounts.length === 0 && <EmptyState icon="🔌" label="Nenhuma rede conectada ainda." />}
       {accounts && accounts.length > 0 && (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Contas conectadas">
             <thead>
               <tr><th scope="col">Rede</th><th scope="col">Conta</th><th scope="col">Situação</th><th scope="col">Conectada em</th><th scope="col">Comentários lidos</th><th scope="col"><span className="sr-only">Ações</span></th></tr>
             </thead>

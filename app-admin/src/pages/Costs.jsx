@@ -113,7 +113,7 @@ export default function Costs() {
           <div className="card">
             <h2 className="section-title">Uso x plano</h2>
             <div className="table-wrap">
-              <table className="resp-table">
+              <table className="resp-table" aria-label="Uso x plano">
                 <thead><tr><th scope="col">Recurso</th><th scope="col">Usado</th><th scope="col">Incluso</th><th scope="col">Uso</th><th scope="col">Excedente</th><th scope="col">Tendência (30 dias)</th></tr></thead>
                 <tbody>
                   {est.lines.map(l => {

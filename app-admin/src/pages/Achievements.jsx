@@ -41,7 +41,7 @@ function RecordsCard() {
       {!error && !rows && <Loading />}
       {!error && rows && (rows.length === 0 ? <EmptyState icon="🏋️" label="Nenhuma carga registrada no período." /> : (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Conquistas e recordes">
             <thead><tr><th scope="col">Exercício</th><th scope="col">Usuários</th><th scope="col">Maior carga</th><th scope="col">Média da melhor carga</th><th scope="col">Séries</th></tr></thead>
             <tbody>
               {rows.map(r => (

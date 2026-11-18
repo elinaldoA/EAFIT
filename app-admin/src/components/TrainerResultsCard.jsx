@@ -35,7 +35,7 @@ export default function TrainerResultsCard({ trainers, days }) {
             </p>
           )}
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Ranking por resultado dos alunos">
               <thead>
                 <tr>
                   <th scope="col">#</th><th scope="col">Personal</th><th scope="col">Alunos</th><th scope="col">Treinando (14 dias)</th><th scope="col">Dias/semana</th><th scope="col">Bateram recorde</th>

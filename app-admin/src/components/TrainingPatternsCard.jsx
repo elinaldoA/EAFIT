@@ -61,7 +61,7 @@ export default function TrainingPatternsCard() {
       <div className="card">
         <h2 className="section-title">Academia × em casa</h2>
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Academia × em casa">
             <thead>
               <tr>
                 <th scope="col">Local</th><th scope="col">Usuários</th><th scope="col">Com plano</th><th scope="col">Treinaram em 30 dias</th><th scope="col">Nunca treinaram</th>

@@ -225,7 +225,7 @@ export default function ExerciseLibrary() {
           <EmptyState icon="🏋️" label="Nenhum exercício com esses filtros." />
         ) : (
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Biblioteca de exercícios">
               <thead>
                 <tr><th scope="col">Exercício</th><th scope="col">Grupo</th><th scope="col">Tipo · nível</th><th scope="col">Prescrição</th><th scope="col">Mídia</th><th scope="col">Em planos</th><th scope="col">Relatos de dor</th><th scope="col"></th></tr>
               </thead>

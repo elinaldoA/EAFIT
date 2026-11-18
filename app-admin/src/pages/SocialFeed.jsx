@@ -178,7 +178,7 @@ export default function SocialFeed() {
         {!loading && !error && (
           <>
             <div className="table-wrap">
-              <table className="resp-table">
+              <table className="resp-table" aria-label="Amigos e feed">
                 <thead><tr><th scope="col">Quando</th><th scope="col">Usuário</th><th scope="col">Tipo</th><th scope="col">Publicação</th><th scope="col">Reações</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
                 <tbody>
                   {feed.rows.map(e => (

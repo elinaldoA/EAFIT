@@ -99,7 +99,7 @@ export default function EditorialCalendar() {
             <h2 className="section-title">No mês</h2>
             {list.length === 0 ? <EmptyState icon="🗓️" label="Nada programado neste mês." /> : (
               <div className="table-wrap">
-                <table className="resp-table">
+                <table className="resp-table" aria-label="No mês">
                   <thead><tr><th scope="col">Tipo</th><th scope="col">O quê</th><th scope="col">Quando</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
                   <tbody>
                     {list.map((e, i) => (

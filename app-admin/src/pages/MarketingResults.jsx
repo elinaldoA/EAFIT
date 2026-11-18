@@ -218,7 +218,7 @@ export default function MarketingResults() {
         <section className="card stack" aria-label="Cadastros por post">
           <h2 className="section-title">Cadastros por post</h2>
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Cadastros por post">
               <thead>
                 <tr><th scope="col">Post</th><th scope="col">Rede</th><th scope="col">Visitas</th><th scope="col">Cadastros</th><th scope="col">Treinaram</th><th scope="col">Seguiram</th></tr>
               </thead>

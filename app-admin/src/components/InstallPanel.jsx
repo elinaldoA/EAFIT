@@ -247,7 +247,7 @@ export default function InstallPanel() {
               <div className="card">
                 <h3 className="dash-group__title">Tela "Instale o app"</h3>
                 <div className="table-wrap">
-                  <table className="source-table">
+                  <table className="source-table" aria-label="Do convite ao uso">
                     <tbody>
                       <tr><th scope="row">Viram a tela</th><td>{s.screen.shown}{cmp && <> <Trend cur={s.screen.shown} prev={cmp.shown} days={days} /></>}</td></tr>
                       <tr><th scope="row">Aceitaram no botão "Instalar app"</th><td>{s.screen.accepted}{cmp && <> <Trend cur={s.screen.accepted} prev={cmp.accepted} days={days} /></>}</td></tr>
@@ -258,7 +258,7 @@ export default function InstallPanel() {
                 </div>
                 <h3 className="subsection-title">Como instalaram</h3>
                 <div className="table-wrap">
-                  <table className="source-table">
+                  <table className="source-table" aria-label="Como instalaram">
                     <tbody>
                       {s.sources.map(x => (
                         <tr key={x.key}><th scope="row">{x.label}</th><td>{x.total}</td></tr>
@@ -310,7 +310,7 @@ export default function InstallPanel() {
                 <h3 className="subsection-title" style={{ marginTop: 0 }}>Por sistema</h3>
                 {data.byOs.length ? (
                   <div className="table-wrap">
-                    <table className="source-table">
+                    <table className="source-table" aria-label="Por sistema">
                       <thead>
                         <tr>
                           <th scope="col">Sistema</th><th scope="col">Instalados</th><th scope="col">Novos no período</th>
@@ -333,7 +333,7 @@ export default function InstallPanel() {
                   <>
                     <h3 className="subsection-title">Por navegador</h3>
                     <div className="table-wrap">
-                      <table className="source-table">
+                      <table className="source-table" aria-label="Por navegador">
                         <thead>
                           <tr><th scope="col">Navegador</th><th scope="col">Instalados</th><th scope="col">Novos no período</th><th scope="col">Em uso (30 dias)</th></tr>
                         </thead>
@@ -353,7 +353,7 @@ export default function InstallPanel() {
               <div className="geo-detail">
                 <h3 className="subsection-title" style={{ marginTop: 0 }}>Quem continua abrindo</h3>
                 <div className="table-wrap">
-                  <table className="source-table">
+                  <table className="source-table" aria-label="Quem continua abrindo">
                     <thead><tr><th scope="col">Depois de instalar</th><th scope="col">Ainda abriam</th><th scope="col">Instalações com essa idade</th><th scope="col">%</th></tr></thead>
                     <tbody>
                       {data.retention.returns.map(r => (
@@ -376,7 +376,7 @@ export default function InstallPanel() {
               <div className="geo-detail">
                 <h3 className="subsection-title" style={{ marginTop: 0 }}>De onde vieram as instalações</h3>
                 <div className="table-wrap">
-                  <table className="source-table">
+                  <table className="source-table" aria-label="De onde vieram as instalações">
                     <thead><tr><th scope="col">Origem</th><th scope="col">Instalações</th><th scope="col">%</th><th scope="col">Em uso (30 dias)</th></tr></thead>
                     <tbody>
                       {data.byOrigin.map(o => (
@@ -412,7 +412,7 @@ export default function InstallPanel() {
           <h2 className="section-title">Últimos indícios de desinstalação</h2>
           {data.recent.length ? (
             <div className="table-wrap">
-              <table className="resp-table">
+              <table className="resp-table" aria-label="Últimos indícios de desinstalação">
                 <thead>
                   <tr><th scope="col">Quando</th><th scope="col">Aparelho</th><th scope="col">Conta</th><th scope="col">Tinha ativado em</th><th scope="col">Ainda recebe em outro aparelho</th></tr>
                 </thead>

@@ -92,7 +92,7 @@ export default function Campaigns() {
           </div>
           <div className="actions-row"><button type="button" className="btn btn--ghost btn--small" onClick={exportCsv}>Exportar CSV</button></div>
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Campanhas">
               <thead>
                 <tr>
                   <th scope="col">Origem</th><th scope="col">Campanha</th><th scope="col">Visitas</th><th scope="col">Cadastros</th><th scope="col">Conversão</th><th scope="col">Ativaram (7 dias)</th>

@@ -69,7 +69,7 @@ export default function AuditLog() {
 
       {!loading && !error && (
         <>
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Auditoria">
             <thead>
               <tr><th scope="col">Quando</th><th scope="col">Admin</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">Detalhes</th></tr>
             </thead>

@@ -193,7 +193,7 @@ function Results({ survey }) {
         </div>
       </div>
       <div className="table-wrap">
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Por segmento">
           <thead><tr><th scope="col">Grupo</th><th scope="col">Respostas</th>{survey.kind === 'nps' && <th scope="col">NPS</th>}{survey.kind === 'escolha' && <th scope="col">Mais escolhida</th>}</tr></thead>
           <tbody>
             {r.breakdown.map(g => (
@@ -212,7 +212,7 @@ function Results({ survey }) {
         <>
           <h3 className="subsection-title" style={{ margin: 0 }}>Por semana</h3>
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Por semana">
               <thead><tr><th scope="col">Semana de</th><th scope="col">Respostas</th>{survey.kind === 'nps' && <th scope="col">NPS</th>}</tr></thead>
               <tbody>
                 {r.weekly.map(w => (

@@ -170,7 +170,7 @@ function UpcomingAppointments() {
     <div className="card" style={{ marginTop: 20 }}>
       <h2 className="section-title">Próximas aulas</h2>
       <div className="table-wrap">
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Próximas aulas">
           <thead><tr><th scope="col">Quando</th><th scope="col">Personal</th><th scope="col">Aluno</th><th scope="col">Duração</th><th scope="col">Situação</th></tr></thead>
           <tbody>
             {rows.map(a => (

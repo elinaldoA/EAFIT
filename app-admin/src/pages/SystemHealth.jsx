@@ -51,7 +51,7 @@ function PurgeCard() {
     <div className="card">
       <h2 className="section-title">Dados antigos</h2>
       <div className="table-wrap">
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Dados antigos">
           <thead><tr><th scope="col">Tipo</th><th scope="col">Registros</th><th scope="col">Com mais de {PURGE_DAYS} dias</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
           <tbody>
             {rows.map(r => (
@@ -188,7 +188,7 @@ export default function SystemHealth() {
         <h2 className="section-title">Jobs agendados</h2>
         {health.cron.error ? <BlockError message={health.cron.error} /> : (
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Jobs agendados">
               <thead><tr><th scope="col">Job</th><th scope="col">Estado</th><th scope="col">Última execução</th><th scope="col">Execuções (24h)</th><th scope="col">Falhas (24h)</th></tr></thead>
               <tbody>
                 {jobs.map(j => (
@@ -227,7 +227,7 @@ export default function SystemHealth() {
                 {httpIntermittent && <span className="user-detail__meta"> · {http.recentTransient} sem resposta (timeout) na última hora, sem erro nas funções</span>}
               </p>
               <div className="table-wrap">
-                <table className="resp-table">
+                <table className="resp-table" aria-label="Respostas das funções (cron → Edge Functions)">
                   <thead><tr><th scope="col">Resposta</th><th scope="col">Qtd.</th><th scope="col">Última</th></tr></thead>
                   <tbody>
                     {health.http.data.map(r => (
@@ -280,7 +280,7 @@ export default function SystemHealth() {
         <h2 className="section-title">Notificações automáticas</h2>
         {health.notifications.error ? <BlockError message={health.notifications.error} /> : (
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Notificações automáticas">
               <thead><tr><th scope="col">Tipo</th><th scope="col">Situação</th><th scope="col">Horário</th><th scope="col">Último envio</th><th scope="col">24h</th><th scope="col">7 dias</th></tr></thead>
               <tbody>
                 {health.notifications.data.map(n => (

@@ -135,7 +135,7 @@ export default function Commissions() {
               <Paged items={data.rows} size={30} resetKey={month} label="Ver mais parceiros">
                 {visible => (
               <div className="table-wrap">
-                <table className="resp-table">
+                <table className="resp-table" aria-label="Comissões">
                   <thead><tr><th scope="col">Parceiro</th><th scope="col">Indicações</th><th scope="col">Ativados</th><th scope="col">Por ativado</th><th scope="col">Calculado</th><th scope="col">Fechamento</th><th scope="col">Notas</th></tr></thead>
                   <tbody>
                     {visible.map(r => (

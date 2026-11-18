@@ -121,7 +121,7 @@ export default function Wellbeing() {
             </p>
             {data.low.length === 0 ? <EmptyState icon="🌤️" label="Ninguém com energia ou sono baixos no período." /> : (
               <div className="table-wrap">
-                <table className="resp-table">
+                <table className="resp-table" aria-label="Energia ou sono baixos">
                   <thead><tr><th scope="col">Usuário</th><th scope="col">Check-ins</th><th scope="col">Energia</th><th scope="col">Sono</th><th scope="col">Humor</th><th scope="col">Último</th></tr></thead>
                   <tbody>
                     {data.low.map(u => (
@@ -234,7 +234,7 @@ export default function Wellbeing() {
               </div>
 
               <h3 className="subsection-title">Por refeição</h3>
-              <table className="resp-table">
+              <table className="resp-table" aria-label="Por refeição">
                 <thead><tr><th scope="col">Refeição</th><th scope="col">Registros</th><th scope="col">Usuários</th><th scope="col">kcal médias</th></tr></thead>
                 <tbody>
                   {data.diary.meals.map(m => (
@@ -249,7 +249,7 @@ export default function Wellbeing() {
               {data.diary.topFoods.length > 0 && (
                 <>
                   <h3 className="subsection-title">Alimentos mais registrados</h3>
-                  <table className="resp-table">
+                  <table className="resp-table" aria-label="Alimentos mais registrados">
                     <thead><tr><th scope="col">Alimento</th><th scope="col">Registros</th><th scope="col">Usuários</th></tr></thead>
                     <tbody>
                       {data.diary.topFoods.map(f => (
@@ -263,7 +263,7 @@ export default function Wellbeing() {
               {data.diary.barcodeMisses.length > 0 && (
                 <>
                   <h3 className="subsection-title">Códigos de barras não encontrados</h3>
-                  <table className="resp-table">
+                  <table className="resp-table" aria-label="Códigos de barras não encontrados">
                     <thead><tr><th scope="col">Código</th><th scope="col">Usuários</th><th scope="col">Última vez</th></tr></thead>
                     <tbody>
                       {data.diary.barcodeMisses.map(b => (

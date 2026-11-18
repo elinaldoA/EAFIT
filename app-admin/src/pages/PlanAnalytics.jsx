@@ -23,7 +23,7 @@ function BreakdownTable({ title, rows }) {
       <h2 className="section-title">{title}</h2>
       {!rows.length ? <p className="card-note">Sem dados.</p> : (
         <div className="table-wrap">
-          <table className="resp-table">
+          <table className="resp-table" aria-label={title}>
             <thead>
               <tr>
                 <th scope="col">Grupo</th><th scope="col">Usuários</th><th scope="col">Treinaram (30d)</th><th scope="col">Nunca treinaram</th>
@@ -88,7 +88,7 @@ function CardioCard() {
             <div className="tile"><div className="tile__value">{String(total.km).replace('.', ',')} km</div><div className="tile__label">distância total</div></div>
           </div>
           <div className="table-wrap" style={{ marginTop: 14 }}>
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Cardio (30 dias)">
               <thead><tr><th scope="col">Atividade</th><th scope="col">Treinos</th><th scope="col">Usuários</th><th scope="col">Minutos</th><th scope="col">Km</th></tr></thead>
               <tbody>
                 {exercises.map(e => (

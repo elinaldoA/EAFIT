@@ -315,7 +315,7 @@ export default function Broadcast() {
         <h2 className="section-title">Agendadas</h2>
         {pending.length === 0 && <EmptyState icon="🗓️" label="Nenhuma notificação agendada." />}
         {pending.length > 0 && (
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Agendadas">
             <thead><tr><th scope="col">Quando</th><th scope="col">Título</th><th scope="col">Destinatários</th><th scope="col"></th></tr></thead>
             <tbody>
               {pending.map(p => (
@@ -335,7 +335,7 @@ export default function Broadcast() {
         <h2 className="section-title">Histórico de envios (últimos 20)</h2>
         {history.length === 0 && <EmptyState icon="🔔" label="Nenhuma notificação enviada ainda." />}
         {history.length > 0 && (
-          <table className="resp-table">
+          <table className="resp-table" aria-label="Histórico de envios (últimos 20)">
             <thead><tr><th scope="col">Quando</th><th scope="col">Título</th><th scope="col">Mensagem</th><th scope="col">Enviadas</th></tr></thead>
             <tbody>
               {history.map(h => (

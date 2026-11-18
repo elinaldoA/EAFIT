@@ -59,7 +59,7 @@ export default function BroadcastHistory() {
       {!loading && !error && visible.length > 0 && (
         <Paged items={visible} size={30} resetKey={filter} label="Ver mais envios">
           {shown => (
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Histórico de envios">
           <thead>
             <tr><th scope="col">Quando</th><th scope="col">Origem</th><th scope="col">Título</th><th scope="col">Mensagem</th><th scope="col">Destino</th><th scope="col">Entregues</th></tr>
           </thead>

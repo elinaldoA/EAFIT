@@ -194,7 +194,7 @@ export default function ExerciseMedia() {
 
       {!loading && !error && pager}
       {!loading && !error && (
-        <table className="resp-table">
+        <table className="resp-table" aria-label="Demonstrações de exercícios">
           <thead><tr><th scope="col">Exercício</th><th scope="col">Grupo</th><th scope="col">Demonstração</th><th scope="col">Ações</th></tr></thead>
           <tbody>
             {pageRows.map(r => (

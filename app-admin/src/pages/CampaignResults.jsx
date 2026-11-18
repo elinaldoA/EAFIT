@@ -108,7 +108,7 @@ export default function CampaignResults() {
           </div>
 
           <div className="table-wrap">
-            <table className="resp-table">
+            <table className="resp-table" aria-label="Resultados dos envios">
               <thead>
                 <tr>
                   <th scope="col">Quando</th><th scope="col">Envio</th><th scope="col">Envios</th><th scope="col">Chegaram</th><th scope="col">Tocaram</th><th scope="col">Leram</th><th scope="col">Abriram o app</th>
