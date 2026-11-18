@@ -195,7 +195,7 @@ export default function ExerciseMedia() {
       {!loading && !error && pager}
       {!loading && !error && (
         <table className="resp-table">
-          <thead><tr><th>Exercício</th><th>Grupo</th><th>Demonstração</th><th>Ações</th></tr></thead>
+          <thead><tr><th scope="col">Exercício</th><th scope="col">Grupo</th><th scope="col">Demonstração</th><th scope="col">Ações</th></tr></thead>
           <tbody>
             {pageRows.map(r => (
               <tr key={r.nome}>

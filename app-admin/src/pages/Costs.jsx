@@ -114,7 +114,7 @@ export default function Costs() {
             <h2 className="section-title">Uso x plano</h2>
             <div className="table-wrap">
               <table className="resp-table">
-                <thead><tr><th>Recurso</th><th>Usado</th><th>Incluso</th><th>Uso</th><th>Excedente</th><th>Tendência (30 dias)</th></tr></thead>
+                <thead><tr><th scope="col">Recurso</th><th scope="col">Usado</th><th scope="col">Incluso</th><th scope="col">Uso</th><th scope="col">Excedente</th><th scope="col">Tendência (30 dias)</th></tr></thead>
                 <tbody>
                   {est.lines.map(l => {
                     const proj = projectQuota(recent, l, l.quota);

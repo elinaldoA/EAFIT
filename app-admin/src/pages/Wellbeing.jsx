@@ -122,7 +122,7 @@ export default function Wellbeing() {
             {data.low.length === 0 ? <EmptyState icon="🌤️" label="Ninguém com energia ou sono baixos no período." /> : (
               <div className="table-wrap">
                 <table className="resp-table">
-                  <thead><tr><th>Usuário</th><th>Check-ins</th><th>Energia</th><th>Sono</th><th>Humor</th><th>Último</th></tr></thead>
+                  <thead><tr><th scope="col">Usuário</th><th scope="col">Check-ins</th><th scope="col">Energia</th><th scope="col">Sono</th><th scope="col">Humor</th><th scope="col">Último</th></tr></thead>
                   <tbody>
                     {data.low.map(u => (
                       <tr key={u.userId}>
@@ -235,7 +235,7 @@ export default function Wellbeing() {
 
               <h3 className="subsection-title">Por refeição</h3>
               <table className="resp-table">
-                <thead><tr><th>Refeição</th><th>Registros</th><th>Usuários</th><th>kcal médias</th></tr></thead>
+                <thead><tr><th scope="col">Refeição</th><th scope="col">Registros</th><th scope="col">Usuários</th><th scope="col">kcal médias</th></tr></thead>
                 <tbody>
                   {data.diary.meals.map(m => (
                     <tr key={m.meal}>
@@ -250,7 +250,7 @@ export default function Wellbeing() {
                 <>
                   <h3 className="subsection-title">Alimentos mais registrados</h3>
                   <table className="resp-table">
-                    <thead><tr><th>Alimento</th><th>Registros</th><th>Usuários</th></tr></thead>
+                    <thead><tr><th scope="col">Alimento</th><th scope="col">Registros</th><th scope="col">Usuários</th></tr></thead>
                     <tbody>
                       {data.diary.topFoods.map(f => (
                         <tr key={f.name}><td data-label="Alimento">{f.name}</td><td data-label="Registros">{f.entries}</td><td data-label="Usuários">{f.users}</td></tr>
@@ -264,7 +264,7 @@ export default function Wellbeing() {
                 <>
                   <h3 className="subsection-title">Códigos de barras não encontrados</h3>
                   <table className="resp-table">
-                    <thead><tr><th>Código</th><th>Usuários</th><th>Última vez</th></tr></thead>
+                    <thead><tr><th scope="col">Código</th><th scope="col">Usuários</th><th scope="col">Última vez</th></tr></thead>
                     <tbody>
                       {data.diary.barcodeMisses.map(b => (
                         <tr key={b.code}><td data-label="Código">{b.code}</td><td data-label="Usuários">{b.users}</td><td data-label="Última vez">{b.last}</td></tr>

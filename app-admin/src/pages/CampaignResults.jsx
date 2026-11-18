@@ -111,8 +111,8 @@ export default function CampaignResults() {
             <table className="resp-table">
               <thead>
                 <tr>
-                  <th>Quando</th><th>Envio</th><th>Envios</th><th>Chegaram</th><th>Tocaram</th><th>Leram</th><th>Abriram o app</th>
-                  <th>Treinaram (1 dia)</th><th>Treinaram (3 dias)</th><th>Antes (3 dias)</th><th>Diferença</th>
+                  <th scope="col">Quando</th><th scope="col">Envio</th><th scope="col">Envios</th><th scope="col">Chegaram</th><th scope="col">Tocaram</th><th scope="col">Leram</th><th scope="col">Abriram o app</th>
+                  <th scope="col">Treinaram (1 dia)</th><th scope="col">Treinaram (3 dias)</th><th scope="col">Antes (3 dias)</th><th scope="col">Diferença</th>
                 </tr>
               </thead>
               <tbody>

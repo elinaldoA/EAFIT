@@ -315,7 +315,7 @@ export default function Broadcast() {
         {pending.length === 0 && <EmptyState icon="🗓️" label="Nenhuma notificação agendada." />}
         {pending.length > 0 && (
           <table className="resp-table">
-            <thead><tr><th>Quando</th><th>Título</th><th>Destinatários</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Quando</th><th scope="col">Título</th><th scope="col">Destinatários</th><th scope="col"></th></tr></thead>
             <tbody>
               {pending.map(p => (
                 <tr key={p.id}>
@@ -335,7 +335,7 @@ export default function Broadcast() {
         {history.length === 0 && <EmptyState icon="🔔" label="Nenhuma notificação enviada ainda." />}
         {history.length > 0 && (
           <table className="resp-table">
-            <thead><tr><th>Quando</th><th>Título</th><th>Mensagem</th><th>Enviadas</th></tr></thead>
+            <thead><tr><th scope="col">Quando</th><th scope="col">Título</th><th scope="col">Mensagem</th><th scope="col">Enviadas</th></tr></thead>
             <tbody>
               {history.map(h => (
                 <tr key={h.id}>

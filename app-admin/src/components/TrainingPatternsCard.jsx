@@ -64,8 +64,8 @@ export default function TrainingPatternsCard() {
           <table className="resp-table">
             <thead>
               <tr>
-                <th>Local</th><th>Usuários</th><th>Com plano</th><th>Treinaram em 30 dias</th><th>Nunca treinaram</th>
-                <th>Treinos/semana</th><th>Retenção (4–12 sem.)</th><th>Com dor ou lesão</th>
+                <th scope="col">Local</th><th scope="col">Usuários</th><th scope="col">Com plano</th><th scope="col">Treinaram em 30 dias</th><th scope="col">Nunca treinaram</th>
+                <th scope="col">Treinos/semana</th><th scope="col">Retenção (4–12 sem.)</th><th scope="col">Com dor ou lesão</th>
               </tr>
             </thead>
             <tbody>

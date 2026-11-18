@@ -20,7 +20,7 @@ function RankTable({ title, rows, cols, empty, note }) {
       {rows.length === 0 ? <p className="card-note" style={{ marginTop: 0 }}>{empty}</p> : (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Exercício</th>{cols.map(c => <th key={c.label}>{c.label}</th>)}</tr></thead>
+            <thead><tr><th scope="col">Exercício</th>{cols.map(c => <th key={c.label} scope="col">{c.label}</th>)}</tr></thead>
             <tbody>
               {rows.map(r => (
                 <tr key={r.name}>
@@ -131,7 +131,7 @@ export default function ContentRanking() {
             {data.plans.length === 0 ? <EmptyState icon="📋" label="Nenhum plano começado no período." /> : (
               <div className="table-wrap">
                 <table className="resp-table">
-                  <thead><tr><th>Plano</th><th>Planos</th><th>Pessoas</th><th>Do personal</th><th>Aderência</th><th>Terminados</th><th>Chegaram ao fim treinando</th></tr></thead>
+                  <thead><tr><th scope="col">Plano</th><th scope="col">Planos</th><th scope="col">Pessoas</th><th scope="col">Do personal</th><th scope="col">Aderência</th><th scope="col">Terminados</th><th scope="col">Chegaram ao fim treinando</th></tr></thead>
                   <tbody>
                     {data.plans.map(p => (
                       <tr key={p.name}>
@@ -191,7 +191,7 @@ export default function ContentRanking() {
             {queue.length === 0 ? <EmptyState icon="✨" label="Nada pendente nesse filtro." /> : (
               <div className="table-wrap">
                 <table className="resp-table">
-                  <thead><tr><th>Exercício</th><th>Grupo</th><th>Em planos ativos</th><th>Pendências</th><th /></tr></thead>
+                  <thead><tr><th scope="col">Exercício</th><th scope="col">Grupo</th><th scope="col">Em planos ativos</th><th scope="col">Pendências</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
                   <tbody>
                     {queue.slice(0, 200).map(i => (
                       <tr key={i.name}>

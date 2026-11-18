@@ -61,7 +61,7 @@ function DeviceTable({ rows, empty }) {
     <div className="table-wrap">
       <table className="resp-table">
         <thead>
-          <tr><th>Instalou em</th><th>Aparelho</th><th>Como</th><th>Dias de uso</th><th>Último acesso</th><th>Conta</th></tr>
+          <tr><th scope="col">Instalou em</th><th scope="col">Aparelho</th><th scope="col">Como</th><th scope="col">Dias de uso</th><th scope="col">Último acesso</th><th scope="col">Conta</th></tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
@@ -414,7 +414,7 @@ export default function InstallPanel() {
             <div className="table-wrap">
               <table className="resp-table">
                 <thead>
-                  <tr><th>Quando</th><th>Aparelho</th><th>Conta</th><th>Tinha ativado em</th><th>Ainda recebe em outro aparelho</th></tr>
+                  <tr><th scope="col">Quando</th><th scope="col">Aparelho</th><th scope="col">Conta</th><th scope="col">Tinha ativado em</th><th scope="col">Ainda recebe em outro aparelho</th></tr>
                 </thead>
                 <tbody>
                   {data.recent.map((r, i) => (

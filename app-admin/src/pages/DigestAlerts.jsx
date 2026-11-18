@@ -149,7 +149,7 @@ export default function DigestAlerts() {
         <h2 className="section-title">Alertas</h2>
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Alerta</th><th>Agora</th><th>Limite</th><th>Repetir após</th><th>Último disparo</th><th /></tr></thead>
+            <thead><tr><th scope="col">Alerta</th><th scope="col">Agora</th><th scope="col">Limite</th><th scope="col">Repetir após</th><th scope="col">Último disparo</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>{data.rules.map(r => <RuleRow key={`${r.key}-${r.threshold}-${r.cooldownHours}-${r.enabled}`} rule={r} onSaved={load} />)}</tbody>
           </table>
         </div>
@@ -161,7 +161,7 @@ export default function DigestAlerts() {
         {data.log.length === 0 ? <p className="card-note" style={{ marginTop: 0 }}>Nenhum alerta ou relatório enviado ainda.</p> : (
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Quando</th><th>O quê</th><th>Detalhe</th><th>Avisados</th></tr></thead>
+              <thead><tr><th scope="col">Quando</th><th scope="col">O quê</th><th scope="col">Detalhe</th><th scope="col">Avisados</th></tr></thead>
               <tbody>
                 {data.log.map(l => (
                   <tr key={l.id}>

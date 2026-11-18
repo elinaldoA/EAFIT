@@ -294,7 +294,7 @@ function Results({ campaign }) {
       {rows.length === 0 ? <p className="card-note" style={{ margin: 0 }}>Nenhum parceiro ativo neste público.</p> : (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Parceiro</th><th>Tipo</th><th>Código</th><th>Cliques</th><th>Cadastros</th><th>Conversão</th><th>Ativados</th></tr></thead>
+            <thead><tr><th scope="col">Parceiro</th><th scope="col">Tipo</th><th scope="col">Código</th><th scope="col">Cliques</th><th scope="col">Cadastros</th><th scope="col">Conversão</th><th scope="col">Ativados</th></tr></thead>
             <tbody>
               {rows.map(r => (
                 <tr key={`${r.kind}-${r.code}`}>
@@ -386,7 +386,7 @@ export default function PartnerCampaigns() {
         <div className="card">
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Campanha</th><th>Para</th><th>Período</th><th>Situação</th><th>Cliques</th><th>Cadastros</th><th>Ativados</th><th /></tr></thead>
+              <thead><tr><th scope="col">Campanha</th><th scope="col">Para</th><th scope="col">Período</th><th scope="col">Situação</th><th scope="col">Cliques</th><th scope="col">Cadastros</th><th scope="col">Ativados</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
               <tbody>
                 {list.map(c => {
                   const status = STATUS[campaignStatus(c)];

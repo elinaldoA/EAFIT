@@ -61,7 +61,7 @@ export default function BroadcastHistory() {
           {shown => (
         <table className="resp-table">
           <thead>
-            <tr><th>Quando</th><th>Origem</th><th>Título</th><th>Mensagem</th><th>Destino</th><th>Entregues</th></tr>
+            <tr><th scope="col">Quando</th><th scope="col">Origem</th><th scope="col">Título</th><th scope="col">Mensagem</th><th scope="col">Destino</th><th scope="col">Entregues</th></tr>
           </thead>
           <tbody>
             {shown.map(i => (

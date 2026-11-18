@@ -194,7 +194,7 @@ function Results({ survey }) {
       </div>
       <div className="table-wrap">
         <table className="resp-table">
-          <thead><tr><th>Grupo</th><th>Respostas</th>{survey.kind === 'nps' && <th>NPS</th>}{survey.kind === 'escolha' && <th>Mais escolhida</th>}</tr></thead>
+          <thead><tr><th scope="col">Grupo</th><th scope="col">Respostas</th>{survey.kind === 'nps' && <th scope="col">NPS</th>}{survey.kind === 'escolha' && <th scope="col">Mais escolhida</th>}</tr></thead>
           <tbody>
             {r.breakdown.map(g => (
               <tr key={g.label}>
@@ -213,7 +213,7 @@ function Results({ survey }) {
           <h3 className="subsection-title" style={{ margin: 0 }}>Por semana</h3>
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Semana de</th><th>Respostas</th>{survey.kind === 'nps' && <th>NPS</th>}</tr></thead>
+              <thead><tr><th scope="col">Semana de</th><th scope="col">Respostas</th>{survey.kind === 'nps' && <th scope="col">NPS</th>}</tr></thead>
               <tbody>
                 {r.weekly.map(w => (
                   <tr key={w.week}>
@@ -235,7 +235,7 @@ function Results({ survey }) {
       {r.comments.length === 0 ? <p className="card-note" style={{ margin: 0 }}>Nenhum comentário.</p> : (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Quando</th><th>Quem</th><th>Resposta</th><th>Comentário</th></tr></thead>
+            <thead><tr><th scope="col">Quando</th><th scope="col">Quem</th><th scope="col">Resposta</th><th scope="col">Comentário</th></tr></thead>
             <tbody>
               {r.comments.map(a => (
                 <tr key={a.id}>
@@ -307,7 +307,7 @@ export default function Surveys() {
       {items && items.length > 0 && (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Pergunta</th><th>Tipo</th><th>Público</th><th>Período</th><th>Situação</th><th>Respostas</th><th /></tr></thead>
+            <thead><tr><th scope="col">Pergunta</th><th scope="col">Tipo</th><th scope="col">Público</th><th scope="col">Período</th><th scope="col">Situação</th><th scope="col">Respostas</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>
               {items.map(s => {
                 const st = surveyStatus(s, today);

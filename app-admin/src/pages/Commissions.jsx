@@ -136,7 +136,7 @@ export default function Commissions() {
                 {visible => (
               <div className="table-wrap">
                 <table className="resp-table">
-                  <thead><tr><th>Parceiro</th><th>Indicações</th><th>Ativados</th><th>Por ativado</th><th>Calculado</th><th>Fechamento</th><th>Notas</th></tr></thead>
+                  <thead><tr><th scope="col">Parceiro</th><th scope="col">Indicações</th><th scope="col">Ativados</th><th scope="col">Por ativado</th><th scope="col">Calculado</th><th scope="col">Fechamento</th><th scope="col">Notas</th></tr></thead>
                   <tbody>
                     {visible.map(r => (
                       <tr key={r.id}>

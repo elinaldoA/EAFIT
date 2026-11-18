@@ -26,8 +26,8 @@ function BreakdownTable({ title, rows }) {
           <table className="resp-table">
             <thead>
               <tr>
-                <th>Grupo</th><th>Usuários</th><th>Treinaram (30d)</th><th>Nunca treinaram</th>
-                <th>Treinos/semana</th><th>Aderência ao plano</th><th>Relatos de dor</th>
+                <th scope="col">Grupo</th><th scope="col">Usuários</th><th scope="col">Treinaram (30d)</th><th scope="col">Nunca treinaram</th>
+                <th scope="col">Treinos/semana</th><th scope="col">Aderência ao plano</th><th scope="col">Relatos de dor</th>
               </tr>
             </thead>
             <tbody>
@@ -89,7 +89,7 @@ function CardioCard() {
           </div>
           <div className="table-wrap" style={{ marginTop: 14 }}>
             <table className="resp-table">
-              <thead><tr><th>Atividade</th><th>Treinos</th><th>Usuários</th><th>Minutos</th><th>Km</th></tr></thead>
+              <thead><tr><th scope="col">Atividade</th><th scope="col">Treinos</th><th scope="col">Usuários</th><th scope="col">Minutos</th><th scope="col">Km</th></tr></thead>
               <tbody>
                 {exercises.map(e => (
                   <tr key={e.exercise}>

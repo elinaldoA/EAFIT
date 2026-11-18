@@ -52,7 +52,7 @@ function PurgeCard() {
       <h2 className="section-title">Dados antigos</h2>
       <div className="table-wrap">
         <table className="resp-table">
-          <thead><tr><th>Tipo</th><th>Registros</th><th>Com mais de {PURGE_DAYS} dias</th><th /></tr></thead>
+          <thead><tr><th scope="col">Tipo</th><th scope="col">Registros</th><th scope="col">Com mais de {PURGE_DAYS} dias</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
           <tbody>
             {rows.map(r => (
               <tr key={r.kind}>
@@ -189,7 +189,7 @@ export default function SystemHealth() {
         {health.cron.error ? <BlockError message={health.cron.error} /> : (
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Job</th><th>Estado</th><th>Última execução</th><th>Execuções (24h)</th><th>Falhas (24h)</th></tr></thead>
+              <thead><tr><th scope="col">Job</th><th scope="col">Estado</th><th scope="col">Última execução</th><th scope="col">Execuções (24h)</th><th scope="col">Falhas (24h)</th></tr></thead>
               <tbody>
                 {jobs.map(j => (
                   <tr key={j.name}>
@@ -228,7 +228,7 @@ export default function SystemHealth() {
               </p>
               <div className="table-wrap">
                 <table className="resp-table">
-                  <thead><tr><th>Resposta</th><th>Qtd.</th><th>Última</th></tr></thead>
+                  <thead><tr><th scope="col">Resposta</th><th scope="col">Qtd.</th><th scope="col">Última</th></tr></thead>
                   <tbody>
                     {health.http.data.map(r => (
                       <tr key={r.status_group}>
@@ -281,7 +281,7 @@ export default function SystemHealth() {
         {health.notifications.error ? <BlockError message={health.notifications.error} /> : (
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Tipo</th><th>Situação</th><th>Horário</th><th>Último envio</th><th>24h</th><th>7 dias</th></tr></thead>
+              <thead><tr><th scope="col">Tipo</th><th scope="col">Situação</th><th scope="col">Horário</th><th scope="col">Último envio</th><th scope="col">24h</th><th scope="col">7 dias</th></tr></thead>
               <tbody>
                 {health.notifications.data.map(n => (
                   <tr key={n.kind}>

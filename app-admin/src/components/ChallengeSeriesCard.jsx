@@ -26,7 +26,7 @@ function SeriesReport({ series }) {
       )}
       <div className="table-wrap">
         <table className="resp-table">
-          <thead><tr><th>Edição</th><th>Participantes</th><th>Treinaram</th><th>Bateram a meta ({series.min_days}+ dias)</th><th>Voltaram da anterior</th><th>Média de dias</th></tr></thead>
+          <thead><tr><th scope="col">Edição</th><th scope="col">Participantes</th><th scope="col">Treinaram</th><th scope="col">Bateram a meta ({series.min_days}+ dias)</th><th scope="col">Voltaram da anterior</th><th scope="col">Média de dias</th></tr></thead>
           <tbody>
             {rows.map(e => (
               <tr key={e.id}>

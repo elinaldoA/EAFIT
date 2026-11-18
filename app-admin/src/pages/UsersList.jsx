@@ -305,21 +305,21 @@ export default function UsersList() {
           <div className="table-wrap"><table className="resp-table users-table">
             <thead>
               <tr>
-                <th>
+                <th scope="col">
                   <input
                     type="checkbox" aria-label="Selecionar todos da página"
                     checked={allVisibleSelected}
                     onChange={() => setSelected(sel => toggleAll(sel, visibleIds))}
                   />
                 </th>
-                <th>Usuário</th>
-                <th>Peso alvo</th>
-                <th>Nível / objetivo</th>
-                <th>Último treino</th>
-                <th>Treinos (30d)</th>
-                <th>Fim do plano</th>
-                <th>Criado em</th>
-                <th>Último login</th>
+                <th scope="col">Usuário</th>
+                <th scope="col">Peso alvo</th>
+                <th scope="col">Nível / objetivo</th>
+                <th scope="col">Último treino</th>
+                <th scope="col">Treinos (30d)</th>
+                <th scope="col">Fim do plano</th>
+                <th scope="col">Criado em</th>
+                <th scope="col">Último login</th>
               </tr>
             </thead>
             <tbody>

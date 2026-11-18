@@ -132,7 +132,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
       <section>
         <h2 className="section-title">Peso</h2>
         <table className="resp-table">
-          <thead><tr><th>Data</th><th>Peso (kg)</th></tr></thead>
+          <thead><tr><th scope="col">Data</th><th scope="col">Peso (kg)</th></tr></thead>
           <tbody>
             {weightLogs.map(w => (
               <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="Peso (kg)">{w.weight}</td></tr>
@@ -145,7 +145,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
       <section>
         <h2 className="section-title">Água</h2>
         <table className="resp-table">
-          <thead><tr><th>Data</th><th>ml</th></tr></thead>
+          <thead><tr><th scope="col">Data</th><th scope="col">ml</th></tr></thead>
           <tbody>
             {waterLogs.map(w => (
               <tr key={w.id}><td data-label="Data">{w.log_date}</td><td data-label="ml">{w.amount_ml}</td></tr>
@@ -158,7 +158,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
       <section>
         <h2 className="section-title">Nutrição</h2>
         <table className="resp-table">
-          <thead><tr><th>Data</th><th>Proteína (g)</th><th>kcal</th><th>Carbo (g)</th><th>Gordura (g)</th></tr></thead>
+          <thead><tr><th scope="col">Data</th><th scope="col">Proteína (g)</th><th scope="col">kcal</th><th scope="col">Carbo (g)</th><th scope="col">Gordura (g)</th></tr></thead>
           <tbody>
             {proteinLogs.map(w => (
               <tr key={w.id}>
@@ -174,7 +174,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
       <section>
         <h2 className="section-title">Diário por refeição</h2>
         <table className="resp-table">
-          <thead><tr><th>Data</th><th>Refeição</th><th>Alimento</th><th>Proteína (g)</th><th>kcal</th></tr></thead>
+          <thead><tr><th scope="col">Data</th><th scope="col">Refeição</th><th scope="col">Alimento</th><th scope="col">Proteína (g)</th><th scope="col">kcal</th></tr></thead>
           <tbody>
             {nutritionEntries.map(e => (
               <tr key={e.id}>
@@ -190,7 +190,7 @@ export default function UserProfileTab({ userId, detail, form, setForm, busy, on
       <section>
         <h2 className="section-title">Atalhos de alimentos próprios</h2>
         <table className="resp-table">
-          <thead><tr><th>Alimento</th><th>Proteína (g)</th><th>kcal</th><th>Carbo (g)</th><th>Gordura (g)</th></tr></thead>
+          <thead><tr><th scope="col">Alimento</th><th scope="col">Proteína (g)</th><th scope="col">kcal</th><th scope="col">Carbo (g)</th><th scope="col">Gordura (g)</th></tr></thead>
           <tbody>
             {nutritionFoods.map(f => (
               <tr key={f.id}>

@@ -93,7 +93,7 @@ export default function Moderation() {
           {visible => (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Publicação</th><th>Quem publicou</th><th>Motivos</th><th>Denúncias</th><th>Quando</th><th /></tr></thead>
+            <thead><tr><th scope="col">Publicação</th><th scope="col">Quem publicou</th><th scope="col">Motivos</th><th scope="col">Denúncias</th><th scope="col">Quando</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>
               {visible.map(r => {
                 const key = `${r.eventId}-${r.userId}`;
@@ -145,7 +145,7 @@ export default function Moderation() {
           {data.flags.length === 0 ? <EmptyState icon="✅" label={data.words.length ? 'Nada com palavras bloqueadas nos últimos 30 dias.' : 'Cadastre palavras bloqueadas abaixo.'} /> : (
             <div className="table-wrap">
               <table className="resp-table">
-                <thead><tr><th>Quando</th><th>Quem</th><th>Publicação</th><th>Palavra</th><th /></tr></thead>
+                <thead><tr><th scope="col">Quando</th><th scope="col">Quem</th><th scope="col">Publicação</th><th scope="col">Palavra</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
                 <tbody>
                   {data.flags.map(f => (
                     <tr key={f.eventId}>

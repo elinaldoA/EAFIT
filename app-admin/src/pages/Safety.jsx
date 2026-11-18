@@ -56,7 +56,7 @@ export default function Safety() {
       {!loading && !error && (
         <>
           <table className="resp-table">
-            <thead><tr><th>Data</th><th>Usuário</th><th>Exercício</th><th>Severidade</th><th>Nota</th><th>Resposta automática</th></tr></thead>
+            <thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Exercício</th><th scope="col">Severidade</th><th scope="col">Nota</th><th scope="col">Resposta automática</th></tr></thead>
             <tbody>
               {rows.map(r => (
                 <tr key={r.id}>

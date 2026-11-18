@@ -227,7 +227,7 @@ export default function ExerciseLibrary() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Exercício</th><th>Grupo</th><th>Tipo · nível</th><th>Prescrição</th><th>Mídia</th><th>Em planos</th><th>Relatos de dor</th><th></th></tr>
+                <tr><th scope="col">Exercício</th><th scope="col">Grupo</th><th scope="col">Tipo · nível</th><th scope="col">Prescrição</th><th scope="col">Mídia</th><th scope="col">Em planos</th><th scope="col">Relatos de dor</th><th scope="col"></th></tr>
               </thead>
               <tbody>
                 {filtered.slice(0, shown).map(r => (

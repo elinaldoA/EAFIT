@@ -110,7 +110,7 @@ export default function ClientErrors() {
         <>
           <table className="resp-table">
             <thead>
-              <tr><th>Quando</th><th>Tipo</th><th>Mensagem</th><th>Tela</th><th>Usuário</th><th>Detalhes</th></tr>
+              <tr><th scope="col">Quando</th><th scope="col">Tipo</th><th scope="col">Mensagem</th><th scope="col">Tela</th><th scope="col">Usuário</th><th scope="col">Detalhes</th></tr>
             </thead>
             <tbody>
               {rows.map(r => (

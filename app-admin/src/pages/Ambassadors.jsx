@@ -349,7 +349,7 @@ function ReferralList({ ambassadorId }) {
   return (
     <div className="table-wrap">
       <table className="resp-table">
-        <thead><tr><th>Usuário</th><th>Canal</th><th>Cadastro</th><th>E-mail confirmado</th><th>Último acesso</th><th>Treinos</th></tr></thead>
+        <thead><tr><th scope="col">Usuário</th><th scope="col">Canal</th><th scope="col">Cadastro</th><th scope="col">E-mail confirmado</th><th scope="col">Último acesso</th><th scope="col">Treinos</th></tr></thead>
         <tbody>
           {rows.map(r => (
             <tr key={r.userId}>

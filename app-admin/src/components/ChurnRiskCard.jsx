@@ -128,7 +128,7 @@ export default function ChurnRiskCard() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Usuário</th><th>Nota</th><th>Motivos</th><th>Último treino</th><th>Ritmo</th><th>Último aviso</th><th /></tr>
+                <tr><th scope="col">Usuário</th><th scope="col">Nota</th><th scope="col">Motivos</th><th scope="col">Último treino</th><th scope="col">Ritmo</th><th scope="col">Último aviso</th><th scope="col"><span className="sr-only">Ações</span></th></tr>
               </thead>
               <tbody>
                 {visible.map(r => {

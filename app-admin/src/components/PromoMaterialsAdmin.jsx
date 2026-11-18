@@ -135,7 +135,7 @@ export default function PromoMaterialsAdmin() {
       {items && items.length > 0 && (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Título</th><th>Para</th><th>Arquivo</th><th>Tamanho</th><th>Publicado</th><th /></tr></thead>
+            <thead><tr><th scope="col">Título</th><th scope="col">Para</th><th scope="col">Arquivo</th><th scope="col">Tamanho</th><th scope="col">Publicado</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>
               {items.map(item => (
                 <tr key={item.id}>

@@ -108,7 +108,7 @@ export default function LineChart({
           overflow não corta, aí as linhas esticavam a página abaixo do rodapé. */}
       <div className="sr-only">
         <table>
-          <thead><tr><th>Ponto</th>{series.map(s => <th key={s.key}>{s.label}</th>)}</tr></thead>
+          <thead><tr><th scope="col">Ponto</th>{series.map(s => <th key={s.key} scope="col">{s.label}</th>)}</tr></thead>
           <tbody>{points.map((p, i) => <tr key={i}><td>{title(p)}</td>{series.map(s => <td key={s.key}>{format(Number(p[s.key]) || 0)}</td>)}</tr>)}</tbody>
         </table>
       </div>

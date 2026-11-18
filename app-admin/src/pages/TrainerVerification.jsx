@@ -132,7 +132,7 @@ export default function TrainerVerification() {
       {rows && (rows.length === 0 ? <EmptyState icon="🪪" label={status === 'pendente' ? 'Nenhum pedido esperando análise.' : 'Nenhum pedido aqui.'} /> : (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Pessoa</th><th>CREF</th><th>Pedido</th><th>Situação</th></tr></thead>
+            <thead><tr><th scope="col">Pessoa</th><th scope="col">CREF</th><th scope="col">Pedido</th><th scope="col">Situação</th></tr></thead>
             <tbody>{rows.map(r => <RequestRow key={r.id} r={r} onDone={load} />)}</tbody>
           </table>
         </div>
@@ -144,7 +144,7 @@ export default function TrainerVerification() {
           {trainers.length === 0 ? <p className="user-detail__meta">Nenhum personal ainda.</p> : (
             <div className="table-wrap">
               <table className="resp-table">
-                <thead><tr><th>Personal</th><th>Código</th><th>CREF</th><th>Verificado em</th></tr></thead>
+                <thead><tr><th scope="col">Personal</th><th scope="col">Código</th><th scope="col">CREF</th><th scope="col">Verificado em</th></tr></thead>
                 <tbody>
                   {trainers.map(t => (
                     <tr key={t.userId}>

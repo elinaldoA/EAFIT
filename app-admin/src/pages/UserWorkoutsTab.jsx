@@ -145,8 +145,8 @@ export default function UserWorkoutsTab({
             )}
             {activePlan.plan_days.map(day => (
               <table className="resp-table" key={day.id}>
-                <thead className="resp-table__title"><tr><th colSpan={5}>{day.dia} — {day.foco}</th></tr></thead>
-                <thead><tr><th>Exercício</th><th>Séries</th><th>Reps</th><th>Descanso</th><th>Execução</th></tr></thead>
+                <thead className="resp-table__title"><tr><th colSpan={5} scope="col">{day.dia} — {day.foco}</th></tr></thead>
+                <thead><tr><th scope="col">Exercício</th><th scope="col">Séries</th><th scope="col">Reps</th><th scope="col">Descanso</th><th scope="col">Execução</th></tr></thead>
                 <tbody>
                   {day.plan_exercises.map(ex => (
                     <tr key={ex.id}>
@@ -171,7 +171,7 @@ export default function UserWorkoutsTab({
           <button className="btn btn--small" onClick={onExportTreinos} disabled={workouts.length === 0}>Exportar CSV</button>
         </div>
         <table className="resp-table">
-          <thead><tr><th>Data</th><th>Dia</th><th>Concluído</th><th>Duração</th><th></th></tr></thead>
+          <thead><tr><th scope="col">Data</th><th scope="col">Dia</th><th scope="col">Concluído</th><th scope="col">Duração</th><th scope="col"></th></tr></thead>
           <tbody>
             {workouts.map(w => (
               <Fragment key={w.id}>
@@ -198,7 +198,7 @@ export default function UserWorkoutsTab({
                       )}
                       {workoutSets[w.id]?.length > 0 && (
                         <table className="resp-table">
-                          <thead><tr><th>Exercício</th><th>Série</th><th>Carga</th><th>Reps</th><th>Concluída</th>{onFixSet && <th />}</tr></thead>
+                          <thead><tr><th scope="col">Exercício</th><th scope="col">Série</th><th scope="col">Carga</th><th scope="col">Reps</th><th scope="col">Concluída</th>{onFixSet && <th scope="col"><span className="sr-only">Ações</span></th>}</tr></thead>
                           <tbody>
                             {workoutSets[w.id].map(s => (
                               <SetRow key={s.id} set={s} onFix={onFixSet && ((set, fields) => onFixSet(w.id, set, fields))} />
@@ -219,7 +219,7 @@ export default function UserWorkoutsTab({
       <section>
         <h2 className="section-title">Recordes pessoais</h2>
         <table className="resp-table">
-          <thead><tr><th>Exercício</th><th>Carga máxima</th><th>1RM estimado</th></tr></thead>
+          <thead><tr><th scope="col">Exercício</th><th scope="col">Carga máxima</th><th scope="col">1RM estimado</th></tr></thead>
           <tbody>
             {personalRecords.map(p => (
               <tr key={p.exercise_name}>
@@ -236,7 +236,7 @@ export default function UserWorkoutsTab({
       <section>
         <h2 className="section-title">Registros de dor/desconforto</h2>
         <table className="resp-table">
-          <thead><tr><th>Data</th><th>Exercício</th><th>Severidade</th><th>Nota</th></tr></thead>
+          <thead><tr><th scope="col">Data</th><th scope="col">Exercício</th><th scope="col">Severidade</th><th scope="col">Nota</th></tr></thead>
           <tbody>
             {discomfortLogs.map(d => (
               <tr key={d.id}>

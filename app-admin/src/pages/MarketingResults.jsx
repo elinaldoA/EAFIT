@@ -186,7 +186,7 @@ export default function MarketingResults() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Rede</th><th>Tipo de link</th><th>Visitas</th><th>Cadastros</th><th>Por visita</th><th>Treinaram</th><th>Seguiram</th></tr>
+                <tr><th scope="col">Rede</th><th scope="col">Tipo de link</th><th scope="col">Visitas</th><th scope="col">Cadastros</th><th scope="col">Por visita</th><th scope="col">Treinaram</th><th scope="col">Seguiram</th></tr>
               </thead>
               <tbody>
                 {conversion.map(r => {
@@ -220,7 +220,7 @@ export default function MarketingResults() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Post</th><th>Rede</th><th>Visitas</th><th>Cadastros</th><th>Treinaram</th><th>Seguiram</th></tr>
+                <tr><th scope="col">Post</th><th scope="col">Rede</th><th scope="col">Visitas</th><th scope="col">Cadastros</th><th scope="col">Treinaram</th><th scope="col">Seguiram</th></tr>
               </thead>
               <tbody>
                 {byPost.map(r => (
@@ -303,7 +303,7 @@ export default function MarketingResults() {
             <table className="resp-table">
               <thead>
                 <tr>
-                  <th>Post</th><th>Rede</th><th>Alcance</th><th>Visualizações</th><th>Curtidas</th><th>Comentários</th><th>Salvos</th><th>Compart.</th>
+                  <th scope="col">Post</th><th scope="col">Rede</th><th scope="col">Alcance</th><th scope="col">Visualizações</th><th scope="col">Curtidas</th><th scope="col">Comentários</th><th scope="col">Salvos</th><th scope="col">Compart.</th>
                 </tr>
               </thead>
               <tbody>

@@ -82,7 +82,7 @@ function AtRiskCard() {
           <table className="resp-table">
             <thead>
               <tr>
-                <th>Usuário</th><th>Último treino</th><th>Sem treinar</th><th>Treinos</th><th>Fim do plano</th><th></th>
+                <th scope="col">Usuário</th><th scope="col">Último treino</th><th scope="col">Sem treinar</th><th scope="col">Treinos</th><th scope="col">Fim do plano</th><th scope="col"></th>
               </tr>
             </thead>
             <tbody>
@@ -148,7 +148,7 @@ function ExpiringPlansCard() {
         <div className="table-wrap">
           <table className="resp-table">
             <thead>
-              <tr><th>Usuário</th><th>Plano</th><th>Vence em</th><th>Situação</th><th>Próximo plano</th><th></th></tr>
+              <tr><th scope="col">Usuário</th><th scope="col">Plano</th><th scope="col">Vence em</th><th scope="col">Situação</th><th scope="col">Próximo plano</th><th scope="col"></th></tr>
             </thead>
             <tbody>
               {rows.map(r => (

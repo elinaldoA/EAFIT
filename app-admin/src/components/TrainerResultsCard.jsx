@@ -38,8 +38,8 @@ export default function TrainerResultsCard({ trainers, days }) {
             <table className="resp-table">
               <thead>
                 <tr>
-                  <th>#</th><th>Personal</th><th>Alunos</th><th>Treinando (14 dias)</th><th>Dias/semana</th><th>Bateram recorde</th>
-                  <th>Retenção (30+ dias)</th><th>Aulas com treino</th><th>Sem plano</th>
+                  <th scope="col">#</th><th scope="col">Personal</th><th scope="col">Alunos</th><th scope="col">Treinando (14 dias)</th><th scope="col">Dias/semana</th><th scope="col">Bateram recorde</th>
+                  <th scope="col">Retenção (30+ dias)</th><th scope="col">Aulas com treino</th><th scope="col">Sem plano</th>
                 </tr>
               </thead>
               <tbody>

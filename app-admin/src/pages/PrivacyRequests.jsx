@@ -159,7 +159,7 @@ export default function PrivacyRequests() {
           {visible => (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Recebido</th><th>Quem</th><th>Pedido</th><th>Prazo</th><th>Situação</th><th>Notas</th><th /></tr></thead>
+            <thead><tr><th scope="col">Recebido</th><th scope="col">Quem</th><th scope="col">Pedido</th><th scope="col">Prazo</th><th scope="col">Situação</th><th scope="col">Notas</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>{visible.map(r => <RequestRow key={`${r.id}-${r.status}-${r.notes}`} req={r} onChanged={load} />)}</tbody>
           </table>
         </div>

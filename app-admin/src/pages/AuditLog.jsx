@@ -71,7 +71,7 @@ export default function AuditLog() {
         <>
           <table className="resp-table">
             <thead>
-              <tr><th>Quando</th><th>Admin</th><th>Ação</th><th>Alvo</th><th>Detalhes</th></tr>
+              <tr><th scope="col">Quando</th><th scope="col">Admin</th><th scope="col">Ação</th><th scope="col">Alvo</th><th scope="col">Detalhes</th></tr>
             </thead>
             <tbody>
               {rows.map(r => (

@@ -95,7 +95,7 @@ export default function MarketingAccounts() {
         <div className="table-wrap">
           <table className="resp-table">
             <thead>
-              <tr><th>Rede</th><th>Conta</th><th>Situação</th><th>Conectada em</th><th>Comentários lidos</th><th /></tr>
+              <tr><th scope="col">Rede</th><th scope="col">Conta</th><th scope="col">Situação</th><th scope="col">Conectada em</th><th scope="col">Comentários lidos</th><th scope="col"><span className="sr-only">Ações</span></th></tr>
             </thead>
             <tbody>
               {accounts.map(a => (

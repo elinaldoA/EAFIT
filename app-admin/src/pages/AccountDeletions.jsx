@@ -55,7 +55,7 @@ export default function AccountDeletions() {
 
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Quando</th><th>Quem pediu</th><th>Tempo de conta</th><th>Treinos registrados</th></tr></thead>
+              <thead><tr><th scope="col">Quando</th><th scope="col">Quem pediu</th><th scope="col">Tempo de conta</th><th scope="col">Treinos registrados</th></tr></thead>
               <tbody>
                 {data.rows.map(r => (
                   <tr key={r.id}>

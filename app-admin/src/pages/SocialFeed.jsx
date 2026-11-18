@@ -179,7 +179,7 @@ export default function SocialFeed() {
           <>
             <div className="table-wrap">
               <table className="resp-table">
-                <thead><tr><th>Quando</th><th>Usuário</th><th>Tipo</th><th>Publicação</th><th>Reações</th><th /></tr></thead>
+                <thead><tr><th scope="col">Quando</th><th scope="col">Usuário</th><th scope="col">Tipo</th><th scope="col">Publicação</th><th scope="col">Reações</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
                 <tbody>
                   {feed.rows.map(e => (
                     <tr key={e.id}>

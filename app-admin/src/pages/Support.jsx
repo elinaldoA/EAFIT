@@ -106,7 +106,7 @@ export default function Support() {
           {visible => (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Há</th><th>De</th><th>Assunto</th><th>Mensagem</th><th>Situação</th><th>Responsável</th><th /></tr></thead>
+            <thead><tr><th scope="col">Há</th><th scope="col">De</th><th scope="col">Assunto</th><th scope="col">Mensagem</th><th scope="col">Situação</th><th scope="col">Responsável</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>
               {visible.map(i => {
                 const age = ageHours(i);

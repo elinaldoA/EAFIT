@@ -15,7 +15,7 @@ function Bars({ rows, best, label }) {
   return (
     <div className="table-wrap">
       <table className="resp-table">
-        <thead><tr><th>{label}</th><th>Posts</th><th>Engajamento (× a média)</th></tr></thead>
+        <thead><tr><th scope="col">{label}</th><th scope="col">Posts</th><th scope="col">Engajamento (× a média)</th></tr></thead>
         <tbody>
           {rows.map(r => (
             <tr key={r.key}>

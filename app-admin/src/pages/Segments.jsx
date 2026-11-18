@@ -65,7 +65,7 @@ export default function Segments() {
         ) : (
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Segmento</th><th>Critérios</th><th>Usuários hoje</th><th>Criado em</th><th></th></tr></thead>
+              <thead><tr><th scope="col">Segmento</th><th scope="col">Critérios</th><th scope="col">Usuários hoje</th><th scope="col">Criado em</th><th scope="col"></th></tr></thead>
               <tbody>
                 {segments.map(s => (
                   <tr key={s.id}>

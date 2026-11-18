@@ -89,7 +89,7 @@ export default function Leagues() {
                 {visible => (
               <div className="table-wrap">
                 <table className="resp-table">
-                  <thead><tr><th>Posição</th><th>Participante</th><th>Dias no mês</th></tr></thead>
+                  <thead><tr><th scope="col">Posição</th><th scope="col">Participante</th><th scope="col">Dias no mês</th></tr></thead>
                   <tbody>
                     {visible.map(r => (
                       <tr key={r.userId}>

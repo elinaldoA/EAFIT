@@ -95,8 +95,8 @@ export default function Campaigns() {
             <table className="resp-table">
               <thead>
                 <tr>
-                  <th>Origem</th><th>Campanha</th><th>Visitas</th><th>Cadastros</th><th>Conversão</th><th>Ativaram (7 dias)</th>
-                  <th>Ativos (30 dias)</th><th>Gasto</th><th>Por ativado</th>
+                  <th scope="col">Origem</th><th scope="col">Campanha</th><th scope="col">Visitas</th><th scope="col">Cadastros</th><th scope="col">Conversão</th><th scope="col">Ativaram (7 dias)</th>
+                  <th scope="col">Ativos (30 dias)</th><th scope="col">Gasto</th><th scope="col">Por ativado</th>
                 </tr>
               </thead>
               <tbody>

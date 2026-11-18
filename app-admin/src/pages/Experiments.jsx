@@ -138,8 +138,8 @@ function Results({ experiment }) {
         <table className="resp-table">
           <thead>
             <tr>
-              <th>Variante</th><th>Pessoas</th><th>Abriram o app</th><th>Treinaram</th><th>Diferença</th><th>Dias/semana</th>
-              <th>Contas novas ativadas</th>{experiment.flag && <th>Usaram a função</th>}
+              <th scope="col">Variante</th><th scope="col">Pessoas</th><th scope="col">Abriram o app</th><th scope="col">Treinaram</th><th scope="col">Diferença</th><th scope="col">Dias/semana</th>
+              <th scope="col">Contas novas ativadas</th>{experiment.flag && <th scope="col">Usaram a função</th>}
             </tr>
           </thead>
           <tbody>

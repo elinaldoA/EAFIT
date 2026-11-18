@@ -76,7 +76,7 @@ export default function Admins() {
       {!loading && !error && (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Admin</th><th>Papel</th><th>Conta criada em</th><th>Último login</th><th /></tr></thead>
+            <thead><tr><th scope="col">Admin</th><th scope="col">Papel</th><th scope="col">Conta criada em</th><th scope="col">Último login</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
             <tbody>
               {rows.map(a => (
                 <tr key={a.id}>

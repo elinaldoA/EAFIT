@@ -28,7 +28,7 @@ function Leaderboard({ challengeId }) {
 
   return (
     <table className="resp-table">
-      <thead><tr><th>Participante</th><th>Dias treinados</th></tr></thead>
+      <thead><tr><th scope="col">Participante</th><th scope="col">Dias treinados</th></tr></thead>
       <tbody>
         {rows.map(r => (
           <tr key={r.userId}>
@@ -190,7 +190,7 @@ export default function Challenges() {
 
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Desafio</th><th>Período</th><th>Situação</th><th>Participantes</th><th>Treinaram</th><th>Criado por</th><th /></tr></thead>
+              <thead><tr><th scope="col">Desafio</th><th scope="col">Período</th><th scope="col">Situação</th><th scope="col">Participantes</th><th scope="col">Treinaram</th><th scope="col">Criado por</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
               <tbody>
                 {rows.map(c => {
                   const status = challengeStatus(c, today);

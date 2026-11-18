@@ -172,14 +172,14 @@ export default function Dormant() {
           <table className="resp-table">
             <thead>
               <tr>
-                <th>
+                <th scope="col">
                   <input
                     type="checkbox" aria-label="Selecionar todos"
                     checked={selected.size === people.length}
                     onChange={() => setSelected(selected.size === people.length ? new Set() : new Set(people.map(p => p.id)))}
                   />
                 </th>
-                <th>Quem</th><th>Sumido há</th><th>Último treino</th><th>Último acesso</th><th>Canais</th><th>Último aviso</th>
+                <th scope="col">Quem</th><th scope="col">Sumido há</th><th scope="col">Último treino</th><th scope="col">Último acesso</th><th scope="col">Canais</th><th scope="col">Último aviso</th>
               </tr>
             </thead>
             <tbody>

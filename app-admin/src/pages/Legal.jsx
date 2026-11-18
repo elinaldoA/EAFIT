@@ -154,7 +154,7 @@ export default function Legal() {
         {versions.length === 0 ? <EmptyState icon="📄" label="Nenhuma versão registrada ainda." /> : (
           <div className="table-wrap">
             <table className="resp-table">
-              <thead><tr><th>Documento</th><th>Versão</th><th>Em vigor desde</th><th>O que mudou</th></tr></thead>
+              <thead><tr><th scope="col">Documento</th><th scope="col">Versão</th><th scope="col">Em vigor desde</th><th scope="col">O que mudou</th></tr></thead>
               <tbody>
                 {versions.map(v => (
                   <tr key={v.id}>

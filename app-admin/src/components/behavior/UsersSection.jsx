@@ -95,7 +95,7 @@ export default function UsersSection({ days }) {
             <div className="table-wrap">
               <table className="resp-table">
                 <thead>
-                  <tr><th>Funcionalidade</th><th>Usuários</th><th>% dos ativos</th><th>vs. anterior</th><th>Retenção de quem usou</th><th>Dos demais</th><th>Diferença</th></tr>
+                  <tr><th scope="col">Funcionalidade</th><th scope="col">Usuários</th><th scope="col">% dos ativos</th><th scope="col">vs. anterior</th><th scope="col">Retenção de quem usou</th><th scope="col">Dos demais</th><th scope="col">Diferença</th></tr>
                 </thead>
                 <tbody>
                   {data.items.map(i => (

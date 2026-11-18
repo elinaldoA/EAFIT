@@ -43,7 +43,7 @@ export default function UserFriendsCard({ userId }) {
       {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
       {rows.length > 0 && (
         <table className="resp-table">
-          <thead><tr><th>Pessoa</th><th>Situação</th><th>Desde</th><th /></tr></thead>
+          <thead><tr><th scope="col">Pessoa</th><th scope="col">Situação</th><th scope="col">Desde</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
           <tbody>
             {rows.map(r => (
               <tr key={r.uf_id}>

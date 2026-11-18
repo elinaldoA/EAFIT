@@ -88,7 +88,7 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
             <div className="table-wrap">
               <table className="resp-table">
                 <thead>
-                  <tr><th>Anúncio</th><th>Situação</th><th>Gasto</th><th>Alcance</th><th>Impressões</th><th>Cliques</th><th>Custo/clique</th><th>Cadastros</th><th>Custo/cadastro</th></tr>
+                  <tr><th scope="col">Anúncio</th><th scope="col">Situação</th><th scope="col">Gasto</th><th scope="col">Alcance</th><th scope="col">Impressões</th><th scope="col">Cliques</th><th scope="col">Custo/clique</th><th scope="col">Cadastros</th><th scope="col">Custo/cadastro</th></tr>
                 </thead>
                 <tbody>
                   {visible.map(a => (

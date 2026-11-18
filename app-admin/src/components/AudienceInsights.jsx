@@ -96,7 +96,7 @@ export default function AudienceInsights() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>#</th><th>Exercício</th><th>Séries</th><th>Usuários</th><th>Carga média</th></tr>
+                <tr><th scope="col">#</th><th scope="col">Exercício</th><th scope="col">Séries</th><th scope="col">Usuários</th><th scope="col">Carga média</th></tr>
               </thead>
               <tbody>
                 {exercises.map((e, i) => (

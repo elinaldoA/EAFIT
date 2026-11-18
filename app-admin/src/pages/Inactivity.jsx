@@ -63,7 +63,7 @@ export default function Inactivity() {
           <div className="table-wrap">
             <table className="resp-table">
               <thead>
-                <tr><th>Motivo</th><th>Respostas</th><th>% das respostas</th><th>{SEGMENT_LABELS.absent}</th><th>{SEGMENT_LABELS.idle}</th></tr>
+                <tr><th scope="col">Motivo</th><th scope="col">Respostas</th><th scope="col">% das respostas</th><th scope="col">{SEGMENT_LABELS.absent}</th><th scope="col">{SEGMENT_LABELS.idle}</th></tr>
               </thead>
               <tbody>
                 {summary.reasons.map(r => (
@@ -87,7 +87,7 @@ export default function Inactivity() {
               {visible => (
             <div className="table-wrap">
               <table className="resp-table">
-                <thead><tr><th>Quando</th><th>Quem</th><th>Situação</th><th>Motivo</th><th>Comentário</th></tr></thead>
+                <thead><tr><th scope="col">Quando</th><th scope="col">Quem</th><th scope="col">Situação</th><th scope="col">Motivo</th><th scope="col">Comentário</th></tr></thead>
                 <tbody>
                   {visible.map(a => (
                     <tr key={a.id}>

@@ -166,7 +166,7 @@ export default function VisitorsSection({ days }) {
                   <div className="table-wrap">
                     <table className="resp-table">
                       <thead>
-                        <tr><th>Navegador</th><th>Primeira visita</th><th>Última</th><th>Dias</th><th>Origem</th><th>Aparelho</th><th>Parou em</th><th>Último erro</th></tr>
+                        <tr><th scope="col">Navegador</th><th scope="col">Primeira visita</th><th scope="col">Última</th><th scope="col">Dias</th><th scope="col">Origem</th><th scope="col">Aparelho</th><th scope="col">Parou em</th><th scope="col">Último erro</th></tr>
                       </thead>
                       <tbody>
                         {data.recent.map(v => (

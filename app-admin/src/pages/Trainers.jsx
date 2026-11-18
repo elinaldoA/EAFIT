@@ -51,7 +51,7 @@ function TrainerInviteSignups({ trainerId, code }) {
           {visible => (
         <div className="table-wrap">
           <table className="resp-table">
-            <thead><tr><th>Usuário</th><th>Cadastro</th><th>E-mail confirmado</th><th>Último acesso</th><th>Treinos</th><th>Virou aluno</th></tr></thead>
+            <thead><tr><th scope="col">Usuário</th><th scope="col">Cadastro</th><th scope="col">E-mail confirmado</th><th scope="col">Último acesso</th><th scope="col">Treinos</th><th scope="col">Virou aluno</th></tr></thead>
             <tbody>
               {visible.map(r => (
                 <tr key={r.userId}>
@@ -118,7 +118,7 @@ function TrainerClients({ trainerId }) {
       {visible => (
     <div className="table-wrap">
       <table className="resp-table">
-        <thead><tr><th>Aluno</th><th>Vinculado em</th><th>Dias treinados (30d)</th><th>Último treino</th><th>Meta semanal</th><th>Último contato</th><th /></tr></thead>
+        <thead><tr><th scope="col">Aluno</th><th scope="col">Vinculado em</th><th scope="col">Dias treinados (30d)</th><th scope="col">Último treino</th><th scope="col">Meta semanal</th><th scope="col">Último contato</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
         <tbody>
           {visible.map(r => {
             const rate = goalRate(r.goalWeeks, r.goalHit);
@@ -171,7 +171,7 @@ function UpcomingAppointments() {
       <h2 className="section-title">Próximas aulas</h2>
       <div className="table-wrap">
         <table className="resp-table">
-          <thead><tr><th>Quando</th><th>Personal</th><th>Aluno</th><th>Duração</th><th>Situação</th></tr></thead>
+          <thead><tr><th scope="col">Quando</th><th scope="col">Personal</th><th scope="col">Aluno</th><th scope="col">Duração</th><th scope="col">Situação</th></tr></thead>
           <tbody>
             {rows.map(a => (
               <tr key={a.id}>
