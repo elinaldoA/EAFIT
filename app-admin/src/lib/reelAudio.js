@@ -175,9 +175,161 @@ function electricTrack(seconds, sweeps, shift = 0) {
   return finish(left, right, seconds);
 }
 
+// Eletrônica "de corrida", mais enérgica que a `electric`: construção com rufo de caixa
+// acelerando e subida de ruído, um respiro curto e o drop (impacto, prato, bumbo saturado
+// em toda batida, baixo nos contratempos, lead supersaw com melodia em Am, F, C, G e pad,
+// tudo com sidechain). `bpm` ajusta o andamento; a grade é alinhada para o drop cair numa
+// batida. As trocas seguintes em `sweeps` ganham subida e impacto.
+function runTrack(seconds, sweeps, shift = 0, bpm = 140) {
+  const BEAT = 60 / bpm;
+  const STEP = BEAT / 4;
+  const n = Math.floor(seconds * SR);
+  const left = new Float32Array(n);
+  const right = new Float32Array(n);
+  const noise = rng(23);
+  const add = (i, v, pan = 0) => {
+    if (i < 0 || i >= n) return;
+    left[i] += v * (1 - Math.max(0, pan));
+    right[i] += v * (1 + Math.min(0, pan));
+  };
+  const tr = 2 ** (shift / 12);
+  const drop = sweeps.length ? sweeps[0] : 0;
+  const origin = drop % BEAT; // grade de batidas que passa pelo drop
+  const duck = (abs) => 1 - 0.9 * Math.exp(-((((abs - origin) % BEAT) + BEAT) % BEAT) * 14);
+  const saw = (f, t, h = 8) => {
+    let v = 0;
+    for (let k = 1; k <= h; k += 1) v += Math.sin(2 * Math.PI * k * f * t) / k;
+    return v * 0.6;
+  };
+  const super3 = (f, t) => saw(f, t) + saw(f * 1.007, t) + saw(f * 0.993, t);
+  const ROOTS = [55, 43.65, 65.41, 49].map(f => f * tr);
+  const CHORDS = [[220, 261.63, 329.63], [174.61, 220, 261.63], [261.63, 329.63, 392], [196, 246.94, 293.66]]
+    .map(c => c.map(f => f * tr));
+  const LEAD = [[0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 2, 1, 0, 1], [0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 2, 1, 0, 2]];
+  const barOf = (t0) => Math.floor(Math.max(0, t0 - drop) / (BEAT * 4));
+
+  // Bumbo: antes do drop só a base; depois, saturado em toda batida. Palma nas batidas 2 e 4.
+  for (let t0 = origin; t0 < seconds; t0 += BEAT) {
+    const live = t0 >= drop - 1e-6;
+    if (!live && t0 > drop - 0.2) continue; // respiro antes do drop
+    const amp = live ? 1.15 : 0.55;
+    let phase = 0;
+    for (let k = 0; k < 0.3 * SR; k += 1) {
+      const t = k / SR;
+      phase += (2 * Math.PI * (44 + 170 * Math.exp(-t * 40))) / SR;
+      add(Math.floor(t0 * SR) + k, amp * (Math.tanh(1.8 * Math.sin(phase)) * Math.exp(-t * 9) + (t < 0.004 ? 0.35 * noise() : 0)));
+    }
+    const bi = Math.round((t0 - origin) / BEAT);
+    if (live && bi % 2 === 1) {
+      for (const off of [0, 0.01, 0.02]) {
+        for (let k = 0; k < 0.18 * SR; k += 1) {
+          const t = k / SR;
+          add(Math.floor((t0 + off) * SR) + k, 0.3 * noise() * Math.exp(-t * (off === 0.02 ? 16 : 45)), 0.1);
+        }
+      }
+    }
+  }
+
+  // Chimbais: fechados nas semicolcheias, abertos nos contratempos.
+  for (let t0 = origin, st = 0; t0 < seconds; t0 += STEP, st += 1) {
+    if (st % 4 === 0 || (t0 > drop - 0.2 && t0 < drop)) continue;
+    const live = t0 >= drop - 1e-6;
+    const open = st % 4 === 2;
+    let prev = 0;
+    for (let k = 0; k < (open ? 0.15 : 0.04) * SR; k += 1) {
+      const t = k / SR;
+      const x = noise();
+      add(Math.floor(t0 * SR) + k, (open ? 0.15 : 0.05) * (live ? 1 : 0.6) * (x - prev) * Math.exp(-t * (open ? 22 : 90)), open ? -0.25 : 0.25);
+      prev = x;
+    }
+  }
+
+  // Rufo de caixa antes do drop: acelera e sobe de volume.
+  if (drop > 0.6) {
+    const rollLen = Math.min(drop - 0.2, BEAT * 4);
+    const start = drop - 0.2 - rollLen;
+    let gap = STEP * 1.5;
+    for (let t0 = start; t0 < drop - 0.2; t0 += gap) {
+      const q = (t0 - start) / rollLen;
+      for (let k = 0; k < 0.1 * SR; k += 1) {
+        const t = k / SR;
+        add(Math.floor(t0 * SR) + k, (0.1 + 0.3 * q) * noise() * Math.exp(-t * 28), 0.05);
+      }
+      gap = Math.max(STEP / 4, gap * 0.9);
+    }
+  }
+
+  // Do drop em diante: baixo nos contratempos, lead supersaw em semicolcheias e pad.
+  for (let t0 = origin; t0 < seconds; t0 += STEP) {
+    if (t0 < drop - 1e-6) continue;
+    const bi = barOf(t0) % 4;
+    const k16 = Math.round((t0 - drop) / STEP);
+    if (k16 % 4 === 2 || k16 % 8 === 7) {
+      const f = ROOTS[bi] * (k16 % 8 === 7 ? 2 : 1);
+      for (let k = 0; k < 0.2 * SR; k += 1) {
+        const t = k / SR;
+        const env = Math.exp(-t * 7) * Math.min(1, t * 500);
+        add(Math.floor(t0 * SR) + k, 0.36 * env * duck(t0 + t) * (0.7 * Math.sin(2 * Math.PI * f * t) + saw(f, t, 5)));
+      }
+    }
+    const f = CHORDS[bi][LEAD[Math.floor(k16 / 16) % 2][k16 % 16]] * 2;
+    const pan = k16 % 2 ? 0.35 : -0.35;
+    for (let k = 0; k < 0.18 * SR; k += 1) {
+      const t = k / SR;
+      const env = Math.exp(-t * 9) * Math.min(1, t * 400);
+      add(Math.floor(t0 * SR) + k, 0.045 * env * duck(t0 + t) * super3(f, t), pan);
+    }
+    if (k16 % 16 === 0) {
+      for (let k = 0; k < BEAT * 4 * SR; k += 1) {
+        const t = k / SR;
+        const env = Math.min(1, t * 20) * Math.exp(-t * 0.8);
+        let v = 0;
+        for (const cf of CHORDS[bi]) v += Math.sin(2 * Math.PI * cf * t) + 0.4 * saw(cf * 1.004, t, 4);
+        add(Math.floor(t0 * SR) + k, 0.035 * env * duck(t0 + t) * v);
+      }
+    }
+  }
+
+  // Subida (ruído e tom) e impacto com prato em cada troca de cena.
+  const riser = (end, len) => {
+    let prev = 0;
+    for (let k = 0; k < len * SR; k += 1) {
+      const t = k / SR;
+      const x = noise();
+      const q = (t / len) ** 2;
+      add(Math.floor((end - len) * SR) + k, 0.22 * (x - prev) * q + 0.08 * q * Math.sin(2 * Math.PI * (250 + 3200 * q) * t));
+      prev = x;
+    }
+  };
+  const impact = (at) => {
+    let phase = 0;
+    for (let k = 0; k < 0.9 * SR; k += 1) {
+      const t = k / SR;
+      phase += (2 * Math.PI * (30 + 90 * Math.exp(-t * 5))) / SR;
+      add(Math.floor(at * SR) + k, 0.8 * Math.sin(phase) * Math.exp(-t * 3.2) + 0.2 * noise() * Math.exp(-t * 18));
+    }
+    let prev = 0;
+    for (let k = 0; k < 1.2 * SR; k += 1) { // prato
+      const t = k / SR;
+      const x = noise();
+      add(Math.floor(at * SR) + k, 0.16 * (x - prev) * Math.exp(-t * 3.5), -0.1);
+      prev = x;
+    }
+  };
+  sweeps.forEach((at, i) => { riser(at, i === 0 ? Math.min(at, 1.6) : 0.6); impact(at); });
+
+  // Saturação suave: mais volume percebido sem estourar.
+  for (let i = 0; i < n; i += 1) {
+    left[i] = Math.tanh(left[i] * 1.5);
+    right[i] = Math.tanh(right[i] * 1.5);
+  }
+  return finish(left, right, seconds);
+}
+
 // Estéreo normalizado (pico 0,7) com entrada e saída suaves. `sweeps` são os
 // instantes (s) das trocas de cena, onde entra uma subida de ruído.
-export function synthTrack(seconds, { style = 'energy', sweeps = [3.4, 9.6], shift = 0 } = {}) {
+export function synthTrack(seconds, { style = 'energy', sweeps = [3.4, 9.6], shift = 0, bpm } = {}) {
+  if (style === 'run') return runTrack(seconds, sweeps, shift, bpm || 140);
   if (style === 'electric') return electricTrack(seconds, sweeps, shift);
   const st = AUDIO_STYLES[style] || AUDIO_STYLES.energy;
   const BEAT = 60 / st.bpm;

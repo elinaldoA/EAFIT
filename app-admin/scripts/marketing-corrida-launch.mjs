@@ -148,15 +148,15 @@ async function images() {
 
 async function videos() {
   for (const [key, title, sub, print, variant] of STORIES) {
-    const audio = join(tmpdir(), `eafit-story-v${variant}.wav`);
-    writeFileSync(audio, makeWav(STORY_DURATION, { style: 'electric', sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
+    const audio = join(tmpdir(), `eafit-story-corrida-v${variant}.wav`);
+    writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
     const img = await loadImage(readFileSync(join(PRINTS, `${print}.webp`)));
     const story = { pill: 'EAFIT RUN', title, sub, variant };
     await renderVideo(`story-${key}.mp4`, STORY_DURATION, audio, (ctx, im, t) => drawStoryFrame(ctx, story, im, t), img);
     console.log('ok', `story-${key}.mp4`);
   }
-  const audio = join(tmpdir(), 'eafit-reel-trilha.wav');
-  writeFileSync(audio, makeWav(DURATION));
+  const audio = join(tmpdir(), 'eafit-reel-corrida.wav');
+  writeFileSync(audio, makeWav(DURATION, { style: 'run', bpm: 140, sweeps: [3.4, 9.6] }));
   for (const reel of REELS) {
     const img = await loadImage(readFileSync(join(PRINTS, `${reel.print}.webp`)));
     await renderVideo(`reel-${reel.key}.mp4`, DURATION, audio, (ctx, im, t) => drawReelFrame(ctx, reel, im, t), img);
