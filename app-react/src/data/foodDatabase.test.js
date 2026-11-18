@@ -189,6 +189,7 @@ describe('householdMeasures', () => {
     expect(bad).toEqual([]);
     expect(FOOD_DATABASE.find(f => f.ptName === 'Banana prata')).toMatchObject({ sugar: 12, satFat: 0.1 });
     expect(FOOD_DATABASE.find(f => f.ptName === 'Risoto de frango').estimated).toBe(true);
-    expect(FOOD_DATABASE.find(f => f.ptName === 'Feijoada').sugar).toBeUndefined();
+    // Toda a lista própria traz açúcares e gordura saturada.
+    expect(FOOD_DATABASE.filter(f => f.sugar === undefined).map(f => f.ptName)).toEqual([]);
   });
 });
