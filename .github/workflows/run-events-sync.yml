@@ -1,0 +1,49 @@
+name: Provas de corrida
+
+# Sincroniza todo dia o calendário de provas (CorridasBR) com a tabela
+# run_events do EAFIT Run: provas novas entram (aprovadas sozinhas quando estão
+# completas), alteradas são atualizadas e as que sumiram do calendário voltam
+# para rascunho na 2ª falta seguida. Provas passadas somem do app sozinhas.
+# Disparo manual: Actions → Provas de corrida → Run workflow.
+#
+# Segredos (os mesmos do deploy do Supabase):
+#   SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_ID
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # 03:17 em Brasília
+  workflow_dispatch:
+    inputs:
+      states:
+        description: 'UFs separadas por espaço (vazio = todas)'
+        required: false
+        default: ''
+      dry:
+        description: 'Só simular (não grava)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: run-events-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sincronizar provas
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          STATES: ${{ inputs.states }}
+          DRY: ${{ inputs.dry }}
+        run: |
+          args="--all"
+          if [ -n "$STATES" ]; then args="$STATES"; fi
+          if [ "$DRY" = "true" ]; then args="$args --dry"; fi
+          node app-admin/scripts/run-events-import.mjs $args --max-details 600

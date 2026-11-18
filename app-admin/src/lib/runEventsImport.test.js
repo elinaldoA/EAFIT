@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decodeEntities, parseDistances, inferDate, parseCalendar, parseDetail, toSql } from '../../scripts/run-events-import.mjs';
+import { decodeEntities, parseDistances, inferDate, parseCalendar, parseDetail, diffCalendar, isComplete, insertSql, missedSql, parseArgs } from '../../scripts/run-events-import.mjs';
 
 const CAL = `<table>
 <tr align="center"><td width="40">20.11</span></td>
@@ -39,11 +39,53 @@ describe('importação do CorridasBR', () => {
     expect(inferDate('32.13')).toBeNull();
   });
 
-  it('gera o upsert sem tocar no status e escapa aspas', () => {
-    const sql = toSql([{ name: "Corrida D'Água", event_date: '2026-12-06', city: 'Vila Velha', state: 'ES', venue: null, lat: -20.3, lng: -40.2, distances: [5, 10], url: null, source: 'corridasbr', source_id: '1', source_url: 'https://x.com/a' }]);
+  const row = (over = {}) => ({ name: "Corrida D'Água", event_date: '2026-12-06', city: 'Vila Velha', state: 'ES', venue: null, lat: -20.3, lng: -40.2, distances: [5, 10], url: 'https://x.com/i', source_id: '1', source_url: 'https://x.com/a', ...over });
+
+  it('só entra aprovada a prova completa; o resto vai para rascunho', () => {
+    expect(isComplete(row())).toBe(true);
+    expect(isComplete(row({ url: null }))).toBe(false);
+    expect(isComplete(row({ lat: null }))).toBe(false);
+    expect(isComplete(row({ distances: [] }))).toBe(false);
+    const sql = insertSql([row(), row({ source_id: '2', url: null })]);
     expect(sql).toContain("'Corrida D''Água'");
     expect(sql).toContain("'{5,10}'::numeric[]");
-    expect(sql).toContain('on conflict (source, source_id)');
-    expect(sql).not.toMatch(/status\s*=/);
+    expect(sql).toContain("'approved'");
+    expect(sql).toContain("'draft'");
+    expect(sql).toContain('on conflict (source, source_id) do nothing');
+  });
+
+  it('sumida: conta a falta e só esconde a aprovada na 2ª seguida', () => {
+    const sql = missedSql(['9']);
+    expect(sql).toContain('missed_runs = missed_runs + 1');
+    expect(sql).toContain("missed_runs + 1 >= 2 and status = 'approved' then 'draft'");
+    expect(missedSql([])).toBe('');
+  });
+
+  it('compara o calendário com o banco: nova, alterada, igual e sumida', () => {
+    const today = new Date(2026, 10, 18);
+    const list = [
+      { id: '1', dayMonth: '20.11', city: 'A', name: 'Igual', distances: [10, 5] },
+      { id: '2', dayMonth: '21.11', city: 'A', name: 'Mudou de dia', distances: [5] },
+      { id: '3', dayMonth: '22.11', city: 'A', name: 'Nova', distances: [5] },
+      { id: '4', dayMonth: '23.11', city: 'A', name: 'Nome novo', distances: [5] },
+    ];
+    const existing = [
+      { source_id: '1', name: 'Igual', event_date: '2026-11-20', distances: ['5', '10'] },
+      { source_id: '2', name: 'Mudou de dia', event_date: '2026-11-28', distances: ['5'] },
+      { source_id: '4', name: 'Nome antigo', event_date: '2026-11-23', distances: ['5'] },
+      { source_id: '5', name: 'Sumiu', event_date: '2026-12-01', distances: ['5'] },
+      { source_id: '6', name: 'Sumiu mas já passou', event_date: '2026-10-01', distances: ['5'] },
+    ];
+    const d = diffCalendar(list, existing, today);
+    expect(d.same.map(i => i.id)).toEqual(['1']);
+    expect(d.changed.map(i => i.id)).toEqual(['2', '4']);
+    expect(d.fresh.map(i => i.id)).toEqual(['3']);
+    expect(d.missing.map(e => e.source_id)).toEqual(['5']);
+  });
+
+  it('argumentos: --all pega todas as UFs, limite de páginas e simulação', () => {
+    expect(parseArgs(['--all']).ufs).toHaveLength(27);
+    expect(parseArgs(['es', 'MG', 'xx', '--dry', '--max-details', '10'])).toEqual({ ufs: ['ES', 'MG'], dry: true, maxDetails: 10 });
+    expect(parseArgs(['ES']).maxDetails).toBe(300);
   });
 });
