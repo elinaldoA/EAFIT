@@ -44,4 +44,11 @@ describe('foodCatalog', () => {
     expect(friendlyFoodError({ code: '23505' })).toMatch(/Já existe/);
     expect(friendlyFoodError({ code: '42P01' })).toMatch(/migration/);
   });
+
+  it('açúcares e gordura saturada são opcionais', () => {
+    const base = { ...EMPTY_FOOD, name: 'X', kcal: '100', protein_g: '5', carbs_g: '15', fat_g: '2' };
+    expect(validateFood(base).value).toMatchObject({ sugar_g: null, sat_fat_g: null });
+    expect(validateFood({ ...base, sugar_g: '4,5', sat_fat_g: '1' }).value).toMatchObject({ sugar_g: 4.5, sat_fat_g: 1 });
+    expect(validateFood({ ...base, sugar_g: '120' }).errors.sugar_g).toBeTruthy();
+  });
 });

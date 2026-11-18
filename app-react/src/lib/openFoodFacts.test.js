@@ -40,4 +40,12 @@ describe('openFoodFacts', () => {
   it('erro de rede ou HTTP lança', async () => {
     await expect(lookupBarcode('7891000100103', vi.fn().mockResolvedValue({ ok: false, status: 500 }))).rejects.toThrow();
   });
+
+  it('traz açúcares e gordura saturada quando o produto informa', async () => {
+    const food = await lookupBarcode('7891000100103', reply({ status: 1, product: { nutriments: { 'energy-kcal_100g': 400, sugars_100g: 12.34, 'saturated-fat_100g': 3.06 } } }));
+    expect(food).toMatchObject({ sugar: 12.3, satFat: 3.1 });
+    const none = await lookupBarcode('7891000100103', reply({ status: 1, product: { nutriments: { 'energy-kcal_100g': 400 } } }));
+    expect(none.sugar).toBeUndefined();
+    expect(none.satFat).toBeUndefined();
+  });
 });

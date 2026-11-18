@@ -15,12 +15,21 @@ export function unloggedRest(entries, totals) {
   return kcal || prot ? { kcal, protein: prot } : null;
 }
 
-// Fibra e sódio do dia, só dos registros que trazem o dado: { fiber, sodium,
+// Fibra, sódio, açúcares e gordura saturada do dia, só dos registros que trazem o dado: { fiber, sodium,
 // partial } (partial = há registros sem esse dado) ou null se nenhum traz.
 export function dayMicros(entries) {
-  const known = entries.filter(e => e.fiber != null || e.sodium != null);
+  const known = entries.filter(e => e.fiber != null || e.sodium != null || e.sugar != null || e.satFat != null);
   if (!known.length) return null;
+  // Açúcares e gordura saturada: só de quem traz o dado; sem nenhum, ficam de fora.
+  const only = k => {
+    const rows = entries.filter(e => e[k] != null);
+    return rows.length ? Math.round(rows.reduce((sum, e) => sum + (Number(e[k]) || 0), 0) * 10) / 10 : null;
+  };
+  const sugar = only('sugar');
+  const satFat = only('satFat');
   return {
+    ...(sugar != null && { sugar }),
+    ...(satFat != null && { satFat }),
     fiber: Math.round(known.reduce((sum, e) => sum + (Number(e.fiber) || 0), 0) * 10) / 10,
     sodium: Math.round(known.reduce((sum, e) => sum + (Number(e.sodium) || 0), 0)),
     partial: known.length < entries.length,

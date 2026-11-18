@@ -13,6 +13,8 @@ export default function ProfileNutritionSection({ goals }) {
     [t('Gorduras'), `${goals.fat} g`],
     [t('Fibras'), t('{g} g ou mais', { g: goals.fiber })],
     [t('Sódio'), t('até {mg} mg', { mg: goals.sodium })],
+    [t('Açúcares'), t('até {g} g', { g: goals.sugar })],
+    [t('Gordura saturada'), t('até {g} g', { g: goals.satFat })],
   ];
   return (
     <>

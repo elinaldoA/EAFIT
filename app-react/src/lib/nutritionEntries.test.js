@@ -44,6 +44,13 @@ describe('nutritionEntries', () => {
     expect(calls.upsert[1]).toMatchObject({ fiber_g: null, sodium_mg: null });
   });
 
+  it('grava açúcares e gordura saturada quando vierem e null quando não', async () => {
+    await addEntry('u1', D, { ...ovo, sugar: 4.26, satFat: 1.5 }, 'cafe', 'e1');
+    await addEntry('u1', D, ovo, 'cafe', 'e2');
+    expect(calls.upsert[0]).toMatchObject({ sugar_g: 4.3, sat_fat_g: 1.5 });
+    expect(calls.upsert[1]).toMatchObject({ sugar_g: null, sat_fat_g: null });
+  });
+
   it('sem rede, enfileira o registro; editar o mesmo registro mantém uma operação', async () => {
     calls.error = new Error('offline');
     await addEntry('u1', D, ovo, 'cafe', 'e1');

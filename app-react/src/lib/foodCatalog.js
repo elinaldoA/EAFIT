@@ -4,7 +4,7 @@ import { db } from './supabase';
 // local deixa a busca completa sem rede. Sem a tabela ou sem rede, a busca segue
 // só com a lista do app e a TACO.
 const KEY = 'foodCatalog_v1';
-const COLS = 'id, name, icon, category, portion_g, kcal, protein_g, carbs_g, fat_g, fiber_g, sodium_mg, estimated, measures';
+const COLS = 'id, name, icon, category, portion_g, kcal, protein_g, carbs_g, fat_g, fiber_g, sodium_mg, sugar_g, sat_fat_g, estimated, measures';
 
 export function readCachedCatalog() {
   try {

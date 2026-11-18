@@ -40,4 +40,11 @@ describe('recentDays', () => {
   it('o padrão é a janela de histórico da aba', () => {
     expect(recentDays('2026-11-16')).toHaveLength(HISTORY_DAYS);
   });
+
+  it('dayMicros soma açúcares e gordura saturada só de quem traz o dado', () => {
+    const r = dayMicros([{ sugar: 10.25, satFat: 2 }, { sugar: 5, fiber: 1 }, { label: 'sem dado' }]);
+    expect(r).toMatchObject({ sugar: 15.3, satFat: 2, fiber: 1, partial: true });
+    expect(dayMicros([{ fiber: 1, sodium: 5 }])).not.toHaveProperty('sugar');
+    expect(dayMicros([{ sugar: 4 }])).toMatchObject({ sugar: 4, fiber: 0, sodium: 0 });
+  });
 });

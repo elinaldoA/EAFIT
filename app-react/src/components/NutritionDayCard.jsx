@@ -103,9 +103,11 @@ export default function NutritionDayCard({ totals, goals, micros, status, hint }
         ))}
         <Row k="fiber" label={t('Fibras')} value={micros?.fiber || 0} text={micros ? fmtDec(micros.fiber) : '—'} goal={goals.fiber} unit="g" />
         <Row k="sodium" label={t('Sódio')} value={micros?.sodium || 0} text={micros ? fmt(micros.sodium) : '—'} goal={goals.sodium} unit="mg" limit />
+        {micros?.sugar != null && <Row k="sugar" label={t('Açúcares')} value={micros.sugar} text={fmtDec(micros.sugar)} goal={goals.sugar} unit="g" limit />}
+        {micros?.satFat != null && <Row k="satFat" label={t('Gordura saturada')} value={micros.satFat} text={fmtDec(micros.satFat)} goal={goals.satFat} unit="g" limit />}
       </ul>
       {micros?.partial && (
-        <p className="nutri-day__note">{t('Fibras e sódio só contam os alimentos da busca e da TACO; atalhos e valores digitados não trazem esse dado.')}</p>
+        <p className="nutri-day__note">{t('Fibras, sódio, açúcares e gordura saturada só contam os alimentos que trazem esse dado (TACO, produtos lidos pelo código de barras e itens do catálogo); atalhos e valores digitados não.')}</p>
       )}
     </div>
   );

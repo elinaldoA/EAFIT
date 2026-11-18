@@ -403,6 +403,8 @@ export function foodFromCatalog(r) {
     kcal: Number(r.kcal) || 0, g: Number(r.protein_g) || 0, carbs: Number(r.carbs_g) || 0, fat: Number(r.fat_g) || 0,
     fiber: Number(r.fiber_g) || 0, sodium: Number(r.sodium_mg) || 0,
     portion: Number(r.portion_g) || 100, estimated: !!r.estimated,
+    ...(r.sugar_g != null && { sugar: Number(r.sugar_g) }),
+    ...(r.sat_fat_g != null && { satFat: Number(r.sat_fat_g) }),
     ...(Array.isArray(r.measures) && r.measures.length && { measures: r.measures }),
   };
 }
@@ -460,5 +462,7 @@ export function portionOf(food, grams) {
     fat: Math.round(food.fat * k),
     ...(Number.isFinite(food.fiber) && { fiber: r1(food.fiber * k) }),
     ...(Number.isFinite(food.sodium) && { sodium: Math.round(food.sodium * k) }),
+    ...(Number.isFinite(food.sugar) && { sugar: r1(food.sugar * k) }),
+    ...(Number.isFinite(food.satFat) && { satFat: r1(food.satFat * k) }),
   };
 }

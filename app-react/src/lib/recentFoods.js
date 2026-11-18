@@ -8,6 +8,8 @@ const fromRow = r => ({
   icon: r.icon || '🍽️', label: r.name, g: r.protein_g || 0, kcal: r.kcal || 0, carbs: r.carbs_g || 0, fat: r.fat_g || 0,
   ...(r.fiber_g != null && { fiber: Number(r.fiber_g) }),
   ...(r.sodium_mg != null && { sodium: Number(r.sodium_mg) }),
+  ...(r.sugar_g != null && { sugar: Number(r.sugar_g) }),
+  ...(r.sat_fat_g != null && { satFat: Number(r.sat_fat_g) }),
 });
 
 export function recentFoods(rows, entries = [], today, limit = 8) {

@@ -202,6 +202,14 @@ export default function FoodSearch({ onAdd, recent = [], used, catalog }) {
                 {t('{fiber} g de fibra · {sodium} mg de sódio', { fiber: macros.fiber.toLocaleString(locale), sodium: macros.sodium.toLocaleString(locale) })}
               </small>
             )}
+            {(macros.sugar !== undefined || macros.satFat !== undefined) && (
+              <small className="food-search__micros">
+                {[
+                  macros.sugar !== undefined && t('{g} g de açúcares', { g: macros.sugar.toLocaleString(locale) }),
+                  macros.satFat !== undefined && t('{g} g de gordura saturada', { g: macros.satFat.toLocaleString(locale) }),
+                ].filter(Boolean).join(' · ')}
+              </small>
+            )}
           </p>
           <button type="submit" className="btn btn--primary btn--sm custom-food__submit" disabled={!(grams > 0)}>{t('Adicionar')}</button>
           <button type="button" className="link-btn" onClick={() => setPicked(null)}>{t('Cancelar')}</button>

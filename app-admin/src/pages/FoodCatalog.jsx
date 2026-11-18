@@ -11,6 +11,7 @@ const PAGE = 50;
 const NUM_FIELDS = [
   ['portion_g', 'Porção sugerida (g)'], ['kcal', 'Calorias (kcal/100 g)'], ['protein_g', 'Proteína (g/100 g)'],
   ['carbs_g', 'Carboidratos (g/100 g)'], ['fat_g', 'Gorduras (g/100 g)'], ['fiber_g', 'Fibra (g/100 g)'], ['sodium_mg', 'Sódio (mg/100 g)'],
+  ['sugar_g', 'Açúcares (g/100 g, opcional)'], ['sat_fat_g', 'Gordura saturada (g/100 g, opcional)'],
 ];
 
 function FoodForm({ editing, categories, onCancel, onSaved }) {

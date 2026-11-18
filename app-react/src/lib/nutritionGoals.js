@@ -35,6 +35,8 @@ export const MIN_KCAL = { M: 1500, F: 1200 };
 // 2000 mg por dia (OMS).
 const FIBER_PER_1000_KCAL = 14;
 export const SODIUM_LIMIT_MG = 2000;
+const SUGAR_KCAL_SHARE = 0.1;
+const SAT_FAT_KCAL_SHARE = 0.1;
 
 // Fator de calorias da meta principal sobre o gasto do dia.
 export const goalKcalFactor = meta => (GOAL_PLAN[meta] || GOAL_PLAN.saude).kcalFactor;
@@ -68,5 +70,8 @@ export function computeNutritionGoals({ sexo, idade, peso, altura, meta, weeklyG
   const fat = Math.round((kcal * FAT_KCAL_SHARE) / 9);
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   const fiber = Math.round((kcal / 1000) * FIBER_PER_1000_KCAL);
-  return { kcal, protein, carbs, fat, fiber, sodium: SODIUM_LIMIT_MG };
+  // Teto de açúcares e de gordura saturada: 10% das calorias (OMS), em gramas.
+  const sugar = Math.round((kcal * SUGAR_KCAL_SHARE) / 4);
+  const satFat = Math.round((kcal * SAT_FAT_KCAL_SHARE) / 9);
+  return { kcal, protein, carbs, fat, fiber, sodium: SODIUM_LIMIT_MG, sugar, satFat };
 }

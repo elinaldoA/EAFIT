@@ -30,6 +30,8 @@ export async function lookupBarcode(code, fetchFn = fetch) {
   return {
     id: `off${code}`, icon: '🏷️', name: (p.product_name || '').trim() || code,
     kcal, g, carbs, fat, portion: Math.round(num(p.serving_quantity)) || 100,
+    ...(n.sugars_100g != null && { sugar: Math.round(num(n.sugars_100g) * 10) / 10 }),
+    ...(n['saturated-fat_100g'] != null && { satFat: Math.round(num(n['saturated-fat_100g']) * 10) / 10 }),
     ...(hasMicros && { fiber: Math.round(num(n.fiber_100g) * 10) / 10, sodium: Math.round(num(n.sodium_100g) * 1000) }),
   };
 }

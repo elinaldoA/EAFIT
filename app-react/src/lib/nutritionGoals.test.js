@@ -77,4 +77,10 @@ describe('nutritionProfile', () => {
     const broken = { getItem: () => { throw new Error('bloqueado'); } };
     expect(nutritionProfile({}, broken).meta).toBe('massa');
   });
+
+  it('teto de açúcares e de gordura saturada: 10% das calorias', () => {
+    const g = computeNutritionGoals({ sexo: 'M', idade: 30, peso: 70, altura: 175, meta: 'ganhar' });
+    expect(g.sugar).toBe(Math.round((g.kcal * 0.1) / 4));
+    expect(g.satFat).toBe(Math.round((g.kcal * 0.1) / 9));
+  });
 });

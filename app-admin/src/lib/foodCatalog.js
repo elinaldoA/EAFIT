@@ -4,7 +4,7 @@ import { db } from './supabase';
 // oferece além da lista do app e da TACO. Valores por 100 g.
 export const EMPTY_FOOD = {
   name: '', icon: '🍽️', category: '', portion_g: '100', kcal: '', protein_g: '0', carbs_g: '0', fat_g: '0',
-  fiber_g: '0', sodium_mg: '0', estimated: false, active: true, measures: '',
+  fiber_g: '0', sodium_mg: '0', sugar_g: '', sat_fat_g: '', estimated: false, active: true, measures: '',
 };
 
 const FIELDS = Object.keys(EMPTY_FOOD);
@@ -50,6 +50,13 @@ export function validateFood(draft) {
   for (const [k, min, max, msg] of limits) {
     const n = String(draft[k] ?? '').trim() === '' ? NaN : num(draft[k]);
     if (!Number.isFinite(n) || n < min || n > max) errors[k] = msg;
+    value[k] = n;
+  }
+  // Açúcares e gordura saturada são opcionais: em branco, o alimento não traz o dado.
+  for (const k of ['sugar_g', 'sat_fat_g']) {
+    if (String(draft[k] ?? '').trim() === '') { value[k] = null; continue; }
+    const n = num(draft[k]);
+    if (!Number.isFinite(n) || n < 0 || n > 100) errors[k] = 'De 0 a 100 g, ou deixe em branco.';
     value[k] = n;
   }
   if (value.icon.length > 8) errors.icon = 'Use só um emoji.';

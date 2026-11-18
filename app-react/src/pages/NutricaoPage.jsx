@@ -177,7 +177,7 @@ export default function NutricaoPage({ active }) {
       if (food.id) bumpUseCount(food.id);
       next = applyFood(next, food);
       const entryId = crypto.randomUUID();
-      if (user) addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat, fiber: food.fiber, sodium: food.sodium }, mealKey, entryId);
+      if (user) addEntry(user.id, todayDate(), { icon: food.icon, label: food.label || t('Alimento'), g: food.g, kcal: food.kcal, carbs: food.carbs, fat: food.fat, fiber: food.fiber, sodium: food.sodium, sugar: food.sugar, satFat: food.satFat }, mealKey, entryId);
       added.push({ ...food, entryId });
     }
     if (user) setEntries(readCachedEntries(todayDate()));

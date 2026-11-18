@@ -70,6 +70,8 @@ export function portionFood({ food, n }) {
     g: food.g * n, kcal: food.kcal * n, carbs: (food.carbs || 0) * n, fat: (food.fat || 0) * n,
     ...(food.fiber != null && { fiber: Math.round(food.fiber * n * 10) / 10 }),
     ...(food.sodium != null && { sodium: food.sodium * n }),
+    ...(food.sugar != null && { sugar: Math.round(food.sugar * n * 10) / 10 }),
+    ...(food.satFat != null && { satFat: Math.round(food.satFat * n * 10) / 10 }),
   };
 }
 
@@ -78,6 +80,8 @@ const rowFood = r => ({
   icon: r.icon || '🍽️', label: r.name, g: r.protein_g || 0, kcal: r.kcal || 0, carbs: r.carbs_g || 0, fat: r.fat_g || 0,
   ...(r.fiber_g != null && { fiber: Number(r.fiber_g) }),
   ...(r.sodium_mg != null && { sodium: Number(r.sodium_mg) }),
+  ...(r.sugar_g != null && { sugar: Number(r.sugar_g) }),
+  ...(r.sat_fat_g != null && { satFat: Number(r.sat_fat_g) }),
 });
 
 // O que a pessoa costuma comer nesta refeição, pelo diário dos últimos 14 dias
