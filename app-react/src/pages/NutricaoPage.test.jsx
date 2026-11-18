@@ -323,4 +323,40 @@ describe('NutricaoPage', () => {
     expect(mockToast).toHaveBeenCalledWith('Refeição desfeita');
     expect(screen.getByText('Registrar esta refeição')).toBeTruthy();
   });
+
+  describe('apoio no fim do dia e no diário', () => {
+    afterEach(() => vi.useRealTimers());
+    const at = hour => { vi.useFakeTimers({ toFake: ['Date'] }); const d = new Date(); d.setHours(hour, 0, 0, 0); vi.setSystemTime(d); };
+    const dayAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+    it('à tarde, com proteína faltando, sugere o que fecha a meta e um toque registra', async () => {
+      at(18);
+      render(<NutricaoPage active />);
+      await screen.findByText('Ovo');
+      expect(screen.getByText(/Para fechar a proteína de hoje/)).toBeTruthy();
+      const btn = document.querySelector('.close-protein button');
+      fireEvent.click(btn);
+      expect(readLocalTotals().protein).toBeGreaterThan(0);
+    });
+
+    it('de manhã não sugere nada', async () => {
+      at(9);
+      render(<NutricaoPage active />);
+      await screen.findByText('Ovo');
+      expect(screen.queryByText(/Para fechar a proteína de hoje/)).toBeNull();
+    });
+
+    it('repete a refeição de ontem e abre a busca com os alimentos de sempre', async () => {
+      at(9);
+      const r = (name, kcal) => ({ log_date: dayAgo(1), meal: 'cafe', name, icon: '🍞', protein_g: 5, kcal, carbs_g: 10, fat_g: 1 });
+      pastRows = [r('Pão 50g', 130), r('Café 100g', 20)];
+      render(<NutricaoPage active />);
+      await screen.findByText('Ovo');
+      fireEvent.click(await screen.findByText(/Repetir café da manhã de ontem/));
+      expect(readLocalTotals()).toMatchObject({ kcal: 150, protein: 10 });
+      expect(screen.queryByText(/Repetir café da manhã de ontem/)).toBeNull();
+      fireEvent.click(screen.getByText('🔎 Buscar alimento'));
+      expect(screen.getByText('Seus alimentos de sempre')).toBeTruthy();
+    });
+  });
 });

@@ -15,7 +15,7 @@ import { computeNutritionGoals, goalKcalFactor, MIN_KCAL, nutritionProfile } fro
 import { fetchCustomFoods, createCustomFood, updateCustomFood, deleteCustomFood, restoreCustomFood, readCachedFoods } from '../lib/nutritionFoods';
 import { sortByUse, bumpUseCount, readUseCounts, MAX_CUSTOM_FOODS } from '../lib/foodShortcuts';
 import { MEALS, mealForHour, readCachedEntries, fetchEntries, fetchEntriesRange, addEntry, updateEntry, removeEntry } from '../lib/nutritionEntries';
-import { dayPace, mealHabit, proteinSpread, suggestedKcal } from '../lib/nutritionCoach';
+import { dayPace, mealHabit, proteinSpread, suggestedKcal, suggestFoods, portionFood } from '../lib/nutritionCoach';
 import FoodSearch from '../components/FoodSearch';
 import MealLog from '../components/MealLog';
 import NutritionDayCard from '../components/NutritionDayCard';
@@ -31,6 +31,8 @@ import { HISTORY_DAYS, unloggedRest, dayMicros } from '../lib/nutritionDay';
 
 import { t, locale } from '../lib/i18n';
 const SPREAD_FROM_HOUR = 19;
+const CLOSE_FROM_HOUR = 16;
+const CLOSE_MIN_PROTEIN = 10;
 // Duas fileiras de atalhos; o resto fica em "Ver todos".
 const VISIBLE_FOODS = 8;
 
@@ -401,6 +403,14 @@ export default function NutricaoPage({ active }) {
     return toDateStr(d);
   }, []);
   const repeatItems = useMemo(() => yesterdayMeal(pastEntries, entries, meal, yesterday), [pastEntries, entries, meal, yesterday]);
+  // Fim de tarde em diante, com proteína ainda faltando: o que fecha a meta com
+  // poucas calorias (lib/nutritionCoach suggestFoods) entre os atalhos.
+  const closeLeft = goals ? { protein: remaining, kcal: goals.kcal - totals.kcal } : null;
+  const closing = useMemo(
+    () => (closeLeft && now.getHours() >= CLOSE_FROM_HOUR && remaining >= CLOSE_MIN_PROTEIN ? suggestFoods(allFoods, closeLeft, 3) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allFoods, remaining, totals.kcal, goals],
+  );
   const habit = useMemo(() => mealHabit(pastEntries, meal, todayDate(), entries), [pastEntries, meal, entries]);
   // Só no fim do dia: antes disso as outras refeições ainda nem chegaram.
   const spread = now.getHours() >= SPREAD_FROM_HOUR ? proteinSpread(entries) : null;
@@ -470,6 +480,18 @@ export default function NutricaoPage({ active }) {
             {searchOpen ? t('Fechar busca') : t('🔎 Buscar alimento')}
           </button>
         </div>
+        {closing.length > 0 && (
+          <div className="close-protein">
+            <p className="dash-card__subtitle">{t('Para fechar a proteína de hoje (faltam {g} g):', { g: fmt(remaining) })}</p>
+            <div className="water-actions">
+              {closing.map(s => (
+                <button key={s.food.id} type="button" className="btn btn--ghost btn--sm" onClick={() => handleAdd(portionFood(s))}>
+                  {s.food.icon} {s.n > 1 ? `${s.n}× ` : ''}{s.food.label} · +{fmt(s.g)} g · {fmt(s.kcal)} kcal
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {repeatItems.length > 0 && (
           <div className="water-actions">
             <button
