@@ -12,7 +12,7 @@
 // (corrida-*.jpg, story-corrida-*.mp4, reel-corrida-*.mp4).
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -125,21 +125,27 @@ export async function renderVideo(file, seconds, audio, drawFrame, img) {
   await done;
 }
 
-// Trilha: o song.mp3 do projeto (app-admin/music, fora do git), com um trecho diferente por
-// vídeo e uma batida forte caindo na entrada do print (story) ou na troca de cena (Reel).
-// SONG_OFF=1 usa a trilha sintetizada.
+// Trilha: faixas de app-admin/music (fora do git). Usa corrida-*.mp3 (ex.: corrida-1.mp3 e
+// corrida-2.mp3, do Pixabay), alternando entre elas a cada vídeo; sem elas, o song.mp3.
+// Cada vídeo pega um trecho diferente, com uma batida forte na entrada do print (story) ou na
+// troca de cena (Reel). SONG_OFF=1 usa a trilha sintetizada.
 export async function audioPlan(offset = 0) {
-  if (process.env.SONG_OFF === '1' || !existsSync(SONG)) {
-    console.log('Trilha sintetizada (sem song.mp3)');
+  const dir = dirname(SONG);
+  const songs = existsSync(dir) ? readdirSync(dir).filter((f) => /^corrida-.*\.mp3$/i.test(f)).sort().map((f) => join(dir, f)) : [];
+  if (!songs.length && existsSync(SONG)) songs.push(SONG);
+  if (process.env.SONG_OFF === '1' || !songs.length) {
+    console.log('Trilha sintetizada (sem mp3)');
     return { story: () => null, reel: () => null };
   }
-  console.log(`Trilha: ${SONG}`);
-  const st = await strongOnsets(SONG, 24, STORY_DROP, STORY_DURATION);
-  const rl = await strongOnsets(SONG, 24, 3.4, DURATION);
-  return {
-    story: (i) => ({ song: SONG, start: st[(i + offset) % st.length] }),
-    reel: (i) => ({ song: SONG, start: rl[(i + offset) % rl.length] }),
-  };
+  console.log(`Trilha: ${songs.join(', ')}`);
+  const st = [];
+  const rl = [];
+  for (const song of songs) {
+    st.push((await strongOnsets(song, 24, STORY_DROP, STORY_DURATION)).map((start) => ({ song, start })));
+    rl.push((await strongOnsets(song, 24, 3.4, DURATION)).map((start) => ({ song, start })));
+  }
+  const pick = (lists, i) => lists[i % lists.length][Math.floor((i + offset) / lists.length) % lists[0].length];
+  return { story: (i) => pick(st, i + offset), reel: (i) => pick(rl, i + offset) };
 }
 
 export const SHIFTS = [0, 2, 3, 5, 7, -2];
