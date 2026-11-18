@@ -37,7 +37,7 @@ function RecordsCard() {
           ))}
         </div>
       </div>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!error && !rows && <Loading />}
       {!error && rows && (rows.length === 0 ? <EmptyState icon="🏋️" label="Nenhuma carga registrada no período." /> : (
         <div className="table-wrap">
@@ -93,7 +93,7 @@ export default function Achievements() {
 
       <div className="card">
         <h2 className="section-title">Conquistas desbloqueadas</h2>
-        {error && <p className="form-msg form-msg--error">{error}</p>}
+        {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
         {!error && !data && <Loading />}
         {data && (
           <>

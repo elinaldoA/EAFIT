@@ -120,7 +120,7 @@ export default function PromoMaterialsAdmin() {
             onChange={e => setFile(e.target.files?.[0] || null)} />
         </label>
         <div className="form-grid__actions">
-          <span className={`card-note ${fileError ? 'form-msg--error' : ''}`} style={{ margin: 0 }}>
+          <span role={fileError ? 'alert' : undefined} className={`card-note ${fileError ? 'form-msg--error' : ''}`} style={{ margin: 0 }}>
             {fileError || (file ? `${file.name} · ${formatSize(file.size)}` : 'Imagem, vídeo, PDF ou ZIP.')}
           </span>
           <button className="btn btn--primary" type="submit" disabled={busy || !title.trim() || !file || !!fileError}>
@@ -129,7 +129,7 @@ export default function PromoMaterialsAdmin() {
         </div>
       </form>
 
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       {items && items.length === 0 && <p className="card-note" style={{ margin: 0 }}>Nenhum material publicado ainda.</p>}
       {items && items.length > 0 && (

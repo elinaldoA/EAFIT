@@ -50,7 +50,7 @@ export default function ResetPassword() {
           />
         </label>
 
-        {error && <p className="form-msg form-msg--error">{error}</p>}
+        {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
         <button className="btn btn--primary btn--full" type="submit" disabled={busy}>
           {busy ? 'Salvando…' : 'Salvar nova senha'}

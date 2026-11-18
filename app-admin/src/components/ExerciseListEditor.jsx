@@ -31,11 +31,11 @@ export default function ExerciseListEditor({ title, exercises, onChange }) {
       <div className="exercise-list__title">{title}</div>
       {exercises.map((ex, idx) => (
         <div className="exercise-row" key={idx}>
-          <input className="input" placeholder="Nome" value={ex.nome} onChange={e => updateField(idx, 'nome', e.target.value)} />
-          <input className="input" placeholder="Séries" value={ex.series} onChange={e => updateField(idx, 'series', e.target.value)} />
-          <input className="input" placeholder="Reps" value={ex.reps} onChange={e => updateField(idx, 'reps', e.target.value)} />
-          <input className="input" placeholder="Descanso" value={ex.descanso} onChange={e => updateField(idx, 'descanso', e.target.value)} />
-          <input className="input" placeholder="Técnica" value={ex.tecnica} onChange={e => updateField(idx, 'tecnica', e.target.value)} />
+          <input className="input" placeholder="Nome" aria-label="Nome" value={ex.nome} onChange={e => updateField(idx, 'nome', e.target.value)} />
+          <input className="input" placeholder="Séries" aria-label="Séries" value={ex.series} onChange={e => updateField(idx, 'series', e.target.value)} />
+          <input className="input" placeholder="Reps" aria-label="Reps" value={ex.reps} onChange={e => updateField(idx, 'reps', e.target.value)} />
+          <input className="input" placeholder="Descanso" aria-label="Descanso" value={ex.descanso} onChange={e => updateField(idx, 'descanso', e.target.value)} />
+          <input className="input" placeholder="Técnica" aria-label="Técnica" value={ex.tecnica} onChange={e => updateField(idx, 'tecnica', e.target.value)} />
           <div className="exercise-row__actions">
             <button type="button" className="icon-btn" title="Mover para cima" disabled={idx === 0} onClick={() => move(idx, -1)}>↑</button>
             <button type="button" className="icon-btn" title="Mover para baixo" disabled={idx === exercises.length - 1} onClick={() => move(idx, 1)}>↓</button>

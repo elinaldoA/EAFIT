@@ -103,7 +103,7 @@ export default function LandingEditor() {
   }
 
   if (loading) return <Loading label="Carregando landing page…" />;
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
 
   return (
     <div>
@@ -128,7 +128,7 @@ export default function LandingEditor() {
         </label>
       </div>
 
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       <div className="stack">
         {content.sections.map((section, idx) => (

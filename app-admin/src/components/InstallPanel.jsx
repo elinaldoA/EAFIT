@@ -208,7 +208,7 @@ export default function InstallPanel() {
         </div>
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : !s ? (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : !s ? (
         <div className="card"><p className="card-note" style={{ margin: 0 }}>Sem dados.</p></div>
       ) : (
           <>

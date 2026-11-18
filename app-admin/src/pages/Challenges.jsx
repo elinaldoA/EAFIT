@@ -22,7 +22,7 @@ function Leaderboard({ challengeId }) {
     return () => { active = false; };
   }, [challengeId]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!rows) return <Loading />;
   if (rows.length === 0) return <p className="user-detail__meta">Ninguém entrou ainda.</p>;
 
@@ -106,10 +106,10 @@ function OfficialChallengeForm({ onCreated }) {
       </div>
       <div className="actions-row">
         <button className="btn btn--primary btn--small" type="submit" disabled={busy}>Criar desafio</button>
-        {msg && <span className="form-msg form-msg--error">{msg}</span>}
+        {msg && <span className="form-msg form-msg--error" role="alert">{msg}</span>}
       </div>
       {code && (
-        <p className="form-msg form-msg--ok">
+        <p className="form-msg form-msg--ok" role="status">
           Desafio criado. Código de convite: <code>{code}</code>. Divulgue em{' '}
           <Link to="/notificacoes">Enviar notificação</Link> ou no aviso do app.
         </p>
@@ -174,8 +174,8 @@ export default function Challenges() {
       <ChallengeSeriesCard onSpawned={load} />
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       {!loading && !error && (
         <>

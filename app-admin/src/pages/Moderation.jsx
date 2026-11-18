@@ -34,7 +34,7 @@ function WordsCard({ saved, onSaved }) {
       <div className="actions-row" style={{ marginTop: 8 }}>
         <button type="button" className="btn btn--small btn--primary" disabled={!dirty} onClick={save}>Salvar</button>
         <span className="user-detail__meta">{next.length} palavra(s)</span>
-        {msg && <span className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'}>{msg}</span>}
+        {msg && <span className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
       </div>
       <p className="card-note">
         Publicações e apelidos dos últimos 30 dias que contêm uma dessas palavras aparecem em “Sinalizados”. Nada é
@@ -85,7 +85,7 @@ export default function Moderation() {
         ))}
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!data && !error && <Loading />}
 
       {data && view !== 'sinalizados' && (reports.length === 0 ? <EmptyState icon="🛡️" label={view === 'aberta' ? 'Nenhuma denúncia aberta.' : 'Nenhuma denúncia resolvida.'} /> : (

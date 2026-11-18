@@ -44,7 +44,7 @@ function NudgeForm({ row, onSent, onCancel }) {
         <span className="field__label">Mensagem</span>
         <textarea className="input" rows={2} value={msg.body} onChange={e => setMsg({ ...msg, body: e.target.value })} maxLength={240} />
       </label>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       <div className="actions-row">
         <button type="button" className="btn btn--primary btn--small" disabled={sending || !msg.title.trim() || !msg.body.trim()} onClick={send}>
           {sending ? 'Enviando…' : 'Enviar push'}
@@ -118,7 +118,7 @@ export default function ChurnRiskCard() {
         </div>
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : (
         <>
           <div className="tile-grid" style={{ marginBottom: 12 }}>
             <div className="tile"><div className="tile__value">{counts.high}</div><div className="tile__label">risco alto (50+)</div></div>

@@ -82,7 +82,7 @@ export default function MarketingWeekly({ metrics = [], accounts = [] }) {
           )}
           <div className="actions-row">
             <button type="button" className="btn btn--small" onClick={copy}>Copiar resumo</button>
-            {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</span>}
+            {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
           </div>
           <pre className="user-detail__meta" style={{ whiteSpace: 'pre-wrap' }}>{summaryText(summary)}</pre>
         </>

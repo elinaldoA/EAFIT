@@ -102,7 +102,7 @@ export default function Profile() {
                 <input className="input" value={email} disabled />
               </label>
               <div className="form-grid__actions">
-                <span className={`form-msg ${profileMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{profileMsg}</span>
+                <span className={`form-msg ${profileMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={profileMsg.startsWith('Erro') ? 'alert' : 'status'}>{profileMsg}</span>
                 <button className="btn btn--primary" type="submit" disabled={savingProfile}>Salvar perfil</button>
               </div>
             </div>
@@ -190,7 +190,7 @@ function SecurityCard({ updatePassword }) {
           </ul>
         )}
         <div className="form-grid__actions">
-          <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</span>
+          <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>
           <button className="btn btn--primary" type="submit" disabled={busy || !password}>Atualizar senha</button>
         </div>
       </form>
@@ -214,7 +214,7 @@ function SecurityCard({ updatePassword }) {
           <p className="card-note" style={{ margin: '2px 0 0' }}>
             Esqueceu o painel aberto em outro computador? Desconecte todos, menos este.
           </p>
-          {othersMsg && <p className={`form-msg ${othersMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{othersMsg}</p>}
+          {othersMsg && <p className={`form-msg ${othersMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={othersMsg.startsWith('Erro') ? 'alert' : 'status'}>{othersMsg}</p>}
         </div>
         <button type="button" className="btn btn--small" onClick={handleSignOutOthers}>Sair dos outros dispositivos</button>
       </div>
@@ -299,7 +299,7 @@ function EmailPrefsCard({ adminId }) {
         <input type="checkbox" checked={prefs.alerts} onChange={() => toggle('alerts')} />
         Alertas de problemas (e-mail e push)
       </label>
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
     </section>
   );
 }

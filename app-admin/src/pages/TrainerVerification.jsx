@@ -54,7 +54,7 @@ function RequestRow({ r, onDone }) {
                 <button type="button" className="btn btn--small" disabled={busy} onClick={() => decide(false)}>Enviar recusa</button>
               </div>
             )}
-            {error && <span className="form-msg form-msg--error">{error}</span>}
+            {error && <span className="form-msg form-msg--error" role="alert">{error}</span>}
           </div>
         ) : (
           <>
@@ -88,7 +88,7 @@ function CrefCell({ t, onSaved }) {
       <input className="input input--sm" style={{ maxWidth: 140 }} placeholder="012345-G/SP" value={value} onChange={e => setValue(e.target.value)} aria-label="CREF" />
       <button type="button" className="btn btn--small btn--primary" onClick={save}>Salvar</button>
       <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing(false)}>Cancelar</button>
-      {error && <span className="form-msg form-msg--error">{error}</span>}
+      {error && <span className="form-msg form-msg--error" role="alert">{error}</span>}
     </div>
   );
 }
@@ -127,7 +127,7 @@ export default function TrainerVerification() {
         </div>
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!rows && !error && <Loading />}
       {rows && (rows.length === 0 ? <EmptyState icon="🪪" label={status === 'pendente' ? 'Nenhum pedido esperando análise.' : 'Nenhum pedido aqui.'} /> : (
         <div className="table-wrap">

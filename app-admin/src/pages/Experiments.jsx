@@ -103,7 +103,7 @@ function NewExperiment({ onSaved, onCancel }) {
           {Object.entries(AUDIENCE_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </select>
       </label>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       <div className="actions-row">
         <button type="submit" className="btn btn--primary" disabled={busy}>{busy ? 'Salvando…' : 'Criar como rascunho'}</button>
         <button type="button" className="btn btn--ghost" onClick={onCancel}>Cancelar</button>
@@ -128,7 +128,7 @@ function Results({ experiment }) {
   }, [experiment]);
 
   if (state.loading) return <Loading />;
-  if (state.error) return <p className="form-msg form-msg--error">{state.error}</p>;
+  if (state.error) return <p className="form-msg form-msg--error" role="alert">{state.error}</p>;
   const r = state.data;
   const label = v => (experiment.kind === 'rollout' ? (v === 'on' ? 'Ligada' : 'Desligada') : v.toUpperCase());
 
@@ -242,7 +242,7 @@ function ExperimentCard({ experiment, onChanged }) {
           <span className="user-detail__meta">Aumentar só acrescenta pessoas: quem já tinha a função continua com ela.</span>
         </div>
       )}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {open && experiment.status !== 'rascunho' && <Results experiment={experiment} />}
       {experiment.status === 'encerrado' && rollout && experiment.winner === 'on' && (
         <p className="card-note">Para deixar a função ligada para todos, confira a chave em Configurações do app.</p>
@@ -274,7 +274,7 @@ export default function Experiments() {
         </div>
         {!creating && <button type="button" className="btn btn--primary" onClick={() => setCreating(true)}>Novo experimento</button>}
       </div>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {creating && <NewExperiment onSaved={() => { setCreating(false); load(); }} onCancel={() => setCreating(false)} />}
       {!items && !error && <Loading />}
       {items && items.length === 0 && !creating && <EmptyState icon="🧪" label="Nenhum experimento ainda." />}

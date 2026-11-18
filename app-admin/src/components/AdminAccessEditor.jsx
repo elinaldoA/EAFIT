@@ -72,7 +72,7 @@ export default function AdminAccessEditor({ admin, adminId, canEdit, onSaved }) 
       {canEdit && (
         <div className="actions-row">
           <button type="button" className="btn btn--primary btn--small" disabled={busy} onClick={save}>Salvar permissões</button>
-          {msg && <span className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg form-msg--ok'}>{msg}</span>}
+          {msg && <span className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg form-msg--ok'} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
         </div>
       )}
     </div>

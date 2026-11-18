@@ -17,7 +17,7 @@ export default function UserActionsTab({
       )}
 
       {deactivation && (
-        <p className="form-msg">
+        <p className="form-msg" role="status">
           Conta desativada em {formatDate(deactivation.deactivated_at)}
           {deactivation.deactivated_by_email ? ` por ${deactivation.deactivated_by_email}` : ''}.
           {' '}Motivo: {deactivation.reason || 'não informado'}.
@@ -68,7 +68,7 @@ export default function UserActionsTab({
 
       <div>
         <h2 className="section-title">Gerar plano (suporte)</h2>
-        {!hasProfile && <p className="form-msg">Este usuário ainda não completou peso/altura no perfil — não é possível gerar plano.</p>}
+        {!hasProfile && <p className="form-msg" role="status">Este usuário ainda não completou peso/altura no perfil — não é possível gerar plano.</p>}
         <div className="actions-row">
           <button
             className="btn" disabled={busy || !hasProfile}

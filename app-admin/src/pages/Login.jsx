@@ -30,7 +30,7 @@ function SecondFactor() {
         <div className="auth-card">
           <img className="auth-card__logo" src={logoMark} alt="EAFIT" />
           <div className="auth-card__brand">Verificação em duas etapas</div>
-          <p className="form-msg form-msg--error">Não foi possível abrir a verificação agora. Entre de novo em instantes.</p>
+          <p className="form-msg form-msg--error" role="alert">Não foi possível abrir a verificação agora. Entre de novo em instantes.</p>
           <button type="button" className="btn btn--primary btn--full" onClick={logout}>Voltar ao login</button>
         </div>
       </div>
@@ -66,7 +66,7 @@ function SecondFactor() {
           />
         </label>
 
-        {error && <p className="form-msg form-msg--error">{error}</p>}
+        {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
         <button className="btn btn--primary btn--full" type="submit" disabled={busy}>
           {busy ? 'Conferindo…' : enrolling ? 'Ativar e entrar' : 'Entrar'}
@@ -136,8 +136,8 @@ export default function Login() {
           />
         </label>
 
-        {error && <p className="form-msg form-msg--error">{error}</p>}
-        {info && <p className="form-msg form-msg--ok">{info}</p>}
+        {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
+        {info && <p className="form-msg form-msg--ok" role="status">{info}</p>}
 
         <button className="btn btn--primary btn--full" type="submit" disabled={busy}>
           {busy ? 'Entrando…' : 'Entrar'}

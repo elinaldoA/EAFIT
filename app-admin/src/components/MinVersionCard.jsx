@@ -69,7 +69,7 @@ export default function MinVersionCard({ saved, adminId, onSaved }) {
         <span className="field__label">Mensagem (opcional)</span>
         <input className="input" maxLength={200} value={draft.message} placeholder="Atualize para receber a correção do cronômetro." onChange={e => setDraft({ ...draft, message: e.target.value })} />
       </label>
-      {!valid && <p className="form-msg form-msg--error">Use o formato 1, 1.4 ou 1.4.2.</p>}
+      {!valid && <p className="form-msg form-msg--error" role="alert">Use o formato 1, 1.4 ou 1.4.2.</p>}
 
       {rows === null ? <p className="card-note" style={{ margin: 0 }}>Carregando versões…</p> : share.list.length === 0 ? (
         <p className="card-note" style={{ margin: 0 }}>Nenhum acesso com versão registrada nos últimos 30 dias.</p>
@@ -93,7 +93,7 @@ export default function MinVersionCard({ saved, adminId, onSaved }) {
       <div className="actions-row">
         <button className={`btn btn--small ${draft.mode === 'block' && v ? 'btn--danger' : 'btn--primary'}`} disabled={busy || !dirty || !valid} onClick={save}>Salvar</button>
         <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(saved); setMsg(''); }}>Desfazer</button>
-        {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</span>}
+        {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
       </div>
     </div>
   );

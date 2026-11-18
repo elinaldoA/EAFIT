@@ -60,7 +60,7 @@ export default function UserNotesTab({ userId, adminUser }) {
         </div>
       </form>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {loading ? <Loading /> : !notes.length ? (
         <p className="card-note">Nenhuma nota para este usuário.</p>

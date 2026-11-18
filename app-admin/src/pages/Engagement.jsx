@@ -77,7 +77,7 @@ function AtRiskCard() {
         </div>
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : (
         <div className="table-wrap">
           <table className="resp-table">
             <thead>
@@ -144,7 +144,7 @@ function ExpiringPlansCard() {
         <SegControl label="Vencem em até" options={AHEAD_OPTIONS} value={daysAhead} onChange={setDaysAhead} suffix="dias" />
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : (
         <div className="table-wrap">
           <table className="resp-table">
             <thead>

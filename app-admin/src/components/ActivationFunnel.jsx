@@ -71,7 +71,7 @@ export default function ActivationFunnel() {
         </div>
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : (
         <>
           <div className="tile-grid tile-grid--kpi">
             {summary.map(t => (

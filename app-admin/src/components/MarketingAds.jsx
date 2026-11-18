@@ -52,9 +52,9 @@ export default function MarketingAds({ days, metrics = [], accounts: networkAcco
     <section className="card stack" aria-label="Posts promovidos">
       <h2 className="section-title">Posts promovidos</h2>
       {!data && !error && <Loading />}
-      {error && <p className="form-msg form-msg--error">Erro: {error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">Erro: {error}</p>}
       {failed.map(a => (
-        <p key={a.id} className="form-msg form-msg--error">Conta de anúncios {a.name || a.id}: {a.error}</p>
+        <p key={a.id} className="form-msg form-msg--error" role="alert">Conta de anúncios {a.name || a.id}: {a.error}</p>
       ))}
 
       {data && accounts.length === 0 && (

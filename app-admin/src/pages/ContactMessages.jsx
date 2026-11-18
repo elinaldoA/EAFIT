@@ -55,7 +55,7 @@ function MessageCard({ item, onChanged }) {
           {answered ? 'Voltar para novo' : 'Marcar como respondido'}
         </button>
         <button className="btn btn--ghost btn--small" disabled={busy} onClick={handleDelete}>Excluir</button>
-        {msg && <span className="form-msg form-msg--error">{msg}</span>}
+        {msg && <span className="form-msg form-msg--error" role="alert">{msg}</span>}
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ export default function ContactMessages() {
         </div>
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {loading && <Loading />}
 
       {!loading && !error && (

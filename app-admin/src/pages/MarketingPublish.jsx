@@ -350,7 +350,7 @@ export default function MarketingPublish() {
 
       {tab === 'agenda' && (
         <>
-          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
           <MarketingAutopost
             posts={posts || []} accounts={accounts || []} onOpenHistory={() => setTab('historico')}
             renderTools={p => (
@@ -439,7 +439,7 @@ export default function MarketingPublish() {
             <div className="actions-row">
               <button type="button" className={`btn btn--small${pickerTab === 'library' ? '' : ' btn--ghost'}`} onClick={() => setPickerTab('library')}>Minhas mídias ({library.length})</button>
               <button type="button" className={`btn btn--small${pickerTab === 'videos' ? '' : ' btn--ghost'}`} onClick={() => setPickerTab('videos')}>Vídeos de exercício</button>
-              {pickerTab === 'videos' && <input className="input search-input" placeholder="Buscar exercício" value={videoQuery} onChange={e => setVideoQuery(e.target.value)} />}
+              {pickerTab === 'videos' && <input className="input search-input" placeholder="Buscar exercício" aria-label="Buscar exercício" value={videoQuery} onChange={e => setVideoQuery(e.target.value)} />}
               <Link to="/marketing-midia" className="user-detail__meta">Criar arte com print do app →</Link>
             </div>
             {pickerItems.length === 0
@@ -489,14 +489,14 @@ export default function MarketingPublish() {
           </div>
 
           {errors.length > 0 && (caption || media.length > 0 || story) && (
-            <ul className="form-msg form-msg--error mkt-errors">{errors.map(e => <li key={e}>{e}</li>)}</ul>
+            <ul className="form-msg form-msg--error mkt-errors" role="alert">{errors.map(e => <li key={e}>{e}</li>)}</ul>
           )}
           <div className="actions-row">
             <button type="button" className="btn btn--primary" disabled={busy || errors.length > 0} onClick={handleSubmit}>
               {busy ? 'Enviando…' : when === 'schedule' ? (story ? 'Agendar story' : 'Agendar post') : 'Publicar agora'}
             </button>
           </div>
-          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
           </section>
         </>
       ))}
@@ -509,7 +509,7 @@ export default function MarketingPublish() {
               {refreshing ? 'Atualizando…' : 'Atualizar'}
             </button>
           </div>
-          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
           {posts && posts.length > 0 && (
             <div className="mkt-filter" role="group" aria-label="Filtrar posts">
               {HISTORY_FILTERS.map(f => (

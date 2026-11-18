@@ -47,7 +47,7 @@ function ExerciseForm({ editing, groups, equipments, onCancel, onSaved }) {
     }
   }
 
-  const err = key => errors[key] && <span className="form-msg form-msg--error">{errors[key]}</span>;
+  const err = key => errors[key] && <span className="form-msg form-msg--error" role="alert">{errors[key]}</span>;
 
   return (
     <form className="card stack" style={{ gap: 14 }} onSubmit={handleSubmit}>
@@ -110,11 +110,11 @@ function ExerciseForm({ editing, groups, equipments, onCancel, onSaved }) {
       <datalist id="lib-equipments">{equipments.map(g => <option key={g} value={g} />)}</datalist>
 
       {renamed && (
-        <p className="form-msg form-msg--error">
+        <p className="form-msg form-msg--error" role="alert">
           Atenção: este exercício está em {editing.plans_count} plano(s){editing.has_media ? ' e tem mídia própria' : ''}. Renomear separa o histórico dos usuários.
         </p>
       )}
-      {msg && <p className="form-msg form-msg--error">{msg}</p>}
+      {msg && <p className="form-msg form-msg--error" role="alert">{msg}</p>}
 
       <div className="actions-row">
         <button className="btn btn--primary btn--small" type="submit" disabled={busy}>{editing ? 'Salvar' : 'Criar exercício'}</button>
@@ -176,7 +176,7 @@ export default function ExerciseLibrary() {
   }
 
   if (loading) return <Loading />;
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
 
   return (
     <div className="stack">
@@ -199,10 +199,10 @@ export default function ExerciseLibrary() {
         />
       )}
 
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       <div className="actions-row">
-        <input className="input search-input" placeholder="Buscar por nome…" value={filters.search} onChange={e => setFilter('search', e.target.value)} />
+        <input className="input search-input" placeholder="Buscar por nome…" aria-label="Buscar por nome…" value={filters.search} onChange={e => setFilter('search', e.target.value)} />
         <select className="input" value={filters.grupo} onChange={e => setFilter('grupo', e.target.value)} aria-label="Grupo muscular">
           <option value="">Todos os grupos</option>
           {groups.map(g => <option key={g} value={g}>{g}</option>)}

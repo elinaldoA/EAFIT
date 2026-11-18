@@ -6,6 +6,7 @@ import { fetchUsersPage } from '../../lib/users';
 import { tabForPath } from './nav';
 import { useFavorites } from '../../lib/favorites';
 import NavIcon from './NavIcon';
+import { useDialogFocus } from '../../lib/useDialogFocus';
 
 const USER_MIN_CHARS = 3;
 const USER_LIMIT = 6;
@@ -27,6 +28,8 @@ export default function QuickSearch() {
   const [active, setActive] = useState(0);
   const inputRef = useRef(null);
   const listRef = useRef(null);
+  const dialogRef = useRef(null);
+  useDialogFocus(dialogRef, open);
 
   const favorites = useFavorites();
   const pages = useMemo(() => pageIndex(hiddenScreens), [hiddenScreens]);
@@ -122,7 +125,7 @@ export default function QuickSearch() {
 
       {open && (
         <div className="qsearch-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setOpen(false); }}>
-          <div className="qsearch" role="dialog" aria-modal="true" aria-label="Busca rápida">
+          <div className="qsearch" ref={dialogRef} role="dialog" aria-modal="true" aria-label="Busca rápida">
             <input
               ref={inputRef}
               className="qsearch__input"

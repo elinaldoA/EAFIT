@@ -103,8 +103,8 @@ export default function ClientErrors() {
       </p>
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
-      {msg && <p className="form-msg">{msg}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
+      {msg && <p className="form-msg" role="status">{msg}</p>}
 
       {!loading && !error && (
         <>

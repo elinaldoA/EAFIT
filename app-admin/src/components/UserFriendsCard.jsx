@@ -40,7 +40,7 @@ export default function UserFriendsCard({ userId }) {
   return (
     <section>
       <h2 className="section-title">Amigos</h2>
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
       {rows.length > 0 && (
         <table className="resp-table">
           <thead><tr><th>Pessoa</th><th>Situação</th><th>Desde</th><th /></tr></thead>

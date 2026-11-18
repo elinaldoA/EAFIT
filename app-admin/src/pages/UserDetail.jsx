@@ -324,7 +324,7 @@ export default function UserDetail() {
   }
 
   if (loading) return <Loading />;
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
 
   const isBanned = detail.banned_until && new Date(detail.banned_until) > new Date();
   const md = detail.user_metadata || {};
@@ -364,7 +364,7 @@ export default function UserDetail() {
         ))}
       </div>
 
-      {actionMsg && <p className={`form-msg ${actionMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{actionMsg}</p>}
+      {actionMsg && <p className={`form-msg ${actionMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={actionMsg.startsWith('Erro') ? 'alert' : 'status'}>{actionMsg}</p>}
 
       {tab === 'perfil' && (
         <UserProfileTab

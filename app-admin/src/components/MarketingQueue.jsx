@@ -141,7 +141,7 @@ export default function MarketingQueue({ library = [] }) {
           O que está aqui sai sozinho, um de cada formato por dia, na ordem da lista. Só dá para mexer no que ainda não saiu.
           Os horários de cada faixa aparecem no título dela.
         </p>
-        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
         {adding && (
           <div className="stack mkt-art">

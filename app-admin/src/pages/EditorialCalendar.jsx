@@ -67,7 +67,7 @@ export default function EditorialCalendar() {
         ))}
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!raw && !error && <Loading />}
       {raw && (
         <>

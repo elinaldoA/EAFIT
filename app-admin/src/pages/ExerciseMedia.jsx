@@ -190,7 +190,7 @@ export default function ExerciseMedia() {
 
       {msg && <p className={`form-msg ${msg.ok ? 'form-msg--ok' : 'form-msg--error'}`} role="status">{msg.text}</p>}
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {!loading && !error && pager}
       {!loading && !error && (

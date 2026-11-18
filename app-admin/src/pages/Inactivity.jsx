@@ -38,7 +38,7 @@ export default function Inactivity() {
       </div>
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {!loading && !error && summary.sent === 0 && (
         <EmptyState icon="✉️" label="Nenhuma pesquisa enviada ainda. O primeiro envio sai na próxima segunda de manhã." />

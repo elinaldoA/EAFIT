@@ -35,7 +35,7 @@ function RulesCard({ rules, onSaved }) {
           </label>
         ))}
         <button type="button" className="btn btn--primary btn--small" onClick={save}>Salvar</button>
-        {msg && <span className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'}>{msg}</span>}
+        {msg && <span className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
       </div>
       <p className="card-note">
         Cadastro ativado = conta criada pelo link do parceiro que treinou nos 7 primeiros dias. Um valor diferente para
@@ -68,7 +68,7 @@ function RateCell({ row, onSaved }) {
       <input className="input input--sm" style={{ maxWidth: 90 }} inputMode="decimal" placeholder="do tipo" value={value} onChange={e => setValue(e.target.value)} aria-label={`Exceção de ${row.name}`} />
       <button type="button" className="btn btn--small btn--primary" onClick={save}>Salvar</button>
       <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing(false)}>Cancelar</button>
-      {error && <span className="form-msg form-msg--error">{error}</span>}
+      {error && <span className="form-msg form-msg--error" role="alert">{error}</span>}
     </div>
   );
 }
@@ -118,7 +118,7 @@ export default function Commissions() {
         </label>
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!data && !error && <Loading />}
       {data && (
         <>

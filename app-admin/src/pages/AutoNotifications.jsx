@@ -146,7 +146,7 @@ function RuleCard({ rule, stats, onSaved }) {
             <span className="field__label">Mensagem em inglês</span>
             <textarea className="input" rows={2} maxLength={200} value={draft.body_en || ''} onChange={e => setDraft({ ...draft, body_en: e.target.value })} />
           </label>
-          {!enOk && <p className="form-msg form-msg--error">Preencha o título e a mensagem em inglês, ou deixe os dois em branco.</p>}
+          {!enOk && <p className="form-msg form-msg--error" role="alert">Preencha o título e a mensagem em inglês, ou deixe os dois em branco.</p>}
         </div>
       </details>
 
@@ -160,10 +160,10 @@ function RuleCard({ rule, stats, onSaved }) {
         <button className="btn btn--small" onClick={handlePreview} disabled={preview?.loading}>
           {preview?.loading ? 'Consultando…' : 'Ver quem receberia agora'}
         </button>
-        {preview?.error && <p className="form-msg form-msg--error" style={{ marginTop: 8 }}>Erro: {preview.error}</p>}
+        {preview?.error && <p className="form-msg form-msg--error" role="alert" style={{ marginTop: 8 }}>Erro: {preview.error}</p>}
         {preview?.rows && (
           <div style={{ marginTop: 10 }}>
-            {!saved.enabled && <p className="form-msg form-msg--error">Esta regra está pausada: nada é enviado enquanto estiver pausada.</p>}
+            {!saved.enabled && <p className="form-msg form-msg--error" role="alert">Esta regra está pausada: nada é enviado enquanto estiver pausada.</p>}
             {preview.rows.length === 0 ? (
               <p className="card-note" style={{ marginTop: 0 }}>
                 Ninguém se encaixa agora (critério da regra, intervalo mínimo, limite de 1 por dia ou sem push ativo).
@@ -196,7 +196,7 @@ function RuleCard({ rule, stats, onSaved }) {
           Enviadas: <strong>{stats?.d7 ?? 0}</strong> nos últimos 7 dias · <strong>{stats?.d30 ?? 0}</strong> nos últimos 30
         </span>
         <div className="actions-row">
-          {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</span>}
+          {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
           <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(rule); setMsg(''); }}>Desfazer</button>
           <button className="btn btn--primary btn--small" disabled={busy || !dirty || !valid} onClick={handleSave}>Salvar</button>
         </div>
@@ -226,7 +226,7 @@ export default function AutoNotifications() {
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <Loading />;
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
 
   const stats = countByKind(log.rows);
   const labelByKind = Object.fromEntries(rules.map(r => [r.kind, r.label]));

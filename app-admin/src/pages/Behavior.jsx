@@ -65,7 +65,7 @@ function Card({ title, state, note, children }) {
   return (
     <div className="card">
       <h2 className="section-title">{title}</h2>
-      {state.loading ? <Loading /> : state.error ? <p className="form-msg form-msg--error">{state.error}</p> : children(state.data)}
+      {state.loading ? <Loading /> : state.error ? <p className="form-msg form-msg--error" role="alert">{state.error}</p> : children(state.data)}
       {note && <p className="card-note">{note}</p>}
     </div>
   );

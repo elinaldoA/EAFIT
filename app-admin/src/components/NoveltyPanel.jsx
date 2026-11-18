@@ -52,7 +52,7 @@ export default function NoveltyPanel() {
     return () => { active = false; };
   }, [days]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
 
   return (
     <section className="stack" aria-labelledby="novelty-title">

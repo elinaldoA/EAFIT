@@ -45,7 +45,7 @@ function InviteCard() {
           ))}
         </div>
       </div>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!error && !funnel && <Loading />}
       {!error && funnel && (
         <>
@@ -141,7 +141,7 @@ export default function SocialFeed() {
         </div>
       </div>
 
-      {statsError && <p className="form-msg form-msg--error">{statsError}</p>}
+      {statsError && <p className="form-msg form-msg--error" role="alert">{statsError}</p>}
       {stats && (
         <div className="tile-grid">
           {tiles.map(t => (
@@ -171,9 +171,9 @@ export default function SocialFeed() {
           </div>
         </div>
 
-        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
         {loading && <Loading />}
-        {error && <p className="form-msg form-msg--error">{error}</p>}
+        {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
         {!loading && !error && (
           <>

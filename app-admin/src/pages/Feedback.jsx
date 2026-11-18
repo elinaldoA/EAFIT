@@ -101,7 +101,7 @@ function FeedbackCard({ item, onChanged }) {
       <div className="actions-row">
         <button className="btn btn--small" disabled={busy || !noteChanged(item.admin_note, note)} onClick={handleSaveNote}>Salvar nota</button>
         <button className="btn btn--ghost btn--small" disabled={busy} onClick={handleDelete}>Excluir</button>
-        {msg && <span className={`form-msg ${msg.startsWith('Resposta enviada:') ? 'form-msg--ok' : 'form-msg--error'}`}>{msg}</span>}
+        {msg && <span role={msg.startsWith('Resposta enviada:') ? 'status' : 'alert'} className={`form-msg ${msg.startsWith('Resposta enviada:') ? 'form-msg--ok' : 'form-msg--error'}`}>{msg}</span>}
       </div>
     </div>
   );
@@ -158,7 +158,7 @@ export default function Feedback() {
         </div>
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {loading && <Loading />}
 
       {!loading && !error && (

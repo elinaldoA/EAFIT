@@ -110,7 +110,7 @@ export default function MarketingComments() {
         </select>
       </div>
 
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
       {!comments && <Loading />}
       {comments && comments.length === 0 && (
         <EmptyState icon="💬" label={filter === 'open' ? 'Tudo respondido por aqui.' : 'Nenhum comentário.'} />

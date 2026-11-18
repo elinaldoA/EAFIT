@@ -36,7 +36,7 @@ function CostCell({ item, onSaved }) {
       <input className="input input--sm" style={{ maxWidth: 110 }} inputMode="decimal" value={value} onChange={e => setValue(e.target.value)} aria-label="Valor gasto (R$)" />
       <button type="button" className="btn btn--small btn--primary" onClick={save}>Salvar</button>
       <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing(false)}>Cancelar</button>
-      {error && <span className="form-msg form-msg--error">{error}</span>}
+      {error && <span className="form-msg form-msg--error" role="alert">{error}</span>}
     </div>
   );
 }
@@ -79,7 +79,7 @@ export default function Campaigns() {
         </div>
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!data && !error && <Loading />}
       {data && data.items.length === 0 && <EmptyState icon="📣" label="Nenhum cadastro ou visita de fora no período." />}
       {data && data.items.length > 0 && (

@@ -112,7 +112,7 @@ function SurveyForm({ initial, onSaved, onCancel }) {
         <input type="checkbox" checked={draft.active} onChange={e => set({ active: e.target.checked })} />
         <span>Ativa (aparece no app dentro do período)</span>
       </label>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       <div className="actions-row">
         <button type="submit" className="btn btn--primary" disabled={busy}>{busy ? 'Salvando…' : 'Salvar'}</button>
         <button type="button" className="btn btn--ghost" onClick={onCancel}>Cancelar</button>
@@ -141,7 +141,7 @@ function Results({ survey }) {
 
   const r = useMemo(() => (answers ? buildResults(survey, answers, breakdown) : null), [survey, answers, breakdown]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!r) return <Loading />;
   if (!r.total) return <EmptyState icon="🗳️" label="Ninguém respondeu ainda." />;
 
@@ -293,7 +293,7 @@ export default function Surveys() {
         {!editing && <button type="button" className="btn btn--primary" onClick={() => setEditing(EMPTY)}>Nova pesquisa</button>}
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {editing && (
         <SurveyForm
           key={editing.id || 'new'} initial={editing}

@@ -181,7 +181,7 @@ export default function MarketingHighlights() {
         </div>
         <button type="button" className="btn" onClick={saveAll}>Baixar todas</button>
       </div>
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       <section className="card stack" aria-label="Capas dos destaques">
         <div className="actions-row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: 24 }}>
@@ -219,7 +219,7 @@ export default function MarketingHighlights() {
           destaque pelo Arquivo do Instagram. Depoimentos fica de fora: só vale com relato real e autorizado.
         </p>
         {!canRenderReels() && (
-          <p className="form-msg form-msg--error">Este navegador não gera vídeo. Abra o painel no Chrome ou no Edge, no computador.</p>
+          <p className="form-msg form-msg--error" role="alert">Este navegador não gera vídeo. Abra o painel no Chrome ou no Edge, no computador.</p>
         )}
         <div className="actions-row" style={{ flexWrap: 'wrap', gap: 16, alignItems: 'flex-end' }}>
           <div className="stack" style={{ gap: 4 }} role="group" aria-label="Contas">

@@ -86,7 +86,7 @@ export default function MarketingAccounts() {
           aparece automaticamente. No TikTok o painel posta só vídeo (sem stories, comentários ou exclusão pela API), e
           os vídeos saem privados até o app passar pela auditoria do TikTok.
         </p>
-        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
       </section>
 
       {!accounts && <Loading />}

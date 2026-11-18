@@ -50,6 +50,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed })
                     aria-current={active ? 'page' : undefined}
                     className={`sidebar__link ${active ? 'sidebar__link--active' : ''}`}
                     title={collapsed ? tab.label : undefined}
+                    aria-label={collapsed ? tab.label : undefined}
                     onClick={onClose}
                   >
                     <span className="sidebar__link-icon"><NavIcon name={section.icon} /></span>
@@ -72,6 +73,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed })
                     aria-current={active ? 'page' : undefined}
                     className={`sidebar__link ${active ? 'sidebar__link--active' : ''}`}
                     title={collapsed ? (count ? `${section.label} · ${count.title}` : section.label) : undefined}
+                    aria-label={collapsed ? (count ? `${section.label}, ${count.title}` : section.label) : undefined}
                     onClick={onClose}
                   >
                     <span className="sidebar__link-icon"><NavIcon name={section.icon} /></span>

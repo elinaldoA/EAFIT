@@ -65,7 +65,7 @@ export default function MessageEditor({ title, body, onTitle, onBody, users = []
           {EMOJIS.map(e => <button key={e} type="button" className="btn btn--ghost btn--small" aria-label={`Inserir ${e}`} onClick={() => insert(e)}>{e}</button>)}
         </div>
         {unknown.length > 0 && (
-          <p className="form-msg form-msg--error">
+          <p className="form-msg form-msg--error" role="alert">
             {unknown.map(u => `{${u}}`).join(', ')} não é variável: some do texto no envio. Use {MESSAGE_VARS.map(v => `{${v.key}}`).join(', ')}.
           </p>
         )}
@@ -86,7 +86,7 @@ export default function MessageEditor({ title, body, onTitle, onBody, users = []
             {users.slice(0, 500).map(u => <option key={u.id} value={u.id}>{u.email}</option>)}
           </select>
         </div>
-        {varsError && <p className="form-msg form-msg--error">{varsError}</p>}
+        {varsError && <p className="form-msg form-msg--error" role="alert">{varsError}</p>}
 
         {tab === 'push' && (
           <div className="msg-preview__push" data-testid="preview-push">

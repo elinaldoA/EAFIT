@@ -294,7 +294,7 @@ export default function MarketingMedia() {
       </div>
 
 
-      {msg && !share && <p ref={msgRef} className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && !share && <p ref={msgRef} className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       <section className="card stack">
         <h2 className="section-title">Minhas mídias</h2>
@@ -397,7 +397,7 @@ export default function MarketingMedia() {
                   placeholder="Ex.: Meu treino agora fala comigo 🎧 Comece agora:"
                   onChange={e => setShare({ ...share, caption: e.target.value })} />
               </label>
-              {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+              {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
               <div className="actions-row">
                 <button type="submit" className="btn btn--primary" disabled={busy || !share.title.trim()}>{busy ? 'Enviando…' : 'Enviar'}</button>
                 <button type="button" className="btn btn--ghost" onClick={() => setShare(null)}>Fechar</button>
@@ -478,7 +478,7 @@ export default function MarketingMedia() {
                 Leva cerca de 6 segundos para gerar.
               </p>
               {!canRenderReels() && (
-                <p className="form-msg form-msg--error">Este navegador não gera vídeo. Use o Chrome ou o Edge no computador.</p>
+                <p className="form-msg form-msg--error" role="alert">Este navegador não gera vídeo. Use o Chrome ou o Edge no computador.</p>
               )}
               <label className="field">
                 <span className="field__label">Etiqueta (opcional, ex.: HIDRATAÇÃO)</span>
@@ -518,7 +518,7 @@ export default function MarketingMedia() {
                 <button type="button" className="btn btn--ghost" onClick={() => setStory(null)}>Fechar</button>
               </div>
               {story.saved && (
-                <p className="form-msg form-msg--ok">
+                <p className="form-msg form-msg--ok" role="status">
                   Pronto. Agora <Link to="/marketing?aba=fila">adicione à fila da publicação automática</Link> (formato Story, no horário que quiser) ou publique em Publicar → Novo post.
                 </p>
               )}
@@ -535,7 +535,7 @@ export default function MarketingMedia() {
                 e a chamada para o link da bio. Leva cerca de 10 segundos para gerar.
               </p>
               {!canRenderReels() && (
-                <p className="form-msg form-msg--error">Este navegador não gera vídeo. Use o Chrome ou o Edge no computador.</p>
+                <p className="form-msg form-msg--error" role="alert">Este navegador não gera vídeo. Use o Chrome ou o Edge no computador.</p>
               )}
               <label className="field">
                 <span className="field__label">Gancho (abre o vídeo)</span>
@@ -560,7 +560,7 @@ export default function MarketingMedia() {
                 <button type="button" className="btn btn--ghost" onClick={() => setReel(null)}>Fechar</button>
               </div>
               {reel.saved && (
-                <p className="form-msg form-msg--ok">
+                <p className="form-msg form-msg--ok" role="status">
                   Pronto. Agora <Link to="/marketing?aba=fila">adicione à fila da publicação automática</Link> (formato Reel) ou publique em Publicar → Novo post.
                 </p>
               )}
@@ -573,7 +573,7 @@ export default function MarketingMedia() {
       <section className="card stack">
         <div className="actions-row" style={{ justifyContent: 'space-between' }}>
           <h2 className="section-title">Vídeos de exercício ({videos.length})</h2>
-          <input className="input search-input" placeholder="Buscar exercício" value={videoQuery} onChange={e => setVideoQuery(e.target.value)} />
+          <input className="input search-input" placeholder="Buscar exercício" aria-label="Buscar exercício" value={videoQuery} onChange={e => setVideoQuery(e.target.value)} />
         </div>
         <p className="user-detail__meta">
           Vídeos de terceiros (wger, Wikimedia Commons, Pixabay). Ao usar num post, o crédito vai na legenda. Os marcados

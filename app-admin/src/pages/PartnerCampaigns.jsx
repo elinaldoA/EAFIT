@@ -113,7 +113,7 @@ function CampaignForm({ initial, onSaved, onCancel }) {
         <input className="input" value={d.goal} maxLength={GOAL_MAX} placeholder="Ex.: 10 cadastros no mês = comissão em dobro"
           onChange={e => set({ goal: e.target.value })} />
       </label>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       <div className="actions-row">
         {!initial.published && (
           <button type="button" className="btn btn--primary" disabled={busy} onClick={() => submit(true)}>
@@ -195,7 +195,7 @@ function Materials({ campaign }) {
           <input ref={fileRef} className="input" type="file" accept={ACCEPT} required onChange={e => setFile(e.target.files?.[0] || null)} />
         </label>
         <div className="form-grid__actions">
-          <span className={`card-note ${fileError ? 'form-msg--error' : ''}`} style={{ margin: 0 }}>
+          <span role={fileError ? 'alert' : undefined} className={`card-note ${fileError ? 'form-msg--error' : ''}`} style={{ margin: 0 }}>
             {fileError || (file ? `${file.name} · ${formatSize(file.size)}` : 'Imagem, vídeo, PDF ou ZIP.')}
           </span>
           <button className="btn btn--primary" type="submit" disabled={busy || !title.trim() || !file || !!fileError}>
@@ -203,7 +203,7 @@ function Materials({ campaign }) {
           </button>
         </div>
       </form>
-      {msg && <p className="form-msg form-msg--error">{msg}</p>}
+      {msg && <p className="form-msg form-msg--error" role="alert">{msg}</p>}
       {items === null ? <Loading /> : items.length === 0
         ? <p className="card-note" style={{ margin: 0 }}>Nenhum material nesta campanha.</p>
         : (
@@ -264,7 +264,7 @@ function Notify({ campaign, onDone }) {
         <button type="submit" className="btn btn--primary" disabled={busy || !notice.title.trim() || !notice.body.trim()}>
           {busy ? 'Enviando…' : 'Enviar aviso'}
         </button>
-        {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</span>}
+        {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
       </div>
     </form>
   );
@@ -281,7 +281,7 @@ function Results({ campaign }) {
     return () => { active = false; };
   }, [campaign.id]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!rows) return <Loading />;
   const engaged = rows.filter(r => r.visits > 0 || r.signups > 0).length;
   return (
@@ -377,8 +377,8 @@ export default function PartnerCampaigns() {
       </div>
 
       {editing && <CampaignForm key={editing.id || 'nova'} initial={editing} onSaved={handleSaved} onCancel={() => setEditing(null)} />}
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {list === null ? <Loading /> : list.length === 0 ? (
         <EmptyState icon="📣" label="Nenhuma campanha ainda. Crie a primeira: ela aparece no app dos parceiros quando for publicada." />

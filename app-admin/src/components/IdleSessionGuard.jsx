@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useDialogFocus } from '../lib/useDialogFocus';
 import { useAdminAuth } from '../context/useAdminAuth';
 import {
   IDLE_MS, WARN_MS, idleState, readLastActivity, writeLastActivity,
@@ -14,6 +15,8 @@ export default function IdleSessionGuard({ idleMs = IDLE_MS, warnMs = WARN_MS })
   const [warning, setWarning] = useState(null);
   const lastWrite = useRef(0);
   const loggedOut = useRef(false);
+  const boxRef = useRef(null);
+  useDialogFocus(boxRef, warning !== null);
 
   useEffect(() => {
     writeLastActivity();
@@ -48,8 +51,8 @@ export default function IdleSessionGuard({ idleMs = IDLE_MS, warnMs = WARN_MS })
 
   if (warning === null) return null;
   return (
-    <div className="idle-warning" role="alertdialog" aria-live="assertive" aria-labelledby="idle-warning-title">
-      <div className="idle-warning__box">
+    <div className="idle-warning" role="alertdialog" aria-modal="true" aria-labelledby="idle-warning-title">
+      <div className="idle-warning__box" ref={boxRef}>
         <h2 id="idle-warning-title" className="section-title">Sessão prestes a expirar</h2>
         <p>Por segurança, você será desconectado em <strong>{warning} s</strong> por falta de atividade.</p>
         <div className="actions-row">

@@ -93,7 +93,7 @@ export default function CampaignResults() {
       </div>
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {!loading && !error && visible.length === 0 && <EmptyState icon="📬" label="Nenhum envio no período." />}
 

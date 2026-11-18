@@ -50,7 +50,7 @@ export default function PushCapCard() {
         Teto de avisos que uma pessoa recebe em 7 dias, somando manuais e automáticos. Quem já chegou ao teto deixa de
         receber as automáticas até a semana “abrir espaço”. Envios manuais sempre saem (o admin decide na hora).
       </p>
-      {state.error ? <p className="form-msg form-msg--error">{state.error}</p> : (
+      {state.error ? <p className="form-msg form-msg--error" role="alert">{state.error}</p> : (
         <>
           <div className="actions-row" style={{ alignItems: 'flex-end' }}>
             <label className="field" style={{ maxWidth: 220 }}>
@@ -66,8 +66,8 @@ export default function PushCapCard() {
             >{busy ? 'Salvando…' : 'Salvar'}</button>
             <span className="user-detail__meta">Atual: {state.cap ? `${state.cap} por semana` : 'sem limite'}</span>
           </div>
-          {!valid && <p className="form-msg form-msg--error">Use um número inteiro de 0 a {MAX_CAP}.</p>}
-          {msg && <p className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'}>{msg}</p>}
+          {!valid && <p className="form-msg form-msg--error" role="alert">Use um número inteiro de 0 a {MAX_CAP}.</p>}
+          {msg && <p className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
           <h3 className="subsection-title">Avisos recebidos nos últimos 7 dias</h3>
           {preview.total === 0 ? <p className="card-note" style={{ marginTop: 0 }}>Ninguém recebeu avisos nos últimos 7 dias.</p> : (

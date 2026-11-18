@@ -27,7 +27,7 @@ export default function TrainerResultsCard({ trainers, days }) {
   return (
     <div className="card" style={{ marginTop: 20 }}>
       <h2 className="section-title">Ranking por resultado dos alunos</h2>
-      {state.loading ? <Loading /> : state.error ? <p className="form-msg form-msg--error">{state.error}</p> : (
+      {state.loading ? <Loading /> : state.error ? <p className="form-msg form-msg--error" role="alert">{state.error}</p> : (
         <>
           {noPlan > 0 && (
             <p className="card-note" style={{ margin: '0 0 8px' }}>

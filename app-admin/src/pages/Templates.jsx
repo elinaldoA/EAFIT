@@ -58,13 +58,13 @@ export default function Templates() {
       </div>
 
       {loading && <Loading label="Carregando template…" />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {!loading && !error && data && (
         <div className="stack">
           <WorkoutTemplateEditor days={data} onChange={setData} />
 
-          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+          {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
           <div>
             <button className="btn btn--primary" onClick={handleSave} disabled={saving}>

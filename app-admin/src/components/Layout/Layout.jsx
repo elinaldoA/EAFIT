@@ -36,6 +36,15 @@ function Shell() {
   // Tela oculta para este admin (Sistema → Administradores): só interface.
   const blocked = isHidden(hiddenScreens, pathname);
   const tabsRef = useRef(null);
+  const mainRef = useRef(null);
+  const firstRoute = useRef(true);
+
+  // Navegar não recarrega a página: leva o foco ao conteúdo para o leitor de tela
+  // anunciar a tela nova (e o teclado não ficar preso no link do menu).
+  useEffect(() => {
+    if (firstRoute.current) { firstRoute.current = false; return; }
+    mainRef.current?.focus({ preventScroll: true });
+  }, [pathname]);
   const favorites = useFavorites();
   const pinned = favorites.includes(pathname);
   const hint = hintForPath(pathname);
@@ -70,10 +79,11 @@ function Shell() {
   return (
     <div className="shell">
       <IdleSessionGuard />
+      <button type="button" className="skip-link" onClick={() => mainRef.current?.focus()}>Pular para o conteúdo</button>
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
       <div className="shell__main">
         <Topbar menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />
-        <main className="shell__content">
+        <main className="shell__content" id="conteudo" tabIndex={-1} ref={mainRef}>
           {showTabs ? (
             <>
               <div className="section-head">

@@ -13,7 +13,7 @@ function SeriesReport({ series }) {
   const [error, setError] = useState('');
   useEffect(() => { fetchSeriesReport(series.id).then(setRows).catch(err => setError(err.message)); }, [series.id]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!rows) return <Loading />;
   if (rows.length === 0) return <p className="user-detail__meta">Nenhuma edição criada ainda.</p>;
   const trend = seriesTrend(rows, todayStr());
@@ -107,7 +107,7 @@ export default function ChallengeSeriesCard({ onSpawned }) {
           <button className="btn btn--primary btn--small" type="submit">Criar série</button>
         </div>
       </form>
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       {!list ? <Loading /> : list.length > 0 && (
         <div className="stack" style={{ gap: 10 }}>

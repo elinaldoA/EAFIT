@@ -84,7 +84,7 @@ export default function ContentRanking() {
       </div>
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {!loading && !error && (
         <>

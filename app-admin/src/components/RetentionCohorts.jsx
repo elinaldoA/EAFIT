@@ -44,7 +44,7 @@ export default function RetentionCohorts() {
         <p className="section-hint">Das pessoas que se cadastraram em cada semana, quantas continuam treinando.</p>
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : !cohorts.length ? (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : !cohorts.length ? (
         <div className="card"><p className="card-note" style={{ margin: 0 }}>Nenhum cadastro nas últimas {WEEKS} semanas.</p></div>
       ) : (
         <>

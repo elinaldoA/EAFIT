@@ -397,9 +397,9 @@ export default function GeoPanel() {
       </form>
     </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {extrasFailed && (
-        <p className="form-msg form-msg--error">
+        <p className="form-msg form-msg--error" role="alert">
           Parte dos detalhes (comparação, por dia, por horário ou origem) não carregou.{' '}
           <button type="button" className="btn btn--ghost btn--small" onClick={refresh}>Tentar de novo</button>
         </p>

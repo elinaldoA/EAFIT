@@ -60,7 +60,7 @@ function NewRequest({ onSaved, onCancel }) {
         <span className="field__label">Notas (opcional)</span>
         <textarea className="input" rows={2} maxLength={2000} value={draft.notes} onChange={e => setDraft({ ...draft, notes: e.target.value })} />
       </label>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       <div className="actions-row">
         <button type="submit" className="btn btn--primary" disabled={busy}>{busy ? 'Salvando…' : 'Registrar'}</button>
         <button type="button" className="btn btn--ghost" onClick={onCancel}>Cancelar</button>
@@ -111,7 +111,7 @@ function RequestRow({ req, onChanged }) {
           <Link className="btn btn--small" to={`/users/${req.user_id}`}>Baixar dados na ficha</Link>
         )}
         {req.user_id && req.kind === 'exclusao' && <Link className="btn btn--ghost btn--small" to={`/users/${req.user_id}`}>Excluir na ficha</Link>}
-        {msg && <div className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'user-detail__meta'}>{msg}</div>}
+        {msg && <div role={msg.startsWith('Erro') ? 'alert' : 'status'} className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'user-detail__meta'}>{msg}</div>}
       </td>
     </tr>
   );
@@ -150,7 +150,7 @@ export default function PrivacyRequests() {
           <div className="tile"><div className="tile__value">{late}</div><div className="tile__label">vencidos</div></div>
         </div>
       )}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {creating && <NewRequest onSaved={() => { setCreating(false); load(); }} onCancel={() => setCreating(false)} />}
       {!items && !error && <Loading />}
       {items && items.length === 0 && !creating && <EmptyState icon="🔐" label="Nenhum pedido registrado." />}

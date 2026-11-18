@@ -14,7 +14,7 @@ export default function UserAppViewTab({ userId, plan, metadata }) {
     fetchAppView(userId).then(setData).catch(err => setError(err.message));
   }, [userId]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!data) return <Loading />;
   const v = buildAppView({ plan, metadata, settings: data.settings, view: data.view });
 

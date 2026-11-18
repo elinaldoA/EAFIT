@@ -57,7 +57,7 @@ export default function Segments() {
         </div>
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       <div className="card">
         {!segments.length ? (

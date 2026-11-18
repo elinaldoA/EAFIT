@@ -120,7 +120,7 @@ export default function Dormant() {
       <section className="card stack">
         <h2 className="section-title">Envio automático</h2>
         {rule === undefined && <Loading />}
-        {rule === null && <p className="form-msg form-msg--error">Regra automática indisponível (migration pendente).</p>}
+        {rule === null && <p className="form-msg form-msg--error" role="alert">Regra automática indisponível (migration pendente).</p>}
         {rule && (
           <>
             <p>
@@ -157,11 +157,11 @@ export default function Dormant() {
             Selecionados: push {chosen.push} · e-mail {alsoEmail ? chosen.email : 0}
           </span>
         </div>
-        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
       </section>
 
       {!people && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {people && !error && capNotice(people.length, 'pessoas') && <p className="form-msg form-msg--error" role="alert">{capNotice(people.length, 'pessoas')}</p>}
       {people && !error && people.length === 0 && <EmptyState icon="🎉" label="Ninguém sumido nesse período." />}
 

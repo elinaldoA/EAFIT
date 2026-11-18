@@ -68,7 +68,7 @@ function VersionForm({ onPublished }) {
       </label>
       <div className="actions-row">
         <button className="btn btn--primary btn--small" type="submit" disabled={busy}>Registrar versão</button>
-        {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</span>}
+        {msg && <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>}
       </div>
     </form>
   );
@@ -95,7 +95,7 @@ export default function Legal() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!versions) return <Loading />;
 
   const current = currentVersions(versions);

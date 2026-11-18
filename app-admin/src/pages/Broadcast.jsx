@@ -298,7 +298,7 @@ export default function Broadcast() {
           </span>
         </label>
 
-        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+        {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
         <div className="actions-row">
           <button className="btn btn--primary" type="submit" disabled={busy}>

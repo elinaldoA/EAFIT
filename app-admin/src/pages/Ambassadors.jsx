@@ -137,7 +137,7 @@ export default function Ambassadors() {
       </div>
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {ready && rows.length > 0 && (
         <div className="seg" role="group" aria-label="Tipo" style={{ alignSelf: 'flex-start' }}>
@@ -239,7 +239,7 @@ export default function Ambassadors() {
 
       {msg && (
         <div className="toast" role="status">
-          <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>
+          <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>
         </div>
       )}
     </div>
@@ -342,7 +342,7 @@ function ReferralList({ ambassadorId }) {
     return () => { active = false; };
   }, [ambassadorId]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!rows) return <Loading />;
   if (rows.length === 0) return <p className="card-note">Nenhuma conta vinculada ainda.</p>;
 
@@ -437,7 +437,7 @@ function ProgramMessageForm({ counts, loading }) {
           {busy ? 'Enviando…' : 'Enviar recado'}
         </button>
       </div>
-      {result && <p className={`form-msg ${result.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{result}</p>}
+      {result && <p className={`form-msg ${result.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={result.startsWith('Erro') ? 'alert' : 'status'}>{result}</p>}
     </form>
   );
 }

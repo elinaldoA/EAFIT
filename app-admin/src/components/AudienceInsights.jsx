@@ -55,7 +55,7 @@ export default function AudienceInsights() {
   }, [days]);
 
   if (loading) return <Loading />;
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
 
   const maxSets = Math.max(1, ...exercises.map(e => Number(e.sets_done) || 0));
 

@@ -38,7 +38,7 @@ function TrainerInviteSignups({ trainerId, code }) {
     return () => { active = false; };
   }, [trainerId]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!rows) return <Loading />;
 
   return (
@@ -109,7 +109,7 @@ function TrainerClients({ trainerId }) {
     return () => { active = false; };
   }, [trainerId]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!rows) return <Loading />;
   if (rows.length === 0) return <p className="user-detail__meta">Nenhum aluno ativo.</p>;
 
@@ -297,7 +297,7 @@ export default function Trainers() {
       )}
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {ready && rows.length === 0 && (
         <div className="card"><EmptyState icon="🧑‍🏫" label="Nenhum personal liberado ainda. Libere em Usuários → Ações." /></div>

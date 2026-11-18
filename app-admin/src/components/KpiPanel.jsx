@@ -90,7 +90,7 @@ export default function KpiPanel() {
         </div>
       </div>
 
-      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error">{error}</p> : kpis && (
+      {loading ? <Loading /> : error ? <p className="form-msg form-msg--error" role="alert">{error}</p> : kpis && (
         <>
           <div className="tile-grid tile-grid--kpi">
             {cards.map(c => (

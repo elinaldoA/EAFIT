@@ -14,7 +14,7 @@ function StateBadge({ state }) {
 }
 
 function BlockError({ message }) {
-  return <p className="form-msg form-msg--error">Não foi possível carregar: {message}</p>;
+  return <p className="form-msg form-msg--error" role="alert">Não foi possível carregar: {message}</p>;
 }
 
 // Limpeza de dados técnicos antigos (métricas e controle de envio). Carrega
@@ -67,7 +67,7 @@ function PurgeCard() {
           </tbody>
         </table>
       </div>
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} style={{ marginTop: 12 }}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'} style={{ marginTop: 12 }}>{msg}</p>}
       <p className="card-note">
         Métricas de uso e controle de envio, que crescem sem parar. Nada aqui é conteúdo criado pelo usuário
         (treinos, peso, fotos). Depois de limpar, o período "Todos" de Comportamento e do funil do Dashboard passa a
@@ -208,7 +208,7 @@ export default function SystemHealth() {
           </div>
         )}
         {overdue > 0 && (
-          <p className="form-msg form-msg--error" style={{ marginTop: 12 }}>
+          <p className="form-msg form-msg--error" role="alert" style={{ marginTop: 12 }}>
             {overdue} notificação(ões) agendada(s) passou(aram) do horário há mais de 10 minutos sem serem enviadas.
           </p>
         )}

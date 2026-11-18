@@ -134,8 +134,8 @@ export default function MyReport() {
           </div>
         </div>
       )}
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
-      {error && <p className="form-msg form-msg--error">{error.includes('invalid_period') ? 'Período inválido (até 366 dias).' : error}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error.includes('invalid_period') ? 'Período inválido (até 366 dias).' : error}</p>}
       {!rows && !error && <Loading />}
       {rows && rows.length === 0 && <EmptyState icon="🧩" label="Nenhum cartão. Use Editar cartões para escolher." />}
       {rows && rows.length > 0 && (

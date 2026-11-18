@@ -53,7 +53,7 @@ function RuleRow({ rule, onSaved }) {
       <td data-label="Último disparo">{fmtDateTime(rule.lastFiredAt)}</td>
       <td data-label="">
         <button type="button" className="btn btn--small" disabled={busy || !dirty} onClick={save}>Salvar</button>
-        {msg && <div className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'user-detail__meta'}>{msg}</div>}
+        {msg && <div role={msg.startsWith('Erro') ? 'alert' : 'status'} className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'user-detail__meta'}>{msg}</div>}
       </td>
     </tr>
   );
@@ -91,7 +91,7 @@ export default function DigestAlerts() {
     }
   }
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!data) return <Loading />;
   const p = data.preview;
 
@@ -127,7 +127,7 @@ export default function DigestAlerts() {
           <h2 className="section-title" style={{ margin: 0 }}>Prévia do relatório (últimos 7 dias)</h2>
           <button type="button" className="btn btn--small" disabled={sending} onClick={sendMe}>{sending ? 'Enviando…' : 'Enviar para mim agora'}</button>
         </div>
-        {msg && <p className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'}>{msg}</p>}
+        {msg && <p className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
         <div className="tile-grid">
           <Trend label="cadastros" cur={p.signups} prev={p.signups_prev} />
           <Trend label="pessoas treinaram" cur={p.trained} prev={p.trained_prev} />

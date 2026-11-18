@@ -115,7 +115,7 @@ export default function Dashboard() {
   const severe = Number(stats?.severe_discomfort_30d) || 0;
 
   if (loading) return <Loading />;
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
 
   return (
     <div className="stack">

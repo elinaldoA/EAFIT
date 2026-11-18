@@ -40,7 +40,7 @@ function ReplyBox({ item, onDone }) {
         <button type="button" className="btn btn--primary btn--small" disabled={busy || !text.trim()} onClick={() => send(true)}>Responder e resolver</button>
         <button type="button" className="btn btn--ghost btn--small" disabled={busy || !text.trim()} onClick={() => send(false)}>Só responder</button>
       </div>
-      {msg && <p className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'}>{msg}</p>}
+      {msg && <p className={msg.startsWith('Erro') ? 'form-msg form-msg--error' : 'form-msg'} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
     </div>
   );
 }
@@ -97,7 +97,7 @@ export default function Support() {
         ))}
       </div>
 
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {!data && !error && <Loading />}
       {data && items.length === 0 && <EmptyState icon="📭" label="Nada nesta fila." />}
 

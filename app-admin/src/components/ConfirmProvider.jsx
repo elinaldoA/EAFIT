@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ConfirmContext, normalizeConfirm } from '../context/confirmContext';
+import { useDialogFocus } from '../lib/useDialogFocus';
 import { reauthIsFresh, verifyMfaCode } from '../lib/reauth';
 
 // Diálogo de confirmação único do painel, no lugar do window.confirm.
@@ -13,6 +14,8 @@ export default function ConfirmProvider({ children }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const resolver = useRef(null);
+  const formRef = useRef(null);
+  useDialogFocus(formRef, !!req);
 
   const ask = useCallback(opts => new Promise(resolve => {
     resolver.current?.(false);
@@ -53,7 +56,7 @@ export default function ConfirmProvider({ children }) {
       {children}
       {req && (
         <div className="idle-warning" onMouseDown={e => { if (e.target === e.currentTarget) close(false); }}>
-          <form className="idle-warning__box" role="alertdialog" aria-modal="true"
+          <form ref={formRef} className="idle-warning__box" role="alertdialog" aria-modal="true"
             aria-labelledby="confirm-title" aria-describedby="confirm-msg" onSubmit={submit}>
             <h2 id="confirm-title" className="section-title">{req.title || 'Confirmar'}</h2>
             {req.message && <p id="confirm-msg" style={{ whiteSpace: 'pre-line' }}>{req.message}</p>}

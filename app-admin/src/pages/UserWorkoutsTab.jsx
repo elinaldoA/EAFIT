@@ -89,7 +89,7 @@ function PlanImport({ onImportPlan }) {
       <input ref={fileRef} type="file" accept={PLAN_FILE_ACCEPT} hidden onChange={handleFile} />
       <button className="btn btn--small" onClick={() => fileRef.current?.click()} disabled={busy || reading}>{reading ? 'Lendo o arquivo…' : 'Importar plano'}</button>
       <p className="user-detail__meta">Aceita PDF (com texto), planilha .xlsx, CSV, TXT ou o JSON exportado. Fichas em texto: uma linha por exercício, como “Supino 4x10”, separadas por Dia A/B/C ou dia da semana.</p>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       {parsed && (
         <div className="stack">
           <p className="user-detail__meta">

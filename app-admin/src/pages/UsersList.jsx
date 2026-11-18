@@ -294,10 +294,10 @@ export default function UsersList() {
         </div>
       )}
       {exportMsg && <p className="form-msg form-msg--error" role="alert">{exportMsg}</p>}
-      {bulkMsg && <p className={`form-msg ${bulkMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{bulkMsg}</p>}
-      {segmentMsg && <p className={`form-msg ${segmentMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{segmentMsg}</p>}
+      {bulkMsg && <p className={`form-msg ${bulkMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={bulkMsg.startsWith('Erro') ? 'alert' : 'status'}>{bulkMsg}</p>}
+      {segmentMsg && <p className={`form-msg ${segmentMsg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={segmentMsg.startsWith('Erro') ? 'alert' : 'status'}>{segmentMsg}</p>}
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {!loading && !error && (
         <>

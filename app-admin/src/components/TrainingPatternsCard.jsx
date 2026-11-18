@@ -20,7 +20,7 @@ export default function TrainingPatternsCard() {
   }, []);
 
   if (state.loading) return <div className="card"><Loading /></div>;
-  if (state.error) return <div className="card"><p className="form-msg form-msg--error">{state.error}</p></div>;
+  if (state.error) return <div className="card"><p className="form-msg form-msg--error" role="alert">{state.error}</p></div>;
   const { heatmap, places } = state.data;
 
   return (

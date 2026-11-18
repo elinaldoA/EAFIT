@@ -157,7 +157,7 @@ export default function MarketingResults() {
           </button>
         ))}
       </div>
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       <MarketingWeekly metrics={metrics || []} accounts={accounts} />
 
@@ -271,7 +271,7 @@ export default function MarketingResults() {
         {metrics && metrics.length > 0 && rows.length === 0 && <p className="user-detail__meta">Nenhum post neste período e rede.</p>}
 
         {rows.length > 0 && !withInsights && (
-          <p className="form-msg">
+          <p className="form-msg" role="status">
             Alcance e salvamentos ainda não vieram: a rede só libera com a permissão de insights. Reconecte a conta em
             “Contas conectadas” e aceite as permissões novas. Por enquanto valem curtidas, comentários e compartilhamentos.
             {accounts.filter(a => a.metrics_note).map(a => (

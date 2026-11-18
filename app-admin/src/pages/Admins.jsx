@@ -70,8 +70,8 @@ export default function Admins() {
       </div>
 
       {loading && <Loading />}
-      {error && <p className="form-msg form-msg--error">{error}</p>}
-      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
+      {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
 
       {!loading && !error && (
         <div className="table-wrap">

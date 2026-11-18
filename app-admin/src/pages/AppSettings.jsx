@@ -12,7 +12,7 @@ import MinVersionCard from '../components/MinVersionCard';
 
 function SectionMessage({ msg }) {
   if (!msg) return null;
-  return <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`}>{msg}</span>;
+  return <span className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</span>;
 }
 
 function MaintenanceCard({ saved, adminId, onSaved }) {
@@ -143,7 +143,7 @@ function BannerCard({ saved, adminId, onSaved }) {
           <input className="input" maxLength={30} placeholder="Saiba mais" value={draft.linkLabel} onChange={e => setDraft({ ...draft, linkLabel: e.target.value })} />
         </label>
       </div>
-      {!linkOk && <p className="form-msg form-msg--error">O link precisa começar com https://, http:// ou /.</p>}
+      {!linkOk && <p className="form-msg form-msg--error" role="alert">O link precisa começar com https://, http:// ou /.</p>}
 
       <div className="form-grid">
         <label className="field">
@@ -155,7 +155,7 @@ function BannerCard({ saved, adminId, onSaved }) {
           <input className="input" type="date" value={draft.endsOn || ''} onChange={e => setDraft({ ...draft, endsOn: e.target.value })} />
         </label>
       </div>
-      {!periodOk && <p className="form-msg form-msg--error">A data final não pode ser antes da inicial.</p>}
+      {!periodOk && <p className="form-msg form-msg--error" role="alert">A data final não pode ser antes da inicial.</p>}
 
       <div className={`banner-preview banner-preview--${draft.level}`} aria-label="Pré-visualização">
         <span>
@@ -398,7 +398,7 @@ function MovedCard({ saved, adminId, onSaved }) {
         <span className="field__label">Endereço novo do app (https://…)</span>
         <input className="input" placeholder="https://eafit.com.br/app/" value={draft.url} onChange={e => setDraft({ ...draft, url: e.target.value })} />
       </label>
-      {!valid && <p className="form-msg form-msg--error">Informe o endereço completo, começando com https://.</p>}
+      {!valid && <p className="form-msg form-msg--error" role="alert">Informe o endereço completo, começando com https://.</p>}
       <div className="actions-row">
         <button className={`btn btn--small ${draft.enabled ? 'btn--danger' : 'btn--primary'}`} disabled={busy || !dirty || !valid} onClick={handleSave}>Salvar</button>
         <button className="btn btn--ghost btn--small" disabled={busy || !dirty} onClick={() => { setDraft(saved); setMsg(''); }}>Desfazer</button>
@@ -508,7 +508,7 @@ function SeasonCard({ saved, adminId, onSaved, today }) {
         <button type="button" className="btn btn--ghost btn--small" onClick={() => fillYear(year)}>Preencher {year}</button>
         <button type="button" className="btn btn--ghost btn--small" onClick={() => fillYear(year + 1)}>Preencher {year + 1}</button>
       </div>
-      {error && <p className="form-msg form-msg--error">{error}</p>}
+      {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
       <label className="switch-row">
         <input type="checkbox" checked={!panelOff} onChange={e => { setPanelOff(!e.target.checked); setAdminSeasonOff(!e.target.checked); }} />
         <span>Mostrar o tema também neste painel (só neste navegador)</span>
@@ -537,7 +537,7 @@ export default function AppSettings() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (error) return <p className="form-msg form-msg--error">{error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">{error}</p>;
   if (!settings) return <Loading />;
 
   return (

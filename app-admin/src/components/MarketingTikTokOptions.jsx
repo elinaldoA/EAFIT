@@ -9,7 +9,7 @@ const BRANDED_URL = 'https://www.tiktok.com/legal/page/global/bc-policy/en';
 export default function MarketingTikTokOptions({ creator, publicPosts, error, value, onChange, video, onDuration }) {
   const set = patch => onChange({ ...value, ...patch });
 
-  if (error) return <p className="form-msg form-msg--error">TikTok: {error}</p>;
+  if (error) return <p className="form-msg form-msg--error" role="alert">TikTok: {error}</p>;
   if (!creator) return <p className="user-detail__meta">Carregando a conta do TikTok…</p>;
 
   const interactions = [
