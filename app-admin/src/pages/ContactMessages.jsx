@@ -6,10 +6,12 @@ import {
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { useConfirm } from '../context/confirmContext';
 
 const STATUS_FILTERS = [{ value: '', label: 'Todos' }, ...STATUS_OPTIONS];
 
 function MessageCard({ item, onChanged }) {
+  const ask = useConfirm();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -28,8 +30,8 @@ function MessageCard({ item, onChanged }) {
 
   const answered = item.status === 'respondido';
   const handleToggle = () => run(() => setContactStatus(item.id, answered ? 'novo' : 'respondido'));
-  const handleDelete = () => {
-    if (!window.confirm('Excluir esta mensagem?')) return;
+  const handleDelete = async () => {
+    if (!await ask('Excluir esta mensagem?')) return;
     return run(() => deleteContactMessage(item.id));
   };
 

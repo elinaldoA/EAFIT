@@ -9,10 +9,12 @@ import { displayName } from '../lib/management';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { useConfirm } from '../context/confirmContext';
 
 const STATUS_FILTERS = [{ value: '', label: 'Todos' }, ...STATUS_OPTIONS];
 
 function FeedbackCard({ item, onChanged }) {
+  const ask = useConfirm();
   const [note, setNote] = useState(item.admin_note || '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -50,8 +52,8 @@ function FeedbackCard({ item, onChanged }) {
       setBusy(false);
     }
   }
-  const handleDelete = () => {
-    if (!window.confirm('Excluir este feedback?')) return;
+  const handleDelete = async () => {
+    if (!await ask('Excluir este feedback?')) return;
     return run(() => deleteFeedback(item.id));
   };
 

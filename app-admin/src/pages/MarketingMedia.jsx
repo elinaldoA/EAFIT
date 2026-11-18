@@ -13,6 +13,7 @@ import {
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { Paged } from '../components/ShowMore';
+import { useConfirm } from '../context/confirmContext';
 
 // Marketing → Biblioteca de mídia: o que pode ir para as redes. Arquivos
 // próprios e artes feitas dos prints do app ficam no bucket público
@@ -20,6 +21,7 @@ import { Paged } from '../components/ShowMore';
 // que a licença pede (entra sozinho na legenda). Cada item também pode ir para
 // embaixadores e influenciadores (material de divulgação no app, com texto pronto).
 export default function MarketingMedia() {
+  const ask = useConfirm();
   const { adminUser } = useAdminAuth();
   const [items, setItems] = useState(null);
   const [msg, setMsg] = useState('');
@@ -270,7 +272,7 @@ export default function MarketingMedia() {
   }
 
   async function handleRemove(item) {
-    if (!window.confirm(`Remover “${item.title || item.storage_path}” da biblioteca? Posts já publicados não mudam.`)) return;
+    if (!await ask(`Remover “${item.title || item.storage_path}” da biblioteca? Posts já publicados não mudam.`)) return;
     try {
       await removeMedia(item);
       await load();

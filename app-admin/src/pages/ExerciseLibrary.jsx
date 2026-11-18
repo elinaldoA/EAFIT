@@ -6,6 +6,7 @@ import {
 } from '../lib/exerciseLibrary';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { useConfirm } from '../context/confirmContext';
 
 const PAGE = 50;
 const PROBLEMAS = [
@@ -16,6 +17,7 @@ const PROBLEMAS = [
 ];
 
 function ExerciseForm({ editing, groups, equipments, onCancel, onSaved }) {
+  const ask = useConfirm();
   const [draft, setDraft] = useState(editing ? toDraft(editing) : { ...EMPTY_EXERCISE });
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -29,7 +31,7 @@ function ExerciseForm({ editing, groups, equipments, onCancel, onSaved }) {
     const { ok, errors: errs, value } = validateExercise(draft);
     setErrors(errs);
     if (!ok) return;
-    if (renamed && !window.confirm(
+    if (renamed && !await ask(
       `Renomear "${editing.nome}" para "${value.nome}"? O histórico de carga e os recordes dos usuários são agrupados pelo nome, `
       + 'e a mídia própria também. Eles NÃO acompanham a renomeação. Continuar?',
     )) return;
@@ -123,6 +125,7 @@ function ExerciseForm({ editing, groups, equipments, onCancel, onSaved }) {
 }
 
 export default function ExerciseLibrary() {
+  const ask = useConfirm();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -155,7 +158,7 @@ export default function ExerciseLibrary() {
 
   async function handleDelete(row) {
     const warn = row.plans_count > 0 ? ` Ele está em ${row.plans_count} plano(s) de usuários (os planos existentes não mudam).` : '';
-    if (!window.confirm(`Excluir "${row.nome}" da biblioteca?${warn} Ele deixa de ser sorteado nos treinos gerados.`)) return;
+    if (!await ask(`Excluir "${row.nome}" da biblioteca?${warn} Ele deixa de ser sorteado nos treinos gerados.`)) return;
     setMsg('');
     try {
       await deleteExercise(row.id);

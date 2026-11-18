@@ -13,6 +13,7 @@ import { METAS, NIVEIS } from '../lib/userDetailHelpers';
 const PAGE_SIZES = [25, 50, 100];
 import { toggleId, toggleAll, bulkAction, bulkNotify, summarize } from '../lib/bulkActions';
 import { softFail } from '../lib/softFail';
+import { useConfirm } from '../context/confirmContext';
 
 const CSV_COLUMNS = [
   { key: 'nome', label: 'Nome' }, { key: 'sobrenome', label: 'Sobrenome' },
@@ -78,6 +79,7 @@ function StatusBadges({ u }) {
 }
 
 export default function UsersList() {
+  const ask = useConfirm();
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -196,7 +198,7 @@ export default function UsersList() {
   }
 
   async function handleBulk(label, confirmText, run) {
-    if (confirmText && !window.confirm(confirmText)) return;
+    if (confirmText && !await ask(confirmText)) return;
     setBulkBusy(true);
     setBulkMsg('');
     try {

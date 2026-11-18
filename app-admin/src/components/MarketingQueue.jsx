@@ -6,6 +6,7 @@ import {
 } from '../lib/marketing';
 import Loading from './Loading';
 import { Paged } from './ShowMore';
+import { useConfirm } from '../context/confirmContext';
 
 const FORMAT_CHOICES = [
   { key: 'feed', label: 'Feed' },
@@ -25,6 +26,7 @@ function Thumb({ media = [] }) {
 // ordem, remover, repor o que foi pulado) e adiciona itens novos ao fim.
 // `library` é a biblioteca de mídia (imagens e vídeos) da página.
 export default function MarketingQueue({ library = [] }) {
+  const ask = useConfirm();
   const [state, setState] = useState(null);
   const [editing, setEditing] = useState(null); // { id, text }
   const [busy, setBusy] = useState('');
@@ -119,7 +121,7 @@ export default function MarketingQueue({ library = [] }) {
                   <button type="button" className="btn btn--ghost btn--small" onClick={() => setEditing({ id: item.id, text: item.caption })}>Editar legenda</button>
                 )}
                 <button type="button" className="btn btn--danger btn--small" disabled={busy === item.id}
-                  onClick={() => { if (window.confirm('Remover este item da fila?')) run(item.id, () => removeQueueItem(item.id), 'Item removido.'); }}>Remover</button>
+                  onClick={async () => { if (await ask('Remover este item da fila?')) run(item.id, () => removeQueueItem(item.id), 'Item removido.'); }}>Remover</button>
               </div>
             </>
           )}
@@ -238,7 +240,7 @@ export default function MarketingQueue({ library = [] }) {
                     <button type="button" className="btn btn--small" disabled={busy === item.id}
                       onClick={() => run(item.id, () => restoreQueueItem(item.id), 'Item reposto no fim da fila.')}>Repor na fila</button>
                     <button type="button" className="btn btn--danger btn--small" disabled={busy === item.id}
-                      onClick={() => { if (window.confirm('Remover este item?')) run(item.id, () => removeQueueItem(item.id), 'Item removido.'); }}>Remover</button>
+                      onClick={async () => { if (await ask('Remover este item?')) run(item.id, () => removeQueueItem(item.id), 'Item removido.'); }}>Remover</button>
                   </div>
                   {editing?.id === item.id && (
                     <>

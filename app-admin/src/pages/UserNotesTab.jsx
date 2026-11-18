@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { db } from '../lib/supabase';
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
+import { useConfirm } from '../context/confirmContext';
 
 // Notas internas do time sobre o usuário (suporte, contexto de atendimento).
 // Nunca aparecem no app do usuário: a tabela só tem policy de admin.
 export default function UserNotesTab({ userId, adminUser }) {
+  const ask = useConfirm();
   const [notes, setNotes] = useState([]);
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function UserNotesTab({ userId, adminUser }) {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm('Excluir esta nota?')) return;
+    if (!await ask('Excluir esta nota?')) return;
     const { error: err } = await db.from('admin_user_notes').delete().eq('id', id);
     if (err) setError(err.message); else await load();
   }

@@ -124,7 +124,7 @@ export default function UserDetail() {
   useEffect(() => { loadTrainer(); }, [loadTrainer]);
 
   async function runAction(action, extra, confirmMsg) {
-    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    if (confirmMsg && !await confirm(confirmMsg)) return;
     setBusy(true);
     setActionMsg('');
     setRecoveryLink('');
@@ -217,7 +217,7 @@ export default function UserDetail() {
   }
 
   async function handleGeneratePlan(confirmMsg) {
-    if (!window.confirm(confirmMsg)) return;
+    if (!await confirm(confirmMsg)) return;
     setBusy(true);
     setActionMsg('');
     try {
@@ -267,7 +267,7 @@ export default function UserDetail() {
   }
 
   async function handleDeleteWorkout(workout) {
-    if (!window.confirm(`Apagar o treino de ${workout.workout_date} e todas as séries dele? Não dá para desfazer.`)) return;
+    if (!await confirm(`Apagar o treino de ${workout.workout_date} e todas as séries dele? Não dá para desfazer.`)) return;
     setActionMsg('');
     try {
       await deleteWorkout(workout, adminUser?.id, id);
@@ -290,7 +290,7 @@ export default function UserDetail() {
   // Devolve true quando gravou (a aba fecha o resumo da importação).
   async function handleImportPlan(plan, activate) {
     if (activate && activePlan
-      && !window.confirm(`Ativar “${plan.name}” vai substituir o plano ativo atual (“${activePlan.name}”). Continuar?`)) return false;
+      && !await confirm(`Ativar “${plan.name}” vai substituir o plano ativo atual (“${activePlan.name}”). Continuar?`)) return false;
     setActionMsg('');
     try {
       await importPlanForUser(id, plan, { activate, adminId: adminUser?.id });

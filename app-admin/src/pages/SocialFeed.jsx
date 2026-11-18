@@ -7,6 +7,7 @@ import {
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { useConfirm } from '../context/confirmContext';
 
 const PERIODS = [7, 30, 90];
 
@@ -65,6 +66,7 @@ function InviteCard() {
 }
 
 export default function SocialFeed() {
+  const ask = useConfirm();
   const [stats, setStats] = useState(null);
   const [statsError, setStatsError] = useState('');
   const [kind, setKind] = useState('');
@@ -105,14 +107,14 @@ export default function SocialFeed() {
     }
   }
 
-  function handleDelete(e) {
-    if (!window.confirm(`Remover a publicação "${e.title}" do feed? Ela some para todos os amigos.`)) return;
+  async function handleDelete(e) {
+    if (!await ask(`Remover a publicação "${e.title}" do feed? Ela some para todos os amigos.`)) return;
     run(() => deleteFeedEvent(e.id), 'Publicação removida.');
   }
 
-  function handleBlock(e) {
+  async function handleBlock(e) {
     const block = !e.blocked;
-    if (block && !window.confirm(`Bloquear ${e.email} de publicar no feed? As publicações dessa pessoa deixam de aparecer para os amigos.`)) return;
+    if (block && !await ask(`Bloquear ${e.email} de publicar no feed? As publicações dessa pessoa deixam de aparecer para os amigos.`)) return;
     run(() => setFeedBlock(e.userId, block), block ? 'Usuário bloqueado no feed.' : 'Bloqueio removido.');
   }
 

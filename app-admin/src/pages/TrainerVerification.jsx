@@ -7,8 +7,10 @@ import {
   CONFEF_URL, REJECT_REASONS, STATUS_BADGE, STATUS_LABELS,
   decideRequest, fetchRequests, fetchTrainerCrefs, setTrainerCref, splitCref,
 } from '../lib/trainerVerification';
+import { useConfirm } from '../context/confirmContext';
 
 function RequestRow({ r, onDone }) {
+  const ask = useConfirm();
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState(REJECT_REASONS[0]);
   const [error, setError] = useState('');
@@ -16,7 +18,7 @@ function RequestRow({ r, onDone }) {
   const parts = splitCref(r.cref);
 
   async function decide(approve) {
-    if (approve && !window.confirm(`Liberar o modo Personal para ${r.name} (CREF ${r.cref})?`)) return;
+    if (approve && !await ask(`Liberar o modo Personal para ${r.name} (CREF ${r.cref})?`)) return;
     setBusy(true); setError('');
     try { await decideRequest(r.id, approve, approve ? '' : reason); onDone(); } catch (err) { setError(err.message); } finally { setBusy(false); }
   }

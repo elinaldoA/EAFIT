@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { compareVersions, isVersion, saveSetting, versionShare } from '../lib/appSettings';
 import { fetchClientBreakdown } from '../lib/behavior';
+import { useConfirm } from '../context/confirmContext';
 
 // Configurações do app → Versão mínima. Abaixo dela, o app avisa (faixa com
 // "Atualizar agora") ou bloqueia (tela cheia). Ver app-react/src/components/ForceUpdate.jsx.
 export default function MinVersionCard({ saved, adminId, onSaved }) {
+  const ask = useConfirm();
   const [draft, setDraft] = useState(saved);
   const [rows, setRows] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -22,7 +24,7 @@ export default function MinVersionCard({ saved, adminId, onSaved }) {
   const dirty = v !== saved.version || draft.mode !== saved.mode || draft.message.trim() !== saved.message;
 
   async function save() {
-    if (v && draft.mode === 'block' && !window.confirm(`Bloquear o app para quem está abaixo da ${v} (${share.below} pessoa(s) nos últimos 30 dias) até atualizar?`)) return;
+    if (v && draft.mode === 'block' && !await ask(`Bloquear o app para quem está abaixo da ${v} (${share.below} pessoa(s) nos últimos 30 dias) até atualizar?`)) return;
     setBusy(true);
     setMsg('');
     try {

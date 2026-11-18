@@ -11,6 +11,7 @@ import MarketingTikTokOptions from '../components/MarketingTikTokOptions';
 import MarketingAutopost from '../components/MarketingAutopost';
 import MarketingQueue from '../components/MarketingQueue';
 import { Paged } from '../components/ShowMore';
+import { useConfirm } from '../context/confirmContext';
 
 const NO_STORIES = ['tiktok'];
 const POSTS_PAGE = 30; // posts por vez no histórico
@@ -40,6 +41,7 @@ function toLocalInputValue(date) {
 // (marketing_post_targets) é processada pela Edge Function marketing; aqui só
 // cria o post e acompanha o estado em cada conta.
 export default function MarketingPublish() {
+  const ask = useConfirm();
   const [params, setParams] = useSearchParams();
   const tab = TABS.some(t => t.key === params.get('aba')) ? params.get('aba') : 'agenda';
   const setTab = key => { setMsg(''); setParams(key === 'agenda' ? {} : { aba: key }, { replace: true }); };
@@ -152,7 +154,7 @@ export default function MarketingPublish() {
     const scheduled = when === 'schedule' ? scheduleAt : null;
     const names = chosenAccounts.map(a => `${PLATFORMS[a.platform].label} ${accountLabel(a)}`).join(', ');
     const what = story ? 'story' : 'post';
-    if (!window.confirm(`${scheduled ? `Agendar ${what} para ${new Date(scheduled).toLocaleString('pt-BR')}` : `Publicar ${what} agora`} em: ${names}?`)) return;
+    if (!await ask(`${scheduled ? `Agendar ${what} para ${new Date(scheduled).toLocaleString('pt-BR')}` : `Publicar ${what} agora`} em: ${names}?`)) return;
     setBusy(true);
     setMsg('');
     try {
@@ -192,7 +194,7 @@ export default function MarketingPublish() {
   }
 
   async function handleCancel(post) {
-    if (!window.confirm('Cancelar este post agendado?')) return;
+    if (!await ask('Cancelar este post agendado?')) return;
     try {
       await cancelPost(post.id);
       await loadPosts();
@@ -206,7 +208,7 @@ export default function MarketingPublish() {
     const question = live
       ? `Excluir este post? Ele será apagado em ${live} rede(s), com curtidas e comentários. Não dá para desfazer.`
       : 'Remover este post do painel?';
-    if (!window.confirm(question)) return;
+    if (!await ask(question)) return;
     setDeleting(post.id);
     setMsg('');
     try {
@@ -245,7 +247,7 @@ export default function MarketingPublish() {
     const accountIds = post.targets.map(t => t.account_id).filter(id => byId.get(id) && byId.get(id).status === 'ok' && byId.get(id).platform !== 'tiktok');
     if (!accountIds.length) { setMsg('Erro: nenhuma conta conectada para republicar.'); return; }
     const live = post.targets.filter(t => t.status === 'published').length;
-    if (!window.confirm(`Excluir este post em ${live} rede(s) e publicar de novo com a legenda nova? Curtidas, comentários e visualizações do post atual serão perdidos. Não dá para desfazer.`)) return;
+    if (!await ask(`Excluir este post em ${live} rede(s) e publicar de novo com a legenda nova? Curtidas, comentários e visualizações do post atual serão perdidos. Não dá para desfazer.`)) return;
     setEditBusy(true);
     setMsg('');
     try {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../lib/supabase';
+import { useConfirm } from '../context/confirmContext';
 
 const STATUS = {
   friend: { label: 'amigos', badge: 'badge--ok' },
@@ -11,6 +12,7 @@ const STATUS = {
 // Amizades e pedidos do usuário, com remoção pelo suporte (denúncia, assédio).
 // Sem amizades ou com a consulta indisponível, não mostra nada.
 export default function UserFriendsCard({ userId }) {
+  const ask = useConfirm();
   const [rows, setRows] = useState([]);
   const [msg, setMsg] = useState('');
 
@@ -25,7 +27,7 @@ export default function UserFriendsCard({ userId }) {
   useEffect(() => { if (userId) load(); }, [userId, load]);
 
   async function handleRemove(r) {
-    if (!window.confirm(`Desfazer o vínculo com ${r.uf_email}? Os dois deixam de se ver no ranking e no feed.`)) return;
+    if (!await ask(`Desfazer o vínculo com ${r.uf_email}? Os dois deixam de se ver no ranking e no feed.`)) return;
     setMsg('');
     const { error } = await db.rpc('admin_remove_friendship', { p_id: r.uf_id });
     if (error) { setMsg(`Erro: ${error.message}`); return; }

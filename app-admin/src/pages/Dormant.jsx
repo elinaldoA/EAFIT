@@ -13,12 +13,14 @@ import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import { Paged } from '../components/ShowMore';
 import { capNotice } from '../lib/listLimits';
+import { useConfirm } from '../context/confirmContext';
 
 const fmtDay = d => (d ? new Date(`${d}T12:00:00`).toLocaleDateString('pt-BR') : 'nunca');
 
 // Comunicação → Sumidos: quem parou de treinar e de abrir o app, com envio
 // manual (push + e-mail) e o liga/desliga do envio automático (regra 'dormant').
 export default function Dormant() {
+  const ask = useConfirm();
   const canSend = useAdminAccess().can('notifications');
   const [days, setDays] = useState(7);
   const [people, setPeople] = useState(null);
@@ -62,7 +64,7 @@ export default function Dormant() {
     if (!title.trim() || !body.trim()) { setMsg('Erro: preencha título e mensagem.'); return; }
     if (!selected.size) { setMsg('Erro: selecione ao menos uma pessoa.'); return; }
     const channels = alsoEmail ? `push para ${chosen.push} e e-mail para até ${chosen.email}` : `push para ${chosen.push}`;
-    if (!window.confirm(`Enviar para ${selected.size} pessoa(s) sumida(s)? (${channels})`)) return;
+    if (!await ask(`Enviar para ${selected.size} pessoa(s) sumida(s)? (${channels})`)) return;
     setBusy(true);
     setMsg('');
     try {
@@ -78,7 +80,7 @@ export default function Dormant() {
 
   async function toggleRule() {
     const next = !rule.enabled;
-    if (next && !window.confirm('Ligar o envio automático? Quem tem push ativo e está de 7 a 60 dias sumido passa a receber, no máximo uma vez por semana.')) return;
+    if (next && !await ask('Ligar o envio automático? Quem tem push ativo e está de 7 a 60 dias sumido passa a receber, no máximo uma vez por semana.')) return;
     try {
       await setDormantRuleEnabled(next);
       setRule({ ...rule, enabled: next });

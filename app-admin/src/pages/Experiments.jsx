@@ -7,6 +7,7 @@ import {
   buildExperimentRow, buildResults, createExperiment, deleteExperiment, fetchExperimentResults, fetchExperiments,
   rolloutVariants, updateExperiment,
 } from '../lib/experiments';
+import { useConfirm } from '../context/confirmContext';
 
 const STATUS_BADGE = { rascunho: 'badge', rodando: 'badge badge--ok', encerrado: 'badge badge--warning' };
 const EMPTY = {
@@ -175,6 +176,7 @@ function Results({ experiment }) {
 }
 
 function ExperimentCard({ experiment, onChanged }) {
+  const ask = useConfirm();
   const [open, setOpen] = useState(experiment.status !== 'rascunho');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -182,7 +184,7 @@ function ExperimentCard({ experiment, onChanged }) {
   const rollout = experiment.kind === 'rollout';
 
   async function run(patch, confirmText) {
-    if (confirmText && !window.confirm(confirmText)) return;
+    if (confirmText && !await ask(confirmText)) return;
     setBusy(true);
     setError('');
     try {
@@ -196,7 +198,7 @@ function ExperimentCard({ experiment, onChanged }) {
   }
 
   async function remove() {
-    if (!window.confirm(`Apagar o experimento "${experiment.name}"?`)) return;
+    if (!await ask(`Apagar o experimento "${experiment.name}"?`)) return;
     try { await deleteExperiment(experiment.key); onChanged(); } catch (err) { setError(err.message); }
   }
 

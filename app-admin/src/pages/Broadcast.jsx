@@ -8,6 +8,7 @@ import MessageEditor from '../components/MessageEditor';
 import { useSearchParams } from 'react-router-dom';
 import { READY_SEGMENTS, fetchSegments, resolveSegment } from '../lib/segments';
 import { softFail } from '../lib/softFail';
+import { useConfirm } from '../context/confirmContext';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -22,6 +23,7 @@ function toLocalInputValue(date) {
 }
 
 export default function Broadcast() {
+  const ask = useConfirm();
   const { adminUser } = useAdminAuth();
   const [users, setUsers] = useState([]);
   const [title, setTitle] = useState('');
@@ -113,7 +115,7 @@ export default function Broadcast() {
       return;
     }
 
-    if (!window.confirm(
+    if (!await ask(
       isScheduled
         ? `Agendar notificação para ${formatDate(scheduledDate)}, ${scope === 'all' ? 'TODOS os usuários' : `${selectedIds.length} usuário(s) ${scope === 'segment' ? 'do segmento' : 'selecionado(s)'}`}?`
         : (scope === 'all' ? 'Enviar notificação para TODOS os usuários?' : `Enviar notificação para ${selectedIds.length} usuário(s) selecionado(s)?`)
@@ -173,7 +175,7 @@ export default function Broadcast() {
 
   async function deleteTemplate() {
     const t = (templates || []).find(x => x.id === templateId);
-    if (!t || !window.confirm(`Apagar o modelo "${t.name}"?`)) return;
+    if (!t || !await ask(`Apagar o modelo "${t.name}"?`)) return;
     const { error } = await db.from('broadcast_templates').delete().eq('id', t.id);
     if (error) { setMsg(`Erro: ${error.message}`); return; }
     setTemplateId('');
@@ -202,7 +204,7 @@ export default function Broadcast() {
   }
 
   async function cancelScheduled(id) {
-    if (!window.confirm('Cancelar esta notificação agendada?')) return;
+    if (!await ask('Cancelar esta notificação agendada?')) return;
     const { error } = await db.from('scheduled_broadcasts').delete().eq('id', id);
     if (!error) await loadExtras();
   }

@@ -87,3 +87,18 @@ describe('ConfirmProvider', () => {
     spy.mockRestore();
   });
 });
+
+describe('confirm com texto solto', () => {
+  it('aceita só a mensagem e deixa vermelho o que apaga', async () => {
+    setup('Excluir esta nota?');
+    expect(screen.getByText('Excluir esta nota?')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Confirmar' }).className).toContain('btn--danger');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+    await waitFor(() => expect(result).toBe(true));
+  });
+
+  it('mensagem neutra fica com botão normal', () => {
+    setup('Enviar para 3 pessoas?');
+    expect(screen.getByRole('button', { name: 'Confirmar' }).className).toContain('btn--primary');
+  });
+});

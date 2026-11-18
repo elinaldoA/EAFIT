@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ConfirmContext } from '../context/confirmContext';
+import { ConfirmContext, normalizeConfirm } from '../context/confirmContext';
 import { reauthIsFresh, verifyMfaCode } from '../lib/reauth';
 
 // Diálogo de confirmação único do painel, no lugar do window.confirm.
@@ -18,7 +18,7 @@ export default function ConfirmProvider({ children }) {
     resolver.current?.(false);
     resolver.current = resolve;
     setTyped(''); setCode(''); setError(''); setBusy(false);
-    setReq({ ...opts, needsCode: !!opts.reauth && !reauthIsFresh() });
+    setReq({ ...normalizeConfirm(opts), needsCode: !!normalizeConfirm(opts).reauth && !reauthIsFresh() });
   }), []);
 
   const close = useCallback(result => {

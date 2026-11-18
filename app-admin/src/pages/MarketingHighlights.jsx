@@ -6,6 +6,7 @@ import { highlightSeconds } from '../lib/highlightVideo';
 import { PLATFORMS, createPost, fetchAccounts, printUrl, uploadMedia, validatePost } from '../lib/marketing';
 import { canRenderReels, renderHighlight } from '../lib/reelVideo';
 import logoMark from '../assets/logo-mark.png';
+import { useConfirm } from '../context/confirmContext';
 
 // Pré-visualização pequena (a imagem final é 1080×1920); o círculo tracejado mostra o que
 // o Instagram deixa visível na capa do destaque.
@@ -52,6 +53,7 @@ function startAt(daysAhead) {
 }
 
 export default function MarketingHighlights() {
+  const ask = useConfirm();
   const { adminUser } = useAdminAuth();
   const canvases = useRef({});
   const [logo, setLogo] = useState(null);
@@ -148,7 +150,7 @@ export default function MarketingHighlights() {
     const errors = validatePost({ format: 'story', media: [{ type: 'video', url: 'x' }], accounts: chosen, scheduledAt: at });
     if (errors.length) { setMsg(`Erro: ${errors[0]}`); return; }
     const where = chosen.map(a => `${PLATFORMS[a.platform].label}${a.username ? ` @${a.username}` : ''}`).join(' e ');
-    if (!window.confirm(`Agendar o vídeo do destaque “${h.label}” (${video.seconds} s) em ${where} para ${fmtWhen(at)}? Ele sai sozinho nesse horário.`)) return;
+    if (!await ask(`Agendar o vídeo do destaque “${h.label}” (${video.seconds} s) em ${where} para ${fmtWhen(at)}? Ele sai sozinho nesse horário.`)) return;
     setBusy(h.key);
     setMsg('');
     try {

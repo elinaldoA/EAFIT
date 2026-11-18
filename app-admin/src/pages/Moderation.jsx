@@ -8,6 +8,7 @@ import { setFeedBlock } from '../lib/community';
 import {
   REASON_LABELS, STATUS_LABELS, blockUser, fetchModeration, ignoreReport, parseWords, removePost, reopenReport, saveWords,
 } from '../lib/moderation';
+import { useConfirm } from '../context/confirmContext';
 
 const fmtDate = iso => (iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
 
@@ -45,6 +46,7 @@ function WordsCard({ saved, onSaved }) {
 
 // Comunidade → Moderação.
 export default function Moderation() {
+  const ask = useConfirm();
   const [view, setView] = useState('aberta');
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -58,7 +60,7 @@ export default function Moderation() {
   useEffect(() => { setData(null); load(); }, [load]);
 
   async function act(key, fn, confirmText) {
-    if (confirmText && !window.confirm(confirmText)) return;
+    if (confirmText && !await ask(confirmText)) return;
     setBusy(key);
     try { await fn(); load(); } catch (err) { setError(err.message); } finally { setBusy(''); }
   }

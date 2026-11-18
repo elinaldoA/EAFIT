@@ -10,6 +10,7 @@ import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
 import PromoMaterialsAdmin from '../components/PromoMaterialsAdmin';
 import PersonStat from '../components/PersonStat';
+import { useConfirm } from '../context/confirmContext';
 
 const PERIODS = [
   { days: 7, label: '7 dias' },
@@ -25,6 +26,7 @@ const FILTERS = [{ key: '', label: 'Todos' }, ...KINDS.map(k => ({ key: k.key, l
 // Pessoas → Embaixadores e influenciadores: o link de cada um e as contas que
 // chegaram por ele. Os dois tipos têm o mesmo programa; só muda o nome.
 export default function Ambassadors() {
+  const ask = useConfirm();
   const [days, setDays] = useState(30);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,7 @@ export default function Ambassadors() {
   async function handleSave(a, changes) {
     const next = { ...a, ...changes };
     if (changes.code && changes.code !== a.code
-      && !window.confirm(`Trocar o código desativa o link antigo (${ambassadorLink(a.code)}). Quem já se cadastrou continua vinculado. Continuar?`)) return;
+      && !await ask(`Trocar o código desativa o link antigo (${ambassadorLink(a.code)}). Quem já se cadastrou continua vinculado. Continuar?`)) return;
     setBusy(true);
     setMsg('');
     try {
@@ -373,6 +375,7 @@ function ReferralList({ ambassadorId }) {
 // Recado para um grupo do programa (só os ativos): chega por push (se a pessoa
 // ativou as notificações) e fica na aba Recados do modo Embaixador/Influenciador.
 function ProgramMessageForm({ counts, loading }) {
+  const ask = useConfirm();
   const [audience, setAudience] = useState(MESSAGE_AUDIENCES[0].key);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -384,7 +387,7 @@ function ProgramMessageForm({ counts, loading }) {
 
   async function handleSend(e) {
     e.preventDefault();
-    if (!window.confirm(`Enviar este recado para ${count} ${who}?`)) return;
+    if (!await ask(`Enviar este recado para ${count} ${who}?`)) return;
     setBusy(true);
     setResult('');
     try {

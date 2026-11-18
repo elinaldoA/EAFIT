@@ -5,12 +5,14 @@ import {
   uploadPromoMaterial, validatePromoFile,
 } from '../lib/promoMaterials';
 import { formatDate } from '../lib/userDetailHelpers';
+import { useConfirm } from '../context/confirmContext';
 
 // Pessoas → Embaixadores e influenciadores → Material de divulgação: o que
 // embaixadores e influenciadores baixam no app (modo do programa → Divulgar),
 // cada material para o público escolhido. O Marketing também envia para cá a
 // partir da Biblioteca de mídia (marcado "Do Marketing").
 export default function PromoMaterialsAdmin() {
+  const ask = useConfirm();
   const { adminUser } = useAdminAuth();
   const [items, setItems] = useState(null);
   const [title, setTitle] = useState('');
@@ -58,7 +60,7 @@ export default function PromoMaterialsAdmin() {
   }
 
   async function handleRemove(item) {
-    if (!window.confirm(`Remover "${item.title}"? Ele some do app de quem via o material.`)) return;
+    if (!await ask(`Remover "${item.title}"? Ele some do app de quem via o material.`)) return;
     setBusy(true);
     setMsg('');
     try {

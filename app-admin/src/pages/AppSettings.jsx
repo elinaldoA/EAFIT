@@ -241,6 +241,7 @@ function BetaUsers({ module }) {
 }
 
 function ModulesCard({ saved, adminId, onSaved }) {
+  const confirm = useConfirm();
   const [busyKey, setBusyKey] = useState('');
   const [msg, setMsg] = useState('');
   const [stats, setStats] = useState(null);
@@ -293,7 +294,7 @@ function ModulesCard({ saved, adminId, onSaved }) {
               ) : (
                 <button
                   className="btn btn--primary btn--small" disabled={busyKey === m.key}
-                  onClick={() => { if (window.confirm(`Ligar "${m.label}" para todos? Qualquer pessoa poderá escolher o módulo no cadastro e no Perfil.`)) toggle(m.key, true); }}
+                  onClick={async () => { if (await confirm(`Ligar "${m.label}" para todos? Qualquer pessoa poderá escolher o módulo no cadastro e no Perfil.`)) toggle(m.key, true); }}
                 >Ligar para todos</button>
               )}
             </div>

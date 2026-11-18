@@ -9,6 +9,7 @@ import {
 } from '../lib/partnerCampaigns';
 import { ACCEPT, formatSize, promoMaterialUrl, removePromoMaterial, validatePromoFile } from '../lib/promoMaterials';
 import { MESSAGE_BODY_MAX, MESSAGE_TITLE_MAX } from '../lib/ambassadors';
+import { useConfirm } from '../context/confirmContext';
 
 const fmtDay = iso => (iso ? iso.split('-').reverse().join('/') : '');
 const period = c => (c.ends_on ? `${fmtDay(c.starts_on)} a ${fmtDay(c.ends_on)}` : `Desde ${fmtDay(c.starts_on)}`);
@@ -133,6 +134,7 @@ function CampaignForm({ initial, onSaved, onCancel }) {
 }
 
 function Materials({ campaign }) {
+  const ask = useConfirm();
   const { adminUser } = useAdminAuth();
   const [items, setItems] = useState(null);
   const [title, setTitle] = useState('');
@@ -167,7 +169,7 @@ function Materials({ campaign }) {
   }
 
   async function remove(item) {
-    if (!window.confirm(`Remover "${item.title}" da campanha?`)) return;
+    if (!await ask(`Remover "${item.title}" da campanha?`)) return;
     try {
       await removePromoMaterial({ item, adminId: adminUser?.id });
       load();
@@ -222,6 +224,7 @@ function Materials({ campaign }) {
 }
 
 function Notify({ campaign, onDone }) {
+  const ask = useConfirm();
   const [notice, setNotice] = useState(() => noticeFor(campaign));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -229,7 +232,7 @@ function Notify({ campaign, onDone }) {
   async function send(e) {
     e.preventDefault();
     const who = campaign.audiences.map(audienceLabel).join(', ').toLowerCase();
-    if (!window.confirm(`Enviar o aviso para ${who}? Eles recebem notificação no celular.`)) return;
+    if (!await ask(`Enviar o aviso para ${who}? Eles recebem notificação no celular.`)) return;
     setBusy(true);
     setMsg('');
     try {
@@ -313,6 +316,7 @@ function Results({ campaign }) {
 }
 
 export default function PartnerCampaigns() {
+  const ask = useConfirm();
   const { adminUser } = useAdminAuth();
   const [list, setList] = useState(null);
   const [error, setError] = useState('');
@@ -336,7 +340,7 @@ export default function PartnerCampaigns() {
 
   async function togglePublish(c) {
     const publish = !c.published_at;
-    if (!publish && !window.confirm(`Tirar "${c.title}" do ar? Ela some do app dos parceiros; os links continuam funcionando.`)) return;
+    if (!publish && !await ask(`Tirar "${c.title}" do ar? Ela some do app dos parceiros; os links continuam funcionando.`)) return;
     try {
       await saveCampaign(draftFrom(c), adminUser?.id, publish);
       setMsg(publish ? 'Campanha publicada.' : 'Campanha voltou a rascunho.');
@@ -348,7 +352,7 @@ export default function PartnerCampaigns() {
   }
 
   async function remove(c) {
-    if (!window.confirm(`Excluir "${c.title}" e o material dela? Os números somem do painel e do app dos parceiros.`)) return;
+    if (!await ask(`Excluir "${c.title}" e o material dela? Os números somem do painel e do app dos parceiros.`)) return;
     try {
       await deleteCampaign(c, adminUser?.id);
       setMsg('Campanha excluída.');

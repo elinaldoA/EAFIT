@@ -4,8 +4,10 @@ import { fetchSegments, deleteSegment, countSegment, describeFilters } from '../
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { useConfirm } from '../context/confirmContext';
 
 export default function Segments() {
+  const ask = useConfirm();
   const [segments, setSegments] = useState([]);
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function Segments() {
   useEffect(() => { load(); }, [load]);
 
   async function handleDelete(segment) {
-    if (!window.confirm(`Excluir o segmento "${segment.name}"?`)) return;
+    if (!await ask(`Excluir o segmento "${segment.name}"?`)) return;
     try {
       await deleteSegment(segment.id);
       await load();

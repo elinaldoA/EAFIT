@@ -4,11 +4,13 @@ import { PLATFORMS, accountLabel, disconnectAccount, fetchAccounts, startConnect
 import { formatDate } from '../lib/userDetailHelpers';
 import Loading from '../components/Loading';
 import EmptyState from '../components/EmptyState';
+import { useConfirm } from '../context/confirmContext';
 
 // Marketing → Contas conectadas: liga as redes da EAFIT por OAuth (Meta e
 // TikTok). A volta do login cai aqui com ?conectado=… ou ?erro=….
 const PROVIDER = { facebook: 'meta', instagram: 'meta', tiktok: 'tiktok' };
 export default function MarketingAccounts() {
+  const ask = useConfirm();
   const [params, setParams] = useSearchParams();
   const [accounts, setAccounts] = useState(null);
   const [busy, setBusy] = useState('');
@@ -46,7 +48,7 @@ export default function MarketingAccounts() {
 
   async function disconnect(a) {
     const extra = a.platform === 'facebook' && accounts.some(x => x.parent_id === a.id) ? ' O Instagram ligado a ela sai junto.' : '';
-    if (!window.confirm(`Desconectar ${PLATFORMS[a.platform].label} ${accountLabel(a)}? Posts agendados para ela deixam de sair.${extra}`)) return;
+    if (!await ask(`Desconectar ${PLATFORMS[a.platform].label} ${accountLabel(a)}? Posts agendados para ela deixam de sair.${extra}`)) return;
     try {
       await disconnectAccount(a.id);
       setMsg(`Desconectado: ${accountLabel(a)}.`);
