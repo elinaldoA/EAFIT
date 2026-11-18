@@ -572,39 +572,8 @@
   justify-content: center;
   gap: var(--sp-6);
 }
-.run-countdown__n { font-size: 9rem; font-weight: 800; line-height: 1; color: var(--primary); animation: run-count-pop .9s ease-out; }
-@keyframes run-count-pop { 0% { transform: scale(1.6); opacity: 0; } 25% { transform: scale(1); opacity: 1; } 100% { transform: scale(.92); opacity: .85; } }
-
-.run-countdown__runner { width: 12rem; height: 12rem; overflow: visible; --rc-t: .6s; stroke-linejoin: round; }
-.run-countdown__ground { stroke: var(--text-muted); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 14 12; opacity: .35; animation: rc-ground var(--rc-t) linear infinite; }
-.run-countdown__shadow { fill: var(--text); opacity: .12; }
-.run-countdown__body { animation: rc-bob calc(var(--rc-t) / 2) ease-in-out infinite; }
-.rc-skin { fill: #c97b4d; stroke: #c97b4d; stroke-width: 3; }
-.rc-hair { fill: #1d3557; }
-.rc-shirt { fill: url(#rc-shirt-g); stroke: #ff6a22; stroke-width: 3; }
-.rc-shorts { fill: #1f3b5c; stroke: #1f3b5c; stroke-width: 3; }
-.rc-shoe { fill: #2f6f86; stroke: #2f6f86; stroke-width: 2; }
-.rc-sole { stroke: #8fc1cc; stroke-width: 3; stroke-linecap: round; }
-.rc-far { filter: brightness(.78); }
-
-.rc-leg, .rc-arm, .rc-shin, .rc-fore { transform-box: view-box; animation-duration: var(--rc-t); animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
-.rc-leg { transform-origin: 96px 112px; animation-name: rc-thigh; }
-.rc-shin { transform-origin: 97px 146px; animation-name: rc-knee; }
-.rc-arm { transform-origin: 101px 60px; animation-name: rc-upper; }
-.rc-fore { transform-origin: 101px 88px; animation-name: rc-elbow; }
-.rc-phase-b, .rc-phase-b .rc-shin, .rc-phase-b .rc-fore { animation-delay: calc(var(--rc-t) / -2); }
-.rc-phase-a .rc-shin, .rc-phase-a .rc-fore { animation-delay: 0s; }
-
-/* positivo = para trás (a pessoa corre para a direita) */
-@keyframes rc-thigh { 0%, 100% { transform: rotate(-45deg); } 50% { transform: rotate(35deg); } }
-@keyframes rc-knee  { 0%, 100% { transform: rotate(8deg); } 50% { transform: rotate(20deg); } 75% { transform: rotate(95deg); } }
-@keyframes rc-upper { 0%, 100% { transform: rotate(-40deg); } 50% { transform: rotate(40deg); } }
-@keyframes rc-elbow { 0%, 100% { transform: rotate(-95deg); } 50% { transform: rotate(-65deg); } }
-@keyframes rc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-@keyframes rc-ground { to { stroke-dashoffset: 26; } }
-@media (prefers-reduced-motion: reduce) {
-  .run-countdown__n, .run-countdown__body, .run-countdown__ground, .rc-leg, .rc-arm, .rc-shin, .rc-fore { animation: none; }
-}
+.run-countdown__n { font-size: 9rem; font-weight: 800; line-height: 1; color: var(--primary); }
+.run-countdown__actions { display: flex; gap: var(--sp-3); }
 
 /* Ranking de km da semana entre amigos */
 .run-ranking .challenge__row { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; padding: var(--sp-2) 8px; }
