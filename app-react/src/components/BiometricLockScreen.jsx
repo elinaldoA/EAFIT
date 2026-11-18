@@ -60,7 +60,7 @@ export default function BiometricLockScreen({ user, onUnlock }) {
 
   return (
     <div className="boot bio-lock" role="dialog" aria-modal="true" aria-label={t('App bloqueado')}>
-      <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
+      <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />
       <div className="boot__name"><Wordmark /></div>
       <p className="bio-lock__text">{t('App bloqueado. Use a biometria do aparelho para continuar.')}</p>
 

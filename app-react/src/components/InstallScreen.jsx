@@ -34,7 +34,7 @@ export default function InstallScreen() {
     setBusy(false);
   }
 
-  const icon = <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />;
+  const icon = <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />;
   // Quem veio do app do endereço antigo fica com dois ícones iguais: o site
   // não consegue remover o antigo, só avisar.
   const removeOld = fromOldAddress && (

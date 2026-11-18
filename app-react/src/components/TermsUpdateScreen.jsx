@@ -34,7 +34,7 @@ export default function TermsUpdateScreen() {
 
   return (
     <div className="boot maintenance" role="dialog" aria-modal="true" aria-labelledby="terms-update-title">
-      <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
+      <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />
       <h1 className="maintenance__title" id="terms-update-title">{t('Atualizamos nossos termos')}</h1>
       <p className="maintenance__text">
         {t('Para continuar usando o EAFIT, leia e aceite a versão atual dos')}{' '}

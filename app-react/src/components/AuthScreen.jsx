@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { useAuth } from '../context/useAuth';
-import logoMark from '../assets/app-icon.png';
+import logoMark from '../assets/app-icon.webp';
 import PasswordInput from './PasswordInput';
 import { MIN_PASSWORD } from '../lib/passwordRules';
 import LanguageSwitch from './LanguageSwitch';

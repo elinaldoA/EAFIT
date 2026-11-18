@@ -39,7 +39,7 @@
   height: 96px;
   margin-bottom: var(--sp-2);
   border-radius: 26px;
-  /* Ícone de fundo contínuo (assets/app-icon.png) + cantos arredondados: o
+  /* Ícone de fundo contínuo (assets/app-icon.webp) + cantos arredondados: o
      logo-mark.png antigo trazia um quadrado preto em volta que aparecia com
      o brilho. */
   box-shadow: 0 0 0 1px var(--border), 0 12px 40px var(--primary-glow);

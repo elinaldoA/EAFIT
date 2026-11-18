@@ -29,7 +29,7 @@ export default function InactivitySurveyScreen({ token, reason: initialReason, o
   if (state === 'done') {
     return (
       <div className="boot maintenance" role="status">
-        <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
+        <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />
         <div className="boot__name"><Wordmark /></div>
         <h1 className="maintenance__title">{t('Obrigado por contar pra gente')}</h1>
         <p className="maintenance__text">{t('Sua resposta ajuda a melhorar o app. Seu plano e seu histórico continuam guardados, pra quando você quiser voltar.')}</p>
@@ -40,7 +40,7 @@ export default function InactivitySurveyScreen({ token, reason: initialReason, o
 
   return (
     <div className="boot maintenance survey">
-      <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
+      <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />
       <div className="boot__name"><Wordmark /></div>
       <h1 className="maintenance__title">{t('O que fez você parar?')}</h1>
       <p className="maintenance__text" role="status">

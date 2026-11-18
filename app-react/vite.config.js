@@ -39,7 +39,7 @@ export default defineConfig({
         rollupFormat: 'iife',
         // jpg: só a anatomia.jpg (≈70KB), usada no avatar corporal do resumo do
         // treino e da Evolução — sem ela no precache a figura falha offline.
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,jpg}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,jpg}', 'icon-192.webp'],
         // og-image.png só é lida por crawlers de prévia de link (WhatsApp,
         // redes sociais), nunca pelo app — não precisa ir pro precache.
         // ocr/ (Tesseract, ≈5 MB) e o PDF.js (≈480 KB) só são baixados por

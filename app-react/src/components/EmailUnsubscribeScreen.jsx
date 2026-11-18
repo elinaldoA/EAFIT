@@ -17,7 +17,7 @@ export default function EmailUnsubscribeScreen({ token, onClose }) {
 
   return (
     <div className="boot maintenance" role="status">
-      <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
+      <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />
       <div className="boot__name"><Wordmark /></div>
       {state === 'working' && <p className="maintenance__text">{t('Cancelando o envio de e-mails…')}</p>}
       {state === 'done' && (

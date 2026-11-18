@@ -6,7 +6,7 @@ import Wordmark from './Wordmark';
 export default function MovedScreen({ url }) {
   return (
     <div className="boot maintenance" role="status">
-      <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
+      <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />
       <div className="boot__name"><Wordmark /></div>
       <h1 className="maintenance__title">{t('O EAFIT mudou de endereço')}</h1>
       <p className="maintenance__text">

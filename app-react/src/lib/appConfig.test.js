@@ -129,4 +129,19 @@ describe('experimentos', () => {
     expect(cfg.flags.desafios).toBe(false);
     expect(cfg.experiments).toEqual({});
   });
+
+  it('sem sessão não chama my_experiments (evita 401 no console)', async () => {
+    db.from = () => ({ select: async () => ({ data: [], error: null }) });
+    db.rpc = vi.fn();
+    db.auth = { getSession: async () => ({ data: { session: null } }) };
+    let cfg = await fetchAppConfig();
+    expect(db.rpc).not.toHaveBeenCalled();
+    expect(cfg.experiments).toEqual({});
+
+    db.rpc = vi.fn(async () => ({ data: [], error: null }));
+    db.auth = { getSession: async () => ({ data: { session: { user: {} } } }) };
+    await fetchAppConfig();
+    expect(db.rpc).toHaveBeenCalledWith('my_experiments');
+    delete db.auth;
+  });
 });

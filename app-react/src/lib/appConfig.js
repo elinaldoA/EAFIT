@@ -122,12 +122,25 @@ export function isFlagOn(flags, name) {
   return flags?.[name] !== false;
 }
 
+// A sessão vem do armazenamento local (sem rede). Se não der pra saber, tenta.
+async function hasSession() {
+  try {
+    if (!db.auth?.getSession) return true;
+    const { data } = await db.auth.getSession();
+    return !!data?.session;
+  } catch { return true; }
+}
+
 export async function fetchAppConfig() {
   const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), FETCH_TIMEOUT_MS));
   const [settings, experiments] = await Promise.all([
     Promise.race([db.from('app_settings').select('key, value'), timeout]),
     // Sem login (ou função ainda não criada) = sem experimentos; nunca derruba a configuração.
-    Promise.race([Promise.resolve(db.rpc('my_experiments')), timeout]).catch(() => null),
+    // Sem sessão nem chama: a função exige login e responderia 401 no console.
+    // (Ao entrar, o AppConfigContext relê a configuração.)
+    hasSession().then(logged => (logged
+      ? Promise.race([Promise.resolve(db.rpc('my_experiments')), timeout])
+      : null)).catch(() => null),
   ]);
   if (settings.error) throw settings.error;
   return normalizeConfig(settings.data, todayInAppZone(), experiments && !experiments.error ? experiments.data : []);

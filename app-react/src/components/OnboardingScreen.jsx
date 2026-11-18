@@ -6,7 +6,7 @@ import { seedGeneratedPlan } from '../lib/workoutPlans';
 import { upsertWeightLog } from '../lib/weightLog';
 import { enqueue } from '../lib/syncQueue';
 import { todayDate } from '../data/treinoData';
-import logoMark from '../assets/app-icon.png';
+import logoMark from '../assets/app-icon.webp';
 import { trackEvent } from '../lib/tracking';
 import { heightToCm, bodyErrors, cleanName, NAME_MAX } from '../lib/profileValidation';
 import { firstNameFromAccount } from '../lib/namePrompt';

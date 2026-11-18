@@ -8,7 +8,7 @@ import Wordmark from './Wordmark';
 export default function BootSplash() {
   return (
     <div className="boot" role="status" aria-label={t('Carregando o EAFIT')}>
-      <img src={`${import.meta.env.BASE_URL}icon-maskable-192.png`} alt="" />
+      <img src={`${import.meta.env.BASE_URL}icon-192.webp`} alt="" />
       <div className="boot__name"><Wordmark /></div>
       <DumbbellSpinner size="lg" />
     </div>
