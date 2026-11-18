@@ -4,6 +4,7 @@ import { useAdminAccess } from '../../context/useAdminAccess';
 import { pageIndex, pushRecent, readRecent, searchPages } from '../../lib/quickSearch';
 import { fetchUsersPage } from '../../lib/users';
 import { tabForPath } from './nav';
+import { useFavorites } from '../../lib/favorites';
 import NavIcon from './NavIcon';
 
 const USER_MIN_CHARS = 3;
@@ -27,6 +28,7 @@ export default function QuickSearch() {
   const inputRef = useRef(null);
   const listRef = useRef(null);
 
+  const favorites = useFavorites();
   const pages = useMemo(() => pageIndex(hiddenScreens), [hiddenScreens]);
 
   // Lembra as telas visitadas para sugerir quando a busca abre vazia.
@@ -69,8 +71,11 @@ export default function QuickSearch() {
   const results = useMemo(() => {
     if (!q) {
       const byTo = new Map(pages.map(p => [p.to, p]));
-      return readRecent().map(to => byTo.get(to)).filter(Boolean)
-        .map(p => ({ kind: 'page', key: p.to, to: p.to, title: p.label, meta: p.section, icon: p.icon, group: 'Abertas recentemente' }));
+      const item = (p, group) => ({ kind: 'page', key: `${group}:${p.to}`, to: p.to, title: p.label, meta: p.section, icon: p.icon, group });
+      return [
+        ...favorites.map(to => byTo.get(to)).filter(Boolean).map(p => item(p, 'Fixadas')),
+        ...readRecent().map(to => byTo.get(to)).filter(Boolean).map(p => item(p, 'Abertas recentemente')),
+      ];
     }
     const pageHits = searchPages(q, pages).map(p => ({ kind: 'page', key: p.to, to: p.to, title: p.label, meta: p.section, icon: p.icon, group: 'Telas' }));
     const userHits = q.length >= USER_MIN_CHARS && users.q === q
@@ -81,7 +86,7 @@ export default function QuickSearch() {
         }))
       : [];
     return [...pageHits, ...userHits];
-  }, [q, pages, users]);
+  }, [q, pages, users, favorites]);
 
   useEffect(() => { setActive(0); }, [q]);
 

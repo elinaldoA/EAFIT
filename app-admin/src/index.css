@@ -1613,3 +1613,12 @@ button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
 /* Aviso de sessão expirando (IdleSessionGuard) */
 .idle-warning { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .55); }
 .idle-warning__box { max-width: 420px; width: 100%; padding: 20px; border-radius: 12px; background: var(--card, #fff); color: inherit; box-shadow: 0 10px 40px rgba(0, 0, 0, .4); }
+
+/* ---------- telas fixadas e dica da aba ---------- */
+.section-head { margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.section-head .section-title-main { margin: 0; }
+.pin-btn { background: none; border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 12.5px; color: var(--text-muted); cursor: pointer; }
+.pin-btn:hover:not(:disabled) { color: var(--text); border-color: var(--text-dim); }
+.pin-btn--on { color: var(--primary); border-color: var(--primary); }
+.pin-btn:disabled { opacity: .5; cursor: not-allowed; }
+.tabs__hint { margin: -10px 0 16px; font-size: 12.5px; color: var(--text-muted); }

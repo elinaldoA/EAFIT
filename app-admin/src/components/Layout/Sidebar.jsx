@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import logoMark from '../../assets/logo-mark.png';
-import { NAV_GROUPS, sectionForPath } from './nav';
+import { NAV_GROUPS, sectionForPath, tabByRoute } from './nav';
+import { useFavorites } from '../../lib/favorites';
 import NavIcon from './NavIcon';
 import { useAttention } from '../../lib/attention';
 import { useAdminAccess } from '../../context/useAdminAccess';
-import { visibleNav } from '../../lib/adminAccess';
+import { isHidden, visibleNav } from '../../lib/adminAccess';
 
 // `collapsed` só vale no desktop (só ícones); no celular a gaveta mostra tudo.
 export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed }) {
@@ -13,6 +14,9 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed })
   const attention = useAttention();
   const { hiddenScreens } = useAdminAccess();
   const groups = visibleNav(NAV_GROUPS, hiddenScreens);
+  const pinned = useFavorites()
+    .filter(to => !isHidden(hiddenScreens, to))
+    .map(tabByRoute).filter(Boolean);
 
   return (
     <>
@@ -35,6 +39,26 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapsed })
           </button>
         </div>
         <nav className="sidebar__nav" aria-label="Principal">
+          {pinned.length > 0 && (
+            <div className="sidebar__group">
+              <div className="sidebar__group-label">Fixadas</div>
+              {pinned.map(({ tab, section }) => {
+                const active = pathname === tab.to;
+                return (
+                  <Link
+                    key={tab.to} to={tab.to}
+                    aria-current={active ? 'page' : undefined}
+                    className={`sidebar__link ${active ? 'sidebar__link--active' : ''}`}
+                    title={collapsed ? tab.label : undefined}
+                    onClick={onClose}
+                  >
+                    <span className="sidebar__link-icon"><NavIcon name={section.icon} /></span>
+                    <span className="sidebar__label">{tab.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
           {groups.map(group => (
             <div className="sidebar__group" key={group.label}>
               <div className="sidebar__group-label">{group.label}</div>

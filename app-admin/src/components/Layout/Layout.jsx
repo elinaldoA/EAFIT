@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { sectionForPath, tabForPath } from './nav';
+import { hintForPath, sectionForPath, tabForPath } from './nav';
+import { FAVORITES_MAX, toggleFavorite, useFavorites } from '../../lib/favorites';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import AdminAccessProvider from '../../context/AdminAccessProvider';
@@ -35,6 +36,9 @@ function Shell() {
   // Tela oculta para este admin (Sistema → Administradores): só interface.
   const blocked = isHidden(hiddenScreens, pathname);
   const tabsRef = useRef(null);
+  const favorites = useFavorites();
+  const pinned = favorites.includes(pathname);
+  const hint = hintForPath(pathname);
 
   // Menu lateral (celular): Esc fecha, a página de trás não rola, e se a
   // janela crescer até o layout de desktop ele fecha sozinho.
@@ -72,19 +76,32 @@ function Shell() {
         <main className="shell__content">
           {showTabs ? (
             <>
-              <h1 className="section-title-main">{section.label}</h1>
+              <div className="section-head">
+                <h1 className="section-title-main">{section.label}</h1>
+                <button
+                  type="button" className={`pin-btn ${pinned ? 'pin-btn--on' : ''}`}
+                  aria-pressed={pinned}
+                  title={pinned ? 'Tirar das fixadas' : (favorites.length >= FAVORITES_MAX ? `Limite de ${FAVORITES_MAX} telas fixadas` : 'Fixar esta tela no menu')}
+                  disabled={!pinned && favorites.length >= FAVORITES_MAX}
+                  onClick={() => toggleFavorite(pathname)}
+                >
+                  {pinned ? '★ Fixada' : '☆ Fixar'}
+                </button>
+              </div>
               <nav className="tabs" aria-label={section.label} ref={tabsRef}>
                 {tabs.map(t => (
                   <NavLink
                     key={t.to}
                     to={t.to}
                     end
+                    title={hintForPath(t.to) || undefined}
                     className={({ isActive }) => `tabs__btn ${isActive ? 'tabs__btn--active' : ''}`}
                   >
                     {t.label}
                   </NavLink>
                 ))}
               </nav>
+              {hint && <p className="tabs__hint">{hint}</p>}
               <div className="section-body">{content}</div>
             </>
           ) : content}
