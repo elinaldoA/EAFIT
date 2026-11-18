@@ -137,13 +137,13 @@ export default function OnboardingScreen() {
           <div className="auth-logo__name"><Wordmark /></div>
           <p className="auth-logo__tagline">{usesPlan ? t('Vamos montar seu treino personalizado') : t('Conte um pouco sobre você')}</p>
         </div>
-        <div className="auth-form">
+        <form className="auth-form" onSubmit={e => { e.preventDefault(); handleSubmit(); }} noValidate>
           <SportPicker id="onbSport" value={esporte} onChange={pickSport} modules={sports} />
           <div className="profile-field">
             <label className="profile-field__label" htmlFor={FIELD_IDS.nome}>{t('Como podemos te chamar?')}</label>
             <input
               type="text" id={FIELD_IDS.nome} className="input" placeholder={t('Seu primeiro nome')}
-              autoComplete="given-name" autoCapitalize="words" maxLength={NAME_MAX}
+              autoComplete="given-name" autoCapitalize="words" enterKeyHint="next" maxLength={NAME_MAX}
               value={nome} {...invalidProps(FIELD_IDS.nome, errors.nome)}
               onChange={e => { setNome(e.target.value); clearError('nome'); }}
             />
@@ -161,7 +161,7 @@ export default function OnboardingScreen() {
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbIdade">{t('Idade')}</label>
             <input
-              type="number" id="onbIdade" inputMode="numeric" className="input" placeholder={t('Ex: 28')}
+              type="number" id="onbIdade" inputMode="numeric" enterKeyHint="next" className="input" placeholder={t('Ex: 28')}
               min="14" max="100" value={idade} {...invalidProps(FIELD_IDS.idade, errors.idade)}
               onChange={e => { setIdade(e.target.value); clearError('idade'); }}
             />
@@ -170,7 +170,7 @@ export default function OnboardingScreen() {
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbPeso">{t('Peso (kg)')}</label>
             <input
-              type="number" id="onbPeso" inputMode="decimal" className="input" placeholder={t('Ex: 85')}
+              type="number" id="onbPeso" inputMode="decimal" enterKeyHint="next" className="input" placeholder={t('Ex: 85')}
               min="30" max="300" step="0.1" value={peso} {...invalidProps(FIELD_IDS.peso, errors.peso)}
               onChange={e => { setPeso(e.target.value); clearError('peso'); }}
             />
@@ -179,7 +179,7 @@ export default function OnboardingScreen() {
           <div className="profile-field">
             <label className="profile-field__label" htmlFor="onbAltura">{t('Altura (cm)')}</label>
             <input
-              type="number" id="onbAltura" inputMode="numeric" className="input" placeholder={t('Ex: 178')}
+              type="number" id="onbAltura" inputMode="numeric" enterKeyHint="go" className="input" placeholder={t('Ex: 178')}
               min="100" max="250" value={altura} {...invalidProps(FIELD_IDS.altura, errors.altura)}
               onChange={e => { setAltura(e.target.value); clearError('altura'); }}
               onBlur={e => setAltura(heightToCm(e.target.value))}
@@ -217,13 +217,13 @@ export default function OnboardingScreen() {
               </select>
             </div>
           )}
-          <button className="btn btn--primary btn--full" disabled={busy} onClick={handleSubmit}>
+          <button type="submit" className="btn btn--primary btn--full" disabled={busy}>
             {busy ? (usesPlan ? t('Gerando seu plano…') : t('Salvando…')) : usesPlan ? t('Gerar meu treino') : t('Começar')}
           </button>
           <p className="auth-form__msg auth-form__msg--error" role="alert">
             {Object.values(errors).some(Boolean) ? t('Corrija os campos marcados acima.') : msg}
           </p>
-        </div>
+        </form>
       </div>
     </div>
   );

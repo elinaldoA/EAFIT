@@ -49,6 +49,15 @@ describe('onboarding: qual é a sua vibe?', () => {
     expect(h.track).toHaveBeenCalledWith('onboarding', 'erro_esporte');
   });
 
+  it('o Enter / Ir do teclado envia o formulário (é um <form>)', async () => {
+    localStorage.setItem('eafit_sport_pref', JSON.stringify({ id: 'corrida', at: Date.now() }));
+    render(<OnboardingScreen />);
+    fill();
+    fireEvent.submit(screen.getByLabelText('Altura (cm)').closest('form'));
+    await waitFor(() => expect(h.updateProfile).toHaveBeenCalled());
+    expect(screen.getByLabelText('Altura (cm)').getAttribute('enterkeyhint')).toBe('go');
+  });
+
   it('o esporte do link de divulgação já vem marcado', () => {
     localStorage.setItem('eafit_sport_pref', JSON.stringify({ id: 'corrida', at: Date.now() }));
     render(<OnboardingScreen />);
