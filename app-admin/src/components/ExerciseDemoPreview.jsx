@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { getExerciseMedia } from '../../../app-react/src/data/exerciseMedia.js';
-import { youtubeEmbedUrl } from '../../../app-react/src/data/exerciseYoutube.js';
+import { getExerciseMedia } from '../lib/appCatalog';
+import { youtubeEmbedUrl } from '../lib/appCatalog';
 
 // Os vídeos e quadros do app ficam em /app/ (mesmo domínio do painel).
 const APP_BASE = '/app/';

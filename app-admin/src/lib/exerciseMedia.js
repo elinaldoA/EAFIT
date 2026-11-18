@@ -3,9 +3,9 @@ import { fetchAllRows } from './paged';
 import { fetchAllLibraryRows } from './exerciseLibrary';
 // Demonstração padrão que o app já mostra sem mídia própria (vídeo curto ou 2
 // quadros) — mesma fonte do app, pra não divergir.
-import { EXERCISE_VIDEOS } from '../../../app-react/src/data/exerciseVideos.js';
-import { EXERCISE_YOUTUBE } from '../../../app-react/src/data/exerciseYoutube.js';
-import { EXERCISE_MEDIA, normalizeExerciseName } from '../../../app-react/src/data/exerciseMedia.js';
+import { EXERCISE_VIDEOS } from './appCatalog';
+import { EXERCISE_YOUTUBE } from './appCatalog';
+import { EXERCISE_MEDIA, normalizeExerciseName } from './appCatalog';
 
 // Mídia própria de demonstração de execução (tabela exercise_media + bucket
 // público exercise-media — ver supabase/migrations/20260925040000_exercise_media.sql).

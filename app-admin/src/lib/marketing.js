@@ -1,7 +1,7 @@
 import { drawPhone } from './reelRender';
 import { db } from './supabase';
 // Vídeos de execução que o app já usa, com o crédito exigido pela licença.
-import { EXERCISE_VIDEOS, videoCredit } from '../../../app-react/src/data/exerciseVideos.js';
+import { EXERCISE_VIDEOS, videoCredit } from './appCatalog';
 
 // Marketing: redes da EAFIT conectadas (Facebook, Instagram, TikTok), fila de
 // publicação, biblioteca de mídia e comentários. Tabelas e RPCs em

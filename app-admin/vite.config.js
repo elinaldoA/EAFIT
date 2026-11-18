@@ -5,7 +5,7 @@ export default defineConfig({
   base: '/admin/',
   server: {
     port: 5174,
-    // lib/exerciseMedia.js lê o mapeamento de demonstrações padrão do app-react
+    // lib/appCatalog.js lê o catálogo de exercícios do app-react (único ponto de acoplamento)
     fs: { allow: ['..'] },
   },
   test: {

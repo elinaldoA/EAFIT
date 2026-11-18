@@ -1,9 +1,9 @@
 import { db } from './supabase';
 import { parseWorkoutPlanText, planDaysFromTreinos } from './planTextParser';
-import { EXERCISE_VIDEOS } from '../../../app-react/src/data/exerciseVideos.js';
-import { EXERCISE_YOUTUBE } from '../../../app-react/src/data/exerciseYoutube.js';
-import { EXERCISE_MEDIA, normalizeExerciseName } from '../../../app-react/src/data/exerciseMedia.js';
-import { matchCatalogExercise } from '../../../app-react/src/data/exerciseMatch.js';
+import { EXERCISE_VIDEOS } from './appCatalog';
+import { EXERCISE_YOUTUBE } from './appCatalog';
+import { EXERCISE_MEDIA, normalizeExerciseName } from './appCatalog';
+import { matchCatalogExercise } from './appCatalog';
 import { parsePlanTable, parseDelimited } from './planTable';
 import { PlanFileError, readPdfText, readXlsxRows } from './planFileReader';
 
