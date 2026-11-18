@@ -1,8 +1,8 @@
--- Itens da fila do autopost: pré-lançamento do módulo Corrida ("em breve").
+-- Itens da fila do autopost (entram NA FRENTE da fila pendente, para sair nos próximos disparos): pré-lançamento do módulo Corrida ("em breve").
 -- Gerado por app-admin/scripts/marketing-corrida-teaser.mjs. Aplicar ANTES de liberar o módulo e
 -- pular o que sobrar na fila quando o admin liberar (depois valem os itens de lançamento).
 insert into public.marketing_autopost_queue (position, key, format, caption, media)
-select (select coalesce(max(position), 0) from public.marketing_autopost_queue) + v.n, v.key, v.format, v.caption, v.media::jsonb
+select (select coalesce(min(position), 1) from public.marketing_autopost_queue where posted_at is null and skipped_at is null) - 11 + v.n, v.key, v.format, v.caption, v.media::jsonb
 from (values
   (1, 'embreve-corrida-vem-ai-feed', 'feed', 'Você corre? Vem novidade aí. 🏃
 O EAFIT Run chega em breve: cada corrida com mapa, ritmo e aplausos dos amigos.

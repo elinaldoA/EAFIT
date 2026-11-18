@@ -146,7 +146,7 @@ async function main() {
 -- Gerado por app-admin/scripts/marketing-corrida-teaser.mjs. Aplicar ANTES de liberar o módulo e
 -- pular o que sobrar na fila quando o admin liberar (depois valem os itens de lançamento).
 insert into public.marketing_autopost_queue (position, key, format, caption, media)
-select (select coalesce(max(position), 0) from public.marketing_autopost_queue) + v.n, v.key, v.format, v.caption, v.media::jsonb
+select (select coalesce(min(position), 1) from public.marketing_autopost_queue where posted_at is null and skipped_at is null) - ${items.length + 1} + v.n, v.key, v.format, v.caption, v.media::jsonb
 from (values
 ${values.join(',\n')}
 ) as v(n, key, format, caption, media);
