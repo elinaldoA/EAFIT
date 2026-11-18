@@ -6,8 +6,8 @@ import { parseLocalDate } from '../../lib/utils';
 import { t, locale, decimal } from '../../lib/i18n';
 import { raceFromMetadata } from './race';
 import {
-  EVENT_BANDS, EVENT_RADII, DEFAULT_RADIUS, fetchRunEvents, nearbyEvents, readLocation, writeLocation,
-  formatEventKm, raceFromEvent, eventPlace,
+  EVENT_BANDS, fetchRunEvents, nearbyEvents, readLocation, writeLocation,
+  formatEventKm, raceFromEvent, eventPlace, stateFromPosition,
 } from './events';
 
 const SHOWN = 5;
@@ -60,14 +60,15 @@ function EventRow({ event, picked, busy, onPick }) {
   );
 }
 
-// Aba Gravar: provas aprovadas pelo admin perto da pessoa. "Quero participar"
-// marca a prova em "Sua prova" (contagem regressiva e programa de treino).
+// Aba Gravar: provas aprovadas pelo admin, só as do estado da pessoa. O estado sai da
+// localização uma única vez (a prova mais próxima) e só ele fica guardado; sem permissão,
+// a pessoa escolhe o estado. "Quero participar" marca a prova em "Sua prova"
+// (contagem regressiva e programa de treino).
 export default function RunEvents({ today }) {
   const { user, updateProfile } = useAuth();
   const toast = useToast();
   const [events, setEvents] = useState(null);
   const [loc, setLoc] = useState(readLocation);
-  const [radius, setRadius] = useState(DEFAULT_RADIUS);
   const [band, setBand] = useState('');
   const [all, setAll] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -82,7 +83,18 @@ export default function RunEvents({ today }) {
   }, [today]);
 
   const states = useMemo(() => [...new Set((events || []).map(e => e.state).filter(Boolean))].sort(), [events]);
-  const list = useMemo(() => nearbyEvents(events || [], { loc, radius, band }), [events, loc, radius, band]);
+  // Estado: o guardado; uma posição antiga (versão anterior) vira estado quando as provas chegam;
+  // com provas de um estado só, é esse.
+  const guessed = useMemo(() => (loc?.lat != null && events ? stateFromPosition(events, { lat: loc.lat, lon: loc.lon }) : ''), [loc, events]);
+  const uf = loc?.uf || guessed || (states.length === 1 && !loc ? states[0] : '');
+  const list = useMemo(() => (uf ? nearbyEvents(events || [], { loc: { uf }, band }) : []), [events, uf, band]);
+
+  useEffect(() => {
+    if (loc?.lat == null || !events) return;
+    const next = guessed ? { uf: guessed } : null;
+    writeLocation(next);
+    setLoc(next);
+  }, [loc, events, guessed]);
 
   if (!events?.length) return null; // sem provas cadastradas, sem card
 
@@ -97,7 +109,12 @@ export default function RunEvents({ today }) {
     setLocating(true);
     setLocError('');
     navigator.geolocation.getCurrentPosition(
-      pos => { setLocating(false); choose({ lat: pos.coords.latitude, lon: pos.coords.longitude }); },
+      pos => {
+        setLocating(false);
+        const found = stateFromPosition(events, { lat: pos.coords.latitude, lon: pos.coords.longitude });
+        if (found) choose({ uf: found });
+        else setLocError(t('Não achei provas perto de você. Escolha o estado.'));
+      },
       () => { setLocating(false); setLocError(t('Não consegui sua localização. Escolha o estado.')); },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
     );
@@ -118,43 +135,46 @@ export default function RunEvents({ today }) {
     <div className="dash-card run-events">
       <strong>{t('📍 Próximas corridas perto de você')}</strong>
 
-      {loc?.lat != null ? (
+      {uf ? (
         <div className="run-events__where">
-          <label className="profile-field__hint" htmlFor="eventsRadius">{t('Num raio de')}</label>
-          <select id="eventsRadius" className="input" value={radius} onChange={e => setRadius(Number(e.target.value))}>
-            {EVENT_RADII.map(r => <option key={r} value={r}>{r} km</option>)}
-          </select>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => choose(null)}>{t('Mudar')}</button>
+          <span className="run-events__uf">{t('Corridas em {v1}', { v1: uf })}</span>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { choose(null); setLocError(''); }}>{t('Mudar')}</button>
         </div>
       ) : (
         <div className="run-events__where">
           <button type="button" className="btn btn--outline btn--sm" disabled={locating} onClick={useMyLocation}>
-            {locating ? t('Localizando…') : t('📍 Usar minha localização')}
+            {locating ? t('Localizando…') : t('📍 Ver as corridas do meu estado')}
           </button>
-          <select className="input" aria-label={t('Estado')} value={loc?.uf || ''} onChange={e => choose(e.target.value ? { uf: e.target.value } : null)}>
-            <option value="">{t('ou escolha o estado')}</option>
-            {states.map(uf => <option key={uf} value={uf}>{uf}</option>)}
-          </select>
+          {locError && (
+            <select className="input" aria-label={t('Estado')} value="" onChange={e => e.target.value && choose({ uf: e.target.value })}>
+              <option value="">{t('ou escolha o estado')}</option>
+              {states.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          )}
         </div>
       )}
       {locError && <p className="profile-field__hint text-error" role="alert">{locError}</p>}
 
+      {!uf && !locError && <span className="profile-field__hint">{t('Usamos sua localização só para descobrir o estado; ela não é guardada.')}</span>}
+
+      {uf && (
       <div className="run-chips" role="group" aria-label={t('Distância')}>
         {[{ key: '', label: t('Todas') }, ...EVENT_BANDS].map(b => (
           <button key={b.key} type="button" aria-pressed={band === b.key} className={`run-chip${band === b.key ? ' run-chip--on' : ''}`} onClick={() => { setBand(b.key); setAll(false); }}>{b.label}</button>
         ))}
       </div>
+      )}
 
-      {!list.length ? (
+      {uf && !list.length ? (
         <p className="profile-field__hint">
-          {loc?.lat != null ? t('Nenhuma corrida neste raio. Aumente o raio ou escolha o estado.') : t('Nenhuma prova com esses filtros.')}
+          {band ? t('Nenhuma prova com esses filtros.') : t('Nenhuma corrida cadastrada em {v1} por enquanto.', { v1: uf })}
         </p>
-      ) : (
+      ) : uf && (
         <ul className="run-events__list">
           {visible.map(e => <EventRow key={e.id} event={e} picked={race} busy={busy} onPick={pick} />)}
         </ul>
       )}
-      {list.length > SHOWN && (
+      {uf && list.length > SHOWN && (
         <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAll(a => !a)}>
           {all ? t('Mostrar menos') : t('Ver todas ({v1})', { v1: list.length })}
         </button>

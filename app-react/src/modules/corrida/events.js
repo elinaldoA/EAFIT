@@ -64,6 +64,19 @@ export function writeLocation(loc) {
   } catch { /* sem storage */ }
 }
 
+// Estado da pessoa a partir da posição: o da prova com coordenadas mais próxima (até 300 km).
+// A posição só serve para esse cálculo; quem guarda é só o estado (UF).
+export const MAX_STATE_GUESS_KM = 300;
+export function stateFromPosition(events, pos) {
+  let best = null;
+  for (const e of events) {
+    if (!e.state || e.lat == null || e.lng == null) continue;
+    const km = haversineKm(pos, { lat: e.lat, lon: e.lng });
+    if (!best || km < best.km) best = { km, state: e.state };
+  }
+  return best && best.km <= MAX_STATE_GUESS_KM ? best.state : '';
+}
+
 // Provas ordenadas por data. Com posição, só as que têm coordenadas e estão
 // dentro do raio (cada uma ganha `km`); com UF, as do estado; sem nada, todas.
 export function nearbyEvents(events, { loc, radius = DEFAULT_RADIUS, band = '' } = {}) {

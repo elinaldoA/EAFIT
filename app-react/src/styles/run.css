@@ -691,3 +691,4 @@
 @media (max-width: 360px) {
   .run-event { grid-template-columns: 48px minmax(0, 1fr); gap: var(--sp-2); }
 }
+.run-events__uf { flex: 1 1 auto; font-weight: 700; font-size: var(--fs-base); }

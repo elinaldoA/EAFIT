@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../../lib/supabase', () => ({ db: {} }));
 
-import { toEvent, haversineKm, nearbyEvents, raceFromEvent, formatEventKm, readLocation, writeLocation } from './events';
+import { toEvent, haversineKm, nearbyEvents, raceFromEvent, formatEventKm, readLocation, writeLocation, stateFromPosition } from './events';
 
 const ev = (over = {}) => toEvent({
   id: 'a', name: 'Corrida Teste', event_date: '2026-12-06', city: 'Vila Velha', state: 'ES',
@@ -37,6 +37,14 @@ describe('events', () => {
   it('com estado escolhido: filtra pelo estado, inclusive sem coordenadas', () => {
     const r = nearbyEvents([ev({ id: '1' }), ev({ id: '2', state: 'MG' }), ev({ id: '3', lat: null, lng: null })], { loc: { uf: 'ES' } });
     expect(r.map(e => e.id)).toEqual(['1', '3']);
+  });
+
+  it('estado pela posição: o da prova mais próxima; longe de tudo, vazio', () => {
+    const list = [ev({ id: '1' }), ev({ id: '2', state: 'MG', lat: -19.92, lng: -43.94 }), ev({ id: '3', state: 'RJ', lat: null, lng: null })];
+    expect(stateFromPosition(list, { lat: -20.3, lon: -40.3 })).toBe('ES');
+    expect(stateFromPosition(list, { lat: -19.9, lon: -43.9 })).toBe('MG');
+    expect(stateFromPosition(list, { lat: -3.7, lon: -38.5 })).toBe(''); // Fortaleza: a mais de 300 km
+    expect(stateFromPosition([], { lat: 0, lon: 0 })).toBe('');
   });
 
   it('filtro de distância usa faixas (6 km conta como 5K)', () => {
