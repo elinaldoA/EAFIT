@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useConfirm } from '../context/confirmContext';
 import { AREA_LABELS, ROLE_AREAS, ROLE_LABELS, SCREENS, saveAccess, setRole } from '../lib/adminAccess';
 
 // Sistema → Administradores → Permissões de uma pessoa (só superadmin edita).
@@ -6,6 +7,7 @@ export default function AdminAccessEditor({ admin, adminId, canEdit, onSaved }) 
   const [role, setRoleDraft] = useState(admin.role);
   const [extra, setExtra] = useState(admin.extraAreas);
   const [hidden, setHidden] = useState(admin.hiddenScreens);
+  const confirm = useConfirm();
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const fromRole = ROLE_AREAS[role] || [];
@@ -16,6 +18,11 @@ export default function AdminAccessEditor({ admin, adminId, canEdit, onSaved }) 
   }
 
   async function save() {
+    if (!await confirm({
+      title: 'Salvar permissões',
+      message: `Mudar o acesso de ${admin.email} ao painel. Vale na próxima vez que a pessoa abrir ou recarregar o painel.`,
+      confirmLabel: 'Salvar permissões', reauth: true,
+    })) return;
     setBusy(true); setMsg('');
     try {
       if (role !== admin.role) await setRole(admin.id, role, adminId);

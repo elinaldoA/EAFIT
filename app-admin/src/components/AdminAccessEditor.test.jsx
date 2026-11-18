@@ -34,6 +34,7 @@ describe('adminAccess', () => {
 describe('AdminAccessEditor', () => {
   it('superadmin troca o papel, dá área extra e oculta tela', async () => {
     const onSaved = vi.fn();
+    vi.spyOn(window, 'confirm').mockReturnValue(true); // sem provider, a confirmação cai no confirm do navegador
     render(<AdminAccessEditor admin={ADMIN} adminId="adm1" canEdit onSaved={onSaved} />);
     const users = screen.getByLabelText(/Pode alterar: Usuários/);
     expect(users.checked).toBe(true);
