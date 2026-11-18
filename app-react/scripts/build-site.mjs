@@ -13,6 +13,7 @@
 // e as demonstrações de src/data/exerciseMedia.js, exerciseVideos.js e exerciseYoutube.js.
 // Cabeçalho, rodapé e <head> comuns são copiados da home (blocos site-head,
 // site-header e site-footer de public/landing/index.html).
+import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -355,7 +356,19 @@ export function stampHtml(html, versions) {
     : acc), html);
 }
 
+// Minifica o site.css de dist (106 kB -> 82 kB) com o lightningcss que o Vite
+// já traz. Sem ele (ou se falhar) o arquivo segue como está.
+export function minifyCss(file) {
+  try {
+    const { transform } = createRequire(import.meta.url)('lightningcss');
+    const code = fs.readFileSync(file);
+    fs.writeFileSync(file, transform({ filename: file, code, minify: true }).code);
+  } catch { /* segue com o CSS original */ }
+}
+
 export function stamp(distLanding) {
+  const cssFile = path.join(distLanding, 'assets/site.css');
+  if (fs.existsSync(cssFile)) minifyCss(cssFile);
   const versions = {};
   for (const url of STAMPED) {
     const file = path.join(distLanding, url);

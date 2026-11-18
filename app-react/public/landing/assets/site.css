@@ -405,7 +405,7 @@ section { padding: clamp(64px, 9vw, 112px) 0; }
 .show-row:nth-child(even) .show-copy { order: 2; }
 .show-tag { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--primary-ink); margin-bottom: 12px; }
 .show-tag i { width: 26px; height: 26px; border-radius: 8px; background: var(--primary-glow); display: grid; place-items: center; font-style: normal; }
-.show-copy h3 { font-size: clamp(24px, 2.8vw, 34px); line-height: 1.12; letter-spacing: -.025em; margin: 0 0 14px; }
+.show-copy h2, .show-copy h3 { font-size: clamp(24px, 2.8vw, 34px); line-height: 1.12; letter-spacing: -.025em; margin: 0 0 14px; }
 .show-copy > p { color: var(--text-muted); margin: 0 0 22px; font-size: 16.5px; }
 .checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .checks li { position: relative; padding-left: 28px; font-weight: 600; }
