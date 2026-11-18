@@ -95,6 +95,7 @@ export const NAV_GROUPS = [
         tabs: [
           { to: '/conteudo', label: 'Modelos' },
           { to: '/biblioteca', label: 'Biblioteca de exercícios' },
+          { to: '/alimentos', label: 'Catálogo de alimentos' },
           { to: '/demonstracoes', label: 'Demonstrações' },
           { to: '/ranking-conteudo', label: 'Ranking e qualidade' },
           { to: '/landing', label: 'Landing page' },
@@ -169,6 +170,7 @@ export const TAB_HINTS = {
   '/marketing-contas': 'Contas das redes conectadas ao painel.',
   '/conteudo': 'Modelos de treino que o app oferece.',
   '/biblioteca': 'Catálogo de exercícios e suas informações.',
+  '/alimentos': 'Alimentos da busca da aba Nutrição, com valores por 100 g.',
   '/demonstracoes': 'Vídeo ou imagem de demonstração de cada exercício.',
   '/ranking-conteudo': 'Quais conteúdos mais funcionam e a qualidade de cada um.',
   '/landing': 'Textos e blocos da página inicial do site.',

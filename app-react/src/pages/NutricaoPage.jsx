@@ -26,6 +26,7 @@ import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import NutritionWeek from '../components/NutritionWeek';
 import DayFixForm from '../components/DayFixForm';
 import ProteinSources from '../components/ProteinSources';
+import { readCachedCatalog, fetchFoodCatalog } from '../lib/foodCatalog';
 import { recentFoods, usedNames, yesterdayMeal } from '../lib/recentFoods';
 import { HISTORY_DAYS, unloggedRest, dayMicros } from '../lib/nutritionDay';
 
@@ -87,6 +88,7 @@ export default function NutricaoPage({ active }) {
   const [useCounts, setUseCounts] = useState(readUseCounts);
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [manage, setManage] = useState(false);
+  const [catalog, setCatalog] = useState(readCachedCatalog);
   const [plan, setPlan] = useState(() => (user ? readCachedPlan(user.id) : []));
 
   const totals = readLocalTotals();
@@ -126,6 +128,7 @@ export default function NutricaoPage({ active }) {
     habitSince.setDate(habitSince.getDate() - HISTORY_DAYS);
     fetchEntriesRange(user.id, toDateStr(habitSince)).then(setPastEntries).catch(err => console.error('fetchEntriesRange:', err));
     fetchPlan(user.id).then(setPlan).catch(err => console.error('fetchPlan:', err));
+    fetchFoodCatalog().then(setCatalog).catch(err => console.warn('fetchFoodCatalog:', err));
     fetchCustomFoods(user.id).then(setMyFoods).catch(err => console.error('fetchCustomFoods:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, user]);
@@ -503,7 +506,7 @@ export default function NutricaoPage({ active }) {
             </button>
           </div>
         )}
-        {searchOpen && <FoodSearch onAdd={handleAdd} recent={recent} used={used} />}
+        {searchOpen && <FoodSearch onAdd={handleAdd} recent={recent} used={used} catalog={catalog} />}
 
         <div className="water-quick quick-foods">
           {shownFoods.map(f => (

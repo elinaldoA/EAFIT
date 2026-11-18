@@ -345,8 +345,9 @@ function valuesOf(source) {
 }
 
 // `ptName`: o nome original, que as medidas caseiras usam com o app em inglês.
+// `estimated`: prato montado por ingredientes, valor aproximado.
 export const FOOD_DATABASE = RAW.map(([icon, name, portion, source], i) => ({
-  id: `db${i}`, icon, name: t(name), ptName: name, ...valuesOf(source), portion,
+  id: `db${i}`, icon, name: t(name), ptName: name, ...valuesOf(source), portion, ...(Array.isArray(source[0]) && { estimated: true }),
 }));
 
 const plain = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -393,6 +394,26 @@ function fuzzyHit(word, f) {
   if (word.length < 4) return false;
   const max = word.length >= 7 ? 2 : 1;
   return tokensOf(f).some(tok => editDistance(word, tok, max) <= max || (tok.length > word.length && editDistance(word, tok.slice(0, word.length), max) <= max));
+}
+
+// Alimento do catálogo do painel (tabela food_catalog), no formato da busca.
+export function foodFromCatalog(r) {
+  return {
+    id: `cat${r.id}`, icon: r.icon || '🍽️', name: r.name, ptName: r.name, source: 'catalog',
+    kcal: Number(r.kcal) || 0, g: Number(r.protein_g) || 0, carbs: Number(r.carbs_g) || 0, fat: Number(r.fat_g) || 0,
+    fiber: Number(r.fiber_g) || 0, sodium: Number(r.sodium_mg) || 0,
+    portion: Number(r.portion_g) || 100, estimated: !!r.estimated,
+    ...(Array.isArray(r.measures) && r.measures.length && { measures: r.measures }),
+  };
+}
+
+// Lista da busca com o catálogo do painel: os itens dele vêm junto dos próprios
+// do app (antes da TACO) e um item de mesmo nome substitui o do app.
+export function foodsWithCatalog(rows) {
+  if (!rows?.length) return ALL_FOODS;
+  const extra = rows.map(foodFromCatalog);
+  const names = new Set(extra.map(f => plain(f.name)));
+  return [...extra, ...FOOD_DATABASE.filter(f => !names.has(plain(f.ptName)) && !names.has(plain(f.name))), ...TACO_FOODS];
 }
 
 // Todas as palavras digitadas precisam aparecer no nome (sem acento, qualquer

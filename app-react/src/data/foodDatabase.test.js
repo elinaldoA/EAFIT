@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import en from '../i18n/en';
-import { FOOD_DATABASE, ALL_FOODS, searchFoods, portionOf, fromTaco } from './foodDatabase';
+import { FOOD_DATABASE, ALL_FOODS, searchFoods, portionOf, fromTaco, foodsWithCatalog } from './foodDatabase';
 import { TACO_FOODS } from './tacoFoods';
 import { measuresFor } from './householdMeasures';
 
@@ -146,5 +146,25 @@ describe('householdMeasures', () => {
     const after = searchFoods('arroz', undefined, 10, { loose: true, used: new Set([plainName]) }).map(f => f.name);
     expect(after.indexOf(pick)).toBeGreaterThanOrEqual(0);
     expect(after.indexOf(pick)).toBeLessThan(base.indexOf(pick));
+  });
+
+  it('catálogo do painel entra na busca, com medidas e selo, e um item de mesmo nome substitui o do app', () => {
+    expect(foodsWithCatalog([])).toBe(ALL_FOODS);
+    const rows = [
+      { id: 'a1', name: 'Pamonha de queijo', icon: '🌽', portion_g: 120, kcal: '210.5', protein_g: '5', carbs_g: '30', fat_g: '8', fiber_g: '2', sodium_mg: '300', estimated: true, measures: [{ label: 'unidade', grams: 120 }] },
+      { id: 'a2', name: 'Mostarda', portion_g: 10, kcal: 70, protein_g: 4, carbs_g: 6, fat_g: 4, fiber_g: 4, sodium_mg: 1000 },
+    ];
+    const list = foodsWithCatalog(rows);
+    const [pamonha] = searchFoods('pamonha queijo', list);
+    expect(pamonha).toMatchObject({ id: 'cata1', source: 'catalog', kcal: 210.5, portion: 120, estimated: true, measures: [{ label: 'unidade', grams: 120 }] });
+    const mostardas = searchFoods('mostarda', list, 20).filter(f => f.name === 'Mostarda');
+    expect(mostardas).toHaveLength(1);
+    expect(mostardas[0]).toMatchObject({ source: 'catalog', kcal: 70 });
+    expect(portionOf(pamonha, 120).kcal).toBe(253);
+  });
+
+  it('pratos montados por ingredientes levam o selo de estimado', () => {
+    expect(FOOD_DATABASE.find(f => f.ptName === 'Prato feito (arroz, feijão, carne e salada)').estimated).toBe(true);
+    expect(FOOD_DATABASE.find(f => f.ptName === 'Mostarda').estimated).toBeUndefined();
   });
 });

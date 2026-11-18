@@ -481,6 +481,8 @@ export default {
   '{g} g de proteína atrás do ritmo para este horário.': '{g} g of protein behind pace for this time.',
   'Sua próxima refeição': 'Your next meal',
   'Seus alimentos de sempre': 'Your usual foods',
+  'estimado': 'estimated',
+  'Valores aproximados: o prato varia de receita para receita.': 'Approximate values: the dish varies from recipe to recipe.',
   'Para fechar a proteína de hoje (faltam {g} g):': "To close out today's protein ({g} g to go):",
   '{label} adicionado': '{label} added',
   '{kcal} kcal · {g} g de proteína': '{kcal} kcal · {g} g of protein',

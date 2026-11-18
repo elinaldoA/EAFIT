@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { searchFoods, portionOf } from '../data/foodDatabase';
+import { searchFoods, portionOf, foodsWithCatalog } from '../data/foodDatabase';
 import { measuresFor } from '../data/householdMeasures';
 import { lookupBarcode, isBarcode } from '../lib/openFoodFacts';
 import { canUseCamera, createBarcodeDetector } from '../lib/barcodeScan';
@@ -50,7 +50,7 @@ function Scanner({ onCode, onClose }) {
 
 // `recent`: alimentos que a pessoa já registrou (um toque repete a porção);
 // `used`: nomes deles, que sobem nos resultados.
-export default function FoodSearch({ onAdd, recent = [], used }) {
+export default function FoodSearch({ onAdd, recent = [], used, catalog }) {
   const [query, setQuery] = useState('');
   const [code, setCode] = useState('');
   const [picked, setPicked] = useState(null);
@@ -61,8 +61,9 @@ export default function FoodSearch({ onAdd, recent = [], used }) {
   const [msg, setMsg] = useState('');
   const [scanning, setScanning] = useState(false);
 
-  const results = useMemo(() => searchFoods(query, undefined, 10, { loose: true, used }), [query, used]);
-  const measures = useMemo(() => (picked ? measuresFor(picked.ptName || picked.name) : []), [picked]);
+  const list = useMemo(() => foodsWithCatalog(catalog), [catalog]);
+  const results = useMemo(() => searchFoods(query, list, 10, { loose: true, used }), [query, list, used]);
+  const measures = useMemo(() => (picked ? (picked.measures || measuresFor(picked.ptName || picked.name)) : []), [picked]);
   const unit = measures[measure];
   const grams = Math.round((Number(amount) || 0) * (unit ? unit.grams : 1));
   const macros = picked ? portionOf(picked, grams) : null;
@@ -147,7 +148,7 @@ export default function FoodSearch({ onAdd, recent = [], used }) {
             <li key={f.id}>
               <button type="button" onClick={() => pick(f)}>
                 <span aria-hidden="true">{f.icon}</span> {f.name}
-                <small>{t('{kcal} kcal por 100 g', { kcal: f.kcal })}{f.source === 'taco' && ' · TACO'}</small>
+                <small>{t('{kcal} kcal por 100 g', { kcal: f.kcal })}{f.source === 'taco' && ' · TACO'}{f.estimated && ` · ${t('estimado')}`}</small>
               </button>
             </li>
           ))}
@@ -176,6 +177,7 @@ export default function FoodSearch({ onAdd, recent = [], used }) {
       {picked && (
         <form className="custom-food food-search__pick" onSubmit={submit}>
           <p className="custom-food__name"><strong>{picked.icon} {picked.name}</strong></p>
+          {picked.estimated && <p className="dash-card__subtitle">{t('Valores aproximados: o prato varia de receita para receita.')}</p>}
           {measures.length > 0 && (
             <label className="food-search__measure">
               {t('Medida')}
