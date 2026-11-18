@@ -15,7 +15,7 @@ function contrast(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 const block = (text, selector) => text.slice(text.indexOf(selector)).match(/\{([\s\S]*?)\n\}/)[1];
-const token = (blockText, name) => blockText.match(new RegExp(`${name}:\s*([^;]+);`))?.[1].trim();
+const token = (blockText, name) => blockText.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1].trim();
 
 describe('contorno de foco do teclado', () => {
   const tokens = css('tokens.css');
