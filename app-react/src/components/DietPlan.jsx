@@ -30,7 +30,7 @@ function MealList({ meals }) {
 
 // A dieta do aluno: importa de texto colado ou arquivo, mostra uma prévia para
 // conferir e, salva, registra cada refeição no dia com um toque.
-export default function DietPlan({ plan, onSave, onClear, onRegister }) {
+export default function DietPlan({ plan, onSave, onClear, onRegister, foods }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [preview, setPreview] = useState(null);
@@ -44,7 +44,7 @@ export default function DietPlan({ plan, onSave, onClear, onRegister }) {
   }
 
   function read(source = text) {
-    const result = parseDiet(source);
+    const result = parseDiet(source, { foods });
     if (!result.meals.some(m => m.items.some(i => !i.unknown))) {
       setPreview(null);
       setError(t('Não encontrei refeições nem alimentos nesse texto. Escreva o nome da refeição (Café da manhã, Almoço...) e, abaixo, um alimento por linha.'));

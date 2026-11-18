@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import en from '../i18n/en';
-import { FOOD_DATABASE, ALL_FOODS, searchFoods, portionOf, fromTaco, foodsWithCatalog } from './foodDatabase';
+import { FOOD_DATABASE, ALL_FOODS, searchFoods, portionOf, fromTaco, foodsWithCatalog, SUGAR_SAT, ESTIMATED_DISHES } from './foodDatabase';
 import { TACO_FOODS } from './tacoFoods';
 import { measuresFor } from './householdMeasures';
 
@@ -80,8 +80,8 @@ describe('foodDatabase', () => {
 
   it('portionOf calcula pelos gramas, com fibra e sódio quando o alimento tem', () => {
     const arroz = FOOD_DATABASE.find(f => f.name === 'Arroz branco cozido');
-    expect(portionOf(arroz, 200)).toEqual({ g: 5, kcal: 256, carbs: 56, fat: 0, fiber: 3.2, sodium: 2 });
-    expect(portionOf(arroz, 0)).toEqual({ g: 0, kcal: 0, carbs: 0, fat: 0, fiber: 0, sodium: 0 });
+    expect(portionOf(arroz, 200)).toEqual({ g: 5, kcal: 256, carbs: 56, fat: 0, fiber: 3.2, sodium: 2, sugar: 0.2, satFat: 0.2 });
+    expect(portionOf(arroz, 0)).toEqual({ g: 0, kcal: 0, carbs: 0, fat: 0, fiber: 0, sodium: 0, sugar: 0, satFat: 0 });
     expect(portionOf({ g: 10, kcal: 100, carbs: 0, fat: 0 }, 50)).toEqual({ g: 5, kcal: 50, carbs: 0, fat: 0 });
   });
 
@@ -178,5 +178,17 @@ describe('householdMeasures', () => {
     const quinoa = searchFoods('quinoa', list, 20).filter(f => f.ptName === 'Quinoa cozida');
     expect(quinoa).toHaveLength(1);
     expect(quinoa[0]).toMatchObject({ source: 'catalog', kcal: 130 });
+  });
+
+  it('açúcares e gordura saturada: nomes existem na lista e os números batem com carboidratos e gordura', () => {
+    const names = new Set(FOOD_DATABASE.map(f => f.ptName));
+    expect(Object.keys(SUGAR_SAT).filter(n => !names.has(n))).toEqual([]);
+    expect([...ESTIMATED_DISHES].filter(n => !names.has(n))).toEqual([]);
+    const bad = FOOD_DATABASE.filter(f => f.sugar !== undefined && (f.sugar > f.carbs + 0.5 || f.satFat > f.fat + 0.1))
+      .map(f => `${f.ptName}: açúcar ${f.sugar}/carbo ${f.carbs}, sat ${f.satFat}/gordura ${f.fat}`);
+    expect(bad).toEqual([]);
+    expect(FOOD_DATABASE.find(f => f.ptName === 'Banana prata')).toMatchObject({ sugar: 12, satFat: 0.1 });
+    expect(FOOD_DATABASE.find(f => f.ptName === 'Risoto de frango').estimated).toBe(true);
+    expect(FOOD_DATABASE.find(f => f.ptName === 'Feijoada').sugar).toBeUndefined();
   });
 });

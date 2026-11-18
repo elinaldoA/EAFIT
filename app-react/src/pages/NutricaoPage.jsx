@@ -26,12 +26,16 @@ import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import NutritionWeek from '../components/NutritionWeek';
 import DayFixForm from '../components/DayFixForm';
 import ProteinSources from '../components/ProteinSources';
+import FreeTextMeal from '../components/FreeTextMeal';
+import { foodsWithCatalog } from '../data/foodDatabase';
 import { readCachedCatalog, fetchFoodCatalog } from '../lib/foodCatalog';
 import { recentFoods, usedNames, yesterdayMeal } from '../lib/recentFoods';
 import { HISTORY_DAYS, unloggedRest, dayMicros } from '../lib/nutritionDay';
 
 import { t, locale } from '../lib/i18n';
 const SPREAD_FROM_HOUR = 19;
+// Diário buscado para os "alimentos de sempre" (o hábito da refeição olha só os últimos 14 dias).
+const RECENT_DAYS = 60;
 const CLOSE_FROM_HOUR = 16;
 const CLOSE_MIN_PROTEIN = 10;
 // Duas fileiras de atalhos; o resto fica em "Ver todos".
@@ -80,6 +84,7 @@ export default function NutricaoPage({ active }) {
   const [pastEntries, setPastEntries] = useState([]);
   const [meal, setMeal] = useState(() => mealForHour(new Date().getHours()));
   const [searchOpen, setSearchOpen] = useState(false);
+  const [textOpen, setTextOpen] = useState(false);
   const [fixOpen, setFixOpen] = useState(false);
   const [customOpen, setCustomOpen] = useState(false);
   const [custom, setCustom] = useState(EMPTY_CUSTOM);
@@ -125,7 +130,7 @@ export default function NutricaoPage({ active }) {
     fetchWeightLogs(user.id).then(setWeightLogs).catch(err => console.error('fetchWeightLogs:', err));
     fetchEntries(user.id, todayDate()).then(setEntries).catch(err => console.error('fetchEntries:', err));
     const habitSince = parseLocalDate(todayDate());
-    habitSince.setDate(habitSince.getDate() - HISTORY_DAYS);
+    habitSince.setDate(habitSince.getDate() - RECENT_DAYS);
     fetchEntriesRange(user.id, toDateStr(habitSince)).then(setPastEntries).catch(err => console.error('fetchEntriesRange:', err));
     fetchPlan(user.id).then(setPlan).catch(err => console.error('fetchPlan:', err));
     fetchFoodCatalog().then(setCatalog).catch(err => console.warn('fetchFoodCatalog:', err));
@@ -398,6 +403,7 @@ export default function NutricaoPage({ active }) {
   const hasLog = totals.protein + totals.kcal + totals.carbs + totals.fat > 0;
   const now = new Date();
   const pace = dayPace(totals, goals, now.getHours() + now.getMinutes() / 60);
+  const foodList = useMemo(() => foodsWithCatalog(catalog), [catalog]);
   const recent = useMemo(() => recentFoods(pastEntries, entries, todayDate()), [pastEntries, entries]);
   const used = useMemo(() => usedNames(recent), [recent]);
   const yesterday = useMemo(() => {
@@ -462,7 +468,7 @@ export default function NutricaoPage({ active }) {
 
       <div className="section-group">
         <div className="section-group__label">{t('Sua dieta')}</div>
-        <DietPlan plan={plan} onSave={handleSavePlan} onClear={handleClearPlan} onRegister={handleRegisterPlanMeal} />
+        <DietPlan foods={foodList} plan={plan} onSave={handleSavePlan} onClear={handleClearPlan} onRegister={handleRegisterPlanMeal} />
       </div>
 
       <div className="section-group">
@@ -481,6 +487,9 @@ export default function NutricaoPage({ active }) {
           )}
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => setSearchOpen(o => !o)} aria-expanded={searchOpen}>
             {searchOpen ? t('Fechar busca') : t('🔎 Buscar alimento')}
+          </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setTextOpen(o => !o)} aria-expanded={textOpen}>
+            {textOpen ? t('Fechar texto') : t('✍️ Escrever o que comi')}
           </button>
         </div>
         {closing.length > 0 && (
@@ -505,6 +514,12 @@ export default function NutricaoPage({ active }) {
               {' '}({fmt(repeatItems.reduce((n, f) => n + f.kcal, 0))} kcal)
             </button>
           </div>
+        )}
+        {textOpen && (
+          <FreeTextMeal
+            foods={foodList} mealName={MEAL_NAME[meal]()}
+            onAdd={items => { handleAddMany(items); toast(t('Refeição registrada')); setTextOpen(false); }}
+          />
         )}
         {searchOpen && <FoodSearch onAdd={handleAdd} recent={recent} used={used} catalog={catalog} />}
 

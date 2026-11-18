@@ -359,4 +359,20 @@ describe('NutricaoPage', () => {
       expect(screen.getByText('Seus alimentos de sempre')).toBeTruthy();
     });
   });
+
+  describe('escrever o que comi', () => {
+    it('lê o texto, mostra os itens e registra os encontrados na refeição escolhida', async () => {
+      render(<NutricaoPage active />);
+      await screen.findByText('Ovo');
+      fireEvent.click(screen.getByText('✍️ Escrever o que comi'));
+      fireEvent.change(screen.getByLabelText('O que você comeu?'), { target: { value: 'comi 2 ovos cozidos e 150 g de arroz branco cozido, 1 xyzzy' } });
+      fireEvent.click(screen.getByText('Ler o texto'));
+      expect(await screen.findByText('ovos cozidos 100g')).toBeTruthy();
+      expect(screen.getByText('não encontrei')).toBeTruthy();
+      fireEvent.click(screen.getByText(/^Adicionar ao dia ·/, { selector: 'button' }));
+      expect(readLocalTotals().kcal).toBeGreaterThan(300);
+      expect(document.querySelector('.meal-log').textContent).toContain('arroz branco cozido 150g');
+      expect(screen.queryByLabelText('O que você comeu?')).toBeNull();
+    });
+  });
 });

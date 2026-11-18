@@ -1,4 +1,5 @@
 import { searchFoods, portionOf } from '../data/foodDatabase';
+import { measuresFor } from '../data/householdMeasures';
 
 // Lê a dieta de um nutricionista (texto colado ou arquivo .txt/.csv) e devolve
 // uma lista de refeições com itens no formato do diário: { label, icon, g,
@@ -71,21 +72,23 @@ function quantityOf(name) {
 const BULLET = /^\s*(?:[-*•·▪►]+|\d+[.)]|#{1,6})\s+/;
 const clean = line => line.replace(/\*\*|__/g, '').replace(BULLET, '').trim();
 
-function lookup(name) {
+function lookup(name, ctx = {}) {
   const q = quantityOf(name);
   const words = plain(q.rest).replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
   // Tenta o nome inteiro e, se não achar, tira palavras do fim ("ovo mexido com sal" → "ovo mexido").
   for (let n = words.length; n >= 1; n--) {
     if (words.slice(0, n).join('').length < 3) continue;
-    const [food] = searchFoods(words.slice(0, n).join(' '), undefined, 1);
+    const [food] = searchFoods(words.slice(0, n).join(' '), ctx.foods, 1, { loose: ctx.loose });
     if (!food) continue;
-    const grams = q.grams ?? Math.round((q.count ?? 1) * (food.portion || 100));
+    // Texto livre: "2 ovos" são 2 unidades (a medida caseira), não 2 porções sugeridas.
+    const unit = ctx.loose ? (food.measures || measuresFor(food.ptName || food.name)).find(m => /^(unidade|unit)/i.test(m.label)) : null;
+    const grams = q.grams ?? Math.round((q.count ?? 1) * (unit?.grams || food.portion || 100));
     return { food, grams, label: q.rest };
   }
   return null;
 }
 
-function itemFromLine(raw) {
+function itemFromLine(raw, ctx = {}) {
   let rest = raw;
   const kcal = takeKcal(rest); rest = kcal.rest;
   const prot = takeMacro(rest, 'prot|ptn', 'p'); rest = prot.rest;
@@ -114,7 +117,7 @@ function itemFromLine(raw) {
   }
 
   // Sem macros: o nome com a quantidade ("150 g arroz"), ou nome e quantidade em partes separadas.
-  const found = lookup(q.grams != null || q.count != null ? nameText : parts.join(' ')) || lookup(nameText);
+  const found = lookup(q.grams != null || q.count != null ? nameText : parts.join(' '), ctx) || lookup(nameText, ctx);
   if (!found) return { label: label.slice(0, 60), icon: '🍽️', g: 0, kcal: 0, carbs: 0, fat: 0, amount: '', unknown: true };
   const p = portionOf(found.food, found.grams);
   return {
@@ -188,7 +191,8 @@ export const sumItems = items => items.reduce((s, f) => ({
 }), { g: 0, kcal: 0, carbs: 0, fat: 0 });
 
 // → { meals: [{ meal, name, items }], skipped: nº de linhas ignoradas, truncated }
-export function parseDiet(input) {
+// `opts.foods`: lista de alimentos da busca (com o catálogo do painel); sem ela, a lista do app e a TACO.
+export function parseDiet(input, opts = {}) {
   const text = String(input || '').slice(0, MAX_DIET_CHARS);
   const meals = [];
   let skipped = 0;
@@ -203,7 +207,7 @@ export function parseDiet(input) {
     meals.push(current);
   };
   const add = line => {
-    const item = itemFromLine(line);
+    const item = itemFromLine(line, { foods: opts.foods });
     if (!item) { skipped++; return; }
     if (!current) open('outro', 'Dieta');
     if (current.overflow) return;
@@ -251,4 +255,34 @@ export function cleanMeals(meals) {
       amount: String(i.amount || '').slice(0, 20),
     })),
   })).filter(m => m.items.length);
+}
+
+// Texto livre do dia a dia ("comi 2 ovos mexidos, uma banana e 150 g de arroz")
+// → itens para registrar, no mesmo formato do diário. Separa por vírgula, ponto
+// e vírgula, "+", " e " e quebra de linha; entende "um/uma/dois…/meio". O que
+// não achar vem com `unknown: true`. → { items, unknown: nº, truncated }
+const WORD_NUMBERS = { um: '1', uma: '1', dois: '2', duas: '2', tres: '3', quatro: '4', cinco: '5', seis: '6', meio: '0.5', meia: '0.5' };
+const LEAD_VERB = /^(?:(?:hoje|eu|agora)\s+)*(?:comi|tomei|bebi|jantei|almocei|lanchei|ceei)\s+/i;
+export const MAX_TEXT_CHARS = 400;
+const MAX_TEXT_ITEMS = 12;
+
+export function parseMealText(input, opts = {}) {
+  const text = String(input || '').slice(0, MAX_TEXT_CHARS);
+  const pieces = text.split(/\s*[;\n+]\s*|,\s+|\s+e\s+/i).map(s => s.trim()).filter(Boolean);
+  const items = [];
+  let truncated = false;
+  for (let piece of pieces) {
+    piece = piece.replace(/^[\s.:-]+|[\s.:-]+$/g, '');
+    let rest = piece.replace(LEAD_VERB, '');
+    const first = rest.split(/\s+/)[0];
+    if (WORD_NUMBERS[plain(first)] && rest.length > first.length) rest = rest.replace(/^\S+/, WORD_NUMBERS[plain(first)]);
+    if (!rest) continue;
+    const item = itemFromLine(rest, { foods: opts.foods, loose: true });
+    if (!item) continue;
+    if (items.length >= MAX_TEXT_ITEMS) { truncated = true; break; }
+    // Rótulo no padrão da busca: "ovos 100g".
+    const label = item.amount && !item.unknown ? `${item.label} ${item.amount.replace(/\s+/g, '')}` : item.label;
+    items.push({ ...item, label: label.slice(0, 60) });
+  }
+  return { items, unknown: items.filter(i => i.unknown).length, truncated };
 }

@@ -344,10 +344,55 @@ function valuesOf(source) {
   return Object.fromEntries(NUTRIENTS.map((k, i) => [k, source[i]]));
 }
 
+// Pratos e preparos de valor aproximado (variam de receita para receita), além dos
+// montados por ingredientes: a busca mostra o selo "estimado".
+export const ESTIMATED_DISHES = new Set([
+  'Ovo mexido', 'Pizza (muçarela)', 'Purê de batata', 'Panqueca simples', 'Nuggets de frango', 'Frango à parmegiana',
+  'Esfiha de carne', 'Risoto de frango', 'Moqueca de peixe', 'Sopa de legumes', 'Tapioca com queijo', 'Pão de alho',
+  'Panetone', 'Pudim de leite', 'Guacamole', 'Molho pesto', 'Galinhada', 'Bobó de camarão', 'Tutu de feijão',
+  'Arroz à grega', 'Batata rústica assada', 'Legumes assados', 'Maionese de batata', 'Cachorro-quente', 'Wrap de frango',
+  'Waffle', 'Smoothie de frutas', 'Brownie', 'Churros', 'Cheesecake', 'Carne de panela', 'Frango xadrez',
+  'Espaguete à bolonhesa', 'Homus', 'Brigadeiro', 'Café com leite (sem açúcar)',
+]);
+
+// Açúcares e gordura saturada (g por 100 g) dos alimentos comuns da lista, que a
+// TACO não traz como número: [açúcares, gordura saturada], do USDA/rótulo comum.
+// Quem não está aqui fica sem o dado (a soma do dia só conta quem traz).
+export const SUGAR_SAT = {
+  'Arroz branco cozido': [0.1, 0.1], 'Arroz integral cozido': [0.2, 0.2], 'Feijão carioca cozido': [0.3, 0.1],
+  'Feijão preto cozido': [0.3, 0.1], 'Lentilha cozida': [1.8, 0.1], 'Grão-de-bico cozido': [4.8, 0.3],
+  'Macarrão cozido': [0.6, 0.2], 'Batata inglesa cozida': [0.8, 0], 'Batata-doce cozida': [6.5, 0],
+  'Mandioca cozida': [1.7, 0.1], 'Cuscuz de milho': [0.3, 0.2], 'Tapioca (goma hidratada)': [0, 0],
+  'Pão francês': [3, 0.8], 'Pão de forma integral': [4.5, 0.6], 'Pão de queijo': [1.5, 5], 'Aveia em flocos': [1.1, 1.2],
+  'Granola': [20, 2.5], 'Milho cozido': [3.2, 0.2],
+  'Peito de frango grelhado': [0, 0.7], 'Frango desfiado (peito cozido)': [0, 0.6], 'Coxa de frango assada': [0, 4],
+  'Carne bovina (patinho) grelhada': [0, 2.5], 'Carne moída refogada': [0, 4.2], 'Alcatra grelhada': [0, 4.5],
+  'Carne de porco (lombo) assada': [0, 2], 'Tilápia grelhada': [0, 0.8], 'Salmão grelhado': [0, 2.5],
+  'Atum em lata (natural)': [0, 0.2], 'Sardinha em lata (óleo)': [0, 1.5],
+  'Ovo cozido': [0.4, 3.1], 'Ovo frito': [0.4, 3.8], 'Ovo mexido': [1.1, 3.3],
+  'Leite integral': [4.8, 1.9], 'Leite desnatado': [5, 0.1], 'Leite semidesnatado': [4.8, 1], 'Iogurte natural': [1.9, 2],
+  'Iogurte grego natural': [4, 3.2], 'Queijo minas frescal': [2, 10], 'Queijo muçarela': [1, 14], 'Queijo cottage': [2.7, 1.7],
+  'Requeijão cremoso': [2, 10], 'Manteiga': [0.1, 51], 'Whey protein (pó)': [4, 3.5], 'Tofu': [0.6, 0.7],
+  'Kefir': [4.5, 0.6], 'Cream cheese': [3, 19],
+  'Alface': [0.8, 0], 'Tomate': [2.6, 0], 'Cenoura cozida': [3.5, 0], 'Brócolis cozido': [1.4, 0.1],
+  'Abobrinha cozida': [2.5, 0.1], 'Couve refogada': [0.5, 0.8],
+  'Banana prata': [12, 0.1], 'Maçã': [10, 0], 'Laranja': [9, 0], 'Manga': [12, 0.1], 'Melancia': [6, 0], 'Uva': [13, 0.1],
+  'Morango': [4.9, 0], 'Abacaxi': [10, 0], 'Mamão': [6, 0.1], 'Abacate': [0.7, 2.1],
+  'Amendoim': [3.9, 7], 'Pasta de amendoim': [9, 10], 'Castanha-do-pará': [2.3, 15], 'Azeite de oliva': [0, 14],
+  'Mel': [82, 0], 'Chocolate ao leite': [56, 18], 'Biscoito cream cracker': [1.5, 3.5], 'Suco de laranja': [7.4, 0],
+  'Refrigerante': [8.5, 0],
+  'Quinoa cozida': [0.9, 0.2], 'Bacon frito': [0, 14], 'Uva-passa': [59, 0.1], 'Tâmara': [66, 0], 'Chia': [0, 3.3],
+  'Chocolate 70% cacau': [24, 24], 'Brigadeiro': [50, 9], 'Sorvete de creme': [21, 6.8], 'Ketchup': [22, 0],
+  'Mostarda': [0.9, 0.2], 'Croissant': [11, 12], 'Donut': [22, 10], 'Cookies de chocolate': [38, 9],
+  'Geleia de morango': [48, 0], 'Café com leite (sem açúcar)': [2.4, 1.1],
+};
+
 // `ptName`: o nome original, que as medidas caseiras usam com o app em inglês.
 // `estimated`: prato montado por ingredientes, valor aproximado.
 export const FOOD_DATABASE = RAW.map(([icon, name, portion, source], i) => ({
-  id: `db${i}`, icon, name: t(name), ptName: name, ...valuesOf(source), portion, ...(Array.isArray(source[0]) && { estimated: true }),
+  id: `db${i}`, icon, name: t(name), ptName: name, ...valuesOf(source), portion,
+  ...((Array.isArray(source[0]) || ESTIMATED_DISHES.has(name)) && { estimated: true }),
+  ...(SUGAR_SAT[name] && { sugar: SUGAR_SAT[name][0], satFat: SUGAR_SAT[name][1] }),
 }));
 
 const plain = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
