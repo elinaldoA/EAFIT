@@ -37,3 +37,19 @@ Os carrosséis têm vários arquivos: envie as imagens de cada um num único ZIP
 
 A fila do autopost segue esta ordem: `supabase/migrations/20270227010000_marketing_corrida_lancamento.sql.txt`
 (renomear para `.sql` e aplicar junto com a liberação do módulo).
+
+## Pré-lançamento ("Em breve")
+
+Para criar desejo ANTES de o admin liberar o módulo. Gerado por `app-admin/scripts/marketing-corrida-teaser.mjs`
+(arquivos `embreve-corrida-*` e `*-embreve-corrida-*`). Fila: `supabase/migrations/20270227000000_marketing_corrida_embreve.sql.txt`.
+Publicar nos dias antes da liberação; no dia D, pular o que sobrar e seguir com o material de lançamento acima.
+
+| Material | Arquivo | Texto pronto |
+|---|---|---|
+| Feed: vem aí | `embreve-corrida-vem-ai-feed.jpg` | Você corre? Vem novidade aí 🏃 O EAFIT Run chega em breve. Fique de olho: |
+| Feed: mapa | `embreve-corrida-mapa-feed.jpg` | Imagine saber o tempo de cada km sem olhar o relógio 📍 Em breve no EAFIT: |
+| Feed: ranking | `embreve-corrida-ranking-feed.jpg` | Já separou o amigo que vai topar o desafio? 🏅 Em breve: |
+| Carrossel: imagine | `embreve-corrida-imagine-1.jpg` a `-6.jpg` | Já imaginou? O EAFIT Run chega em breve. Salve e mande para o seu parceiro de corrida: |
+| Carrossel: plano | `embreve-corrida-plano-1.jpg` a `-6.jpg` | Começar a correr fica mais fácil com um plano 👟 Em breve no EAFIT: |
+| Reels | `reel-embreve-corrida-vem-ai.mp4`, `reel-embreve-corrida-plano.mp4` | Corrida, mapa e amigos no mesmo app 🏃 Em breve: |
+| Stories | `story-embreve-corrida-vem-ai.mp4`, `-5k.mp4`, `-turma.mp4` | (sem texto; usar o link) |

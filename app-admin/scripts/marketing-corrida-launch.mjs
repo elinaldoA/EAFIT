@@ -15,7 +15,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { makeWav } from './marketing-reels-audio.mjs';
 import { printArt, slideArt } from './marketing-autopost-content.mjs';
 import {
@@ -93,7 +93,7 @@ const REELS = [
   },
 ];
 
-async function renderVideo(file, seconds, audioWav, drawFrame, img) {
+export async function renderVideo(file, seconds, audioWav, drawFrame, img) {
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext('2d');
   const ff = spawn('ffmpeg', [
@@ -118,7 +118,7 @@ async function renderVideo(file, seconds, audioWav, drawFrame, img) {
   await done;
 }
 
-const SHIFTS = [0, 2, 3, 5, 7, -2];
+export const SHIFTS = [0, 2, 3, 5, 7, -2];
 const sqlText = (s) => `'${s.replace(/'/g, "''")}'`;
 const mediaImg = (files) => JSON.stringify(files.map((f) => ({ type: 'image', url: `${SITE}/img/marketing/${f}` })));
 const mediaVid = (file) => JSON.stringify([{ type: 'video', url: `${SITE}/img/marketing/${file}` }]);
@@ -204,4 +204,4 @@ ${values.join(',\n')}
   console.log(`${items.length} itens na fila (SQL gerado)`);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

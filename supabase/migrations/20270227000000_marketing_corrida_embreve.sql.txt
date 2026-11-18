@@ -1,0 +1,55 @@
+-- Itens da fila do autopost: pré-lançamento do módulo Corrida ("em breve").
+-- Gerado por app-admin/scripts/marketing-corrida-teaser.mjs. Aplicar ANTES de liberar o módulo e
+-- pular o que sobrar na fila quando o admin liberar (depois valem os itens de lançamento).
+insert into public.marketing_autopost_queue (position, key, format, caption, media)
+select (select coalesce(max(position), 0) from public.marketing_autopost_queue) + v.n, v.key, v.format, v.caption, v.media::jsonb
+from (values
+  (1, 'embreve-corrida-vem-ai-feed', 'feed', 'Você corre? Vem novidade aí. 🏃
+O EAFIT Run chega em breve: cada corrida com mapa, ritmo e aplausos dos amigos.
+
+Fique de olho: em breve no EAFIT. 👀
+Salve este post para não perder o lançamento.
+
+#corrida #corridaderua #running #embreve #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-vem-ai-feed.jpg"}]'),
+  (2, 'embreve-corrida-vem-ai-story', 'story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-embreve-corrida-vem-ai.mp4"}]'),
+  (3, 'embreve-corrida-vem-ai-reel', 'reel', 'Corrida, mapa e amigos no mesmo app. 🏃
+O EAFIT Run chega em breve.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/reel-embreve-corrida-vem-ai.mp4"}]'),
+  (4, 'embreve-corrida-imagine-feed', 'feed', 'Já imaginou? 🏃
+O EAFIT Run chega em breve para quem corre ou quer começar a correr.
+
+Fique de olho: em breve no EAFIT. 👀
+Salve e mande para o seu parceiro de corrida.
+
+#corrida #corridaderua #running #embreve #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-imagine-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-imagine-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-imagine-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-imagine-4.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-imagine-5.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-imagine-6.jpg"}]'),
+  (5, 'embreve-corrida-mapa-feed', 'feed', 'Imagine saber o tempo de cada quilômetro sem olhar o relógio. 📍
+GPS, voz a cada km e o resumo da corrida, tudo no app. Em breve.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #embreve #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-mapa-feed.jpg"}]'),
+  (6, 'embreve-corrida-5k-story', 'story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-embreve-corrida-5k.mp4"}]'),
+  (7, 'embreve-corrida-plano-feed', 'feed', 'Começar a correr fica mais fácil com um plano. 👟
+Em breve no EAFIT: programa de 5K, 10K e meia maratona, com o treino de cada dia.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #embreve #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-plano-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-plano-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-plano-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-plano-4.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-plano-5.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-plano-6.jpg"}]'),
+  (8, 'embreve-corrida-plano-reel', 'reel', 'Primeiros 5 km sem improviso. 👟
+Em breve o app monta as semanas de corrida para você.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/reel-embreve-corrida-plano.mp4"}]'),
+  (9, 'embreve-corrida-ranking-feed', 'feed', 'Já separou o amigo que vai topar o desafio? 🏅
+Em breve: desafios de corrida todo mês e ranking de km da semana entre amigos.
+
+Fique de olho: em breve no EAFIT. 👀
+Marque quem vai correr com você.
+
+#corrida #corridaderua #running #embreve #EAFIT', '[{"type":"image","url":"https://eafit.com.br/img/marketing/embreve-corrida-ranking-feed.jpg"}]'),
+  (10, 'embreve-corrida-turma-story', 'story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/story-embreve-corrida-turma.mp4"}]')
+) as v(n, key, format, caption, media);
