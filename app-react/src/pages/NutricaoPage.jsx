@@ -492,11 +492,14 @@ export default function NutricaoPage({ active }) {
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => setTextOpen(o => !o)} aria-expanded={textOpen}>
             {textOpen ? t('Fechar texto') : t('✍️ Escrever o que comi')}
           </button>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => (customOpen ? closeForm() : setCustomOpen(true))} aria-expanded={customOpen}>
+            {customOpen ? t('Fechar') : t('+ Outro alimento')}
+          </button>
         </div>
         {closing.length > 0 && (
           <div className="close-protein">
             <button type="button" className="link-btn" aria-expanded={closeOpen} onClick={() => setCloseOpen(o => !o)}>
-              {t('Faltam {g} g de proteína · ver o que fecha a meta', { g: fmt(remaining) })} {closeOpen ? '▴' : '▾'}
+              {t('Como fechar a meta de proteína')} {closeOpen ? '▴' : '▾'}
             </button>
             {closeOpen && <div className="water-actions">
               {closing.map(s => (
@@ -508,15 +511,13 @@ export default function NutricaoPage({ active }) {
           </div>
         )}
         {repeatItems.length > 0 && (
-          <div className="water-actions">
-            <button
-              type="button" className="btn btn--ghost btn--sm"
-              onClick={() => { handleAddMany(repeatItems); toast(t('{meal} de ontem repetido', { meal: MEAL_NAME[meal]() })); }}
-            >
-              ↻ {t('Repetir {meal} de ontem', { meal: MEAL_NAME[meal]().toLowerCase() })}
-              {' '}({fmt(repeatItems.reduce((n, f) => n + f.kcal, 0))} kcal)
-            </button>
-          </div>
+          <button
+            type="button" className="link-btn"
+            onClick={() => { handleAddMany(repeatItems); toast(t('{meal} de ontem repetido', { meal: MEAL_NAME[meal]() })); }}
+          >
+            ↻ {t('Repetir {meal} de ontem', { meal: MEAL_NAME[meal]().toLowerCase() })}
+            {' '}({fmt(repeatItems.reduce((n, f) => n + f.kcal, 0))} kcal)
+          </button>
         )}
         {textOpen && (
           <FreeTextMeal
@@ -525,36 +526,6 @@ export default function NutricaoPage({ active }) {
           />
         )}
         {searchOpen && <FoodSearch onAdd={handleAdd} recent={recent} used={used} catalog={catalog} />}
-
-        <div className="water-quick quick-foods">
-          {shownFoods.map(f => (
-            <div key={f.id} className="quick-foods__cell">
-              <button type="button" className="water-quick__btn" onClick={() => handleAdd(f)}>
-                <span className="water-quick__icon" aria-hidden="true">{f.icon}</span>
-                <span className="water-quick__ml">+{f.g}g</span>
-                <span className="water-quick__label">{f.label}</span>
-                <span className="quick-foods__kcal">{f.kcal} kcal</span>
-              </button>
-              {manage && f.custom && (
-                <button type="button" className="quick-foods__edit" aria-label={t('Editar o atalho "{name}"', { name: f.label })} onClick={() => handleEditFood(f)}>✎</button>
-              )}
-              {manage && f.custom && (
-                <button type="button" className="quick-foods__del" aria-label={t('Apagar o atalho "{name}"', { name: f.label })} onClick={() => handleDeleteFood(f)}>×</button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="water-actions">
-          <button type="button" className="btn btn--ghost btn--sm" onClick={() => (customOpen ? closeForm() : setCustomOpen(true))} aria-expanded={customOpen}>
-            {customOpen ? t('Fechar') : t('+ Outro alimento')}
-          </button>
-          {undoFood && (
-            <button type="button" className="btn btn--ghost btn--sm" onClick={handleUndo}>
-              ↶ {t('Desfazer {label}', { label: undoFood.label || `+${undoFood.g}g` })}
-            </button>
-          )}
-        </div>
         {customOpen && (
           <form className="custom-food" onSubmit={handleCustomSubmit}>
             {[['kcal', t('Calorias')], ['g', t('Proteína (g)')], ['carbs', t('Carbo (g)')], ['fat', t('Gordura (g)')]].map(([k, label]) => (
@@ -579,6 +550,33 @@ export default function NutricaoPage({ active }) {
             )}
             <button type="submit" className="btn btn--primary btn--sm custom-food__submit">{editingEntry || editingId ? t('Salvar') : t('Adicionar')}</button>
           </form>
+        )}
+
+        <div className="water-quick quick-foods">
+          {shownFoods.map(f => (
+            <div key={f.id} className="quick-foods__cell">
+              <button type="button" className="water-quick__btn" onClick={() => handleAdd(f)}>
+                <span className="water-quick__icon" aria-hidden="true">{f.icon}</span>
+                <span className="water-quick__ml">+{f.g}g</span>
+                <span className="water-quick__label">{f.label}</span>
+                <span className="quick-foods__kcal">{f.kcal} kcal</span>
+              </button>
+              {manage && f.custom && (
+                <button type="button" className="quick-foods__edit" aria-label={t('Editar o atalho "{name}"', { name: f.label })} onClick={() => handleEditFood(f)}>✎</button>
+              )}
+              {manage && f.custom && (
+                <button type="button" className="quick-foods__del" aria-label={t('Apagar o atalho "{name}"', { name: f.label })} onClick={() => handleDeleteFood(f)}>×</button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {undoFood && (
+          <div className="water-actions">
+            <button type="button" className="link-btn" onClick={handleUndo}>
+              ↶ {t('Desfazer {label}', { label: undoFood.label || `+${undoFood.g}g` })}
+            </button>
+          </div>
         )}
         {(allFoods.length > VISIBLE_FOODS || myFoods.length > 0) && (
           <div className="water-actions">
