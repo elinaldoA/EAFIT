@@ -1,0 +1,229 @@
+/* ---------- celular e toque ---------- */
+
+/* iOS amplia a página ao focar um campo com fonte menor que 16px. Só no iOS:
+   -webkit-touch-callout não existe nos outros navegadores. */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea { font-size: 16px !important; }
+
+  /* Campos de data/hora no iOS: sem isso ignoram a largura do layout, centralizam
+     o texto e encolhem quando vazios. */
+  input[type="date"], input[type="time"], input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 2.75em;
+    text-align: left;
+  }
+  input::-webkit-date-and-time-value { text-align: left; }
+}
+
+/* Dedo em vez de mouse: alvos de toque maiores. */
+@media (pointer: coarse) {
+  .btn { min-height: 40px; }
+  .btn--small { min-height: 36px; padding: 6px 12px; }
+  .icon-btn { width: 36px; height: 36px; font-size: 14px; }
+  .tabs__btn { padding: 12px 16px; }
+  .sidebar__link { padding: 11px 10px; }
+  .seg__btn { padding: 8px 12px; }
+}
+
+@media (max-width: 640px) {
+  .page-title, .section-title-main { font-size: 20px; }
+  /* Filtros do cabeçalho: busca em linha própria, seletores dividindo a largura. */
+  .page-header > .actions-row { width: 100%; }
+  .page-header > .actions-row > .search-input { width: 100%; }
+  .page-header > .actions-row > select.input { flex: 1 1 140px; }
+  .card { padding: 16px; }
+  /* Indicadores em duas colunas (uma só deixava a página muito longa). */
+  .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px; }
+  .tile { padding: 14px; }
+  .tile__value { font-size: 22px; overflow-wrap: anywhere; }
+  .auth-card { padding: 22px 18px; }
+  .flag-row { flex-wrap: wrap; }
+  .media-thumb { width: 96px; }
+  .dist__row { grid-template-columns: minmax(0, 96px) 1fr auto !important; }
+  /* Botões de ação dos cartões dividem a largura: alvo de toque maior. */
+  .resp-table td:not([data-label]) > .actions-row > .btn { flex: 1 1 auto; }
+  .tabs { margin-left: -16px; margin-right: -16px; padding: 0 16px; scroll-padding: 0 16px; }
+}
+
+/* Mapa dia × hora dos treinos (Análise dos planos) */
+.heatgrid { display: grid; gap: 2px; overflow-x: auto; padding-bottom: 4px; }
+.heatgrid__row { display: grid; grid-template-columns: 34px repeat(24, minmax(10px, 1fr)); gap: 2px; align-items: center; }
+.heatgrid__day { font-size: 12px; color: var(--text-muted); }
+.heatgrid__hour { font-size: 10px; color: var(--text-dim); text-align: left; }
+.heatgrid__cell { height: 18px; border-radius: 3px; background: var(--surface-3); }
+.heatgrid__cell--l1 { background: color-mix(in srgb, var(--primary) 22%, var(--surface-3)); }
+.heatgrid__cell--l2 { background: color-mix(in srgb, var(--primary) 45%, var(--surface-3)); }
+.heatgrid__cell--l3 { background: color-mix(in srgb, var(--primary) 70%, var(--surface-3)); }
+.heatgrid__cell--l4 { background: var(--primary); }
+
+/* Calendário editorial */
+.cal { display: grid; gap: 2px; overflow-x: auto; }
+.cal__row { display: grid; grid-template-columns: repeat(7, minmax(92px, 1fr)); gap: 2px; }
+.cal__weekday { font-size: 12px; color: var(--text-muted); text-align: center; padding: 4px 0; }
+.cal__cell { min-height: 84px; border: 1px solid var(--border); border-radius: 6px; padding: 4px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cal__cell--empty { border-style: dashed; opacity: 0.4; }
+.cal__cell--today { outline: 2px solid var(--primary, #6366f1); outline-offset: -2px; }
+.cal__cell--busy { background: rgba(245,158,11,0.08); }
+.cal__day { font-size: 12px; font-weight: 600; }
+.cal__more { font-size: 11px; color: var(--text-muted); }
+.cal__chip { font-size: 11px; line-height: 1.3; padding: 2px 6px; border-radius: 4px; border: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; background: rgba(148,163,184,0.16); }
+button.cal__chip { font-size: 13px; padding: 4px 10px; cursor: pointer; }
+.cal__chip--off { opacity: 0.4; text-decoration: line-through; }
+.cal__chip--tema { background: rgba(236,72,153,0.16); }
+.cal__chip--aviso { background: rgba(59,130,246,0.16); }
+.cal__chip--envio { background: rgba(245,158,11,0.18); }
+.cal__chip--desafio { background: rgba(34,197,94,0.16); }
+.cal__chip--pesquisa { background: rgba(168,85,247,0.16); }
+.cal__chip--experimento { background: rgba(20,184,166,0.16); }
+
+/* Celular: o mês inteiro cabe na tela. Os eventos viram barrinhas coloridas
+   (o texto não caberia); o detalhe de cada um está na lista "No mês". */
+@media (max-width: 640px) {
+  .cal__row { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .cal__cell { min-height: 54px; padding: 3px; gap: 3px; }
+  .cal__day { font-size: 11px; }
+  .cal__cell .cal__chip { height: 5px; padding: 0; font-size: 0; border-radius: 3px; background: var(--text-dim); }
+  .cal__cell .cal__chip--tema { background: rgb(236,72,153); }
+  .cal__cell .cal__chip--aviso { background: rgb(59,130,246); }
+  .cal__cell .cal__chip--envio { background: rgb(245,158,11); }
+  .cal__cell .cal__chip--desafio { background: rgb(34,197,94); }
+  .cal__cell .cal__chip--pesquisa { background: rgb(168,85,247); }
+  .cal__cell .cal__chip--experimento { background: rgb(20,184,166); }
+  .cal__more { font-size: 10px; }
+}
+
+/* Listas simples (Visão do app) */
+.plain-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+
+/* Editor de mensagem com prévia (components/MessageEditor.jsx) */
+.msg-editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .msg-editor { grid-template-columns: 1fr; } }
+.msg-editor__count { font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+.msg-editor__count--over { color: var(--warning); font-weight: 600; }
+.msg-preview { display: grid; gap: 10px; }
+.msg-preview__push { background: var(--surface-3); border-radius: 14px; padding: 10px 12px; display: grid; gap: 2px; font-size: 13px; }
+.msg-preview__app { font-size: 11px; color: var(--text-muted); }
+.msg-preview__clip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-preview__clip2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.msg-preview__inbox { display: flex; gap: 10px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+.msg-preview__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); margin-top: 5px; flex: none; }
+.msg-preview__email { background: #fff; color: #18181b; border-radius: 10px; padding: 16px; font-size: 14px; }
+.msg-preview__email h3 { margin: 6px 0; font-size: 18px; }
+.msg-preview__email-head { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; }
+.msg-preview__btn { display: inline-block; background: #18181b; color: #fff; border-radius: 8px; padding: 8px 14px; margin: 6px 0 10px; font-weight: 600; }
+
+/* Permissões por admin (components/AdminAccessEditor.jsx) */
+.access-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+
+/* Cartão por pessoa (Personais, Embaixadores e influenciadores) */
+/* blocos de 4 totais: sempre 4 lado a lado (no celular a regra geral põe 2) */
+.tile-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pcard-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.pcard__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 16px; }
+.pcard__id { flex: 1 1 260px; min-width: 0; }
+.pcard__name { font-size: 16px; font-weight: 700; letter-spacing: -.01em; color: var(--text); text-decoration: none; overflow-wrap: anywhere; }
+.pcard__name:hover { color: var(--primary-text); }
+.pcard__title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.pcard__title .badge { margin-left: 0; }
+.pcard__edit { margin-top: 14px; padding: 14px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); }
+.pcard__meta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 3px; font-size: 12.5px; color: var(--text-muted); overflow-wrap: anywhere; }
+.pcard__meta code { color: var(--text); }
+.pcard__flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pcard__flags .badge { margin-left: 0; }
+.pcard__actions { flex: none; }
+/* 6 indicadores: 6, 3 ou 2 colunas pela largura do cartão (nunca sobra um sozinho) */
+.pcard { container-type: inline-size; }
+.pcard__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 0; }
+@container (min-width: 900px) { .pcard__stats { grid-template-columns: repeat(var(--stat-cols, 6), minmax(0, 1fr)); } }
+@container (max-width: 480px) {
+  .pcard__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* número ímpar de indicadores: o último ocupa a linha em vez de ficar sozinho */
+  .pcard__stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+.pcard__stat { min-width: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); }
+.pcard__stat-label { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-dim); }
+.pcard__stat dd { margin: 0; }
+.pcard__stat-value { margin-top: 3px; font-size: 18px; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.pcard__stat-sub { margin-top: 3px; font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+.pcard__panel { margin-top: 16px; padding-top: 4px; border-top: 1px solid var(--border); }
+.pcard__panel .subsection-title { margin-top: 12px; }
+@media (max-width: 640px) {
+  .pcard__actions { width: 100%; }
+  .pcard__actions > .btn { flex: 1 1 auto; }
+  .pcard__stat-value { font-size: 16px; }
+}
+
+/* Custos (pages/Costs.jsx) */
+.dist__fill--warn { background: var(--warning); }
+.spark { display: block; width: 120px; height: 28px; color: var(--primary-text); }
+
+/* Aviso flutuante (ex.: "Link copiado") — aparece onde o admin está olhando,
+   não no topo da página que pode estar fora da tela. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 50;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  box-shadow: var(--shadow-md);
+  overflow-wrap: anywhere;
+}
+
+/* Meu perfil (pages/Profile.jsx) */
+.profile-hero { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; }
+.profile-hero__avatar {
+  display: grid; place-items: center; flex: none;
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-h));
+  color: #fff; font-size: 26px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em;
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+.profile-hero__id { flex: 1 1 220px; min-width: 0; }
+.profile-hero__id .user-detail__meta { margin: 2px 0 0; }
+.profile-hero__badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.profile-hero__badges .badge { margin-left: 0; }
+.profile-hero__facts { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; }
+.profile-hero__facts dt { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
+.profile-hero__facts dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.profile-hero__logout { flex: none; }
+@media (max-width: 640px) {
+  .profile-hero__avatar { width: 56px; height: 56px; font-size: 20px; }
+  .profile-hero__logout { width: 100%; }
+}
+
+.profile-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.profile-row > div:not(.seg) { flex: 1 1 220px; min-width: 0; }
+.profile-checks { list-style: none; margin: -4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12.5px; color: var(--text-dim); }
+.profile-checks .is-ok { color: var(--ok-text); }
+.profile-areas { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+.profile-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.profile-timeline li { display: flex; flex-wrap: wrap; gap: 2px 14px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.profile-timeline li:first-child { border-top: 0; padding-top: 0; }
+.profile-timeline__when { min-width: 130px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+
+/* Localização: gráfico de acessos por dia */
+.geo-daily { margin-bottom: 14px; }
+.geo-daily__chart { display: block; width: 100%; height: 72px; color: var(--primary-text); }
+.geo-daily__note { margin: 4px 0 0; }
+
+.geo-new { margin: 0 0 12px; font-size: 13px; color: var(--text-muted); }
+.geo-new summary { cursor: pointer; font-weight: 500; color: var(--text); }
+.geo-tabs { margin-top: 16px; flex-wrap: wrap; }
+.geo-detail { margin-top: 12px; }
+.geo-custom { display: inline-flex; align-items: center; font-size: 13px; color: var(--text-muted); }
+.geo-custom__input { width: 64px; padding: 4px 8px; display: inline-block; }
+
+/* Período por datas: uma linha só, tudo na mesma altura e os campos de data no mesmo tamanho. */
+.geo-range { align-items: center; margin-top: 12px; }
+.geo-range > .btn, .geo-range .input { box-sizing: border-box; height: 36px; margin: 0; }
+.geo-range > .btn { padding: 0 14px; font-size: 12.5px; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+.geo-range label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+.geo-range .input { width: 150px; padding: 0 10px; }
+

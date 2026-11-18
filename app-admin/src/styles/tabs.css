@@ -1,0 +1,51 @@
+/* ---------- tabs ---------- */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.tabs__btn {
+  text-decoration: none;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color .15s ease, border-color .15s ease;
+}
+
+.tabs__btn:hover { color: var(--text); }
+
+.tabs__btn--active {
+  color: var(--primary-text);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+
+.user-detail__meta { color: var(--text-muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.user-app-data { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+.user-app-data__avatar { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; flex: none; border: 1px solid var(--border); }
+.user-app-data__avatar--empty { display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-muted); background: var(--surface-2, transparent); }
+.user-app-data__grid { flex: 1 1 320px; min-width: 0; padding: 0; border: 0; background: none; box-shadow: none; }
+
+.actions-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.form-grid__actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+

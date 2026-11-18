@@ -1,0 +1,66 @@
+/* ---------- shell / layout ---------- */
+
+.shell {
+  display: flex;
+  /* dvh: no celular, 100vh inclui a área atrás da barra do navegador. */
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.shell__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  /* rede de segurança: um item largo demais não faz a página inteira rolar de
+     lado. clip (e não hidden) não cria contêiner de rolagem, então o topbar
+     continua sticky. */
+  overflow-x: clip;
+}
+
+.shell__content {
+  padding: 28px 32px 48px;
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+/* Tablet / notebook pequeno: menu e margens menores sobram mais espaço pras tabelas. */
+@media (min-width: 901px) and (max-width: 1200px) {
+  .sidebar { width: 216px; }
+  .shell__content { padding: 24px 22px 44px; }
+  .topbar { padding: 0 22px; }
+}
+
+@media (max-width: 900px) {
+  .shell__content {
+    padding: 18px max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+}
+
+/* Rodapé da página: fica no fim do conteúdo (shell__main é coluna flex e o
+   conteúdo cresce), não preso na tela. */
+.shell__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 20px;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 16px 32px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+@media (min-width: 901px) and (max-width: 1200px) { .shell__footer { padding-left: 22px; padding-right: 22px; } }
+@media (max-width: 900px) { .shell__footer { padding-left: 16px; padding-right: 16px; } }
+
+.page-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}
+

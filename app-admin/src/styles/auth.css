@@ -1,0 +1,49 @@
+/* ---------- auth screen ---------- */
+
+.auth-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--bg);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-card__logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  margin: 0 auto;
+  display: block;
+  filter: drop-shadow(0 0 24px var(--primary-glow));
+}
+
+.auth-card__brand {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(135deg, var(--primary) 30%, var(--primary-h));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.auth-card__subtitle { text-align: center; color: var(--text-muted); font-size: 13px; margin: -8px 0 4px; }
+/* QR do autenticador: fundo branco fixo para a câmera ler também no tema escuro */
+.auth-card__qr { width: 180px; height: 180px; align-self: center; background: #fff; padding: 8px; border-radius: var(--radius); }
+.auth-card__secret { text-align: center; color: var(--text-muted); font-size: 12px; margin: 0; }
+.auth-card__secret code { font-size: 13px; letter-spacing: 1px; word-break: break-all; user-select: all; }
+
