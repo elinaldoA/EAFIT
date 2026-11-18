@@ -44,7 +44,6 @@ export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hou
   // Refeição recém-registrada: { meal, name, token } (token = o que onAdd devolveu, para desfazer).
   const [done, setDone] = useState(null);
   const [howOpen, setHowOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   if (!goals) return null;
   const { target, meals } = suggestGoalMeals({ goals, totals, meal, meta, hour, trainingHour });
   if (!target) return null;
@@ -71,7 +70,7 @@ export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hou
         <div className="goal-meals__title">
           <select
             className="goal-meals__meal" value={meal} aria-label={t('Refeição')}
-            onChange={e => { onMealChange(e.target.value); setPick(0); setDetailsOpen(false); }}
+            onChange={e => { onMealChange(e.target.value); setPick(0); }}
           >
             {MEALS.map(m => <option key={m} value={m}>{MEAL_NAME[m]()}</option>)}
           </select>
@@ -89,28 +88,21 @@ export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hou
           {current.habit && <span className="goal-meals__badge goal-meals__badge--habit">{t('Seu hábito')}</span>}
           {current.training && <span className="goal-meals__badge">{current.training === 'pre' ? t('Pré-treino') : t('Pós-treino')}</span>}
         </div>
+        <ul className="goal-meals__items">
+          {current.items.map((it, i) => (
+            <li key={`${it.label}-${i}`}>
+              <span aria-hidden="true">{it.icon}</span>
+              <span className="goal-meals__name">{it.name || it.label}</span>
+              {it.amount && <span className="goal-meals__amount">{it.amount}</span>}
+            </li>
+          ))}
+        </ul>
         <p className="goal-meals__macros">
           {t('{kcal} kcal · {g} g prot · {carbs} g carbo · {fat} g gord', {
             kcal: fmt(current.total.kcal), g: fmt(current.total.g), carbs: fmt(current.total.carbs), fat: fmt(current.total.fat),
           })}
         </p>
-        <button type="button" className="link-btn goal-meals__details-toggle" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(o => !o)}>
-          {detailsOpen ? t('Esconder os itens') : t('Ver os {n} itens', { n: current.items.length })} {detailsOpen ? '▴' : '▾'}
-        </button>
-        {detailsOpen && (
-          <>
-            <ul className="goal-meals__items">
-              {current.items.map((it, i) => (
-                <li key={`${it.label}-${i}`}>
-                  <span aria-hidden="true">{it.icon}</span>
-                  <span className="goal-meals__name">{it.name || it.label}</span>
-                  {it.amount && <span className="goal-meals__amount">{it.amount}</span>}
-                </li>
-              ))}
-            </ul>
-            <p className="goal-meals__why">{current.why}</p>
-          </>
-        )}
+        <p className="goal-meals__why">{current.why}</p>
         <div className="goal-meals__actions">
           {isDone ? (
             <span className="goal-meals__done" role="status">
@@ -123,7 +115,7 @@ export default function GoalMeals({ meta, goals, totals, meal, onMealChange, hou
             </button>
           )}
           {!isDone && options.length > 1 && (
-            <button type="button" className="link-btn" onClick={() => { setPick(i => i + 1); setDetailsOpen(false); }}>
+            <button type="button" className="link-btn" onClick={() => setPick(i => i + 1)}>
               {t('Outra opção')} →
             </button>
           )}

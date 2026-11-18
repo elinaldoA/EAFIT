@@ -302,8 +302,6 @@ describe('NutricaoPage', () => {
     await screen.findByText('Sua próxima refeição');
     fireEvent.change(screen.getByLabelText('Refeição'), { target: { value: 'almoco' } });
     expect(screen.getByLabelText('Refeição').value).toBe('almoco');
-    expect(document.querySelectorAll('.goal-meals__items li')).toHaveLength(0);
-    fireEvent.click(screen.getByText(/Ver os \d+ itens/));
     const n = document.querySelectorAll('.goal-meals__items li').length;
     expect(n).toBeGreaterThan(1);
     fireEvent.click(screen.getByText('Registrar esta refeição'));
@@ -337,8 +335,8 @@ describe('NutricaoPage', () => {
       at(18);
       render(<NutricaoPage active />);
       await screen.findByText('Ovo');
-      expect(screen.getByText(/Como fechar a meta de proteína/)).toBeTruthy();
-      fireEvent.click(screen.getByText(/Como fechar a meta de proteína/));
+      expect(screen.getByText(/ver o que fecha a meta/)).toBeTruthy();
+      fireEvent.click(screen.getByText(/ver o que fecha a meta/));
       const btn = document.querySelector('.close-protein .water-actions button');
       fireEvent.click(btn);
       expect(readLocalTotals().protein).toBeGreaterThan(0);
@@ -348,7 +346,7 @@ describe('NutricaoPage', () => {
       at(9);
       render(<NutricaoPage active />);
       await screen.findByText('Ovo');
-      expect(screen.queryByText(/Como fechar a meta de proteína/)).toBeNull();
+      expect(screen.queryByText(/ver o que fecha a meta/)).toBeNull();
     });
 
     it('repete a refeição de ontem e abre a busca com os alimentos de sempre', async () => {
