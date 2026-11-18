@@ -11,7 +11,7 @@
     "build": "node scripts/build-site.mjs && vite build && node scripts/build-site.mjs --stamp",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "node scripts/test.mjs run",
     "e2e:build": "node scripts/build-e2e.mjs",
     "e2e": "npm run e2e:build && playwright test"
   },
