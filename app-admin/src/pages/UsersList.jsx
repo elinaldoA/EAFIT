@@ -13,7 +13,7 @@ import { METAS, NIVEIS } from '../lib/userDetailHelpers';
 const PAGE_SIZES = [25, 50, 100];
 import { toggleId, toggleAll, bulkAction, bulkNotify, summarize } from '../lib/bulkActions';
 import { softFail } from '../lib/softFail';
-import { useConfirm } from '../context/confirmContext';
+import { useConfirm, usePrompt } from '../context/confirmContext';
 
 const CSV_COLUMNS = [
   { key: 'nome', label: 'Nome' }, { key: 'sobrenome', label: 'Sobrenome' },
@@ -80,6 +80,7 @@ function StatusBadges({ u }) {
 
 export default function UsersList() {
   const ask = useConfirm();
+  const prompt = usePrompt();
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -134,7 +135,7 @@ export default function UsersList() {
 
   async function handleSaveSegment() {
     const filters = { search, status, nivel, meta };
-    const name = window.prompt('Nome do segmento (ex.: Iniciantes inativos):');
+    const name = await prompt({ title: 'Salvar segmento', label: 'Nome do segmento (ex.: Iniciantes inativos)' });
     if (!name?.trim()) return;
     setSegmentMsg('');
     try {
@@ -217,13 +218,19 @@ export default function UsersList() {
     return summarize(res, verb);
   });
 
-  const handleBulkNotify = () => {
-    const title = window.prompt('Título da notificação:');
-    if (!title?.trim()) return;
-    const body = window.prompt('Mensagem:');
-    if (!body?.trim()) return;
+  const handleBulkNotify = async () => {
+    const res = await ask({
+      title: 'Notificar selecionados',
+      message: `A notificação vai para ${selected.size} usuário(s).`,
+      confirmLabel: 'Continuar',
+      fields: [
+        { name: 'title', label: 'Título da notificação', required: true },
+        { name: 'body', label: 'Mensagem', multiline: true, required: true },
+      ],
+    });
+    if (!res || !res.title?.trim() || !res.body?.trim()) return;
     return handleBulk('Enviado', `Enviar para ${selected.size} usuário(s)?`, async () => {
-      const data = await bulkNotify([...selected], { title: title.trim(), body: body.trim() });
+      const data = await bulkNotify([...selected], { title: res.title.trim(), body: res.body.trim() });
       return `Enviado: ${data.sent} de ${data.targetCount} dispositivo(s).`;
     });
   };

@@ -96,7 +96,7 @@ export default function Ambassadors() {
       await navigator.clipboard.writeText(text);
       setMsg(`Link copiado: ${text}`);
     } catch {
-      window.prompt('Copie o link:', text);
+      await ask({ title: 'Copie o link', confirmLabel: 'Fechar', fields: [{ name: 'link', label: 'Link', defaultValue: text, readOnly: true }] });
     }
   }
 

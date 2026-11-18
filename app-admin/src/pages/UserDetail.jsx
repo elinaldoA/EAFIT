@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useConfirm } from '../context/confirmContext';
+import { useConfirm, usePrompt } from '../context/confirmContext';
 import { fetchAllRows } from '../lib/paged';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../lib/supabase';
@@ -24,6 +24,7 @@ export default function UserDetail() {
   const navigate = useNavigate();
   const { adminUser } = useAdminAuth();
   const confirm = useConfirm();
+  const prompt = usePrompt();
 
   const [detail, setDetail] = useState(null);
   const [activePlan, setActivePlan] = useState(null);
@@ -147,11 +148,14 @@ export default function UserDetail() {
   }
 
   // O prompt do motivo já serve de confirmação: cancelar não desativa.
-  function handleDeactivate() {
-    const reason = window.prompt(
-      'Desativar esta conta? O login fica bloqueado e a conta sai de e-mails, notificações e comunidade. '
-      + 'Os dados são mantidos e você pode reativar depois.\n\nMotivo (opcional, fica no registro de auditoria):',
-    );
+  async function handleDeactivate() {
+    const reason = await prompt({
+      title: 'Desativar esta conta?',
+      message: 'O login fica bloqueado e a conta sai de e-mails, notificações e comunidade. '
+        + 'Os dados são mantidos e você pode reativar depois.',
+      label: 'Motivo (opcional, fica no registro de auditoria)',
+      required: false, confirmLabel: 'Desativar', danger: true,
+    });
     if (reason === null) return;
     return runAction('deactivate', { reason: reason.trim() });
   }

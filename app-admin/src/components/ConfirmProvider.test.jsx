@@ -10,7 +10,7 @@ vi.mock('../lib/reauth', () => ({
 }));
 
 import ConfirmProvider from './ConfirmProvider';
-import { useConfirm } from '../context/confirmContext';
+import { useConfirm, usePrompt } from '../context/confirmContext';
 
 let result;
 function Trigger({ opts }) {
@@ -100,5 +100,60 @@ describe('confirm com texto solto', () => {
   it('mensagem neutra fica com botão normal', () => {
     setup('Enviar para 3 pessoas?');
     expect(screen.getByRole('button', { name: 'Confirmar' }).className).toContain('btn--primary');
+  });
+
+  it('fields: pede texto, só habilita com os obrigatórios e resolve com os valores', async () => {
+    setup({
+      title: 'Notificar', confirmLabel: 'Enviar',
+      fields: [{ name: 'title', label: 'Título', required: true }, { name: 'body', label: 'Mensagem', multiline: true, required: true }],
+    });
+    const btn = screen.getByText('Enviar');
+    expect(btn.disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Oi' } });
+    expect(btn.disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('Mensagem'), { target: { value: 'Tudo bem?' } });
+    expect(btn.disabled).toBe(false);
+    fireEvent.click(btn);
+    await waitFor(() => expect(result).toEqual({ title: 'Oi', body: 'Tudo bem?' }));
+  });
+
+  it('fields: cancelar devolve false', async () => {
+    setup({ title: 'Notificar', fields: [{ name: 'title', label: 'Título' }] });
+    fireEvent.click(screen.getByText('Cancelar'));
+    await waitFor(() => expect(result).toBe(false));
+  });
+});
+
+describe('usePrompt', () => {
+  let value;
+  function PromptTrigger({ opts }) {
+    const prompt = usePrompt();
+    return <button onClick={async () => { value = await prompt(opts); }}>pedir</button>;
+  }
+
+  it('devolve o texto (sem espaços nas pontas) ou null ao cancelar', async () => {
+    render(<ConfirmProvider><PromptTrigger opts={{ title: 'Nome', label: 'Nome do modelo', defaultValue: 'A' }} /></ConfirmProvider>);
+    fireEvent.click(screen.getByText('pedir'));
+    fireEvent.change(screen.getByLabelText('Nome do modelo'), { target: { value: '  Meu modelo ' } });
+    fireEvent.click(screen.getByText('Salvar'));
+    await waitFor(() => expect(value).toBe('Meu modelo'));
+
+    fireEvent.click(screen.getByText('pedir'));
+    fireEvent.click(screen.getByText('Cancelar'));
+    await waitFor(() => expect(value).toBeNull());
+  });
+
+  it('campo opcional aceita vazio (devolve string vazia, não null)', async () => {
+    render(<ConfirmProvider><PromptTrigger opts={{ title: 'Motivo', label: 'Motivo', required: false, confirmLabel: 'Ok' }} /></ConfirmProvider>);
+    fireEvent.click(screen.getByText('pedir'));
+    fireEvent.click(screen.getByText('Ok'));
+    await waitFor(() => expect(value).toBe(''));
+  });
+
+  it('sem provider cai no window.prompt', async () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('x');
+    render(<PromptTrigger opts={{ label: 'Nome' }} />);
+    fireEvent.click(screen.getByText('pedir'));
+    await waitFor(() => expect(value).toBe('x'));
   });
 });

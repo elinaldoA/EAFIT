@@ -8,7 +8,7 @@ import MessageEditor from '../components/MessageEditor';
 import { useSearchParams } from 'react-router-dom';
 import { READY_SEGMENTS, fetchSegments, resolveSegment } from '../lib/segments';
 import { softFail } from '../lib/softFail';
-import { useConfirm } from '../context/confirmContext';
+import { useConfirm, usePrompt } from '../context/confirmContext';
 
 function formatDate(value) {
   if (!value) return '—';
@@ -24,6 +24,7 @@ function toLocalInputValue(date) {
 
 export default function Broadcast() {
   const ask = useConfirm();
+  const prompt = usePrompt();
   const { adminUser } = useAdminAuth();
   const [users, setUsers] = useState([]);
   const [title, setTitle] = useState('');
@@ -163,7 +164,7 @@ export default function Broadcast() {
 
   async function saveTemplate() {
     if (!title.trim() || !body.trim()) { setMsg('Erro: preencha título e mensagem para salvar o modelo.'); return; }
-    const name = window.prompt('Nome do modelo:', title.trim().slice(0, 60));
+    const name = await prompt({ title: 'Salvar modelo', label: 'Nome do modelo', defaultValue: title.trim().slice(0, 60) });
     if (!name || !name.trim()) return;
     const { error } = await db.from('broadcast_templates').insert({
       name: name.trim().slice(0, 60), title: title.trim(), body: body.trim(), created_by: adminUser.id,
