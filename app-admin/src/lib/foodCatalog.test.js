@@ -51,4 +51,11 @@ describe('foodCatalog', () => {
     expect(validateFood({ ...base, sugar_g: '4,5', sat_fat_g: '1' }).value).toMatchObject({ sugar_g: 4.5, sat_fat_g: 1 });
     expect(validateFood({ ...base, sugar_g: '120' }).errors.sugar_g).toBeTruthy();
   });
+
+  it('nome em inglês é opcional', () => {
+    const base = { ...EMPTY_FOOD, name: 'X', kcal: '100', protein_g: '5', carbs_g: '15', fat_g: '2' };
+    expect(validateFood(base).value.name_en).toBeNull();
+    expect(validateFood({ ...base, name_en: ' Rice ' }).value.name_en).toBe('Rice');
+    expect(validateFood({ ...base, name_en: 'x'.repeat(61) }).errors.name_en).toBeTruthy();
+  });
 });

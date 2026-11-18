@@ -33,7 +33,7 @@ describe('FoodCatalog', () => {
     render(<FoodCatalog />);
     await screen.findByText(/Pamonha/);
     fireEvent.click(screen.getByText('Novo alimento'));
-    fireEvent.change(screen.getByLabelText(/^Nome/), { target: { value: 'Tapioca recheada' } });
+    fireEvent.change(screen.getByLabelText(/^Nome \(igual/), { target: { value: 'Tapioca recheada' } });
     fireEvent.change(screen.getByLabelText(/Calorias/), { target: { value: '200' } });
     fireEvent.change(screen.getByLabelText(/Proteína/), { target: { value: '5' } });
     fireEvent.change(screen.getByLabelText(/Carboidratos/), { target: { value: '30' } });

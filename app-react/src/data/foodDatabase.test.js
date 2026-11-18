@@ -167,4 +167,16 @@ describe('householdMeasures', () => {
     expect(FOOD_DATABASE.find(f => f.ptName === 'Prato feito (arroz, feijão, carne e salada)').estimated).toBe(true);
     expect(FOOD_DATABASE.find(f => f.ptName === 'Mostarda').estimated).toBeUndefined();
   });
+
+  it('catálogo desativado esconde o item de mesmo nome da lista do app; o nome em inglês também casa', () => {
+    const rows = [
+      { id: 'x1', name: 'Mostarda', active: false, kcal: 60, protein_g: 3.7, carbs_g: 5.8, fat_g: 3.3 },
+      { id: 'x2', name: 'Quinoa cozida', name_en: 'Cooked quinoa', active: true, kcal: 130, protein_g: 4.4, carbs_g: 21.3, fat_g: 1.9 },
+    ];
+    const list = foodsWithCatalog(rows);
+    expect(searchFoods('mostarda', list, 20).filter(f => f.name === 'Mostarda')).toEqual([]);
+    const quinoa = searchFoods('quinoa', list, 20).filter(f => f.ptName === 'Quinoa cozida');
+    expect(quinoa).toHaveLength(1);
+    expect(quinoa[0]).toMatchObject({ source: 'catalog', kcal: 130 });
+  });
 });

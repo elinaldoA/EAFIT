@@ -3,7 +3,7 @@ import { db } from './supabase';
 // Catálogo de alimentos (tabela food_catalog): o que a busca da aba Nutrição
 // oferece além da lista do app e da TACO. Valores por 100 g.
 export const EMPTY_FOOD = {
-  name: '', icon: '🍽️', category: '', portion_g: '100', kcal: '', protein_g: '0', carbs_g: '0', fat_g: '0',
+  name: '', name_en: '', icon: '🍽️', category: '', portion_g: '100', kcal: '', protein_g: '0', carbs_g: '0', fat_g: '0',
   fiber_g: '0', sodium_mg: '0', sugar_g: '', sat_fat_g: '', estimated: false, active: true, measures: '',
 };
 
@@ -43,8 +43,10 @@ export function validateFood(draft) {
     ['protein_g', 0, 100, 'De 0 a 100 g.'], ['carbs_g', 0, 100, 'De 0 a 100 g.'], ['fat_g', 0, 100, 'De 0 a 100 g.'],
     ['fiber_g', 0, 100, 'De 0 a 100 g.'], ['sodium_mg', 0, 40000, 'De 0 a 40000 mg.'],
   ];
+  const nameEn = String(draft.name_en || '').trim();
+  if (nameEn.length > 60) errors.name_en = 'Até 60 caracteres.';
   const value = {
-    name, icon: String(draft.icon || '').trim() || '🍽️', category: String(draft.category || '').trim() || null,
+    name, name_en: nameEn || null, icon: String(draft.icon || '').trim() || '🍽️', category: String(draft.category || '').trim() || null,
     estimated: !!draft.estimated, active: draft.active !== false,
   };
   for (const [k, min, max, msg] of limits) {

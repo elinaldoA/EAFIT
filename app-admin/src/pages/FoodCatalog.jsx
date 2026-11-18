@@ -48,6 +48,11 @@ function FoodForm({ editing, categories, onCancel, onSaved }) {
           <input className="input" value={draft.name} maxLength={60} onChange={e => set('name', e.target.value)} />
           {err('name')}
         </label>
+        <label className="field" style={{ gridColumn: '1 / -1' }}>
+          <span className="field__label">Nome em inglês (opcional; o app em inglês usa este)</span>
+          <input className="input" value={draft.name_en} maxLength={60} onChange={e => set('name_en', e.target.value)} />
+          {err('name_en')}
+        </label>
         <label className="field">
           <span className="field__label">Ícone</span>
           <input className="input" value={draft.icon} onChange={e => set('icon', e.target.value)} />
@@ -116,7 +121,7 @@ export default function FoodCatalog() {
   const setFilter = (k, v) => { setFilters(f => ({ ...f, [k]: v })); setShown(PAGE); };
 
   async function handleDelete(row) {
-    if (!await ask(`Excluir "${row.name}" do catálogo? Ele some da busca do app na próxima abertura. Para só esconder, desative.`)) return;
+    if (!await ask(`Excluir "${row.name}" do catálogo? Se for um alimento que também está na lista do app, ele volta com os valores originais. Para esconder de vez, desative.`)) return;
     setMsg('');
     try {
       await deleteFood(row.id);
@@ -180,7 +185,7 @@ export default function FoodCatalog() {
               <tbody>
                 {filtered.slice(0, shown).map(r => (
                   <tr key={r.id}>
-                    <td data-label="Alimento">{r.icon} {r.name}</td>
+                    <td data-label="Alimento">{r.icon} {r.name}{r.name_en && <div className="user-detail__meta">{r.name_en}</div>}</td>
                     <td data-label="Categoria">{r.category || '—'}</td>
                     <td data-label="Por 100 g">{r.kcal} kcal · {r.protein_g} P · {r.carbs_g} C · {r.fat_g} G</td>
                     <td data-label="Porção">{r.portion_g} g</td>

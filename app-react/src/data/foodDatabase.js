@@ -1,4 +1,4 @@
-import { t } from '../lib/i18n';
+import { t, lang } from '../lib/i18n';
 import { TACO_FOODS } from './tacoFoods';
 
 // Base de alimentos para a busca da aba Nutrição, por 100 g; `portion` é a
@@ -399,7 +399,7 @@ function fuzzyHit(word, f) {
 // Alimento do catálogo do painel (tabela food_catalog), no formato da busca.
 export function foodFromCatalog(r) {
   return {
-    id: `cat${r.id}`, icon: r.icon || '🍽️', name: r.name, ptName: r.name, source: 'catalog',
+    id: `cat${r.id}`, icon: r.icon || '🍽️', name: (lang === 'en' && r.name_en) || r.name, ptName: r.name, source: 'catalog',
     kcal: Number(r.kcal) || 0, g: Number(r.protein_g) || 0, carbs: Number(r.carbs_g) || 0, fat: Number(r.fat_g) || 0,
     fiber: Number(r.fiber_g) || 0, sodium: Number(r.sodium_mg) || 0,
     portion: Number(r.portion_g) || 100, estimated: !!r.estimated,
@@ -410,11 +410,13 @@ export function foodFromCatalog(r) {
 }
 
 // Lista da busca com o catálogo do painel: os itens dele vêm junto dos próprios
-// do app (antes da TACO) e um item de mesmo nome substitui o do app.
+// do app (antes da TACO) e um item de mesmo nome substitui o do app. A lista do
+// app fica como reserva (sem rede, antes do catálogo carregar).
 export function foodsWithCatalog(rows) {
   if (!rows?.length) return ALL_FOODS;
-  const extra = rows.map(foodFromCatalog);
-  const names = new Set(extra.map(f => plain(f.name)));
+  // Item desativado no painel não aparece, mas também tira da lista o de mesmo nome do app.
+  const extra = rows.filter(r => r.active !== false).map(foodFromCatalog);
+  const names = new Set(rows.flatMap(r => [plain(r.name), r.name_en && plain(r.name_en)]).filter(Boolean));
   return [...extra, ...FOOD_DATABASE.filter(f => !names.has(plain(f.ptName)) && !names.has(plain(f.name))), ...TACO_FOODS];
 }
 
