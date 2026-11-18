@@ -48,7 +48,9 @@ function Scanner({ onCode, onClose }) {
   );
 }
 
-export default function FoodSearch({ onAdd }) {
+// `recent`: alimentos que a pessoa já registrou (um toque repete a porção);
+// `used`: nomes deles, que sobem nos resultados.
+export default function FoodSearch({ onAdd, recent = [], used }) {
   const [query, setQuery] = useState('');
   const [code, setCode] = useState('');
   const [picked, setPicked] = useState(null);
@@ -59,7 +61,7 @@ export default function FoodSearch({ onAdd }) {
   const [msg, setMsg] = useState('');
   const [scanning, setScanning] = useState(false);
 
-  const results = useMemo(() => searchFoods(query), [query]);
+  const results = useMemo(() => searchFoods(query, undefined, 10, { loose: true, used }), [query, used]);
   const measures = useMemo(() => (picked ? measuresFor(picked.ptName || picked.name) : []), [picked]);
   const unit = measures[measure];
   const grams = Math.round((Number(amount) || 0) * (unit ? unit.grams : 1));
@@ -121,6 +123,24 @@ export default function FoodSearch({ onAdd }) {
         placeholder={t('Buscar alimento (ex.: arroz, frango)')} aria-label={t('Buscar alimento')}
         onChange={e => { setQuery(e.target.value); setPicked(null); }}
       />
+      {!picked && !query.trim() && recent.length > 0 && (
+        <div className="food-search__recent">
+          <p className="dash-card__subtitle">{t('Seus alimentos de sempre')}</p>
+          <ul className="food-search__list">
+            {recent.map(f => (
+              <li key={f.label}>
+                <button
+                  type="button"
+                  onClick={() => { onAdd(f); setMsg(t('{label} adicionado', { label: f.label })); }}
+                >
+                  <span aria-hidden="true">{f.icon}</span> {f.label}
+                  <small>{t('{kcal} kcal · {g} g de proteína', { kcal: f.kcal, g: f.g })}</small>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {!picked && results.length > 0 && (
         <ul className="food-search__list">
           {results.map(f => (

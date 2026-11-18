@@ -354,22 +354,78 @@ const plain = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim
 // Base da busca: os itens acima (nomes simples, traduzidos) e a Tabela TACO completa.
 export const ALL_FOODS = [...FOOD_DATABASE, ...TACO_FOODS];
 
+// Sinônimos e grafias comuns: a palavra digitada vale também pelas alternativas.
+const SYNONYMS = {
+  macaxeira: ['mandioca'], aipim: ['mandioca'], castelinha: ['mandioca'],
+  bolacha: ['biscoito'], refri: ['refrigerante'], mussarela: ['mucarela', 'mozarela'],
+  mucarela: ['mozarela'], mozarela: ['mucarela'], mozzarella: ['mucarela', 'mozarela'],
+  yogurt: ['iogurte'], iogurt: ['iogurte'], hamburger: ['hamburguer'], hamburguer: ['hamburger'],
+  fecula: ['polvilho'], batatinha: ['batata'],
+};
+
+// Distância de edição, cortada: só interessa saber se é pequena.
+function editDistance(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let low = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      low = Math.min(low, cur[j]);
+    }
+    if (low > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+const TOKENS = new WeakMap();
+const tokensOf = f => {
+  let t = TOKENS.get(f);
+  if (!t) { t = plain(f.name).split(/[^a-z0-9]+/).filter(w => w.length >= 3); TOKENS.set(f, t); }
+  return t;
+};
+
+// Palavra com erro de digitação: perto de alguma palavra do nome (1 letra de
+// diferença até 6 letras, 2 a partir de 7), inclusive pelo começo dela.
+function fuzzyHit(word, f) {
+  if (word.length < 4) return false;
+  const max = word.length >= 7 ? 2 : 1;
+  return tokensOf(f).some(tok => editDistance(word, tok, max) <= max || (tok.length > word.length && editDistance(word, tok.slice(0, word.length), max) <= max));
+}
+
 // Todas as palavras digitadas precisam aparecer no nome (sem acento, qualquer
 // ordem). Os itens acima vêm antes dos da TACO e, em cada grupo, os que começam
 // pela primeira palavra ("feijão" → "Feijão, carioca…" antes de "Acarajé…").
 // Item cru vai depois do preparado, a não ser que a busca peça "cru".
-export function searchFoods(query, list = ALL_FOODS, limit = 10) {
+// `opts.loose` (a busca da tela): aceita plural ("ovos"), sinônimos ("macaxeira")
+// e, sem resultado nenhum, erro de digitação ("frango grelhdo"); `opts.used`
+// (nomes sem acento que a pessoa já registrou) sobe os alimentos dela.
+export function searchFoods(query, list = ALL_FOODS, limit = 10, opts = {}) {
   const words = plain(query).split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const wantsRaw = words.some(w => w.startsWith('cru'));
+  const used = opts.used;
   const rank = f => (f.source === 'taco' ? 2 : 0) + (plain(f.name).startsWith(words[0]) ? 0 : 1)
-    + (!wantsRaw && /\bcrua?\b/.test(plain(f.name)) ? 0.5 : 0);
-  return list
-    .filter(f => words.every(w => plain(f.name).includes(w)))
+    + (!wantsRaw && /\bcrua?\b/.test(plain(f.name)) ? 0.5 : 0)
+    + (used?.has(plain(f.name)) ? -1.5 : 0);
+  const top = hits => hits
     .map((f, i) => [rank(f), i, f])
     .sort((a, b) => a[0] - b[0] || a[1] - b[1])
     .slice(0, limit)
     .map(([, , f]) => f);
+
+  const strict = list.filter(f => words.every(w => plain(f.name).includes(w)));
+  if (!opts.loose) return top(strict);
+
+  const alts = w => [w, ...(w.length > 3 && w.endsWith('s') ? [w.slice(0, -1)] : []), ...(SYNONYMS[w] || [])];
+  const loose = list.filter(f => {
+    const name = plain(f.name);
+    return words.every(w => alts(w).some(a => name.includes(a)));
+  });
+  if (loose.length) return top(loose);
+  return top(list.filter(f => words.every(w => alts(w).some(a => plain(f.name).includes(a)) || fuzzyHit(w, f))));
 }
 
 // Macros de `grams` gramas de um alimento por 100 g, no formato do registro do

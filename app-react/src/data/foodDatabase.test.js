@@ -127,4 +127,24 @@ describe('householdMeasures', () => {
   it('itens próprios guardam o nome em português (ptName)', () => {
     for (const f of FOOD_DATABASE) expect(f.ptName, f.name).toBeTruthy();
   });
+
+  it('busca solta: plural, sinônimo e erro de digitação (a estrita não muda)', () => {
+    const loose = { loose: true };
+    expect(searchFoods('ovos cozidos', undefined, 10, loose).map(f => f.name)).toContain('Ovo cozido');
+    expect(searchFoods('macaxeira', undefined, 10, loose).map(f => f.name)).toContain('Mandioca cozida');
+    expect(searchFoods('frango grelhdo', undefined, 10, loose).map(f => f.name)).toContain('Peito de frango grelhado');
+    expect(searchFoods('mussarela', undefined, 10, loose).map(f => f.name)).toContain('Queijo muçarela');
+    expect(searchFoods('xyzqw', undefined, 10, loose)).toEqual([]);
+    expect(searchFoods('macaxeira')).toEqual([]);
+    expect(searchFoods('frango grelhdo')).toEqual([]);
+  });
+
+  it('o que a pessoa já usa sobe nos resultados', () => {
+    const base = searchFoods('arroz', undefined, 10, { loose: true }).map(f => f.name);
+    const pick = base[base.length - 1];
+    const plainName = pick.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const after = searchFoods('arroz', undefined, 10, { loose: true, used: new Set([plainName]) }).map(f => f.name);
+    expect(after.indexOf(pick)).toBeGreaterThanOrEqual(0);
+    expect(after.indexOf(pick)).toBeLessThan(base.indexOf(pick));
+  });
 });

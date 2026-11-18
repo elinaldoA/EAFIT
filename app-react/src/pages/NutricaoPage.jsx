@@ -26,6 +26,7 @@ import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import NutritionWeek from '../components/NutritionWeek';
 import DayFixForm from '../components/DayFixForm';
 import ProteinSources from '../components/ProteinSources';
+import { recentFoods, usedNames, yesterdayMeal } from '../lib/recentFoods';
 import { HISTORY_DAYS, unloggedRest, dayMicros } from '../lib/nutritionDay';
 
 import { t, locale } from '../lib/i18n';
@@ -392,6 +393,14 @@ export default function NutricaoPage({ active }) {
   const hasLog = totals.protein + totals.kcal + totals.carbs + totals.fat > 0;
   const now = new Date();
   const pace = dayPace(totals, goals, now.getHours() + now.getMinutes() / 60);
+  const recent = useMemo(() => recentFoods(pastEntries, entries, todayDate()), [pastEntries, entries]);
+  const used = useMemo(() => usedNames(recent), [recent]);
+  const yesterday = useMemo(() => {
+    const d = parseLocalDate(todayDate());
+    d.setDate(d.getDate() - 1);
+    return toDateStr(d);
+  }, []);
+  const repeatItems = useMemo(() => yesterdayMeal(pastEntries, entries, meal, yesterday), [pastEntries, entries, meal, yesterday]);
   const habit = useMemo(() => mealHabit(pastEntries, meal, todayDate(), entries), [pastEntries, meal, entries]);
   // Só no fim do dia: antes disso as outras refeições ainda nem chegaram.
   const spread = now.getHours() >= SPREAD_FROM_HOUR ? proteinSpread(entries) : null;
@@ -461,7 +470,18 @@ export default function NutricaoPage({ active }) {
             {searchOpen ? t('Fechar busca') : t('🔎 Buscar alimento')}
           </button>
         </div>
-        {searchOpen && <FoodSearch onAdd={handleAdd} />}
+        {repeatItems.length > 0 && (
+          <div className="water-actions">
+            <button
+              type="button" className="btn btn--ghost btn--sm"
+              onClick={() => { handleAddMany(repeatItems); toast(t('{meal} de ontem repetido', { meal: MEAL_NAME[meal]() })); }}
+            >
+              ↻ {t('Repetir {meal} de ontem', { meal: MEAL_NAME[meal]().toLowerCase() })}
+              {' '}({fmt(repeatItems.reduce((n, f) => n + f.kcal, 0))} kcal)
+            </button>
+          </div>
+        )}
+        {searchOpen && <FoodSearch onAdd={handleAdd} recent={recent} used={used} />}
 
         <div className="water-quick quick-foods">
           {shownFoods.map(f => (
