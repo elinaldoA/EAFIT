@@ -1,5 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { softFail } from './softFail';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { softFail, clearSoftFailures } from './softFail';
+
+beforeEach(() => clearSoftFailures());
 
 describe('softFail', () => {
   it('registra a origem no console e devolve o valor reserva', async () => {

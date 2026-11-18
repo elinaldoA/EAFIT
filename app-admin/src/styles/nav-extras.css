@@ -11,3 +11,6 @@
 .skip-link { position: absolute; left: 8px; top: -48px; z-index: 10001; padding: 8px 14px; border-radius: 8px; background: var(--primary); color: #09090b; border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .skip-link:focus { top: 8px; }
 .shell__content:focus { outline: none; }
+
+/* ---------- aviso de dado que não carregou ---------- */
+.soft-fail { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 14px; border: 1px solid var(--warning); border-radius: var(--radius); background: var(--surface-2); color: var(--text); font-size: 13px; }

@@ -11,6 +11,7 @@ import EmptyState from '../EmptyState';
 import Loading from '../Loading';
 import ErrorBoundary from '../ErrorBoundary';
 import IdleSessionGuard from '../IdleSessionGuard';
+import SoftFailNotice from '../SoftFailNotice';
 
 const COLLAPSED_KEY = 'sidebarCollapsed';
 
@@ -84,6 +85,7 @@ function Shell() {
       <div className="shell__main">
         <Topbar menuOpen={menuOpen} onMenuClick={() => setMenuOpen(true)} />
         <main className="shell__content" id="conteudo" tabIndex={-1} ref={mainRef}>
+          <SoftFailNotice />
           {showTabs ? (
             <>
               <div className="section-head">
