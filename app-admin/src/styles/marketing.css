@@ -67,7 +67,7 @@
 .mkt-planned__caption { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0; }
 .mkt-step { display: flex; flex-direction: column; gap: 14px; }
 .mkt-step__title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; }
-.mkt-step__n { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 13px; }
+.mkt-step__n { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #09090b; font-size: 13px; }
 .mkt-filter { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 560px) {
   .mkt-row { grid-template-columns: 48px minmax(0, 1fr); }

@@ -56,11 +56,11 @@
 .btn:hover:not(:disabled) { background: var(--surface-3); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn--primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn--primary { background: var(--primary); border-color: var(--primary); color: #09090b; }
 .btn--primary:hover:not(:disabled) { background: var(--primary-h); border-color: var(--primary-h); box-shadow: 0 4px 18px var(--primary-glow); }
 
-.btn--danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-.btn--danger:hover:not(:disabled) { background: var(--danger-h); border-color: var(--danger-h); }
+.btn--danger { background: var(--danger-solid); border-color: var(--danger-solid); color: #fff; }
+.btn--danger:hover:not(:disabled) { background: var(--danger-solid-h); border-color: var(--danger-solid-h); }
 
 .btn--ghost { background: transparent; border-color: var(--border); color: var(--text-muted); }
 .btn--ghost:hover:not(:disabled) { color: var(--text); }

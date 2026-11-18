@@ -18,6 +18,8 @@
   --primary-glow: rgba(249,115,22,.16);
   --danger:       #ef4444;
   --danger-h:     #f87171;
+  --danger-solid: #dc2626;   /* fundo com texto branco (contraste 4,8); --danger puro fica para texto e barras */
+  --danger-solid-h: #b91c1c;
   --ok:           #22c55e;
   --warning:      #eab308;
   --radius: 10px;

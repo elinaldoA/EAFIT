@@ -8,6 +8,6 @@
 .tabs__hint { margin: -10px 0 16px; font-size: 12.5px; color: var(--text-muted); }
 
 /* ---------- acessibilidade: pular para o conteúdo e foco programático ---------- */
-.skip-link { position: absolute; left: 8px; top: -48px; z-index: 10001; padding: 8px 14px; border-radius: 8px; background: var(--primary); color: #fff; border: 0; font: inherit; font-weight: 600; cursor: pointer; }
+.skip-link { position: absolute; left: 8px; top: -48px; z-index: 10001; padding: 8px 14px; border-radius: 8px; background: var(--primary); color: #09090b; border: 0; font: inherit; font-weight: 600; cursor: pointer; }
 .skip-link:focus { top: 8px; }
 .shell__content:focus { outline: none; }
