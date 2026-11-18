@@ -177,7 +177,7 @@ export default function FoodSearch({ onAdd, recent = [], used, catalog }) {
       {picked && (
         <form className="custom-food food-search__pick" onSubmit={submit}>
           <p className="custom-food__name"><strong>{picked.icon} {picked.name}</strong></p>
-          {picked.estimated && <p className="dash-card__subtitle">{t('Valores aproximados: o prato varia de receita para receita.')}</p>}
+          {picked.estimated && <p className="dash-card__subtitle food-search__note">{t('Valores aproximados: o prato varia de receita para receita.')}</p>}
           {measures.length > 0 && (
             <label className="food-search__measure">
               {t('Medida')}
