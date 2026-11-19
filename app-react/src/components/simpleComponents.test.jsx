@@ -107,7 +107,7 @@ describe('BootSplash, DumbbellSpinner, Skeleton', () => {
     try {
       const { container } = render(<DumbbellSpinner size="lg" />);
       expect(container.querySelector('.dumbbell--runner.dumbbell--lg')).toBeTruthy();
-      expect(container.querySelector('.runner__leg')).toBeTruthy();
+      expect(container.querySelector('.runner__frame--4')).toBeTruthy();
       expect(container.querySelector('rect')).toBeNull();
     } finally {
       document.documentElement.removeAttribute('data-spinner');

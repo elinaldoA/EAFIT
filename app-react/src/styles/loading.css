@@ -22,25 +22,21 @@
 .dumbbell__svg--runner path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
 .dumbbell__svg--runner .runner__torso { stroke: var(--primary, #f97316); stroke-width: 4.6; }
 .dumbbell__svg--runner .runner__head { fill: var(--primary, #f97316); }
-.runner__body { animation: runner-bob .36s ease-in-out infinite alternate; }
-.runner__leg, .runner__arm { transform-box: view-box; animation: runner-swing .72s ease-in-out infinite alternate; }
-.runner__leg { transform-origin: 23px 26px; }
-.runner__arm { transform-origin: 26px 15px; }
-.runner__leg--f, .runner__arm--b { --from: -38deg; --to: 38deg; }
-.runner__leg--b, .runner__arm--f { --from: 38deg; --to: -38deg; }
-
-@keyframes runner-swing {
-  from { transform: rotate(var(--from)); }
-  to { transform: rotate(var(--to)); }
-}
-@keyframes runner-bob {
-  from { transform: translateY(0); }
-  to { transform: translateY(-1.6px); }
+/* 4 quadros de corrida: um visível por vez (step-end), 0,6 s por passada. */
+.runner__frame { visibility: hidden; animation: runner-frame .6s step-end infinite; }
+.runner__frame--2 { animation-delay: -.45s; }
+.runner__frame--3 { animation-delay: -.3s; }
+.runner__frame--4 { animation-delay: -.15s; }
+@keyframes runner-frame {
+  0% { visibility: visible; }
+  25% { visibility: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dumbbell__svg { animation: none; }
-  .runner__body, .runner__leg, .runner__arm { animation: none; }
+  /* sem movimento: só o primeiro quadro, parado */
+  .runner__frame { animation: none; }
+  .runner__frame--1 { visibility: visible; }
 }
 
 /* ---------- overlay de carregamento (tela cheia, bloqueia a interação) ---------- */

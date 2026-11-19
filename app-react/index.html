@@ -65,18 +65,15 @@
       .boot .boot__runner path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
       .boot .boot__runner .r-torso { stroke: #f97316; stroke-width: 4.6; }
       .boot .boot__runner .r-head { fill: #f97316; }
-      .boot .boot__runner .r-body { animation: boot-bob .36s ease-in-out infinite alternate; }
-      .boot .boot__runner .r-leg, .boot .boot__runner .r-arm { transform-box: view-box; animation: boot-swing .72s ease-in-out infinite alternate; }
-      .boot .boot__runner .r-leg { transform-origin: 23px 26px; }
-      .boot .boot__runner .r-arm { transform-origin: 26px 15px; }
-      .boot .boot__runner .r-f { --from: -38deg; --to: 38deg; }
-      .boot .boot__runner .r-b { --from: 38deg; --to: -38deg; }
-      @keyframes boot-swing { from { transform: rotate(var(--from)); } to { transform: rotate(var(--to)); } }
-      @keyframes boot-bob { from { transform: translateY(0); } to { transform: translateY(-1.6px); } }
+      .boot .boot__runner .r-frame { visibility: hidden; animation: boot-frame .6s step-end infinite; }
+      .boot .boot__runner .r-frame2 { animation-delay: -.45s; }
+      .boot .boot__runner .r-frame3 { animation-delay: -.3s; }
+      .boot .boot__runner .r-frame4 { animation-delay: -.15s; }
+      @keyframes boot-frame { 0% { visibility: visible; } 25% { visibility: hidden; } }
       html[data-spinner="corrida"] .boot > .dumbbell:not(.dumbbell--runner) { display: none; }
       html[data-spinner="corrida"] .boot > .boot__runner { display: inline-block; }
       @media (prefers-color-scheme: light) { .boot { background: #f4f4f5; color: #18181b; } }
-      @media (prefers-reduced-motion: reduce) { .boot .dumbbell svg, .boot .boot__runner * { animation: none !important; } }
+      @media (prefers-reduced-motion: reduce) { .boot .dumbbell svg, .boot .boot__runner .r-frame { animation: none !important; } .boot .boot__runner .r-frame1 { visibility: visible; } }
     </style>
   </head>
   <body>
@@ -86,7 +83,7 @@
         <img src="icon-192.webp" alt="" />
         <div class="boot__name">EA<span style="color:#f97316">FIT</span></div>
         <span class="dumbbell"><svg viewBox="0 0 64 32" aria-hidden="true"><rect x="18" y="14" width="28" height="4" rx="2" fill="currentColor" opacity=".55"/><rect x="14" y="6" width="5" height="20" rx="2" fill="#f97316"/><rect x="45" y="6" width="5" height="20" rx="2" fill="#f97316"/><rect x="8" y="10" width="5" height="12" rx="2" fill="currentColor"/><rect x="51" y="10" width="5" height="12" rx="2" fill="currentColor"/></svg></span>
-        <span class="boot__runner"><svg viewBox="0 0 48 44" aria-hidden="true"><g class="r-body"><g class="r-arm r-b" opacity=".55"><path d="M26 15l-5 6 5 4"/></g><g class="r-leg r-b" opacity=".55"><path d="M23 26l-4 8 -6 3"/></g><path class="r-torso" d="M27 14l-4 12"/><circle class="r-head" cx="29" cy="7" r="4.2"/><g class="r-leg r-f"><path d="M23 26l6 6 -2 8"/></g><g class="r-arm r-f"><path d="M26 15l6 5 -1 6"/></g></g></svg></span>
+        <span class="boot__runner"><svg viewBox="0 0 48 44" aria-hidden="true"><g class="r-frame r-frame1" transform="translate(0 -1.2)"><g class="r-far" opacity=".55"><path d="M23 26l-6 7 -9 -2"/><path d="M27 15l5 6 6 -3"/></g><path class="r-torso" d="M28 14l-5 12"/><circle class="r-head" cx="30" cy="7" r="4.2"/><path d="M23 26l8 4 3 9"/><path d="M27 15l-6 5 -5 -5"/></g><g class="r-frame r-frame2" transform="translate(0 0)"><g class="r-far" opacity=".55"><path d="M23 26l5 5 -7 3"/><path d="M27 15l2 6 5 -1"/></g><path class="r-torso" d="M28 14l-5 12"/><circle class="r-head" cx="30" cy="7" r="4.2"/><path d="M23 26l2 8 -2 8"/><path d="M27 15l-1 6 5 2"/></g><g class="r-frame r-frame3" transform="translate(0 -1.2)"><g class="r-far" opacity=".55"><path d="M23 26l8 4 3 9"/><path d="M27 15l-6 5 -5 -5"/></g><path class="r-torso" d="M28 14l-5 12"/><circle class="r-head" cx="30" cy="7" r="4.2"/><path d="M23 26l-6 7 -9 -2"/><path d="M27 15l5 6 6 -3"/></g><g class="r-frame r-frame4" transform="translate(0 0)"><g class="r-far" opacity=".55"><path d="M23 26l2 8 -2 8"/><path d="M27 15l-1 6 5 2"/></g><path class="r-torso" d="M28 14l-5 12"/><circle class="r-head" cx="30" cy="7" r="4.2"/><path d="M23 26l5 5 -7 3"/><path d="M27 15l2 6 5 -1"/></g></svg></span>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>
