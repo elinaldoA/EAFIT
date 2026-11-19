@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import DumbbellSpinner from './DumbbellSpinner';
+import DumbbellSpinner, { useRunSpinner } from './DumbbellSpinner';
 
 import { t } from '../lib/i18n';
 // Não há progresso real de uma requisição: a porcentagem sobe suave até 95% e
@@ -17,6 +17,7 @@ function useProgress() {
 // enquanto estiver montado.
 export default function Loading({ label = t('Carregando…') }) {
   const pct = useProgress();
+  const running = useRunSpinner();
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -35,9 +36,15 @@ export default function Loading({ label = t('Carregando…') }) {
       onKeyDown={e => e.preventDefault()}
     >
       <div className="loading-overlay__box">
-        <DumbbellSpinner size="lg" />
+        {running ? (
+          // Módulo Run: a barra de progresso é uma pista e o corredor avança nela.
+          <div className="run-track" style={{ '--p': pct / 100 }}>
+            <span className="run-track__runner"><DumbbellSpinner size="md" /></span>
+            <div className="run-track__lane"><span /></div>
+          </div>
+        ) : <DumbbellSpinner size="lg" />}
         <div className="loading-overlay__pct">{pct}%</div>
-        <div className="loading-overlay__bar"><span style={{ width: `${pct}%` }} /></div>
+        {!running && <div className="loading-overlay__bar"><span style={{ width: `${pct}%` }} /></div>}
         <div className="loading-overlay__label">{label}</div>
       </div>
     </div>

@@ -72,3 +72,41 @@
 .loading-overlay__bar { width: 100%; height: 4px; border-radius: var(--r-xs); background: var(--surface-3, #27272a); overflow: hidden; }
 .loading-overlay__bar > span { display: block; height: 100%; background: var(--primary, #f97316); border-radius: var(--r-xs); transition: width .12s linear; }
 .loading-overlay__label { font-size: var(--fs-sm); color: var(--text-muted, #a1a1aa); }
+
+/* ---------- pista de corrida (barra de progresso do módulo Run) ---------- */
+
+.run-track { position: relative; width: min(260px, 70vw); padding-top: 30px; }
+.run-track__runner {
+  position: absolute;
+  top: 0;
+  left: calc((100% - 40px) * var(--p, 0));
+  width: 40px;
+  line-height: 0;
+  transition: left .12s linear;
+}
+/* Pista: piso na cor do módulo, linhas de raia tracejadas e o trecho já corrido mais escuro. */
+.run-track__lane {
+  position: relative;
+  height: 18px;
+  border-radius: 9px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .55) 0 10px, transparent 10px 20px) center / 100% 2px no-repeat,
+    color-mix(in srgb, var(--primary, #f97316) 38%, var(--surface-3, #27272a));
+  border: 1px solid color-mix(in srgb, var(--primary, #f97316) 55%, transparent);
+}
+.run-track__lane > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--p, 0) * 100%);
+  background: color-mix(in srgb, var(--primary, #f97316) 70%, transparent);
+  transition: width .12s linear;
+}
+/* Linha de chegada no fim da pista */
+.run-track__lane::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 8px;
+  background: repeating-conic-gradient(#fff 0 25%, #18181b 0 50%) 0 0 / 8px 8px;
+}

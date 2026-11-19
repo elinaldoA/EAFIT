@@ -29,6 +29,9 @@ const RUN_POSES = [
   { y: 0, far: ["M23 26l2 8 -2 8", "M27 15l-1 6 5 2"], near: ["M23 26l5 5 -7 3", "M27 15l2 6 5 -1"] },
 ];
 
+// true quando o spinner do módulo é o corredor; reage à troca de módulo.
+export const useRunSpinner = () => useSyncExternalStore(subscribeModule, isRunModule, () => false);
+
 export function RunnerSvg() {
   return (
     <svg className="dumbbell__svg dumbbell__svg--runner" viewBox="0 0 48 44" aria-hidden="true">
@@ -45,7 +48,7 @@ export function RunnerSvg() {
 }
 
 export default function DumbbellSpinner({ size = 'md' }) {
-  const running = useSyncExternalStore(subscribeModule, isRunModule, () => false);
+  const running = useRunSpinner();
   if (running) {
     return (
       <span className={`dumbbell dumbbell--runner dumbbell--${size}`} aria-hidden="true">
