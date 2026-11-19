@@ -19,7 +19,7 @@ const OUT = join(root, 'app-react', 'public', 'landing', 'img', 'marketing');
 const SITE = 'https://eafit.com.br';
 const TAGS = '#fitnessbrasil #treino #academia #appfitness #EAFIT';
 
-const SIZES = { feed: [1080, 1350], story: [1080, 1920] };
+export const SIZES = { feed: [1080, 1350], story: [1080, 1920] };
 
 // kind: 'print' (uma arte com o print) | 'slides' (carrossel de texto)
 export const ITEMS = [
@@ -367,9 +367,9 @@ ${TAGS}`,
   },
 ];
 
-const FONT = 'Arial, Helvetica, sans-serif';
+export const FONT = 'Arial, Helvetica, sans-serif';
 
-function background(ctx, w, h) {
+export function background(ctx, w, h) {
   const bg = ctx.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, '#17171b');
   bg.addColorStop(1, '#0e0e12');
@@ -382,7 +382,7 @@ function background(ctx, w, h) {
   ctx.fillRect(0, 0, w, h);
 }
 
-function wrap(ctx, text, maxWidth, maxLines) {
+export function wrap(ctx, text, maxWidth, maxLines) {
   const words = String(text).split(/\s+/).filter(Boolean);
   const lines = [];
   let line = '';
@@ -398,7 +398,7 @@ function wrap(ctx, text, maxWidth, maxLines) {
   return lines;
 }
 
-function footer(ctx, w, h, label = 'eafit.com.br') {
+export function footer(ctx, w, h, label = 'eafit.com.br') {
   ctx.fillStyle = '#f97316';
   ctx.font = `700 40px ${FONT}`;
   ctx.textAlign = 'center';
