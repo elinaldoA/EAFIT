@@ -73,7 +73,7 @@
       .boot .boot__runner .r-b { --from: 38deg; --to: -38deg; }
       @keyframes boot-swing { from { transform: rotate(var(--from)); } to { transform: rotate(var(--to)); } }
       @keyframes boot-bob { from { transform: translateY(0); } to { transform: translateY(-1.6px); } }
-      html[data-spinner="corrida"] .boot > .dumbbell { display: none; }
+      html[data-spinner="corrida"] .boot > .dumbbell:not(.dumbbell--runner) { display: none; }
       html[data-spinner="corrida"] .boot > .boot__runner { display: inline-block; }
       @media (prefers-color-scheme: light) { .boot { background: #f4f4f5; color: #18181b; } }
       @media (prefers-reduced-motion: reduce) { .boot .dumbbell svg, .boot .boot__runner * { animation: none !important; } }
