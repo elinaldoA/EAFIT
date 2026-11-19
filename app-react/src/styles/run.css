@@ -305,6 +305,15 @@
 .run-challenge__main strong { font-size: var(--fs-base); }
 .run-challenge .run-live__bar { height: 10px; }
 
+/* Desafios da comunidade (criados pelo EAFIT) */
+.run-community { align-items: start; }
+.run-community .run-challenge__icon { padding-top: 2px; }
+.run-community__desc { margin: 0; font-size: var(--fs-base); color: var(--text-muted); }
+.run-community__people { font-size: var(--fs-sm); color: var(--text-muted); }
+.run-community__done { font-weight: 800; color: var(--success); }
+.run-community__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.run-community .profile-field__hint { font-size: var(--fs-sm); }
+
 /* ---- Aba Você ---- */
 .run-periods { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); margin-bottom: var(--sp-3); }
 .run-periods__item {

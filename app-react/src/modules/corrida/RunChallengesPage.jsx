@@ -8,6 +8,7 @@ import {
 } from '../../lib/friends';
 import { RUN_SAVED_EVENT, fetchRuns, fetchFriendsWeek, formatKm, decimal } from './runs';
 import RunClubs from './Clubs';
+import CommunityChallenges from './CommunityChallenges';
 import { monthlyChallenges, challengeProgress, monthMedals } from './challenges';
 
 import { t, locale } from '../../lib/i18n';
@@ -252,6 +253,7 @@ export default function RunChallengesPage() {
 
   return (
     <section id="page-desafios" className="page active">
+      <CommunityChallenges />
       <MonthChallenges runs={runs} today={today} />
       <Medals runs={runs} today={today} />
       <WeekRanking rows={ranking} />

@@ -110,6 +110,7 @@ describe('backup cobre as tabelas do usuário', () => {
     feed_reactions: 'reações em publicações de terceiros',
     run_clubs: 'os clubes vão em runClubs (pela função my_run_clubs, tabela fechada)',
     run_club_members: 'a participação vai em runClubs (pela função my_run_clubs)',
+    run_challenge_members: 'só a adesão a um desafio do Run (tabela fechada); o progresso é calculado das corridas, que já vão em runs',
     run_kudos: 'aplausos em corridas de amigos (reação a conteúdo de terceiros), mesma natureza de feed_reactions',
     feed_reports: 'denúncias de publicações (moderação interna do feed)',
     friendships: 'a lista de amigos (apelido e status) vai em friends',
