@@ -31,6 +31,7 @@ export function validatePost({
   if (media.length > 10) errors.push('No máximo 10 imagens por post.');
   if (platforms.has('instagram') && !media.length) errors.push('Instagram exige ao menos uma imagem ou vídeo.');
   if (platforms.has('tiktok') && !(media.length === 1 && videos === 1)) errors.push('TikTok: o post precisa ser um único vídeo.');
+  if (platforms.has('youtube') && !(media.length === 1 && videos === 1)) errors.push('YouTube: o post precisa ser um único vídeo.');
   if (platforms.has('tiktok')) errors.push(...validateTikTok(tiktok, tiktokCreator, videoDuration));
   for (const p of platforms) {
     const { label, limit } = PLATFORMS[p];
@@ -46,6 +47,7 @@ function validateStory({ media, accounts, scheduledAt, now }) {
   const errors = [];
   if (!accounts.length) errors.push('Escolha ao menos uma conta.');
   if (accounts.some(a => a.platform === 'tiktok')) errors.push('TikTok não tem stories pelo painel: desmarque o TikTok.');
+  if (accounts.some(a => a.platform === 'youtube')) errors.push('YouTube não tem stories pelo painel: desmarque o YouTube.');
   if (media.length !== 1) errors.push('Story leva exatamente uma imagem ou um vídeo.');
   if (media.some(m => m.credit)) errors.push('Mídia com crédito obrigatório não pode ir para story (não há legenda para o crédito).');
   if (scheduledAt && new Date(scheduledAt) <= now) errors.push('O horário agendado já passou.');

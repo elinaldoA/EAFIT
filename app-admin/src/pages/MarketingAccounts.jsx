@@ -8,7 +8,7 @@ import { useConfirm } from '../context/confirmContext';
 
 // Marketing → Contas conectadas: liga as redes da EAFIT por OAuth (Meta e
 // TikTok). A volta do login cai aqui com ?conectado=… ou ?erro=….
-const PROVIDER = { facebook: 'meta', instagram: 'meta', tiktok: 'tiktok' };
+const PROVIDER = { facebook: 'meta', instagram: 'meta', tiktok: 'tiktok', youtube: 'youtube' };
 export default function MarketingAccounts() {
   const ask = useConfirm();
   const [params, setParams] = useSearchParams();
@@ -80,11 +80,16 @@ export default function MarketingAccounts() {
           <button type="button" className="btn" disabled={!!busy} onClick={() => connect('tiktok')}>
             {busy === 'tiktok' ? 'Abrindo…' : 'Conectar TikTok'}
           </button>
+          <button type="button" className="btn" disabled={!!busy} onClick={() => connect('youtube')}>
+            {busy === 'youtube' ? 'Abrindo…' : 'Conectar YouTube'}
+          </button>
         </div>
         <p className="user-detail__meta">
           Facebook e Instagram entram juntos: no login, marque a Página da EAFIT. O Instagram profissional ligado a ela
           aparece automaticamente. No TikTok o painel posta só vídeo (sem stories, comentários ou exclusão pela API), e
-          os vídeos saem privados até o app passar pela auditoria do TikTok.
+          os vídeos saem privados até o app passar pela auditoria do TikTok. No YouTube entre com a conta do Google dona do
+          canal: o painel posta só vídeo (Shorts, se for vertical e de até 3 min) e pode apagar, mas não tem stories,
+          comentários nem edição de legenda; sem a auditoria do Google os vídeos saem privados.
         </p>
         {msg && <p className={`form-msg ${msg.startsWith('Erro') ? 'form-msg--error' : 'form-msg--ok'}`} role={msg.startsWith('Erro') ? 'alert' : 'status'}>{msg}</p>}
       </section>

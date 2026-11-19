@@ -1,6 +1,6 @@
 
 
-export const NO_STORIES = ['tiktok'];
+export const NO_STORIES = ['tiktok', 'youtube'];
 export const POSTS_PAGE = 30; // posts por vez no histórico
 
 export const TABS = [

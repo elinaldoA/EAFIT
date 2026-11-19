@@ -17,6 +17,7 @@
 //     { action: 'deleteExternal', accountId, externalId }  apaga um post feito direto na rede (lista de Resultados)
 //     { action: 'editExternal', accountId, externalId, caption }  muda a legenda de um post do Facebook feito direto na rede
 //     { action: 'ads', days }                   anúncios (posts promovidos), só leitura
+//     (YouTube: publica e apaga; sem stories, comentários, métricas nem edição de legenda)
 //     { action: 'tiktokCreator', accountId }    dados da conta TikTok para a tela de publicar (regra do TikTok)
 //
 // Verify JWT desligado por causa do cron; o admin é conferido aqui (JWT + admin_can).
@@ -28,6 +29,9 @@ import {
   type Media, type Post, replyToComment, setCommentHidden, startPublish, type Step, trackedCaption,
 } from '../_shared/marketing.ts';
 import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
+import {
+  deleteYouTube, oauthToken as youtubeOauthToken, parseToken as parseYouTubeToken, publishYouTube, tokenFromOAuth as youtubeTokenFromOAuth,
+} from '../_shared/youtube.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -38,6 +42,10 @@ const TIKTOK_CLIENT_KEY = Deno.env.get('TIKTOK_CLIENT_KEY') || '';
 const TIKTOK_CLIENT_SECRET = Deno.env.get('TIKTOK_CLIENT_SECRET') || '';
 // Só depois da auditoria do app no TikTok: antes disso ele aceita apenas posts privados.
 const TIKTOK_PUBLIC_POSTS = Deno.env.get('TIKTOK_PUBLIC_POSTS') === 'true';
+const YOUTUBE_CLIENT_ID = Deno.env.get('YOUTUBE_CLIENT_ID') || '';
+const YOUTUBE_CLIENT_SECRET = Deno.env.get('YOUTUBE_CLIENT_SECRET') || '';
+// Só depois da auditoria do projeto no Google: antes disso o YouTube trava os vídeos como privados.
+const YOUTUBE_PUBLIC_POSTS = Deno.env.get('YOUTUBE_PUBLIC_POSTS') === 'true';
 
 // ~30 min de espera (a cada 30 s) para a rede processar um vídeo.
 const MAX_ATTEMPTS = 60;
@@ -59,6 +67,17 @@ async function loadAccount(id: string): Promise<Loaded> {
   if (!enc) throw new Error('Conta sem token: reconecte em Marketing → Contas.');
   const account = data as unknown as AccountRow;
   const stored = await decryptToken(TOKEN_KEY, enc);
+  if (account.platform === 'youtube') {
+    // YouTube: o acesso vale 1 h; renova com o refresh token (que não vence) quando falta pouco.
+    const yt = parseYouTubeToken(stored);
+    if (yt.accessExp > Date.now() + 5 * 60_000) return { account, token: yt.access };
+    try {
+      return { account, token: await renewYouTube(id, yt.refresh) };
+    } catch (err) {
+      await handleGraphError(id, err);
+      throw err;
+    }
+  }
   if (account.platform !== 'tiktok') return { account, token: stored };
   // TikTok: o acesso vale 24 h; renova com o refresh token quando falta pouco.
   const tiktok = parseToken(stored);
@@ -82,6 +101,17 @@ async function renewTikTok(accountId: string, refresh: string): Promise<string> 
   await db.from('marketing_accounts').update({
     token_expires_at: new Date(Date.now() + Number(r.refresh_expires_in || 31_536_000) * 1000).toISOString(),
   }).eq('id', accountId);
+  return tok.access;
+}
+
+async function renewYouTube(accountId: string, refresh: string): Promise<string> {
+  const r = await youtubeOauthToken(fetch, {
+    client_id: YOUTUBE_CLIENT_ID, client_secret: YOUTUBE_CLIENT_SECRET, grant_type: 'refresh_token', refresh_token: refresh,
+  });
+  const tok = youtubeTokenFromOAuth(r, Date.now(), refresh);
+  await db.from('marketing_tokens').update({
+    token_enc: await encryptToken(TOKEN_KEY, JSON.stringify(tok)), updated_at: new Date().toISOString(),
+  }).eq('account_id', accountId);
   return tok.access;
 }
 
@@ -134,6 +164,8 @@ async function processTarget(t: TargetRow, posts: Map<string, Post>): Promise<{ 
       step = t.container_id
         ? await continueTikTok(tk, account.username, t.container_id, TIKTOK_PUBLIC_POSTS)
         : await startTikTok(tk, fetch, post, TIKTOK_PUBLIC_POSTS);
+    } else if (account.platform === 'youtube') {
+      step = await publishYouTube(token, fetch, post, YOUTUBE_PUBLIC_POSTS);
     } else {
       const api = makeApi(fetch, baseFor(account.platform), token);
       const out = { ...post, caption: trackedCaption(account.platform, post) };
@@ -235,7 +267,8 @@ async function deletePost(postId: string): Promise<{ removed: boolean; results: 
     }
     try {
       const { account, token } = await loadAccount(t.account_id);
-      await deletePublished(makeApi(fetch, baseFor(account.platform), token), t.external_id);
+      if (account.platform === 'youtube') await deleteYouTube(token, fetch, t.external_id);
+      else await deletePublished(makeApi(fetch, baseFor(account.platform), token), t.external_id);
       await db.from('marketing_comments').delete().eq('account_id', t.account_id).eq('post_external_id', t.external_id);
       await db.from('marketing_post_targets').delete().eq('id', t.id);
       results.push({ target: t.id, ok: true });
@@ -255,8 +288,8 @@ async function deletePost(postId: string): Promise<{ removed: boolean; results: 
 // ---------- comentários ----------
 
 async function syncComments() {
-  // TikTok não tem API de comentários para esta conta.
-  const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok').neq('platform', 'tiktok');
+  // TikTok e YouTube não têm leitura de comentários pelo painel.
+  const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok').not('platform', 'in', '(tiktok,youtube)');
   const out: { account: string; comments?: number; error?: string }[] = [];
   for (const { id } of accounts || []) {
     try {
@@ -275,7 +308,7 @@ async function syncComments() {
 
 // Desempenho dos últimos posts de cada conta. Falha numa conta não derruba as outras.
 async function syncMetrics() {
-  const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok').neq('platform', 'tiktok');
+  const { data: accounts } = await db.from('marketing_accounts').select('id').eq('status', 'ok').not('platform', 'in', '(tiktok,youtube)');
   const out: { account: string; posts?: number; error?: string; insightsError?: string }[] = [];
   for (const { id } of accounts || []) {
     try {

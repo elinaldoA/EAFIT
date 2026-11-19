@@ -10,7 +10,7 @@
 export const GRAPH_VERSION = 'v23.0';
 export const GRAPH_BASE = `https://graph.facebook.com/${GRAPH_VERSION}`;
 
-export type Platform = 'facebook' | 'instagram' | 'tiktok';
+export type Platform = 'facebook' | 'instagram' | 'tiktok' | 'youtube';
 export type Media = { type: 'image' | 'video'; url: string; credit?: string };
 export type Account = { id: string; platform: Platform; external_id: string; username?: string | null };
 // format 'story': uma mídia, sem legenda (Instagram e Página do Facebook).
@@ -33,7 +33,7 @@ export const META_SCOPES = [
   'ads_read',
 ];
 
-export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, tiktok: 2200 };
+export const CAPTION_LIMITS: Record<Platform, number> = { facebook: 63000, instagram: 2200, tiktok: 2200, youtube: 5000 };
 
 // ---------- cifra e assinatura ----------
 
@@ -79,7 +79,7 @@ export async function decryptToken(secret: string, stored: string): Promise<stri
   return dec.decode(plain);
 }
 
-export type OAuthState = { admin: string; provider: 'meta' | 'tiktok'; origin: string; exp: number };
+export type OAuthState = { admin: string; provider: 'meta' | 'tiktok' | 'youtube'; origin: string; exp: number };
 
 // state do OAuth: quem pediu, para onde voltar e validade (10 min), assinado
 // para ninguém forjar um retorno que conecte outra conta.
@@ -181,6 +181,10 @@ export function checkPost(platform: Platform, post: Post): string | null {
   if (platform === 'tiktok') {
     if (post.format === 'story') return 'TikTok não tem stories pelo painel.';
     if (post.media.length !== 1 || post.media[0].type !== 'video') return 'TikTok pelo painel aceita só um vídeo por post.';
+  }
+  if (platform === 'youtube') {
+    if (post.format === 'story') return 'YouTube não tem stories pelo painel.';
+    if (post.media.length !== 1 || post.media[0].type !== 'video') return 'YouTube pelo painel aceita só um vídeo por post.';
   }
   if (post.format === 'story') {
     if (post.media.length !== 1) return 'Story leva exatamente uma imagem ou um vídeo.';

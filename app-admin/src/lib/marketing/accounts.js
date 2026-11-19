@@ -17,7 +17,7 @@ export function accountLabel(a) {
   return a.username ? `@${a.username}` : a.name;
 }
 
-// Leva para o login da Meta ou do TikTok; a volta cai em #/marketing-contas.
+// Leva para o login da Meta, do TikTok ou do Google (YouTube); a volta cai em #/marketing-contas.
 export async function startConnect(provider) {
   const { url } = await invoke('marketing-oauth', { provider });
   window.location.assign(url);

@@ -1,7 +1,7 @@
 // Conecta as redes da EAFIT ao painel (Marketing → Contas) por OAuth.
 //
-//   POST { provider: 'meta' | 'tiktok' } (admin logado, área 'marketing')
-//        → { url } da tela de login da Meta ou do TikTok, com state assinado.
+//   POST { provider: 'meta' | 'tiktok' | 'youtube' } (admin logado, área 'marketing')
+//        → { url } da tela de login da Meta, do TikTok ou do Google, com state assinado.
 //   GET  ?code=…&state=… (retorno da Meta ou do TikTok)
 //        → troca o código por token de longa duração, salva as contas e
 //          redireciona de volta para o painel (#/marketing-contas).
@@ -25,12 +25,20 @@
 //      user.info.profile e video.publish, e a mesma URI de redirecionamento.
 //      Secrets TIKTOK_CLIENT_KEY e TIKTOK_CLIENT_SECRET. Até a auditoria do
 //      app pelo TikTok os vídeos saem privados; aprovado, TIKTOK_PUBLIC_POSTS=true.
+//   5. YouTube: console.cloud.google.com → projeto com a YouTube Data API v3 ativada,
+//      tela de consentimento publicada (em "Teste" o acesso vence em 7 dias) e cliente
+//      OAuth do tipo Aplicativo da Web com a mesma URI de redirecionamento.
+//      Secrets YOUTUBE_CLIENT_ID e YOUTUBE_CLIENT_SECRET. Até o Google auditar o
+//      projeto os vídeos saem privados; aprovado, YOUTUBE_PUBLIC_POSTS=true.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeadersFor } from '../_shared/cors.ts';
 import {
   encryptToken, fetchAdAccounts, GRAPH_BASE, GRAPH_VERSION, makeApi, META_SCOPES, type OAuthState, request, signState, verifyState,
 } from '../_shared/marketing.ts';
 import { makeTikTokApi, oauthToken, TIKTOK_AUTHORIZE, TIKTOK_SCOPES, tokenFromOAuth } from '../_shared/tiktok.ts';
+import {
+  myChannel, oauthToken as youtubeOauthToken, tokenFromOAuth as youtubeTokenFromOAuth, YOUTUBE_AUTHORIZE, YOUTUBE_SCOPES,
+} from '../_shared/youtube.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -44,6 +52,8 @@ const META_APP_SECRET = Deno.env.get('META_APP_SECRET') || '';
 const META_LOGIN_CONFIG_ID = Deno.env.get('META_LOGIN_CONFIG_ID') || '';
 const TIKTOK_CLIENT_KEY = Deno.env.get('TIKTOK_CLIENT_KEY') || '';
 const TIKTOK_CLIENT_SECRET = Deno.env.get('TIKTOK_CLIENT_SECRET') || '';
+const YOUTUBE_CLIENT_ID = Deno.env.get('YOUTUBE_CLIENT_ID') || '';
+const YOUTUBE_CLIENT_SECRET = Deno.env.get('YOUTUBE_CLIENT_SECRET') || '';
 
 const REDIRECT_URI = `${SUPABASE_URL}/functions/v1/marketing-oauth`;
 // Para onde o retorno pode mandar o admin de volta (o painel fica em /admin/).
@@ -57,7 +67,7 @@ function back(origin: string, params: Record<string, string>) {
 }
 
 type SavedAccount = {
-  platform: 'facebook' | 'instagram' | 'tiktok'; external_id: string; name: string; username?: string | null;
+  platform: 'facebook' | 'instagram' | 'tiktok' | 'youtube'; external_id: string; name: string; username?: string | null;
   picture_url?: string | null; parent_id?: string | null; token_expires_at?: string | null;
 };
 
@@ -173,6 +183,21 @@ async function connectTikTok(code: string, adminId: string): Promise<string[]> {
   return [`TikTok: @${user.username || user.display_name}`];
 }
 
+// YouTube: o Google só entrega o refresh token com access_type=offline + prompt=consent.
+// O refresh não vence sozinho, então token_expires_at fica vazio.
+async function connectYouTube(code: string, adminId: string): Promise<string[]> {
+  const r = await youtubeOauthToken(fetch, {
+    client_id: YOUTUBE_CLIENT_ID, client_secret: YOUTUBE_CLIENT_SECRET, code, grant_type: 'authorization_code', redirect_uri: REDIRECT_URI,
+  });
+  const tok = youtubeTokenFromOAuth(r);
+  const channel = await myChannel(fetch, tok.access);
+  await saveAccount({
+    platform: 'youtube', external_id: channel.id, name: channel.title, username: channel.handle, picture_url: channel.pictureUrl,
+    token_expires_at: null,
+  }, JSON.stringify(tok), adminId);
+  return [`YouTube: ${channel.handle ? `@${channel.handle}` : channel.title}`];
+}
+
 async function handleCallback(url: URL): Promise<Response> {
   // A Meta devolve erros de configuração (ex.: domínio do app) com error_code
   // e sem state: volta para o painel de produção mostrando o motivo.
@@ -190,7 +215,9 @@ async function handleCallback(url: URL): Promise<Response> {
   try {
     const names = state.provider === 'meta'
       ? await connectMeta(code, state.admin)
-      : await connectTikTok(code, state.admin);
+      : state.provider === 'youtube'
+        ? await connectYouTube(code, state.admin)
+        : await connectTikTok(code, state.admin);
     await admin.from('admin_audit_log').insert({
       admin_id: state.admin, target_user_id: null, action: 'marketingConnect', details: { provider: state.provider, accounts: names },
     });
@@ -223,7 +250,7 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('origin') || '';
   if (!ADMIN_ORIGINS.includes(origin)) return json({ error: 'Origem não permitida.' }, 400);
   const { provider } = await req.json().catch(() => ({})) as { provider?: string };
-  if (provider !== 'meta' && provider !== 'tiktok') return json({ error: 'Rede inválida.' }, 400);
+  if (provider !== 'meta' && provider !== 'tiktok' && provider !== 'youtube') return json({ error: 'Rede inválida.' }, 400);
 
   const missing = [
     !TOKEN_KEY && 'MARKETING_TOKEN_KEY',
@@ -231,6 +258,8 @@ Deno.serve(async (req) => {
     provider === 'meta' && !META_APP_SECRET && 'META_APP_SECRET',
     provider === 'tiktok' && !TIKTOK_CLIENT_KEY && 'TIKTOK_CLIENT_KEY',
     provider === 'tiktok' && !TIKTOK_CLIENT_SECRET && 'TIKTOK_CLIENT_SECRET',
+    provider === 'youtube' && !YOUTUBE_CLIENT_ID && 'YOUTUBE_CLIENT_ID',
+    provider === 'youtube' && !YOUTUBE_CLIENT_SECRET && 'YOUTUBE_CLIENT_SECRET',
   ].filter(Boolean);
   if (missing.length) return json({ error: `Falta configurar nas Edge Functions: ${missing.join(', ')}.`, missing }, 503);
 
@@ -241,8 +270,13 @@ Deno.serve(async (req) => {
       client_id: META_APP_ID, redirect_uri: REDIRECT_URI, state: signed, response_type: 'code',
       ...(META_LOGIN_CONFIG_ID ? { config_id: META_LOGIN_CONFIG_ID } : { scope: META_SCOPES.join(',') }),
     })}`
-    : `${TIKTOK_AUTHORIZE}?${new URLSearchParams({
-      client_key: TIKTOK_CLIENT_KEY, redirect_uri: REDIRECT_URI, state: signed, response_type: 'code', scope: TIKTOK_SCOPES.join(','),
-    })}`;
+    : provider === 'youtube'
+      ? `${YOUTUBE_AUTHORIZE}?${new URLSearchParams({
+        client_id: YOUTUBE_CLIENT_ID, redirect_uri: REDIRECT_URI, state: signed, response_type: 'code', scope: YOUTUBE_SCOPES.join(' '),
+        access_type: 'offline', prompt: 'consent', include_granted_scopes: 'false',
+      })}`
+      : `${TIKTOK_AUTHORIZE}?${new URLSearchParams({
+        client_key: TIKTOK_CLIENT_KEY, redirect_uri: REDIRECT_URI, state: signed, response_type: 'code', scope: TIKTOK_SCOPES.join(','),
+      })}`;
   return json({ url: loginUrl });
 });

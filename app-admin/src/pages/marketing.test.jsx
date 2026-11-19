@@ -92,6 +92,18 @@ describe('lib/marketing', () => {
       .toContain('TikTok não tem stories pelo painel: desmarque o TikTok.');
   });
 
+  it('YouTube: só um vídeo, legenda até 5000 e nada de story', () => {
+    const YT = { platform: 'youtube' };
+    const video = { type: 'video', url: 'https://v' };
+    expect(validatePost({ caption: 'oi', media: [video], accounts: [YT] })).toEqual([]);
+    expect(validatePost({ caption: 'oi', media: [{ type: 'image', url: 'https://a' }], accounts: [YT] }))
+      .toContain('YouTube: o post precisa ser um único vídeo.');
+    expect(validatePost({ caption: 'a'.repeat(5001), media: [video], accounts: [YT] }))
+      .toContain('YouTube: a legenda (com créditos) passa de 5000 caracteres.');
+    expect(validatePost({ caption: '', format: 'story', media: [video], accounts: [YT] }))
+      .toContain('YouTube não tem stories pelo painel: desmarque o YouTube.');
+  });
+
   it('TikTok: quem pode ver sem padrão, divulgação comercial e duração', () => {
     const TK = { platform: 'tiktok' };
     const video = { type: 'video', url: 'https://v' };

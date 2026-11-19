@@ -9,6 +9,7 @@ export const PLATFORMS = {
   facebook: { label: 'Facebook', limit: 63000 },
   instagram: { label: 'Instagram', limit: 2200 },
   tiktok: { label: 'TikTok', limit: 2200 },
+  youtube: { label: 'YouTube', limit: 5000 },
 };
 
 export const STATUS_LABEL = {
