@@ -123,7 +123,7 @@ export const STORIES = [
 
 export const REELS = [
   {
-    key: 'corrida-edu-mitos', print: 'run-inicio', hook: 'Você ainda acredita nesses mitos da corrida?', title: 'Mitos e verdades da corrida', sub: 'Progressão, descanso e ritmo confortável.',
+    ctaTitle: 'Em breve', ctaSub: 'Fique de olho no app', key: 'corrida-edu-mitos', print: 'run-inicio', hook: 'Você ainda acredita nesses mitos da corrida?', title: 'Mitos e verdades da corrida', sub: 'Progressão, descanso e ritmo confortável.',
     caption: `Correr estraga o joelho? Tem que correr todo dia? 🤔
 Com plano, progressão e descanso, correr fica mais seguro e mais leve. Em breve no EAFIT Run.
 
@@ -132,7 +132,7 @@ ${CTA}
 ${TAGS}`,
   },
   {
-    key: 'corrida-edu-forca', print: 'run-ao-vivo', hook: 'Quer correr melhor? Treine força', title: 'Força para quem corre', sub: 'Agachamento, afundo, panturrilha e prancha.',
+    ctaTitle: 'Em breve', ctaSub: 'Fique de olho no app', key: 'corrida-edu-forca', print: 'run-ao-vivo', hook: 'Quer correr melhor? Treine força', title: 'Força para quem corre', sub: 'Agachamento, afundo, panturrilha e prancha.',
     caption: `Quem corre e treina força corre melhor. 💪
 Em breve no EAFIT: programa de corrida com treino de força para corredor.
 
@@ -141,7 +141,7 @@ ${CTA}
 ${TAGS}`,
   },
   {
-    key: 'corrida-edu-primeira-prova', print: 'run-desafios', hook: 'Vai correr a sua primeira prova?', title: 'Escolha a sua corrida', sub: 'Próximas provas do seu estado. Em breve.',
+    ctaTitle: 'Em breve', ctaSub: 'Fique de olho no app', key: 'corrida-edu-primeira-prova', print: 'run-desafios', hook: 'Vai correr a sua primeira prova?', title: 'Escolha a sua corrida', sub: 'Próximas provas do seu estado. Em breve.',
     caption: `A primeira prova não precisa dar medo. 🏁
 Em breve o EAFIT Run vai mostrar as próximas corridas do seu estado para você escolher a sua.
 
@@ -159,7 +159,7 @@ async function videos() {
     const audio = plan.story(i) || join(tmpdir(), `eafit-story-corrida-edu-v${variant}.wav`);
     if (typeof audio === 'string') writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
     const img = await loadImage(readFileSync(join(PRINTS, `${print}.webp`)));
-    const story = { pill: 'EAFIT RUN', title, sub, variant };
+    const story = { pill: 'EM BREVE', title, sub, variant, cta: 'EM BREVE · FIQUE DE OLHO' };
     await renderVideo(`story-${key}.mp4`, STORY_DURATION, audio, (ctx, im, t) => drawStoryFrame(ctx, story, im, t), img);
     console.log('ok', `story-${key}.mp4`);
   }
