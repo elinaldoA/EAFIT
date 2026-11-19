@@ -102,6 +102,18 @@ describe('BootSplash, DumbbellSpinner, Skeleton', () => {
     expect(container.querySelector('.dumbbell--lg')).toBeTruthy();
   });
 
+  it('no módulo Run o spinner é um corredor, não um halter', () => {
+    document.documentElement.setAttribute('data-module', 'corrida');
+    try {
+      const { container } = render(<DumbbellSpinner size="lg" />);
+      expect(container.querySelector('.dumbbell--runner.dumbbell--lg')).toBeTruthy();
+      expect(container.querySelector('.runner__leg')).toBeTruthy();
+      expect(container.querySelector('rect')).toBeNull();
+    } finally {
+      document.documentElement.removeAttribute('data-module');
+    }
+  });
+
   it('skeleton aplica a altura', () => {
     const { container } = render(<Skeleton height={80} />);
     expect(container.firstChild.style.height).toBe('80px');

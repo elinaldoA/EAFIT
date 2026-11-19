@@ -5,6 +5,7 @@ import { DEFAULT_MODULE_ID, MODULES } from '../modules/registry';
 // foi liberado, vale a musculação — o app de sempre.
 
 const CACHE_KEY = 'eafit_modules';
+const BOOT_KEY = 'eafit_boot_module'; // lida também por public/boot-module.js
 
 // Módulos que podem ser escolhidos agora: o padrão, os lançados e os que o
 // painel admin liberou (app_settings.modules.enabled).
@@ -41,6 +42,12 @@ export const brandName = module => (module?.name ? `EAFIT · ${module.name}` : '
 export function applyModuleTheme(id, root = document.documentElement) {
   if (id && id !== DEFAULT_MODULE_ID) root.setAttribute('data-module', id);
   else root.removeAttribute('data-module');
+  // Guardado para a splash do próximo carregamento (public/boot-module.js) já
+  // abrir com as cores e o spinner do módulo, antes do JS do app.
+  try {
+    if (id && id !== DEFAULT_MODULE_ID) localStorage.setItem(BOOT_KEY, id);
+    else localStorage.removeItem(BOOT_KEY);
+  } catch { /* armazenamento bloqueado */ }
 }
 
 // Última liberação conhecida guardada no aparelho: até a configuração do

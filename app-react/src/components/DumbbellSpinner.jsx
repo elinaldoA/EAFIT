@@ -1,8 +1,43 @@
 import { currentSeason } from '../lib/season';
 
-// Spinner de carregamento: um halter fazendo repetições (sobe e desce).
-// No Dia das Bruxas as anilhas viram abóboras.
+// Spinner de carregamento. Na musculação: um halter fazendo repetições (sobe e
+// desce); no Dia das Bruxas as anilhas viram abóboras. No módulo Run
+// (<html data-module="corrida">): um corredor em movimento.
+export const isRunModule = () =>
+  typeof document !== 'undefined' && document.documentElement.getAttribute('data-module') === 'corrida';
+
+export function RunnerSvg() {
+  return (
+    <svg className="dumbbell__svg dumbbell__svg--runner" viewBox="0 0 48 44" aria-hidden="true">
+      <g className="runner__body">
+        {/* braço de trás e perna de trás ficam mais apagados: dão profundidade */}
+        <g className="runner__arm runner__arm--b" opacity=".55">
+          <path d="M26 15l-5 6 5 4" />
+        </g>
+        <g className="runner__leg runner__leg--b" opacity=".55">
+          <path d="M23 26l-4 8 -6 3" />
+        </g>
+        <path className="runner__torso" d="M27 14l-4 12" />
+        <circle className="runner__head" cx="29" cy="7" r="4.2" />
+        <g className="runner__leg runner__leg--f">
+          <path d="M23 26l6 6 -2 8" />
+        </g>
+        <g className="runner__arm runner__arm--f">
+          <path d="M26 15l6 5 -1 6" />
+        </g>
+      </g>
+    </svg>
+  );
+}
+
 export default function DumbbellSpinner({ size = 'md' }) {
+  if (isRunModule()) {
+    return (
+      <span className={`dumbbell dumbbell--runner dumbbell--${size}`} aria-hidden="true">
+        <RunnerSvg />
+      </span>
+    );
+  }
   const pumpkins = currentSeason() === 'halloween';
   return (
     <span className={`dumbbell dumbbell--${size}`} aria-hidden="true">

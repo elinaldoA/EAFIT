@@ -14,6 +14,7 @@
       do domínio do Supabase pelas signed URLs do Storage.
     -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://btzdetvoneyhzthsmdrp.supabase.co https://tile.openstreetmap.org; connect-src 'self' https://world.openfoodfacts.org https://api.open-meteo.com https://btzdetvoneyhzthsmdrp.supabase.co wss://btzdetvoneyhzthsmdrp.supabase.co; font-src 'self'; manifest-src 'self'; worker-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'" />
+    <script src="boot-module.js"></script>
     <title>EAFIT — Treino</title>
     <link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" />
     <link rel="alternate icon" href="favicon.ico?v=2" />
@@ -58,8 +59,24 @@
       .boot .dumbbell { width: 88px; line-height: 0; color: #a1a1aa; }
       .boot .dumbbell svg { width: 100%; height: auto; overflow: visible; animation: boot-lift 1.8s ease-in-out infinite; }
       @keyframes boot-lift { 0%, 35% { transform: rotate(0); } 50%, 85% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
+      /* Módulo Run (data-module vem de boot-module.js): corredor no lugar do halter. */
+      .boot .boot__runner { display: none; width: 64px; line-height: 0; color: #a1a1aa; }
+      .boot .boot__runner svg { width: 100%; height: auto; overflow: visible; }
+      .boot .boot__runner path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+      .boot .boot__runner .r-torso { stroke: #f97316; stroke-width: 4.6; }
+      .boot .boot__runner .r-head { fill: #f97316; }
+      .boot .boot__runner .r-body { animation: boot-bob .36s ease-in-out infinite alternate; }
+      .boot .boot__runner .r-leg, .boot .boot__runner .r-arm { transform-box: view-box; animation: boot-swing .72s ease-in-out infinite alternate; }
+      .boot .boot__runner .r-leg { transform-origin: 23px 26px; }
+      .boot .boot__runner .r-arm { transform-origin: 26px 15px; }
+      .boot .boot__runner .r-f { --from: -38deg; --to: 38deg; }
+      .boot .boot__runner .r-b { --from: 38deg; --to: -38deg; }
+      @keyframes boot-swing { from { transform: rotate(var(--from)); } to { transform: rotate(var(--to)); } }
+      @keyframes boot-bob { from { transform: translateY(0); } to { transform: translateY(-1.6px); } }
+      html[data-module="corrida"] .boot > .dumbbell { display: none; }
+      html[data-module="corrida"] .boot > .boot__runner { display: inline-block; }
       @media (prefers-color-scheme: light) { .boot { background: #f4f4f5; color: #18181b; } }
-      @media (prefers-reduced-motion: reduce) { .boot .dumbbell svg { animation: none; } }
+      @media (prefers-reduced-motion: reduce) { .boot .dumbbell svg, .boot .boot__runner * { animation: none !important; } }
     </style>
   </head>
   <body>
@@ -69,6 +86,7 @@
         <img src="icon-192.webp" alt="" />
         <div class="boot__name">EA<span style="color:#f97316">FIT</span></div>
         <span class="dumbbell"><svg viewBox="0 0 64 32" aria-hidden="true"><rect x="18" y="14" width="28" height="4" rx="2" fill="currentColor" opacity=".55"/><rect x="14" y="6" width="5" height="20" rx="2" fill="#f97316"/><rect x="45" y="6" width="5" height="20" rx="2" fill="#f97316"/><rect x="8" y="10" width="5" height="12" rx="2" fill="currentColor"/><rect x="51" y="10" width="5" height="12" rx="2" fill="currentColor"/></svg></span>
+        <span class="boot__runner"><svg viewBox="0 0 48 44" aria-hidden="true"><g class="r-body"><g class="r-arm r-b" opacity=".55"><path d="M26 15l-5 6 5 4"/></g><g class="r-leg r-b" opacity=".55"><path d="M23 26l-4 8 -6 3"/></g><path class="r-torso" d="M27 14l-4 12"/><circle class="r-head" cx="29" cy="7" r="4.2"/><g class="r-leg r-f"><path d="M23 26l6 6 -2 8"/></g><g class="r-arm r-f"><path d="M26 15l6 5 -1 6"/></g></g></svg></span>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>
