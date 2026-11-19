@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { currentSeason } from '../lib/season';
 
 // Spinner de carregamento. Na musculação: um halter fazendo repetições (sobe e
@@ -5,6 +6,16 @@ import { currentSeason } from '../lib/season';
 // (<html data-module="corrida">): um corredor em movimento.
 export const isRunModule = () =>
   typeof document !== 'undefined' && document.documentElement.getAttribute('data-module') === 'corrida';
+
+// O módulo só é marcado em <html> depois que a conta carrega (no login, por
+// exemplo, o spinner já está na tela antes): acompanha a mudança do atributo
+// para trocar o halter pelo corredor na hora.
+function subscribeModule(onChange) {
+  if (typeof MutationObserver === 'undefined') return () => {};
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-module'] });
+  return () => observer.disconnect();
+}
 
 export function RunnerSvg() {
   return (
@@ -31,7 +42,8 @@ export function RunnerSvg() {
 }
 
 export default function DumbbellSpinner({ size = 'md' }) {
-  if (isRunModule()) {
+  const running = useSyncExternalStore(subscribeModule, isRunModule, () => false);
+  if (running) {
     return (
       <span className={`dumbbell dumbbell--runner dumbbell--${size}`} aria-hidden="true">
         <RunnerSvg />
