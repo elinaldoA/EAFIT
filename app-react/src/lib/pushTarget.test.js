@@ -57,7 +57,13 @@ describe('kindTargetKey', () => {
     expect(kindTargetKey('run_week')).toBe('corrida');
     expect(kindTargetKey('run_goal')).toBe('corrida');
     for (const kind of ['run_first', 'run_streak', 'run_comeback']) expect(kindTargetKey(kind)).toBe('gravar');
+    expect(kindTargetKey('run_challenge')).toBe('desafios');
     expect(kindTargetKey('aviso')).toBeNull();
+  });
+
+  it('tag dos avisos de desafio abre a aba Desafios do Run', () => {
+    expect(pushTargetKey({ tag: 'run-challenge-new-2026-11-19' })).toBe('desafios');
+    expect(pushTargetKey({ tag: 'run-challenge-pass-abc-2026-11-19' })).toBe('desafios');
   });
 });
 

@@ -9,6 +9,7 @@ import {
 import { RUN_SAVED_EVENT, fetchRuns, fetchFriendsWeek, formatKm, decimal } from './runs';
 import RunClubs from './Clubs';
 import CommunityChallenges from './CommunityChallenges';
+import { communityDone } from './runsCommunity';
 import { monthlyChallenges, challengeProgress, monthMedals } from './challenges';
 
 import { t, locale } from '../../lib/i18n';
@@ -45,9 +46,10 @@ function MonthChallenges({ runs, today }) {
 }
 
 // Medalhas dos níveis de desafio batidos, agrupadas por mês.
-function Medals({ runs, today }) {
+function Medals({ runs, today, community }) {
   const medals = monthMedals(runs, today);
-  if (!medals.length) return null;
+  const trophies = (community || []).filter(c => c.joined && communityDone(c));
+  if (!medals.length && !trophies.length) return null;
   const months = [...new Set(medals.map(m => m.month))];
   const label = month => {
     const text = new Date(`${month}-15T12:00:00`).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
@@ -55,8 +57,21 @@ function Medals({ runs, today }) {
   };
   return (
     <div className="section-group">
-      <div className="section-group__label">{t('Suas medalhas ({v1})', { v1: medals.length })}</div>
+      <div className="section-group__label">{t('Suas medalhas ({v1})', { v1: medals.length + trophies.length })}</div>
       <div className="dash-card run-medals">
+        {trophies.length > 0 && (
+          <div className="run-medals__month">
+            <span className="run-medals__label">{t('Desafios da comunidade')}</span>
+            <ul className="run-medals__list">
+              {trophies.map(c => (
+                <li key={c.id} className="run-medal" title={c.title}>
+                  <span className="run-medal__icon" aria-hidden="true">🏆</span>
+                  <span>{c.title}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {months.map(month => (
           <div key={month} className="run-medals__month">
             <span className="run-medals__label">{label(month)}</span>
@@ -237,6 +252,7 @@ export default function RunChallengesPage() {
   const today = todayDate();
   const [runs, setRuns] = useState([]);
   const [ranking, setRanking] = useState(null);
+  const [community, setCommunity] = useState([]);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -253,9 +269,9 @@ export default function RunChallengesPage() {
 
   return (
     <section id="page-desafios" className="page active">
-      <CommunityChallenges />
+      <CommunityChallenges onLoaded={setCommunity} />
       <MonthChallenges runs={runs} today={today} />
-      <Medals runs={runs} today={today} />
+      <Medals runs={runs} today={today} community={community} />
       <WeekRanking rows={ranking} />
       <RunClubs />
       <RunFriends onChange={load} />

@@ -703,4 +703,11 @@ export default {
   "Esse desafio já terminou.": "This challenge has ended.",
   "Desafio não encontrado.": "Challenge not found.",
   "⚠️ Sua conta não pode entrar em desafios no momento": "⚠️ Your account can't join challenges right now",
+  "Desafios da comunidade": "Community challenges",
+  "Desafio concluído": "Challenge complete",
+  "DESAFIO CONCLUÍDO": "CHALLENGE COMPLETE",
+  "posição": "rank",
+  "participantes": "participants",
+  "período": "period",
+  "Fechei o desafio \"{v1}\" no EAFIT Run 🏅 Corra com a gente: {v2}": "I finished the \"{v1}\" challenge on EAFIT Run 🏅 Run with us: {v2}",
 };

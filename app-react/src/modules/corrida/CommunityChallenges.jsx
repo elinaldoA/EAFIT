@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useToast } from '../../context/useToast';
 import { todayDate } from '../../data/treinoData';
 import { RUN_SAVED_EVENT } from './runs';
@@ -7,6 +7,7 @@ import {
   communityStatus, communityDone, communityProgress, communityDaysLeft, communityGoalText,
   formatCommunityAmount, communityError,
 } from './runsCommunity';
+import { renderChallengeCard, shareChallengeCard } from './runShareCard';
 import { t, locale } from '../../lib/i18n';
 
 const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -35,6 +36,31 @@ function Ranking({ challenge }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+// Cartão do desafio concluído para os stories; a imagem começa a ser desenhada no primeiro toque.
+function ShareChallenge({ c }) {
+  const toast = useToast();
+  const [sharing, setSharing] = useState(false);
+  const prepared = useRef(null);
+  const prepare = () => { if (!prepared.current) prepared.current = renderChallengeCard(c).catch(() => null); };
+  async function handle() {
+    prepare();
+    setSharing(true);
+    try {
+      const result = await shareChallengeCard(c, prepared.current);
+      if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
+    } catch (err) {
+      if (err?.name !== 'AbortError') toast(t('⚠️ Não foi possível gerar a imagem'));
+    } finally {
+      setSharing(false);
+    }
+  }
+  return (
+    <button type="button" className="btn btn--primary btn--sm" disabled={sharing} onPointerDown={prepare} onFocus={prepare} onClick={handle}>
+      {sharing ? t('Gerando imagem…') : t('📤 Compartilhar')}
+    </button>
   );
 }
 
@@ -81,6 +107,7 @@ function CommunityCard({ c, today, busy, onJoin, onLeave }) {
             </span>
             {done && <span className="run-community__done">{t('🏅 Desafio concluído!')}</span>}
             <div className="run-community__actions">
+              {done && <ShareChallenge c={c} />}
               <button type="button" className="btn btn--outline btn--sm" aria-expanded={showRanking} onClick={() => setShowRanking(s => !s)}>
                 {showRanking ? t('Esconder ranking') : t('Ver ranking')}
               </button>
@@ -98,7 +125,7 @@ function CommunityCard({ c, today, busy, onJoin, onLeave }) {
 
 // Desafios criados pelo EAFIT (admin): o topo da aba Desafios. Sem desafio
 // aberto — ou sem a tabela no banco —, a seção nem aparece.
-export default function CommunityChallenges() {
+export default function CommunityChallenges({ onLoaded }) {
   const toast = useToast();
   const today = todayDate();
   const [list, setList] = useState(null);
@@ -106,12 +133,14 @@ export default function CommunityChallenges() {
 
   const load = useCallback(async () => {
     try {
-      setList(await fetchCommunityChallenges());
+      const next = await fetchCommunityChallenges();
+      setList(next);
+      onLoaded?.(next);
     } catch (err) {
       console.error('CommunityChallenges:', err);
       setList(l => l || []);
     }
-  }, []);
+  }, [onLoaded]);
 
   useEffect(() => {
     load();

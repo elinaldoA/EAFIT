@@ -9,6 +9,7 @@ import { monthSummary, monthRuns } from './runSummary';
 import { weatherBands } from './weatherInsights';
 import { goalProgress } from './runReadings';
 import { runTitle, paceSeconds, formatPace, formatClock, formatKm } from './runs';
+import { formatCommunityAmount, communityGoalText } from './runsCommunity';
 
 // Card 9:16 de uma corrida para os stories e o status: mapa com o percurso
 // (já sem as pontas e as zonas de privacidade, como foi salvo), distância,
@@ -468,4 +469,58 @@ export async function shareRunSummary(runs, today, prepared, goalKm = null) {
   const sum = monthSummary(runs, today);
   const text = t('{v1} km de corrida neste mês no EAFIT Run 🏃 Corra com a gente: {v2}', { v1: formatKm(sum?.meters || 0, 1), v2: cardUrl(refCode) });
   return shareImageBlob(blob, 'meu-mes-de-corrida.png', t('Meu mês de corrida'), text);
+}
+
+// Card 9:16 de um desafio da comunidade concluído: total feito em destaque, a
+// meta, a posição no ranking e o período. c vem de runsCommunity (fetchCommunityChallenges).
+export async function renderChallengeCard(c, refCode = myRefCode()) {
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+  drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
+  await drawBrandBar(ctx, { started_at: new Date().toISOString() }, t('Desafio concluído'));
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `800 30px ${FONT}`;
+  setTracking(ctx, 4);
+  ctx.fillText(t('DESAFIO CONCLUÍDO'), PAD_X, 250);
+  setTracking(ctx, 0);
+  ctx.fillStyle = '#ffffff';
+  fitFont(ctx, c.title, CONTENT_W, 76, 900, 36);
+  ctx.fillText(c.title, PAD_X, 345);
+
+  drawPanel(ctx, PAD_X, MAP_Y, CONTENT_W, 480, 36);
+  const amount = formatCommunityAmount(c.metric, c.value);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  fitFont(ctx, amount, CONTENT_W - 60, 220, 900, 90);
+  ctx.fillText(amount, CARD_WIDTH / 2, MAP_Y + 250);
+  ctx.font = `800 44px ${FONT}`;
+  ctx.fillStyle = ORANGE_LIGHT;
+  setTracking(ctx, 4);
+  ctx.fillText(`🏅 ${communityGoalText(c).toUpperCase()}`, CARD_WIDTH / 2, MAP_Y + 370);
+  setTracking(ctx, 0);
+
+  const day = d => new Date(`${d}T12:00:00`).toLocaleDateString(locale, { day: '2-digit', month: '2-digit' });
+  const gap = 22;
+  const boxW = (CONTENT_W - gap * 2) / 3;
+  const boxY = MAP_Y + 480 + 40;
+  [
+    [c.rank ? `${c.rank}º` : '–', t('posição')],
+    [String(c.members), t('participantes')],
+    [`${day(c.start)}–${day(c.end)}`, t('período')],
+  ].forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: 80, padX: 30, labelSize: 25 }));
+
+  await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+export async function shareChallengeCard(c, prepared) {
+  trackFeature('share_run_challenge');
+  const refCode = myRefCode();
+  const blob = (await prepared) || await renderChallengeCard(c, refCode);
+  const text = t('Fechei o desafio "{v1}" no EAFIT Run 🏅 Corra com a gente: {v2}', { v1: c.title, v2: cardUrl(refCode) });
+  return shareImageBlob(blob, 'desafio-concluido.png', t('Desafio concluído'), text);
 }

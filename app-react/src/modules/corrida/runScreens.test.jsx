@@ -13,6 +13,7 @@ const h = vi.hoisted(() => ({
   toggleKudos: vi.fn(async () => ({ kudos: 1, kudoed: true })),
   fetchFriendsWeek: vi.fn(async () => []),
   shoes: [],
+  community: [],
   comments: [],
   addRunComment: vi.fn(async (runId, body) => ({ id: 9, name: 'Ana', isMe: true, body, created_at: new Date().toISOString(), canDelete: true })),
   deleteRunComment: vi.fn(async () => {}),
@@ -43,6 +44,7 @@ vi.mock('./runs', async (orig) => ({
   deleteRunComment: (...a) => h.deleteRunComment(...a),
   reportRunComment: (...a) => h.reportRunComment(...a),
 }));
+vi.mock('./runsCommunity', async (orig) => ({ ...(await orig()), fetchCommunityChallenges: async () => h.community }));
 vi.mock('../../lib/friends', () => ({
   friendlyFriendError: e => e.message, normalizeFriendCode: c => c.toUpperCase(), shareFriendCode: vi.fn(),
   fetchMyFriendProfile: async () => ({ code: 'ANA7K2', share: true }), setShareActivity: vi.fn(),
@@ -985,6 +987,27 @@ describe('RunChallengesPage (aba Desafios)', () => {
     expect(screen.getByText(/🥇 Bia/)).toBeTruthy();
     expect(screen.getByText(/Corra 25 km no mês/)).toBeTruthy();
     expect(await screen.findByText('ANA7K2')).toBeTruthy();
+  });
+});
+
+describe('RunChallengesPage (desafios da comunidade)', () => {
+  const done = { id: 'c1', title: 'Desafio de novembro', description: '', metric: 'km', goal: 100, start: '2026-11-01', end: '2026-11-30', members: 5, joined: true, value: 104, rank: 1 };
+
+  it('desafio concluído da comunidade vira medalha em Suas medalhas', async () => {
+    h.community = [done];
+    render(<RunChallengesPage />);
+    expect(await screen.findByText('Suas medalhas (1)')).toBeTruthy();
+    expect(screen.getAllByText('Desafio de novembro').length).toBe(2);
+    h.community = [];
+  });
+
+  it('desafio ainda em andamento não vira medalha', async () => {
+    h.community = [{ ...done, value: 40 }];
+    render(<RunChallengesPage />);
+    await screen.findByText('Km da semana entre amigos').catch(() => {});
+    await act(async () => {});
+    expect(screen.queryByText(/Suas medalhas/)).toBeNull();
+    h.community = [];
   });
 });
 

@@ -7,6 +7,7 @@ const h = vi.hoisted(() => ({
   toast: vi.fn(),
   fetch: vi.fn(),
   join: vi.fn(async () => {}),
+  share: vi.fn(async () => 'shared'),
   leave: vi.fn(async () => {}),
   ranking: vi.fn(async () => [{ name: 'Ana', isMe: false, value: 30, rank: 1 }, { name: 'Bia', isMe: true, value: 12, rank: 2 }]),
 }));
@@ -14,6 +15,7 @@ const h = vi.hoisted(() => ({
 vi.mock('../../lib/supabase', () => ({ db: {} }));
 vi.mock('../../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../../data/treinoData', () => ({ todayDate: () => '2026-11-19' }));
+vi.mock('./runShareCard', () => ({ renderChallengeCard: vi.fn(async () => 'blob'), shareChallengeCard: (...a) => h.share(...a) }));
 vi.mock('./runsCommunity', async orig => ({
   ...(await orig()),
   fetchCommunityChallenges: (...a) => h.fetch(...a),
@@ -82,6 +84,26 @@ describe('CommunityChallenges', () => {
     h.list = [ch({ joined: true, value: 101, rank: 1 })];
     render(<CommunityChallenges />);
     expect(await screen.findByText('🏅 Desafio concluído!')).toBeTruthy();
+  });
+
+  it('só quem concluiu vê o botão de compartilhar, e ele gera o cartão do desafio', async () => {
+    h.list = [ch({ joined: true, value: 40, rank: 3 })];
+    const { unmount } = render(<CommunityChallenges />);
+    await screen.findByText(/3º lugar/);
+    expect(screen.queryByText('📤 Compartilhar')).toBeNull();
+    unmount();
+    h.list = [ch({ joined: true, value: 101, rank: 1 })];
+    render(<CommunityChallenges />);
+    fireEvent.click(await screen.findByText('📤 Compartilhar'));
+    await waitFor(() => expect(h.share).toHaveBeenCalled());
+    expect(h.share.mock.calls[0][0]).toMatchObject({ id: 'c1', value: 101 });
+  });
+
+  it('entrega a lista carregada para quem precisa dela (medalhas)', async () => {
+    h.list = [ch({ joined: true, value: 101, rank: 1 })];
+    const onLoaded = vi.fn();
+    render(<CommunityChallenges onLoaded={onLoaded} />);
+    await waitFor(() => expect(onLoaded).toHaveBeenCalledWith(h.list));
   });
 
   it('desafio encerrado só aparece para quem entrou, sem botão de sair', async () => {
