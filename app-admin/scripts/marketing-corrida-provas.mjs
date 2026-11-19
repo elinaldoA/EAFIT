@@ -17,8 +17,9 @@ import { FONT, SIZES, background, footer, printArt, slideArt, wrap } from './mar
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = join(root, 'app-react', 'public', 'landing', 'img', 'marketing');
 const SITE = 'https://eafit.com.br';
-const TAGS = '#corrida #corridaderua #running #provasdecorrida #EAFIT';
-const CTA = 'Comece agora. Link na bio 👇';
+const TAGS = '#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT';
+const CTA = 'Fique de olho: em breve no EAFIT. 👀';
+const FOOTER = 'Em breve · eafit.com.br';
 const FROM_DAYS = 21;
 const TO_DAYS = 75;
 const MAX_STATES = 8;
@@ -115,9 +116,9 @@ async function main() {
       files.push(f);
     }
     const last = `${key}-${pages + 2}.jpg`;
-    writeFileSync(join(OUT, last), await printArt({ headline: 'Veja todas as provas do seu estado', sub: 'Próximas corridas no EAFIT Run.', print: 'run-inicio' }, 'feed'));
+    writeFileSync(join(OUT, last), await printArt({ headline: 'Em breve: as provas do seu estado', sub: 'Próximas corridas no EAFIT Run.', print: 'run-inicio' }, 'feed', FOOTER));
     files.push(last);
-    const caption = `Vai correr em ${name}? 🏁\nSalve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.\nNo EAFIT Run você vê as corridas perto de você e grava a sua preparação.\n\n${CTA}\n\n${TAGS} #${name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '').toLowerCase()}`;
+    const caption = `Vai correr em ${name}? 🏁\nSalve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.\nEm breve no EAFIT Run: as corridas perto de você e a sua preparação no app.\n\n${CTA}\n\n${TAGS} #${name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '').toLowerCase()}`;
     items.push({ key: `${key}-feed`, caption, media: JSON.stringify(files.map((f) => ({ type: 'image', url: `${SITE}/img/marketing/${f}` }))) });
     console.log('ok', uf, `${events.length} provas (de ${all.length}), ${files.length} imagens`);
   }
@@ -125,8 +126,8 @@ async function main() {
   const values = items.map((it, i) => `  (${i + 1}, ${sqlText(it.key)}, 'feed', ${sqlText(it.caption)}, ${sqlText(it.media)})`);
   const sql = `-- Marketing do módulo Corrida: carrosséis "Corridas em <estado>" (provas aprovadas de ${FROM_DAYS} a ${TO_DAYS} dias a partir de ${new Date().toISOString().slice(0, 10)}).
 -- Gerado por app-admin/scripts/marketing-corrida-provas.mjs. Os dados envelhecem: regerar perto de liberar o módulo.
--- Aplicar só depois de publicar as imagens. Entram no fim da fila e só saem com o módulo Corrida ligado.
-insert into public.marketing_autopost_queue (position, key, format, caption, media, requires_module)
+-- Aplicar só depois de publicar as imagens. Texto "Em breve": entram no fim da fila e saem com o módulo Corrida DESLIGADO (param quando ele liga).
+insert into public.marketing_autopost_queue (position, key, format, caption, media, hide_when_module)
 select (select coalesce(max(position), 0) from public.marketing_autopost_queue) + v.n, v.key, v.format, v.caption, v.media::jsonb, 'corrida'
 from (values
 ${values.join(',\n')}

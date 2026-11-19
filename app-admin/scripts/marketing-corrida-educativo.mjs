@@ -4,8 +4,8 @@
 //   node app-admin/scripts/marketing-corrida-educativo.mjs
 //
 // Saída: app-react/public/landing/img/marketing/corrida-edu-*.jpg e a migration
-// supabase/migrations/20270228010000_marketing_corrida_educativo.sql (itens da fila com
-// requires_module = 'corrida', no fim da fila pendente).
+// supabase/migrations/20270301000000_marketing_corrida_educativo_embreve.sql (reescreve como "Em breve" os
+// itens que a migration 20270228010000 pôs na fila: saem com o módulo desligado).
 import { loadImage } from '@napi-rs/canvas';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -19,8 +19,9 @@ import { DURATION, STORY_DROP, STORY_DURATION, drawReelFrame, drawStoryFrame } f
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = join(root, 'app-react', 'public', 'landing', 'img', 'marketing');
 const SITE = 'https://eafit.com.br';
-const TAGS = '#corrida #corridaderua #running #treino #EAFIT';
-const CTA = 'Comece agora. Link na bio 👇';
+const TAGS = '#corrida #corridaderua #running #embreve #EAFIT';
+const FOOTER = 'Em breve · eafit.com.br';
+const CTA = 'Fique de olho: em breve no EAFIT. 👀';
 
 // Cada carrossel: capa, slides numerados e fechamento com o print do app.
 export const CAROUSELS = [
@@ -34,8 +35,8 @@ export const CAROUSELS = [
       ['5', 'Mito: quem corre devagar não está treinando'],
       ['6', 'Verdade: a maior parte dos treinos deve ser num ritmo confortável'],
     ],
-    closing: 'Corra com plano no EAFIT Run.',
-    caption: `Quantos desses mitos você já ouviu? 🤔\nSalve este post e mande para quem diz que não nasceu para correr.\n\n${CTA}\n\n${TAGS}`,
+    closing: 'Em breve: corra com plano no EAFIT Run.',
+    caption: `Quantos desses mitos você já ouviu? 🤔\nSalve este post e mande para quem diz que não nasceu para correr. O EAFIT Run chega em breve.\n\n${CTA}\n\n${TAGS}`,
   },
   {
     key: 'corrida-edu-aquecimento', headline: 'Aquecimento antes de correr',
@@ -46,8 +47,8 @@ export const CAROUSELS = [
       ['4', 'Trote bem leve nos primeiros minutos da corrida'],
       ['5', 'Só acelere quando o corpo estiver quente'],
     ],
-    closing: 'Registre cada corrida no EAFIT Run.',
-    caption: `Cinco minutos de aquecimento mudam a sua corrida. 🔥\nSalve este roteiro e use antes de calçar o tênis.\n\n${CTA}\n\n${TAGS}`,
+    closing: 'Em breve: registre cada corrida no EAFIT Run.',
+    caption: `Cinco minutos de aquecimento mudam a sua corrida. 🔥\nSalve este roteiro e use antes de calçar o tênis. Em breve no EAFIT Run: registre cada corrida.\n\n${CTA}\n\n${TAGS}`,
   },
   {
     key: 'corrida-edu-forca', headline: 'Força para quem corre',
@@ -58,8 +59,8 @@ export const CAROUSELS = [
       ['4', 'Prancha: tronco firme segura a postura no fim da prova'],
       ['5', 'Duas vezes por semana já fazem diferença'],
     ],
-    closing: 'Corrida e força no mesmo app.',
-    caption: `Quem corre e treina força corre melhor. 💪\nNo EAFIT, o programa de corrida já inclui o treino de força para corredor.\n\n${CTA}\n\n${TAGS}`,
+    closing: 'Em breve: corrida e força no mesmo app.',
+    caption: `Quem corre e treina força corre melhor. 💪\nEm breve no EAFIT: programa de corrida com treino de força para corredor.\n\n${CTA}\n\n${TAGS}`,
   },
   {
     key: 'corrida-edu-lesao', headline: 'Como evitar lesão na corrida',
@@ -70,8 +71,8 @@ export const CAROUSELS = [
       ['4', 'Fortaleça pernas e core, não só corra'],
       ['5', 'Dor que persiste é sinal para parar e procurar um profissional'],
     ],
-    closing: 'Evolua com plano no EAFIT Run.',
-    caption: `Correr por mais tempo começa por se cuidar. 🩹\nSalve estas dicas para consultar sempre.\n\n${CTA}\n\n${TAGS}`,
+    closing: 'Em breve: evolua com plano no EAFIT Run.',
+    caption: `Correr por mais tempo começa por se cuidar. 🩹\nSalve estas dicas para consultar sempre. Em breve no EAFIT Run: programa com plano e descanso.\n\n${CTA}\n\n${TAGS}`,
   },
   {
     key: 'corrida-edu-tenis', headline: 'Como escolher o tênis de corrida',
@@ -82,8 +83,8 @@ export const CAROUSELS = [
       ['4', 'Pense no piso em que você mais corre'],
       ['5', 'Controle os km do tênis e troque quando ele estiver gasto'],
     ],
-    closing: 'Acompanhe os seus km no EAFIT Run.',
-    caption: `Tênis certo, corrida mais confortável. 👟\nSalve este guia antes da próxima compra.\n\n${CTA}\n\n${TAGS}`,
+    closing: 'Em breve: acompanhe os seus km no EAFIT Run.',
+    caption: `Tênis certo, corrida mais confortável. 👟\nSalve este guia antes da próxima compra. Em breve no EAFIT Run: km de cada tênis.\n\n${CTA}\n\n${TAGS}`,
   },
   {
     key: 'corrida-edu-pre-corrida', headline: 'O que fazer antes de correr',
@@ -94,8 +95,8 @@ export const CAROUSELS = [
       ['4', 'Separe a roupa e carregue o celular na véspera'],
       ['5', 'Durma bem: a noite anterior vale mais que o treino extra'],
     ],
-    closing: 'Grave a corrida no EAFIT Run.',
-    caption: `Preparação simples, corrida melhor. ⏱️\nSalve este checklist para o dia da prova.\n\n${CTA}\n\n${TAGS}`,
+    closing: 'Em breve: grave a corrida no EAFIT Run.',
+    caption: `Preparação simples, corrida melhor. ⏱️\nSalve este checklist para o dia da prova. Em breve no EAFIT Run: grave a corrida.\n\n${CTA}\n\n${TAGS}`,
   },
   {
     key: 'corrida-edu-primeira-prova', headline: 'Sua primeira prova de rua',
@@ -106,8 +107,8 @@ export const CAROUSELS = [
       ['4', 'Não largue rápido: comece mais devagar do que o treino'],
       ['5', 'Curta a prova. A meta é terminar bem'],
     ],
-    closing: 'Veja as próximas corridas no app.',
-    caption: `A primeira prova não precisa dar medo. 🏁\nO EAFIT Run mostra as próximas corridas do seu estado para você escolher a sua.\n\n${CTA}\n\n${TAGS}`,
+    closing: 'Em breve: as próximas corridas no app.',
+    caption: `A primeira prova não precisa dar medo. 🏁\nEm breve o EAFIT Run vai mostrar as próximas corridas do seu estado para você escolher a sua.\n\n${CTA}\n\n${TAGS}`,
   },
 ];
 
@@ -117,14 +118,14 @@ const PRINTS = join(root, 'app-react', 'public', 'landing', 'img', 'app');
 export const STORIES = [
   ['corrida-edu-mitos', 'Mito ou verdade? Correr estraga o joelho', 'Com progressão e descanso, o risco cai.', 'run-inicio', 1],
   ['corrida-edu-aquecimento', 'Aqueça 5 minutos antes de correr', 'Caminhe, mobilize e comece leve.', 'run-ao-vivo', 3],
-  ['corrida-edu-provas', 'Quais corridas tem perto de você?', 'Veja as próximas provas do seu estado.', 'run-desafios', 5],
+  ['corrida-edu-provas', 'Quais corridas vão ter perto de você?', 'As provas do seu estado, em breve no app.', 'run-desafios', 5],
 ];
 
 export const REELS = [
   {
     key: 'corrida-edu-mitos', print: 'run-inicio', hook: 'Você ainda acredita nesses mitos da corrida?', title: 'Mitos e verdades da corrida', sub: 'Progressão, descanso e ritmo confortável.',
     caption: `Correr estraga o joelho? Tem que correr todo dia? 🤔
-Com plano, progressão e descanso, correr fica mais seguro e mais leve.
+Com plano, progressão e descanso, correr fica mais seguro e mais leve. Em breve no EAFIT Run.
 
 ${CTA}
 
@@ -133,16 +134,16 @@ ${TAGS}`,
   {
     key: 'corrida-edu-forca', print: 'run-ao-vivo', hook: 'Quer correr melhor? Treine força', title: 'Força para quem corre', sub: 'Agachamento, afundo, panturrilha e prancha.',
     caption: `Quem corre e treina força corre melhor. 💪
-O programa de corrida do EAFIT já inclui o treino de força para corredor.
+Em breve no EAFIT: programa de corrida com treino de força para corredor.
 
 ${CTA}
 
 ${TAGS}`,
   },
   {
-    key: 'corrida-edu-primeira-prova', print: 'run-desafios', hook: 'Vai correr a sua primeira prova?', title: 'Escolha a sua corrida', sub: 'Próximas provas do seu estado no app.',
+    key: 'corrida-edu-primeira-prova', print: 'run-desafios', hook: 'Vai correr a sua primeira prova?', title: 'Escolha a sua corrida', sub: 'Próximas provas do seu estado. Em breve.',
     caption: `A primeira prova não precisa dar medo. 🏁
-O EAFIT Run mostra as próximas corridas do seu estado para você escolher a sua.
+Em breve o EAFIT Run vai mostrar as próximas corridas do seu estado para você escolher a sua.
 
 ${CTA}
 
@@ -188,7 +189,7 @@ async function main() {
       files.push(f);
     });
     const last = `${c.key}-${c.slides.length + 2}.jpg`;
-    writeFileSync(join(OUT, last), await printArt({ headline: c.closing, sub: 'Comece agora. Link na bio.', print: 'run-inicio' }, 'feed'));
+    writeFileSync(join(OUT, last), await printArt({ headline: c.closing, sub: 'Em breve · eafit.com.br', print: 'run-inicio' }, 'feed', FOOTER));
     files.push(last);
     items.push({ key: `${c.key}-feed`, format: 'feed', caption: c.caption, media: mediaImg(files) });
     console.log('ok', c.key, `${files.length} imagens`);
@@ -205,17 +206,18 @@ async function main() {
   ];
   const values = ordered.map((it, i) => `  (${i + 1}, ${sqlText(it.key)}, ${sqlText(it.format || 'feed')}, ${sqlText(it.caption)}, ${sqlText(it.media)})`);
   if (process.env.ONLY !== 'imagens') await videos();
-  const sql = `-- Marketing do módulo Corrida: carrosséis educativos e de produto (pós-lançamento).
--- Gerado por app-admin/scripts/marketing-corrida-educativo.mjs. Entram no FIM da fila pendente e só
--- saem com o módulo Corrida ligado.
-insert into public.marketing_autopost_queue (position, key, format, caption, media, requires_module)
-select (select coalesce(max(position), 0) from public.marketing_autopost_queue) + v.n, v.key, v.format, v.caption, v.media::jsonb, 'corrida'
+  const sql = `-- Marketing do módulo Corrida: carrosséis educativos e de produto reescritos como "Em breve".
+-- Gerado por app-admin/scripts/marketing-corrida-educativo.mjs. O módulo ainda não foi lançado, então nada
+-- diz que já dá para usar: os itens já na fila (ainda não publicados) passam a sair com o módulo DESLIGADO
+-- (hide_when_module = 'corrida') e param quando ele liga. Imagens e vídeos mantêm o mesmo nome de arquivo.
+update public.marketing_autopost_queue q
+set caption = v.caption, requires_module = null, hide_when_module = 'corrida'
 from (values
 ${values.join(',\n')}
 ) as v(n, key, format, caption, media)
-where not exists (select 1 from public.marketing_autopost_queue q where q.key = v.key);
+where q.key = v.key and q.posted_at is null;
 `;
-  writeFileSync(join(root, 'supabase', 'migrations', '20270228010000_marketing_corrida_educativo.sql'), sql);
+  writeFileSync(join(root, 'supabase', 'migrations', '20270301000000_marketing_corrida_educativo_embreve.sql'), sql);
   console.log(`${ordered.length} itens na fila (SQL gerado)`);
 }
 

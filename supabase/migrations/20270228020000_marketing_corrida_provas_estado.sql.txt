@@ -1,0 +1,64 @@
+-- Marketing do módulo Corrida: carrosséis "Corridas em <estado>" (provas aprovadas de 21 a 75 dias a partir de 2026-11-19).
+-- Gerado por app-admin/scripts/marketing-corrida-provas.mjs. Os dados envelhecem: regerar perto de liberar o módulo.
+-- Aplicar só depois de publicar as imagens. Texto "Em breve": entram no fim da fila e saem com o módulo Corrida DESLIGADO (param quando ele liga).
+insert into public.marketing_autopost_queue (position, key, format, caption, media, hide_when_module)
+select (select coalesce(max(position), 0) from public.marketing_autopost_queue) + v.n, v.key, v.format, v.caption, v.media::jsonb, 'corrida'
+from (values
+  (1, 'corrida-provas-rj-202611-feed', 'feed', 'Vai correr em Rio de Janeiro? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #riodejaneiro', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rj-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rj-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rj-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rj-202611-4.jpg"}]'),
+  (2, 'corrida-provas-mg-202611-feed', 'feed', 'Vai correr em Minas Gerais? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #minasgerais', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-mg-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-mg-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-mg-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-mg-202611-4.jpg"}]'),
+  (3, 'corrida-provas-ba-202611-feed', 'feed', 'Vai correr em Bahia? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #bahia', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-ba-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-ba-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-ba-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-ba-202611-4.jpg"}]'),
+  (4, 'corrida-provas-go-202611-feed', 'feed', 'Vai correr em Goiás? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #goias', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-go-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-go-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-go-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-go-202611-4.jpg"}]'),
+  (5, 'corrida-provas-rs-202611-feed', 'feed', 'Vai correr em Rio Grande do Sul? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #riograndedosul', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rs-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rs-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rs-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-rs-202611-4.jpg"}]'),
+  (6, 'corrida-provas-pr-202611-feed', 'feed', 'Vai correr em Paraná? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #parana', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pr-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pr-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pr-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pr-202611-4.jpg"}]'),
+  (7, 'corrida-provas-pa-202611-feed', 'feed', 'Vai correr em Pará? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #para', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pa-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pa-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pa-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pa-202611-4.jpg"}]'),
+  (8, 'corrida-provas-pb-202611-feed', 'feed', 'Vai correr em Paraíba? 🏁
+Salve este post: separamos as próximas provas do estado. Confira datas e inscrição no site de cada organizador.
+Em breve no EAFIT Run: as corridas perto de você e a sua preparação no app.
+
+Fique de olho: em breve no EAFIT. 👀
+
+#corrida #corridaderua #running #provasdecorrida #embreve #EAFIT #paraiba', '[{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pb-202611-1.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pb-202611-2.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pb-202611-3.jpg"},{"type":"image","url":"https://eafit.com.br/img/marketing/corrida-provas-pb-202611-4.jpg"}]')
+) as v(n, key, format, caption, media)
+where not exists (select 1 from public.marketing_autopost_queue q where q.key = v.key);
