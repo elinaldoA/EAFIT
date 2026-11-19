@@ -8,6 +8,7 @@ const STAT_LABELS = {
   distancia: 'Distância',
   ritmo: 'Ritmo',
   tempo: 'Tempo',
+  calorias: 'Calorias',
 };
 
 // Compartilhar a corrida numa foto da própria pessoa (câmera ou galeria), com o
@@ -16,7 +17,7 @@ export default function RunPhotoShare({ run, onClose }) {
   const render = useCallback((img, show) => renderRunPhotoCard(run, img, show), [run]);
   const share = useCallback(blob => shareRunPhoto(run, blob), [run]);
   // Sem GPS não há traçado para mostrar.
-  const keys = RUN_PHOTO_STATS.filter(k => k !== 'percurso' || (Array.isArray(run.route) && run.route.length > 0));
+  const keys = RUN_PHOTO_STATS.filter(k => (k !== 'percurso' || (Array.isArray(run.route) && run.route.length > 0)) && (k !== 'calorias' || run.kcal));
   return (
     <PhotoShareModal
       title={t('📸 Foto da corrida')}

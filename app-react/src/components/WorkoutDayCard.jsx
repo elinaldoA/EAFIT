@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/useAuth';
+import { strengthCalories, weightFromMeta } from '../lib/calories';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { formatDuration } from '../lib/utils';
@@ -120,9 +121,11 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     const exercises = gatherExerciseDetails(day);
     const { done: totalSetsDone, total: totalPlannedSets } = countSets(exercises);
     const { done: weekDone, total: weekTotal } = weekProgress();
+    const kcal = strengthCalories({ durationSeconds: Math.round(durationMs / 1000), doneSets: totalSetsDone }, weightFromMeta(user?.user_metadata));
     return {
       day, durationMs, volume: calcDayVolume(day),
       exercises, totalSetsDone, totalPlannedSets, weekDone, weekTotal,
+      ...(kcal ? { kcal } : {}),
     };
   }
 

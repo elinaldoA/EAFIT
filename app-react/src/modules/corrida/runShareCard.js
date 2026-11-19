@@ -185,15 +185,16 @@ export async function renderRunCard(run, refCode = myRefCode()) {
     drawBigDistance(ctx, run);
   }
 
-  const gap = 22;
-  const boxW = (CONTENT_W - gap * 2) / 3;
-  const boxY = MAP_Y + MAP_H + 40;
   const stats = [
     [formatKm(run.distance_m), t('km')],
     [formatPace(paceSeconds(run.duration_s, run.distance_m)), t('ritmo /km')],
     [formatClock(run.duration_s), t('tempo')],
   ];
-  stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: 80, padX: 30, labelSize: 25 }));
+  if (run.kcal) stats.push([String(run.kcal), t('kcal')]);
+  const gap = run.kcal ? 14 : 22;
+  const boxW = (CONTENT_W - gap * (stats.length - 1)) / stats.length;
+  const boxY = MAP_Y + MAP_H + 40;
+  stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: run.kcal ? 66 : 80, padX: run.kcal ? 18 : 30, labelSize: run.kcal ? 22 : 25 }));
 
   await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
@@ -209,7 +210,7 @@ export async function shareRunCard(run, prepared) {
   return shareImageBlob(blob, 'minha-corrida.png', t('Minha corrida'), text);
 }
 
-export const RUN_PHOTO_STATS = ['percurso', 'distancia', 'ritmo', 'tempo'];
+export const RUN_PHOTO_STATS = ['percurso', 'distancia', 'ritmo', 'tempo', 'calorias'];
 
 // Traçado sozinho (sem mapa), para ir por cima da foto: linha laranja com
 // contorno branco e sombra, início verde e fim vermelho.
@@ -276,11 +277,12 @@ export async function renderRunPhotoCard(run, img, show = {}) {
     on('distancia') && [formatKm(run.distance_m), t('km')],
     on('ritmo') && [formatPace(paceSeconds(run.duration_s, run.distance_m)), t('ritmo /km')],
     on('tempo') && [formatClock(run.duration_s), t('tempo')],
+    run.kcal && on('calorias') && [String(run.kcal), t('kcal')],
   ].filter(Boolean);
   const hasTrace = on('percurso') && Array.isArray(run.route) && run.route.length > 0;
 
   const rowH = 155;
-  const gridTop = CARD_HEIGHT - 170 - 3 * rowH;
+  const gridTop = CARD_HEIGHT - 170 - Math.max(3, stats.length) * rowH;
   const shadeTop = gridTop - 420;
   const bottom = ctx.createLinearGradient(0, shadeTop, 0, CARD_HEIGHT);
   bottom.addColorStop(0, 'rgba(0,0,0,0)');

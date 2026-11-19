@@ -34,6 +34,7 @@ import { geoSupported } from './useGeoTracker';
 import { requestMotionPermission } from './cadence';
 import { GPS_KEY, readPref } from './runPrefs';
 import { trackEvent } from '../../lib/tracking';
+import { runCalories, weightFromMeta } from '../../lib/calories';
 
 import { t } from '../../lib/i18n';
 const EFFORT_LABEL = { 1: t('1 km'), 5: t('5 km'), 10: t('10 km'), 21: t('21 km') };
@@ -47,17 +48,19 @@ function RunItem({ run, runs, shoe, onDelete }) {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const { user } = useAuth();
+  const kcal = runCalories(run, weightFromMeta(user?.user_metadata));
+  const card = useMemo(() => (kcal ? { ...run, kcal } : run), [run, kcal]);
   // O card é desenhado ao abrir a corrida: no toque em Compartilhar ele já
   // está pronto e o share nativo não perde o gesto (lib/shareCard.js).
   const prepared = useRef(null);
   useEffect(() => {
-    if (open && !prepared.current) prepared.current = renderRunCard(run).catch(() => null);
-  }, [open, run]);
+    if (open && !prepared.current) prepared.current = renderRunCard(card).catch(() => null);
+  }, [open, card]);
 
   async function handleShare() {
     setSharing(true);
     try {
-      const result = await shareRunCard(run, prepared.current);
+      const result = await shareRunCard(card, prepared.current);
       if (result === 'downloaded') toast(t('🖼️ Imagem baixada'));
     } catch (err) {
       if (err?.name !== 'AbortError') toast(t('⚠️ Não foi possível gerar a imagem'));
@@ -111,6 +114,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
               {t('⛰ Ritmo ajustado pela inclinação: {v1}/km (real {v2}/km)', { v1: formatPace(gap(run).adjusted), v2: formatPace(gap(run).actual) })}
             </p>
           )}
+          {kcal && <p className="run-item__weather">{t('🔥 ~{v1} kcal queimadas', { v1: kcal })}</p>}
           {run.hr && <p className="run-item__weather">{hrText(run.hr)}</p>}
           {run.hr?.z && <HrZones zones={run.hr.z} />}
           {run.weather && <p className="run-item__weather">{weatherText(run.weather)}</p>}
@@ -154,7 +158,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
           >{t('Apagar corrida')}</button>
         </div>
       )}
-      {photoOpen && <RunPhotoShare run={run} onClose={() => setPhotoOpen(false)} />}
+      {photoOpen && <RunPhotoShare run={card} onClose={() => setPhotoOpen(false)} />}
     </li>
   );
 }

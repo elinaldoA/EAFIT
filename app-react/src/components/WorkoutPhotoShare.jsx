@@ -8,6 +8,7 @@ const STAT_LABELS = {
   carga: 'Volume',
   series: 'Séries',
   exercicios: 'Exercícios',
+  calorias: 'Calorias',
 };
 
 // Compartilhar o treino numa foto da própria pessoa (câmera ou galeria).
@@ -19,7 +20,7 @@ export default function WorkoutPhotoShare({ summary, onClose }) {
       subtitle={t('Tire uma foto e mostre os números do treino')}
       ariaLabel={t('Foto com os dados do treino')}
       previewAlt={t('Prévia da foto com os dados do treino')}
-      stats={PHOTO_STATS.map(k => [k, t(STAT_LABELS[k])])}
+      stats={PHOTO_STATS.filter(k => k !== 'calorias' || summary.kcal).map(k => [k, t(STAT_LABELS[k])])}
       render={render}
       share={shareWorkoutPhoto}
       onClose={onClose}

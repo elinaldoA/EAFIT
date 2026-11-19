@@ -10,6 +10,7 @@ import { formatSeconds } from '../lib/timedSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 
 import { setExtras } from '../lib/intensity';
+import { strengthCalories, weightFromMeta } from '../lib/calories';
 import { t, locale, tEx } from '../lib/i18n';
 function fmtKg(n) {
   return `${n.toLocaleString(locale, { maximumFractionDigits: 1 })}kg`;
@@ -35,6 +36,8 @@ export default function SessionDetailModal({ session, onClose }) {
   const { user } = useAuth();
   const [previous, setPrevious] = useState(null);
   const rating = RATING_OPTIONS.find(o => o.value === session.rating);
+  const weight = weightFromMeta(user?.user_metadata);
+  const kcal = strengthCalories(session, weight);
 
   useEffect(() => {
     document.body.classList.add('modal-open');
@@ -83,11 +86,21 @@ export default function SessionDetailModal({ session, onClose }) {
               <span className="stat-card__value">{session.volume ? fmtVolume(session.volume) : '–'}</span>
               <span className="stat-card__label">{t('Volume (kg × reps)')}</span>
             </div>
+            {kcal && (
+              <div className="stat-card">
+                <span className="stat-card__value">{`~${kcal}`}</span>
+                <span className="stat-card__label">{t('kcal queimadas')}</span>
+              </div>
+            )}
             <div className="stat-card">
               <span className="stat-card__value">{rating ? rating.label : '–'}</span>
               <span className="stat-card__label">{t('Avaliação')}</span>
             </div>
           </div>
+
+          {!weight && session.durationSeconds > 0 && (
+            <p className="session-notes">{t('Informe seu peso no Perfil para ver as calorias queimadas.')}</p>
+          )}
 
           {session.notes && (
             <div className="summary-section">

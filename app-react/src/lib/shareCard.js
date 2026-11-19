@@ -764,7 +764,7 @@ function formatCardDate(date = new Date()) {
 export async function renderWorkoutSummaryCard(summary, refCode = myRefCode()) {
   const {
     day, durationMs, volume, weekDone, weekTotal,
-    exercises = [], totalSetsDone, totalPlannedSets,
+    exercises = [], totalSetsDone, totalPlannedSets, kcal,
   } = summary;
 
   const canvas = document.createElement('canvas');
@@ -825,8 +825,16 @@ export async function renderWorkoutSummaryCard(summary, refCode = myRefCode()) {
   drawStatBox(ctx, PAD_X, y, boxW, statBoxH, formatDuration(durationMs), t('duração'), ORANGE);
   drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, `${(volume || 0).toLocaleString(locale)} kg`, t('volume'), SKY);
   y += statBoxH + statsGap;
-  drawStatBox(ctx, PAD_X, y, boxW, statBoxH, `${totalSetsDone}/${totalPlannedSets}`, t('séries concluídas'), EMERALD);
-  drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, String(exercises.length), t('exercícios'), VIOLET);
+  if (kcal) {
+    const w3 = (CONTENT_W - statsGap * 2) / 3;
+    const o3 = { padX: 24, labelSize: 22 };
+    drawStatBox(ctx, PAD_X, y, w3, statBoxH, `${totalSetsDone}/${totalPlannedSets}`, t('séries'), EMERALD, o3);
+    drawStatBox(ctx, PAD_X + w3 + statsGap, y, w3, statBoxH, String(exercises.length), t('exercícios'), VIOLET, o3);
+    drawStatBox(ctx, PAD_X + (w3 + statsGap) * 2, y, w3, statBoxH, `~${kcal}`, t('kcal'), ORANGE, o3);
+  } else {
+    drawStatBox(ctx, PAD_X, y, boxW, statBoxH, `${totalSetsDone}/${totalPlannedSets}`, t('séries concluídas'), EMERALD);
+    drawStatBox(ctx, PAD_X + boxW + statsGap, y, boxW, statBoxH, String(exercises.length), t('exercícios'), VIOLET);
+  }
 
   y += statBoxH + 28 + bonus;
   drawWeeklyGoal(ctx, PAD_X, y, CONTENT_W, goalH, weekDone, weekTotal);
@@ -848,13 +856,13 @@ export function coverRect(imgW, imgH, boxW, boxH) {
   return { x: (boxW - w) / 2, y: (boxH - h) / 2, w, h };
 }
 
-export const PHOTO_STATS = ['duracao', 'carga', 'series', 'exercicios'];
+export const PHOTO_STATS = ['duracao', 'carga', 'series', 'exercicios', 'calorias'];
 
 // Cartão 9:16 com a foto da pessoa de fundo e os dados do treino por cima
 // (marca no topo, foco do treino e números embaixo), no estilo dos apps de
 // academia. `show` escolhe quais números aparecem; `img` é uma imagem já carregada.
 export async function renderWorkoutPhotoCard(summary, img, show = {}) {
-  const { day, durationMs, volume, exercises = [], totalSetsDone, totalPlannedSets } = summary;
+  const { day, durationMs, volume, exercises = [], totalSetsDone, totalPlannedSets, kcal } = summary;
   const on = k => show[k] !== false;
 
   const canvas = document.createElement('canvas');
@@ -880,6 +888,7 @@ export async function renderWorkoutPhotoCard(summary, img, show = {}) {
     on('carga') && [`${(volume || 0).toLocaleString(locale)} kg`, t('volume')],
     on('series') && [`${totalSetsDone}/${totalPlannedSets}`, t('séries concluídas')],
     on('exercicios') && [String(exercises.length), t('exercícios')],
+    kcal && on('calorias') && [`~${kcal}`, t('kcal')],
   ].filter(Boolean);
 
   const rowH = 150;

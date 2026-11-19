@@ -290,4 +290,9 @@ export default {
   '💧 +{ml} ml · {total} ml hoje': '💧 +{ml} ml · {total} ml today',
   'Lembrar de beber água durante o treino (automático a cada 15 min de treino)': 'Remind me to drink water while training (automatic every 15 min of training)',
   '💧 Hora de se hidratar': '💧 Time to hydrate',
+  '🔥 ~{v1} kcal queimadas': '🔥 ~{v1} kcal burned',
+  'kcal queimadas': 'kcal burned',
+  'kcal': 'kcal',
+  'séries': 'sets',
+  'Informe seu peso no Perfil para ver as calorias queimadas.': 'Add your weight in Profile to see calories burned.',
 };
