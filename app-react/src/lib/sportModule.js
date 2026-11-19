@@ -39,15 +39,18 @@ export const brandName = module => (module?.name ? `EAFIT · ${module.name}` : '
 
 // Cores e detalhes do módulo (styles/modules.css) via <html data-module>. A
 // musculação não marca nada: é o visual padrão de tokens.css.
-export function applyModuleTheme(id, root = document.documentElement) {
-  if (id && id !== DEFAULT_MODULE_ID) root.setAttribute('data-module', id);
+// `remember` (pessoa logada): grava o módulo também para o spinner e para a
+// splash do próximo carregamento (<html data-spinner> e public/boot-module.js).
+// Deslogado, o tema volta ao padrão mas o spinner segue o último módulo usado
+// no aparelho, para a tela de login já carregar com o spinner certo.
+export function applyModuleTheme(id, root = document.documentElement, remember = true) {
+  const custom = id && id !== DEFAULT_MODULE_ID;
+  if (custom) root.setAttribute('data-module', id);
   else root.removeAttribute('data-module');
-  // Guardado para a splash do próximo carregamento (public/boot-module.js) já
-  // abrir com as cores e o spinner do módulo, antes do JS do app.
-  try {
-    if (id && id !== DEFAULT_MODULE_ID) localStorage.setItem(BOOT_KEY, id);
-    else localStorage.removeItem(BOOT_KEY);
-  } catch { /* armazenamento bloqueado */ }
+  if (!remember) return;
+  if (custom) root.setAttribute('data-spinner', id);
+  else root.removeAttribute('data-spinner');
+  try { localStorage.setItem(BOOT_KEY, id || DEFAULT_MODULE_ID); } catch { /* armazenamento bloqueado */ }
 }
 
 // Última liberação conhecida guardada no aparelho: até a configuração do

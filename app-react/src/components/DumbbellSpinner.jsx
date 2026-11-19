@@ -3,17 +3,18 @@ import { currentSeason } from '../lib/season';
 
 // Spinner de carregamento. Na musculação: um halter fazendo repetições (sobe e
 // desce); no Dia das Bruxas as anilhas viram abóboras. No módulo Run
-// (<html data-module="corrida">): um corredor em movimento.
+// (<html data-spinner="corrida">): um corredor em movimento.
 export const isRunModule = () =>
-  typeof document !== 'undefined' && document.documentElement.getAttribute('data-module') === 'corrida';
+  typeof document !== 'undefined' && document.documentElement.getAttribute('data-spinner') === 'corrida';
 
-// O módulo só é marcado em <html> depois que a conta carrega (no login, por
-// exemplo, o spinner já está na tela antes): acompanha a mudança do atributo
+// O spinner do módulo (<html data-spinner>, lib/sportModule.js) só é marcado
+// depois que a conta carrega (no login, por exemplo, o spinner já está na tela
+// antes): acompanha a mudança do atributo
 // para trocar o halter pelo corredor na hora.
 function subscribeModule(onChange) {
   if (typeof MutationObserver === 'undefined') return () => {};
   const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-module'] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-spinner'] });
   return () => observer.disconnect();
 }
 

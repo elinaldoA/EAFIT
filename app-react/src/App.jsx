@@ -86,7 +86,11 @@ function Shell() {
   // Versão do app do esporte da pessoa (modules/registry.js): abas, cores e marca.
   const { module: sport } = useSportModule();
   const [page, setPage] = useHashTab(sport.tabs, sport.defaultTab);
-  useEffect(() => { applyModuleTheme(sport.id); }, [sport.id]);
+  // Enquanto a sessão é restaurada o módulo ainda é desconhecido (cai na
+  // musculação): não mexe no tema nem no spinner, que a splash já marcou.
+  useEffect(() => {
+    if (!authLoading) applyModuleTheme(sport.id, undefined, !!user);
+  }, [sport.id, authLoading, user]);
   // Módulo ocupado (ex.: corrida rodando): manutenção e atualização obrigatória
   // esperam o fim — trocar a tela inteira mataria o GPS e o cronômetro.
   const moduleBusy = useSyncExternalStore(sport.busy?.subscribe || noSubscribe, sport.busy?.get || notBusy);

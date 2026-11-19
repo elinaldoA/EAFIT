@@ -59,7 +59,7 @@
       .boot .dumbbell { width: 88px; line-height: 0; color: #a1a1aa; }
       .boot .dumbbell svg { width: 100%; height: auto; overflow: visible; animation: boot-lift 1.8s ease-in-out infinite; }
       @keyframes boot-lift { 0%, 35% { transform: rotate(0); } 50%, 85% { transform: rotate(180deg); } 100% { transform: rotate(360deg); } }
-      /* Módulo Run (data-module vem de boot-module.js): corredor no lugar do halter. */
+      /* Módulo Run (data-spinner vem de boot-module.js): corredor no lugar do halter. */
       .boot .boot__runner { display: none; width: 64px; line-height: 0; color: #a1a1aa; }
       .boot .boot__runner svg { width: 100%; height: auto; overflow: visible; }
       .boot .boot__runner path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -73,8 +73,8 @@
       .boot .boot__runner .r-b { --from: 38deg; --to: -38deg; }
       @keyframes boot-swing { from { transform: rotate(var(--from)); } to { transform: rotate(var(--to)); } }
       @keyframes boot-bob { from { transform: translateY(0); } to { transform: translateY(-1.6px); } }
-      html[data-module="corrida"] .boot > .dumbbell { display: none; }
-      html[data-module="corrida"] .boot > .boot__runner { display: inline-block; }
+      html[data-spinner="corrida"] .boot > .dumbbell { display: none; }
+      html[data-spinner="corrida"] .boot > .boot__runner { display: inline-block; }
       @media (prefers-color-scheme: light) { .boot { background: #f4f4f5; color: #18181b; } }
       @media (prefers-reduced-motion: reduce) { .boot .dumbbell svg, .boot .boot__runner * { animation: none !important; } }
     </style>
