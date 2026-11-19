@@ -9,6 +9,24 @@
    entrada ou está na lista de textos que não mudam). */
 window.LANDING_EN = {
   text: {
+    // EAFIT Run em breve (home e /corrida)
+    "Em breve": "Coming soon",
+    "EAFIT Run: o módulo para quem ama correr": "EAFIT Run: the module for people who love running",
+    "Em breve · EAFIT Run": "Coming soon · EAFIT Run",
+    "Vem aí o EAFIT Run, o módulo para quem ama correr": "EAFIT Run is coming, the module for people who love running",
+    "O app que você já usa para treinar vai ganhar um jeito de correr com plano: grave cada corrida com GPS, ouça o seu ritmo a cada quilômetro e divida a evolução com os amigos.": "The app you already use to train is getting a way to run with a plan: record every run with GPS, hear your pace every kilometer and share your progress with friends.",
+    "Do 5K à meia maratona": "From 5K to half marathon",
+    "Programa semanal pelo seu nível, para sair do sofá ou bater o seu recorde.": "A weekly program for your level, to get off the couch or beat your record.",
+    "Corrida ao vivo com GPS": "Live runs with GPS",
+    "Tempo, distância e ritmo na tela, voz a cada quilômetro e o seu percurso no mapa.": "Time, distance and pace on screen, a voice cue every kilometer and your route on the map.",
+    "Calorias e recordes": "Calories and records",
+    "Veja as calorias queimadas, os seus melhores tempos de 1, 5, 10 e 21 km e a evolução semana a semana.": "See the calories you burned, your best times for 1, 5, 10 and 21 km and your progress week by week.",
+    "Acompanhe as corridas deles, aplauda e entre nos desafios do mês.": "Follow their runs, cheer them on and join the monthly challenges.",
+    "Criar minha conta agora": "Create my account now",
+    "Conhecer o EAFIT Run": "Discover EAFIT Run",
+    "Já tem conta? Quando o Run abrir, é só escolher Corrida em Perfil › Meu esporte. Sem novo cadastro.": "Already have an account? When Run opens, just pick Running under Profile › My sport. No new sign-up.",
+    "EAFIT Run · Em breve": "EAFIT Run · Coming soon",
+    "O EAFIT Run chega em breve. Quem já tem conta recebe o módulo no mesmo app, sem novo cadastro.": "EAFIT Run is coming soon. If you already have an account, the module arrives in the same app, no new sign-up.",
     // Página /corrida (EAFIT Run)
     "A versão de corrida do EAFIT grava a sua corrida com GPS e voz a cada quilômetro, mostra as corridas dos amigos para vocês se aplaudirem e acompanha a sua evolução em ritmo, distância e recordes.": "EAFIT's running version records your run with GPS and a voice cue every kilometer, shows your friends' runs so you can give each other kudos, and tracks your progress in pace, distance and records.",
     "As corridas dos amigos": "Your friends' runs",
@@ -26,7 +44,6 @@ window.LANDING_EN = {
     "Pronto para a primeira corrida?": "Ready for your first run?",
     "Crie a conta, escolha Corrida e toque em Gravar.": "Create your account, pick Running and tap Record.",
     "EAFIT Run, a versão de corrida do EAFIT: programa de 5K, 10K ou meia maratona, corrida ao vivo com GPS e voz a cada km, feed com os amigos, desafios do mês, recordes e percurso no mapa com privacidade. Comece agora.": "EAFIT Run, EAFIT's running version: 5K, 10K or half marathon program, live runs with GPS and a voice cue every km, a feed with friends, monthly challenges, records and your route on a map, with privacy. Start now.",
-    "EAFIT Run": "EAFIT Run",
     "Corra com plano, do primeiro 5K à meia maratona": "Run with a plan, from your first 5K to a half marathon",
     "Começar a correr": "Start running",
     "Como começar": "How to start",
@@ -829,8 +846,6 @@ window.LANDING_EN = {
     '📣 EAFIT': '📣 EAFIT',
 
     // Home: novidade no topo, Nutrição, "E tem mais" e preço
-    'Novo': 'New',
-    'Diário de nutrição com leitor de código de barras': 'Nutrition diary with barcode scanner',
     'Nutrição · novo': 'Nutrition · new',
     'O que você come também entra na conta': 'What you eat counts too',
     'Calorias, proteína, carboidrato e gordura do dia, com meta calculada pelo seu peso, objetivo e frequência de treino. Anote por refeição em segundos: busque o alimento ou aponte a câmera pro código de barras.':
