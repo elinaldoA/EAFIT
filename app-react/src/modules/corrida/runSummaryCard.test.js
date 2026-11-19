@@ -87,3 +87,18 @@ describe('cartão do mês para os stories', () => {
     expect(texts).toContain('5,0 / 50 km · 10%');
   });
 });
+
+describe('smoothPoints', () => {
+  it('mantém as pontas e suaviza os cantos', async () => {
+    const { smoothPoints } = await import('./runShareCard');
+    const out = smoothPoints([[0, 0], [10, 0], [10, 10]], 1);
+    expect(out[0]).toEqual([0, 0]);
+    expect(out[out.length - 1]).toEqual([10, 10]);
+    expect(out.length).toBeGreaterThan(3);
+    expect(out.some(([x, y]) => x === 10 && y === 0)).toBe(false);
+  });
+  it('não mexe em linha com menos de 3 pontos', async () => {
+    const { smoothPoints } = await import('./runShareCard');
+    expect(smoothPoints([[0, 0], [5, 5]])).toEqual([[0, 0], [5, 5]]);
+  });
+});

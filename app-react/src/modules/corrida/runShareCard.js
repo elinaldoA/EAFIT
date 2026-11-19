@@ -212,42 +212,125 @@ export async function shareRunCard(run, prepared) {
 
 export const RUN_PHOTO_STATS = ['percurso', 'distancia', 'ritmo', 'tempo', 'calorias'];
 
-// Traçado sozinho (sem mapa), para ir por cima da foto: linha laranja com
-// contorno branco e sombra, início verde e fim vermelho.
+// Traçado sozinho (sem mapa), para ir por cima da foto. Pontos do GPS são
+// suavizados (Chaikin), a linha ganha degradê do início (verde) ao fim
+// (laranja), com halo escuro e contorno branco para aparecer em foto clara
+// ou escura, e marcadores de largada e chegada.
+const TRACE_STOPS = [[34, 197, 94], [250, 204, 21], [252, 76, 2]];
+
+function traceColor(f) {
+  const k = Math.min(Math.max(f, 0), 1) * (TRACE_STOPS.length - 1);
+  const i = Math.min(Math.floor(k), TRACE_STOPS.length - 2);
+  const u = k - i;
+  const [r, g, b] = TRACE_STOPS[i].map((v, c) => Math.round(v + (TRACE_STOPS[i + 1][c] - v) * u));
+  return `rgb(${r},${g},${b})`;
+}
+
+// Média móvel (tira o tremido do GPS, mantendo as pontas) e depois Chaikin,
+// que corta os cantos e deixa as curvas suaves.
+export function smoothPoints(pts, rounds = 2, window = 2) {
+  let out = pts;
+  if (window > 0 && pts.length > 2 * window + 1) {
+    out = pts.map((p, i) => {
+      if (i === 0 || i === pts.length - 1) return p;
+      const k = Math.min(window, i, pts.length - 1 - i);
+      let x = 0, y = 0;
+      for (let j = i - k; j <= i + k; j++) { x += pts[j][0]; y += pts[j][1]; }
+      return [x / (2 * k + 1), y / (2 * k + 1)];
+    });
+  }
+  for (let r = 0; r < rounds && out.length > 2; r++) {
+    const next = [out[0]];
+    for (let i = 0; i < out.length - 1; i++) {
+      const [x0, y0] = out[i];
+      const [x1, y1] = out[i + 1];
+      next.push([x0 * 0.75 + x1 * 0.25, y0 * 0.75 + y1 * 0.25], [x0 * 0.25 + x1 * 0.75, y0 * 0.25 + y1 * 0.75]);
+    }
+    next.push(out[out.length - 1]);
+    out = next;
+  }
+  return out;
+}
+
 function drawTrace(ctx, run, x0, y0, w, h) {
-  const view = mapView(run.route, w, h, 36);
+  const view = mapView(run.route, w, h, 40);
   if (!view) return;
+  // Segmentos projetados, sem excesso de pontos (o suavizado dobra a contagem).
+  const segs = run.route
+    .filter(seg => Array.isArray(seg) && seg.length >= 2)
+    .map(seg => {
+      const step = Math.ceil(seg.length / 700);
+      const pts = seg.filter((_, i) => i % step === 0 || i === seg.length - 1).map(p => view.place(p));
+      return smoothPoints(pts);
+    });
+  if (!segs.length) return;
+  const total = segs.reduce((n, sg) => n + sg.length, 0);
+
   ctx.save();
   ctx.translate(x0, y0);
-  const line = (pts, color, width) => {
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Sombra suave atrás de tudo: dá contraste em foto clara sem escurecer o resto.
+  const cx = w / 2;
+  const cy = h / 2;
+  const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.5);
+  halo.addColorStop(0, 'rgba(0,0,0,0.2)');
+  halo.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(-40, -40, w + 80, h + 80);
+
+  const path = (sg, from = 0, to = sg.length) => {
     ctx.beginPath();
-    pts.forEach((p, i) => {
-      const [px, py] = view.place(p);
-      if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
-    });
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.stroke();
+    for (let i = from; i < to; i++) {
+      if (i === from) ctx.moveTo(sg[i][0], sg[i][1]); else ctx.lineTo(sg[i][0], sg[i][1]);
+    }
   };
-  const segs = run.route.filter(seg => Array.isArray(seg) && seg.length >= 2);
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 16;
-  segs.forEach(seg => line(seg, 'rgba(255,255,255,0.95)', 13));
+  // Duas camadas inteiras (halo escuro e contorno branco), depois a cor por trechos.
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = 18;
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth = 17;
+  segs.forEach(sg => { path(sg); ctx.stroke(); });
   ctx.shadowBlur = 0;
-  segs.forEach(seg => line(seg, '#fc4c02', 8));
-  const dot = ([px, py], color) => {
+  ctx.strokeStyle = 'rgba(255,255,255,0.96)';
+  ctx.lineWidth = 13;
+  segs.forEach(sg => { path(sg); ctx.stroke(); });
+  ctx.lineWidth = 8;
+  let done = 0;
+  segs.forEach(sg => {
+    for (let i = 1; i < sg.length; i++) {
+      ctx.strokeStyle = traceColor((done + i) / total);
+      path(sg, i - 1, i + 1);
+      ctx.stroke();
+    }
+    done += sg.length;
+  });
+
+  const marker = ([px, py], color, r) => {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 10;
     ctx.beginPath();
-    ctx.arc(px, py, 11, 0, Math.PI * 2);
+    ctx.arc(px, py, r, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
-    ctx.lineWidth = 4;
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 5;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
   };
-  dot(view.start, '#22c55e');
-  dot(view.end, '#ef4444');
+  const first = segs[0][0];
+  const lastSeg = segs[segs.length - 1];
+  const last = lastSeg[lastSeg.length - 1];
+  // Chegada: bola maior com miolo branco (alvo), mais fácil de achar que um ponto.
+  // A largada (verde) só é desenhada quando fica longe da chegada; num percurso
+  // fechado as duas coincidem e basta o alvo.
+  marker(last, '#fc4c02', 15);
+  ctx.beginPath();
+  ctx.arc(last[0], last[1], 5.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  if (Math.hypot(first[0] - last[0], first[1] - last[1]) > 30) marker(first, '#22c55e', 12);
   ctx.restore();
 }
 
