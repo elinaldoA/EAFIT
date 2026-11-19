@@ -18,6 +18,9 @@ function subscribeModule(onChange) {
   return () => observer.disconnect();
 }
 
+// true quando o spinner do módulo é o corredor; reage à troca de módulo.
+export const useRunSpinner = () => useSyncExternalStore(subscribeModule, isRunModule, () => false);
+
 // Ciclo de corrida em 4 quadros (passada, apoio, passada com as pernas trocadas,
 // apoio): cada quadro é um desenho completo e o CSS (loading.css) mostra um de
 // cada vez, então o corredor corre de verdade em vez de só balançar os membros.
