@@ -19,8 +19,10 @@
 .dumbbell--runner.dumbbell--md { width: 40px; }
 .dumbbell--runner.dumbbell--lg { width: 64px; }
 .dumbbell__svg--runner { animation: none; }
-.dumbbell__svg--runner path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
-.dumbbell__svg--runner .runner__torso { stroke: var(--primary, #f97316); stroke-width: 4.6; }
+.dumbbell__svg--runner path { fill: none; stroke: currentColor; stroke-width: 4.6; stroke-linecap: round; stroke-linejoin: round; }
+.dumbbell__svg--runner .runner__torso { stroke: var(--primary, #f97316); stroke-width: 6; }
+.dumbbell__svg--runner .runner__shoe { stroke: var(--primary, #f97316); stroke-width: 5.4; }
+.dumbbell__svg--runner .runner__shadow { fill: currentColor; opacity: .18; }
 .dumbbell__svg--runner .runner__head { fill: var(--primary, #f97316); }
 /* 4 quadros de corrida: um visível por vez (step-end), 0,6 s por passada. */
 .runner__frame { visibility: hidden; animation: runner-frame .6s step-end infinite; }

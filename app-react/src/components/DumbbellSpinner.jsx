@@ -18,29 +18,46 @@ function subscribeModule(onChange) {
   return () => observer.disconnect();
 }
 
-// Ciclo de corrida em 4 quadros (contato, passagem, contato com as pernas
-// trocadas, passagem): cada quadro é um desenho completo e o CSS (loading.css)
-// mostra um de cada vez, então o corredor corre de verdade em vez de só balançar
-// os membros. Os mesmos quadros estão em index.html (splash estática).
+// Ciclo de corrida em 4 quadros (passada, apoio, passada com as pernas trocadas,
+// apoio): cada quadro é um desenho completo e o CSS (loading.css) mostra um de
+// cada vez, então o corredor corre de verdade em vez de só balançar os membros.
+// Mesmo padrão do halter: corpo e cabeça na cor do módulo, membros em
+// currentColor (os do lado de trás mais apagados) e tênis na cor do módulo.
+// Os mesmos quadros estão em index.html (splash estática).
 const RUN_POSES = [
-  { y: -1.2, far: ["M23 26l-6 7 -9 -2", "M27 15l5 6 6 -3"], near: ["M23 26l8 4 3 9", "M27 15l-6 5 -5 -5"] },
-  { y: 0, far: ["M23 26l5 5 -7 3", "M27 15l2 6 5 -1"], near: ["M23 26l2 8 -2 8", "M27 15l-1 6 5 2"] },
-  { y: -1.2, far: ["M23 26l8 4 3 9", "M27 15l-6 5 -5 -5"], near: ["M23 26l-6 7 -9 -2", "M27 15l5 6 6 -3"] },
-  { y: 0, far: ["M23 26l2 8 -2 8", "M27 15l-1 6 5 2"], near: ["M23 26l5 5 -7 3", "M27 15l2 6 5 -1"] },
+  { y: -1.2,
+    far: { limbs: ["M23 26l-6 7 -9 -2", "M27 15l5 6 6 -3"], foot: "M8 31l-3 2.5" },
+    near: { limbs: ["M23 26l8 4 3 9", "M27 15l-6 5 -5 -5"], foot: "M34 39l4 1" } },
+  { y: 0,
+    far: { limbs: ["M23 26l5 5 -7 3", "M27 15l2 6 5 -1"], foot: "M21 34l4 2" },
+    near: { limbs: ["M23 26l2 8 -2 8", "M27 15l-1 6 5 2"], foot: "M23 42l4.5 0" } },
+  { y: -1.2,
+    far: { limbs: ["M23 26l8 4 3 9", "M27 15l-6 5 -5 -5"], foot: "M34 39l4 1" },
+    near: { limbs: ["M23 26l-6 7 -9 -2", "M27 15l5 6 6 -3"], foot: "M8 31l-3 2.5" } },
+  { y: 0,
+    far: { limbs: ["M23 26l2 8 -2 8", "M27 15l-1 6 5 2"], foot: "M23 42l4.5 0" },
+    near: { limbs: ["M23 26l5 5 -7 3", "M27 15l2 6 5 -1"], foot: "M21 34l4 2" } },
 ];
 
-// true quando o spinner do módulo é o corredor; reage à troca de módulo.
-export const useRunSpinner = () => useSyncExternalStore(subscribeModule, isRunModule, () => false);
+function RunLimbs({ limbs, foot }) {
+  return (
+    <>
+      {limbs.map(d => <path key={d} d={d} />)}
+      <path className="runner__shoe" d={foot} />
+    </>
+  );
+}
 
 export function RunnerSvg() {
   return (
     <svg className="dumbbell__svg dumbbell__svg--runner" viewBox="0 0 48 44" aria-hidden="true">
+      <ellipse className="runner__shadow" cx="24" cy="43.5" rx="14" ry="1.6" />
       {RUN_POSES.map((pose, i) => (
         <g key={i} className={`runner__frame runner__frame--${i + 1}`} transform={`translate(0 ${pose.y})`}>
-          <g className="runner__far" opacity=".55">{pose.far.map(d => <path key={d} d={d} />)}</g>
+          <g className="runner__far" opacity=".55"><RunLimbs {...pose.far} /></g>
           <path className="runner__torso" d="M28 14l-5 12" />
-          <circle className="runner__head" cx="30" cy="7" r="4.2" />
-          {pose.near.map(d => <path key={d} d={d} />)}
+          <circle className="runner__head" cx="30" cy="7" r="4.6" />
+          <RunLimbs {...pose.near} />
         </g>
       ))}
     </svg>
