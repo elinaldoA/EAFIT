@@ -88,6 +88,7 @@ describe('backup cobre as tabelas do usuário', () => {
 
   // tabela -> motivo de não estar no backup
   const NOT_IN_BACKUP = {
+    run_waitlist: 'pré-cadastro do lançamento do Run: só o e-mail da própria conta, sem conteúdo do usuário',
     push_subscriptions: 'dado técnico do aparelho (chaves de push), não é conteúdo do usuário',
     notification_log: 'controle interno de envio (as mensagens em si estão em notifications)',
     client_errors: 'diagnóstico técnico de erros do navegador',

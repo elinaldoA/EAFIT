@@ -115,7 +115,7 @@
         <h1>Corra com plano, do primeiro 5K à meia maratona</h1>
         <p class="lead">A versão de corrida do EAFIT grava a sua corrida com GPS e voz a cada quilômetro, mostra as corridas dos amigos para vocês se aplaudirem e acompanha a sua evolução em ritmo, distância e recordes.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="/app/">Criar minha conta agora</a>
+          <a class="btn btn-primary" href="#avise-me">Quero ser avisado</a>
           <a class="btn btn-ghost" href="#como-comecar">Como começar</a>
         </div>
         <p class="hint">O EAFIT Run chega em breve. Quem já tem conta recebe o módulo no mesmo app, sem novo cadastro.</p>
@@ -161,6 +161,40 @@
           <div class="card reveal reveal-d1"><div class="icon-badge">📶</div><h3>Corre sem internet</h3><p>Sem sinal no meio do caminho? A corrida fica no celular e sobe sozinha quando a conexão voltar.</p></div>
           <div class="card reveal reveal-d2"><div class="icon-badge">📤</div><h3>Poste nos stories</h3><p>Cada corrida vira uma imagem pronta para o Instagram ou o WhatsApp, com o mapa, a distância, o ritmo e o tempo.</p></div>
         </div>
+      </div>
+    </section>
+
+    <section id="avise-me">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Seja o primeiro a correr com o EAFIT Run</h2>
+          <p>Deixe seu e-mail e a gente avisa no dia em que o módulo abrir. Sem spam, só esse aviso.</p>
+        </div>
+        <form class="contact-form card reveal" id="run-waitlist-form" style="max-width:560px;margin:0 auto">
+          <label class="field"><span>E-mail</span>
+            <input class="input" name="email" type="email" required maxlength="160" autocomplete="email" />
+          </label>
+          <label class="field"><span>Nome (opcional)</span>
+            <input class="input" name="name" type="text" maxlength="80" autocomplete="given-name" />
+          </label>
+          <label class="field"><span>Qual é o seu objetivo? (opcional)</span>
+            <select class="input" name="goal">
+              <option value="">Prefiro não dizer</option>
+              <option value="comecar">Começar a correr</option>
+              <option value="5k">Correr 5 km</option>
+              <option value="10k">Correr 10 km</option>
+              <option value="21k">Meia maratona</option>
+              <option value="42k">Maratona</option>
+              <option value="saude">Correr por saúde</option>
+            </select>
+          </label>
+          <!-- Campo isca: gente não vê, robô preenche e o envio é descartado. -->
+          <div class="hp" aria-hidden="true"><input name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+          <button class="btn btn-primary" type="submit">Quero ser avisado</button>
+          <p class="form-status" id="run-waitlist-status" role="status" aria-live="polite" hidden></p>
+          <p class="form-note">Usamos seu e-mail só para avisar do lançamento do EAFIT Run. Detalhes na <a href="/app/legal/privacidade.html">Política de Privacidade</a>.</p>
+        </form>
+        <p class="hint reveal" style="text-align:center;margin-top:14px">Já usa o EAFIT? Entre no app e toque em “Quero ser avisado” no Perfil.</p>
       </div>
     </section>
 

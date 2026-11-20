@@ -33,6 +33,8 @@ const Feedback = lazy(() => import('./pages/Feedback'));
 const Inactivity = lazy(() => import('./pages/Inactivity'));
 const Surveys = lazy(() => import('./pages/Surveys'));
 const ContactMessages = lazy(() => import('./pages/ContactMessages'));
+const RunWaitlist = lazy(() => import('./pages/RunWaitlist'));
+const ModuleUsage = lazy(() => import('./pages/ModuleUsage'));
 const Support = lazy(() => import('./pages/Support'));
 const UserDetail = lazy(() => import('./pages/UserDetail'));
 const Broadcast = lazy(() => import('./pages/Broadcast'));
@@ -88,6 +90,7 @@ function AppShell() {
             <Route path="/meu-relatorio" element={<MyReport />} />
             <Route path="/users" element={<UsersList />} />
             <Route path="/users/:id" element={<UserDetail />} />
+            <Route path="/uso-por-modulo" element={<ModuleUsage />} />
             <Route path="/analise-planos" element={<PlanAnalytics />} />
             <Route path="/comportamento" element={<Behavior />} />
             <Route path="/campanhas" element={<Campaigns />} />
@@ -96,6 +99,7 @@ function AppShell() {
             <Route path="/inatividade" element={<Inactivity />} />
             <Route path="/pesquisas" element={<Surveys />} />
             <Route path="/contato" element={<ContactMessages />} />
+            <Route path="/pre-cadastro-run" element={<RunWaitlist />} />
             <Route path="/engajamento" element={<Engagement />} />
             <Route path="/automacoes" element={<AutoNotifications />} />
             <Route path="/configuracoes" element={<RequireArea area="settings"><AppSettings /></RequireArea>} />

@@ -546,6 +546,65 @@
     });
   })();
 
+  // ---------- pré-cadastro do EAFIT Run (/corrida/#avise-me → public.run_waitlist) ----------
+  // Só insere (RLS). E-mail repetido volta 409 (unique): vale como "já está na
+  // lista". A origem usa a mesma regra das visitas (detectSource); o app
+  // grava a mesma tabela pela função join_run_waitlist.
+  (function () {
+    var form = document.getElementById('run-waitlist-form');
+    var status = document.getElementById('run-waitlist-status');
+    if (!form || !status) return;
+    function field(name) { return form.elements.namedItem(name); }
+    function say(kind, text) {
+      status.className = 'form-status' + (kind ? ' ' + kind : '');
+      status.textContent = text;
+      status.hidden = false;
+    }
+    function origin() {
+      try {
+        var saved = JSON.parse(localStorage.getItem('eafit_utm') || 'null');
+        var fromUrl = detectSource();
+        if (fromUrl && fromUrl !== 'direto' && fromUrl !== 'landing') return fromUrl;
+        if (saved && saved.source) return String(saved.source);
+        return fromUrl === 'landing' ? 'site' : 'direto';
+      } catch { return 'direto'; }
+    }
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (field('website').value) { form.reset(); return; } // campo isca preenchido: robô
+      var button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      say('', 'Enviando…');
+      var row = {
+        email: field('email').value.trim().toLowerCase(),
+        source: origin(),
+        lang: window.LANDING_LANG === 'en' ? 'en' : 'pt',
+      };
+      var name = field('name').value.trim();
+      if (name.length >= 2) row.name = name;
+      if (field('goal').value) row.goal = field('goal').value;
+      fetch(SUPABASE_URL + '/rest/v1/run_waitlist', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json', Prefer: 'return=minimal',
+        },
+        body: JSON.stringify(row),
+      })
+        .then(function (r) {
+          if (!r.ok && r.status !== 409) throw new Error(String(r.status));
+          form.reset();
+          say('ok', r.status === 409
+            ? 'Esse e-mail já está na lista. A gente avisa quando o EAFIT Run abrir.'
+            : 'Pronto! Você está na lista e recebe um aviso quando o EAFIT Run abrir.');
+        })
+        .catch(function () {
+          say('err', 'Não deu pra enviar agora. Tente de novo em instantes.');
+        })
+        .then(function () { button.disabled = false; });
+    });
+  })();
+
   // ---------- eventos anônimos (public.landing_events) ----------
   // Cliques nos CTAs que levam ao app, instalação e seções alcançadas.
   // Sem identificar ninguém; 1 registro por evento+lugar por sessão;

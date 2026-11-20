@@ -25,6 +25,7 @@ import { WeeklyGoalSection, MacrosSection } from '../components/ProfileGoalsSect
 import ProfileNutritionSection from '../components/ProfileNutritionSection';
 import { computeNutritionGoals, DEFAULT_META, nutritionProfile } from '../lib/nutritionGoals';
 import ProfileSportSection from '../components/ProfileSportSection';
+import RunWaitlistCard from '../components/RunWaitlistCard';
 import { useSportModule } from '../hooks/useSportModule';
 import { brandName } from '../lib/sportModule';
 import { takeProfileCardToOpen } from '../lib/appNav';
@@ -278,6 +279,8 @@ export default function PerfilPage({ active }) {
             apelido={apelido} setApelido={setApelido} onSave={handleSavePersonal}
           />
         </CollapsibleCard>
+
+        {!sports.some(m => m.id === 'corrida') && <RunWaitlistCard toast={toast} />}
 
         {sports.length > 1 && (
           <CollapsibleCard icon={sport.icon} title={t('Meu esporte')} summary={`${sport.label} · ${brandName(sport)}`}>
