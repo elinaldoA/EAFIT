@@ -2,7 +2,7 @@
 // casos, só pra confirmar que o PORT deste arquivo pro Deno se comporta
 // igual ao original em JS.
 import { assertEquals } from 'jsr:@std/assert@1';
-import { applyImcAdjustment, applyLevelAdjustment, computeImcBracket, type Day } from './workoutAdjustments.ts';
+import { applyImcAdjustment, applyLevelAdjustment, computeImcBracket, exerciseFitsLocal, type Day } from './workoutAdjustments.ts';
 
 Deno.test('computeImcBracket - classifica cada faixa de IMC corretamente', () => {
   assertEquals(computeImcBracket(50, 180), 'abaixo');     // IMC ~15.4
@@ -106,4 +106,14 @@ Deno.test('applyLevelAdjustment - não mexe em dias de descanso/cardio nem em it
   const [segunda, domingo] = applyLevelAdjustment(levelFixture(), 'avancado');
   assertEquals(segunda.pos, levelFixture()[0].pos);
   assertEquals(domingo, levelFixture()[1]);
+});
+
+Deno.test('exerciseFitsLocal - em casa barra máquina, Smith, polia, esteira e escada; aceita a versão com elástico', () => {
+  for (const nome of ['Supino Inclinado na Máquina', 'Agachamento Sumô no Smith', 'Curl na Polia Alta (Bíceps)', 'Cadeira Extensora', '🏃 Cardio — Esteira', '🏃 Cardio — Escada']) {
+    assertEquals(exerciseFitsLocal(nome, 'casa'), false, nome);
+  }
+  assertEquals(exerciseFitsLocal('Tríceps Pulley com Elástico', 'casa'), true);
+  assertEquals(exerciseFitsLocal('Puxada com Elástico', 'casa'), true);
+  assertEquals(exerciseFitsLocal('Curl na Polia Alta (Bíceps)', 'condominio'), true);
+  assertEquals(exerciseFitsLocal('Supino Inclinado na Máquina', 'academia'), true);
 });

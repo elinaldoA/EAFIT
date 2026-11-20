@@ -32,11 +32,13 @@ export function isRestOrCardioDay(day) {
 // desconhecido) não restringe nada.
 const FORA_DA_ACADEMIA = /\bbarra\b(?!\s*fixa)|máquina|maquina|smith|leg press|hack|cadeira (flexora|extensora|adutora|abdutora)|mesa flexora|esteira|escada|el[ií]ptico|ergom|peck deck|crossover|^\W*levantamento terra(?!\s+com halter)|^\W*agachamento livre|panturrilha em p[ée]|desenvolvimento militar|assistida|trenó/i;
 const SO_COM_POLIA = /polia|puxada|pulley/i;
+// Versão com elástico/faixa (ex.: Tríceps Pulley com Elástico) funciona em casa.
+const COM_ELASTICO = /el[aá]stico|faixa|band/i;
 
 export function exerciseFitsLocal(nome, local) {
     if (local !== 'condominio' && local !== 'casa') return true;
     if (FORA_DA_ACADEMIA.test(nome)) return false;
-    if (local === 'casa' && SO_COM_POLIA.test(nome)) return false;
+    if (local === 'casa' && SO_COM_POLIA.test(nome) && !COM_ELASTICO.test(nome)) return false;
     return true;
 }
 
