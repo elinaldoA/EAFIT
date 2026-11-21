@@ -56,15 +56,24 @@ export default function ModuleUsage() {
     }
   }
 
+  function pick(value) { setFilter(value); setPage(0); }
+
   const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
+  const pct = n => (summary && summary.total ? Math.round((n / summary.total) * 100) : 0);
   const tiles = summary && [
-    { label: 'Contas (sem admins)', value: summary.total, filter: '' },
-    { label: 'Só musculação', value: summary.onlyStrength, filter: 'musculacao' },
-    { label: 'Só Run', value: summary.onlyRun, filter: 'corrida' },
-    { label: 'Usam os dois', value: summary.both, filter: 'ambos' },
-    { label: 'Ainda não usaram', value: summary.none, filter: 'nenhum' },
-    { label: 'Liberados no teste do Run', value: summary.beta, filter: 'beta' },
-    { label: 'Na lista de espera do Run', value: summary.waitlist, filter: 'waitlist' },
+    { label: 'Contas (sem admins)', value: summary.total, filter: '', hint: 'base analisada' },
+    { label: 'Só musculação', value: summary.onlyStrength, filter: 'musculacao', hint: `${pct(summary.onlyStrength)}% da base` },
+    { label: 'Só Run', value: summary.onlyRun, filter: 'corrida', hint: `${pct(summary.onlyRun)}% da base` },
+    { label: 'Usam os dois', value: summary.both, filter: 'ambos', hint: `${pct(summary.both)}% da base` },
+    { label: 'Ainda não usaram', value: summary.none, filter: 'nenhum', hint: `${pct(summary.none)}% da base` },
+    { label: 'Liberados no teste do Run', value: summary.beta, filter: 'beta', hint: 'teste fechado' },
+    { label: 'Na lista de espera do Run', value: summary.waitlist, filter: 'waitlist', hint: 'pré-cadastro' },
+  ];
+  const segments = summary && [
+    { key: 'musculacao', label: 'Só musculação', value: summary.onlyStrength },
+    { key: 'ambos', label: 'Os dois', value: summary.both },
+    { key: 'corrida', label: 'Só Run', value: summary.onlyRun },
+    { key: 'nenhum', label: 'Sem uso', value: summary.none },
   ];
 
   return (
@@ -82,35 +91,60 @@ export default function ModuleUsage() {
       {error && <p className="form-msg form-msg--error" role="alert">{error}</p>}
 
       {tiles && (
-        <div className="actions-row">
-          {tiles.map(t => (
-            <button
-              key={t.label} type="button"
-              className={`btn btn--small${filter === t.filter ? ' btn--primary' : ''}`}
-              onClick={() => { setFilter(t.filter); setPage(0); }}
-            >
-              {t.label} · <strong>{t.value}</strong>
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="tile-grid tile-grid--kpi mu-tiles">
+            {tiles.map(t => (
+              <button
+                key={t.label} type="button" aria-pressed={filter === t.filter}
+                className={`tile tile--kpi mu-tile${filter === t.filter ? ' mu-tile--active' : ''}`}
+                onClick={() => pick(t.filter)}
+              >
+                <span className="tile__label">{t.label}</span>
+                <span className="tile__value">{t.value.toLocaleString('pt-BR')}</span>
+                <span className="mu-tile__hint">{t.hint}</span>
+              </button>
+            ))}
+          </div>
+
+          {summary.total > 0 && (
+            <div className="card">
+              <div className="card-head"><h2 className="card-title">Composição da base</h2></div>
+              <div className="mu-bar" role="img" aria-label="Composição da base por uso de módulo">
+                {segments.filter(sg => sg.value > 0).map(sg => (
+                  <span
+                    key={sg.key} className={`mu-bar__seg mu-bar__seg--${sg.key}`}
+                    style={{ flexGrow: sg.value }} title={`${sg.label}: ${sg.value}`}
+                  />
+                ))}
+              </div>
+              <ul className="mu-legend">
+                {segments.map(sg => (
+                  <li key={sg.key}>
+                    <span className={`mu-dot mu-bar__seg--${sg.key}`} />
+                    {sg.label} <strong>{sg.value.toLocaleString('pt-BR')}</strong>{' '}
+                    <span className="mu-legend__pct">{pct(sg.value)}%</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
-      <div className="page-header">
-        <div className="seg" role="group" aria-label="Filtro de uso">
-          {FILTERS.map(f => (
-            <button
-              key={f.value} type="button" aria-pressed={filter === f.value}
-              className={`seg__btn${filter === f.value ? ' seg__btn--active' : ''}`}
-              onClick={() => { setFilter(f.value); setPage(0); }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      <div className="card mu-toolbar">
         <input
           className="input" type="search" placeholder="Buscar por nome ou e-mail"
-          value={searchInput} onChange={e => setSearchInput(e.target.value)} style={{ maxWidth: 280 }}
+          aria-label="Buscar por nome ou e-mail"
+          value={searchInput} onChange={e => setSearchInput(e.target.value)}
         />
+        <div className="mu-toolbar__info">
+          {filter && (
+            <button type="button" className="btn btn--small" onClick={() => pick('')}>
+              {FILTERS.find(f => f.value === filter)?.label} ✕
+            </button>
+          )}
+          <span className="user-detail__meta">{data.total.toLocaleString('pt-BR')} pessoa(s)</span>
+        </div>
       </div>
 
       {loading && <Loading />}
@@ -119,49 +153,57 @@ export default function ModuleUsage() {
         !data.rows.length ? (
           <div className="card"><EmptyState icon="🏋️" label="Ninguém com esse filtro." /></div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th scope="col">Pessoa</th>
-                  <th scope="col">Escolheu</th>
-                  <th scope="col">Uso</th>
-                  <th scope="col">Treinos (30d)</th>
-                  <th scope="col">Último treino</th>
-                  <th scope="col">Corridas (30d)</th>
-                  <th scope="col">Última corrida</th>
-                  <th scope="col">Run</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.rows.map(u => (
-                  <tr key={u.mu_id}>
-                    <td data-label="Pessoa">
-                      <Link to={`/users/${u.mu_id}`}>{u.mu_name}</Link>
-                      <div className="user-detail__meta">{u.mu_email}</div>
-                    </td>
-                    <td data-label="Escolheu">{DECLARED_LABELS[u.mu_declared] || u.mu_declared}</td>
-                    <td data-label="Uso"><span className={`badge ${USAGE_BADGE[u.mu_usage] || ''}`} style={{ marginLeft: 0 }}>{USAGE_LABELS[u.mu_usage] || u.mu_usage}</span></td>
-                    <td data-label="Treinos (30d)">{u.mu_train_30d}</td>
-                    <td data-label="Último treino">{formatDay(u.mu_last_train)}</td>
-                    <td data-label="Corridas (30d)">{u.mu_runs_30d}</td>
-                    <td data-label="Última corrida">{formatDay(u.mu_last_run)}</td>
-                    <td data-label="Run">
-                      {u.mu_beta && <span className="badge badge--admin" style={{ marginLeft: 0 }}>teste</span>}
-                      {u.mu_waitlist && <span className="badge badge--warning">na lista</span>}
-                      {!u.mu_beta && !u.mu_waitlist && '—'}
-                    </td>
+          <div className="card mu-card">
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Pessoa</th>
+                    <th scope="col">Escolheu</th>
+                    <th scope="col">Uso</th>
+                    <th scope="col" className="mu-num">Treinos (30d)</th>
+                    <th scope="col" className="mu-num">Corridas (30d)</th>
+                    <th scope="col">Run</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.rows.map(u => (
+                    <tr key={u.mu_id}>
+                      <td data-label="Pessoa">
+                        <Link to={`/users/${u.mu_id}`} className="mu-person">{u.mu_name}</Link>
+                        <div className="user-detail__meta">{u.mu_email}</div>
+                      </td>
+                      <td data-label="Escolheu">{DECLARED_LABELS[u.mu_declared] || u.mu_declared}</td>
+                      <td data-label="Uso">
+                        <span className={`badge ${USAGE_BADGE[u.mu_usage] || ''}`} style={{ marginLeft: 0 }}>
+                          {USAGE_LABELS[u.mu_usage] || u.mu_usage}
+                        </span>
+                      </td>
+                      <td data-label="Treinos (30d)" className="mu-num">
+                        <strong>{u.mu_train_30d}</strong>
+                        <div className="user-detail__meta">último: {formatDay(u.mu_last_train)}</div>
+                      </td>
+                      <td data-label="Corridas (30d)" className="mu-num">
+                        <strong>{u.mu_runs_30d}</strong>
+                        <div className="user-detail__meta">última: {formatDay(u.mu_last_run)}</div>
+                      </td>
+                      <td data-label="Run">
+                        {u.mu_beta && <span className="badge badge--admin" style={{ marginLeft: 0 }}>teste</span>}
+                        {u.mu_waitlist && <span className="badge badge--warning">na lista</span>}
+                        {!u.mu_beta && !u.mu_waitlist && '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )
       )}
 
       {!loading && data.total > PAGE_SIZE && (
         <div className="page-header">
-          <p className="user-detail__meta">{data.total} pessoa(s) · página {page + 1} de {totalPages}</p>
+          <p className="user-detail__meta">página {page + 1} de {totalPages}</p>
           <div className="actions-row">
             <button className="btn btn--small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</button>
             <button className="btn btn--small" disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)}>Próxima</button>
