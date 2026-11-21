@@ -28,6 +28,13 @@ window.LANDING_EN = {
     "EAFIT Run · Em breve": "EAFIT Run · Coming soon",
     "O EAFIT Run chega em breve. Quem já tem conta recebe o módulo no mesmo app, sem novo cadastro.": "EAFIT Run is coming soon. If you already have an account, the module arrives in the same app, no new sign-up.",
     // Página /corrida (EAFIT Run)
+    "Seja avisado quando o EAFIT Run abrir": "Get notified when EAFIT Run opens",
+    "O módulo para quem ama correr chega em breve: corrida com GPS, voz a cada quilômetro e desafios com os amigos. Deixe seu e-mail e a gente avisa no dia do lançamento.": "The module for people who love running is coming soon: GPS runs, a voice cue every kilometer and challenges with friends. Leave your email and we'll let you know on launch day.",
+    "Entrar na lista com esta conta": "Join the list with this account",
+    "Você está no app como": "You're signed in to the app as",
+    "Entre na lista do EAFIT Run": "Join the EAFIT Run list",
+    "Deixe seu e-mail e seja avisado quando o EAFIT Run, o módulo de corrida do EAFIT, abrir.": "Leave your email and get notified when EAFIT Run, EAFIT's running module, opens.",
+    "Usamos seu e-mail só para avisar do lançamento do EAFIT Run. Isso não cria conta no app. Detalhes na": "We use your email only to tell you about the EAFIT Run launch. This doesn't create an app account. Details in the",
     "Quero ser avisado": "Notify me",
     "Seja o primeiro a correr com o EAFIT Run": "Be the first to run with EAFIT Run",
     "Deixe seu e-mail e a gente avisa no dia em que o módulo abrir. Sem spam, só esse aviso.": "Leave your email and we'll let you know the day the module opens. No spam, just that one notice.",

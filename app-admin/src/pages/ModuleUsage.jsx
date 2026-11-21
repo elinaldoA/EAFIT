@@ -155,7 +155,7 @@ export default function ModuleUsage() {
         ) : (
           <div className="card mu-card">
             <div className="table-wrap">
-              <table className="table">
+              <table className="resp-table" aria-label="Uso por módulo">
                 <thead>
                   <tr>
                     <th scope="col">Pessoa</th>
@@ -201,12 +201,16 @@ export default function ModuleUsage() {
         )
       )}
 
-      {!loading && data.total > PAGE_SIZE && (
+      {!loading && data.total > 0 && (
         <div className="page-header">
-          <p className="user-detail__meta">página {page + 1} de {totalPages}</p>
+          <p className="user-detail__meta">
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, data.total)} de {data.total.toLocaleString('pt-BR')} · página {page + 1} de {totalPages}
+          </p>
           <div className="actions-row">
+            <button className="btn btn--small" disabled={page === 0} onClick={() => setPage(0)}>« Primeira</button>
             <button className="btn btn--small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</button>
             <button className="btn btn--small" disabled={page + 1 >= totalPages} onClick={() => setPage(p => p + 1)}>Próxima</button>
+            <button className="btn btn--small" disabled={page + 1 >= totalPages} onClick={() => setPage(totalPages - 1)}>Última »</button>
           </div>
         </div>
       )}

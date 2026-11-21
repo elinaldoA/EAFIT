@@ -555,6 +555,7 @@
     var status = document.getElementById('run-waitlist-status');
     if (!form || !status) return;
     function field(name) { return form.elements.namedItem(name); }
+    function val(name) { var f = field(name); return f ? String(f.value || '') : ''; }
     function say(kind, text) {
       status.className = 'form-status' + (kind ? ' ' + kind : '');
       status.textContent = text;
@@ -571,18 +572,18 @@
     }
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (field('website').value) { form.reset(); return; } // campo isca preenchido: robô
+      if (val('website')) { form.reset(); return; } // campo isca preenchido: robô
       var button = form.querySelector('button[type="submit"]');
       button.disabled = true;
       say('', 'Enviando…');
       var row = {
-        email: field('email').value.trim().toLowerCase(),
+        email: val('email').trim().toLowerCase(),
         source: origin(),
         lang: window.LANDING_LANG === 'en' ? 'en' : 'pt',
       };
-      var name = field('name').value.trim();
+      var name = val('name').trim();
       if (name.length >= 2) row.name = name;
-      if (field('goal').value) row.goal = field('goal').value;
+      if (val('goal')) row.goal = val('goal');
       fetch(SUPABASE_URL + '/rest/v1/run_waitlist', {
         method: 'POST',
         headers: {
@@ -603,6 +604,44 @@
         })
         .then(function () { button.disabled = false; });
     });
+
+    // Quem já está logado no app (mesma origem: a sessão fica no localStorage)
+    // entra na lista com um toque, pela função join_run_waitlist. Só inscreve:
+    // não muda esporte nem libera módulo. Sem sessão válida, fica só o formulário.
+    var box = document.getElementById('run-waitlist-account');
+    if (box) {
+      try {
+        var raw = JSON.parse(localStorage.getItem('sb-btzdetvoneyhzthsmdrp-auth-token') || 'null');
+        var mail = raw && raw.user && raw.user.email;
+        if (raw && raw.access_token && mail && Number(raw.expires_at || 0) * 1000 > Date.now() + 60000) {
+          document.getElementById('run-waitlist-account-email').textContent = mail;
+          box.hidden = false;
+          var btn = document.getElementById('run-waitlist-account-btn');
+          btn.addEventListener('click', function () {
+            btn.disabled = true;
+            say('', 'Enviando…');
+            fetch(SUPABASE_URL + '/rest/v1/rpc/join_run_waitlist', {
+              method: 'POST',
+              headers: {
+                apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + raw.access_token,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ p_source: origin() }),
+            })
+              .then(function (r) {
+                if (!r.ok) throw new Error(String(r.status));
+                box.hidden = true;
+                form.hidden = true;
+                say('ok', 'Pronto! Você está na lista e recebe um aviso quando o EAFIT Run abrir.');
+              })
+              .catch(function () {
+                btn.disabled = false;
+                say('err', 'Não deu pra entrar agora. Use o formulário abaixo ou tente de novo.');
+              });
+          });
+        }
+      } catch (e) { /* sem sessão legível: só o formulário */ }
+    }
   })();
 
   // ---------- eventos anônimos (public.landing_events) ----------
