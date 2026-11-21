@@ -10,13 +10,14 @@ import { parseLocalDate, toDateStr } from '../../lib/utils';
 // Cada dia é uma sessão: { type, minutes?, km?, reps?, run?, walk? }
 // - type: leve | longao | intervalado | ritmo | corre_caminha | prova | cross | descanso
 
-export const RUN_GOALS = ['5k', '10k', 'meia', 'livre'];
+export const RUN_GOALS = ['5k', '10k', 'meia', 'maratona', 'livre'];
 export const RUN_LEVELS = ['iniciante', 'intermediario', 'avancado'];
 
 export const GOAL_LABEL = {
   '5k': t('5K'),
   '10k': t('10K'),
   meia: t('Meia maratona'),
+  maratona: t('Maratona'),
   livre: t('Corrida livre'),
 };
 
@@ -26,6 +27,9 @@ const PLANS = {
   '5k': { weeks: 8, km: 5, long: [25, 28, 30, 33, 35, 38, 40], beginnerLong: [24, 24, 26, 28, 30, 32, 35] },
   '10k': { weeks: 10, km: 10, long: [30, 34, 38, 42, 46, 50, 54, 58, 45], beginnerLong: [24, 24, 26, 28, 30, 32, 36, 40, 45] },
   meia: { weeks: 12, km: 21.1, long: [40, 45, 50, 55, 60, 66, 72, 78, 84, 90, 60], beginnerLong: null },
+  // Só intermediário e avançado. Os treinos de semana não passam de 60/45 min: o volume
+  // da maratona vem do longão, não de corridas de meio da semana cada vez mais longas.
+  maratona: { weeks: 16, km: 42.195, long: [60, 65, 70, 75, 80, 85, 90, 100, 110, 120, 130, 140, 150, 120, 90], beginnerLong: null, easyCap: 60, shortCap: 45 },
 };
 
 // [minutos correndo, minutos caminhando] por semana do iniciante; passando do
@@ -37,10 +41,12 @@ const round5 = n => Math.round(n / 5) * 5;
 
 export const normalizeLevel = nivel => (RUN_LEVELS.includes(nivel) ? nivel : 'intermediario');
 
-// Iniciante não faz meia maratona do zero: cai no 10K (a tela também não oferece).
+// Iniciante não faz meia nem maratona do zero: cai no 10K (a tela também não oferece).
+export const isLongGoal = goal => goal === 'meia' || goal === 'maratona';
+
 export function effectiveGoal(goal, nivel) {
   const g = RUN_GOALS.includes(goal) ? goal : 'livre';
-  return g === 'meia' && normalizeLevel(nivel) === 'iniciante' ? '10k' : g;
+  return isLongGoal(g) && normalizeLevel(nivel) === 'iniciante' ? '10k' : g;
 }
 
 export const goalWeeks = (goal, nivel) => PLANS[effectiveGoal(goal, nivel)]?.weeks || 0;
@@ -51,8 +57,8 @@ function buildWeek(w, weeks, nivel, plan) {
   const beginner = nivel === 'iniciante';
   const raceWeek = w === weeks;
   const longMin = raceWeek ? 0 : (beginner ? plan.beginnerLong : plan.long)[w - 1];
-  const easyMin = raceWeek ? 20 : Math.max(20, round5(longMin * 0.6));
-  const shortMin = raceWeek ? 20 : Math.max(20, round5(longMin * 0.45));
+  const easyMin = raceWeek ? 20 : Math.min(plan.easyCap || Infinity, Math.max(20, round5(longMin * 0.6)));
+  const shortMin = raceWeek ? 20 : Math.min(plan.shortCap || Infinity, Math.max(20, round5(longMin * 0.45)));
   const rw = beginner && w <= RUN_WALK.length ? RUN_WALK[w - 1] : null;
 
   const easy = minutes => (rw ? { type: 'corre_caminha', minutes, run: rw[0], walk: rw[1] } : { type: 'leve', minutes });

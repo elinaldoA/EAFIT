@@ -27,8 +27,25 @@ describe('buildRunProgram', () => {
     expect(p.weeks.at(-1).days[5]).toMatchObject({ type: 'prova', km: 21.1 });
   });
 
-  it('iniciante não faz meia: cai no 10K; objetivo desconhecido vira corrida livre', () => {
+  it('maratona tem 16 semanas, longão que sobe e alivia no fim, e treinos de semana limitados', () => {
+    const p = buildRunProgram({ goal: 'maratona', nivel: 'avancado' });
+    expect(p.weeks).toHaveLength(16);
+    expect(p.weeks[15].days[5]).toMatchObject({ type: 'prova', km: 42.195 });
+    const longs = p.weeks.slice(0, -1).map(w => w.days[5].minutes);
+    const peak = Math.max(...longs);
+    expect(longs.indexOf(peak)).toBe(12);
+    expect(longs.at(-1)).toBeLessThan(peak);
+    for (const w of p.weeks.slice(0, -1)) {
+      expect(w.days[0].minutes).toBeLessThanOrEqual(60);
+      expect(w.days[4].minutes).toBeLessThanOrEqual(45);
+    }
+  });
+
+  it('iniciante não faz meia nem maratona: cai no 10K; objetivo desconhecido vira corrida livre', () => {
     expect(effectiveGoal('meia', 'iniciante')).toBe('10k');
+    expect(effectiveGoal('maratona', 'iniciante')).toBe('10k');
+    expect(effectiveGoal('maratona', 'intermediario')).toBe('maratona');
+    expect(goalWeeks('maratona', 'avancado')).toBe(16);
     expect(effectiveGoal('ultra', 'avancado')).toBe('livre');
     expect(goalWeeks('livre')).toBe(0);
     expect(buildRunProgram({ goal: 'livre' }).weeks).toEqual([]);
@@ -83,7 +100,7 @@ describe('dias de corrida (espelho de run_day_planned no banco)', () => {
   const EXPECTED = { iniciante: '1010010', intermediario: '1010110', avancado: '1101110' };
 
   it('todas as semanas de cada nível têm os mesmos dias de corrida', () => {
-    for (const goal of ['5k', '10k', 'meia']) {
+    for (const goal of ['5k', '10k', 'meia', 'maratona']) {
       for (const nivel of Object.keys(EXPECTED)) {
         const { weeks } = buildRunProgram({ goal, nivel });
         for (const w of weeks) expect(mask(w.days)).toBe(EXPECTED[nivel]);

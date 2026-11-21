@@ -45,7 +45,8 @@ describe('programa para a prova', () => {
     expect(programGoalFor(10)).toBe('10k');
     expect(programGoalFor(21.1)).toBe('meia');
     expect(programGoalFor(15)).toBeNull();
-    expect(programGoalFor(42.195)).toBeNull();
+    expect(programGoalFor(42.195)).toBe('maratona');
+    expect(programGoalFor(30)).toBeNull();
   });
   it('começa de modo que a semana da prova seja a última (5K = 8 semanas)', () => {
     // prova no sábado 2027-05-08 (semana de 05-03): começa 7 semanas antes = 03-15.

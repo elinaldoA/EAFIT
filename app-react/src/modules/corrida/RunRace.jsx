@@ -4,7 +4,7 @@ import { useToast } from '../../context/useToast';
 import { trackEvent } from '../../lib/tracking';
 import { parseLocalDate } from '../../lib/utils';
 import { formatKm, decimal } from './runs';
-import { programFromMetadata, normalizeLevel, GOAL_LABEL } from './program';
+import { programFromMetadata, normalizeLevel, isLongGoal, GOAL_LABEL } from './program';
 import {
   RACE_DISTANCES, RACE_NAME_MAX, raceFromMetadata, buildRace, daysUntil, programGoalFor,
   suggestedStart, raceReadiness, raceStage,
@@ -111,8 +111,9 @@ export default function RunRace({ runs, today, onProgram }) {
 
   const ready = raceReadiness(runs, race, today);
   const nivel = normalizeLevel(md.runNivel || md.nivel);
-  // Iniciante não faz meia maratona do zero (o programa cai no 10K): sem sugestão.
-  const goal = programGoalFor(race.km) === 'meia' && nivel === 'iniciante' ? null : programGoalFor(race.km);
+  // Iniciante não faz meia nem maratona do zero (o programa cai no 10K): sem sugestão.
+  const raceGoal = programGoalFor(race.km);
+  const goal = isLongGoal(raceGoal) && nivel === 'iniciante' ? null : raceGoal;
   const advice = goal ? suggestedStart(race, goal, nivel, today) : null;
   const onTrack = !!program && !!goal && program.goal === goal && advice && program.start && program.start <= advice.start;
   const countdown = stage === 'today' ? t('É hoje! Boa prova 🍀')

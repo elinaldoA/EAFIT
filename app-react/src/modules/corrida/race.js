@@ -42,6 +42,7 @@ export function programGoalFor(km) {
   if (km >= 4.5 && km <= 7) return '5k';
   if (km >= 9 && km <= 12) return '10k';
   if (km >= 20 && km <= 22) return 'meia';
+  if (km >= 41 && km <= 43) return 'maratona';
   return null;
 }
 

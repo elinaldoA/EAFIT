@@ -711,6 +711,17 @@ describe('RunHomePage (aba Gravar)', () => {
     expect(h.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ runGoal: '10k', runNivel: 'iniciante' }));
   });
 
+  it('o iniciante vê a explicação do nível e o aviso de saúde', () => {
+    render(<RunHomePage />);
+    fireEvent.click(screen.getByRole('button', { name: /Quer um plano/ }));
+    expect(screen.getByRole('button', { name: '5K' })).toBeTruthy();
+    expect(screen.getByText(/Nunca correu, ou parou há muito tempo/)).toBeTruthy();
+    expect(screen.getByText(/converse com um médico/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Seu nível na corrida'), { target: { value: 'intermediario' } });
+    expect(screen.getByRole('button', { name: '5K' })).toBeTruthy();
+    expect(screen.queryByText(/converse com um médico/)).toBeNull();
+  });
+
   it('com programa mostra a semana e permite encerrar', async () => {
     h.user = { id: 'u1', user_metadata: { runGoal: '5k', runNivel: 'intermediario', runStart: '2026-11-02' } };
     render(<RunHomePage />);

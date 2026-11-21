@@ -6,7 +6,7 @@ import { todayDate } from '../../data/treinoData';
 import { trackEvent } from '../../lib/tracking';
 import {
   RUN_GOALS, RUN_LEVELS, GOAL_LABEL, sessionTitle, programFromMetadata, programToday,
-  describeSession, isRunSession, mondayOf, goalWeeks, missedWeek, postponeStart,
+  describeSession, isRunSession, mondayOf, goalWeeks, missedWeek, postponeStart, isLongGoal,
 } from './program';
 import { suggestedPace } from './runReadings';
 import RunRace from './RunRace';
@@ -35,6 +35,11 @@ import { batteryReadable } from './battery';
 import { t } from '../../lib/i18n';
 const WEEKDAYS = [t('Seg'), t('Ter'), t('Qua'), t('Qui'), t('Sex'), t('Sáb'), t('Dom')];
 const LEVEL_LABEL = { iniciante: t('Iniciante'), intermediario: t('Intermediário'), avancado: t('Avançado') };
+const LEVEL_HINT = {
+  iniciante: t('Nunca correu, ou parou há muito tempo? Comece aqui: você alterna corrida e caminhada, 3 vezes por semana (na 1ª semana, 1 minuto correndo e 2 caminhando) e aumenta aos poucos até correr direto.'),
+  intermediario: t('Já corre uns 20 minutos sem parar e quer um objetivo ou mais ritmo.'),
+  avancado: t('Corre com frequência, 3 vezes por semana ou mais, e aguenta treino de intervalado e ritmo.'),
+};
 
 // Datas (YYYY-MM-DD) de segunda a domingo da semana de `today`.
 function weekDates(today) {
@@ -48,7 +53,7 @@ function weekDates(today) {
 export function ProgramSetup({ initialNivel, onSave, onCancel, busy }) {
   const [goal, setGoal] = useState('5k');
   const [nivel, setNivel] = useState(RUN_LEVELS.includes(initialNivel) ? initialNivel : 'iniciante');
-  const goals = RUN_GOALS.filter(g => !(g === 'meia' && nivel === 'iniciante'));
+  const goals = RUN_GOALS.filter(g => !(isLongGoal(g) && nivel === 'iniciante'));
   const weeks = goalWeeks(goal, nivel);
   return (
     <div className="dash-card run-setup">
@@ -64,10 +69,16 @@ export function ProgramSetup({ initialNivel, onSave, onCancel, busy }) {
       </div>
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="runLevel">{t('Seu nível na corrida')}</label>
-        <select id="runLevel" className="input" value={nivel} onChange={e => { setNivel(e.target.value); if (e.target.value === 'iniciante' && goal === 'meia') setGoal('10k'); }}>
+        <select id="runLevel" className="input" value={nivel} onChange={e => { setNivel(e.target.value); if (e.target.value === 'iniciante' && isLongGoal(goal)) setGoal('10k'); }}>
           {RUN_LEVELS.map(l => <option key={l} value={l}>{LEVEL_LABEL[l]}</option>)}
         </select>
+        <span className="profile-field__hint">{LEVEL_HINT[nivel]}</span>
       </div>
+      {nivel === 'iniciante' && (
+        <p className="profile-field__hint">
+          {t('Antes de começar: se você está muito tempo parado, tem problema de coração, pressão ou articulações, ou sente dor ao se exercitar, converse com um médico. O programa não substitui orientação profissional.')}
+        </p>
+      )}
       <p className="profile-field__hint">
         {goal === 'livre' ? t('Sem prazo: semanas leves e constantes, para correr pela saúde.') : t('{v1} semanas, começando nesta segunda-feira.', { v1: weeks })}
       </p>
