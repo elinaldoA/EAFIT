@@ -28,7 +28,7 @@ import MarketingMedia from './MarketingMedia';
 import { synthTrack } from '../lib/reelAudio';
 import { DURATION, FPS, STORY_DROP, STORY_DURATION, STORY_VARIANTS, drawReelFrame, drawStoryFrame } from '../lib/reelRender';
 import {
-  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES, autopostTheme, adSignups, bestTimes, hashtagStats, promoCandidates, trendingPosts, weeklySummary,
+  EMPTY_TIKTOK, countHashtags, exerciseVideoList, fillReply, finalCaption, firstName, tiktokLabel, tiktokPayload, validatePost, wrapLines, nextAutopostSlots, autopostSchedule, publishableNow, laneKey, splitCaption, brtDay, averageByKind, conversionRate, postScore, queuePosition, seasonOnDay, laneLabel, laneWhen, AUTOPOST_LANES, autopostTheme, adSignups, bestTimes, hashtagStats, promoCandidates, trendingPosts, weeklySummary,
 } from '../lib/marketing';
 
 const wrap = (ui, path = '/') => render(<MemoryRouter initialEntries={[path]}>{ui}</MemoryRouter>);
@@ -398,6 +398,36 @@ describe('nextAutopostSlots', () => {
 
   it('sem item pendente de um formato, ele não aparece', () => {
     expect(nextAutopostSlots([{ id: 'f', format: 'feed' }], new Date('2026-11-05T13:00:00Z')).map(s => s.format)).toEqual(['feed']);
+  });
+});
+
+describe('o que a agenda considera publicável (foco e módulo)', () => {
+  const queue = [
+    { id: 'suspense', format: 'story', slot: null, hide_when_module: 'corrida' },
+    { id: 'lancamento', format: 'story', slot: null, requires_module: 'corrida' },
+    { id: 'bomdia', format: 'story', slot: 'bomdia' },
+    { id: 'rotina', format: 'story', slot: null },
+    { id: 'feed-normal', format: 'feed' },
+  ];
+  const ids = list => list.map(i => i.id);
+
+  it('com o foco no Run e o módulo desligado, só sai a campanha "Em breve"', () => {
+    expect(ids(publishableNow(queue, { focus: 'corrida', modulesOn: [] }))).toEqual(['suspense']);
+  });
+
+  it('com o módulo ligado, a campanha de lançamento sai e o "Em breve" e a rotina do formato esperam', () => {
+    expect(ids(publishableNow(queue, { focus: 'corrida', modulesOn: ['corrida'] }))).toEqual(['lancamento']);
+    // sem foco, módulo ligado: itens de lançamento vão na frente no formato; o resto do story espera, o feed segue
+    expect(ids(publishableNow(queue, { focus: null, modulesOn: ['corrida'] }))).toEqual(['lancamento', 'feed-normal']);
+  });
+
+  it('sem foco e com o módulo desligado, sai tudo menos o que depende do módulo', () => {
+    expect(ids(publishableNow(queue, { focus: null, modulesOn: [] }))).toEqual(['suspense', 'bomdia', 'rotina', 'feed-normal']);
+  });
+
+  it('sem regras (banco antigo) não filtra nada', () => {
+    expect(ids(publishableNow(queue))).toEqual(ids(queue));
+    expect(ids(publishableNow(queue, null))).toEqual(ids(queue));
   });
 });
 

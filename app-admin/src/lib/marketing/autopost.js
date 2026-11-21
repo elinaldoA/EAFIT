@@ -15,7 +15,7 @@ export async function fetchAutopost() {
   const columns = 'id, position, key, format, caption, media, posted_at, skipped_at, post_id';
   // Sem as migrations dos horários de refeição (`slot`) ou da temporada
   // (`season`, 20270111010000) a coluna não existe: tenta com ela e cai para menos.
-  const attempts = [`${columns}, slot, season`, `${columns}, slot`, columns];
+  const attempts = [`${columns}, slot, season, hide_when_module, requires_module`, `${columns}, slot, season`, `${columns}, slot`, columns];
   const base = cols => db.from('marketing_autopost_queue').select(cols);
   let open = null;
   let recent = null;
@@ -26,10 +26,13 @@ export async function fetchAutopost() {
     ]);
     if (!open.error && !recent.error) break;
   }
-  const [settings, count, seasonRow] = await Promise.all([
-    db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle(),
+  // `focus_module` (foco total numa campanha) só existe com a migration 20270227050000.
+  let settings = await db.from('marketing_autopost_settings').select('enabled, focus_module').eq('id', true).maybeSingle();
+  if (settings.error) settings = await db.from('marketing_autopost_settings').select('enabled').eq('id', true).maybeSingle();
+  const [count, seasonRow, modulesRow] = await Promise.all([
     db.from('marketing_autopost_queue').select('id', { count: 'exact', head: true }).not('posted_at', 'is', null),
     db.from('app_settings').select('value').eq('key', 'season').maybeSingle(),
+    db.from('app_settings').select('value').eq('key', 'modules').maybeSingle(),
   ]);
   if (settings.error) throw settings.error;
   if (open.error) throw open.error;
@@ -45,7 +48,31 @@ export async function fetchAutopost() {
     posted: count.error ? posted.length : (count.count ?? posted.length),
     // Temporadas do app (app_settings "season"): decidem quando sai cada item de temporada.
     season: seasonRow?.error ? null : (seasonRow?.data?.value || null),
+    // Regras de módulo de marketing_autopost_run: o que de fato pode sair agora.
+    rules: {
+      focus: settings.data?.focus_module || null,
+      modulesOn: Array.isArray(modulesRow?.data?.value?.enabled) ? modulesRow.data.value.enabled : [],
+    },
   };
+}
+
+// Itens que o autopost pode publicar agora, pelas mesmas regras de módulo de marketing_autopost_run:
+//  - requires_module: só com o módulo ligado (app_settings "modules".enabled);
+//  - hide_when_module ("Em breve"): some quando o módulo liga;
+//  - focus_module: com o foco numa campanha, só saem os itens dela (requires/hide desse módulo);
+//  - campanha de módulo ligado: enquanto houver item dela pendente no formato, só ele sai.
+// A agenda do painel usa isto; sem `rules` (ou com banco antigo) nada é filtrado.
+export function publishableNow(pending, rules) {
+  if (!rules) return pending;
+  const { focus = null, modulesOn = [] } = rules;
+  const on = m => modulesOn.includes(m);
+  const campaignFormats = new Set(pending.filter(i => i.requires_module && on(i.requires_module)).map(i => i.format));
+  return pending.filter(i => (
+    (!i.requires_module || on(i.requires_module))
+    && (!focus || i.requires_module === focus || i.hide_when_module === focus)
+    && (!i.hide_when_module || !on(i.hide_when_module))
+    && (i.requires_module || !campaignFormats.has(i.format))
+  ));
 }
 
 export async function setAutopostEnabled(enabled) {

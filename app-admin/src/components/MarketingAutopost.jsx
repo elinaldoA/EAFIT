@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Loading from './Loading';
 import { Paged } from './ShowMore';
-import { PLATFORMS, STATUS_LABEL, NUTRI_SLOTS, autopostSchedule, brtDay, fetchAutopost, laneLabel, setAutopostEnabled, splitCaption } from '../lib/marketing';
+import { PLATFORMS, STATUS_LABEL, NUTRI_SLOTS, autopostSchedule, brtDay, fetchAutopost, laneLabel, publishableNow, setAutopostEnabled, splitCaption } from '../lib/marketing';
 
 const FORMAT_LABEL = { feed: 'Feed', reel: 'Reel', story: 'Story' };
 const STATUS_BADGE = { published: 'badge--ok', failed: 'badge--danger', processing: 'badge--warning', pending: '', canceled: '' };
@@ -100,9 +100,11 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
 
   const now = useMemo(() => new Date(), [state]); // eslint-disable-line react-hooks/exhaustive-deps
   // Simular a agenda varre dias à frente: só refaz quando a fila ou os posts mudam.
+  // Só entra na agenda o que o autopost pode publicar de fato (foco numa campanha, módulo ligado ou não).
+  const publishable = useMemo(() => (state ? publishableNow(state.pending, state.rules) : []), [state]);
   const schedule = useMemo(
-    () => (state ? autopostSchedule(state.pending, now, state.season, (state.items || []).filter(i => i.posted_at)) : []),
-    [state, now],
+    () => (state ? autopostSchedule(publishable, now, state.season, (state.items || []).filter(i => i.posted_at)) : []),
+    [state, publishable, now],
   );
 
   if (state === null) return <Loading />;
@@ -120,7 +122,8 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
   // Fila automática (se ligada) + posts agendados à mão e ainda não publicados.
   // Itens de temporada só entram nos dias em que o tema está no ar no app.
   const scheduledIds = new Set(schedule.map(s => s.item.id));
-  const waitingSeason = state.pending.filter(i => i.season && !scheduledIds.has(i.id));
+  const waitingSeason = publishable.filter(i => i.season && !scheduledIds.has(i.id));
+  const held = state.pending.length - publishable.length;
   const planned = [
     ...(state.enabled ? schedule.map(s => ({ key: s.item.id, at: s.at, format: s.format, item: s.item, auto: true })) : []),
     ...posts
@@ -208,6 +211,7 @@ export default function MarketingAutopost({ posts = [], accounts = [], onOpenHis
           {(state.skipped || []).length > 0 && ` ${state.skipped.length} pulado(s) por repetição.`}
           {' '}Peças de temporada só saem enquanto o tema estiver no ar no app e, nesse período, passam na frente.
           {waitingSeason.length > 0 && ` ${waitingSeason.length} esperando uma temporada que não está programada no app.`}
+          {held > 0 && ` ${held} peça(s) na fila não entram na agenda agora: aguardam o foco numa campanha ou a liberação de um módulo.`}
           {state.pending.length === 0 && ' A fila acabou: o painel não publica mais sozinho.'}
         </p>
         {msg && <p role="alert" className="form-msg form-msg--error">{msg}</p>}

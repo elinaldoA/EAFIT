@@ -11,7 +11,7 @@ export { ART_FORMATS, wrapLines, createArt, createTextArt } from './marketing/ar
 export { fetchAccounts, accountLabel, startConnect, disconnectAccount } from './marketing/accounts';
 export { finalCaption, countHashtags, validatePost, TIKTOK_PRIVACY_LABEL, EMPTY_TIKTOK, validateTikTok, tiktokPayload, tiktokLabel, fetchTikTokCreator, createPost, runPost, fetchPosts, fetchScheduledPosts, cancelPost, deletePost, editPost, deleteExternalPost, editExternalPost, editSummary, retryTarget } from './marketing/posts';
 export { fetchComments, firstName, fillReply, syncComments, replyComment, hideComment } from './marketing/comments';
-export { POSTED_SHOWN, fetchAutopost, setAutopostEnabled, SLOT_LABEL, NUTRI_SLOTS, AUTOPOST_LANES, laneWhen, laneAt, laneRuns, laneKey, laneLabel, SEASON_LABEL, seasonTag, seasonOnDay, brtDay, autopostTheme, THEME_GAP_DAYS, autopostSchedule, nextAutopostSlots, splitCaption } from './marketing/autopost';
+export { POSTED_SHOWN, fetchAutopost, publishableNow, setAutopostEnabled, SLOT_LABEL, NUTRI_SLOTS, AUTOPOST_LANES, laneWhen, laneAt, laneRuns, laneKey, laneLabel, SEASON_LABEL, seasonTag, seasonOnDay, brtDay, autopostTheme, THEME_GAP_DAYS, autopostSchedule, nextAutopostSlots, splitCaption } from './marketing/autopost';
 export { KIND_LABEL, MEDIUM_LABEL, fetchMetrics, refreshMetrics, fetchConversion, fetchContentConversion, postScore, averageByKind, conversionRate } from './marketing/results';
 export { QUEUE_ERRORS, updateQueueCaption, moveQueueItem, removeQueueItem, restoreQueueItem, addQueueItem, queuePosition } from './marketing/queue';
 export { fetchAds, AD_STATUS_LABEL, adTotals, promoCandidates } from './marketing/ads';
