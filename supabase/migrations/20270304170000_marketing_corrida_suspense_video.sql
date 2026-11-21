@@ -16,7 +16,7 @@ from (values
   ('suspense-corrida-s09-story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-story-s09.mp4"}]'),
   ('suspense-corrida-s10-story', '', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-story-s10.mp4"}]'),
   ('suspense-corrida-f01-feed', 'Quem corre vai entender. 🏃
-Aquela vontade de calçar o tênis e sair já tem novidade a caminho no EAFIT.
+Aquela vontade de calçar o tênis e sair já tem nome: EAFIT Run está chegando.
 
 Marque aquele amigo que não perde uma corrida. 👇
 
@@ -24,13 +24,13 @@ Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?o
 
 #corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-feed-f01.mp4"}]'),
   ('suspense-corrida-f02-feed', 'Manhã ☀️ ou noite 🌙? Conta nos comentários a sua hora de correr.
-Vem novidade no EAFIT para quem ama correr.
+O EAFIT Run está chegando para quem ama correr.
 
 Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?origem=post#avise-me 🏃
 
 #corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-feed-f02.mp4"}]'),
   ('suspense-corrida-f03-feed', 'Anote na agenda: 1º de dezembro, às 10h. 📅
-Salve este post para não esquecer. A novidade do EAFIT para quem ama correr abre para todo mundo nesse dia.
+Salve este post para não esquecer. O EAFIT Run abre para todo mundo nesse dia.
 
 Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?origem=post#avise-me 🏃
 
@@ -42,25 +42,25 @@ Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?o
 
 #corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-feed-f04.mp4"}]'),
   ('suspense-corrida-r01-reel', 'Você corre? 🏃
-Algo novo vem aí no EAFIT, para quem ama correr. Comenta EU se você corre. 👇
+O EAFIT Run vem aí, para quem ama correr. Comenta EU se você corre. 👇
 
 Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?origem=post#avise-me 🏃
 
 #corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-reel-r01.mp4"}]'),
   ('suspense-corrida-r02-reel', 'Quem corre vai entender. 👟
-Dia 1º de dezembro tem novidade no EAFIT. Marque quem corre com você.
+Dia 1º de dezembro chega o EAFIT Run. Marque quem corre com você.
 
 Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?origem=post#avise-me 🏃
 
 #corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-reel-r02.mp4"}]'),
   ('suspense-corrida-r03-reel', 'Prepare o tênis. 👟
-Dia 1º de dezembro, às 10h, o EAFIT tem novidade para quem corre. Salve para lembrar.
+Dia 1º de dezembro, às 10h, chega o EAFIT Run para quem corre. Salve para lembrar.
 
 Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?origem=post#avise-me 🏃
 
 #corrida #corridaderua #running #embreve #EAFIT', '[{"type":"video","url":"https://eafit.com.br/img/marketing/suspense-corrida-reel-r03.mp4"}]'),
   ('suspense-corrida-r04-reel', 'Não conta pra ninguém… ou conta, e chama a turma. 😉
-Vem novidade no EAFIT para quem ama correr. Compartilhe com a turma.
+O EAFIT Run está chegando para quem ama correr. Compartilhe com a turma.
 
 Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.br/corrida/?origem=post#avise-me 🏃
 

@@ -10,6 +10,7 @@
 // Saída: suspense-corrida-{story,feed,reel}-*.mp4 em app-react/public/landing/img/marketing/ e a migration
 // supabase/migrations/20270304170000_marketing_corrida_suspense_video.sql (atualiza as peças da fila).
 // Saem enquanto o módulo está desligado (hide_when_module = 'corrida') e param quando ele liga.
+import { loadImage } from '@napi-rs/canvas';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -27,43 +28,44 @@ const CTA = 'Quer ser avisado quando abrir? Entre na lista de espera: eafit.com.
 const ACCENT = '#f97316';
 const URL_SHOWN = 'eafit.com.br/corrida';
 const BEAT = 60 / 128;
+let LOGO = null; // logo da marca (ícone do app), carregada em main() e desenhada em todas as peças
 
 // Stories (8 s): [chave, gancho, segunda frase]
 export const STORIES = [
   ['s01', 'Você corre?', 'Responde EU se você corre.'],
-  ['s02', 'Algo novo vem aí.', 'Adivinha o que é?'],
+  ['s02', 'EAFIT Run vem aí.', 'Quem já estava esperando?'],
   ['s03', 'Calce o tênis.', 'Dia 1º de dezembro.'],
   ['s04', 'Quem corre vai entender.', 'Marque quem corre com você.'],
-  ['s05', 'O EAFIT vai correr com você.', 'Quem aí já sabe?'],
+  ['s05', 'EAFIT Run: corra com a gente.', 'Quem aí já sabe?'],
   ['s06', 'Faltam poucos dias.', 'Você vai estar pronto?'],
   ['s07', 'Sua próxima corrida começa aqui.', 'Manda para quem corre contigo.'],
-  ['s08', 'Já tem plano para dezembro?', 'O EAFIT tem novidade.'],
-  ['s09', 'Quer ser o primeiro a saber?', 'Entre na lista de espera.'],
+  ['s08', 'Já tem plano para dezembro?', 'O EAFIT Run chega dia 1º.'],
+  ['s09', 'Quer correr com o EAFIT Run?', 'Entre na lista de espera.'],
   ['s10', 'Contagem regressiva.', '1º de dezembro, às 10h.'],
 ];
 
 // Feeds (vídeo de 12 s, saem como vídeo no feed): [chave, gancho, segunda frase, legenda]
 export const FEEDS = [
   ['f01', 'Quem corre vai entender.', 'Marque quem corre com você.',
-    'Quem corre vai entender. 🏃\nAquela vontade de calçar o tênis e sair já tem novidade a caminho no EAFIT.\n\nMarque aquele amigo que não perde uma corrida. 👇'],
+    'Quem corre vai entender. 🏃\nAquela vontade de calçar o tênis e sair já tem nome: EAFIT Run está chegando.\n\nMarque aquele amigo que não perde uma corrida. 👇'],
   ['f02', 'Manhã ou noite?', 'Quando você corre?',
-    'Manhã ☀️ ou noite 🌙? Conta nos comentários a sua hora de correr.\nVem novidade no EAFIT para quem ama correr.'],
+    'Manhã ☀️ ou noite 🌙? Conta nos comentários a sua hora de correr.\nO EAFIT Run está chegando para quem ama correr.'],
   ['f03', 'Anote na agenda.', '1º de dezembro, às 10h.',
-    'Anote na agenda: 1º de dezembro, às 10h. 📅\nSalve este post para não esquecer. A novidade do EAFIT para quem ama correr abre para todo mundo nesse dia.'],
+    'Anote na agenda: 1º de dezembro, às 10h. 📅\nSalve este post para não esquecer. O EAFIT Run abre para todo mundo nesse dia.'],
   ['f04', 'Falta pouco.', 'Quem está contando os dias?',
     'Falta pouco. ⏳\nQuem aí já está contando os dias? Comenta 🔥 e entre na lista de espera para ser avisado.'],
 ];
 
 // Reels (12 s): [chave, gancho, segunda frase, legenda]
 export const REELS = [
-  ['r01', 'Você corre?', 'Algo novo vem aí.',
-    'Você corre? 🏃\nAlgo novo vem aí no EAFIT, para quem ama correr. Comenta EU se você corre. 👇'],
+  ['r01', 'Você corre?', 'EAFIT Run vem aí.',
+    'Você corre? 🏃\nO EAFIT Run vem aí, para quem ama correr. Comenta EU se você corre. 👇'],
   ['r02', 'Quem corre vai entender.', '1º de dezembro.',
-    'Quem corre vai entender. 👟\nDia 1º de dezembro tem novidade no EAFIT. Marque quem corre com você.'],
+    'Quem corre vai entender. 👟\nDia 1º de dezembro chega o EAFIT Run. Marque quem corre com você.'],
   ['r03', 'Prepare o tênis.', 'Dia 1º de dezembro, às 10h.',
-    'Prepare o tênis. 👟\nDia 1º de dezembro, às 10h, o EAFIT tem novidade para quem corre. Salve para lembrar.'],
+    'Prepare o tênis. 👟\nDia 1º de dezembro, às 10h, chega o EAFIT Run para quem corre. Salve para lembrar.'],
   ['r04', 'Não conta pra ninguém.', 'Ou conta, e chama a turma.',
-    'Não conta pra ninguém… ou conta, e chama a turma. 😉\nVem novidade no EAFIT para quem ama correr. Compartilhe com a turma.'],
+    'Não conta pra ninguém… ou conta, e chama a turma. 😉\nO EAFIT Run está chegando para quem ama correr. Compartilhe com a turma.'],
 ];
 
 const ease = (x) => 1 - (1 - Math.min(1, Math.max(0, x))) ** 3;
@@ -83,6 +85,20 @@ function makeFrame(hook, line2, { total, drop, t2, t3 }) {
     ctx.stroke();
     ctx.restore();
 
+    if (LOGO) {
+      const ls = 180; // abaixo da faixa que o Instagram cobre no topo do story
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - ls / 2, 270, ls, ls, 40);
+      ctx.clip();
+      ctx.drawImage(LOGO, W / 2 - ls / 2 - ls * 0.08, 270 - ls * 0.08, ls * 1.16, ls * 1.16);
+      ctx.restore();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.font = `800 50px ${FONT}`;
+      ctx.fillText('EAFIT RUN', W / 2, 270 + ls + 56);
+    }
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const draw = (text, y, size, color, alpha, weight = 800, scale = 1) => {
@@ -154,6 +170,7 @@ const media = (file) => JSON.stringify([{ type: 'video', url: `${SITE}/img/marke
 
 async function main() {
   mkdirSync(OUT, { recursive: true });
+  LOGO = await loadImage(join(root, 'app-react', 'public', 'icon-512.png'));
   const only = process.env.ONLY || '';
   const wanted = (k) => !only || only === k;
   const plan = await audioPlan(2);

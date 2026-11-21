@@ -31,7 +31,7 @@ Quem se inscreve **não cria conta nem libera o módulo**: só entra na lista pa
 - **TikTok:** `Algo novo para quem ama correr chega em 1º/12 🏃 Lista de espera no link`
 - **YouTube (descrição do canal):** `Dia 1º de dezembro tem novidade no EAFIT para quem ama correr. Entre na lista de espera: <link>`
 - **Facebook (Sobre):** `Novidade para quem corre no dia 1º de dezembro. Entre na lista de espera: <link>`
-- **WhatsApp (status ou transmissão):** `Você corre? Dia 1º de dezembro tem novidade no EAFIT. Entre na lista de espera e seja avisado: <link>`
+- **WhatsApp (status ou transmissão):** `Você corre? Dia 1º de dezembro chega o EAFIT Run. Entre na lista de espera e seja avisado: <link>`
 
 ### 3. Posts prontos (arquivos em `app-react/public/landing/img/marketing/`)
 
@@ -40,14 +40,14 @@ parceiros podem postar os mesmos nos seus perfis (com o **seu** link) em outros 
 
 | Peça | Arquivo | Texto pronto (acrescente seu link no fim) |
 |---|---|---|
-| Feed: quem corre vai entender | `suspense-corrida-feed-f01.mp4` | Quem corre vai entender. 🏃 Aquela vontade de calçar o tênis e sair já tem novidade a caminho no EAFIT. Entre na lista de espera: |
-| Feed: manhã ou noite? | `suspense-corrida-feed-f02.mp4` | Manhã, noite ou fim de semana? 🌅🌙 Conta nos comentários quando você corre. Vem novidade no EAFIT para quem ama correr. Lista de espera: |
-| Feed: anote na agenda | `suspense-corrida-feed-f03.mp4` | Anote na agenda: 1º de dezembro, às 10h. 📅 A novidade do EAFIT para quem ama correr abre para todo mundo nesse dia. Lista de espera: |
-| Feed: falta pouco | `suspense-corrida-feed-f04.mp4` | Falta pouco. ⏳ Dia 1º de dezembro tem novidade para quem corre. Entre na lista de espera e seja avisado: |
-| Reel: você corre? | `suspense-corrida-reel-r01.mp4` | Você corre? 🏃 Algo novo vem aí no EAFIT, para quem ama correr. Lista de espera: |
-| Reel: quem corre vai entender | `suspense-corrida-reel-r02.mp4` | Quem corre vai entender. 👟 Dia 1º de dezembro tem novidade no EAFIT. Lista de espera: |
-| Reel: prepare o tênis | `suspense-corrida-reel-r03.mp4` | Prepare o tênis. 👟 Dia 1º de dezembro, às 10h, o EAFIT tem novidade para quem corre. Lista de espera: |
-| Reel: não conta pra ninguém | `suspense-corrida-reel-r04.mp4` | Não conta pra ninguém… ou conta, e chama a turma. 😉 Vem novidade no EAFIT para quem ama correr. Lista de espera: |
+| Feed: quem corre vai entender | `suspense-corrida-feed-f01.mp4` | Quem corre vai entender. 🏃 Aquela vontade de calçar o tênis e sair já tem nome: EAFIT Run está chegando. Entre na lista de espera: |
+| Feed: manhã ou noite? | `suspense-corrida-feed-f02.mp4` | Manhã, noite ou fim de semana? 🌅🌙 Conta nos comentários quando você corre. O EAFIT Run está chegando para quem ama correr. Lista de espera: |
+| Feed: anote na agenda | `suspense-corrida-feed-f03.mp4` | Anote na agenda: 1º de dezembro, às 10h. 📅 O EAFIT Run abre para todo mundo nesse dia. Lista de espera: |
+| Feed: falta pouco | `suspense-corrida-feed-f04.mp4` | Falta pouco. ⏳ Dia 1º de dezembro chega o EAFIT Run. Entre na lista de espera e seja avisado: |
+| Reel: você corre? | `suspense-corrida-reel-r01.mp4` | Você corre? 🏃 O EAFIT Run vem aí, para quem ama correr. Lista de espera: |
+| Reel: quem corre vai entender | `suspense-corrida-reel-r02.mp4` | Quem corre vai entender. 👟 Dia 1º de dezembro chega o EAFIT Run. Lista de espera: |
+| Reel: prepare o tênis | `suspense-corrida-reel-r03.mp4` | Prepare o tênis. 👟 Dia 1º de dezembro, às 10h, chega o EAFIT Run para quem corre. Lista de espera: |
+| Reel: não conta pra ninguém | `suspense-corrida-reel-r04.mp4` | Não conta pra ninguém… ou conta, e chama a turma. 😉 O EAFIT Run está chegando para quem ama correr. Lista de espera: |
 | Stories (10) | `suspense-corrida-story-s01.mp4` a `s10.mp4` | (vídeo com música; sem legenda, o endereço eafit.com.br/corrida vai escrito no fecho "EM BREVE · Aguarde.") |
 
 Nos stories o endereço `eafit.com.br/corrida` já aparece escrito na imagem; o parceiro deve **somar o adesivo de link**
