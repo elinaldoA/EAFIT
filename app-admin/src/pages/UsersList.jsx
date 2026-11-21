@@ -73,20 +73,6 @@ function initials(u) {
   return ((parts[0]?.[0] || '?') + (parts.length > 1 ? parts[1][0] : '')).toUpperCase();
 }
 
-const PROVIDER_LABELS = { google: 'Google', email: 'E-mail e senha', apple: 'Apple', facebook: 'Facebook' };
-
-// Como a pessoa entra: Google, cadastro por e-mail ou os dois.
-function LoginMethod({ providers = [] }) {
-  if (!providers.length) return <span className="user-detail__meta">—</span>;
-  return (
-    <span className="users-login">
-      {providers.map(p => (
-        <span key={p} className={`badge users-login__badge users-login__badge--${p}`}>{PROVIDER_LABELS[p] || p}</span>
-      ))}
-    </span>
-  );
-}
-
 function StatusBadges({ u }) {
   return (
     <>
@@ -353,7 +339,6 @@ export default function UsersList() {
                   />
                 </th>
                 <th scope="col">Usuário</th>
-                <th scope="col">Login</th>
                 <th scope="col">Peso alvo</th>
                 <th scope="col">Nível / objetivo</th>
                 <th scope="col">Último treino</th>
@@ -387,7 +372,6 @@ export default function UsersList() {
                       </div>
                     </div>
                   </td>
-                  <td data-label="Login"><LoginMethod providers={u.providers} /></td>
                   <td data-label="Peso alvo" className="hide-mobile">{u.peso_alvo ? `${u.peso_alvo} kg` : '—'}</td>
                   <td data-label="Nível / objetivo">{[u.nivel, u.meta].filter(Boolean).join(' · ') || '—'}</td>
                   <td data-label="Último treino">{formatDay(u.last_training)}</td>
@@ -398,7 +382,7 @@ export default function UsersList() {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={10}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
+                <tr><td colSpan={9}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
               )}
             </tbody>
           </table></div></div>
