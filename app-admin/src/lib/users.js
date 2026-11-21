@@ -23,6 +23,19 @@ export async function fetchDeactivatedIds() {
   }
 }
 
+// Provedores de login (google, email...) das contas da página: id -> lista.
+// Falha aqui não derruba a lista; a coluna só fica sem a informação.
+export async function fetchProviders(ids) {
+  try {
+    if (!ids.length) return new Map();
+    const { data, error } = await db.rpc('admin_user_providers', { p_ids: ids });
+    if (error) throw error;
+    return new Map((data || []).map(r => [r.up_id, r.up_providers || []]));
+  } catch {
+    return new Map();
+  }
+}
+
 export async function fetchUsersPage({ search = '', status = '', sort = '', nivel = '', meta = '', page = 0, pageSize = PAGE_SIZE } = {}) {
   const { data, error } = await db.rpc('admin_list_users_page', {
     search: search || null,

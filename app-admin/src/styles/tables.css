@@ -130,3 +130,7 @@
 }
 .users-table__name:hover { color: var(--primary-text); text-decoration: underline; }
 @media (max-width: 900px) { .users-avatar { width: 30px; height: 30px; } }
+
+.users-login { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.users-login__badge { margin-left: 0; }
+.users-login__badge--google { background: rgba(66, 133, 244, .14); color: #4285f4; }

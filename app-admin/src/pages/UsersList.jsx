@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { useAdminAccess } from '../context/useAdminAccess';
 import { fetchSegments, createSegment, hasFilters } from '../lib/segments';
-import { fetchUsersPage, fetchDeactivatedIds, PAGE_SIZE } from '../lib/users';
+import { fetchUsersPage, fetchDeactivatedIds, fetchProviders, PAGE_SIZE } from '../lib/users';
 import { exportCutNotice } from '../lib/listLimits';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
@@ -23,7 +23,7 @@ const CSV_COLUMNS = [
   { key: 'plan_end_date', label: 'FimDoPlano' }, { key: 'created_at', label: 'CriadoEm' },
   { key: 'last_sign_in_at', label: 'UltimoLogin' }, { key: 'email_confirmed_at', label: 'Confirmado' },
   { key: 'banned_until', label: 'BanidoAte' }, { key: 'deactivated', label: 'Desativado' },
-  { key: 'is_admin', label: 'Admin' },
+  { key: 'is_admin', label: 'Admin' }, { key: 'login', label: 'Login' },
 ];
 
 const STATUS_OPTIONS = [
@@ -57,7 +57,8 @@ function formatDate(value, withTime = true) {
 // Página de usuários com a marca de conta desativada em cada linha.
 async function fetchPage(params) {
   const [{ rows, total }, deactivated] = await Promise.all([fetchUsersPage(params), fetchDeactivatedIds()]);
-  return { rows: rows.map(r => ({ ...r, deactivated: deactivated.has(r.id) })), total };
+  const providers = await fetchProviders(rows.map(r => r.id));
+  return { rows: rows.map(r => ({ ...r, deactivated: deactivated.has(r.id), providers: providers.get(r.id) || [], login: (providers.get(r.id) || []).join('+') })), total };
 }
 
 function formatDay(iso) {
@@ -70,6 +71,20 @@ function initials(u) {
   const base = [u.nome, u.sobrenome].filter(Boolean).join(' ') || u.email || '?';
   const parts = base.split(/[s@.]+/).filter(Boolean);
   return ((parts[0]?.[0] || '?') + (parts.length > 1 ? parts[1][0] : '')).toUpperCase();
+}
+
+const PROVIDER_LABELS = { google: 'Google', email: 'E-mail e senha', apple: 'Apple', facebook: 'Facebook' };
+
+// Como a pessoa entra: Google, cadastro por e-mail ou os dois.
+function LoginMethod({ providers = [] }) {
+  if (!providers.length) return <span className="user-detail__meta">—</span>;
+  return (
+    <span className="users-login">
+      {providers.map(p => (
+        <span key={p} className={`badge users-login__badge users-login__badge--${p}`}>{PROVIDER_LABELS[p] || p}</span>
+      ))}
+    </span>
+  );
 }
 
 function StatusBadges({ u }) {
@@ -338,6 +353,7 @@ export default function UsersList() {
                   />
                 </th>
                 <th scope="col">Usuário</th>
+                <th scope="col">Login</th>
                 <th scope="col">Peso alvo</th>
                 <th scope="col">Nível / objetivo</th>
                 <th scope="col">Último treino</th>
@@ -371,6 +387,7 @@ export default function UsersList() {
                       </div>
                     </div>
                   </td>
+                  <td data-label="Login"><LoginMethod providers={u.providers} /></td>
                   <td data-label="Peso alvo" className="hide-mobile">{u.peso_alvo ? `${u.peso_alvo} kg` : '—'}</td>
                   <td data-label="Nível / objetivo">{[u.nivel, u.meta].filter(Boolean).join(' · ') || '—'}</td>
                   <td data-label="Último treino">{formatDay(u.last_training)}</td>
@@ -381,7 +398,7 @@ export default function UsersList() {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={9}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
+                <tr><td colSpan={10}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
               )}
             </tbody>
           </table></div></div>
