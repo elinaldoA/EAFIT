@@ -22,7 +22,7 @@ const PRINTS = join(root, 'app-react', 'public', 'landing', 'img', 'app');
 const OUT = join(root, 'app-react', 'public', 'landing', 'img', 'marketing');
 const SITE = 'https://eafit.com.br';
 const TAGS = '#corrida #corridaderua #running #embreve #EAFIT';
-const CTA = 'Fique de olho: em breve no EAFIT. 👀';
+const CTA = 'Quer ser avisado quando abrir? Entre na lista de espera: link na bio. 🏃';
 const FOOTER = 'Em breve · eafit.com.br';
 
 const FEED = [

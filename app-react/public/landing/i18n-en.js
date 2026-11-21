@@ -22,12 +22,18 @@ window.LANDING_EN = {
     "Calorias e recordes": "Calories and records",
     "Veja as calorias queimadas, os seus melhores tempos de 1, 5, 10 e 21 km e a evolução semana a semana.": "See the calories you burned, your best times for 1, 5, 10 and 21 km and your progress week by week.",
     "Acompanhe as corridas deles, aplauda e entre nos desafios do mês.": "Follow their runs, cheer them on and join the monthly challenges.",
-    "Criar minha conta agora": "Create my account now",
     "Conhecer o EAFIT Run": "Discover EAFIT Run",
     "Já tem conta? Quando o Run abrir, é só escolher Corrida em Perfil › Meu esporte. Sem novo cadastro.": "Already have an account? When Run opens, just pick Running under Profile › My sport. No new sign-up.",
     "EAFIT Run · Em breve": "EAFIT Run · Coming soon",
     "O EAFIT Run chega em breve. Quem já tem conta recebe o módulo no mesmo app, sem novo cadastro.": "EAFIT Run is coming soon. If you already have an account, the module arrives in the same app, no new sign-up.",
     // Página /corrida (EAFIT Run)
+    "O EAFIT Run abre para todos em 1º de dezembro, às 10h": "EAFIT Run opens to everyone on December 1st, at 10 a.m. (Brasília time)",
+    "dias": "days",
+    "horas": "hours",
+    "minutos": "minutes",
+    "segundos": "seconds",
+    "A abertura do EAFIT Run está acontecendo. Atualize o app e escolha Corrida em Perfil › Meu esporte.": "EAFIT Run is opening now. Update the app and choose Running in Profile › My sport.",
+    "Entrar na lista de espera": "Join the waitlist",
     "Seja avisado quando o EAFIT Run abrir": "Get notified when EAFIT Run opens",
     "O módulo para quem ama correr chega em breve: corrida com GPS, voz a cada quilômetro e desafios com os amigos. Deixe seu e-mail e a gente avisa no dia do lançamento.": "The module for people who love running is coming soon: GPS runs, a voice cue every kilometer and challenges with friends. Leave your email and we'll let you know on launch day.",
     "Entrar na lista com esta conta": "Join the list with this account",
@@ -907,6 +913,7 @@ window.LANDING_EN = {
     'Exportar ou excluir seus dados quando quiser': 'Export or delete your data anytime',
   },
   attrs: {
+    "Contagem regressiva para a abertura do EAFIT Run": "Countdown to the EAFIT Run opening",
     // Página /corrida (EAFIT Run)
     "Aba Início do EAFIT Run: corridas dos amigos com distância, ritmo, tempo, percurso no mapa e aplausos": "EAFIT Run's Home tab: friends' runs with distance, pace, time, route on the map and kudos",
     "Aba Desafios do EAFIT Run: desafios do mês com barra de progresso e ranking de km da semana entre amigos": "EAFIT Run's Challenges tab: monthly challenges with progress bars and the week's km ranking among friends",

@@ -644,6 +644,41 @@
     }
   })();
 
+  // ---------- contagem regressiva da abertura do EAFIT Run ----------
+  // Alvo: data-launch (mesmo instante do job pg_cron "liberar-modulo-corrida":
+  // 2026-12-01 10h de Brasília). Passou da hora, troca os números pelo aviso.
+  (function () {
+    var boxes = document.querySelectorAll('.run-countdown');
+    if (!boxes.length) return;
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    function tick() {
+      var open = 0;
+      for (var i = 0; i < boxes.length; i++) {
+        var box = boxes[i];
+        var left = Date.parse(box.getAttribute('data-launch')) - Date.now();
+        var grid = box.querySelector('.run-countdown__grid');
+        var label = box.querySelector('.run-countdown__label');
+        var done = box.querySelector('.run-countdown__done');
+        if (isNaN(left) || left <= 0) {
+          if (grid) grid.hidden = true;
+          if (label) label.hidden = true;
+          if (done) done.hidden = false;
+          continue;
+        }
+        open++;
+        var s = Math.floor(left / 1000);
+        var vals = { d: String(Math.floor(s / 86400)), h: pad(Math.floor(s % 86400 / 3600)), m: pad(Math.floor(s % 3600 / 60)), s: pad(s % 60) };
+        for (var k in vals) {
+          var el = box.querySelector('[data-u="' + k + '"]');
+          if (el && el.textContent !== vals[k]) el.textContent = vals[k];
+        }
+      }
+      if (!open && timer) clearInterval(timer);
+    }
+    var timer = setInterval(tick, 1000);
+    tick();
+  })();
+
   // ---------- eventos anônimos (public.landing_events) ----------
   // Cliques nos CTAs que levam ao app, instalação e seções alcançadas.
   // Sem identificar ninguém; 1 registro por evento+lugar por sessão;
