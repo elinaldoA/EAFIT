@@ -66,6 +66,12 @@ function formatDay(iso) {
   return `${d}/${m}/${y}`;
 }
 
+function initials(u) {
+  const base = [u.nome, u.sobrenome].filter(Boolean).join(' ') || u.email || '?';
+  const parts = base.split(/[s@.]+/).filter(Boolean);
+  return ((parts[0]?.[0] || '?') + (parts.length > 1 ? parts[1][0] : '')).toUpperCase();
+}
+
 function StatusBadges({ u }) {
   return (
     <>
@@ -241,15 +247,32 @@ export default function UsersList() {
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">Usuários</h1>
+        <div>
+          <h1 className="page-title">Usuários</h1>
+          <p className="page-subtitle">Busque, filtre e acompanhe a base. Clique no nome para abrir a ficha completa.</p>
+        </div>
         <div className="actions-row">
-          <input
-            className="input search-input"
-            placeholder="Buscar por nome, apelido ou e-mail…"
-            value={searchInput}
-            onChange={e => setSearchInput(e.target.value)}
-          />
-          <select className="input" value={status} onChange={e => setStatus(e.target.value)}>
+          <button
+            className="btn btn--small" onClick={handleSaveSegment}
+            disabled={!hasFilters({ search, status, nivel, meta })}
+            title="Guarda os filtros atuais como um segmento reutilizável"
+          >
+            Salvar segmento
+          </button>
+          <button className="btn btn--small" onClick={handleExport} disabled={total === 0}>Exportar CSV</button>
+        </div>
+      </div>
+
+      <div className="card users-filters">
+        <input
+          className="input users-filters__search"
+          type="search" aria-label="Buscar usuário"
+          placeholder="Buscar por nome, apelido ou e-mail…"
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+        />
+        <div className="users-filters__row">
+          <select className="input" value={status} onChange={e => setStatus(e.target.value)} aria-label="Status">
             {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <select className="input" value={nivel} onChange={e => setNivel(e.target.value)} aria-label="Nível">
@@ -272,14 +295,9 @@ export default function UsersList() {
               {segments.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
             </select>
           )}
-          <button
-            className="btn btn--small" onClick={handleSaveSegment}
-            disabled={!hasFilters({ search, status, nivel, meta })}
-            title="Guarda os filtros atuais como um segmento reutilizável"
-          >
-            Salvar segmento
-          </button>
-          <button className="btn btn--small" onClick={handleExport} disabled={total === 0}>Exportar CSV</button>
+          {hasFilters({ search, status, nivel, meta }) && (
+            <button type="button" className="btn btn--ghost btn--small" onClick={() => applyFilters()}>Limpar filtros</button>
+          )}
         </div>
       </div>
 
@@ -309,7 +327,7 @@ export default function UsersList() {
       {!loading && !error && (
         <>
           {pager}
-          <div className="table-wrap"><table className="resp-table users-table" aria-label="Usuários">
+          <div className="card users-card"><div className="table-wrap"><table className="resp-table users-table" aria-label="Usuários">
             <thead>
               <tr>
                 <th scope="col">
@@ -323,7 +341,7 @@ export default function UsersList() {
                 <th scope="col">Peso alvo</th>
                 <th scope="col">Nível / objetivo</th>
                 <th scope="col">Último treino</th>
-                <th scope="col">Treinos (30d)</th>
+                <th scope="col" className="users-num">Treinos (30d)</th>
                 <th scope="col">Fim do plano</th>
                 <th scope="col">Criado em</th>
                 <th scope="col">Último login</th>
@@ -341,17 +359,22 @@ export default function UsersList() {
                   </td>
                   {/* nome (link para a ficha), status e e-mail; no celular é o topo do cartão */}
                   <td data-label="Usuário" className="users-table__head">
-                    <Link className="users-table__name" to={`/users/${u.id}`}>
-                      {[u.nome, u.sobrenome].filter(Boolean).join(' ') || u.email}
-                    </Link>
-                    {u.apelido && <span className="user-detail__meta"> ({u.apelido})</span>}
-                    <div className="users-table__badges"><StatusBadges u={u} /></div>
-                    <div className="user-detail__meta">{u.email}</div>
+                    <div className="users-person">
+                      <span className="users-avatar" aria-hidden="true">{initials(u)}</span>
+                      <div className="users-person__info">
+                        <Link className="users-table__name" to={`/users/${u.id}`}>
+                          {[u.nome, u.sobrenome].filter(Boolean).join(' ') || u.email}
+                        </Link>
+                        {u.apelido && <span className="user-detail__meta"> ({u.apelido})</span>}
+                        <div className="user-detail__meta">{u.email}</div>
+                        <div className="users-table__badges"><StatusBadges u={u} /></div>
+                      </div>
+                    </div>
                   </td>
                   <td data-label="Peso alvo" className="hide-mobile">{u.peso_alvo ? `${u.peso_alvo} kg` : '—'}</td>
                   <td data-label="Nível / objetivo">{[u.nivel, u.meta].filter(Boolean).join(' · ') || '—'}</td>
                   <td data-label="Último treino">{formatDay(u.last_training)}</td>
-                  <td data-label="Treinos (30d)">{u.trainings_30d}</td>
+                  <td data-label="Treinos (30d)" className="users-num"><strong>{u.trainings_30d}</strong></td>
                   <td data-label="Fim do plano">{formatDay(u.plan_end_date)}</td>
                   <td data-label="Criado em" className="hide-mobile">{formatDate(u.created_at, false)}</td>
                   <td data-label="Último login">{formatDate(u.last_sign_in_at)}</td>
@@ -361,7 +384,7 @@ export default function UsersList() {
                 <tr><td colSpan={9}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
               )}
             </tbody>
-          </table></div>
+          </table></div></div>
 
           {pager}
         </>

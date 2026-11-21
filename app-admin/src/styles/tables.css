@@ -111,3 +111,22 @@
   .users-table td[colspan] { grid-column: 1 / -1; }
 }
 
+
+/* ---------- Usuários: filtros em card, avatar e tabela em card ---------- */
+.users-filters { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.users-filters__search { width: 100%; max-width: 420px; }
+.users-filters__row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.users-filters__row .input { width: auto; max-width: 100%; }
+.users-card { padding: 0; overflow: hidden; margin-bottom: 14px; }
+.users-card > .table-wrap > .resp-table { border: 0; box-shadow: none; border-radius: 0; }
+.users-num { text-align: right; font-variant-numeric: tabular-nums; }
+.users-person { display: flex; align-items: flex-start; gap: 10px; }
+.users-person__info { min-width: 0; }
+.users-avatar {
+  flex: none; width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  color: var(--text-muted); font-size: 12px; font-weight: 700; letter-spacing: .02em;
+}
+.users-table__name:hover { color: var(--primary-text); text-decoration: underline; }
+@media (max-width: 900px) { .users-avatar { width: 30px; height: 30px; } }
