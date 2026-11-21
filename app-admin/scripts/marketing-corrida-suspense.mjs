@@ -30,42 +30,34 @@ const URL_SHOWN = 'eafit.com.br/corrida';
 const BEAT = 60 / 128;
 let LOGO = null; // logo da marca (ícone do app), carregada em main() e desenhada em todas as peças
 
-// Stories (8 s): [chave, gancho, segunda frase]
+// Stories (8 s): [chave, gancho, segunda frase]. Cada peça tem gancho e frase próprios, sem repetir entre si.
 export const STORIES = [
   ['s01', 'Você corre?', 'Responde EU se você corre.'],
   ['s02', 'EAFIT Run vem aí.', 'Quem já estava esperando?'],
-  ['s03', 'Calce o tênis.', 'Dia 1º de dezembro.'],
-  ['s04', 'Quem corre vai entender.', 'Marque quem corre com você.'],
-  ['s05', 'EAFIT Run: corra com a gente.', 'Quem aí já sabe?'],
-  ['s06', 'Faltam poucos dias.', 'Você vai estar pronto?'],
+  ['s03', 'Calce o tênis.', 'Dezembro começa correndo.'],
+  ['s04', 'Corre sozinho ou em dupla?', 'Marque seu parceiro de treino.'],
+  ['s05', 'Corra com a gente.', 'Quem aí já sabe o nome?'],
+  ['s06', 'Tá chegando a hora.', 'Você vai estar pronto?'],
   ['s07', 'Sua próxima corrida começa aqui.', 'Manda para quem corre contigo.'],
-  ['s08', 'Já tem plano para dezembro?', 'O EAFIT Run chega dia 1º.'],
-  ['s09', 'Quer correr com o EAFIT Run?', 'Entre na lista de espera.'],
+  ['s08', 'Já tem plano para dezembro?', 'Um nome novo na sua rotina: EAFIT Run.'],
+  ['s09', 'Quer ser o primeiro a saber?', 'Entre na lista de espera.'],
   ['s10', 'Contagem regressiva.', '1º de dezembro, às 10h.'],
 ];
 
 // Feeds (vídeo de 12 s, saem como vídeo no feed): [chave, gancho, segunda frase, legenda]
 export const FEEDS = [
-  ['f01', 'Quem corre vai entender.', 'Marque quem corre com você.',
-    'Quem corre vai entender. 🏃\nAquela vontade de calçar o tênis e sair já tem nome: EAFIT Run está chegando.\n\nMarque aquele amigo que não perde uma corrida. 👇'],
-  ['f02', 'Manhã ou noite?', 'Quando você corre?',
-    'Manhã ☀️ ou noite 🌙? Conta nos comentários a sua hora de correr.\nO EAFIT Run está chegando para quem ama correr.'],
-  ['f03', 'Anote na agenda.', '1º de dezembro, às 10h.',
-    'Anote na agenda: 1º de dezembro, às 10h. 📅\nSalve este post para não esquecer. O EAFIT Run abre para todo mundo nesse dia.'],
-  ['f04', 'Falta pouco.', 'Quem está contando os dias?',
-    'Falta pouco. ⏳\nQuem aí já está contando os dias? Comenta 🔥 e entre na lista de espera para ser avisado.'],
+  ['f01', 'Bateu vontade de correr?', 'Agora ela tem nome.', 'Aquela vontade de calçar o tênis e sair já tem nome: EAFIT Run. 🏃\n\nMarque aquele amigo que não perde uma corrida. 👇'],
+  ['f02', 'Manhã ou noite?', 'Quando você corre?', 'Manhã ☀️ ou noite 🌙? Conta nos comentários a sua hora de correr.\nO EAFIT Run está chegando para quem ama correr.'],
+  ['f03', 'Anote na agenda.', 'Dia 1º, às 10h.', 'Anote na agenda: 1º de dezembro, às 10h. 📅\nSalve este post para não esquecer. O EAFIT Run abre para todo mundo nesse dia.'],
+  ['f04', 'Falta pouco.', 'Quem está contando os dias?', 'Falta pouco. ⏳\nQuem aí já está contando os dias? Comenta 🔥 e entre na lista de espera para ser avisado.'],
 ];
 
 // Reels (12 s): [chave, gancho, segunda frase, legenda]
 export const REELS = [
-  ['r01', 'Você corre?', 'EAFIT Run vem aí.',
-    'Você corre? 🏃\nO EAFIT Run vem aí, para quem ama correr. Comenta EU se você corre. 👇'],
-  ['r02', 'Quem corre vai entender.', '1º de dezembro.',
-    'Quem corre vai entender. 👟\nDia 1º de dezembro chega o EAFIT Run. Marque quem corre com você.'],
-  ['r03', 'Prepare o tênis.', 'Dia 1º de dezembro, às 10h.',
-    'Prepare o tênis. 👟\nDia 1º de dezembro, às 10h, chega o EAFIT Run para quem corre. Salve para lembrar.'],
-  ['r04', 'Não conta pra ninguém.', 'Ou conta, e chama a turma.',
-    'Não conta pra ninguém… ou conta, e chama a turma. 😉\nO EAFIT Run está chegando para quem ama correr. Compartilhe com a turma.'],
+  ['r01', 'Ouviu o barulho do tênis?', 'Já deu para adivinhar?', 'O barulho do tênis na rua já tem trilha nova. 🎧\nO EAFIT Run vem aí, para quem ama correr. Comenta EU se você corre. 👇'],
+  ['r02', 'Quem corre vai entender.', 'Sem spoiler. Só o nome: EAFIT Run.', 'Quem corre vai entender. 👟\nSem spoiler: por enquanto só o nome, EAFIT Run. Marque quem corre com você.'],
+  ['r03', 'Prepare o tênis.', 'A largada está chegando.', 'Prepare o tênis. 👟\nA largada do EAFIT Run está chegando. Salve para lembrar.'],
+  ['r04', 'Não conta pra ninguém.', 'Ou conta, e chama a turma.', 'Não conta pra ninguém… ou conta, e chama a turma. 😉\nO EAFIT Run está chegando. Compartilhe com a turma.'],
 ];
 
 const ease = (x) => 1 - (1 - Math.min(1, Math.max(0, x))) ** 3;
@@ -121,7 +113,9 @@ function makeFrame(hook, line2, { total, drop, t2, t3 }) {
     if (in1 * out1 > 0) {
       ctx.fillStyle = ACCENT;
       ctx.globalAlpha = in1 * out1;
-      ctx.fillRect(W / 2 - 110 * in1, 1130, 220 * in1, 10);
+      ctx.font = `800 124px ${FONT}`;
+      const extra = (wrap(ctx, hook, W - 160, 3).length - 2) * 138; // gancho de 3 linhas empurra o traço para baixo
+      ctx.fillRect(W / 2 - 110 * in1, 1130 + Math.max(0, extra), 220 * in1, 10);
       ctx.globalAlpha = 1;
     }
 
