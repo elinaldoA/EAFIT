@@ -203,7 +203,13 @@ export function checkPost(platform: Platform, post: Post): string | null {
 // Instagram nao tem link na legenda e story nao tem legenda. Legenda que ja tem
 // utm_content ou que estouraria o limite da rede sai como esta.
 export function trackedCaption(platform: Platform, post: Pick<Post, 'id' | 'caption' | 'format'>): string {
-  if (platform !== 'facebook' || post.format === 'story') return post.caption;
+  if (post.format === 'story') return post.caption;
+  // Legenda do pre-cadastro do Run (eafit.com.br/corrida/?origem=post#avise-me): sai com a origem da propria rede,
+  // para o painel separar Instagram, Facebook etc., e sem o "Comece agora" do app (o modulo ainda nao abriu).
+  if (post.caption.includes('eafit.com.br/corrida/')) {
+    return post.caption.replace(/(eafit\.com\.br\/corrida\/\?origem=)post(?![a-z0-9_-])/g, `$1${platform}`);
+  }
+  if (platform !== 'facebook') return post.caption;
   if (post.caption.includes('utm_content=')) return post.caption;
   const content = post.id.replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 8);
   if (!content) return post.caption;

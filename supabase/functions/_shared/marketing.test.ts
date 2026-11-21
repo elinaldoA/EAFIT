@@ -280,6 +280,18 @@ Deno.test('trackedCaption: nao duplica o link nem estoura o limite da rede', () 
   assertEquals(trackedCaption('facebook', full), full.caption);
 });
 
+Deno.test('trackedCaption: legenda do pre-cadastro do Run sai com a origem da rede e sem o Comece agora do app', () => {
+  const caption = 'Em breve.' + String.fromCharCode(10, 10) + 'Entre na lista de espera: eafit.com.br/corrida/?origem=post#avise-me 🏃' + String.fromCharCode(10, 10) + '#corrida';
+  const post = { id: 'AB12CD34-0000-4000-8000-000000000000', caption, format: 'feed' as const };
+  assertEquals(trackedCaption('facebook', post), caption.replace('origem=post', 'origem=facebook'));
+  assertEquals(trackedCaption('instagram', post), caption.replace('origem=post', 'origem=instagram'));
+  assertEquals(trackedCaption('tiktok', post), caption.replace('origem=post', 'origem=tiktok'));
+  assertEquals(trackedCaption('facebook', { ...post, format: 'story' }), caption);
+  // origem ja especifica nao e trocada
+  const own = { ...post, caption: 'eafit.com.br/corrida/?origem=postagem#avise-me' };
+  assertEquals(trackedCaption('instagram', own), own.caption);
+});
+
 Deno.test('anúncios: lista as contas e soma gasto, alcance e cliques por anúncio', async () => {
   const { fn, calls } = fakeFetch({
     'GET /me/adaccounts': { data: [{ id: 'act_99', account_id: '99', name: 'EAFIT', currency: 'BRL', account_status: 1 }] },
