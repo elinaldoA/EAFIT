@@ -40,7 +40,7 @@ export const STORIES = [
 ];
 
 export const REEL = {
-  key: 'embreve-corrida-sua-prova', print: 'run-sua-prova', hook: 'Qual é a sua próxima prova?', title: 'Conte os dias até a corrida', sub: 'Contagem regressiva e programa de treino.', ctaTitle: 'Em breve', ctaSub: 'Fique de olho no app',
+  key: 'embreve-corrida-sua-prova', print: 'run-sua-prova', hook: 'Qual é a sua próxima prova?', title: 'Conte os dias até a corrida', sub: 'Contagem regressiva e programa de treino.', ctaTitle: 'Lista de espera', ctaSub: 'Entre e seja avisado', url: 'eafit.com.br/corrida',
   caption: `Marcou a sua prova? Então o app conta os dias por você. 🏁\nEm breve no EAFIT Run: escolha a corrida, veja quanto falta e receba o programa de treino até lá.\n\n${CTA}\n\n${TAGS}`,
 };
 
@@ -102,7 +102,7 @@ async function videos() {
     const audio = plan.story(i) || join(tmpdir(), `eafit-story-embreve2-v${variant}.wav`);
     if (typeof audio === 'string') writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
     const img = await loadImage(readFileSync(join(PRINTS, `${print}.webp`)));
-    const story = { pill: 'EM BREVE', title, sub, variant, cta: 'EM BREVE · FIQUE DE OLHO' };
+    const story = { pill: 'EM BREVE', title, sub, variant, cta: 'ENTRE NA LISTA DE ESPERA', url: 'eafit.com.br/corrida' };
     await renderVideo(`story-${key}.mp4`, STORY_DURATION, audio, (ctx, im, t) => drawStoryFrame(ctx, story, im, t), img);
     console.log('ok', `story-${key}.mp4`);
   }

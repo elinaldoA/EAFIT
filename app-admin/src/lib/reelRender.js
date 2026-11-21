@@ -159,7 +159,7 @@ export function drawReelFrame(ctx, reel, img, t) {
     const dy = (1 - easeOut((t - 9.7) / 0.6)) * 50;
     text(ctx, reel.ctaTitle || 'Comece agora', { x: W / 2, y: 540 + dy, size: 96, align: 'center', alpha: a3 });
     text(ctx, reel.ctaSub || 'Link na bio', { x: W / 2, y: 920 + dy, size: 64, weight: 600, color: '#a1a1aa', align: 'center', alpha: a3 });
-    text(ctx, 'eafit.com.br', { x: W / 2, y: 1080 + dy, size: 72, weight: 700, color: '#f97316', align: 'center', alpha: a3 });
+    text(ctx, reel.url || 'eafit.com.br', { x: W / 2, y: 1080 + dy, size: 72, weight: 700, color: '#f97316', align: 'center', alpha: a3 });
   }
 }
 
@@ -414,7 +414,7 @@ export function drawStoryFrame(ctx, story, img, t) {
     ctx.textBaseline = 'middle';
     ctx.fillText(story.cta || 'COMECE AGORA · LINK NA BIO', 0, 3);
     ctx.restore();
-    text(ctx, 'eafit.com.br', { x: W / 2, y: by + bh + 26, size: 44, weight: 700, color: '#fff', align: 'center', alpha: cta });
+    text(ctx, story.url || 'eafit.com.br', { x: W / 2, y: by + bh + 26, size: 44, weight: 700, color: '#fff', align: 'center', alpha: cta });
   }
   ctx.fillStyle = v.accent;
   ctx.fillRect(0, H - 14, W * clamp(t / STORY_DURATION), 14);

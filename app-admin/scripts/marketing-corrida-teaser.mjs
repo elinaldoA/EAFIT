@@ -75,12 +75,12 @@ const STORIES = [
 const REELS = [
   {
     key: 'embreve-corrida-vem-ai', print: 'run-inicio', hook: 'Você corre? Vem novidade aí.', title: 'EAFIT Run', sub: 'Mapa, ritmo e amigos na sua corrida.',
-    ctaTitle: 'Em breve', ctaSub: 'Fique de olho no app',
+    ctaTitle: 'Lista de espera', ctaSub: 'Entre e seja avisado', url: 'eafit.com.br/corrida',
     caption: `Corrida, mapa e amigos no mesmo app. 🏃\nO EAFIT Run chega em breve.\n\n${CTA}\n\n${TAGS}`,
   },
   {
     key: 'embreve-corrida-plano', print: 'run-ao-vivo', hook: 'E se o seu 5K tivesse um plano?', title: 'Programa de corrida no app', sub: 'Em breve: 5K, 10K e meia maratona.',
-    ctaTitle: 'Em breve', ctaSub: 'Fique de olho no app',
+    ctaTitle: 'Lista de espera', ctaSub: 'Entre e seja avisado', url: 'eafit.com.br/corrida',
     caption: `Primeiros 5 km sem improviso. 👟\nEm breve o app monta as semanas de corrida para você.\n\n${CTA}\n\n${TAGS}`,
   },
 ];
@@ -115,7 +115,7 @@ async function main() {
     const audio = plan.story(i) || join(tmpdir(), `eafit-story-corrida-v${variant}.wav`);
     if (typeof audio === 'string') writeFileSync(audio, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP], shift: SHIFTS[variant % 6] }));
     const img = await loadImage(readFileSync(join(PRINTS, `${print}.webp`)));
-    const story = { pill: 'EM BREVE', title, sub, variant, cta: 'EM BREVE · FIQUE DE OLHO' };
+    const story = { pill: 'EM BREVE', title, sub, variant, cta: 'ENTRE NA LISTA DE ESPERA', url: 'eafit.com.br/corrida' };
     await renderVideo(`story-${key}.mp4`, STORY_DURATION, audio, (ctx, im, t) => drawStoryFrame(ctx, story, im, t), img);
     console.log('ok', `story-${key}.mp4`);
   }
