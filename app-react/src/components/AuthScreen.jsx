@@ -35,6 +35,7 @@ export default function AuthScreen() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [busy, setBusy] = useState(false);
   const [googleError, setGoogleError] = useState('');
+  const [termsError, setTermsError] = useState('');
 
   // Topo do funil do painel admin: quem chega aqui sem sessão.
   useEffect(() => { recordVisit('acesso'); }, []);
@@ -58,6 +59,7 @@ export default function AuthScreen() {
     setMode(next);
     setMsg({ text: '', type: '' });
     setGoogleError('');
+    setTermsError('');
     setNeedsConfirmation(false);
   }
 
@@ -115,7 +117,8 @@ export default function AuthScreen() {
   async function handleGoogle() {
     if (mode === 'signup' && !acceptedTerms) {
       trackAuthEvent('signup_error', 'termos');
-      setGoogleError(t('Aceite os Termos de Uso para criar a conta.')); return;
+      // Erro junto ao checkbox (é onde a pessoa precisa agir), não sob o botão.
+      setTermsError(t('Aceite os Termos de Uso para criar a conta.')); return;
     }
     setBusy(true);
     setGoogleError('');
@@ -207,12 +210,15 @@ export default function AuthScreen() {
 
           {mode === 'signup' && (
             <label className="auth-form__terms">
-              <input type="checkbox" checked={acceptedTerms} onChange={e => { setAcceptedTerms(e.target.checked); setGoogleError(''); }} />
+              <input type="checkbox" checked={acceptedTerms} onChange={e => { setAcceptedTerms(e.target.checked); setTermsError(''); }} />
               <span>
                 {t('Li e aceito os')} <a href="legal/termos.html" target="_blank" rel="noopener noreferrer">{t('Termos de Uso')}</a> {t('e a')}{' '}
                 <a href="legal/privacidade.html" target="_blank" rel="noopener noreferrer">{t('Política de Privacidade')}</a>
               </span>
             </label>
+          )}
+          {mode === 'signup' && termsError && (
+            <p className="auth-form__msg auth-form__msg--error" role="alert">{termsError}</p>
           )}
 
           <button type="submit" className="btn btn--primary btn--full" disabled={busy}>
