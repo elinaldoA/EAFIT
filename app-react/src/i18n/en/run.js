@@ -662,6 +662,8 @@ export default {
   '🔋 Bateria em {v1}%: use a tela escura e deixe o celular poupar energia.': '🔋 Battery at {v1}%: use the dark screen and let the phone save power.',
   'Bateria em {v1} por cento. Finalize logo a corrida.': 'Battery at {v1} percent. Finish the run soon.',
   'Bateria em {v1} por cento.': 'Battery at {v1} percent.',
+  '📍 Não bloqueie a tela durante a corrida: com a tela apagada o celular para o GPS e a distância deixa de contar. Para poupar bateria, use a 🌙 Tela escura.': '📍 Don\'t lock the screen during the run: with the screen off the phone stops the GPS and distance stops counting. To save battery, use 🌙 Dark screen.',
+  '📍 A tela apagou e o GPS parou: parte da distância pode não ter sido contada. Não bloqueie a tela; para poupar bateria, use a 🌙 Tela escura.': '📍 The screen turned off and the GPS stopped: part of the distance may not have been counted. Don\'t lock the screen; to save battery, use 🌙 Dark screen.',
   "🔋 Confira a bateria antes de sair: o GPS gasta bastante e a corrida não continua com o celular desligado.": "🔋 Check your battery before heading out: GPS uses a lot, and the run can't continue with the phone off.",
   "⏱️ Corrida longa: se a bateria estiver baixa, use a tela escura.": "⏱️ Long run: if your battery is low, use the dark screen.",
   "Corrida longa. Se a bateria estiver baixa, use a tela escura.": "Long run. If your battery is low, use the dark screen.",

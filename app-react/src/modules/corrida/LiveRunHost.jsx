@@ -10,6 +10,7 @@ import { useLiveRun, useNow } from './useLiveRun';
 import { elapsedMs, isPaused, pauseRun, setDistance, splitsOf, addRoutePoint, updateLiveRun, getLiveRun, autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, SEEN_EVERY_MS, addElevation, addSteps, restoreLiveRun } from './liveRun';
 import { emptyMotion, motionStep } from './autoPause';
 import { useStepCounter } from './useStepCounter';
+import { useKeepAliveAudio } from './useKeepAliveAudio';
 import { useHeartRate } from './useHeartRate';
 import { addHeart, maxHeartRate, hrAlert } from './heartRate';
 import { useGuidedWorkout } from './useGuidedWorkout';
@@ -26,6 +27,9 @@ import InterruptedRun from './InterruptedRun';
 import LiveRunScreen from './LiveRunScreen';
 import FinishRun from './FinishRun';
 import SavedRun from './SavedRun';
+
+// Tela apagada por mais que isso (ms) conta como lacuna de GPS.
+const SCREEN_GAP_MS = 10000;
 
 function BackGuard({ onBlocked }) {
   useBackToClose(onBlocked);
@@ -98,6 +102,24 @@ export default function LiveRunHost() {
   });
 
   useWakeLock(!!run);
+
+  // Tela apagada com a corrida rodando: o celular congela o app e o GPS para.
+  // O cronômetro segue (conta por horário), a distância não. Ao voltar, avisa.
+  const [screenGap, setScreenGap] = useState(false);
+  const gpsRunning = running && !!run?.gps && !interrupted;
+  // Áudio mudo em loop para o sistema não congelar o app (e o GPS) com a tela apagada.
+  useKeepAliveAudio((running || autoPaused) && !!run?.gps && !interrupted);
+  useEffect(() => {
+    if (!gpsRunning) { setScreenGap(false); return undefined; }
+    let hiddenAt = null;
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') hiddenAt = Date.now();
+      else if (hiddenAt && Date.now() - hiddenAt > SCREEN_GAP_MS) { hiddenAt = null; setScreenGap(true); buzz('battery'); }
+      else hiddenAt = null;
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [gpsRunning]);
 
   // Bateria acabando: banner na tela da corrida e, ao cruzar 20% e 10%, vibra e avisa por voz.
   const battery = useBattery(!!run && !interrupted);
@@ -261,7 +283,7 @@ export default function LiveRunHost() {
         ? <FinishRun run={run} now={now} onBack={() => setFinishing(false)} onDone={record => { setFinishing(false); setSaved(record); }} />
         : (
           <LiveRunScreen
-            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided} battery={battery} batteryNudge={batteryNudge} onDismissNudge={() => setBatteryNudge(false)}
+            run={run} now={now} geo={geo} phase={phase} voiceOn={voiceOn} onToggleVoice={toggleVoice} spm={spm} heart={heart} guided={guided} battery={battery} batteryNudge={batteryNudge} onDismissNudge={() => setBatteryNudge(false)} screenGap={screenGap} onDismissScreenGap={() => setScreenGap(false)}
             autoPauseOn={autoPauseOn} onToggleAutoPause={toggleAutoPause}
             onFinish={() => { updateLiveRun(s => pauseRun(s)); setFinishing(true); }}
           />

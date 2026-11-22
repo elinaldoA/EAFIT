@@ -345,6 +345,11 @@ export default function RunHomePage() {
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => { writePref(BATTERY_TIP_KEY, false); setBatteryTip(false); }}>{t('Entendi')}</button>
           </div>
         )}
+        {gps && geoSupported() && !live && (
+          <div className="run-record__tip" role="note">
+            <span>{t('📍 Não bloqueie a tela durante a corrida: com a tela apagada o celular para o GPS e a distância deixa de contar. Para poupar bateria, use a 🌙 Tela escura.')}</span>
+          </div>
+        )}
         {!gpxOpen && !live && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGpxOpen(true); setManualOpen(false); setGuidedOpen(false); }}>
             {t('📥 Importar corrida de outro app (GPX)')}
