@@ -9,6 +9,7 @@
 // Não entram no precache nem no cache do service worker (vídeo usa range
 // request); tocam direto da rede.
 export const EXERCISE_VIDEOS = {
+  'Abdominal com Pernas a 90°': 'abdominal-pernas-90',
   'Burpee': 'burpee',
   'Afundo Estático': 'afundo-estatico',
   'Barra Fixa Assistida': 'barra-fixa-assistida',
@@ -120,6 +121,7 @@ export const VIDEO_CREDIT = 'Vídeo: Goulart · wger.de · CC BY-SA 4.0';
 
 // Vídeos que não vêm do wger (licença/autor exigem o crédito certo).
 const VIDEO_CREDITS = {
+  'abdominal-pernas-90': 'Animação 3D com músculos em destaque · licença livre',
   burpee: 'Vídeo: Taco Fleur · Wikimedia Commons · CC BY-SA 4.0',
   'agachamento-livre': 'Vídeo: FitnessScape · Wikimedia Commons · CC BY 3.0',
   'elevacao-joelhos-pendurado': 'Vídeo: FitnessScape · Wikimedia Commons · CC BY 3.0',

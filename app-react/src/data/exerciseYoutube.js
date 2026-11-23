@@ -445,7 +445,6 @@ export const EXERCISE_YOUTUBE = {
   'Abdominal com Anilha Acima da Cabeça': { id: 'rBLLfvmNIIs', canal: 'Ironbluehen' },
   'Abdominal com Arremesso de Medicine Ball': { id: 'zh3bwo6WJDg', canal: 'Sanctify Fitness' },
   'Abdominal com Elástico': { id: 'g3EVVCKsfmw', canal: 'Live Lean TV Daily Exercises' },
-  'Abdominal com Pernas a 90°': { id: 'UK9t2C9BEoo', canal: 'Fitness Diplomat' },
   'Abdominal Cruzado no Solo': { id: '_w7ECPka6jk', canal: 'Global Fitness Training' },
   'Abdominal Declinado': { id: 'V4DOUirrM1g', vertical: true, canal: 'Ricardo Cipolli' },
   'Abdominal Declinado com Rotação': { id: 'ssmmr4rfA3w', canal: 'Varga Athletics' },
