@@ -14,6 +14,8 @@ import RunComments from './RunComments';
 import PushPrompt from '../../components/PushPrompt';
 import { SESSION_TITLE, programFromMetadata, programToday, isRunSession, sessionTitle } from './program';
 import RouteDrawing from './RouteDrawing';
+import RunFlyby from './RunFlyby';
+import { flybyCandidates } from './flybyMatch';
 import { weatherText, weatherShort, startPosition } from './weather';
 import { useStartWeather } from './useStartWeather';
 import { renderRunCard, shareRunCard } from './runShareCard';
@@ -61,8 +63,11 @@ function WeekSummary({ runs }) {
   );
 }
 
-function RunCard({ run, onToggleKudos }) {
+function RunCard({ run, feed, onToggleKudos }) {
   const toast = useToast();
+  const [flybyOpen, setFlybyOpen] = useState(false);
+  // Corridas do feed que aconteceram ao mesmo tempo que esta (com o tempo de cada ponto).
+  const together = useMemo(() => flybyCandidates(run, feed), [run, feed]);
   const pace = paceSeconds(run.duration_s, run.distance_m);
   const [sharing, setSharing] = useState(false);
   // O cartão (com o clima) começa a ser desenhado no primeiro toque no botão:
@@ -102,6 +107,9 @@ function RunCard({ run, onToggleKudos }) {
       <RouteDrawing route={run.route} width={320} height={170} />
       <div className="run-card__foot">
         <KudosButton run={run} onToggle={onToggleKudos} />
+        {together.length > 0 && (
+          <button type="button" className="run-card__kudos" aria-label={t('Ver o flyby desta corrida')} onClick={() => setFlybyOpen(true)}>{t('🛰️ Flyby')}</button>
+        )}
         <button
           type="button" className={`run-card__kudos run-card__comments${open ? ' run-card__kudos--on' : ''}`}
           aria-expanded={open} aria-label={t('Comentários ({v1})', { v1: count })} onClick={() => setOpen(o => !o)}
@@ -114,6 +122,7 @@ function RunCard({ run, onToggleKudos }) {
         )}
       </div>
       {open && <RunComments run={run} onCount={setCount} />}
+      {flybyOpen && <RunFlyby run={run} candidates={together} onClose={() => setFlybyOpen(false)} />}
     </li>
   );
 }
@@ -267,7 +276,7 @@ export default function RunFeedPage() {
         </div>
       ) : (
         <ul className="run-feed">
-          {feed.map(r => <RunCard key={r.id} run={r} onToggleKudos={handleKudos} />)}
+          {feed.map(r => <RunCard key={r.id} run={r} feed={feed} onToggleKudos={handleKudos} />)}
         </ul>
       )}
       {more && (
