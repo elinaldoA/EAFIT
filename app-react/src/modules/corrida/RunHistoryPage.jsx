@@ -5,7 +5,7 @@ import { todayDate } from '../../data/treinoData';
 import { fmtDate } from '../../lib/utils';
 import {
   RUN_SAVED_EVENT, runTitle, fetchRuns, flushPendingRuns, deleteRun, computeRunStats, paceSeconds, formatPace, formatClock, formatKm, EFFORT_KM,
-  fetchShoes, cachedShoes,
+  fetchShoes, cachedShoes, isStuck,
 } from './runs';
 import SplitBars from './SplitBars';
 import { downloadGpx } from './gpx';
@@ -92,7 +92,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
           <span>{formatClock(run.duration_s)} · {formatPace(pace)}/km</span>
           {run.weather && weatherShort(run.weather) && <span className="run-item__wx">{weatherShort(run.weather)}</span>}
         </span>
-        <span className="run-item__kind">{SESSION_TITLE[run.kind] || SESSION_TITLE.livre}{run.pending ? ' · 📶' : ''}</span>
+        <span className="run-item__kind">{SESSION_TITLE[run.kind] || SESSION_TITLE.livre}{run.pending ? (isStuck(run) ? ' · ⚠️' : ' · 📶') : ''}</span>
       </button>
       {open && editing && (
         <div className="run-item__body">
@@ -128,7 +128,8 @@ function RunItem({ run, runs, shoe, onDelete }) {
           )}
           {run.effort && <p>{t('Esforço: {v1}/10', { v1: run.effort })}</p>}
           {run.notes && <p className="run-item__notes">{run.notes}</p>}
-          {run.pending && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
+          {run.pending && !isStuck(run) && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
+          {run.pending && isStuck(run) && <p className="profile-field__hint">{t('⚠️ O servidor recusou esta corrida várias vezes e ela não sobe sozinha. Revise os dados ou apague-a.')}</p>}
           {run.route.length > 0 && (
             <>
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => downloadGpx(run)}>{t('📤 Exportar GPX')}</button>
