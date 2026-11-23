@@ -127,6 +127,13 @@ jobs:
           # marketing: cron (x-cron-secret) e painel (JWT conferido no código); marketing-oauth: retorno do OAuth, autorizado pelo state assinado.
           deploy marketing --no-verify-jwt
           deploy marketing-oauth --no-verify-jwt
+          # Chamadas pelo pg_cron (x-cron-secret), como as de cima.
+          deploy send-activation-emails --no-verify-jwt
+          deploy send-admin-digest --no-verify-jwt
+          deploy send-ambassador-alerts --no-verify-jwt
+          deploy send-charge-reminders --no-verify-jwt
+          deploy send-run-challenge-alerts --no-verify-jwt
+          deploy send-trainer-scheduled --no-verify-jwt
           for fn in send-push send-welcome delete-account admin-users admin-broadcast admin-generate-plan trainer-push reply-push; do
             deploy "$fn"
           done
