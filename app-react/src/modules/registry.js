@@ -12,7 +12,7 @@ import { subscribeLiveRun, isRunActive } from './corrida/liveRun';
 //
 // Para criar um módulo, acrescente uma entrada aqui com:
 //   id         chave gravada na conta e em <html data-module> (cores em styles/modules.css)
-//   name       sufixo da marca: 'Run' vira "EAFIT · Run"; vazio = só "EAFIT"
+//   name       sufixo da marca: 'Run' vira "EAFIT · Run"; vazio = só "EAFIT"; a musculação é "EAFIT · Gym"
 //   label      nome do esporte no seletor do cadastro e do Perfil
 //   icon       emoji do seletor e do card do Perfil
 //   tabs       abas da navegação inferior, na ordem (chaves de BottomNav/App.jsx)
@@ -38,7 +38,7 @@ export const BASE_TABS = Object.freeze(['treino', 'historico', 'hidratacao', 'nu
 export const MODULES = Object.freeze([
   Object.freeze({
     id: DEFAULT_MODULE_ID,
-    name: '',
+    name: 'Gym',
     label: t('Musculação'),
     icon: '🏋️',
     blurb: t('Treino na academia, plano pronto e evolução de carga'),

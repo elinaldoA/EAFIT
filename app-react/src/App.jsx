@@ -203,7 +203,7 @@ function Shell() {
             <TrainerInvitePrompt />
             <div className="app-screen" style={{ display: 'flex' }}>
               <header className="topbar">
-                <TopbarProfile subtitle={sport.name ? brandName(sport) : `EAFIT · ${sport.label}`} />
+                <TopbarProfile subtitle={brandName(sport)} />
                 <TopbarMenu
                   modes={[
                     ...(isTrainer ? [{ label: t('🧑‍🏫 Personal'), onClick: () => setMode('trainer') }] : []),

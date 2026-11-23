@@ -12,7 +12,7 @@
 ============================================================ */
 
 /* Marca do módulo na barra superior: "EAFIT · Run". A marca EAFIT vai em
-   todos os módulos, inclusive a musculação ("EAFIT · Musculação"). */
+   todos os módulos, inclusive a musculação ("EAFIT · Gym"). */
 .module-brand {
   flex: 0 1 auto;
   min-width: 0;
