@@ -22,6 +22,8 @@ import CropRun from './CropRun';
 import { RunPhotos } from './RunPhotos';
 import MergeRun from './MergeRun';
 import { canCrop } from './runEdit';
+import CreateSegment from './CreateSegment';
+import { canMakeSegment } from './segmentMatch';
 import SummaryShareSheet from './SummaryShareSheet';
 import { badgesFor } from './runCardData';
 import { monthSummary } from './runSummary';
@@ -173,6 +175,8 @@ function RunItem({ run, runs, shoe, onDelete }) {
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setEditing(true)}>{t('✏️ Editar corrida')}</button>
           {!run.pending && canCrop(run) && <button type="button" className="btn btn--outline btn--sm" onClick={() => setTool('cortar')}>{t('✂️ Cortar percurso')}</button>}
           {!run.pending && <button type="button" className="btn btn--outline btn--sm" onClick={() => setTool('juntar')}>{t('🔗 Juntar com outra')}</button>}
+          {!run.pending && canMakeSegment(run) && <button type="button" className="btn btn--outline btn--sm" onClick={() => setTool('segmento')}>{t('📍 Criar segmento')}</button>}
+          {tool === 'segmento' && <CreateSegment userId={user.id} run={run} onClose={() => setTool(null)} onCreated={() => window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT))} />}
           {tool === 'cortar' && <CropRun userId={user.id} run={run} onClose={() => setTool(null)} />}
           {tool === 'juntar' && <MergeRun userId={user.id} run={run} runs={runs} onClose={() => setTool(null)} />}
           <button
