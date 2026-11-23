@@ -75,7 +75,7 @@ describe('ExerciseBlock', () => {
     expect(onToggleAll).toHaveBeenCalledTimes(1);
 
     cleanup();
-    for (const n of [1, 2, 3]) localStorage.setItem(`set_${EX.nome}_${n}_done`, 'true');
+    for (const n of [1, 2, 3]) localStorage.setItem(`set_Segunda_${EX.nome}_${n}_done`, 'true');
     setup();
     expect(screen.getByRole('button', { name: '✓ Todas' })).toBeTruthy();
   });
@@ -141,12 +141,12 @@ describe('ExerciseBlock', () => {
     });
 
     it('não aparece depois que a pessoa já digitou a carga da 1ª série', async () => {
-      localStorage.setItem(`set_${EX.nome}_1_carga`, '40');
+      localStorage.setItem(`set_Segunda_${EX.nome}_1_carga`, '40');
       setup();
       await waitFor(() => expect(h.fetchProgressionSuggestion).toHaveBeenCalled());
       await new Promise(r => setTimeout(r, 0));
       expect(screen.queryByText(HINT)).toBeNull();
-      localStorage.removeItem(`set_${EX.nome}_1_carga`);
+      localStorage.removeItem(`set_Segunda_${EX.nome}_1_carga`);
     });
   });
 
@@ -227,7 +227,7 @@ describe('ExerciseBlock', () => {
     expect(h.coachSuggest).not.toHaveBeenCalled();
 
     cleanup();
-    for (const n of [1, 2, 3]) localStorage.setItem(`set_${EX.nome}_${n}_done`, 'true');
+    for (const n of [1, 2, 3]) localStorage.setItem(`set_Segunda_${EX.nome}_${n}_done`, 'true');
     setup({ hideName: true });
     await waitFor(() => expect(h.fetchPlateauStatus).toHaveBeenCalledTimes(3));
     await Promise.resolve();

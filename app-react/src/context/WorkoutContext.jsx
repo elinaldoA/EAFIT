@@ -157,6 +157,9 @@ async function ensureWorkoutId(userId, day) {
 const PLAN_CACHE_KEY = 'plan_cache';
 // Segunda-feira da semana cujos dados estão no aparelho ('treino_' sai no logout).
 const WEEK_MARKER_KEY = 'treino_semana';
+// Formato das chaves de série no aparelho: 2 = set_<dia>_<exercício>_<n>_<campo>.
+const KEY_FORMAT_KEY = 'treino_chaves';
+const KEY_FORMAT = '2';
 
 function cachePlan(userId, plan) {
   try { localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ userId, plan })); } catch { /* cota cheia: segue sem cache */ }
@@ -333,6 +336,12 @@ export function WorkoutProvider({ children }) {
       // Semana nova: o que o aparelho guardou dos dias (séries, notas, cronômetro)
       // é da semana passada. Limpa uma vez e deixa o servidor repovoar; dentro da
       // mesma semana nada é apagado, pois o aparelho pode ter marcações mais novas.
+      // Formato antigo (set_<exercício>_...) misturava dias com o mesmo exercício e
+      // não dá para saber de que dia cada chave era: descarta, o servidor repovoa.
+      if (canResetMissing && localStorage.getItem(KEY_FORMAT_KEY) !== KEY_FORMAT) {
+        Object.keys(localStorage).filter(k => k.startsWith('set_')).forEach(k => localStorage.removeItem(k));
+        localStorage.setItem(KEY_FORMAT_KEY, KEY_FORMAT);
+      }
       const weekKey = getDateForWeekday('Segunda');
       if (canResetMissing && localStorage.getItem(WEEK_MARKER_KEY) !== weekKey) {
         days.forEach(day => clearDayLocal(day, { keepTimer: (() => { const w = byDate.get(getDateForWeekday(day.dia)); return !!w && localTimerIsFrom(day.dia, w); })() }));
@@ -352,14 +361,14 @@ export function WorkoutProvider({ children }) {
         if (!canResetMissing) return;
         localStorage.setItem(`treino_${dayName}`, w.completed);
         allSets.filter(s => s.workout_id === w.id).forEach(s => {
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_carga`, s.carga ?? '');
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_done`, s.completed);
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_reps`, s.reps ?? '');
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_duracao`, s.duracao_min ?? '');
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_distancia`, s.distancia_km ?? '');
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_duracao_s`, s.duracao_s ?? '');
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_rir`, s.rir ?? '');
-          localStorage.setItem(`set_${s.exercise_name}_${s.set_number}_tipo`, s.tipo ?? '');
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_carga`, s.carga ?? '');
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_done`, s.completed);
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_reps`, s.reps ?? '');
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_duracao`, s.duracao_min ?? '');
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_distancia`, s.distancia_km ?? '');
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_duracao_s`, s.duracao_s ?? '');
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_rir`, s.rir ?? '');
+          localStorage.setItem(`set_${dayName}_${s.exercise_name}_${s.set_number}_tipo`, s.tipo ?? '');
         });
         if (w.rating != null) localStorage.setItem(`treino_${dayName}_rating`, w.rating);
         if (w.notes) localStorage.setItem(`treino_${dayName}_notes`, w.notes);

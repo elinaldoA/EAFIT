@@ -41,16 +41,16 @@ export function formatCardioSummary(durationMin, distanceKm) {
   return parts.join(' · ');
 }
 
-const key = (nome, field) => `set_${nome}_1_${field}`;
+const key = (dia, nome, field) => `set_${dia}_${nome}_1_${field}`;
 
-export function readCardio(nome) {
+export function readCardio(dia, nome) {
   return {
-    duracao: localStorage.getItem(key(nome, 'duracao')) || '',
-    distancia: localStorage.getItem(key(nome, 'distancia')) || '',
-    done: localStorage.getItem(key(nome, 'done')) === 'true',
+    duracao: localStorage.getItem(key(dia, nome, 'duracao')) || '',
+    distancia: localStorage.getItem(key(dia, nome, 'distancia')) || '',
+    done: localStorage.getItem(key(dia, nome, 'done')) === 'true',
   };
 }
 
-export function writeCardioField(nome, field, value) {
-  localStorage.setItem(key(nome, field), value);
+export function writeCardioField(dia, nome, field, value) {
+  localStorage.setItem(key(dia, nome, field), value);
 }

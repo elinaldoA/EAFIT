@@ -97,7 +97,7 @@ describe('DayCard — cabeçalho', () => {
   });
 
   it('mostra séries feitas/total quando já há progresso', () => {
-    localStorage.setItem('set_Supino_1_done', 'true');
+    localStorage.setItem('set_Segunda_Supino_1_done', 'true');
     setup();
     expect(screen.getByText('1/7 séries')).toBeTruthy();
   });
@@ -161,9 +161,9 @@ describe('DayCard — cronômetro do treino', () => {
   });
 
   it('finalizar: toca o som, marca o treino, salva a duração e abre o resumo', async () => {
-    localStorage.setItem('set_Supino_1_done', 'true');
-    localStorage.setItem('set_Supino_1_carga', '80');
-    localStorage.setItem('set_Supino_1_reps', '10');
+    localStorage.setItem('set_Segunda_Supino_1_done', 'true');
+    localStorage.setItem('set_Segunda_Supino_1_carga', '80');
+    localStorage.setItem('set_Segunda_Supino_1_reps', '10');
     const { onFinish, bump } = setup();
     fireEvent.click(screen.getByRole('button', { name: LIST_START }));
     act(() => { vi.advanceTimersByTime(60_000); });
@@ -269,7 +269,7 @@ describe('DayCard — séries', () => {
   it('Marcar todas liga todas as séries, avisa e salva uma a uma; de novo desmarca', async () => {
     const { bump } = setup();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'todas Supino' })); });
-    for (const n of [1, 2, 3]) expect(localStorage.getItem(`set_Supino_${n}_done`)).toBe('true');
+    for (const n of [1, 2, 3]) expect(localStorage.getItem(`set_Segunda_Supino_${n}_done`)).toBe('true');
     expect(bump).toHaveBeenCalled();
     expect(h.toast).toHaveBeenCalledWith('✅ Todas as séries marcadas!');
     expect(h.workout.saveSetState).toHaveBeenCalledTimes(3);
@@ -278,24 +278,24 @@ describe('DayCard — séries', () => {
     expect(screen.getByTestId('ex-Supino').dataset.version).toMatch(/^1-/);
 
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'todas Supino' })); });
-    expect(localStorage.getItem('set_Supino_1_done')).toBe('false');
+    expect(localStorage.getItem('set_Segunda_Supino_1_done')).toBe('false');
     expect(h.toast).toHaveBeenCalledWith('Séries desmarcadas');
   });
 
   it('repetir carga/reps preenche só as séries vazias', async () => {
-    localStorage.setItem('set_Supino_2_carga', '60');
+    localStorage.setItem('set_Segunda_Supino_2_carga', '60');
     await act(async () => { setup(); });
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'preencher Supino' })); });
-    expect(localStorage.getItem('set_Supino_2_carga')).toBe('60'); // já tinha: preservada
-    expect(localStorage.getItem('set_Supino_3_carga')).toBe('80');
-    expect(localStorage.getItem('set_Supino_3_reps')).toBe('10');
+    expect(localStorage.getItem('set_Segunda_Supino_2_carga')).toBe('60'); // já tinha: preservada
+    expect(localStorage.getItem('set_Segunda_Supino_3_carga')).toBe('80');
+    expect(localStorage.getItem('set_Segunda_Supino_3_reps')).toBe('10');
     expect(h.workout.saveSetState).toHaveBeenCalledTimes(1);
     expect(h.workout.saveSetState).toHaveBeenCalledWith('Segunda', 'Supino', 3, { carga: 80, reps: 10 });
     expect(h.toast).toHaveBeenCalledWith('✅ Carga e reps repetidas nas outras séries');
   });
 
   it('repetir não faz nada quando todas as outras séries já têm valor', async () => {
-    localStorage.setItem('set_Crucifixo_2_carga', '20');
+    localStorage.setItem('set_Segunda_Crucifixo_2_carga', '20');
     setup();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'preencher Crucifixo' })); });
     expect(h.workout.saveSetState).not.toHaveBeenCalled();
@@ -305,18 +305,18 @@ describe('DayCard — séries', () => {
   it('aplicar sugestão grava na série 1 e propaga às demais quando há reps', async () => {
     setup();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'sugestao Supino' })); });
-    expect(localStorage.getItem('set_Supino_1_carga')).toBe('85');
-    expect(localStorage.getItem('set_Supino_1_reps')).toBe('9');
+    expect(localStorage.getItem('set_Segunda_Supino_1_carga')).toBe('85');
+    expect(localStorage.getItem('set_Segunda_Supino_1_reps')).toBe('9');
     expect(h.workout.saveSetState).toHaveBeenCalledWith('Segunda', 'Supino', 1, { carga: 85, reps: 9 });
-    expect(localStorage.getItem('set_Supino_2_carga')).toBe('85');
+    expect(localStorage.getItem('set_Segunda_Supino_2_carga')).toBe('85');
     expect(h.toast).toHaveBeenCalledWith('🎯 Sugestão aplicada na Série 1');
   });
 
   it('sugestão de deload (sem reps) só mexe na série 1', async () => {
     setup();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'deload Supino' })); });
-    expect(localStorage.getItem('set_Supino_1_carga')).toBe('70');
-    expect(localStorage.getItem('set_Supino_2_carga')).toBeNull();
+    expect(localStorage.getItem('set_Segunda_Supino_1_carga')).toBe('70');
+    expect(localStorage.getItem('set_Segunda_Supino_2_carga')).toBeNull();
     expect(h.workout.saveSetState).toHaveBeenCalledWith('Segunda', 'Supino', 1, { carga: 70 });
   });
 });
@@ -388,7 +388,7 @@ describe('DayCard — notas e modo ao vivo', () => {
 
   it('com todas as séries feitas, finaliza sem perguntar', async () => {
     for (const [nome, total] of [['Supino', 3], ['Crucifixo', 2], ['Prancha', 2]]) {
-      for (let n = 1; n <= total; n++) localStorage.setItem(`set_${nome}_${n}_done`, 'true');
+      for (let n = 1; n <= total; n++) localStorage.setItem(`set_Segunda_${nome}_${n}_done`, 'true');
     }
     const { onFinish } = setup();
     fireEvent.click(screen.getByRole('button', { name: LIST_START }));
@@ -433,10 +433,10 @@ describe('DayCard — bi-set', () => {
 
   it('descanso só ao fechar a volta, com o tempo do último do grupo', () => {
     const { onRestStart } = setup({ day: GROUP_DAY });
-    localStorage.setItem('set_Supino_1_done', 'true');
+    localStorage.setItem('set_Segunda_Supino_1_done', 'true');
     fireEvent.click(screen.getByText('serie Supino'));
     expect(onRestStart).not.toHaveBeenCalled();
-    localStorage.setItem('set_Remada_1_done', 'true');
+    localStorage.setItem('set_Segunda_Remada_1_done', 'true');
     fireEvent.click(screen.getByText('serie Remada'));
     expect(onRestStart).toHaveBeenCalledWith('Remada', 75);
   });

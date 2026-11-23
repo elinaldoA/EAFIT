@@ -109,7 +109,7 @@ describe('treinador por voz no modo treino', () => {
 });
 
 describe('treinador comenta o andamento do treino', () => {
-  const markDone = (nome, ...sets) => sets.forEach(n => localStorage.setItem(`set_${nome}_${n}_done`, 'true'));
+  const markDone = (nome, ...sets) => sets.forEach(n => localStorage.setItem(`set_Segunda_${nome}_${n}_done`, 'true'));
   // O SetRow grava o check antes de avisar o descanso; o stub faz o mesmo.
   function setupMarking(props = {}) {
     const next = {};
@@ -163,15 +163,15 @@ describe('treinador comenta o andamento do treino', () => {
     setupMarking();
     h.coachSay.mockClear();
     // Supino: meta 8-10. A 1ª série saiu com 13 repetições.
-    localStorage.setItem('set_Supino Reto_1_reps', '13');
+    localStorage.setItem('set_Segunda_Supino Reto_1_reps', '13');
     mark('Supino Reto');
     expect(h.coachSay).toHaveBeenLastCalledWith('repsHigh', { tempo: '1 minuto e 30 segundos', reps: 13 });
     // De novo acima da meta: não repete o conselho, volta ao roteiro.
-    localStorage.setItem('set_Supino Reto_2_reps', '12');
+    localStorage.setItem('set_Segunda_Supino Reto_2_reps', '12');
     mark('Supino Reto');
     expect(h.coachSay).toHaveBeenLastCalledWith('lastSet', { tempo: '1 minuto e 30 segundos' });
     // O fim do exercício tem prioridade sobre o comentário da série.
-    localStorage.setItem('set_Supino Reto_3_reps', '5');
+    localStorage.setItem('set_Segunda_Supino Reto_3_reps', '5');
     mark('Supino Reto');
     expect(h.coachSay).toHaveBeenLastCalledWith('exerciseDone', { tempo: '1 minuto e 30 segundos', proximo: 'Crucifixo' });
   });
@@ -180,7 +180,7 @@ describe('treinador comenta o andamento do treino', () => {
     markDone('Supino Reto', 1, 2, 3);
     markDone('Crucifixo', 1);
     setupMarking();
-    localStorage.removeItem('set_Crucifixo_1_done');
+    localStorage.removeItem('set_Segunda_Crucifixo_1_done');
     mark('Crucifixo');
     expect(h.coachSay).not.toHaveBeenCalledWith('halfway', expect.anything());
   });

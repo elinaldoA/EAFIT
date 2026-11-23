@@ -14,7 +14,7 @@ import { t, tEx } from '../lib/i18n';
 export default function TimedSetRow({ ex, n, day, bump, onRestStart, onSetDone, started }) {
   const { user } = useAuth();
   const { saveSetState } = useWorkout();
-  const key = field => `set_${ex.nome}_${n}_${field}`;
+  const key = field => `set_${day.dia}_${ex.nome}_${n}_${field}`;
   const [carga, setCarga] = useState(() => localStorage.getItem(key('carga')) || '');
   const [duracao, setDuracao] = useState(() => localStorage.getItem(key('duracao_s')) || '');
   const [done, setDone] = useState(() => localStorage.getItem(key('done')) === 'true');

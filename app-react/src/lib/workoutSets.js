@@ -14,9 +14,9 @@ export function calcDayVolume(day) {
     const count = parseInt(ex.series, 10);
     if (!count) return;
     for (let n = 1; n <= count; n++) {
-      const done = localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true';
-      const carga = parseFloat(localStorage.getItem(`set_${ex.nome}_${n}_carga`));
-      const reps = parseFloat(localStorage.getItem(`set_${ex.nome}_${n}_reps`));
+      const done = localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_done`) === 'true';
+      const carga = parseFloat(localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_carga`));
+      const reps = parseFloat(localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_reps`));
       if (done && !isNaN(carga) && !isNaN(reps)) total += carga * reps;
     }
   });
@@ -33,13 +33,13 @@ export function gatherExerciseDetails(day) {
         const n = i + 1;
         return {
           n,
-          done: localStorage.getItem(`set_${ex.nome}_${n}_done`) === 'true',
-          carga: localStorage.getItem(`set_${ex.nome}_${n}_carga`) || null,
-          reps: localStorage.getItem(`set_${ex.nome}_${n}_reps`) || null,
-          ...(timed && { duracaoS: localStorage.getItem(`set_${ex.nome}_${n}_duracao_s`) || null }),
+          done: localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_done`) === 'true',
+          carga: localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_carga`) || null,
+          reps: localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_reps`) || null,
+          ...(timed && { duracaoS: localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_duracao_s`) || null }),
           ...(cardio && {
-            duracao: localStorage.getItem(`set_${ex.nome}_${n}_duracao`) || null,
-            distancia: localStorage.getItem(`set_${ex.nome}_${n}_distancia`) || null,
+            duracao: localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_duracao`) || null,
+            distancia: localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_distancia`) || null,
           }),
         };
       });
@@ -54,9 +54,9 @@ export function countSets(exercises) {
   return { done, total };
 }
 
-export function allSetsDone(ex, setCount) {
+export function allSetsDone(ex, setCount, dia) {
   for (let n = 1; n <= setCount; n++) {
-    if (localStorage.getItem(`set_${ex.nome}_${n}_done`) !== 'true') return false;
+    if (localStorage.getItem(`set_${dia}_${ex.nome}_${n}_done`) !== 'true') return false;
   }
   return true;
 }
@@ -65,8 +65,7 @@ export function allSetsDone(ex, setCount) {
 // nota do treino). Chamado quando o servidor é a fonte da verdade: sem isso, o
 // que ficou da semana passada reaparecia como feito na semana nova.
 export function clearDayLocal(day, { keepTimer = false } = {}) {
-  const names = [...(day.exercicios || []), ...(day.pos || [])].map(ex => ex.nome);
-  const prefixes = names.map(n => `set_${n}_`);
+  const prefixes = [`set_${day.dia}_`];
   const own = [...(keepTimer ? [] : [`treino_${day.dia}_timer`]), `treino_${day.dia}_notes`, `treino_${day.dia}_rating`];
   Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i)).forEach(k => {
     if (k && (own.includes(k) || prefixes.some(p => k.startsWith(p)))) localStorage.removeItem(k);

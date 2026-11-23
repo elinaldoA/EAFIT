@@ -20,9 +20,9 @@ import OfflineBanner from './OfflineBanner';
 import { isIntensity, intensityLabel, intensityHint } from '../lib/intensity';
 
 import { t, tEx, tTec, tFoco, tReps } from '../lib/i18n';
-function isExerciseDone(ex) {
+function isExerciseDone(ex, dia) {
   const n = setCountOf(ex);
-  return n > 0 && allSetsDone(ex, n);
+  return n > 0 && allSetsDone(ex, n, dia);
 }
 
 // Tempo sem marcar série (fora do descanso) até o treinador chamar de volta.
@@ -42,7 +42,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   useWakeLock();
   const items = [...day.exercicios, ...day.pos];
   const [index, setIndex] = useState(() => {
-    const firstPending = items.findIndex(ex => setCountOf(ex) > 0 && !isExerciseDone(ex));
+    const firstPending = items.findIndex(ex => setCountOf(ex) > 0 && !isExerciseDone(ex, day.dia));
     return firstPending === -1 ? 0 : firstPending;
   });
   const [rest, setRest] = useState(null); // { id, label, total, endsAt }
@@ -182,7 +182,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
 
   const ex = items[index];
   const isLast = index === items.length - 1;
-  const exDone = isExerciseDone(ex);
+  const exDone = isExerciseDone(ex, day.dia);
   const { done: setsDone, total: setsTotal } = countSets(gatherExerciseDetails(day));
   // Funil do treino (painel → Novidades): abriu o modo treino, marcou a primeira
   // série, e saiu com ou sem ter marcado alguma. Mostra onde quem começa desiste.
@@ -275,7 +275,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
             className={[
               'live__step',
               i === index && 'live__step--current',
-              isExerciseDone(item) && 'live__step--done',
+              isExerciseDone(item, day.dia) && 'live__step--done',
               i >= day.exercicios.length && 'live__step--pos',
               i < day.exercicios.length && findGroup(day.exercicios, item.nome) && 'live__step--grouped',
             ].filter(Boolean).join(' ')}

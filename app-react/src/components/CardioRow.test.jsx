@@ -47,7 +47,7 @@ describe('CardioRow', () => {
     const { bump } = setup();
     fireEvent.change(duracao(), { target: { value: '30' } });
     fireEvent.change(distancia(), { target: { value: '5,2' } });
-    expect(localStorage.getItem('set_🏃 Cardio — Esteira_1_duracao')).toBe('30');
+    expect(localStorage.getItem('set_Segunda_🏃 Cardio — Esteira_1_duracao')).toBe('30');
     expect(bump).toHaveBeenCalled();
     expect(h.saveSetState).not.toHaveBeenCalled();
 
@@ -122,7 +122,7 @@ describe('CardioRow', () => {
   });
 
   it('desmarcar volta completed:false', () => {
-    localStorage.setItem('set_🏃 Cardio — Esteira_1_done', 'true');
+    localStorage.setItem('set_Segunda_🏃 Cardio — Esteira_1_done', 'true');
     setup();
     fireEvent.click(check());
     expect(h.saveSetState).toHaveBeenCalledWith('Segunda', EX.nome, 1, { completed: false });
@@ -142,7 +142,7 @@ describe('CardioRow', () => {
     fireEvent.change(duracao(), { target: { value: '10' } });
     fireEvent.blur(duracao());
     expect(h.saveSetState).not.toHaveBeenCalled();
-    expect(localStorage.getItem('set_🏃 Cardio — Esteira_1_duracao')).toBe('10');
+    expect(localStorage.getItem('set_Segunda_🏃 Cardio — Esteira_1_duracao')).toBe('10');
   });
 });
 

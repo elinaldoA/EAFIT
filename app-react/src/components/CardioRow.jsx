@@ -32,7 +32,7 @@ const elapsedOf = (t, now) => t.accumulatedMs + (t.runningSince ? now - t.runnin
 export default function CardioRow({ ex, day, bump, started }) {
   const { user } = useAuth();
   const { saveSetState } = useWorkout();
-  const [vals, setVals] = useState(() => readCardio(ex.nome));
+  const [vals, setVals] = useState(() => readCardio(day.dia, ex.nome));
   const [timer, setTimer] = useState(() => readTimer(ex.nome));
   const [now, setNow] = useState(() => Date.now());
   const saveTimers = useRef({});
@@ -53,7 +53,7 @@ export default function CardioRow({ ex, day, bump, started }) {
 
   function setField(field, value) {
     setVals(v => ({ ...v, [field === 'duracao_min' ? 'duracao' : 'distancia']: value }));
-    writeCardioField(ex.nome, field === 'duracao_min' ? 'duracao' : 'distancia', value);
+    writeCardioField(day.dia, ex.nome, field === 'duracao_min' ? 'duracao' : 'distancia', value);
     bump();
     clearTimeout(saveTimers.current[field]);
     saveTimers.current[field] = setTimeout(() => persist({ [field]: toPositive(value) }), 800);
@@ -93,7 +93,7 @@ export default function CardioRow({ ex, day, bump, started }) {
     if (ms >= 1000) {
       const minutes = String(Math.round((ms / 60000) * 10) / 10);
       setVals(v => ({ ...v, duracao: minutes }));
-      writeCardioField(ex.nome, 'duracao', minutes);
+      writeCardioField(day.dia, ex.nome, 'duracao', minutes);
       persist({ duracao_min: toPositive(minutes) });
       bump();
     }
@@ -102,7 +102,7 @@ export default function CardioRow({ ex, day, bump, started }) {
   async function toggleDone() {
     const next = !vals.done;
     setVals(v => ({ ...v, done: next }));
-    writeCardioField(ex.nome, 'done', String(next));
+    writeCardioField(day.dia, ex.nome, 'done', String(next));
     bump();
     // Ao concluir com cronômetro ainda correndo, fecha ele primeiro.
     if (next && (running || timer.accumulatedMs)) stopTimer();

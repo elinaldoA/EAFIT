@@ -12,7 +12,7 @@ const kg = v => v.toLocaleString(locale);
 // botão; aberta, parte da carga da série em andamento (a primeira não marcada
 // com carga, senão a da Série 1) e deixa trocar a carga, a barra e as anilhas
 // que a academia tem.
-export default function PlateCalc({ ex, setCount }) {
+export default function PlateCalc({ ex, day, setCount }) {
   const [open, setOpen] = useState(false);
   const [weight, setWeight] = useState('');
   const [bar, setBar] = useState(() => readBar(ex.nome));
@@ -24,9 +24,9 @@ export default function PlateCalc({ ex, setCount }) {
   function currentLoad() {
     let first = '';
     for (let n = 1; n <= setCount; n++) {
-      const carga = localStorage.getItem(`set_${ex.nome}_${n}_carga`) || '';
+      const carga = localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_carga`) || '';
       if (n === 1) first = carga;
-      if (carga && localStorage.getItem(`set_${ex.nome}_${n}_done`) !== 'true') return carga;
+      if (carga && localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_done`) !== 'true') return carga;
     }
     return first;
   }

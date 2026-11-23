@@ -32,7 +32,7 @@ import OfflineBanner from '../components/OfflineBanner';
 const EX = { nome: 'Supino Reto', series: '3', reps: '8-10', descanso: '60s' };
 const DAY = { dia: 'Segunda', foco: 'Peito', exercicios: [EX], pos: [] };
 const PLAN = { id: 'p1', name: 'Plano', days: [DAY] };
-const key = (n, field) => `set_Supino Reto_${n}_${field}`;
+const key = (n, field) => `set_Segunda_Supino Reto_${n}_${field}`;
 
 function App() {
   const noop = () => {};

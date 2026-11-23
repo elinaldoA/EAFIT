@@ -61,8 +61,8 @@ function doneUpTo(nome, isDone) {
   return last;
 }
 
-function defaultIsDone(nome, n) {
-  try { return localStorage.getItem(`set_${nome}_${n}_done`) === 'true'; } catch { return false; }
+function defaultIsDone(dia, nome, n) {
+  try { return localStorage.getItem(`set_${dia}_${nome}_${n}_done`) === 'true'; } catch { return false; }
 }
 
 // Enxuga o dia até caber em `minutes`, nesta ordem (para no primeiro passo que
@@ -74,7 +74,7 @@ function defaultIsDone(nome, n) {
 //   5. reduz os principais a 3 séries e deixa só 1 série de aquecimento.
 // Nunca corta série já marcada nem tira exercício com série marcada.
 // Devolve { day, minutes, changes }, com changes = [{ type, ... }] para a tela.
-export function fitDayToTime(day, minutes, isDone = defaultIsDone) {
+export function fitDayToTime(day, minutes, isDone = (nome, n) => defaultIsDone(day.dia, nome, n)) {
   const budget = minutes * 60;
   const exercicios = day.exercicios.map(ex => ({ ...ex }));
   let pos = [...day.pos];

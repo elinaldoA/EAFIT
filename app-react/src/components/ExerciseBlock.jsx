@@ -55,7 +55,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
     // No modo ao vivo (hideName) o treinador por voz também fala a sugestão,
     // logo depois de apresentar o exercício — só antes da primeira série (num
     // bi-set o bloco remonta a cada volta, e a sugestão não precisa se repetir).
-    if (hideName && localStorage.getItem(`set_${ex.nome}_1_done`) !== 'true') {
+    if (hideName && localStorage.getItem(`set_${day.dia}_${ex.nome}_1_done`) !== 'true') {
       Promise.all([suggested, stuck]).then(([s, p]) => { if (!cancelled) coachSuggest(s, p); });
     }
     // Duplica a mesma consulta que o DiscomfortPanel já faz internamente —
@@ -105,10 +105,10 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
     }
   }
 
-  const allDone = allSetsDone(ex, setCount);
+  const allDone = allSetsDone(ex, setCount, day.dia);
   // Aquecimento: carga de trabalho = a digitada na Série 1, senão a sugerida.
   const warmups = warmupCount(ex, day.exercicios.findIndex(e => e.nome === ex.nome));
-  const workKg = localStorage.getItem(`set_${ex.nome}_1_carga`) || plateau?.suggestedDeload || suggestion?.suggestedCarga || null;
+  const workKg = localStorage.getItem(`set_${day.dia}_${ex.nome}_1_carga`) || plateau?.suggestedDeload || suggestion?.suggestedCarga || null;
   // Troca geral só pros exercícios de força do plano (não o pós-treino) que têm id.
   const canSwap = !!user && !!ex.id && day.exercicios.some(e => e.nome === ex.nome);
   const goal = isFlagOn(config.flags, 'metas_carga') ? goalFor(user, ex.nome) : null;
@@ -173,7 +173,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
         ))}
       </div>
 
-      {isFlagOn(config.flags, 'anilhas') && <PlateCalc ex={ex} setCount={setCount} />}
+      {isFlagOn(config.flags, 'anilhas') && <PlateCalc ex={ex} day={day} setCount={setCount} />}
 
       {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
       {showSwap && (

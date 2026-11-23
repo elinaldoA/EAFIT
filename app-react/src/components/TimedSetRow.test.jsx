@@ -44,8 +44,8 @@ afterEach(() => {
 
 describe('TimedSetRow', () => {
   it('começa com a duração e o check que já estavam salvos', () => {
-    localStorage.setItem('set_Prancha Frontal Estática_1_duracao_s', '42');
-    localStorage.setItem('set_Prancha Frontal Estática_1_done', 'true');
+    localStorage.setItem('set_Segunda_Prancha Frontal Estática_1_duracao_s', '42');
+    localStorage.setItem('set_Segunda_Prancha Frontal Estática_1_done', 'true');
     setup();
     expect(seg().value).toBe('42');
     expect(check().getAttribute('aria-pressed')).toBe('true');
@@ -75,14 +75,14 @@ describe('TimedSetRow', () => {
     expect(h.beep).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: '⏹ Parar' }));
     expect(seg().value).toBe('41');
-    expect(localStorage.getItem('set_Prancha Frontal Estática_1_duracao_s')).toBe('41');
+    expect(localStorage.getItem('set_Segunda_Prancha Frontal Estática_1_duracao_s')).toBe('41');
     expect(h.saveSetState).toHaveBeenCalledWith('Segunda', 'Prancha Frontal Estática', 1, { duracao_s: 41 });
   });
 
   it('o check marca a série e abre o descanso do exercício', () => {
     const { onRestStart } = setup();
     fireEvent.click(check());
-    expect(localStorage.getItem('set_Prancha Frontal Estática_1_done')).toBe('true');
+    expect(localStorage.getItem('set_Segunda_Prancha Frontal Estática_1_done')).toBe('true');
     expect(h.saveSetState).toHaveBeenCalledWith('Segunda', 'Prancha Frontal Estática', 1, { completed: true });
     expect(onRestStart).toHaveBeenCalledWith('Prancha Frontal Estática', 30);
   });

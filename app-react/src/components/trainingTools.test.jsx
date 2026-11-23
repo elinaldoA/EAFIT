@@ -76,10 +76,10 @@ describe('PlateCalc', () => {
   });
 
   it('parte da carga da série em andamento e calcula por lado', () => {
-    localStorage.setItem('set_Supino Reto com Barra_1_carga', '80');
-    localStorage.setItem('set_Supino Reto com Barra_1_done', 'true');
-    localStorage.setItem('set_Supino Reto com Barra_2_carga', '85');
-    render(<PlateCalc ex={ex} setCount={3} />);
+    localStorage.setItem('set_Segunda_Supino Reto com Barra_1_carga', '80');
+    localStorage.setItem('set_Segunda_Supino Reto com Barra_1_done', 'true');
+    localStorage.setItem('set_Segunda_Supino Reto com Barra_2_carga', '85');
+    render(<PlateCalc ex={ex} day={{ dia: 'Segunda' }} setCount={3} />);
     fireEvent.click(screen.getByText(/Anilhas/));
     expect(screen.getByDisplayValue('85')).toBeTruthy();
     expect(screen.getByText('Cada lado: 25 + 5 + 2,5')).toBeTruthy();

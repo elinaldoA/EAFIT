@@ -211,9 +211,9 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   }
 
   async function toggleAllSets(ex, setCount) {
-    const next = !allSetsDone(ex, setCount);
+    const next = !allSetsDone(ex, setCount, day.dia);
     for (let n = 1; n <= setCount; n++) {
-      localStorage.setItem(`set_${ex.nome}_${n}_done`, next);
+      localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_done`, next);
     }
     setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
     bump();
@@ -232,15 +232,15 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
 
     const toFill = [];
     for (let n = 2; n <= setCount; n++) {
-      const existingCarga = localStorage.getItem(`set_${ex.nome}_${n}_carga`);
-      const existingReps = localStorage.getItem(`set_${ex.nome}_${n}_reps`);
+      const existingCarga = localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_carga`);
+      const existingReps = localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_reps`);
       if (!existingCarga && !existingReps) toFill.push(n);
     }
     if (!toFill.length) return;
 
     toFill.forEach(n => {
-      localStorage.setItem(`set_${ex.nome}_${n}_carga`, carga);
-      localStorage.setItem(`set_${ex.nome}_${n}_reps`, reps);
+      localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_carga`, carga);
+      localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_reps`, reps);
     });
     setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
     bump();
@@ -257,8 +257,8 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   // SetRow a reler o valor) e reaproveita fillOtherSets pra propagar às demais
   // séries vazias quando há um alvo de reps (não há no caso de deload).
   async function applySuggestion(ex, setCount, carga, reps) {
-    localStorage.setItem(`set_${ex.nome}_1_carga`, carga);
-    if (reps != null) localStorage.setItem(`set_${ex.nome}_1_reps`, reps);
+    localStorage.setItem(`set_${day.dia}_${ex.nome}_1_carga`, carga);
+    if (reps != null) localStorage.setItem(`set_${day.dia}_${ex.nome}_1_reps`, reps);
     setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
     bump();
     toast(t('🎯 Sugestão aplicada na Série 1'));
@@ -290,7 +290,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   // o descanso só entra ao fechar a volta (lib/supersets.js). No modo ao vivo
   // quem troca de exercício e conta o descanso é o LiveWorkoutModal.
   function handleGroupSetDone(group, ex, n, live) {
-    const step = nextInGroup(group, ex.nome, n, (nome, k) => localStorage.getItem(`set_${nome}_${k}_done`) === 'true');
+    const step = nextInGroup(group, ex.nome, n, (nome, k) => localStorage.getItem(`set_${day.dia}_${nome}_${k}_done`) === 'true');
     if (live) live.onGroupStep(ex, step);
     else if (step.rest && step.seconds > 0) { markRest(step.seconds); onRestStart(ex.nome, step.seconds); }
   }

@@ -58,9 +58,9 @@ describe('SetRow — gravação vinda de fora (version)', () => {
     const props = { ex: EX, n: 2, day: DAY, bump: vi.fn(), onRestStart: vi.fn(), started: true };
     const { rerender } = render(<SetRow {...props} version="0" />);
     const button = check();
-    localStorage.setItem('set_Supino Reto_2_carga', '60');
-    localStorage.setItem('set_Supino Reto_2_reps', '10');
-    localStorage.setItem('set_Supino Reto_2_done', 'true');
+    localStorage.setItem('set_Segunda_Supino Reto_2_carga', '60');
+    localStorage.setItem('set_Segunda_Supino Reto_2_reps', '10');
+    localStorage.setItem('set_Segunda_Supino Reto_2_done', 'true');
     rerender(<SetRow {...props} version="1" />);
     expect(carga().value).toBe('60');
     expect(reps().value).toBe('10');
@@ -81,15 +81,15 @@ describe('SetRow — gravação vinda de fora (version)', () => {
     expect(version).toBe(1);
     fireEvent.click(button);
     expect(check().getAttribute('aria-pressed')).toBe('true');
-    expect(localStorage.getItem('set_Supino Reto_1_done')).toBe('true');
+    expect(localStorage.getItem('set_Segunda_Supino Reto_1_done')).toBe('true');
   });
 });
 
 describe('SetRow — registro de carga e reps', () => {
   it('começa com o que já estava salvo no aparelho', () => {
-    localStorage.setItem('set_Supino Reto_1_carga', '80');
-    localStorage.setItem('set_Supino Reto_1_reps', '8');
-    localStorage.setItem('set_Supino Reto_1_done', 'true');
+    localStorage.setItem('set_Segunda_Supino Reto_1_carga', '80');
+    localStorage.setItem('set_Segunda_Supino Reto_1_reps', '8');
+    localStorage.setItem('set_Segunda_Supino Reto_1_done', 'true');
     setup();
     expect(carga().value).toBe('80');
     expect(reps().value).toBe('8');
@@ -99,7 +99,7 @@ describe('SetRow — registro de carga e reps', () => {
   it('digitar guarda local na hora e salva no banco só depois da pausa', async () => {
     const { bump } = setup();
     fireEvent.change(carga(), { target: { value: '82.5' } });
-    expect(localStorage.getItem('set_Supino Reto_1_carga')).toBe('82.5');
+    expect(localStorage.getItem('set_Segunda_Supino Reto_1_carga')).toBe('82.5');
     expect(bump).toHaveBeenCalled();
     expect(h.saveSetState).not.toHaveBeenCalled();
 
@@ -127,7 +127,7 @@ describe('SetRow — registro de carga e reps', () => {
   });
 
   it('campo apagado salva null', async () => {
-    localStorage.setItem('set_Supino Reto_1_carga', '80');
+    localStorage.setItem('set_Segunda_Supino Reto_1_carga', '80');
     setup();
     fireEvent.change(carga(), { target: { value: '' } });
     await act(async () => { fireEvent.blur(carga()); });
@@ -155,7 +155,7 @@ describe('SetRow — registro de carga e reps', () => {
     setup();
     fireEvent.change(carga(), { target: { value: '50' } });
     await act(async () => { fireEvent.blur(carga()); });
-    expect(localStorage.getItem('set_Supino Reto_1_carga')).toBe('50');
+    expect(localStorage.getItem('set_Segunda_Supino Reto_1_carga')).toBe('50');
     expect(h.saveSetState).not.toHaveBeenCalled();
   });
 
@@ -171,7 +171,7 @@ describe('SetRow — marcar a série', () => {
   it('marcar guarda, avisa a página, inicia o descanso do exercício e salva completed', async () => {
     const { bump, onRestStart } = setup();
     await act(async () => { fireEvent.click(check()); });
-    expect(localStorage.getItem('set_Supino Reto_1_done')).toBe('true');
+    expect(localStorage.getItem('set_Segunda_Supino Reto_1_done')).toBe('true');
     expect(bump).toHaveBeenCalled();
     expect(onRestStart).toHaveBeenCalledWith('Supino Reto', 60);
     expect(h.saveSetState).toHaveBeenCalledWith('Segunda', 'Supino Reto', 1, { completed: true });
@@ -179,7 +179,7 @@ describe('SetRow — marcar a série', () => {
   });
 
   it('desmarcar não inicia descanso e salva completed:false', async () => {
-    localStorage.setItem('set_Supino Reto_1_done', 'true');
+    localStorage.setItem('set_Segunda_Supino Reto_1_done', 'true');
     const { onRestStart } = setup();
     await act(async () => { fireEvent.click(check()); });
     expect(onRestStart).not.toHaveBeenCalled();
@@ -211,8 +211,8 @@ describe('SetRow — marcar a série', () => {
 describe('SetRow — recordes', () => {
   async function markWithCarga(user) {
     if (user) h.user = user;
-    localStorage.setItem('set_Supino Reto_1_carga', '100');
-    localStorage.setItem('set_Supino Reto_1_reps', '5');
+    localStorage.setItem('set_Segunda_Supino Reto_1_carga', '100');
+    localStorage.setItem('set_Segunda_Supino Reto_1_reps', '5');
     setup();
     await act(async () => { fireEvent.click(check()); });
   }
@@ -264,7 +264,7 @@ describe('SetRow — RIR opcional', () => {
     fireEvent.click(check());
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     expect(h.saveSetState).toHaveBeenLastCalledWith('Segunda', 'Supino Reto', 1, { rir: 2 });
-    expect(localStorage.getItem('set_Supino Reto_1_rir')).toBe('2');
+    expect(localStorage.getItem('set_Segunda_Supino Reto_1_rir')).toBe('2');
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     expect(h.saveSetState).toHaveBeenLastCalledWith('Segunda', 'Supino Reto', 1, { rir: null });
   });

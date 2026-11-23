@@ -24,7 +24,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   const { user } = useAuth();
   const { saveSetState, workoutIds } = useWorkout();
   const toast = useToast();
-  const stored = field => localStorage.getItem(`set_${ex.nome}_${n}_${field}`);
+  const stored = field => localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_${field}`);
   const [carga, setCarga] = useState(() => stored('carga') || '');
   const [reps, setReps] = useState(() => stored('reps') || '');
   const [done, setDone] = useState(() => stored('done') === 'true');
@@ -72,7 +72,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   function handleCargaInput(e) {
     const val = e.target.value;
     setCarga(val);
-    localStorage.setItem(`set_${ex.nome}_${n}_carga`, val);
+    localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_carga`, val);
     bump();
     clearTimeout(cargaSaveTimer.current);
     // Salva em background a cada pausa de digitação, mas sem piscar — o flash
@@ -84,7 +84,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   function handleRepsInput(e) {
     const val = e.target.value;
     setReps(val);
-    localStorage.setItem(`set_${ex.nome}_${n}_reps`, val);
+    localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_reps`, val);
     bump();
     clearTimeout(repsSaveTimer.current);
     repsSaveTimer.current = setTimeout(() => flushReps(val, false), 800);
@@ -139,14 +139,14 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   function handleRir(value) {
     const next = rir === String(value) ? '' : String(value);
     setRir(next);
-    localStorage.setItem(`set_${ex.nome}_${n}_rir`, next);
+    localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_rir`, next);
     bump();
     if (user) saveSetState(day.dia, ex.nome, n, { rir: next === '' ? null : Number(next) });
   }
 
   function handleTipo(value) {
     setTipo(value);
-    localStorage.setItem(`set_${ex.nome}_${n}_tipo`, value);
+    localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_tipo`, value);
     bump();
     if (user) saveSetState(day.dia, ex.nome, n, { tipo: value || null });
   }
@@ -154,7 +154,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   async function handleCheck() {
     const next = !done;
     setDone(next);
-    localStorage.setItem(`set_${ex.nome}_${n}_done`, next);
+    localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_done`, next);
     bump();
     if (next) {
       const restSeconds = parseRestSeconds(ex.descanso);

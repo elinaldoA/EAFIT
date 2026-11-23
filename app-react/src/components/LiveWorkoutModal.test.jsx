@@ -40,7 +40,7 @@ function setup(props = {}) {
   return { ...utils, onFinish, onClose, renderExercise };
 }
 
-const markDone = (nome, n) => localStorage.setItem(`set_${nome}_${n}_done`, 'true');
+const markDone = (nome, n) => localStorage.setItem(`set_Segunda_${nome}_${n}_done`, 'true');
 
 // jsdom não implementa scrollTo em elementos
 Element.prototype.scrollTo = () => {};

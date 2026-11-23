@@ -105,7 +105,7 @@ describe('TreinoPage', () => {
     expect(screen.getByText('⚡ Começar treino')).toBeTruthy();
     unmount();
 
-    localStorage.setItem('set_Supino_1_done', 'true');
+    localStorage.setItem('set_Segunda_Supino_1_done', 'true');
     const second = render(<TreinoPage />);
     expect(screen.getByText('⚡ Continuar treino')).toBeTruthy();
     second.unmount();
@@ -139,7 +139,7 @@ describe('TreinoPage', () => {
   describe('Limpar', () => {
     beforeEach(() => {
       localStorage.setItem('treino_Segunda', 'true');
-      localStorage.setItem('set_Supino_1_done', 'true');
+      localStorage.setItem('set_Segunda_Supino_1_done', 'true');
       localStorage.setItem('theme', 'dark');
     });
 
@@ -164,7 +164,7 @@ describe('TreinoPage', () => {
       try {
         fireEvent.click(screen.getByText('Limpar'));
         expect(localStorage.getItem('treino_Segunda')).toBeNull();
-        expect(localStorage.getItem('set_Supino_1_done')).toBeNull();
+        expect(localStorage.getItem('set_Segunda_Supino_1_done')).toBeNull();
         expect(localStorage.getItem('theme')).toBe('dark');
         expect(deleteChain.in).not.toHaveBeenCalled();
         await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
@@ -181,7 +181,7 @@ describe('TreinoPage', () => {
         fireEvent.click(screen.getByText('Limpar'));
         act(() => { mockToast.mock.calls.at(-1)[2].action.onClick(); });
         expect(localStorage.getItem('treino_Segunda')).toBe('true');
-        expect(localStorage.getItem('set_Supino_1_done')).toBe('true');
+        expect(localStorage.getItem('set_Segunda_Supino_1_done')).toBe('true');
         await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
         expect(deleteChain.in).not.toHaveBeenCalled();
         expect(workout.syncNow).not.toHaveBeenCalled();
