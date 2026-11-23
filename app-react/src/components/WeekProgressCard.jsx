@@ -1,10 +1,11 @@
 import { todayName } from '../data/treinoData';
 import { fmtDate, daysUntil } from '../lib/utils';
 import { fmtVolume } from '../lib/workoutHistory';
+import { MUSCLE_LABELS } from '../data/bodyMuscleMap';
 import { t, tFoco } from '../lib/i18n';
 
 // Card "Semana atual": treinos feitos, faixa dos dias, volume e validade do ciclo.
-export default function WeekProgressCard({ workDays, done, total, isDayDone, missedSet, volume, planStartDate, planEndDate, planExpired, planByTrainer }) {
+export default function WeekProgressCard({ workDays, done, total, isDayDone, missedSet, volume, planStartDate, planEndDate, planExpired, planByTrainer, muscles = [] }) {
   return (
     <div className="progress-card">
       <div className="progress-card__row">
@@ -39,6 +40,14 @@ export default function WeekProgressCard({ workDays, done, total, isDayDone, mis
               {' · '}{t('{sinal}{pct}% vs. o mesmo ponto da semana passada', { sinal: volume.deltaPct > 0 ? '+' : '', pct: volume.deltaPct })}
             </span>
           )}
+        </p>
+      )}
+      {muscles.length > 0 && (
+        <p className="progress-card__muscles" aria-label={t('Séries da semana por músculo, abaixo da faixa de referência')}>
+          <span className="progress-card__muscles-label">{t('Séries na semana:')}</span>
+          {muscles.slice(0, 4).map(m => (
+            <span key={m.muscle} className="progress-card__chip">{MUSCLE_LABELS[m.muscle]} {m.count}/{m.min}</span>
+          ))}
         </p>
       )}
       {planEndDate && !planExpired && (

@@ -20,7 +20,18 @@ export async function logDiscomfort(userId, exerciseName, logDate, severity, not
 // Relato de desconforto mais recente (últimos RECENT_DAYS dias) pra um exercício,
 // usado pra avisar o usuário quando o mesmo exercício reincide. Retorna null se
 // não houver nenhum relato recente.
-export async function fetchRecentDiscomfort(userId, exerciseName) {
+// O bloco do exercício e o painel de desconforto pedem o mesmo relato ao mesmo
+// tempo: quem chega no meio reaproveita a consulta em andamento.
+const inFlightDiscomfort = new Map();
+export function fetchRecentDiscomfort(userId, exerciseName) {
+  const key = `${userId}|${exerciseName}`;
+  if (!inFlightDiscomfort.has(key)) {
+    inFlightDiscomfort.set(key, fetchRecentDiscomfortUncached(userId, exerciseName).finally(() => inFlightDiscomfort.delete(key)));
+  }
+  return inFlightDiscomfort.get(key);
+}
+
+async function fetchRecentDiscomfortUncached(userId, exerciseName) {
   const since = parseLocalDate(todayDate());
   since.setDate(since.getDate() - RECENT_DAYS);
 

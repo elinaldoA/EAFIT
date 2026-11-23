@@ -3,7 +3,8 @@ import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { parseRestSeconds } from '../lib/utils';
-import { checkForNewPR } from '../lib/records';
+import { checkForNewPR, invalidateExerciseHistory } from '../lib/records';
+import { adaptRest } from '../lib/restAdapt';
 import { coachSay, noteRecord, speechExercise, speechLoad } from '../lib/coach';
 import { isNotifyEnabled } from '../lib/notifications';
 import { postActivity } from '../lib/friends';
@@ -157,7 +158,10 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
     localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_done`, next);
     bump();
     if (next) {
-      const restSeconds = parseRestSeconds(ex.descanso);
+      // Descanso adaptado ao esforço da série anterior (RIR 0: mais; 3+: menos).
+      const prevRir = n > 1 ? localStorage.getItem(`set_${day.dia}_${ex.nome}_${n - 1}_rir`) : null;
+      const restSeconds = adaptRest(parseRestSeconds(ex.descanso), prevRir);
+      invalidateExerciseHistory();
       if (onSetDone) onSetDone(n);
       else if (restSeconds > 0) onRestStart(ex.nome, restSeconds);
     }

@@ -86,13 +86,13 @@ async function fetchSetsWithDatesFallback(userId, exerciseName) {
 
   const { data: sets, error } = await db
     .from('exercise_sets')
-    .select('workout_id, carga, reps, rir')
+    .select('workout_id, set_number, carga, reps, rir')
     .in('workout_id', ids)
     .eq('exercise_name', exerciseName)
     .eq('completed', true)
     .not('carga', 'is', null);
   if (error) throw error;
-  return (sets || []).map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir, workout_date: dateById.get(s.workout_id) }));
+  return (sets || []).map(s => ({ set_number: s.set_number, carga: s.carga, reps: s.reps, rir: s.rir, workout_date: dateById.get(s.workout_id) }));
 }
 
 // Busca todas as séries concluídas (com carga, reps e data da sessão) de um
@@ -102,12 +102,25 @@ async function fetchSetsWithDatesFallback(userId, exerciseName) {
 // meio reaproveita a consulta em andamento. Só olha os últimos meses, para a
 // consulta não crescer com o histórico inteiro.
 const HISTORY_WINDOW_DAYS = 180;
+// Além da consulta em andamento, guarda o resultado por 30 s: o bi-set remonta
+// o bloco a cada volta e o modo ao vivo reabre o exercício, e cada remontagem
+// repetia a mesma busca. Concluir uma série zera o cache (invalidateExerciseHistory).
+const HISTORY_TTL_MS = 30_000;
 const inFlightHistory = new Map();
+const recentHistory = new Map();
+
+export function invalidateExerciseHistory() {
+  recentHistory.clear();
+}
 
 export function fetchExerciseSetsWithDates(userId, exerciseName) {
   const key = `${userId}|${exerciseName}`;
+  const hit = recentHistory.get(key);
+  if (hit && Date.now() - hit.at < HISTORY_TTL_MS) return Promise.resolve(hit.sets);
   if (!inFlightHistory.has(key)) {
-    const p = fetchExerciseSetsUncached(userId, exerciseName).finally(() => inFlightHistory.delete(key));
+    const p = fetchExerciseSetsUncached(userId, exerciseName)
+      .then(sets => { recentHistory.set(key, { at: Date.now(), sets }); return sets; })
+      .finally(() => inFlightHistory.delete(key));
     inFlightHistory.set(key, p);
   }
   return inFlightHistory.get(key);
@@ -120,14 +133,14 @@ async function fetchExerciseSetsUncached(userId, exerciseName) {
   try {
     const { data, error } = await db
       .from('exercise_sets')
-      .select('carga, reps, rir, workouts!inner(user_id, workout_date)')
+      .select('set_number, carga, reps, rir, workouts!inner(user_id, workout_date)')
       .eq('workouts.user_id', userId)
       .gte('workouts.workout_date', sinceStr)
       .eq('exercise_name', exerciseName)
       .eq('completed', true)
       .not('carga', 'is', null);
     if (error) throw error;
-    return (data || []).map(s => ({ carga: s.carga, reps: s.reps, rir: s.rir, workout_date: s.workouts.workout_date }));
+    return (data || []).map(s => ({ set_number: s.set_number, carga: s.carga, reps: s.reps, rir: s.rir, workout_date: s.workouts.workout_date }));
   } catch (err) {
     console.warn('fetchExerciseSetsWithDates: embed falhou, usando busca em 2 passos', err);
     return fetchSetsWithDatesFallback(userId, exerciseName);
@@ -148,8 +161,20 @@ export async function fetchProgressionSuggestion(userId, exerciseName, repsStr) 
 // ({ carga, reps, workout_date }) — o assistente do Treino busca tudo de uma vez.
 const EASY_RIR = 3;
 // Salto de carga: 2,5 kg numa barra pesada é demais para halter leve ou polia.
-function loadStep(carga) {
+export function loadStep(carga) {
   return carga < 20 ? 1 : 2.5;
+}
+
+// Regra da dupla progressão para mostrar no exercício: faixa "8-12" → mínimo,
+// teto e salto de carga. null quando as reps não são uma faixa numérica.
+export function doubleProgressionRule(repsStr, carga = null) {
+  const m = String(repsStr || '').match(/^\s*(\d+)\s*-\s*(\d+)\s*$/);
+  if (!m) return null;
+  const min = parseInt(m[1], 10);
+  const max = parseInt(m[2], 10);
+  if (!(max > min)) return null;
+  const c = parseFloat(carga);
+  return { min, max, step: loadStep(Number.isFinite(c) ? c : 20) };
 }
 export function progressionFromSets(sets, repsStr) {
   const ceiling = parseRepCeiling(repsStr);

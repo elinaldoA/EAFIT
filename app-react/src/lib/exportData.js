@@ -7,6 +7,7 @@ import { fetchCustomFoods } from './nutritionFoods';
 import { fetchEntriesRange } from './nutritionEntries';
 import { fetchPlan } from './nutritionPlan';
 import { fetchAllDiscomfort } from './discomfort';
+import { fetchAllExerciseNotes } from './exerciseNotes';
 import { fetchUnlockedAchievements } from './achievements';
 import { fetchMeasurements } from './bodyMeasurements';
 import { fetchCheckins } from './checkin';
@@ -106,7 +107,7 @@ export async function gatherUserData(userId) {
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
     friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, charges, surveyAnswers, leagueResults,
-    proteinLogs, customFoods, nutritionEntries, nutritionPlan, runs, runShoes, runComments, runClubs,
+    proteinLogs, customFoods, nutritionEntries, nutritionPlan, runs, runShoes, runComments, runClubs, exerciseNotes,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
     safe('workoutExercises', () => fetchWorkoutExercises(workoutIds), []),
@@ -132,6 +133,7 @@ export async function gatherUserData(userId) {
     safe('runShoes', () => fetchMyRunShoes(userId), []),
     safe('runComments', fetchMyRunComments, []),
     safe('runClubs', fetchMyRunClubs, []),
+    safe('exerciseNotes', () => fetchAllExerciseNotes(userId), []),
   ]);
 
   return {
@@ -141,7 +143,7 @@ export async function gatherUserData(userId) {
     workoutPlans: plans, planDays, planExercises,
     weightLogs, bodyMeasurements, dailyCheckins, runs, runShoes, runComments, runClubs,
     progressPhotos: photos, waterLogs, proteinLogs, customFoods, nutritionEntries, nutritionPlan,
-    discomfortReports, achievements,
+    discomfortReports, achievements, exerciseNotes,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments, charges,
     feedback, notifications, surveyAnswers, leagueResults,

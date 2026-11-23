@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
-import { fetchProgressionSuggestion, fetchPlateauStatus } from '../lib/records';
+import { fetchProgressionSuggestion, fetchPlateauStatus, fetchExerciseSetsWithDates, doubleProgressionRule } from '../lib/records';
+import { lastSessionSets } from '../lib/exerciseHistory';
+import { parseTempo } from '../lib/tempo';
+import { todayDate } from '../data/treinoData';
+import ExerciseNote from './ExerciseNote';
+import ExerciseHistory from './ExerciseHistory';
 import { fetchRecentDiscomfort } from '../lib/discomfort';
 import { substituteExercise } from '../lib/workoutPlans';
 import { logExerciseSwap } from '../lib/tracking';
@@ -29,7 +34,7 @@ import { fmtDate } from '../lib/utils';
 import { t, decimal, tEx, tReps } from '../lib/i18n';
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
 // destaque no próprio cabeçalho, então o bloco omite os dele.
-export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, open, version, onToggleAll, onFillOthers, onApplySuggestion, started, hideName = false }) {
+export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, open, version, onToggleAll, onFillOthers, onApplySuggestion, onRepeatLast, started, hideName = false }) {
   const { user } = useAuth();
   const { refreshPlan, periodization } = useWorkout();
   const { config } = useAppConfig();
@@ -38,6 +43,8 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
   // A busca do histórico terminou (sem isso a dica de "primeira vez" piscaria durante o carregamento).
   const [suggestionDone, setSuggestionDone] = useState(false);
   const [plateau, setPlateau] = useState(null);
+  // Séries da última sessão (antes de hoje), para "repetir o último treino".
+  const [lastSets, setLastSets] = useState([]);
   const [discomfort, setDiscomfort] = useState(null);
   const [substituting, setSubstituting] = useState(false);
   const setCount = parseInt(ex.series, 10);
@@ -52,6 +59,9 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
     const stuck = fetchPlateauStatus(user.id, ex.nome, ex.reps)
       .then(p => { if (!cancelled) setPlateau(p); return p; })
       .catch(err => { console.error('fetchPlateauStatus:', err); return null; });
+    fetchExerciseSetsWithDates(user.id, ex.nome)
+      .then(sets => { if (!cancelled) setLastSets(lastSessionSets(sets, todayDate())); })
+      .catch(err => console.error('lastSessionSets:', err));
     // No modo ao vivo (hideName) o treinador por voz também fala a sugestão,
     // logo depois de apresentar o exercício — só antes da primeira série (num
     // bi-set o bloco remonta a cada volta, e a sugestão não precisa se repetir).
@@ -111,6 +121,9 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
   const workKg = localStorage.getItem(`set_${day.dia}_${ex.nome}_1_carga`) || plateau?.suggestedDeload || suggestion?.suggestedCarga || null;
   // Troca geral só pros exercícios de força do plano (não o pós-treino) que têm id.
   const canSwap = !!user && !!ex.id && day.exercicios.some(e => e.nome === ex.nome);
+  const rule = !timed ? doubleProgressionRule(ex.reps, suggestion?.lastCarga ?? workKg) : null;
+  const tempo = parseTempo(ex.tecnica);
+  const canRepeat = !!onRepeatLast && lastSets.length > 0;
   const goal = isFlagOn(config.flags, 'metas_carga') ? goalFor(user, ex.nome) : null;
   return (
     <div className="ex-block">
@@ -129,6 +142,12 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
             ) : periodization.step && suggestion?.lastCarga ? (
               <p className="ex-block__intensity">{t('📈 Meta da semana {week}: {target} kg', { week: periodization.week, target: decimal(suggestion.lastCarga + periodization.step) })}</p>
             ) : null
+          )}
+          {rule && !ex.deload && (
+            <p className="ex-block__rule">{t('📐 Faixa {min}–{max}: bata {max} reps em todas as séries e suba {step} kg', { min: rule.min, max: rule.max, step: decimal(rule.step) })}</p>
+          )}
+          {tempo && (
+            <p className="ex-block__rule">{t('⏱ Cadência {label}: descer {down}s · pausa {bottom}s · subir {up}s', { label: tempo.label, down: tempo.down, bottom: tempo.bottom, up: tempo.up })}</p>
           )}
           {isIntensity(ex.intensidade) && (
             <p className="ex-block__intensity" title={intensityHint(ex.intensidade)}>⚡ {intensityLabel(ex.intensidade)} — {intensityHint(ex.intensidade)}</p>
@@ -165,6 +184,14 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
       </div>
 
       {warmups > 0 && <WarmupSets key={`warm-${version}`} ex={ex} day={day} count={warmups} workKg={workKg} started={started} />}
+      {warmups > 0 && !workKg && suggestionDone && (
+        <p className="ex-block__rule">{t('Sem histórico aqui: faça o aquecimento leve. Quando anotar a carga da Série 1, as cargas do aquecimento se ajustam.')}</p>
+      )}
+      {canRepeat && (
+        <button type="button" className="ex-block__apply-btn ex-block__repeat" disabled={!started} onClick={() => onRepeatLast(lastSets)}>
+          {t('↩︎ Repetir o último treino')}
+        </button>
+      )}
 
       <div className="ex-block__sets">
         {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (timed
@@ -175,6 +202,12 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
 
       {isFlagOn(config.flags, 'anilhas') && <PlateCalc ex={ex} day={day} setCount={setCount} />}
 
+      {user && (
+        <div className="ex-block__tools">
+          <ExerciseNote userId={user.id} nome={ex.nome} started={started} />
+          <ExerciseHistory userId={user.id} nome={ex.nome} />
+        </div>
+      )}
       {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
       {showSwap && (
         <button type="button" className="ex-block__swap-btn" disabled={substituting} onClick={handleSubstitute}>

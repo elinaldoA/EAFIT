@@ -78,5 +78,31 @@ export function useSetActions({ day, bump }) {
     if (reps != null) await fillOtherSets(ex, setCount, carga, reps);
   }
 
-  return { markVersions, toggleAllSets, fillOtherSets, applySuggestion };
+  // Repete o último treino do exercício: cada série recebe a carga e as reps
+  // da série de mesmo número da sessão anterior (séries a mais repetem a última).
+  // Sobrescreve o que já estava digitado; séries já concluídas ficam como estão.
+  async function repeatLast(ex, setCount, lastSets) {
+    if (!lastSets?.length) return;
+    const patches = [];
+    for (let n = 1; n <= setCount; n++) {
+      if (localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_done`) === 'true') continue;
+      const src = lastSets[Math.min(n, lastSets.length) - 1];
+      localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_carga`, String(src.carga));
+      if (src.reps != null) localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_reps`, String(src.reps));
+      patches.push([n, { carga: src.carga, ...(src.reps != null && { reps: src.reps }) }]);
+    }
+    if (!patches.length) return;
+    setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
+    bump();
+    toast(t('↩︎ Cargas do último treino aplicadas'));
+    if (user) {
+      try {
+        await Promise.all(patches.map(([n, patch]) => saveSetState(day.dia, ex.nome, n, patch)));
+      } catch (err) {
+        console.error('repeatLast:', err);
+      }
+    }
+  }
+
+  return { markVersions, toggleAllSets, fillOtherSets, applySuggestion, repeatLast };
 }

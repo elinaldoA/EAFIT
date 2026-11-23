@@ -15,7 +15,7 @@ const h = vi.hoisted(() => ({
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: h.user }) }));
 vi.mock('../context/useWorkout', () => ({ useWorkout: () => ({ saveSetState: h.saveSetState, workoutIds: { Segunda: 'w-seg' } }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
-vi.mock('../lib/records', () => ({ checkForNewPR: (...a) => h.checkForNewPR(...a) }));
+vi.mock('../lib/records', () => ({ checkForNewPR: (...a) => h.checkForNewPR(...a), invalidateExerciseHistory: () => {} }));
 vi.mock('../lib/coach', () => ({ coachSay: (...a) => h.coachSay(...a), noteRecord: () => {}, speechExercise: n => n, speechLoad: n => String(n) }));
 vi.mock('../lib/friends', () => ({ postActivity: (...a) => h.postActivity(...a) }));
 vi.mock('../lib/pushSubscriptions', () => ({ sendPushToSelf: (...a) => h.sendPushToSelf(...a) }));

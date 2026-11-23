@@ -31,8 +31,8 @@ import WeekProgressCard from '../components/WeekProgressCard';
 import { useWorkoutReset } from '../hooks/useWorkoutReset';
 import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice, QUICK_OPTIONS } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
-import { activePause } from '../lib/pause';
-import { fetchLibraryMap } from '../lib/muscleVolume';
+import { activePause, addDays } from '../lib/pause';
+import { fetchLibraryMap, weekMuscleProgress } from '../lib/muscleVolume';
 import {
   fetchRecentSets, buildTrainingCoach, sorePlannedMuscles, exerciseReadings, missedDays, weekBehind,
   weekVolume, hardWeekStreak, deloadStatus,
@@ -131,6 +131,9 @@ export default function TreinoPage() {
   const hardWeeks = history ? hardWeekStreak(history.sets, todayStr) : null;
   const deload = deloadStatus({ periodization, hardWeeks });
   const volume = history ? weekVolume(history.sets, todayStr) : null;
+  // Só com histórico anterior à semana (mesma regra do assistente): na primeira semana tudo estaria "atrás".
+  const muscles = history && history.sets.some(s => s.workout_date < addDays(todayStr, -6))
+    ? weekMuscleProgress(planDays, history.sets, todayStr, history.libMap) : [];
   const todayHasSets = todaySets.total > 0;
   // Primeiro treino de quem acabou de chegar: se hoje é descanso no plano, oferece o próximo dia.
   const firstDay = history && history.sets.length === 0 && isNewAccount(user)
@@ -188,7 +191,7 @@ export default function TreinoPage() {
       )}
       {!today && !loading && coach && <div className="today-card">{coachEl}</div>}
       <WeekProgressCard
-        workDays={workDays} done={done} total={total} isDayDone={isDayDone} missedSet={missedSet} volume={volume}
+        workDays={workDays} done={done} total={total} isDayDone={isDayDone} missedSet={missedSet} volume={volume} muscles={muscles}
         planStartDate={planStartDate} planEndDate={planEndDate} planExpired={planExpired} planByTrainer={planByTrainer}
       />
       <div className="toolbar">

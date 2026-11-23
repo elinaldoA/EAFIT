@@ -68,3 +68,17 @@ describe('músculos do plano', () => {
     expect(m.has('chest')).toBe(false);
   });
 });
+
+import { weekMuscleProgress } from './muscleVolume';
+
+describe('weekMuscleProgress', () => {
+  const plan = [{ dia: 'Segunda', exercicios: [{ nome: 'Supino Reto', series: '3' }, { nome: 'Rosca Direta', series: '3' }], pos: [] }];
+  const sets = [
+    ...Array.from({ length: 4 }, () => ({ exercise_name: 'Supino Reto', workout_date: '2027-03-05' })),
+    { exercise_name: 'Supino Reto', workout_date: '2027-02-01' },
+  ];
+  it('lista os músculos do plano abaixo de 10 séries nos últimos 7 dias, do mais atrasado', () => {
+    const r = weekMuscleProgress(plan, sets, '2027-03-06');
+    expect(r).toEqual([{ muscle: 'biceps', count: 0, min: 10 }, { muscle: 'chest', count: 4, min: 10 }]);
+  });
+});

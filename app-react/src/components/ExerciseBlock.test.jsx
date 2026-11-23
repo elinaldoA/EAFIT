@@ -21,7 +21,11 @@ vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../lib/records', () => ({
   fetchProgressionSuggestion: (...a) => h.fetchProgressionSuggestion(...a),
   fetchPlateauStatus: (...a) => h.fetchPlateauStatus(...a),
+  fetchExerciseSetsWithDates: () => Promise.resolve([]),
+  doubleProgressionRule: () => null,
 }));
+vi.mock('./ExerciseNote', () => ({ default: () => null }));
+vi.mock('./ExerciseHistory', () => ({ default: () => null }));
 vi.mock('../lib/discomfort', () => ({ fetchRecentDiscomfort: (...a) => h.fetchRecentDiscomfort(...a) }));
 vi.mock('../lib/workoutPlans', () => ({ substituteExercise: (...a) => h.substituteExercise(...a) }));
 // Filhos pesados viram stubs: aqui importa o que o bloco decide mostrar.

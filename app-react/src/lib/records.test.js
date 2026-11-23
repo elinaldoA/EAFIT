@@ -7,9 +7,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const { mockDb } = vi.hoisted(() => ({ mockDb: { from: vi.fn() } }));
 vi.mock('./supabase', () => ({ db: mockDb }));
 
-import { estimateOneRepMax, fetchProgressionSuggestion, fetchPlateauStatus } from './records';
+import { estimateOneRepMax, fetchProgressionSuggestion, fetchPlateauStatus, invalidateExerciseHistory } from './records';
 
 beforeEach(() => {
+  invalidateExerciseHistory();
   mockDb.from.mockClear();
 });
 
@@ -160,5 +161,23 @@ describe('fetchPlateauStatus', () => {
   it('retorna null com menos de 3 sessões distintas', async () => {
     mockSets([{ carga: 50, reps: 8, date: '2026-07-01' }]);
     expect(await fetchPlateauStatus('u1', 'Supino Reto', '8-10')).toBeNull();
+  });
+});
+
+import { doubleProgressionRule, loadStep } from './records';
+
+describe('doubleProgressionRule', () => {
+  it('lê faixa de reps e o salto de carga', () => {
+    expect(doubleProgressionRule('8-12', 40)).toEqual({ min: 8, max: 12, step: 2.5 });
+    expect(doubleProgressionRule('10-15', 10)).toEqual({ min: 10, max: 15, step: 1 });
+  });
+  it('sem faixa numérica não há regra', () => {
+    expect(doubleProgressionRule('10')).toBeNull();
+    expect(doubleProgressionRule('até a falha')).toBeNull();
+    expect(doubleProgressionRule('12-8')).toBeNull();
+  });
+  it('loadStep: 1 kg abaixo de 20 kg, senão 2,5', () => {
+    expect(loadStep(19)).toBe(1);
+    expect(loadStep(20)).toBe(2.5);
   });
 });

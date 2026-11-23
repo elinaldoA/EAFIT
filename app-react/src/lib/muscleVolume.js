@@ -115,6 +115,19 @@ export async function fetchWeekSets(userId, today = todayDate()) {
   return data || [];
 }
 
+// Progresso semanal dos músculos que o plano treina, para a tela do Treino:
+// séries dos últimos 7 dias contra o mínimo da faixa (10), só de quem ainda
+// não chegou lá, do mais atrasado para o menos. [{ muscle, count, min }]
+export function weekMuscleProgress(planDays, sets, today, libraryMap = null) {
+  const since = addDays(today, -6);
+  const counts = countSetsByMuscle((sets || []).filter(s => s.workout_date >= since && s.workout_date <= today), libraryMap);
+  const planned = plannedMuscles(planDays, libraryMap);
+  return MUSCLES
+    .filter(m => planned.has(m) && counts[m] < WEEKLY_MIN)
+    .sort((a, b) => counts[a] - counts[b])
+    .map(m => ({ muscle: m, count: counts[m], min: WEEKLY_MIN }));
+}
+
 // Músculos de um dia do plano, pelos exercícios (para a mobilidade do dia).
 export function dayMuscles(day) {
   return plannedMuscles(day ? [day] : []);

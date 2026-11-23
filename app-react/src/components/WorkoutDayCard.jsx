@@ -37,7 +37,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
   const { config } = useAppConfig();
   const [open, setOpen] = useState(isToday);
   const [checked, setChecked] = useState(() => localStorage.getItem(`treino_${day.dia}`) === 'true');
-  const { markVersions, toggleAllSets, fillOtherSets, applySuggestion } = useSetActions({ day, bump });
+  const { markVersions, toggleAllSets, fillOtherSets, applySuggestion, repeatLast } = useSetActions({ day, bump });
   const [notesOpen, setNotesOpen] = useState(false);
   const { notes, handleNotesInput, handleNotesBlur } = useWorkoutNotes({ day, user, saveWorkoutNotes });
   // Muda ao sair do modo ao vivo: remonta os SetRow da lista, que leem o
@@ -129,6 +129,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         onToggleAll={() => toggleAllSets(ex, parseInt(ex.series, 10))}
         onFillOthers={(carga, reps) => fillOtherSets(ex, parseInt(ex.series, 10), carga, reps)}
         onApplySuggestion={(carga, reps) => applySuggestion(ex, parseInt(ex.series, 10), carga, reps)}
+        onRepeatLast={lastSets => repeatLast(ex, parseInt(ex.series, 10), lastSets)}
       />
     );
   }
