@@ -16,7 +16,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 begin
   new.tagged := coalesce(
     (select array_agg(t) from (
@@ -27,7 +27,7 @@ begin
     '{}');
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists runs_keep_friend_tags on public.runs;
 create trigger runs_keep_friend_tags
@@ -40,7 +40,7 @@ language sql
 stable
 security definer
 set search_path = public
-as $
+as $$
   select o.other, public.friend_display_name(o.other)
   from (
     select case when f.requester_id = auth.uid() then f.addressee_id else f.requester_id end as other
@@ -49,7 +49,7 @@ as $
   ) o
   where not public.is_deactivated(o.other)
   order by 2;
-$;
+$$;
 
 revoke all on function public.run_taggable_friends() from public, anon;
 grant execute on function public.run_taggable_friends() to authenticated;
