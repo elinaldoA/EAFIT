@@ -938,3 +938,5 @@
 .ex-history__meta { color: var(--text-muted); font-size: var(--fs-xs); }
 .progress-card__muscles { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0 0; font-size: var(--fs-xs); color: var(--text-muted); }
 .progress-card__chip { border: 1px solid var(--border); border-radius: var(--r-full); padding: 1px 8px; font-variant-numeric: tabular-nums; }
+
+.plan-ex-row__warn { margin: 0; font-size: var(--fs-xs); color: var(--warning); font-weight: 600; }

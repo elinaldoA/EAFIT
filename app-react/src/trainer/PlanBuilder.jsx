@@ -12,6 +12,7 @@ import PlanProgressionFields from '../components/PlanProgressionFields';
 import ExerciseExtras from '../components/ExerciseExtras';
 
 import { useDeferredRemoval } from '../lib/useDeferredRemoval';
+import { repeatedNames, isRepeatedName } from '../lib/planDuplicates';
 import { t, nExercicios, nSeries } from '../lib/i18n';
 // Montagem de treino: dias da semana, foco, exercícios (com sugestão da
 // biblioteca do app) e prazo. Com `client`, ao enviar vira o plano ativo do
@@ -199,6 +200,7 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
                 </div>
                 <input className="input input--sm" aria-label={t('Técnica / observação (opcional)')} placeholder={t('Técnica / observação (opcional)')} value={ex.tecnica}
                   onChange={e => setEx(di, ei, { tecnica: e.target.value })} />
+                {isRepeatedName(ex.nome, repeatedNames(day.exercicios)) && <p className="plan-ex-row__warn" role="alert">{t('⚠️ Há outro exercício com este nome neste dia: eles dividem as mesmas séries. Mude o nome (ex.: "{nome} (2)").', { nome: ex.nome })}</p>}
                 <ExerciseExtras grupo={ex.grupo} aquecimento={ex.aquecimento} intensidade={ex.intensidade} onChange={patch => setEx(di, ei, patch)} />
               </div>
               <button type="button" className="plan-row__dup" aria-label={t('Duplicar exercício')} disabled={day.exercicios.length >= MAX_EXERCISES}

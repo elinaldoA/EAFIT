@@ -1086,6 +1086,7 @@ export default {
   'Séries na semana:': 'Sets this week:',
   '💪 Conta como: {musculo}': '💪 Counts as: {musculo}',
   'alterar': 'change',
+  '⚠️ Há outro exercício com este nome neste dia: eles dividem as mesmas séries. Mude o nome (ex.: "{nome} (2)").': '⚠️ Another exercise on this day has the same name: they share the same sets. Rename one (e.g. "{nome} (2)").',
   '💪 Qual músculo este exercício trabalha?': '💪 Which muscle does this exercise train?',
   'Escolher…': 'Choose…',
 };

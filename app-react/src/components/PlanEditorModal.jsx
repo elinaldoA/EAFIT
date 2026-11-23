@@ -15,6 +15,7 @@ import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import Loading from './Loading';
 import ExerciseExtras from './ExerciseExtras';
 import PlanProgressionFields from './PlanProgressionFields';
+import { repeatedNames, isRepeatedName } from '../lib/planDuplicates';
 
 import { t } from '../lib/i18n';
 const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
@@ -148,7 +149,7 @@ function MoveButtons({ canUp, canDown, onMove }) {
 }
 
 // extras: bi-set e aquecimento, só nos exercícios de força (o pós-treino não tem).
-function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = false }) {
+function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = false, repeated = false }) {
   const [local, setLocal] = useState(ex);
   // Ressincroniza só ao trocar de exercício (por id) — incluir `ex` inteiro
   // resetaria `local` a cada render do pai, descartando edição em andamento
@@ -166,6 +167,7 @@ function ExerciseRow({ ex, canUp, canDown, onMove, onChange, onDelete, extras = 
       <div className="plan-ex-row__fields">
         <input className="input input--sm plan-ex-row__name" aria-label={t('Exercício')} placeholder={t('Exercício')} value={local.nome}
           onChange={e => setLocal(l => ({ ...l, nome: e.target.value }))} onBlur={() => save('nome')} />
+        {repeated && <p className="plan-ex-row__warn" role="alert">{t('⚠️ Há outro exercício com este nome neste dia: eles dividem as mesmas séries. Mude o nome (ex.: "{nome} (2)").', { nome: local.nome })}</p>}
         {/* Rótulo em cima de cada campo: preenchido, "3 · 8-10 · 60s" não diz qual é qual. */}
         <div className="plan-ex-row__nums">
           <label className="plan-ex-row__extra">
@@ -276,6 +278,8 @@ export default function PlanEditorModal({ onClose }) {
     exercicios: rawDay.exercicios.filter(e => !removal.hidden.has(e.id)),
     pos: rawDay.pos.filter(e => !removal.hidden.has(e.id)),
   } : rawDay), [rawDay, removal.hidden]);
+
+  const dayRepeated = useMemo(() => (day ? repeatedNames(day.exercicios, day.pos) : null), [day]);
 
   async function handleCreatePlan(copy) {
     const name = newPlanName.trim();
@@ -501,7 +505,7 @@ export default function PlanEditorModal({ onClose }) {
                   <div className="plan-editor__section-title">{t('Exercícios')}</div>
                   {day.exercicios.map((ex, i) => (
                     <ExerciseRow
-                      key={ex.id} ex={ex}
+                      key={ex.id} ex={ex} repeated={isRepeatedName(ex.nome, dayRepeated)}
                       canUp={i > 0} canDown={i < day.exercicios.length - 1}
                       onMove={dir => handleMove(false, ex.id, dir)}
                       onChange={handleUpdateExercise} onDelete={handleDeleteExercise} extras
@@ -512,7 +516,7 @@ export default function PlanEditorModal({ onClose }) {
                   <div className="plan-editor__section-title">{t('Pós-treino')}</div>
                   {day.pos.map((p, i) => (
                     <ExerciseRow
-                      key={p.id} ex={p}
+                      key={p.id} ex={p} repeated={isRepeatedName(p.nome, dayRepeated)}
                       canUp={i > 0} canDown={i < day.pos.length - 1}
                       onMove={dir => handleMove(true, p.id, dir)}
                       onChange={handleUpdateExercise} onDelete={handleDeleteExercise}
