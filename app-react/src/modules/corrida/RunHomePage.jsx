@@ -21,6 +21,7 @@ import { requestMotionPermission } from './cadence';
 import { ShoePicker } from './Shoes';
 import GuidedSetup from './GuidedSetup';
 import GpxImport from './GpxImport';
+import RoutePlanner from './RoutePlanner';
 import StartCountdown from './StartCountdown';
 import { newMedals } from './challenges';
 import { startRun, setLiveRun, getLiveRun } from './liveRun';
@@ -208,6 +209,7 @@ export default function RunHomePage() {
   const [manualOpen, setManualOpen] = useState(false);
   const [guidedOpen, setGuidedOpen] = useState(false);
   const [gpxOpen, setGpxOpen] = useState(false);
+  const [plannerOpen, setPlannerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [countdown, setCountdown] = useState(null); // { start } enquanto conta 3-2-1
   const [gps, setGps] = useState(() => readPref(GPS_KEY) && geoSupported());
@@ -355,6 +357,11 @@ export default function RunHomePage() {
             {t('📥 Importar corrida de outro app ou relógio (GPX/FIT)')}
           </button>
         )}
+        {!plannerOpen && !live && (
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setPlannerOpen(true)}>
+            {t('🗺️ Planejar uma rota')}
+          </button>
+        )}
         {doneToday && <p className="run-today__done">{t('✅ Corrida de hoje registrada')}</p>}
         {!guidedOpen && !live && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGuidedOpen(true); setManualOpen(false); setGpxOpen(false); }}>
@@ -369,6 +376,7 @@ export default function RunHomePage() {
       </div>
 
       {gpxOpen && <GpxImport onClose={() => setGpxOpen(false)} />}
+      {plannerOpen && <RoutePlanner onClose={() => setPlannerOpen(false)} />}
       {guidedOpen && <GuidedSetup gps={gps} onStart={s => begin(false, s)} onCancel={() => setGuidedOpen(false)} />}
       {manualOpen && <ManualRunForm userId={user?.id} onClose={() => setManualOpen(false)} />}
 

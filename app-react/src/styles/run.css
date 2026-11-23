@@ -219,6 +219,15 @@
 .run-segments__board li { display: grid; grid-template-columns: 2.5em 1fr auto; gap: 2px var(--sp-2); align-items: baseline; padding: 6px 8px; border-radius: var(--r-md); }
 .run-segments__board small { grid-column: 2 / 4; color: var(--text-dim); font-size: var(--fs-xs); }
 .run-segments__me { background: var(--primary-glow); }
+.run-plan { display: flex; flex-direction: column; gap: var(--sp-3); }
+.run-plan__map { touch-action: none; cursor: crosshair; user-select: none; }
+.run-plan__dot { fill: var(--surface); stroke: var(--primary); stroke-width: 2.5; }
+.run-plan__zoom { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 6px; }
+.run-plan__zoom button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-2); background: var(--surface); color: var(--text); font-size: 20px; line-height: 1; cursor: pointer; }
+.run-plan__zoom button:disabled { opacity: .4; cursor: default; }
+.run-plan__stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+.run-plan__stats strong { display: block; font-size: var(--fs-lg); }
+.run-plan__stats small { color: var(--text-dim); font-size: var(--fs-xs); }
 .run-route__heat { fill: none; stroke: var(--primary); stroke-opacity: .3; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .run-map--full .run-route__heat { stroke-width: 4; }
 .run-route__line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }

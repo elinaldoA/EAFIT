@@ -113,7 +113,7 @@ export const MAX_FULL_ZOOM = 19;
 const MIN_MAP_ZOOM = 3;
 
 // Posição em pixels do "mundo" no zoom z.
-function worldPx(lat, lon, z) {
+export function worldPx(lat, lon, z) {
   const n = TILE_SIZE * 2 ** z;
   const phi = (Math.max(-85.05, Math.min(85.05, lat)) * Math.PI) / 180;
   return [((lon + 180) / 360) * n, ((1 - Math.log(Math.tan(phi) + 1 / Math.cos(phi)) / Math.PI) / 2) * n];
