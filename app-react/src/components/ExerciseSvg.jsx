@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ANIMATIONS } from '../data/exerciseSvg';
-import { buildTimeline, FAR_OFFSET, layout, LEN, sample, THICK } from '../lib/exerciseFigure';
+import { buildTimeline, FAR_OFFSET, layout, LEN, sample } from '../lib/exerciseFigure';
 import { t } from '../lib/i18n';
 
 const GROUND = 160; // y do SVG onde fica o topo do tapete
@@ -42,7 +42,10 @@ function torsoSlice(l, s0, s1, off, facing) {
 function MuscleLayer({ muscles, l, facing, e }) {
   const style = { opacity: 0.28 + 0.68 * e };
   const stroke = (pts, w, key) => (
-    <polyline key={key} points={fmt(pts.map(p => px(p)))} fill="none" className="fig__muscle" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+    <g key={key}>
+      <polyline points={fmt(pts.map(p => px(p)))} fill="none" className="fig__muscle" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={fmt(pts.map(p => px(p)))} fill="none" className="fig__fiber" strokeWidth={w * 0.3} strokeLinecap="round" strokeLinejoin="round" />
+    </g>
   );
   const dot = (p, r, key) => {
     const [x, y] = px(p);
@@ -71,39 +74,77 @@ function MuscleLayer({ muscles, l, facing, e }) {
   return <g style={style}>{parts}</g>;
 }
 
-function Limb({ pts, widths, far }) {
+// Cápsula afunilada entre dois pontos (raio r1 numa ponta, r2 na outra).
+function capsule(a, b, r1, r2) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+  const f = n => n.toFixed(1);
+  const p1 = [a[0] + nx * r1, a[1] + ny * r1];
+  const p2 = [b[0] + nx * r2, b[1] + ny * r2];
+  const q2 = [b[0] - nx * r2, b[1] - ny * r2];
+  const q1 = [a[0] - nx * r1, a[1] - ny * r1];
+  return `M${f(p1[0])},${f(p1[1])} L${f(p2[0])},${f(p2[1])} A${f(r2)},${f(r2)} 0 0 0 ${f(q2[0])},${f(q2[1])} L${f(q1[0])},${f(q1[1])} A${f(r1)},${f(r1)} 0 0 0 ${f(p1[0])},${f(p1[1])}Z`;
+}
+
+const along = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+
+function Limb({ pts, radii, far, shorts, facing, foot, hand }) {
   const p = pts.map(q => px(q, far));
-  return (
-    <g className={far ? 'fig__limb fig__limb--far' : 'fig__limb'}>
-      {[0, 1].map(i => (
-        <line key={i} x1={p[i][0]} y1={p[i][1]} x2={p[i + 1][0]} y2={p[i + 1][1]} strokeWidth={widths[i]} strokeLinecap="round" />
-      ))}
-    </g>
-  );
+  const cls = far ? 'fig__skin fig__skin--far' : 'fig__skin';
+  const parts = [
+    <path key="a" className={cls} d={capsule(p[0], p[1], radii[0], radii[1])} />,
+    <path key="b" className={cls} d={capsule(p[1], p[2], radii[1], radii[2])} />,
+  ];
+  if (foot) {
+    // Pé: segue a canela, virado pro lado da frente do corpo.
+    const sx = p[2][0] - p[1][0];
+    const sy = p[2][1] - p[1][1];
+    const n = Math.hypot(sx, sy) || 1;
+    // Em coordenadas de tela (y pra baixo) a "frente" é facing*(sy, -sx)/n invertida em y.
+    const fx = (-facing * sy) / n * -1;
+    const fy = (facing * sx) / n * -1;
+    parts.push(<path key="f" className={cls} d={capsule(p[2], [p[2][0] + fx * 9, p[2][1] + fy * 9], 3.2, 2.2)} />);
+  }
+  if (hand) parts.push(<circle key="h" className={cls} cx={p[2][0]} cy={p[2][1]} r="3.6" />);
+  if (shorts) {
+    parts.push(<path key="s" className="fig__shorts" d={capsule(p[0], along(p[0], p[1], 0.62), radii[0] + 0.5, radii[0] - 0.8)} />);
+  }
+  return <g>{parts}</g>;
 }
 
 export function FigureSvg({ anim, c, title }) {
   const l = layout(c);
-  const torso = [l.hip, l.waist, l.shoulder].map(q => px(q));
+  const hip = px(l.hip);
+  const waist = px(l.waist);
+  const sh = px(l.shoulder);
   const [hx, hy] = px(l.head);
-  const nose = (() => {
+  const face = (() => {
     // Rosto no lado da frente do corpo (mesmo critério dos músculos).
     const dx = l.head[0] - l.shoulder[0];
     const dy = l.head[1] - l.shoulder[1];
     const n = Math.hypot(dx, dy) || 1;
-    return px([l.head[0] + ((dy / n) * anim.facing) * THICK.head, l.head[1] - ((dx / n) * anim.facing) * THICK.head]);
+    return [(dy / n) * anim.facing, -(dx / n) * anim.facing];
   })();
+  const fx = face[0];
+  const fy = -face[1];
   return (
     <svg className="fig" viewBox="15 44 260 146" role="img" aria-label={title} preserveAspectRatio="xMidYMid meet">
+      <ellipse className="fig__shadow" cx="145" cy={GROUND + 4} rx="118" ry="5" />
       <rect className="fig__mat" x="15" y={GROUND} width="260" height="9" rx="4" />
-      <Limb pts={l.leg2} widths={[THICK.thigh, THICK.shin]} far />
-      <Limb pts={l.arm2} widths={[THICK.uarm, THICK.farm]} far />
-      <polyline className="fig__torso" points={fmt(torso)} fill="none" strokeWidth={THICK.torso} strokeLinecap="round" strokeLinejoin="round" />
-      <Limb pts={l.leg} widths={[THICK.thigh, THICK.shin]} />
-      <Limb pts={l.arm} widths={[THICK.uarm, THICK.farm]} />
-      <circle className="fig__head" cx={hx} cy={hy} r={THICK.head} />
-      <circle className="fig__face" cx={nose[0]} cy={nose[1]} r="2.2" />
+      <Limb pts={l.leg2} radii={[7.4, 5.2, 3.6]} far foot shorts facing={anim.facing} />
+      <Limb pts={l.arm2} radii={[4.6, 3.8, 3.2]} far hand />
+      <path className="fig__skin" d={capsule(hip, waist, 8.8, 7.8)} />
+      <path className="fig__skin" d={capsule(waist, sh, 7.8, 9.6)} />
+      <circle className="fig__shorts" cx={hip[0]} cy={hip[1]} r="8.6" />
+      <Limb pts={l.leg} radii={[7.4, 5.2, 3.6]} shorts foot facing={anim.facing} />
       <MuscleLayer muscles={anim.muscles} l={l} facing={anim.facing} e={c.e} />
+      <Limb pts={l.arm} radii={[4.6, 3.8, 3.2]} hand />
+      <path className="fig__skin" d={capsule(sh, [(sh[0] + hx) / 2, (sh[1] + hy) / 2], 4.6, 3.8)} />
+      <ellipse className="fig__skin" cx={hx} cy={hy} rx="10" ry="11" />
+      <circle className="fig__nose" cx={hx + fx * 10} cy={hy + fy * 10} r="2.4" />
     </svg>
   );
 }

@@ -536,26 +536,17 @@ body.live-open .toast.show { transform: translateX(-50%) translateY(0); }
   cursor: pointer;
 }
 
-/* Boneco animado em SVG (components/ExerciseSvg.jsx) */
-.demo-modal__stage--svg { aspect-ratio: 16 / 9; background: linear-gradient(#f4f6f9, #e3e8ee); }
+/* Boneco animado em SVG (components/ExerciseSvg.jsx) — visual inspirado nas animações anatômicas */
+.demo-modal__stage--svg { aspect-ratio: 16 / 9; background: #ececec; }
 .fig { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.fig__mat { fill: #59606b; }
-.fig__torso, .fig__limb line { stroke: #aeb7c3; }
-.fig__limb--far line { stroke: #7d8795; }
-.fig__head { fill: #aeb7c3; }
-.fig__face { fill: #6c7684; }
-.fig__muscle { stroke: #e8503f; fill: #e8503f; }
-polyline.fig__muscle, line.fig__muscle { fill: none; }
-.demo-modal__muscles { font-size: var(--fs-xs); color: var(--text-muted); }
-
-/* Boneco animado em SVG (components/ExerciseSvg.jsx) */
-.demo-modal__stage--svg { aspect-ratio: 16 / 9; background: linear-gradient(#f4f6f9, #e3e8ee); }
-.fig { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.fig__mat { fill: #59606b; }
-.fig__torso, .fig__limb line { stroke: #aeb7c3; }
-.fig__limb--far line { stroke: #7d8795; }
-.fig__head { fill: #aeb7c3; }
-.fig__face { fill: #6c7684; }
-.fig__muscle { stroke: #e8503f; fill: #e8503f; }
+.fig__mat { fill: #8a8f97; }
+.fig__shadow { fill: rgba(0, 0, 0, .10); }
+.fig__skin { fill: #c3c9d2; stroke: #8c95a2; stroke-width: .8; stroke-linejoin: round; }
+.fig__skin--far { fill: #9aa2ae; }
+.fig__shorts { fill: #2b2f36; stroke: none; }
+.fig__hair { fill: #4a4f58; }
+.fig__nose { fill: #aab2bd; stroke: #8c95a2; stroke-width: .6; }
+.fig__muscle { stroke: #d9503f; fill: #d9503f; }
+.fig__fiber { stroke: #f5a08a; opacity: .75; }
 polyline.fig__muscle, line.fig__muscle { fill: none; }
 .demo-modal__muscles { font-size: var(--fs-xs); color: var(--text-muted); }
