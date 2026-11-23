@@ -205,6 +205,12 @@
   text-decoration: none;
 }
 .run-route__casing { fill: none; stroke: var(--bg); stroke-opacity: .55; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.run-photos { display: flex; flex-direction: column; gap: var(--sp-2); margin: var(--sp-2) 0; }
+.run-photos__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-2); }
+.run-photos__list--feed { margin: var(--sp-2) 0; }
+.run-photos__item { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r-md); overflow: hidden; background: var(--surface-2); }
+.run-photos__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.run-photos__del { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 14px; cursor: pointer; }
 .run-route__heat { fill: none; stroke: var(--primary); stroke-opacity: .3; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .run-map--full .run-route__heat { stroke-width: 4; }
 .run-route__line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }

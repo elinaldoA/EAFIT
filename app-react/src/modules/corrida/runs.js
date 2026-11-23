@@ -413,6 +413,8 @@ export async function fetchRunFeed({ limit = 20, before = null } = {}) {
     shoe_name: r.rf_shoe_name ? String(r.rf_shoe_name) : null,
     // Nomes dos amigos marcados na corrida (migration 20270305150000).
     tags: Array.isArray(r.rf_tags) ? r.rf_tags.filter(n => typeof n === 'string' && n).slice(0, 10) : [],
+    // Caminhos das fotos da corrida (migration 20270305160000).
+    photos: Array.isArray(r.rf_photos) ? r.rf_photos.filter(p => typeof p === 'string' && p).slice(0, 4) : [],
   }));
 }
 

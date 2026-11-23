@@ -19,6 +19,7 @@ import { renderRunCard, shareRunCard, renderRunSummaryCard, shareRunSummary } fr
 import RunPhotoShare from './RunPhotoShare';
 import RunShareSheet from './RunShareSheet';
 import CropRun from './CropRun';
+import { RunPhotos } from './RunPhotos';
 import MergeRun from './MergeRun';
 import { canCrop } from './runEdit';
 import SummaryShareSheet from './SummaryShareSheet';
@@ -141,6 +142,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
           )}
           {run.effort && <p>{t('Esforço: {v1}/10', { v1: run.effort })}</p>}
           {run.notes && <p className="run-item__notes">{run.notes}</p>}
+          <RunPhotos userId={user.id} run={run} />
           {run.pending && !isStuck(run) && <p className="profile-field__hint">{t('Ainda no aparelho: sobe quando houver internet.')}</p>}
           {run.pending && isStuck(run) && <p className="profile-field__hint">{t('⚠️ O servidor recusou esta corrida várias vezes e ela não sobe sozinha. Revise os dados ou apague-a.')}</p>}
           {run.route.length > 0 && (

@@ -15,6 +15,7 @@ import PushPrompt from '../../components/PushPrompt';
 import { SESSION_TITLE, programFromMetadata, programToday, isRunSession, sessionTitle } from './program';
 import RouteDrawing from './RouteDrawing';
 import RunFlyby from './RunFlyby';
+import { FeedPhotos } from './RunPhotos';
 import { flybyCandidates } from './flybyMatch';
 import { weatherText, weatherShort, startPosition } from './weather';
 import { useStartWeather } from './useStartWeather';
@@ -106,6 +107,7 @@ function RunCard({ run, feed, onToggleKudos }) {
         <div><span>{t('Tempo')}</span><strong>{formatClock(run.duration_s)}</strong></div>
       </div>
       <RouteDrawing route={run.route} width={320} height={170} />
+      <FeedPhotos paths={run.photos} />
       <div className="run-card__foot">
         <KudosButton run={run} onToggle={onToggleKudos} />
         {together.length > 0 && (

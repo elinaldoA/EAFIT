@@ -882,4 +882,12 @@ export default {
   "▶ Reproduzir": "▶ Play",
   "👥 Quem correu com você": "👥 Who ran with you",
   "👥 Com {v1}": "👥 With {v1}",
+  "⚠️ No máximo {v1} fotos por corrida": "⚠️ At most {v1} photos per run",
+  "Não foi possível enviar a foto.": "Could not upload the photo.",
+  "⚠️ Não foi possível apagar a foto — tente novamente": "⚠️ Could not delete the photo — try again",
+  "Foto da corrida": "Run photo",
+  "Apagar foto": "Delete photo",
+  "Enviando…": "Uploading…",
+  "📷 Adicionar foto": "📷 Add photo",
+  "Adicionar foto à corrida": "Add a photo to the run",
 };
