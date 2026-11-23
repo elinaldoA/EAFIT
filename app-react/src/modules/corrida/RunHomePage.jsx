@@ -352,7 +352,7 @@ export default function RunHomePage() {
         )}
         {!gpxOpen && !live && (
           <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setGpxOpen(true); setManualOpen(false); setGuidedOpen(false); }}>
-            {t('📥 Importar corrida de outro app (GPX)')}
+            {t('📥 Importar corrida de outro app ou relógio (GPX/FIT)')}
           </button>
         )}
         {doneToday && <p className="run-today__done">{t('✅ Corrida de hoje registrada')}</p>}

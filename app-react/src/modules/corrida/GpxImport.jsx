@@ -4,6 +4,8 @@ import { useAuth } from '../../context/useAuth';
 import { useToast } from '../../context/useToast';
 import { trackEvent } from '../../lib/tracking';
 import { parseGpx, runFromGpx, MAX_FILE_BYTES } from './gpx';
+import { parseFit } from './fit';
+import { cleanHr } from './heartRate';
 import {
   RUN_SAVED_EVENT, saveRun, fetchRuns, newRecords, describeRecord, formatKm, formatClock, formatPace, paceSeconds,
   fetchShoes, cachedShoes, defaultShoeId, rememberShoe,
@@ -36,8 +38,12 @@ export default function GpxImport({ onClose }) {
     e.target.value = '';
     if (!file) return;
     if (file.size > MAX_FILE_BYTES) return toast(t('⚠️ Arquivo grande demais (máximo 8 MB)'));
-    const { record: rec, error } = runFromGpx(parseGpx(await file.text()), { zones: user?.user_metadata?.runZones, fileName: file.name });
-    if (error) return toast(error);
+    const isFit = /\.fit$/i.test(file.name);
+    const parsed = isFit ? parseFit(await file.arrayBuffer()) : parseGpx(await file.text());
+    const { record: rec, error } = runFromGpx(parsed, { zones: user?.user_metadata?.runZones, fileName: file.name.replace(/\.(fit|gpx)$/i, ''), });
+    if (error) return toast(isFit && !parsed ? t('⚠️ O arquivo não parece um FIT com percurso') : error);
+    // O FIT traz também a frequência cardíaca e a cadência.
+    if (isFit) Object.assign(rec, { hr: cleanHr(parsed.hr), cadence: parsed.cadence });
     setRecord(rec);
     setTitle(rec.title);
   }
@@ -55,7 +61,7 @@ export default function GpxImport({ onClose }) {
     const others = previous.filter(r => r.client_id !== final.client_id);
     const records = loaded ? newRecords(others, final) : [];
     const achieved = loaded ? newAchievements(others, [...others, final]) : [];
-    trackEvent('run', 'gpx');
+    trackEvent('run', final.hr || final.cadence ? 'fit' : 'gpx');
     setBusy(false);
     window.dispatchEvent(new CustomEvent(RUN_SAVED_EVENT));
     onClose();
@@ -67,13 +73,13 @@ export default function GpxImport({ onClose }) {
   }
 
   return (
-    <div className="dash-card run-setup" role="group" aria-label={t('Importar corrida (GPX)')}>
-      <h2 className="run-setup__title">{t('Importar corrida (GPX)')}</h2>
-      <p className="run-setup__text">{t('Traga uma corrida gravada em outro app ou relógio. O tempo parado fora da corrida não conta.')}</p>
-      <input ref={input} type="file" accept=".gpx,application/gpx+xml,text/xml,application/xml" className="run-gpx__file" onChange={handleFile} aria-label={t('Arquivo GPX')} />
+    <div className="dash-card run-setup" role="group" aria-label={t('Importar corrida (GPX ou FIT)')}>
+      <h2 className="run-setup__title">{t('Importar corrida (GPX ou FIT)')}</h2>
+      <p className="run-setup__text">{t('Traga uma corrida gravada em outro app ou relógio (Garmin, Coros, Polar, Suunto…). O arquivo FIT traz também a frequência cardíaca e a cadência. O tempo parado fora da corrida não conta.')}</p>
+      <input ref={input} type="file" accept=".gpx,.fit,application/gpx+xml,application/vnd.ant.fit,text/xml,application/xml,application/octet-stream" className="run-gpx__file" onChange={handleFile} aria-label={t('Arquivo GPX ou FIT')} />
       {!record ? (
         <>
-          <button type="button" className="btn btn--primary" onClick={() => input.current?.click()}>{t('Escolher arquivo GPX')}</button>
+          <button type="button" className="btn btn--primary" onClick={() => input.current?.click()}>{t('Escolher arquivo GPX ou FIT')}</button>
           <div className="run-setup__actions">
             <button type="button" className="btn btn--ghost" onClick={onClose}>{t('Cancelar')}</button>
           </div>

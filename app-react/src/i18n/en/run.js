@@ -861,4 +861,10 @@ export default {
   "Juntar": "Merge",
   "✂️ Cortar percurso": "✂️ Crop route",
   "🔗 Juntar com outra": "🔗 Merge with another",
+  "⚠️ O arquivo não parece um FIT com percurso": "⚠️ The file does not look like a FIT file with a route",
+  "Importar corrida (GPX ou FIT)": "Import run (GPX or FIT)",
+  "Traga uma corrida gravada em outro app ou relógio (Garmin, Coros, Polar, Suunto…). O arquivo FIT traz também a frequência cardíaca e a cadência. O tempo parado fora da corrida não conta.": "Bring a run recorded in another app or watch (Garmin, Coros, Polar, Suunto…). A FIT file also carries heart rate and cadence. Time stopped outside the run does not count.",
+  "Arquivo GPX ou FIT": "GPX or FIT file",
+  "Escolher arquivo GPX ou FIT": "Choose GPX or FIT file",
+  "📥 Importar corrida de outro app ou relógio (GPX/FIT)": "📥 Import a run from another app or watch (GPX/FIT)",
 };
