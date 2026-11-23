@@ -205,6 +205,8 @@
   text-decoration: none;
 }
 .run-route__casing { fill: none; stroke: var(--bg); stroke-opacity: .55; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.run-route__heat { fill: none; stroke: var(--primary); stroke-opacity: .3; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.run-map--full .run-route__heat { stroke-width: 4; }
 .run-route__line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
 .run-route__km circle { fill: var(--surface); stroke: var(--text); stroke-width: 1.5; r: 9.5px; }
 .run-route__km text { fill: var(--text); font-size: 10.5px; font-weight: 800; }

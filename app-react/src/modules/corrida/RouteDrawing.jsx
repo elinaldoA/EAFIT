@@ -13,15 +13,15 @@ const pct = (v, total) => `${(v / total) * 100}%`;
 // de privacidade (route.js). Sem internet os blocos não carregam e fica só a
 // linha. `detail`: linha colorida pelo ritmo e marcas de km, quando o
 // percurso tem o tempo de cada ponto e `splits` vem junto.
-function MapCanvas({ route, splits, detail, width, height, zoomDelta = 0, pan, className = '', style, ...rest }) {
+function MapCanvas({ route, splits, detail, heat = false, width, height, zoomDelta = 0, pan, className = '', style, ...rest }) {
   const view = mapView(route, width, height, 16, { zoomDelta, pan });
   // Blocos que não carregaram (sem internet). Se nenhum carregar, some também
   // o crédito do mapa e fica só a linha.
   const [failed, setFailed] = useState(() => new Set());
   if (!view) return null;
   const hasMap = view.tiles.some(tile => !failed.has(tileSrc(tile)));
-  const pace = detail ? paceRuns(route) : [];
-  const kms = detail ? kmPoints(route, splits) : [];
+  const pace = detail && !heat ? paceRuns(route) : [];
+  const kms = detail && !heat ? kmPoints(route, splits) : [];
   const step = kmStep(kms.length);
   const toPath = pts => pts.map((p, i) => `${i ? 'L' : 'M'}${view.place(p).join(' ')}`).join('');
   return (
@@ -44,12 +44,18 @@ function MapCanvas({ route, splits, detail, width, height, zoomDelta = 0, pan, c
         </div>
       )}
       <svg className="run-map__route" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-        {view.paths.map((d, i) => <path key={`c${i}`} d={d} className="run-route__casing" />)}
-        {pace.length
-          ? pace.map((run, i) => <path key={i} d={toPath(run.pts)} className="run-route__line" style={{ stroke: PACE_COLORS[run.level] }} />)
-          : view.paths.map((d, i) => <path key={i} d={d} className="run-route__line" />)}
-        <circle cx={view.start[0]} cy={view.start[1]} r="5.5" className="run-route__start" />
-        <circle cx={view.end[0]} cy={view.end[1]} r="5.5" className="run-route__end" />
+        {heat
+          ? view.paths.map((d, i) => <path key={i} d={d} className="run-route__heat" />)
+          : (
+            <>
+              {view.paths.map((d, i) => <path key={`c${i}`} d={d} className="run-route__casing" />)}
+              {pace.length
+                ? pace.map((run, i) => <path key={i} d={toPath(run.pts)} className="run-route__line" style={{ stroke: PACE_COLORS[run.level] }} />)
+                : view.paths.map((d, i) => <path key={i} d={d} className="run-route__line" />)}
+              <circle cx={view.start[0]} cy={view.start[1]} r="5.5" className="run-route__start" />
+              <circle cx={view.end[0]} cy={view.end[1]} r="5.5" className="run-route__end" />
+            </>
+          )}
         {kms.filter(k => k.km % step === 0).map(k => {
           const [x, y] = view.place(k.p);
           return (
@@ -92,7 +98,7 @@ function useViewport() {
 
 // Mapa em tela cheia: arrastar com o dedo, pinça ou + / − para o zoom, toque
 // duplo aproxima. Fecha no ✕ ou no "voltar" do celular.
-function MapFullscreen({ route, splits, onClose }) {
+function MapFullscreen({ route, splits, heat, onClose }) {
   useBackToClose(onClose);
   const { w, h } = useViewport();
   const [zoom, setZoom] = useState(0);
@@ -154,7 +160,7 @@ function MapFullscreen({ route, splits, onClose }) {
   return createPortal(
     <div className="run-map-full" role="dialog" aria-modal="true" aria-label={t('Mapa do percurso')}>
       <MapCanvas
-        route={route} splits={splits} detail width={w} height={h} zoomDelta={zoom} pan={pan}
+        route={route} splits={splits} detail heat={heat} width={w} height={h} zoomDelta={zoom} pan={pan}
         className="run-map--full" style={{ width: w, height: h }}
         onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
         onWheel={e => zoomBy(e.deltaY < 0 ? 1 : -1)}
@@ -172,20 +178,20 @@ function MapFullscreen({ route, splits, onClose }) {
 
 // Percurso sobre o mapa de ruas, em todas as telas da corrida. Tocar abre o
 // mapa em tela cheia. Some sem percurso.
-export default function RouteDrawing({ route, splits, detail = false, width = 320, height = 180, className = '', label }) {
+export default function RouteDrawing({ route, splits, detail = false, heat = false, width = 320, height = 180, className = '', label }) {
   const [full, setFull] = useState(false);
   if (!mapView(route, width, height)) return null;
   return (
     <>
       <MapCanvas
-        route={route} splits={splits} detail={detail} width={width} height={height}
+        route={route} splits={splits} detail={detail} heat={heat} width={width} height={height}
         className={`run-map--tap ${className}`.trim()} style={{ aspectRatio: `${width} / ${height}` }}
         role="button" tabIndex={0}
         aria-label={`${label || t('Mapa do percurso')}. ${t('Toque para ver em tela cheia')}`}
         onClick={e => { if (!e.target.closest('a')) setFull(true); }}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFull(true); } }}
       />
-      {full && <MapFullscreen route={route} splits={splits} onClose={() => setFull(false)} />}
+      {full && <MapFullscreen route={route} splits={splits} heat={heat} onClose={() => setFull(false)} />}
     </>
   );
 }

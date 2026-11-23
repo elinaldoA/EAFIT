@@ -934,6 +934,131 @@ export async function shareRunSummary(runs, today, prepared, goalKm = null, opts
   return shareImageBlob(blob, file, title(), message(formatKm(sum?.meters || 0, 1), cardUrl(refCode)));
 }
 
+
+// ---- Retrospectiva do ano ---------------------------------------------------
+
+const DAYPART_TEXT = {
+  manha: () => t('🌅 Você corre mais de manhã'),
+  tarde: () => t('☀️ Você corre mais à tarde'),
+  noite: () => t('🌙 Você corre mais à noite'),
+  madrugada: () => t('🌌 Você corre mais de madrugada'),
+};
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// Destaques do ano em texto, do mais interessante ao menos: [emoji + frase].
+function yearHighlights(rec) {
+  const monthName = cap(new Date(Number(rec.year), rec.bestMonth.month - 1, 1).toLocaleDateString(locale, { month: 'long' }));
+  const weekday = new Date(2024, 0, 7 + rec.weekday).toLocaleDateString(locale, { weekday: 'long' }); // 7/jan/2024 foi domingo
+  const out = [t('📅 Mês mais forte: {v1} · {v2} km', { v1: monthName, v2: formatKm(rec.bestMonth.meters, 0) })];
+  out.push(t('🏆 Maior corrida: {v1} km', { v1: formatKm(rec.longest.meters) }));
+  if (rec.effort5 !== null) out.push(t('⚡ Melhor 5 km: {v1}', { v1: formatClock(rec.effort5) }));
+  out.push(t('🗓️ Dia favorito: {v1} ({v2} corridas)', { v1: weekday, v2: rec.weekdayCount }));
+  if (rec.daypart) out.push(DAYPART_TEXT[rec.daypart]());
+  if (rec.streak >= 2) out.push(t('🔥 Sequência: {v1} semanas seguidas', { v1: rec.streak }));
+  if (rec.elevM > 0) out.push(t('⛰ {v1} m de subida no ano', { v1: rec.elevM }));
+  return out.slice(0, 5);
+}
+
+// Card 9:16 da retrospectiva do ano: km do ano, km mês a mês, números e destaques.
+// rec vem de runYear.yearRecap.
+export async function renderRunYearCard(rec, refCode = myRefCode()) {
+  if (!rec) return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  const ctx = canvas.getContext('2d');
+  drawBackground(ctx, CARD_WIDTH, CARD_HEIGHT);
+  await drawBrandBar(ctx, { started_at: new Date().toISOString() }, t('Retrospectiva do ano'));
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.font = `800 30px ${FONT}`;
+  setTracking(ctx, 4);
+  ctx.fillText(t('MEU ANO DE CORRIDA'), PAD_X, 250);
+  setTracking(ctx, 0);
+  ctx.fillStyle = '#ffffff';
+  fitFont(ctx, rec.year, CONTENT_W, 76, 900, 44);
+  ctx.fillText(rec.year, PAD_X, 345);
+
+  // Km do ano em destaque (e a variação sobre o ano anterior).
+  drawPanel(ctx, PAD_X, MAP_Y, CONTENT_W, 440, 36);
+  const km = formatKm(rec.meters, 0);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff';
+  fitFont(ctx, km, CONTENT_W - 60, 230, 900, 110);
+  ctx.fillText(km, CARD_WIDTH / 2, MAP_Y + 240);
+  ctx.font = `800 46px ${FONT}`;
+  ctx.fillStyle = ORANGE_LIGHT;
+  setTracking(ctx, 6);
+  ctx.fillText(t('KM EM {v1}', { v1: rec.year }), CARD_WIDTH / 2, MAP_Y + 320);
+  setTracking(ctx, 0);
+  if (rec.vsPrev !== null) {
+    const line = rec.vsPrev >= 0
+      ? t('▲ {v1}% a mais que em {v2}', { v1: rec.vsPrev, v2: Number(rec.year) - 1 })
+      : t('▼ {v1}% a menos que em {v2}', { v1: -rec.vsPrev, v2: Number(rec.year) - 1 });
+    fitFont(ctx, line, CONTENT_W - 60, 30, 700, 20);
+    ctx.fillStyle = rec.vsPrev >= 0 ? '#34d399' : MUTED;
+    ctx.fillText(line, CARD_WIDTH / 2, MAP_Y + 388);
+  }
+
+  // Km mês a mês: o mês mais forte em laranja.
+  const chartY = MAP_Y + 440 + 30;
+  const chartH = 230;
+  drawPanel(ctx, PAD_X, chartY, CONTENT_W, chartH, 28);
+  const left = PAD_X + 36;
+  const right = PAD_X + CONTENT_W - 36;
+  const base = chartY + chartH - 52;
+  const top = chartY + 36;
+  const maxM = Math.max(...rec.months, 1);
+  const gap = 10;
+  const bw = (right - left - gap * 11) / 12;
+  rec.months.forEach((m, i) => {
+    const h = m > 0 ? Math.max(8, (m / maxM) * (base - top)) : 4;
+    roundedRectPath(ctx, left + i * (bw + gap), base - h, bw, h, Math.min(8, bw / 2));
+    ctx.fillStyle = i + 1 === rec.bestMonth.month ? ORANGE_LIGHT : m > 0 ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.2)';
+    ctx.fill();
+    ctx.textAlign = 'center';
+    ctx.font = `600 22px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    ctx.fillText(new Date(2024, i, 1).toLocaleDateString(locale, { month: 'narrow' }).toUpperCase(), left + i * (bw + gap) + bw / 2, base + 34);
+  });
+
+  // Corridas, horas e dias correndo.
+  const boxY = chartY + chartH + 30;
+  const gapBox = 22;
+  const boxW = (CONTENT_W - gapBox * 2) / 3;
+  [
+    [String(rec.count), t('corridas')],
+    [`${Math.floor(rec.seconds / 3600)}h`, t('correndo')],
+    [String(rec.days), t('dias com corrida')],
+  ].forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gapBox), boxY, boxW, 170, value, label, undefined, { maxSize: 70, padX: 30, labelSize: 22 }));
+
+  // Destaques.
+  const lines = yearHighlights(rec);
+  const hy = boxY + 170 + 30;
+  const rowH = 62;
+  const hh = lines.length * rowH + 40;
+  drawPanel(ctx, PAD_X, hy, CONTENT_W, hh, 28);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  lines.forEach((line, i) => {
+    fitFont(ctx, line, CONTENT_W - 72, 33, 700, 22);
+    ctx.fillText(line, PAD_X + 36, hy + 20 + 44 + i * rowH);
+  });
+
+  await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+export async function shareRunYear(rec, prepared) {
+  trackFeature('share_run_year');
+  const refCode = myRefCode();
+  const blob = (await prepared) || await renderRunYearCard(rec, refCode);
+  const text = t('{v1} km de corrida em {v2} no EAFIT Run 🏃 Corra com a gente: {v3}', { v1: formatKm(rec.meters, 0), v2: rec.year, v3: cardUrl(refCode) });
+  return shareImageBlob(blob, 'minha-retrospectiva.png', t('Minha retrospectiva do ano'), text);
+}
+
 // Card 9:16 de um desafio da comunidade concluído: total feito em destaque, a
 // meta, a posição no ranking e o período. c vem de runsCommunity (fetchCommunityChallenges).
 export async function renderChallengeCard(c, refCode = myRefCode()) {

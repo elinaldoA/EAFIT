@@ -8,6 +8,7 @@ import { monthRuns } from './runSummary';
 import { tempText } from './weather';
 import RunFitness from './RunFitness';
 import MonthlyBadges from './MonthlyBadges';
+import RunHeatmap from './RunHeatmap';
 import { t } from '../../lib/i18n';
 
 // Leituras da aba Você do EAFIT Run: carga da semana, previsão de prova,
@@ -217,6 +218,7 @@ export default function RunInsights({ runs, meta }) {
       <Predictions runs={runs} today={today} />
       <EffortHistory runs={runs} today={today} />
       <WeatherPace runs={runs} today={today} />
+      <RunHeatmap runs={runs} />
       <MonthlyBadges runs={runs} today={today} />
       <Achievements runs={runs} />
     </>
