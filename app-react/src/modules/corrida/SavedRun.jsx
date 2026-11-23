@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../context/useToast';
-import { paceSeconds, formatPace, formatClock, formatKm, fetchRuns, cachedRuns } from './runs';
+import { paceSeconds, formatPace, formatClock, formatKm, fetchRuns, cachedRuns, cachedShoes } from './runs';
 import { weatherText } from './weather';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import RunShareSheet from './RunShareSheet';
@@ -18,7 +18,8 @@ export default function SavedRun({ record, onClose }) {
   const { user } = useAuth();
   const weight = weightFromMeta(user?.user_metadata);
   const kcal = runCalories(record, weight);
-  const card = useMemo(() => (kcal ? { ...record, kcal } : record), [record, kcal]);
+  const shoeName = useMemo(() => cachedShoes(user?.id).find(x => x.id === record.shoe_id)?.name, [user?.id, record.shoe_id]);
+  const card = useMemo(() => ({ ...record, ...(kcal ? { kcal } : {}), ...(shoeName ? { shoe_name: shoeName } : {}) }), [record, kcal, shoeName]);
   const [sharing, setSharing] = useState(false);
   const [badges, setBadges] = useState([]);
   const [sheetOpen, setSheetOpen] = useState(false);

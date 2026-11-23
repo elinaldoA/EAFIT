@@ -86,6 +86,16 @@ describe('cartão da corrida', () => {
     expect(transparent).toBeLessThan(log.gradients);
   });
 
+  it('formato quadrado 1:1: canvas de 1080×1080, sem o gráfico', async () => {
+    let size;
+    document.createElement.mockImplementation(tag => { if (tag !== 'canvas') return realCreate(tag); const c = fakeCanvas(log); size = c; return c; });
+    await renderRunCard(base, 'ABC', { format: 'quadrado' });
+    expect(size.width).toBe(1080);
+    expect(size.height).toBe(1080);
+    expect(log.texts).not.toContain('RITMO POR KM');
+    expect(log.texts).toContain('Corra com o EAFIT Run');
+  });
+
   it('só números: sem o mapa, a distância grande no lugar', async () => {
     await renderRunCard(base, 'ABC', { style: 'numeros' });
     expect(log.texts).toContain('KM');

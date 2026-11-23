@@ -788,4 +788,10 @@ export default {
   "📊 Meu resumo": "📊 My summary",
   "Semana, mês ou ano, com a comparação do período anterior": "Week, month or year, compared with the previous period",
   "Prévia do resumo": "Summary preview",
+  "❤️ {v1} bpm": "❤️ {v1} bpm",
+  "⛰ {v1}/km ajustado": "⛰ {v1}/km grade-adjusted",
+  "💪 Esforço {v1}/10": "💪 Effort {v1}/10",
+  "Formato": "Format",
+  "📱 Stories (9:16)": "📱 Stories (9:16)",
+  "⬜ Post (1:1)": "⬜ Post (1:1)",
 };

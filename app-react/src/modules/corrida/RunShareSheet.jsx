@@ -31,6 +31,7 @@ export default function RunShareSheet({ run, onClose, onPhoto }) {
   useBackToClose(onClose);
   const toast = useToast();
   const hasRoute = Array.isArray(run.route) && run.route.length > 0;
+  const [format, setFormat] = useState('story');
   const [style, setStyle] = useState(hasRoute ? 'mapa' : 'numeros');
   const [trace, setTrace] = useState('laranja');
   const [bg, setBg] = useState('escuro');
@@ -48,12 +49,14 @@ export default function RunShareSheet({ run, onClose, onPhoto }) {
     canColorTrace(run, 'elevacao') && ['elevacao', t('Pela subida')],
   ].filter(Boolean), [run]);
 
+  const square = format === 'quadrado';
   const opts = useMemo(() => ({
+    format,
     style,
     trace: map ? trace : 'laranja',
-    bg: map || bg === 'transparente' ? bg : 'escuro',
+    bg: square && bg === 'transparente' ? 'escuro' : (map || bg === 'transparente' ? bg : 'escuro'),
     badges: withBadges ? badges : [],
-  }), [style, trace, bg, map, withBadges, badges]);
+  }), [format, square, style, trace, bg, map, withBadges, badges]);
 
   useEffect(() => {
     document.body.classList.add('modal-open');
@@ -107,9 +110,13 @@ export default function RunShareSheet({ run, onClose, onPhoto }) {
         </div>
 
         <div className="summary-modal__body">
-          {previewUrl && <img className="photo-share__preview" src={previewUrl} alt={t('Prévia do cartão da corrida')} />}
+          {previewUrl && <img className="photo-share__preview" style={square ? { aspectRatio: '1 / 1' } : undefined} src={previewUrl} alt={t('Prévia do cartão da corrida')} />}
           {busy && <p className="card-note" role="status">{t('Gerando imagem…')}</p>}
 
+          <Chips
+            title={t('Formato')} value={format} onChange={setFormat}
+            options={[['story', t('📱 Stories (9:16)')], ['quadrado', t('⬜ Post (1:1)')]]}
+          />
           {hasRoute && (
             <Chips
               title={t('Estilo')} value={style} onChange={setStyle}
@@ -124,7 +131,7 @@ export default function RunShareSheet({ run, onClose, onPhoto }) {
             options={[
               ['escuro', t('Escuro')],
               map && ['claro', t('Mapa claro')],
-              ['transparente', t('Transparente')],
+              !square && ['transparente', t('Transparente')],
             ].filter(Boolean)}
           />
           {opts.bg === 'transparente' && <p className="card-note">{t('Imagem sem fundo: use por cima de uma foto nos stories.')}</p>}

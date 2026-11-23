@@ -25,8 +25,8 @@ const {
 const MAP_Y = 400;
 const MAP_H = 860;
 // Com o gráfico de ritmo por km o mapa encolhe para dar lugar a ele.
-const CHART_MAP_H = 620;
-const CHART_H = 270;
+const CHART_MAP_H = 650;
+const CHART_H = 240;
 // Os blocos do mapa são desenhados 1,5× maiores para os nomes das ruas
 // ficarem legíveis no story.
 const MAP_SCALE = 1.5;
@@ -96,19 +96,19 @@ function drawTraceLegend(ctx, mode, x, y) {
 }
 
 // opts: mapH (altura do quadro), trace (TRACE_MODES), light (mapa sem escurecer).
-async function drawMap(ctx, run, { mapH = MAP_H, trace = 'laranja', light = false, inset = 0 } = {}) {
+async function drawMap(ctx, run, { mapH = MAP_H, trace = 'laranja', light = false, inset = 0, y: y0 = MAP_Y } = {}) {
   const x0 = PAD_X;
   const w = CONTENT_W;
-  drawPanel(ctx, x0, MAP_Y, w, mapH, 36);
+  drawPanel(ctx, x0, y0, w, mapH, 36);
   // `inset`: faixa de cima ocupada pelos selos; o percurso desce para não ficar embaixo deles.
   const k = inset / MAP_SCALE / 2;
   const view = mapView(run.route, w / MAP_SCALE, mapH / MAP_SCALE, 40 + k, { pan: [0, -k] });
   if (!view) return false;
 
   ctx.save();
-  roundedRectPath(ctx, x0, MAP_Y, w, mapH, 36);
+  roundedRectPath(ctx, x0, y0, w, mapH, 36);
   ctx.clip();
-  ctx.translate(x0, MAP_Y);
+  ctx.translate(x0, y0);
   ctx.scale(MAP_SCALE, MAP_SCALE);
   const tiles = await Promise.all(view.tiles.map(tile => loadTile(tileSrc(tile)).then(img => ({ tile, img }))));
   let loaded = 0;
@@ -166,27 +166,27 @@ async function drawMap(ctx, run, { mapH = MAP_H, trace = 'laranja', light = fals
   ctx.textBaseline = 'alphabetic';
   ctx.restore();
 
-  if (pieces.length) drawTraceLegend(ctx, trace, x0 + 24, MAP_Y + mapH - 24 - 78);
+  if (pieces.length) drawTraceLegend(ctx, trace, x0 + 24, y0 + mapH - 24 - 78);
   // Atribuição exigida pelo OpenStreetMap.
   if (loaded) {
     ctx.textAlign = 'right';
     ctx.font = `600 20px ${FONT}`;
     ctx.fillStyle = light ? 'rgba(9,9,13,0.8)' : 'rgba(255,255,255,0.75)';
-    ctx.fillText('© OpenStreetMap', x0 + w - 24, MAP_Y + mapH - 22);
+    ctx.fillText('© OpenStreetMap', x0 + w - 24, y0 + mapH - 22);
   }
   return true;
 }
 
 // Sem percurso (corrida sem GPS ou curta demais): a distância no lugar do mapa.
-function drawBigDistance(ctx, run, mapH = MAP_H) {
+function drawBigDistance(ctx, run, mapH = MAP_H, y0 = MAP_Y) {
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffffff';
   fitFont(ctx, formatKm(run.distance_m), CONTENT_W - 60, 260, 900, 120);
-  ctx.fillText(formatKm(run.distance_m), CARD_WIDTH / 2, MAP_Y + mapH / 2 + 50);
+  ctx.fillText(formatKm(run.distance_m), CARD_WIDTH / 2, y0 + mapH / 2 + 50);
   ctx.font = `800 50px ${FONT}`;
   ctx.fillStyle = ORANGE_LIGHT;
   setTracking(ctx, 6);
-  ctx.fillText('KM', CARD_WIDTH / 2, MAP_Y + mapH / 2 + 150);
+  ctx.fillText('KM', CARD_WIDTH / 2, y0 + mapH / 2 + 150);
   setTracking(ctx, 0);
 }
 
@@ -208,9 +208,8 @@ function drawBadges(ctx, badges, x, y, maxW) {
 }
 
 // Gráfico do ritmo de cada km (o mais rápido em laranja) com o perfil de
-// altitude por trás, quando a corrida tem a subida por km, e subida e cadência
-// na base. `plain`: sem painel (fundo transparente).
-function drawSplitsChart(ctx, chart, extras, x, y, w, h, plain) {
+// altitude por trás, quando a corrida tem a subida por km. `plain`: sem painel (fundo transparente).
+function drawSplitsChart(ctx, chart, x, y, w, h, plain) {
   if (!plain) drawPanel(ctx, x, y, w, h, 28);
   const left = x + 36;
   const right = x + w - 36;
@@ -274,21 +273,24 @@ function drawSplitsChart(ctx, chart, extras, x, y, w, h, plain) {
     }
   });
 
-  if (extras.length) {
-    ctx.textAlign = 'left';
-    ctx.font = `700 25px ${FONT}`;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(extras.join('   ·   '), left, y + h - 14);
-  }
 }
 
-// Subida e cadência numa linha, para quando não há gráfico.
-function drawExtrasLine(ctx, extras, y) {
+// Dados extras (subida, cadência, frequência, tênis…) em até 2 linhas centralizadas
+// embaixo dos números; o que não couber em duas linhas fica de fora.
+function drawExtrasLine(ctx, extras, y, size = 28) {
   if (!extras.length) return;
-  ctx.textAlign = 'center';
-  ctx.font = `700 28px ${FONT}`;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(extras.join('   ·   '), CARD_WIDTH / 2, y);
+  ctx.textAlign = "center";
+  ctx.font = `700 ${size}px ${FONT}`;
+  ctx.fillStyle = "#ffffff";
+  const sep = "   ·   ";
+  const rows = [""];
+  for (const item of extras) {
+    const row = rows.length - 1;
+    const next = rows[row] ? rows[row] + sep + item : item;
+    if (ctx.measureText(next).width <= CONTENT_W || !rows[row]) rows[row] = next;
+    else if (rows.length < 2) rows.push(item);
+  }
+  rows.forEach((text, i) => ctx.fillText(text, CARD_WIDTH / 2, y + i * (size + 14)));
 }
 
 // Números soltos, sem caixa (cartão de fundo transparente).
@@ -351,9 +353,11 @@ async function drawBrandBar(ctx, run, label = t('Corrida')) {
 //   style  'mapa' (padrão, cai para a distância sem percurso) ou 'numeros'
 //   trace  como pintar o percurso (TRACE_MODES): 'laranja', 'ritmo' ou 'elevacao'
 //   bg     'escuro' (padrão), 'claro' (mapa claro) ou 'transparente' (PNG sem fundo, para pôr sobre a sua foto)
+//   format 'story' (9:16, padrão) ou 'quadrado' (1:1, para o feed; sem gráfico nem fundo transparente)
 //   badges selos de recorde e conquista (runCardData.badgesFor); sem isso usa run.badges
 // Com 2 km ou mais ganha o gráfico de ritmo por km (com a subida e a cadência).
 export async function renderRunCard(run, refCode = myRefCode(), opts = {}) {
+  if (opts.format === 'quadrado') return renderSquareCard(run, opts);
   const { style = 'mapa', trace = 'laranja', bg = 'escuro' } = opts;
   const badges = opts.badges ?? run.badges ?? [];
   const plain = bg === 'transparente';
@@ -400,7 +404,7 @@ export async function renderRunCard(run, refCode = myRefCode(), opts = {}) {
 
   let boxY = MAP_Y + mapH + 40;
   if (chart) {
-    drawSplitsChart(ctx, chart, extras, PAD_X, MAP_Y + mapH + 28, CONTENT_W, CHART_H, plain);
+    drawSplitsChart(ctx, chart, PAD_X, MAP_Y + mapH + 28, CONTENT_W, CHART_H, plain);
     boxY = MAP_Y + mapH + 28 + CHART_H + 28;
   }
 
@@ -416,10 +420,74 @@ export async function renderRunCard(run, refCode = myRefCode(), opts = {}) {
     const boxW = (CONTENT_W - gap * (stats.length - 1)) / stats.length;
     stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 220, value, label, undefined, { maxSize: run.kcal ? 66 : 80, padX: run.kcal ? 18 : 30, labelSize: run.kcal ? 22 : 25 }));
   }
-  if (!chart) drawExtrasLine(ctx, extras, boxY + 220 + 60);
+  drawExtrasLine(ctx, extras, boxY + 220 + 56);
 
   await drawFooter(ctx, CARD_HEIGHT - 214, t('Corra com o EAFIT Run'), refCode ? cardUrl(refCode) : '');
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+// Card quadrado 1:1 (post do feed): marca, título, mapa, números e o convite.
+async function renderSquareCard(run, opts) {
+  const { style = "mapa", trace = "laranja", bg = "escuro" } = opts;
+  const SIZE = 1080;
+  const canvas = document.createElement("canvas");
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  const ctx = canvas.getContext("2d");
+  drawBackground(ctx, SIZE, SIZE);
+
+  const logo = 60;
+  const hasLogo = await drawLogo(ctx, PAD_X, 36, logo);
+  const tx = PAD_X + (hasLogo ? logo + 18 : 0);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `900 38px ${FONT}`;
+  setTracking(ctx, 2);
+  ctx.fillText("EAFIT", tx, 82);
+  const brandW = ctx.measureText("EAFIT").width;
+  ctx.fillStyle = ORANGE_LIGHT;
+  ctx.fillText(" · Run", tx + brandW, 82);
+  const when = run.started_at ? new Date(run.started_at) : new Date(`${run.run_date}T12:00:00`);
+  ctx.textAlign = "right";
+  ctx.font = `700 24px ${FONT}`;
+  ctx.fillStyle = MUTED;
+  ctx.fillText(formatCardDate(when).toUpperCase(), SIZE - PAD_X, 80);
+  setTracking(ctx, 0);
+
+  const title = runTitle(run);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#ffffff";
+  fitFont(ctx, title, CONTENT_W, 56, 900, 36);
+  ctx.fillText(title, PAD_X, 160);
+
+  const mapY = 190;
+  const mapH = 520;
+  const badges = (opts.badges ?? run.badges ?? []).slice(0, 1);
+  const hasRoute = Array.isArray(run.route) && run.route.length > 0;
+  if (style === "mapa" && hasRoute) {
+    await drawMap(ctx, run, { mapH, trace, light: bg === "claro", inset: badges.length ? 86 : 0, y: mapY });
+  } else {
+    drawPanel(ctx, PAD_X, mapY, CONTENT_W, mapH, 36);
+    drawBigDistance(ctx, run, mapH, mapY);
+  }
+  drawBadges(ctx, badges, PAD_X + 24, mapY + 24, CONTENT_W - 48);
+
+  const stats = [
+    [formatKm(run.distance_m), t("km")],
+    [formatPace(paceSeconds(run.duration_s, run.distance_m)), t("ritmo /km")],
+    [formatClock(run.duration_s), t("tempo")],
+  ];
+  if (run.kcal) stats.push([String(run.kcal), t("kcal")]);
+  const gap = run.kcal ? 14 : 22;
+  const boxW = (CONTENT_W - gap * (stats.length - 1)) / stats.length;
+  const boxY = mapY + mapH + 30;
+  stats.forEach(([value, label], i) => drawStatBox(ctx, PAD_X + i * (boxW + gap), boxY, boxW, 150, value, label, undefined, { maxSize: run.kcal ? 54 : 62, padX: 24, labelSize: 20 }));
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `700 28px ${FONT}`;
+  ctx.fillText(t("Corra com o EAFIT Run"), SIZE / 2, SIZE - 50);
+  return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
 }
 
 // `prepared`: o card já desenhado antes do toque (o share nativo exige o

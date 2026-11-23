@@ -65,6 +65,14 @@ describe('gráfico de ritmo por km', () => {
     expect(extrasOf({ elev_gain_m: 85, cadence: 168 })).toEqual(['↗ 85 m de subida', '👣 168 passos/min']);
     expect(extrasOf({ elev_gain_m: 0, cadence: null })).toEqual([]);
   });
+
+  it('frequência, ritmo ajustado, tênis e esforço entram quando existem', () => {
+    const out = extrasOf({ hr: { avg: 152, max: 178 }, splits: [330, 330], km_elev: [[40, 0], [0, 40]], shoe_name: 'Pegasus', effort: 7 });
+    expect(out).toContain('❤️ 152 bpm');
+    expect(out).toContain('👟 Pegasus');
+    expect(out).toContain('💪 Esforço 7/10');
+    expect(extrasOf({ hr: { avg: 10, max: 5 } })).toEqual([]); // dado inválido não aparece
+  });
 });
 
 describe('percurso pintado pela subida', () => {

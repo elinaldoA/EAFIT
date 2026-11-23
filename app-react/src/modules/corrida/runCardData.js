@@ -1,6 +1,8 @@
 import { computeRunStats, bestEffort, EFFORT_KM, paceSeconds, formatKm, formatPace, formatClock } from './runs';
 import { newAchievements } from './runReadings';
 import { cleanRoute } from './route';
+import { cleanHr } from './heartRate';
+import { gradeAdjustedPace } from './elevation';
 import { t } from '../../lib/i18n';
 
 // Dados extras dos cartões de corrida (modules/corrida/runShareCard.js): selos
@@ -73,11 +75,19 @@ export function splitsChart(splits, kmElev) {
   return { bars, best: { km: bestIndex + 1, sec: fast }, alt };
 }
 
-// Subida e cadência da corrida, em texto, quando existem.
+// Dados extras da corrida em texto, quando existem: subida, cadência, frequência
+// cardíaca média, ritmo ajustado pela inclinação, tênis e esforço percebido.
+// run.shoe_name é o nome do tênis (quem monta o cartão acha pelo shoe_id).
 export function extrasOf(run) {
   const out = [];
-  if (run?.elev_gain_m > 0) out.push(t('↗ {v1} m de subida', { v1: run.elev_gain_m }));
-  if (run?.cadence > 0) out.push(t('👣 {v1} passos/min', { v1: run.cadence }));
+  if (run?.elev_gain_m > 0) out.push(t("↗ {v1} m de subida", { v1: run.elev_gain_m }));
+  if (run?.cadence > 0) out.push(t("👣 {v1} passos/min", { v1: run.cadence }));
+  const hr = cleanHr(run?.hr);
+  if (hr) out.push(t("❤️ {v1} bpm", { v1: hr.avg }));
+  const adjusted = gradeAdjustedPace(run?.splits, run?.km_elev);
+  if (adjusted) out.push(t("⛰ {v1}/km ajustado", { v1: formatPace(adjusted.adjusted) }));
+  if (run?.shoe_name) out.push(`👟 ${String(run.shoe_name).slice(0, 24)}`);
+  if (run?.effort > 0) out.push(t("💪 Esforço {v1}/10", { v1: run.effort }));
   return out;
 }
 

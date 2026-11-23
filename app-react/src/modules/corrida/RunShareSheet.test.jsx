@@ -55,6 +55,16 @@ describe('RunShareSheet', () => {
     expect(screen.queryByRole('button', { name: 'Mapa claro' })).toBeNull();
   });
 
+  it('formato quadrado vai nas escolhas e tira o fundo transparente', async () => {
+    render(<RunShareSheet run={run} onClose={() => {}} />);
+    await waitFor(() => expect(h.render).toHaveBeenCalled());
+    expect(h.render.mock.calls.at(-1)[2]).toMatchObject({ format: 'story' });
+    fireEvent.click(screen.getByRole('button', { name: 'Transparente' }));
+    fireEvent.click(screen.getByRole('button', { name: '⬜ Post (1:1)' }));
+    await waitFor(() => expect(h.render.mock.calls.at(-1)[2]).toMatchObject({ format: 'quadrado', bg: 'escuro' }));
+    expect(screen.queryByRole('button', { name: 'Transparente' })).toBeNull();
+  });
+
   it('os selos podem ser desligados e o compartilhar leva as mesmas escolhas', async () => {
     render(<RunShareSheet run={run} onClose={() => {}} />);
     await waitFor(() => expect(h.render).toHaveBeenCalled());

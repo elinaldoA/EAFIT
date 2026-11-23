@@ -55,7 +55,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
   const kcal = runCalories(run, weightFromMeta(user?.user_metadata));
   // Recordes e conquistas que esta corrida trouxe (só calculados com a corrida aberta): vão como selos no cartão.
   const badges = useMemo(() => (open && !run.pending ? badgesFor(run, runs) : []), [open, run, runs]);
-  const card = useMemo(() => ({ ...run, ...(kcal ? { kcal } : {}), ...(badges.length ? { badges } : {}) }), [run, kcal, badges]);
+  const card = useMemo(() => ({ ...run, ...(kcal ? { kcal } : {}), ...(badges.length ? { badges } : {}), ...(shoe ? { shoe_name: shoe.name } : {}) }), [run, kcal, badges, shoe]);
   // O card é desenhado ao abrir a corrida: no toque em Compartilhar ele já
   // está pronto e o share nativo não perde o gesto (lib/shareCard.js).
   const prepared = useRef(null);
