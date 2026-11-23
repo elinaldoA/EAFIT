@@ -400,6 +400,9 @@ export async function fetchRunFeed({ limit = 20, before = null } = {}) {
     km_elev: cleanKmElev(r.rf_km_elev),
     elev_gain_m: r.rf_elev_gain_m == null ? null : Number(r.rf_elev_gain_m),
     cadence: r.rf_cadence == null ? null : Number(r.rf_cadence),
+    // Frequência cardíaca e nome do tênis (migration 20270305140000).
+    hr: cleanHr(r.rf_hr),
+    shoe_name: r.rf_shoe_name ? String(r.rf_shoe_name) : null,
   }));
 }
 

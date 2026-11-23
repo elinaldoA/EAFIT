@@ -376,12 +376,12 @@ describe('fetchRunFeed', () => {
 describe('fetchRunFeed: parciais, subida e cadência', () => {
   it('traz os números do gráfico do cartão e, sem a migration, vem vazio', async () => {
     h.result = { error: null, data: [
-      { rf_id: 'a', rf_route: [], rf_splits: [330, 340], rf_km_elev: [[10, 2], [0, 5]], rf_elev_gain_m: 40, rf_cadence: 170 },
+      { rf_id: 'a', rf_route: [], rf_splits: [330, 340], rf_km_elev: [[10, 2], [0, 5]], rf_elev_gain_m: 40, rf_cadence: 170, rf_hr: { avg: 150, max: 175 }, rf_shoe_name: 'Pegasus' },
       { rf_id: 'b', rf_route: [] }, // banco sem a migration
     ] };
     const [a, b] = await fetchRunFeed();
-    expect(a).toMatchObject({ splits: [330, 340], km_elev: [[10, 2], [0, 5]], elev_gain_m: 40, cadence: 170 });
-    expect(b).toMatchObject({ splits: [], km_elev: [], elev_gain_m: null, cadence: null });
+    expect(a).toMatchObject({ splits: [330, 340], km_elev: [[10, 2], [0, 5]], elev_gain_m: 40, cadence: 170, hr: { avg: 150, max: 175 }, shoe_name: 'Pegasus' });
+    expect(b).toMatchObject({ splits: [], km_elev: [], elev_gain_m: null, cadence: null, hr: null, shoe_name: null });
   });
 });
 
