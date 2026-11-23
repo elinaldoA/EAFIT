@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { gatherExerciseDetails, countSets } from './workoutSets';
 
 beforeEach(() => localStorage.clear());
@@ -15,5 +15,49 @@ describe('gatherExerciseDetails com cardio', () => {
     const cardio = exs.find(e => e.nome === nome);
     expect(cardio.cardio).toBe(true);
     expect(cardio.sets[0]).toMatchObject({ done: true, duracao: '30', distancia: '5' });
+  });
+});
+
+import { clearDayLocal } from './workoutSets';
+import { getDateForWeekday } from './utils';
+
+describe('clearDayLocal', () => {
+  it('apaga séries, notas e cronômetro do dia e preserva o resto', () => {
+    localStorage.clear();
+    localStorage.setItem('set_Supino_1_done', 'true');
+    localStorage.setItem('set_Supino_1_carga', '60');
+    localStorage.setItem('set_Agacha_1_done', 'true');
+    localStorage.setItem('treino_Segunda_timer', '{}');
+    localStorage.setItem('treino_Segunda_notes', 'x');
+    localStorage.setItem('treino_Terça_timer', '{}');
+    clearDayLocal({ dia: 'Segunda', exercicios: [{ nome: 'Supino' }], pos: [] });
+    expect(localStorage.getItem('set_Supino_1_done')).toBeNull();
+    expect(localStorage.getItem('treino_Segunda_timer')).toBeNull();
+    expect(localStorage.getItem('treino_Segunda_notes')).toBeNull();
+    expect(localStorage.getItem('set_Agacha_1_done')).toBe('true');
+    expect(localStorage.getItem('treino_Terça_timer')).toBe('{}');
+  });
+
+  it('mantém o cronômetro quando pedido', () => {
+    localStorage.clear();
+    localStorage.setItem('treino_Segunda_timer', '{"status":"running"}');
+    clearDayLocal({ dia: 'Segunda', exercicios: [], pos: [] }, { keepTimer: true });
+    expect(localStorage.getItem('treino_Segunda_timer')).toBe('{"status":"running"}');
+  });
+});
+
+describe('semana de segunda a domingo', () => {
+  afterEach(() => vi.useRealTimers());
+  it('no domingo, segunda é a de seis dias atrás', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-22T15:00:00-03:00')); // domingo
+    expect(getDateForWeekday('Segunda')).toBe('2026-11-16');
+    expect(getDateForWeekday('Domingo')).toBe('2026-11-22');
+  });
+  it('na segunda, domingo é o do fim da semana', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-23T15:00:00-03:00')); // segunda
+    expect(getDateForWeekday('Segunda')).toBe('2026-11-23');
+    expect(getDateForWeekday('Domingo')).toBe('2026-11-29');
   });
 });

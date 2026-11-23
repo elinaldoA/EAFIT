@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { db } from '../lib/supabase';
 import { fetchActivePlan } from '../lib/workoutPlans';
 import { getDateForWeekday } from '../lib/utils';
+import { todayDate } from '../data/treinoData';
+import { clearDayLocal } from '../lib/workoutSets';
 import { enqueue, flushQueue, queueSize, restoreQueue, SYNC_QUEUE_EVENT } from '../lib/syncQueue';
 import { upsertWaterLog } from '../lib/waterLog';
 import { upsertProteinLog, upsertNutritionLog } from '../lib/proteinLog';
@@ -19,23 +21,28 @@ const RETRY_FIRST_MS = 15 * 1000;
 const RETRY_MAX_MS = 5 * 60 * 1000;
 
 // Reexecuta uma escrita que falhou (ex.: sem internet no momento) quando a fila é esvaziada.
+// Cada gravação do treino (status, cronômetro, nota, observações) é um update de
+// colunas em `workouts`: o payload da fila é { id, ...colunas } ou, quando o
+// treino do dia ainda nem existia, { userId, day, ...colunas }.
+function workoutFieldExecutors(kind) {
+  return {
+    [kind]: async ({ id, ...patch }) => {
+      const { error } = await db.from('workouts').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    [`${kind}_by_day`]: async ({ userId, day, ...patch }) => {
+      const wId = await ensureWorkoutId(userId, day);
+      const { error } = await db.from('workouts').update(patch).eq('id', wId);
+      if (error) throw error;
+    },
+  };
+}
+
 const SYNC_EXECUTORS = {
-  workout_status: async ({ id, completed }) => {
-    const { error } = await db.from('workouts').update({ completed }).eq('id', id);
-    if (error) throw error;
-  },
-  workout_timer: async ({ id, started_at, finished_at, duration_seconds }) => {
-    const { error } = await db.from('workouts').update({ started_at, finished_at, duration_seconds }).eq('id', id);
-    if (error) throw error;
-  },
-  workout_rating: async ({ id, rating }) => {
-    const { error } = await db.from('workouts').update({ rating }).eq('id', id);
-    if (error) throw error;
-  },
-  workout_notes: async ({ id, notes }) => {
-    const { error } = await db.from('workouts').update({ notes }).eq('id', id);
-    if (error) throw error;
-  },
+  ...workoutFieldExecutors('workout_status'),
+  ...workoutFieldExecutors('workout_timer'),
+  ...workoutFieldExecutors('workout_rating'),
+  ...workoutFieldExecutors('workout_notes'),
   // Restos da fila da cinta cardíaca (recurso removido): descarta sem enviar.
   workout_hr: async () => {},
   set_state: async ({ workout_id, exercise_name, set_number, patch }) => {
@@ -46,26 +53,6 @@ const SYNC_EXECUTORS = {
   },
   // Usados quando a falha aconteceu antes de resolver o workout do dia (ex.: sem
   // internet logo ao abrir o app) — resolvem/criam o workout de novo antes de escrever.
-  workout_status_by_day: async ({ userId, day, completed }) => {
-    const wId = await ensureWorkoutId(userId, day);
-    const { error } = await db.from('workouts').update({ completed }).eq('id', wId);
-    if (error) throw error;
-  },
-  workout_timer_by_day: async ({ userId, day, started_at, finished_at, duration_seconds }) => {
-    const wId = await ensureWorkoutId(userId, day);
-    const { error } = await db.from('workouts').update({ started_at, finished_at, duration_seconds }).eq('id', wId);
-    if (error) throw error;
-  },
-  workout_rating_by_day: async ({ userId, day, rating }) => {
-    const wId = await ensureWorkoutId(userId, day);
-    const { error } = await db.from('workouts').update({ rating }).eq('id', wId);
-    if (error) throw error;
-  },
-  workout_notes_by_day: async ({ userId, day, notes }) => {
-    const wId = await ensureWorkoutId(userId, day);
-    const { error } = await db.from('workouts').update({ notes }).eq('id', wId);
-    if (error) throw error;
-  },
   workout_hr_by_day: async () => {},
   set_state_by_day: async ({ userId, day, exercise_name, set_number, patch }) => {
     const wId = await ensureWorkoutId(userId, day);
@@ -104,6 +91,18 @@ const SYNC_EXECUTORS = {
     await upsertWeightLog(userId, date, peso);
   },
 };
+
+// Cronômetro em andamento no aparelho que começou na data deste treino: o
+// servidor só recebe a duração ao finalizar, então não dá para apagá-lo.
+function localTimerIsFrom(dayName, workout) {
+  if (workout.duration_seconds != null) return false;
+  try {
+    const timer = JSON.parse(localStorage.getItem(`treino_${dayName}_timer`));
+    return !!timer?.startedAt && todayDate(new Date(timer.startedAt)) === workout.workout_date;
+  } catch {
+    return false;
+  }
+}
 
 async function createExerciseLogs(workoutId, day) {
   if (!day) return;
@@ -333,6 +332,9 @@ export function WorkoutProvider({ children }) {
       days.forEach(day => {
         const dayName = day.dia;
         const w = byDate.get(getDateForWeekday(dayName));
+        // Fila vazia: o servidor manda. Limpa o que o aparelho guardou do dia
+        // (da semana passada, por exemplo) antes de aplicar o que veio de lá.
+        if (canResetMissing) clearDayLocal(day, { keepTimer: w ? localTimerIsFrom(dayName, w) : false });
         if (!w) {
           if (canResetMissing) localStorage.setItem(`treino_${dayName}`, false);
           return;
@@ -391,86 +393,31 @@ export function WorkoutProvider({ children }) {
     return activePlanDays.find(d => d.dia === dayName);
   }
 
-  async function saveWorkoutStatus(dayName, completed) {
+  // Grava colunas de `workouts` do dia; se falhar, entra na fila (kind) para subir depois.
+  async function saveWorkoutPatch(kind, dayName, patch) {
     if (!user) return;
     let wId;
     try {
       wId = workoutIds[dayName] || await ensureWorkoutId(user.id, findDay(dayName));
       if (!workoutIds[dayName]) setWorkoutIds(ids => ({ ...ids, [dayName]: wId }));
-      const { error } = await db.from('workouts').update({ completed }).eq('id', wId);
+      const { error } = await db.from('workouts').update(patch).eq('id', wId);
       if (error) throw error;
     } catch (err) {
-      console.error('saveWorkoutStatus:', err);
-      if (wId) {
-        enqueue('workout_status', { id: wId, completed });
-      } else {
-        enqueue('workout_status_by_day', { userId: user.id, day: findDay(dayName), completed });
-      }
+      console.error(`${kind}:`, err);
+      if (wId) enqueue(kind, { id: wId, ...patch });
+      else enqueue(`${kind}_by_day`, { userId: user.id, day: findDay(dayName), ...patch });
       setSyncStatus('pending');
     }
   }
 
-  async function saveWorkoutTimer(dayName, { startedAt, finishedAt, durationSeconds }) {
-    if (!user) return;
-    let wId;
-    const payload = {
-      started_at: startedAt ? new Date(startedAt).toISOString() : null,
-      finished_at: finishedAt ? new Date(finishedAt).toISOString() : null,
-      duration_seconds: durationSeconds ?? null,
-    };
-    try {
-      wId = workoutIds[dayName] || await ensureWorkoutId(user.id, findDay(dayName));
-      if (!workoutIds[dayName]) setWorkoutIds(ids => ({ ...ids, [dayName]: wId }));
-      const { error } = await db.from('workouts').update(payload).eq('id', wId);
-      if (error) throw error;
-    } catch (err) {
-      console.error('saveWorkoutTimer:', err);
-      if (wId) {
-        enqueue('workout_timer', { id: wId, ...payload });
-      } else {
-        enqueue('workout_timer_by_day', { userId: user.id, day: findDay(dayName), ...payload });
-      }
-      setSyncStatus('pending');
-    }
-  }
-
-  async function saveWorkoutRating(dayName, rating) {
-    if (!user) return;
-    let wId;
-    try {
-      wId = workoutIds[dayName] || await ensureWorkoutId(user.id, findDay(dayName));
-      if (!workoutIds[dayName]) setWorkoutIds(ids => ({ ...ids, [dayName]: wId }));
-      const { error } = await db.from('workouts').update({ rating }).eq('id', wId);
-      if (error) throw error;
-    } catch (err) {
-      console.error('saveWorkoutRating:', err);
-      if (wId) {
-        enqueue('workout_rating', { id: wId, rating });
-      } else {
-        enqueue('workout_rating_by_day', { userId: user.id, day: findDay(dayName), rating });
-      }
-      setSyncStatus('pending');
-    }
-  }
-
-  async function saveWorkoutNotes(dayName, notes) {
-    if (!user) return;
-    let wId;
-    try {
-      wId = workoutIds[dayName] || await ensureWorkoutId(user.id, findDay(dayName));
-      if (!workoutIds[dayName]) setWorkoutIds(ids => ({ ...ids, [dayName]: wId }));
-      const { error } = await db.from('workouts').update({ notes }).eq('id', wId);
-      if (error) throw error;
-    } catch (err) {
-      console.error('saveWorkoutNotes:', err);
-      if (wId) {
-        enqueue('workout_notes', { id: wId, notes });
-      } else {
-        enqueue('workout_notes_by_day', { userId: user.id, day: findDay(dayName), notes });
-      }
-      setSyncStatus('pending');
-    }
-  }
+  const saveWorkoutStatus = (dayName, completed) => saveWorkoutPatch('workout_status', dayName, { completed });
+  const saveWorkoutRating = (dayName, rating) => saveWorkoutPatch('workout_rating', dayName, { rating });
+  const saveWorkoutNotes = (dayName, notes) => saveWorkoutPatch('workout_notes', dayName, { notes });
+  const saveWorkoutTimer = (dayName, { startedAt, finishedAt, durationSeconds }) => saveWorkoutPatch('workout_timer', dayName, {
+    started_at: startedAt ? new Date(startedAt).toISOString() : null,
+    finished_at: finishedAt ? new Date(finishedAt).toISOString() : null,
+    duration_seconds: durationSeconds ?? null,
+  });
 
   async function saveSetState(dayName, exerciseName, setNumber, patch) {
     if (!user) return;

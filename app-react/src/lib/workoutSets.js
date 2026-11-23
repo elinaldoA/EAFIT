@@ -60,3 +60,15 @@ export function allSetsDone(ex, setCount) {
   }
   return true;
 }
+
+// Apaga do aparelho tudo o que é do treino de um dia (séries, cronômetro, notas,
+// nota do treino). Chamado quando o servidor é a fonte da verdade: sem isso, o
+// que ficou da semana passada reaparecia como feito na semana nova.
+export function clearDayLocal(day, { keepTimer = false } = {}) {
+  const names = [...(day.exercicios || []), ...(day.pos || [])].map(ex => ex.nome);
+  const prefixes = names.map(n => `set_${n}_`);
+  const own = [...(keepTimer ? [] : [`treino_${day.dia}_timer`]), `treino_${day.dia}_notes`, `treino_${day.dia}_rating`];
+  Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i)).forEach(k => {
+    if (k && (own.includes(k) || prefixes.some(p => k.startsWith(p)))) localStorage.removeItem(k);
+  });
+}

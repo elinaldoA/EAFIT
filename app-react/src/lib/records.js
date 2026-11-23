@@ -1,5 +1,5 @@
 import { db } from './supabase';
-import { parseRepCeiling } from './utils';
+import { parseRepCeiling, toDateStr } from './utils';
 import { queueSize } from './syncQueue';
 
 // Fórmula de Epley — estimativa padrão de 1RM a partir de peso x repetições.
@@ -98,12 +98,31 @@ async function fetchSetsWithDatesFallback(userId, exerciseName) {
 // Busca todas as séries concluídas (com carga, reps e data da sessão) de um
 // exercício — usada pra sugestão de carga, detecção de platô e (via
 // planEvolution.js) pra classificar a tendência do exercício num ciclo.
-export async function fetchExerciseSetsWithDates(userId, exerciseName) {
+// Sugestão, platô e ciclo pedem o mesmo histórico ao mesmo tempo: quem chega no
+// meio reaproveita a consulta em andamento. Só olha os últimos meses, para a
+// consulta não crescer com o histórico inteiro.
+const HISTORY_WINDOW_DAYS = 180;
+const inFlightHistory = new Map();
+
+export function fetchExerciseSetsWithDates(userId, exerciseName) {
+  const key = `${userId}|${exerciseName}`;
+  if (!inFlightHistory.has(key)) {
+    const p = fetchExerciseSetsUncached(userId, exerciseName).finally(() => inFlightHistory.delete(key));
+    inFlightHistory.set(key, p);
+  }
+  return inFlightHistory.get(key);
+}
+
+async function fetchExerciseSetsUncached(userId, exerciseName) {
+  const since = new Date();
+  since.setDate(since.getDate() - HISTORY_WINDOW_DAYS);
+  const sinceStr = toDateStr(since);
   try {
     const { data, error } = await db
       .from('exercise_sets')
       .select('carga, reps, rir, workouts!inner(user_id, workout_date)')
       .eq('workouts.user_id', userId)
+      .gte('workouts.workout_date', sinceStr)
       .eq('exercise_name', exerciseName)
       .eq('completed', true)
       .not('carga', 'is', null);
@@ -128,6 +147,10 @@ export async function fetchProgressionSuggestion(userId, exerciseName, repsStr) 
 // Mesma conta de fetchProgressionSuggestion sobre séries já buscadas
 // ({ carga, reps, workout_date }) — o assistente do Treino busca tudo de uma vez.
 const EASY_RIR = 3;
+// Salto de carga: 2,5 kg numa barra pesada é demais para halter leve ou polia.
+function loadStep(carga) {
+  return carga < 20 ? 1 : 2.5;
+}
 export function progressionFromSets(sets, repsStr) {
   const ceiling = parseRepCeiling(repsStr);
   if (ceiling === null) return null;
@@ -141,7 +164,9 @@ export function progressionFromSets(sets, repsStr) {
 
   const setsAtLastCarga = lastSets.filter(s => parseFloat(s.carga) === lastCarga);
   const hitCeiling = setsAtLastCarga.every(s => parseInt(s.reps, 10) >= ceiling);
-  const lastReps = Math.max(...setsAtLastCarga.map(s => parseInt(s.reps, 10)));
+  const repsList = setsAtLastCarga.map(s => parseInt(s.reps, 10)).filter(Number.isFinite);
+  // Séries sem reps anotadas: sem base para sugerir reps (antes virava NaN).
+  const lastReps = repsList.length ? Math.max(...repsList) : null;
   // RIR (repetições que sobraram): se todas as séries dessa carga sobraram 3 ou
   // mais, a carga ficou leve mesmo sem bater o teto das reps, e a dupla
   // progressão só por reps seria lenta demais. Exige o RIR anotado em todas.
@@ -154,8 +179,8 @@ export function progressionFromSets(sets, repsStr) {
   return {
     lastCarga,
     lastReps,
-    suggestedCarga: up ? lastCarga + 2.5 : lastCarga,
-    suggestedReps: up ? null : Math.min(ceiling, lastReps + 1),
+    suggestedCarga: up ? lastCarga + loadStep(lastCarga) : lastCarga,
+    suggestedReps: up || lastReps === null ? null : Math.min(ceiling, lastReps + 1),
     hitCeiling,
     easy,
     ready: up,

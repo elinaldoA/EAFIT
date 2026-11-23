@@ -33,7 +33,9 @@ export function getDateForWeekday(dayName) {
   const idx = DAY_NAMES.indexOf(dayName);
   const today = parseLocalDate(todayDate());
   const d = new Date(today);
-  d.setDate(today.getDate() + (idx - today.getDay()));
+  // Semana de segunda a domingo (como getWeekStart): no domingo, "Segunda" é a
+  // de seis dias atrás, não a de amanhã.
+  d.setDate(today.getDate() + ((idx + 6) % 7 - (today.getDay() + 6) % 7));
   return toDateStr(d);
 }
 
