@@ -18,6 +18,9 @@ import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard, renderRunSummaryCard, shareRunSummary } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
 import RunShareSheet from './RunShareSheet';
+import CropRun from './CropRun';
+import MergeRun from './MergeRun';
+import { canCrop } from './runEdit';
 import SummaryShareSheet from './SummaryShareSheet';
 import { badgesFor } from './runCardData';
 import { monthSummary } from './runSummary';
@@ -52,6 +55,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [tool, setTool] = useState(null); // 'cortar' | 'juntar'
   const { user } = useAuth();
   const kcal = runCalories(run, weightFromMeta(user?.user_metadata));
   // Recordes e conquistas que esta corrida trouxe (só calculados com a corrida aberta): vão como selos no cartão.
@@ -165,6 +169,10 @@ function RunItem({ run, runs, shoe, onDelete }) {
             {t('📸 Compartilhar com foto')}
           </button>
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setEditing(true)}>{t('✏️ Editar corrida')}</button>
+          {!run.pending && canCrop(run) && <button type="button" className="btn btn--outline btn--sm" onClick={() => setTool('cortar')}>{t('✂️ Cortar percurso')}</button>}
+          {!run.pending && <button type="button" className="btn btn--outline btn--sm" onClick={() => setTool('juntar')}>{t('🔗 Juntar com outra')}</button>}
+          {tool === 'cortar' && <CropRun userId={user.id} run={run} onClose={() => setTool(null)} />}
+          {tool === 'juntar' && <MergeRun userId={user.id} run={run} runs={runs} onClose={() => setTool(null)} />}
           <button
             type="button" className="btn btn--ghost btn--sm"
             onClick={() => onDelete(run)}
