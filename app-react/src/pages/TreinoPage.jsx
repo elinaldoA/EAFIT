@@ -36,7 +36,7 @@ import { fetchLibraryMap } from '../lib/muscleVolume';
 import { fmtVolume } from '../lib/workoutHistory';
 import {
   fetchRecentSets, buildTrainingCoach, sorePlannedMuscles, exerciseReadings, missedDays, weekBehind,
-  weekVolume, hardWeekStreak, isDeloadWeek, weeksToDeload,
+  weekVolume, hardWeekStreak, deloadStatus,
 } from '../lib/trainingCoach';
 import TrainingCoach from '../components/TrainingCoach';
 
@@ -44,7 +44,7 @@ import { t, nDias, tFoco } from '../lib/i18n';
 export default function TreinoPage() {
   const { user } = useAuth();
   const { config } = useAppConfig();
-  const { dataVersion, syncStatus, syncNow, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating, refreshPlan } = useWorkout();
+  const { dataVersion, syncStatus, syncNow, periodization, activePlanDays, planExpired, planByTrainer, planStartDate, planEndDate, saveWorkoutRating, refreshPlan } = useWorkout();
   const toast = useToast();
   const loading = syncStatus === 'loading';
   const [_tick, setTick] = useState(0);
@@ -129,6 +129,7 @@ export default function TreinoPage() {
   const missed = missedDays(activePlanDays, todayStr, isDayDone, user?.created_at ? toDateStr(new Date(user.created_at)) : null);
   const missedSet = new Set(missed.map(d => d.dia));
   const hardWeeks = history ? hardWeekStreak(history.sets, todayStr) : null;
+  const deload = deloadStatus({ periodization, hardWeeks });
   const volume = history ? weekVolume(history.sets, todayStr) : null;
   const todayHasSets = todaySets.total > 0;
   // Primeiro treino de quem acabou de chegar: se hoje é descanso no plano, oferece o próximo dia.
@@ -145,6 +146,7 @@ export default function TreinoPage() {
         missed,
         behind: weekBehind(activePlanDays, history.sets, todayStr, history.libMap),
         hardWeeks,
+        deload,
       })
     : null;
   const coachEl = (
@@ -292,9 +294,9 @@ export default function TreinoPage() {
       </button>
       <footer className="footer">
         <strong>{t('Progressão:')}</strong> {t('suba a carga quando bater o topo das reps')}
-        {hardWeeks != null && (isDeloadWeek(hardWeeks)
+        {deload && (deload.active
           ? <> · <strong>{t('Deload')}</strong> {t('esta semana')}</>
-          : <> · <strong>{t('Deload')}</strong> {t('em {n} semana(s)', { n: weeksToDeload(hardWeeks) })}</>)}
+          : <> · <strong>{t('Deload')}</strong> {t('em {n} semana(s)', { n: deload.weeksAway })}</>)}
       </footer>
       {restSession && (
         <RestTimer session={restSession} onClose={() => setRestSession(null)} />

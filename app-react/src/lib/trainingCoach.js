@@ -115,15 +115,31 @@ export function hardWeekStreak(sets, today) {
 export const isDeloadWeek = streak => streak >= DELOAD_EVERY - 1;
 export const weeksToDeload = streak => Math.max(0, DELOAD_EVERY - 1 - streak);
 
+// Um só relógio de semana leve para a tela e para o assistente:
+//  - plano com deload programado (periodization.deloadEvery): vale o calendário
+//    do plano, o mesmo que já reduz as séries na lista;
+//  - sem isso, o histórico (semanas puxadas seguidas) só orienta, não muda o treino.
+// periodization: periodizationInfo() do plano (ou null); hardWeeks: hardWeekStreak() (ou null).
+// Devolve { active, weeksAway, source: 'plan' | 'history', streak? } ou null.
+export function deloadStatus({ periodization = null, hardWeeks = null } = {}) {
+  if (periodization?.deloadEvery) {
+    const { week, deloadEvery } = periodization;
+    const active = !!periodization.deload;
+    return { active, weeksAway: active ? 0 : deloadEvery - (week % deloadEvery), source: 'plan' };
+  }
+  if (hardWeeks == null) return null;
+  return { active: isDeloadWeek(hardWeeks), weeksAway: weeksToDeload(hardWeeks), source: 'history', streak: hardWeeks };
+}
+
 // A leitura do dia. Devolve { kind, tone, ...dados } ou null; o texto fica no
 // componente. Prioridade: o que muda o treino de hoje vem antes do que é só
 // informação. today: { day, hasSets, done, started, quick }.
-export function buildTrainingCoach({ today, checkin, sore = [], readings, missed = [], behind = [], hardWeeks = 0 }) {
+export function buildTrainingCoach({ today, checkin, sore = [], readings, missed = [], behind = [], hardWeeks = 0, deload: status = null }) {
   const notes = [];
   const lowEnergy = checkin && checkin.energy <= 2 && checkin.sleep <= 2;
   // Dormiu mal ou está sem energia: o check-in já pede cautela, então nada de subir carga.
   const holdLoads = checkin && (checkin.energy <= 2 || checkin.sleep <= 2);
-  const deload = isDeloadWeek(hardWeeks);
+  const deload = status ? status.active : isDeloadWeek(hardWeeks);
   const ready = readings?.ready || [];
   const stuck = readings?.stuck || [];
 
@@ -131,7 +147,7 @@ export function buildTrainingCoach({ today, checkin, sore = [], readings, missed
     let lead;
     if (lowEnergy) lead = { kind: 'low_energy', tone: 'warn', offerQuick: !today.started && !today.quick };
     else if (sore.length) lead = { kind: 'sore', tone: 'warn', muscles: sore };
-    else if (deload) lead = { kind: 'deload_week', tone: '', weeks: hardWeeks };
+    else if (deload) lead = { kind: 'deload_week', tone: '', weeks: hardWeeks, source: status?.source || 'history' };
     else if (stuck.length >= PLATEAUS_FOR_DELOAD) lead = { kind: 'deload_plateaus', tone: 'warn', count: stuck.length };
     else if (ready.length && !holdLoads) lead = { kind: 'ready', tone: 'ok', count: ready.length, energized: checkin?.energy >= 4 };
     // Energia alta ou sono ruim sozinhos o check-in já comenta logo acima.

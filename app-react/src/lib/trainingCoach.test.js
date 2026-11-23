@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('./supabase', () => ({ db: {} }));
 
 import {
-  missedDays, sorePlannedMuscles, exerciseReadings, weekVolume, hardWeekStreak, isDeloadWeek, weeksToDeload, buildTrainingCoach, weekBehind,
+  missedDays, sorePlannedMuscles, exerciseReadings, weekVolume, hardWeekStreak, isDeloadWeek, weeksToDeload, buildTrainingCoach, deloadStatus, weekBehind,
 } from './trainingCoach';
 
 // 2026-10-29 é quinta-feira; a semana começou no domingo 25.
@@ -151,6 +151,18 @@ describe('buildTrainingCoach', () => {
     expect(c).toMatchObject({ kind: 'deload_week', weeks: 5, notes: [] });
   });
 
+  it('deload do plano manda no assistente: semana leve do plano, mesmo sem histórico puxado', () => {
+    const deload = deloadStatus({ periodization: { week: 4, deloadEvery: 4, deload: true }, hardWeeks: 0 });
+    const c = buildTrainingCoach({ today: pending, readings: { ready, stuck }, hardWeeks: 0, deload });
+    expect(c).toMatchObject({ kind: 'deload_week', source: 'plan', notes: [] });
+  });
+
+  it('fora da semana leve do plano, o histórico puxado não dispara deload', () => {
+    const deload = deloadStatus({ periodization: { week: 2, deloadEvery: 4, deload: false }, hardWeeks: 9 });
+    const c = buildTrainingCoach({ today: pending, readings: { ready, stuck }, hardWeeks: 9, deload });
+    expect(c.kind).not.toBe('deload_week');
+  });
+
   it('três platôs pedem uma semana leve', () => {
     const three = ['A', 'B', 'C'].map(nome => ({ ...stuck[0], nome }));
     expect(buildTrainingCoach({ today: pending, readings: { ready: [], stuck: three } }).kind).toBe('deload_plateaus');
@@ -184,5 +196,18 @@ describe('buildTrainingCoach', () => {
     expect(buildTrainingCoach({ today: rest, missed: [QUA, SEG] })).toMatchObject({ kind: 'catchup', day: QUA });
     expect(buildTrainingCoach({ today: null, missed: [QUA] })).toMatchObject({ kind: 'catchup', day: QUA });
     expect(buildTrainingCoach({ today: rest })).toBeNull();
+  });
+});
+
+describe('deloadStatus', () => {
+  it('plano com deload programado: conta pelas semanas do ciclo', () => {
+    expect(deloadStatus({ periodization: { week: 4, deloadEvery: 4, deload: true } })).toEqual({ active: true, weeksAway: 0, source: 'plan' });
+    expect(deloadStatus({ periodization: { week: 2, deloadEvery: 4, deload: false } })).toEqual({ active: false, weeksAway: 2, source: 'plan' });
+    expect(deloadStatus({ periodization: { week: 5, deloadEvery: 4, deload: false } })).toMatchObject({ weeksAway: 3 });
+  });
+  it('sem deload no plano, usa o histórico; sem nenhum dos dois, null', () => {
+    expect(deloadStatus({ periodization: { week: 2, step: 2.5, deloadEvery: null }, hardWeeks: 5 })).toMatchObject({ active: true, source: 'history' });
+    expect(deloadStatus({ hardWeeks: 1 })).toMatchObject({ active: false, weeksAway: 4, source: 'history' });
+    expect(deloadStatus({})).toBeNull();
   });
 });

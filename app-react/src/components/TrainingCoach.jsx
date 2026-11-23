@@ -8,8 +8,10 @@ function leadText(c) {
   switch (c.kind) {
     case 'low_energy': return t('Energia e sono baixos hoje. Um treino curto ainda conta para a semana.');
     case 'sore': return t('Ontem já teve bastante volume de {musculos}. Comece leve e não busque recorde nesse músculo hoje.', { musculos: muscles(c.muscles) });
-    case 'deload_week': return t('{n} semanas seguidas de treino puxado. Esta é a semana leve: cerca de 60% das cargas e foco na técnica.', { n: c.weeks });
-    case 'deload_plateaus': return t('{n} exercícios de hoje estão parados há 3 treinos. Vale uma semana leve, com cerca de 60% das cargas.', { n: c.count });
+    case 'deload_week': return c.source === 'plan'
+      ? t('Esta é a semana leve do seu plano: cerca de 60% das séries, mesma carga e sem ir à falha.')
+      : t('{n} semanas seguidas de treino puxado. Esta é a semana leve: cerca de 60% das séries, mesma carga e sem ir à falha.', { n: c.weeks });
+    case 'deload_plateaus': return t('{n} exercícios de hoje estão parados há 3 treinos. Vale uma semana leve, com cerca de 60% das séries e a mesma carga.', { n: c.count });
     case 'ready': return c.energized
       ? (c.count === 1 ? t('Energia alta e 1 exercício pronto para subir carga. Dia de recorde.') : t('Energia alta e {n} exercícios prontos para subir carga. Dia de recorde.', { n: c.count }))
       : (c.count === 1 ? t('1 exercício pronto para subir carga hoje.') : t('{n} exercícios prontos para subir carga hoje.', { n: c.count }));
