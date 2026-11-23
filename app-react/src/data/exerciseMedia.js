@@ -1,6 +1,5 @@
 import { EXERCISE_VIDEOS, videoCredit } from './exerciseVideos';
 import { EXERCISE_YOUTUBE } from './exerciseYoutube';
-import { EXERCISE_SVG } from './exerciseSvg';
 import { matchCatalogExercise } from './exerciseMatch';
 
 // Demonstração de execução (2 quadros do movimento, sem ordem garantida) por nome de
@@ -220,7 +219,6 @@ export const EXERCISE_MEDIA = {
   'Caminhada ao Ar Livre': 'Trail_Running_Walking',
 };
 
-export const SVG_CREDIT = 'Ilustração animada · EAFIT';
 export const MEDIA_CREDIT = 'Free Exercise DB · domínio público';
 
 // Planos antigos/templates prefixam emoji no nome dos exercícios de pós-treino
@@ -229,11 +227,11 @@ export function normalizeExerciseName(nome) {
   return String(nome || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
 }
 
-const hasExactMedia = (key, custom) => !!(custom?.[key] || EXERCISE_VIDEOS[key] || EXERCISE_SVG[key] || EXERCISE_MEDIA[key] || EXERCISE_YOUTUBE[key]);
+const hasExactMedia = (key, custom) => !!(custom?.[key] || EXERCISE_VIDEOS[key] || EXERCISE_MEDIA[key] || EXERCISE_YOUTUBE[key]);
 
 // Nomes com alguma demonstração. A mesma lista (mesma referência) enquanto a
 // mídia do admin não muda, pra o índice do matcher não ser refeito.
-const STOCK_NAMES = [...new Set([...Object.keys(EXERCISE_VIDEOS), ...Object.keys(EXERCISE_SVG), ...Object.keys(EXERCISE_YOUTUBE), ...Object.keys(EXERCISE_MEDIA)])];
+const STOCK_NAMES = [...new Set([...Object.keys(EXERCISE_VIDEOS), ...Object.keys(EXERCISE_YOUTUBE), ...Object.keys(EXERCISE_MEDIA)])];
 let namesCache = { custom: null, names: STOCK_NAMES };
 function catalogNames(custom) {
   if (!custom || !Object.keys(custom).length) return STOCK_NAMES;
@@ -242,8 +240,7 @@ function catalogNames(custom) {
 }
 
 // Ordem: mídia própria do admin (custom, lib/customExerciseMedia.js) → vídeo
-// curto (data/exerciseVideos.js) → boneco animado em SVG (data/exerciseSvg.js,
-// só exercícios de solo) → player do YouTube (data/exerciseYoutube.js,
+// curto (data/exerciseVideos.js) → player do YouTube (data/exerciseYoutube.js,
 // com os 2 quadros como reserva offline) → 2 quadros do Free Exercise DB.
 export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom = null) {
   const exact = normalizeExerciseName(nome);
@@ -254,8 +251,6 @@ export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom =
   if (own) return { custom: true, type: own.type, url: own.url };
   const video = EXERCISE_VIDEOS[key];
   if (video) return { stock: true, type: 'video', url: `${base}videos/${video}.mp4`, credit: videoCredit(video) };
-  const svg = EXERCISE_SVG[key];
-  if (svg) return { stock: true, type: 'svg', svg, credit: SVG_CREDIT };
   const id = EXERCISE_MEDIA[key];
   const frames = id ? { id, frames: [0, 1].map(n => `${base}exercicios/${id}/${n}.webp`) } : null;
   const yt = EXERCISE_YOUTUBE[key];

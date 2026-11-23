@@ -535,27 +535,3 @@ body.live-open .toast.show { transform: translateX(-50%) translateY(0); }
   font-weight: 600;
   cursor: pointer;
 }
-
-/* Boneco animado em SVG (components/ExerciseSvg.jsx) */
-.demo-modal__stage--svg { aspect-ratio: 16 / 9; background: linear-gradient(#f4f6f9, #e3e8ee); }
-.fig { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.fig__mat { fill: #59606b; }
-.fig__torso, .fig__limb line { stroke: #aeb7c3; }
-.fig__limb--far line { stroke: #7d8795; }
-.fig__head { fill: #aeb7c3; }
-.fig__face { fill: #6c7684; }
-.fig__muscle { stroke: #e8503f; fill: #e8503f; }
-polyline.fig__muscle, line.fig__muscle { fill: none; }
-.demo-modal__muscles { font-size: var(--fs-xs); color: var(--text-muted); }
-
-/* Boneco animado em SVG (components/ExerciseSvg.jsx) */
-.demo-modal__stage--svg { aspect-ratio: 16 / 9; background: linear-gradient(#f4f6f9, #e3e8ee); }
-.fig { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.fig__mat { fill: #59606b; }
-.fig__torso, .fig__limb line { stroke: #aeb7c3; }
-.fig__limb--far line { stroke: #7d8795; }
-.fig__head { fill: #aeb7c3; }
-.fig__face { fill: #6c7684; }
-.fig__muscle { stroke: #e8503f; fill: #e8503f; }
-polyline.fig__muscle, line.fig__muscle { fill: none; }
-.demo-modal__muscles { font-size: var(--fs-xs); color: var(--text-muted); }
