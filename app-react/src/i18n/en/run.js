@@ -811,4 +811,10 @@ export default {
   "Linha cheia: forma (42 dias). Tracejada: fadiga (7 dias). Frescor = forma − fadiga. Calculado pelo esforço relativo de cada corrida.": "Solid line: fitness (42 days). Dashed: fatigue (7 days). Freshness = fitness − fatigue. Based on each run's relative effort.",
   "🔥 Esforço relativo: {v1} ({v2})": "🔥 Relative effort: {v1} ({v2})",
   "🔥 Esforço relativo {v1}": "🔥 Relative effort {v1}",
+  "{v1} km no mês": "{v1} km this month",
+  "{v1} corridas no mês": "{v1} runs this month",
+  "Uma corrida de {v1} km": "One {v1} km run",
+  "Selos do mês": "Monthly badges",
+  "Conquistado": "Earned",
+  "Estante de selos": "Badge shelf",
 };
