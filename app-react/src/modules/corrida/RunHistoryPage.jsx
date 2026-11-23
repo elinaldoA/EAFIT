@@ -17,6 +17,9 @@ import RouteDrawing from './RouteDrawing';
 import PrivacyZones from './PrivacyZones';
 import { renderRunCard, shareRunCard, renderRunSummaryCard, shareRunSummary } from './runShareCard';
 import RunPhotoShare from './RunPhotoShare';
+import RunShareSheet from './RunShareSheet';
+import SummaryShareSheet from './SummaryShareSheet';
+import { badgesFor } from './runCardData';
 import { monthSummary } from './runSummary';
 import { kmGoals } from './runProfileStats';
 import { useDeferredRemoval } from '../../lib/useDeferredRemoval';
@@ -46,10 +49,13 @@ function RunItem({ run, runs, shoe, onDelete }) {
   const [open, setOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const { user } = useAuth();
   const kcal = runCalories(run, weightFromMeta(user?.user_metadata));
-  const card = useMemo(() => (kcal ? { ...run, kcal } : run), [run, kcal]);
+  // Recordes e conquistas que esta corrida trouxe (só calculados com a corrida aberta): vão como selos no cartão.
+  const badges = useMemo(() => (open && !run.pending ? badgesFor(run, runs) : []), [open, run, runs]);
+  const card = useMemo(() => ({ ...run, ...(kcal ? { kcal } : {}), ...(badges.length ? { badges } : {}) }), [run, kcal, badges]);
   // O card é desenhado ao abrir a corrida: no toque em Compartilhar ele já
   // está pronto e o share nativo não perde o gesto (lib/shareCard.js).
   const prepared = useRef(null);
@@ -149,6 +155,9 @@ function RunItem({ run, runs, shoe, onDelete }) {
           <button type="button" className="btn btn--primary btn--sm" disabled={sharing} onClick={handleShare}>
             {sharing ? t('Gerando imagem…') : t('📤 Compartilhar nos stories')}
           </button>
+          <button type="button" className="btn btn--outline btn--sm" onClick={() => setSheetOpen(true)}>
+            {t('🎨 Personalizar cartão')}
+          </button>
           <button type="button" className="btn btn--outline btn--sm" onClick={() => setPhotoOpen(true)}>
             {t('📸 Compartilhar com foto')}
           </button>
@@ -159,6 +168,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
           >{t('Apagar corrida')}</button>
         </div>
       )}
+      {sheetOpen && <RunShareSheet run={card} onClose={() => setSheetOpen(false)} onPhoto={() => { setSheetOpen(false); setPhotoOpen(true); }} />}
       {photoOpen && <RunPhotoShare run={card} onClose={() => setPhotoOpen(false)} />}
     </li>
   );
@@ -167,9 +177,10 @@ function RunItem({ run, runs, shoe, onDelete }) {
 // Aba Você do EAFIT Run: km da semana, do mês e do ano, totais, recordes, km
 // por semana e a lista das suas corridas (inclusive as que ainda estão no aparelho).
 // Cartão do mês para os stories. A imagem começa a ser desenhada no primeiro toque.
-function SummaryShare({ runs, today, goalKm }) {
+function SummaryShare({ runs, today, goalKm, goals }) {
   const toast = useToast();
   const [sharing, setSharing] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const prepared = useRef(null);
   const prepare = () => { if (!prepared.current) prepared.current = renderRunSummaryCard(runs, today, undefined, goalKm).catch(() => null); };
   async function handle() {
@@ -185,9 +196,15 @@ function SummaryShare({ runs, today, goalKm }) {
     }
   }
   return (
-    <button type="button" className="btn btn--outline btn--sm run-periods__share" disabled={sharing} onPointerDown={prepare} onFocus={prepare} onClick={handle}>
-      {sharing ? t('Gerando imagem…') : t('📤 Compartilhar meu mês')}
-    </button>
+    <>
+      <button type="button" className="btn btn--outline btn--sm run-periods__share" disabled={sharing} onPointerDown={prepare} onFocus={prepare} onClick={handle}>
+        {sharing ? t('Gerando imagem…') : t('📤 Compartilhar meu mês')}
+      </button>
+      <button type="button" className="btn btn--ghost btn--sm run-periods__share" onClick={() => setSheetOpen(true)}>
+        {t('📊 Semana, mês ou ano')}
+      </button>
+      {sheetOpen && <SummaryShareSheet runs={runs} today={today} goals={goals} onClose={() => setSheetOpen(false)} />}
+    </>
   );
 }
 
@@ -292,7 +309,7 @@ export default function RunHistoryPage() {
           </div>
         ))}
       </div>
-      {monthSummary(runs, today) && <SummaryShare runs={runs} today={today} goalKm={kmGoals(user.user_metadata).month} />}
+      {monthSummary(runs, today) && <SummaryShare runs={runs} today={today} goalKm={kmGoals(user.user_metadata).month} goals={kmGoals(user.user_metadata)} />}
 
       <div className="dash-card">
         <div className="summary-stats run-stats">
