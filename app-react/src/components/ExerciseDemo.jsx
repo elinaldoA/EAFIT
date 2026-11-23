@@ -6,6 +6,7 @@ import { getExerciseMedia, MEDIA_CREDIT } from '../data/exerciseMedia';
 import { youtubeEmbedUrl } from '../data/exerciseYoutube';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useCustomExerciseMedia } from '../hooks/useCustomExerciseMedia';
+import ExerciseSvgStage from './ExerciseSvg';
 
 import { t, tEx, tTec } from '../lib/i18n';
 // Devagar o bastante pra acompanhar cada posição (troca com fade — ver live.css).
@@ -176,6 +177,7 @@ function YoutubeStage({ nome, youtube }) {
 }
 
 function DemoStage({ nome, media }) {
+  if (media.type === 'svg') return <ExerciseSvgStage nome={nome} svg={media.svg} />;
   if (media.type === 'youtube') {
     // Sem rede o player não carrega: usa os 2 quadros salvos, se houver.
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
