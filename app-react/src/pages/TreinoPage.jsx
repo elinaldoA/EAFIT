@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { useDeferredRemoval } from '../lib/useDeferredRemoval';
 import { todayName, todayDate } from '../data/treinoData';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { useAppConfig } from '../context/useAppConfig';
 import { isFlagOn } from '../lib/appConfig';
-import { getDateForWeekday, fmtDate, daysUntil, toDateStr } from '../lib/utils';
-import { db } from '../lib/supabase';
+import { toDateStr } from '../lib/utils';
 import { countSets, gatherExerciseDetails } from '../lib/workoutSets';
 import RestTimer from '../components/RestTimer';
 import PlanEditorModal from '../components/PlanEditorModal';
@@ -28,19 +26,20 @@ import MyAppointments from '../components/MyAppointments';
 import { syncCoachPrefs } from '../lib/coach';
 import QuickWorkoutModal from '../components/QuickWorkoutModal';
 import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
-import MobilityButton from '../components/MobilityButton';
+import TodayCard from '../components/TodayCard';
+import WeekProgressCard from '../components/WeekProgressCard';
+import { useWorkoutReset } from '../hooks/useWorkoutReset';
 import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice, QUICK_OPTIONS } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
 import { activePause } from '../lib/pause';
 import { fetchLibraryMap } from '../lib/muscleVolume';
-import { fmtVolume } from '../lib/workoutHistory';
 import {
   fetchRecentSets, buildTrainingCoach, sorePlannedMuscles, exerciseReadings, missedDays, weekBehind,
   weekVolume, hardWeekStreak, deloadStatus,
 } from '../lib/trainingCoach';
 import TrainingCoach from '../components/TrainingCoach';
 
-import { t, nDias, tFoco } from '../lib/i18n';
+import { t } from '../lib/i18n';
 export default function TreinoPage() {
   const { user } = useAuth();
   const { config } = useAppConfig();
@@ -49,7 +48,6 @@ export default function TreinoPage() {
   const loading = syncStatus === 'loading';
   const [_tick, setTick] = useState(0);
   const bump = () => setTick(t => t + 1);
-  const resetRemoval = useDeferredRemoval();
   const [restSession, setRestSession] = useState(null);
   const restKey = useRef(0);
   const [showPlanEditor, setShowPlanEditor] = useState(false);
@@ -125,6 +123,8 @@ export default function TreinoPage() {
   const todayDone = today && localStorage.getItem(`treino_${today.dia}`) === 'true';
   const isDayDone = dia => localStorage.getItem(`treino_${dia}`) === 'true';
 
+  const handleReset = useWorkoutReset({ user, activePlanDays, bump, toast, syncNow });
+
   const todayStr = todayDate();
   const missed = missedDays(activePlanDays, todayStr, isDayDone, user?.created_at ? toDateStr(new Date(user.created_at)) : null);
   const missedSet = new Set(missed.map(d => d.dia));
@@ -157,45 +157,6 @@ export default function TreinoPage() {
     />
   );
 
-  // Limpa a tela na hora, guardando uma cópia dos checks e cargas; a exclusão no
-  // servidor (sessões da semana, que somem do Histórico, sem volta) só roda em 6s
-  // ou ao sair da tela, a não ser que desfaça (devolve a cópia).
-  function handleReset() {
-    const doneDays = activePlanDays.filter(d => isDayDone(d.dia)).length;
-    const isWeekKey = k => ['treino_', 'carga_', 'set_', 'warm_', 'hr_'].some(p => k.startsWith(p));
-    const snapshot = Object.keys(localStorage).filter(isWeekKey).map(k => [k, localStorage.getItem(k)]);
-    snapshot.forEach(([k]) => localStorage.removeItem(k));
-    bump();
-    const id = `reset_${Date.now()}`;
-    if (user) {
-      const dates = activePlanDays.map(d => getDateForWeekday(d.dia));
-      resetRemoval.schedule(id, async () => {
-        try {
-          const { error } = await db.from('workouts').delete().eq('user_id', user.id).in('workout_date', dates);
-          if (error) throw error;
-          await syncNow();
-        } catch (err) {
-          console.error('resetWorkouts:', err);
-          toast(t('⚠️ Limpou localmente, mas falhou ao sincronizar com o servidor — pode voltar ao reabrir o app'));
-        }
-      });
-    }
-    toast(
-      doneDays > 0 ? t('🧹 Semana apagada, inclusive os treinos concluídos ({dias})', { dias: nDias(doneDays) }) : t('🧹 Checks e cargas limpos'),
-      6000,
-      {
-        action: {
-          label: t('Desfazer'),
-          onClick: () => {
-            resetRemoval.undo(id);
-            snapshot.forEach(([k, v]) => localStorage.setItem(k, v));
-            bump();
-          },
-        },
-      },
-    );
-  }
-
   return (
     <section id="page-treino" className="page active">
       <PauseBanner />
@@ -226,47 +187,10 @@ export default function TreinoPage() {
         />
       )}
       {!today && !loading && coach && <div className="today-card">{coachEl}</div>}
-      <div className="progress-card">
-        <div className="progress-card__row">
-          <span className="progress-card__label">{t('Semana atual')}</span>
-          <span className="progress-card__count">{t('{done}/{total} treinos', { done, total })}</span>
-        </div>
-        <div className="week-strip">
-          {workDays.map(d => {
-            const isDone = isDayDone(d.dia);
-            const isToday = d.dia === todayName();
-            const isMissed = missedSet.has(d.dia);
-            let status = '';
-            if (isDone) status = t('(concluído)');
-            else if (isMissed) status = t('(ficou para trás)');
-            return (
-              <div
-                key={d.dia}
-                className={`week-strip__day${isDone ? ' week-strip__day--done' : ''}${isToday ? ' week-strip__day--today' : ''}${isMissed ? ' week-strip__day--missed' : ''}`}
-                title={`${t(d.dia)} — ${tFoco(d.foco)}${status}`}
-              >
-                <span className="week-strip__dot" aria-hidden="true">{isDone ? '✓' : ''}</span>
-                <span className="week-strip__label">{t(d.dia).slice(0, 3)}</span>
-              </div>
-            );
-          })}
-        </div>
-        {volume?.now > 0 && (
-          <p className="progress-card__volume">
-            {t('Volume da semana: {v}', { v: fmtVolume(volume.now) })}
-            {volume.deltaPct != null && (
-              <span className={volume.deltaPct >= 0 ? 'progress-card__delta--up' : 'progress-card__delta--down'}>
-                {' · '}{t('{sinal}{pct}% vs. o mesmo ponto da semana passada', { sinal: volume.deltaPct > 0 ? '+' : '', pct: volume.deltaPct })}
-              </span>
-            )}
-          </p>
-        )}
-        {planEndDate && !planExpired && (
-          <p className="progress-card__cycle">
-            {t('📅 Treino válido de {v1} até {v2} ({v3}d restantes){v4}', { v1: planStartDate ? fmtDate(planStartDate) : '—', v2: fmtDate(planEndDate), v3: Math.max(0, daysUntil(planEndDate)), v4: planByTrainer ? '' : ` · ${t('atualizado automaticamente ao vencer')}` })}
-          </p>
-        )}
-      </div>
+      <WeekProgressCard
+        workDays={workDays} done={done} total={total} isDayDone={isDayDone} missedSet={missedSet} volume={volume}
+        planStartDate={planStartDate} planEndDate={planEndDate} planExpired={planExpired} planByTrainer={planByTrainer}
+      />
       <div className="toolbar">
         <p className="toolbar__hint">
           {loading ? t('Carregando dados salvos…') : t('Marque os treinos · salva automático')}
@@ -325,51 +249,5 @@ export default function TreinoPage() {
         <SurveyPrompt survey={survey} onClose={() => setSurvey(null)} />
       )}
     </section>
-  );
-}
-
-function TodayCard({ day, sets, done, onStart, quickMinutes, onQuick, mobility, coach, firstDay, onStartFirst }) {
-  const hasSets = sets.total > 0;
-  const pct = hasSets ? (sets.done / sets.total) * 100 : 0;
-  let cta = t('⚡ Começar treino');
-  if (done) cta = t('💪 Revisar treino');
-  else if (sets.done > 0) cta = t('⚡ Continuar treino');
-
-  return (
-    <div className={`today-card${done ? ' today-card--done' : ''}`}>
-      <div className="today-card__top">
-        <div>
-          <span className="today-card__kicker">{done ? t('Treino de hoje concluído') : t('Treino de hoje')}</span>
-          <h2 className="today-card__title">{tFoco(day.foco)}</h2>
-          <span className="today-card__meta">
-            {day.exercicios.length === 1
-              ? t('{dia} · 1 exercício', { dia: t(day.dia) })
-              : t('{dia} · {length} exercícios', { dia: t(day.dia), length: day.exercicios.length })}
-            {hasSets && ` · ${t('{setsDone}/{setsTotal} séries', { setsDone: sets.done, setsTotal: sets.total })}`}
-            {hasSets && !done && ` · ${t('~{m} min', { m: estimateMinutes(day) })}`}
-          </span>
-          {quickMinutes && <span className="today-card__quick">{t('⏱ Versão de {m} min', { m: quickMinutes })}</span>}
-        </div>
-        {hasSets && (
-          <div className="today-card__ring" style={{ '--pct': pct }} aria-label={t('{v1}% das séries', { v1: Math.round(pct) })}>
-            <span>{Math.round(pct)}%</span>
-          </div>
-        )}
-      </div>
-      {!hasSets && <p className="today-card__rest">{t('Dia de recuperação — descanse bem ou faça um cardio leve. 🧘')}</p>}
-      {coach}
-      {hasSets && <button type="button" className="btn btn--primary btn--full" onClick={onStart}>{cta}</button>}
-      {!hasSets && firstDay && onStartFirst && (
-        <button type="button" className="btn btn--primary btn--full" onClick={onStartFirst}>
-          {t('⚡ Começar pelo primeiro treino: {foco}', { foco: tFoco(firstDay.foco) })}
-        </button>
-      )}
-      {hasSets && !done && onQuick && (
-        <button type="button" className="today-card__link" onClick={onQuick}>
-          {quickMinutes ? t('Mudar o tempo ou voltar ao treino completo') : t('⏱ Pouco tempo hoje? Enxugar o treino')}
-        </button>
-      )}
-      {!hasSets && mobility && <MobilityButton kind="rest" minutes={8} className="btn btn--outline btn--full" />}
-    </div>
   );
 }

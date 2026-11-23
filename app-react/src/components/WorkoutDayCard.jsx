@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/useAuth';
-import { strengthCalories, weightFromMeta } from '../lib/calories';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { formatDuration } from '../lib/utils';
-import { playWorkoutFinishedSound } from '../lib/sound';
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer';
-import { postActivity } from '../lib/friends';
-import { coachSay, coachRecords, takeRecords, speechTime } from '../lib/coach';
-import { calcDayVolume, gatherExerciseDetails, countSets, allSetsDone } from '../lib/workoutSets';
+import { calcDayVolume, gatherExerciseDetails, countSets } from '../lib/workoutSets';
+import { weekProgress } from '../lib/workoutSummary';
+import { useFinishWorkout } from '../hooks/useFinishWorkout';
+import { useWorkoutNotes } from '../hooks/useWorkoutNotes';
+import { useSetActions } from '../hooks/useSetActions';
+import SessionTimerBar from './SessionTimerBar';
 import { findGroup, nextInGroup, segmentExercises, groupKindLabel } from '../lib/supersets';
 import ExerciseBlock from './ExerciseBlock';
 import LiveWorkoutModal from './LiveWorkoutModal';
@@ -26,22 +27,19 @@ import { dayMuscles } from '../lib/muscleVolume';
 import { weekLabel } from '../lib/periodization';
 import { t, locale, tFoco } from '../lib/i18n';
 
-// Quanto o toast "Treino finalizado" fica na tela (ToastContext) antes de a mensagem do envio entrar.
-const FINISH_TOAST_MS = 2700;
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
 // TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
 // que é quem tem o cronômetro e as ações de série do dia.
 export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
-  const { saveWorkoutStatus, saveSetState, saveWorkoutTimer, saveWorkoutNotes, syncAfterFinish, activePlanDays, markPending, periodization } = useWorkout();
+  const { saveWorkoutStatus, saveWorkoutTimer, saveWorkoutNotes, activePlanDays, markPending, periodization } = useWorkout();
   const toast = useToast();
   const { config } = useAppConfig();
   const [open, setOpen] = useState(isToday);
   const [checked, setChecked] = useState(() => localStorage.getItem(`treino_${day.dia}`) === 'true');
-  const [markVersions, setMarkVersions] = useState({});
+  const { markVersions, toggleAllSets, fillOtherSets, applySuggestion } = useSetActions({ day, bump });
   const [notesOpen, setNotesOpen] = useState(false);
-  const [notes, setNotes] = useState(() => localStorage.getItem(`treino_${day.dia}_notes`) || '');
-  const notesSaveTimer = useRef(null);
+  const { notes, handleNotesInput, handleNotesBlur } = useWorkoutNotes({ day, user, saveWorkoutNotes });
   // Muda ao sair do modo ao vivo: remonta os SetRow da lista, que leem o
   // localStorage só na montagem e ficariam com os valores de antes.
   const [liveEpoch, setLiveEpoch] = useState(0);
@@ -62,45 +60,6 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (user) await saveWorkoutStatus(day.dia, next);
   }
 
-  async function flushNotes(val) {
-    if (!user) return;
-    try {
-      await saveWorkoutNotes(day.dia, val);
-    } catch (err) {
-      console.error('saveWorkoutNotes:', err);
-    }
-  }
-
-  function handleNotesInput(e) {
-    const val = e.target.value;
-    setNotes(val);
-    localStorage.setItem(`treino_${day.dia}_notes`, val);
-    clearTimeout(notesSaveTimer.current);
-    notesSaveTimer.current = setTimeout(() => flushNotes(val), 800);
-  }
-
-  function handleNotesBlur() {
-    clearTimeout(notesSaveTimer.current);
-    flushNotes(notes);
-  }
-
-  // Mesma proteção contra F5/fechar aba que SetRow já usa: dispara o save
-  // pendente na hora em vez de esperar o debounce de 800ms.
-  useEffect(() => {
-    function flushPendingNotes() {
-      if (notesSaveTimer.current) {
-        clearTimeout(notesSaveTimer.current);
-        flushNotes(notes);
-      }
-    }
-    window.addEventListener('pagehide', flushPendingNotes);
-    window.addEventListener('beforeunload', flushPendingNotes);
-    return () => {
-      window.removeEventListener('pagehide', flushPendingNotes);
-      window.removeEventListener('beforeunload', flushPendingNotes);
-    };
-  });
-
   function handleResetTimer() {
     timer.reset();
     if (user) saveWorkoutTimer(day.dia, { startedAt: null, finishedAt: null, durationSeconds: null });
@@ -111,83 +70,9 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     if (user) saveWorkoutTimer(day.dia, { startedAt, finishedAt: null, durationSeconds: null });
   }
 
-  function weekProgress() {
-    const workDays = activePlanDays.filter(d => d.dia !== 'Sábado' && d.dia !== 'Domingo');
-    const done = workDays.filter(d => localStorage.getItem(`treino_${d.dia}`) === 'true').length;
-    return { done, total: workDays.length };
-  }
-
-  function buildSummary(durationMs) {
-    const exercises = gatherExerciseDetails(day);
-    const { done: totalSetsDone, total: totalPlannedSets } = countSets(exercises);
-    const { done: weekDone, total: weekTotal } = weekProgress();
-    const kcal = strengthCalories({ durationSeconds: Math.round(durationMs / 1000), doneSets: totalSetsDone }, weightFromMeta(user?.user_metadata));
-    return {
-      day, durationMs, volume: calcDayVolume(day),
-      exercises, totalSetsDone, totalPlannedSets, weekDone, weekTotal,
-      ...(kcal ? { kcal } : {}),
-    };
-  }
-
-  // Treino finalizado: depois que as gravações do fim assentam (as que falharam
-  // entram na fila), tenta subir tudo que estiver pendente e conta o resultado —
-  // só se havia pendência. O aviso espera o "Treino finalizado" ser lido.
-  async function sendAfterFinish(saves) {
-    await Promise.allSettled(saves);
-    const outcome = await syncAfterFinish();
-    if (!outcome) return;
-    setTimeout(() => toast(outcome.remaining > 0
-      ? t('📴 Treino salvo no aparelho — envia quando a conexão voltar')
-      : t('✅ Treino enviado')), FINISH_TOAST_MS);
-  }
-
-  // Finalizar com séries por fazer pede confirmação: o botão fica embaixo do
-  // polegar, e encerrar sem querer para o cronômetro, marca o dia e avisa os
-  // amigos ("Refazer treino" zeraria o tempo).
-  function confirmFinish() {
-    const { done, total } = countSets(gatherExerciseDetails(day));
-    const left = total - done;
-    if (left <= 0) return true;
-    return window.confirm(left === 1
-      ? t('Ainda falta 1 série. Finalizar o treino mesmo assim?')
-      : t('Ainda faltam {n} séries. Finalizar o treino mesmo assim?', { n: left }));
-  }
-
-  function handleFinishClick() {
-    if (confirmFinish()) handleFinishWorkout();
-  }
-
-  function handleFinishWorkout() {
-    const result = timer.finish();
-    if (!result) return;
-    const { accumulatedMs, startedAt, finishedAt } = result;
-    playWorkoutFinishedSound();
-    toast(t('🏁 Treino finalizado em {v1}!', { v1: formatDuration(accumulatedMs) }));
-    const saves = [];
-    if (!checked) saves.push(markDone(true));
-    if (user) saves.push(saveWorkoutTimer(day.dia, { startedAt, finishedAt, durationSeconds: Math.round(accumulatedMs / 1000) }));
-    if (user) sendAfterFinish(saves);
-    bump();
-    const summary = buildSummary(accumulatedMs);
-    coachSay('finish', { feitos: summary.weekDone, meta: summary.weekTotal }, { delayMs: 900 });
-    // Depois do fecho, o treinador comenta os números do treino, os recordes e a semana.
-    const minutes = Math.round(accumulatedMs / 60000);
-    if (summary.totalSetsDone > 0 && minutes > 0) {
-      coachSay('finishStats', { series: summary.totalSetsDone, duracao: speechTime(minutes * 60) }, { delayMs: 950, queue: true });
-    }
-    coachRecords(takeRecords(day.dia), { delayMs: 975, queue: true });
-    if (summary.weekTotal > 1 && summary.weekDone === summary.weekTotal) {
-      coachSay('weekGoal', {}, { delayMs: 1000, queue: true });
-    }
-    if (user && summary.totalSetsDone > 0) {
-      postActivity('treino', t('Concluiu o treino de {foco}', { foco: day.foco }), t('{v1} · {totalSetsDone} séries', { v1: formatDuration(accumulatedMs), totalSetsDone: summary.totalSetsDone }));
-    }
-    onFinish(summary);
-  }
-
-  function handleShowSummary() {
-    onFinish(buildSummary(timer.elapsedMs));
-  }
+  const { confirmFinish, handleFinishClick, handleFinishWorkout, handleShowSummary } = useFinishWorkout({
+    day, user, timer, checked, markDone, bump, onFinish, activePlanDays,
+  });
 
   // Abrir o modo ao vivo já inicia o cronômetro — as séries ficam travadas
   // até o treino começar, e no modo ao vivo não há outro botão pra isso.
@@ -208,70 +93,6 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     closeLive();
     if (alreadyFinished) handleShowSummary();
     else handleFinishWorkout();
-  }
-
-  async function toggleAllSets(ex, setCount) {
-    const next = !allSetsDone(ex, setCount, day.dia);
-    for (let n = 1; n <= setCount; n++) {
-      localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_done`, next);
-    }
-    setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
-    bump();
-    toast(next ? t('✅ Todas as séries marcadas!') : t('Séries desmarcadas'));
-    if (user) {
-      await Promise.all(
-        Array.from({ length: setCount }, (_, i) => i + 1)
-          .map(n => saveSetState(day.dia, ex.nome, n, { completed: next }))
-      );
-    }
-  }
-
-  async function fillOtherSets(ex, setCount, carga, reps) {
-    const cargaNum = parseFloat(carga);
-    if (!Number.isFinite(cargaNum) || reps === '') return;
-
-    const toFill = [];
-    for (let n = 2; n <= setCount; n++) {
-      const existingCarga = localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_carga`);
-      const existingReps = localStorage.getItem(`set_${day.dia}_${ex.nome}_${n}_reps`);
-      if (!existingCarga && !existingReps) toFill.push(n);
-    }
-    if (!toFill.length) return;
-
-    toFill.forEach(n => {
-      localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_carga`, carga);
-      localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_reps`, reps);
-    });
-    setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
-    bump();
-    toast(t('✅ Carga e reps repetidas nas outras séries'));
-    if (user) {
-      await Promise.all(
-        toFill.map(n => saveSetState(day.dia, ex.nome, n, { carga: cargaNum, reps: parseFloat(reps) }))
-      );
-    }
-  }
-
-  // Aplica a sugestão de progressão/deload direto na Série 1 (mesmo truque de
-  // localStorage + bump de markVersions que fillOtherSets já usa pra forçar o
-  // SetRow a reler o valor) e reaproveita fillOtherSets pra propagar às demais
-  // séries vazias quando há um alvo de reps (não há no caso de deload).
-  async function applySuggestion(ex, setCount, carga, reps) {
-    localStorage.setItem(`set_${day.dia}_${ex.nome}_1_carga`, carga);
-    if (reps != null) localStorage.setItem(`set_${day.dia}_${ex.nome}_1_reps`, reps);
-    setMarkVersions(v => ({ ...v, [ex.nome]: (v[ex.nome] || 0) + 1 }));
-    bump();
-    toast(t('🎯 Sugestão aplicada na Série 1'));
-    if (user) {
-      const patch = { carga: parseFloat(carga) };
-      if (reps != null) patch.reps = parseFloat(reps);
-      try {
-        await saveSetState(day.dia, ex.nome, 1, patch);
-      } catch (err) {
-        console.error('applySuggestion:', err);
-      }
-    }
-    if (reps != null) await fillOtherSets(ex, setCount, carga, reps);
   }
 
   async function handleCheckbox(e) {
@@ -356,52 +177,11 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
       )}
 
       <div className={`day-card__body${open ? ' open' : ''}`}>
-        <div className="session-timer">
-          <div className="session-timer__clock">
-            {formatDuration(timer.elapsedMs)}
-            {timer.status === 'finished' && <span className="session-timer__done"> {t('· concluído')}</span>}
-          </div>
-          <div className="session-timer__actions">
-            {/* Um botão só para começar, com o mesmo nome e a mesma ação do card
-                "Treino de hoje": abre o modo treino, que já liga o cronômetro.
-                Dia sem séries (só cardio ou alongamento) começa na própria lista. */}
-            {timer.status === 'idle' && (setsTotal > 0
-              ? <button type="button" className="btn btn--primary btn--sm" onClick={onOpenLive}>{t('⚡ Começar treino')}</button>
-              : <button type="button" className="btn btn--primary btn--sm" onClick={handleStartWorkout}>{t('▶ Iniciar')}</button>)}
-            {timer.status === 'running' && (
-              <>
-                <button type="button" className="btn btn--outline btn--sm" aria-label={t('Pausar')} onClick={timer.pause}>⏸</button>
-                {setsTotal > 0 && (
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
-                )}
-                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishClick}>{t('🏁 Finalizar')}</button>
-              </>
-            )}
-            {timer.status === 'paused' && (
-              <>
-                <button type="button" className="btn btn--outline btn--sm" aria-label={t('Continuar')} onClick={timer.resume}>▶</button>
-                {setsTotal > 0 && (
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={onOpenLive}>{t('⚡ Modo treino')}</button>
-                )}
-                <button type="button" className="btn btn--primary btn--sm" onClick={handleFinishClick}>{t('🏁 Finalizar')}</button>
-              </>
-            )}
-            {timer.status === 'finished' && (
-              <>
-                <button type="button" className="btn btn--outline btn--sm" onClick={handleShowSummary}>{t('📋 Ver resumo')}</button>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={handleResetTimer}>{t('↺ Refazer treino')}</button>
-              </>
-            )}
-          </div>
-          {timer.status === 'idle' && setsTotal > 0 && (
-            <button type="button" className="link-btn session-timer__alt" onClick={handleStartWorkout}>
-              {t('Prefere marcar aqui na lista? Começar sem o modo treino')}
-            </button>
-          )}
-          {timer.status === 'idle' && setsTotal === 0 && (
-            <span className="session-timer__hint">{t('Inicie o treino para registrar as séries')}</span>
-          )}
-        </div>
+        <SessionTimerBar
+          timer={timer} setsTotal={setsTotal} onOpenLive={onOpenLive}
+          onStart={handleStartWorkout} onFinish={handleFinishClick}
+          onShowSummary={handleShowSummary} onReset={handleResetTimer}
+        />
 
         <div className="day-card__total">
           {t('Volume do treino: {v1} kg', { v1: calcDayVolume(day).toLocaleString(locale) })}
@@ -456,7 +236,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
         <LiveWorkoutModal
           day={day}
           timer={timer}
-          week={weekProgress()}
+          week={weekProgress(activePlanDays)}
           renderExercise={(ex, onLiveRest, onGroupStep) => renderExerciseBlock(ex, {
             onRestStart: onLiveRest,
             onGroupStep: (doneEx, step) => { if (step.rest && step.seconds > 0) markRest(step.seconds); onGroupStep(doneEx, step); },
