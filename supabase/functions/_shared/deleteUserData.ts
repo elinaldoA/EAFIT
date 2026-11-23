@@ -19,7 +19,7 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
 const USER_COLUMNS: [table: string, column: string][] = [
   ['progress_photos', 'user_id'], ['water_logs', 'user_id'], ['protein_logs', 'user_id'], ['nutrition_foods', 'user_id'], ['nutrition_plans', 'user_id'], ['nutrition_entries', 'user_id'],
   ['weight_logs', 'user_id'], ['achievements', 'user_id'], ['push_subscriptions', 'user_id'],
-  ['exercise_discomfort', 'user_id'], ['body_measurements', 'user_id'], ['daily_checkins', 'user_id'], ['run_kudos', 'user_id'], ['runs', 'user_id'], ['run_shoes', 'user_id'], ['run_comments', 'user_id'], ['run_club_members', 'user_id'], ['run_clubs', 'owner_id'], ['run_challenge_members', 'user_id'], ['run_waitlist', 'user_id'],
+  ['exercise_discomfort', 'user_id'], ['body_measurements', 'user_id'], ['daily_checkins', 'user_id'], ['run_kudos', 'user_id'], ['run_photos', 'user_id'], ['segment_efforts', 'user_id'], ['segments', 'user_id'], ['runs', 'user_id'], ['run_shoes', 'user_id'], ['run_comments', 'user_id'], ['run_club_members', 'user_id'], ['run_clubs', 'owner_id'], ['run_challenge_members', 'user_id'], ['run_waitlist', 'user_id'],
   ['challenge_members', 'user_id'],
   ['feed_reactions', 'user_id'], ['feed_events', 'user_id'], ['friend_profiles', 'user_id'],
   ['friendships', 'requester_id'], ['friendships', 'addressee_id'],
@@ -87,6 +87,18 @@ export async function deleteUserData(admin: SupabaseClient, userId: string): Pro
   if (files?.length) {
     const { error: removeErr } = await admin.storage.from('progress-photos').remove(files.map((f) => `${userId}/${f.name}`));
     if (removeErr) throw removeErr;
+  }
+
+  // Fotos de corrida: <dono>/<corrida>/<arquivo> — uma pasta por corrida.
+  const { data: runFolders, error: runListErr } = await admin.storage.from('run-photos').list(userId);
+  if (runListErr) throw runListErr;
+  for (const folder of runFolders || []) {
+    const { data: runFiles, error: runFilesErr } = await admin.storage.from('run-photos').list(`${userId}/${folder.name}`);
+    if (runFilesErr) throw runFilesErr;
+    if (runFiles?.length) {
+      const { error: runRemoveErr } = await admin.storage.from('run-photos').remove(runFiles.map((f) => `${userId}/${folder.name}/${f.name}`));
+      if (runRemoveErr) throw runRemoveErr;
+    }
   }
 
   const { error: profileErr } = await admin.from('profiles').delete().eq('id', userId);

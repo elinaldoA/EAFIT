@@ -72,6 +72,22 @@ describe('WorkoutProvider — sincronização offline', () => {
     expect(result.current.workoutIds.Segunda).toBe('w1');
   });
 
+  it('semana nova: apaga séries e cronômetro da semana passada do aparelho, uma vez só', async () => {
+    const day = { dia: 'Segunda', foco: 'Peito', exercicios: [{ nome: 'Supino', series: '3' }], pos: [] };
+    mockFetchActivePlan.mockResolvedValue({ id: 'p1', name: 'Plano', days: [day] });
+    localStorage.setItem('treino_semana', '2000-01-03');
+    localStorage.setItem('set_Supino_1_done', 'true');
+    localStorage.setItem('treino_Segunda_timer', JSON.stringify({ status: 'finished', startedAt: 1 }));
+    await renderReady();
+    expect(localStorage.getItem('set_Supino_1_done')).toBeNull();
+    expect(localStorage.getItem('treino_Segunda_timer')).toBeNull();
+    expect(localStorage.getItem('treino_semana')).toBe(getDateForWeekday('Segunda'));
+    // Mesma semana: o que o aparelho tem (e o servidor talvez ainda não) fica.
+    localStorage.setItem('set_Supino_2_carga', '50');
+    await renderReady();
+    expect(localStorage.getItem('set_Supino_2_carga')).toBe('50');
+  });
+
   it('saveWorkoutStatus: falha de rede enfileira a operação e marca syncStatus="pending"', async () => {
     const result = await renderReady();
 

@@ -155,6 +155,8 @@ async function ensureWorkoutId(userId, day) {
 // Cópia local do plano ativo: sem rede, o app abre com o último plano em vez de
 // uma tela de erro. Fica sob a chave 'plan_cache', apagada no logout.
 const PLAN_CACHE_KEY = 'plan_cache';
+// Segunda-feira da semana cujos dados estão no aparelho ('treino_' sai no logout).
+const WEEK_MARKER_KEY = 'treino_semana';
 
 function cachePlan(userId, plan) {
   try { localStorage.setItem(PLAN_CACHE_KEY, JSON.stringify({ userId, plan })); } catch { /* cota cheia: segue sem cache */ }
@@ -328,13 +330,18 @@ export function WorkoutProvider({ children }) {
       // Com escritas pendentes na fila o cache local é mais novo que o servidor:
       // não o sobrescreve com "dia sem treino".
       const canResetMissing = queueSize() === 0;
+      // Semana nova: o que o aparelho guardou dos dias (séries, notas, cronômetro)
+      // é da semana passada. Limpa uma vez e deixa o servidor repovoar; dentro da
+      // mesma semana nada é apagado, pois o aparelho pode ter marcações mais novas.
+      const weekKey = getDateForWeekday('Segunda');
+      if (canResetMissing && localStorage.getItem(WEEK_MARKER_KEY) !== weekKey) {
+        days.forEach(day => clearDayLocal(day, { keepTimer: (() => { const w = byDate.get(getDateForWeekday(day.dia)); return !!w && localTimerIsFrom(day.dia, w); })() }));
+        localStorage.setItem(WEEK_MARKER_KEY, weekKey);
+      }
       const ids = {};
       days.forEach(day => {
         const dayName = day.dia;
         const w = byDate.get(getDateForWeekday(dayName));
-        // Fila vazia: o servidor manda. Limpa o que o aparelho guardou do dia
-        // (da semana passada, por exemplo) antes de aplicar o que veio de lá.
-        if (canResetMissing) clearDayLocal(day, { keepTimer: w ? localTimerIsFrom(dayName, w) : false });
         if (!w) {
           if (canResetMissing) localStorage.setItem(`treino_${dayName}`, false);
           return;
