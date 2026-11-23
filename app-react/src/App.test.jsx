@@ -204,9 +204,9 @@ describe('App', () => {
   });
 
   it.each([
-    ['treino', 'Treino · EAFIT'],
-    ['hidratacao', 'Água · EAFIT'],
-    ['perfil', 'Perfil · EAFIT'],
+    ['treino', 'Treino · EAFIT · Gym'],
+    ['hidratacao', 'Água · EAFIT · Gym'],
+    ['perfil', 'Perfil · EAFIT · Gym'],
   ])('o título da janela acompanha a aba %s', async (tab, title) => {
     h.tab.page = tab;
     render(<App />);
