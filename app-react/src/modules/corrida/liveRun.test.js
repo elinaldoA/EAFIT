@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   startRun, pauseRun, resumeRun, elapsedMs, isPaused, setDistance, splitsOf, finishRun,
-  getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS, isPersistFailing, restoreLiveRun, setLiveRunMirror, MIRROR_EVERY_MS,
+  getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS, isPersistFailing, restoreLiveRun, setLiveRunMirror, MIRROR_EVERY_MS, LOCAL_EVERY_MS,
   autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps, addLap, lapsOf,
 } from './liveRun';
 
@@ -132,6 +132,23 @@ describe('cópia no IndexedDB', () => {
     vi.advanceTimersByTime(MIRROR_EVERY_MS);
     expect(m.puts).toBe(1);
     expect(m.value.meters).toBe(200);
+  });
+
+  it('localStorage: dados comuns gravam no máximo a cada 2 s; pausa e fim gravam na hora', () => {
+    const stored = () => JSON.parse(localStorage.getItem('eafit_live_run'));
+    const base = startRun({}, Date.now());
+    setLiveRun(base);
+    expect(stored().meters).toBe(0);
+    for (let i = 1; i <= 20; i++) setLiveRun({ ...base, meters: i * 10 });
+    expect(stored().meters).toBe(0);
+    expect(getLiveRun().meters).toBe(200);
+    vi.advanceTimersByTime(LOCAL_EVERY_MS);
+    expect(stored().meters).toBe(200);
+    setLiveRun({ ...getLiveRun(), meters: 210, segmentStart: null });
+    expect(stored().segmentStart).toBeNull();
+    expect(stored().meters).toBe(210);
+    setLiveRun(null);
+    expect(localStorage.getItem('eafit_live_run')).toBeNull();
   });
 
   it('terminar a corrida apaga a cópia e cancela a gravação pendente', () => {

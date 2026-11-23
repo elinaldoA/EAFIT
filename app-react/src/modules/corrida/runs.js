@@ -315,24 +315,36 @@ export async function saveRun(userId, run) {
   }
 }
 
+// Quantas vezes o servidor pode recusar uma corrida da fila antes de parar de
+// tentar sozinho. Ela continua no aparelho (e na lista, marcada como recusada)
+// para a pessoa apagar ou editar; falta de internet nunca conta.
+export const MAX_REJECTIONS = 5;
+export const isStuck = run => (run?.rejections || 0) >= MAX_REJECTIONS;
+
 // Sobe a fila do aparelho. Devolve quantas subiram.
 export async function flushPendingRuns(userId) {
   const list = pendingRuns(userId);
   if (!list.length) return 0;
   const left = [];
   let sent = 0;
+  let changed = false;
   for (const run of list) {
-    try { await insertRun(userId, run); sent++; } catch { left.push(run); }
+    if (isStuck(run)) { left.push(run); continue; }
+    try { await insertRun(userId, run); sent++; changed = true; } catch (err) {
+      if (isRejectedByServer(err)) { left.push({ ...run, rejections: (run.rejections || 0) + 1 }); changed = true; } else left.push(run);
+    }
   }
-  if (sent) setPending(userId, left);
+  if (changed) setPending(userId, left);
   return sent;
 }
 
 // Corridas da pessoa (as da fila do aparelho entram também), mais recentes primeiro.
-export async function fetchRuns(userId) {
+// light: sem o percurso (a parte mais pesada), para contas que só usam números
+// (recordes, medalhas, conquistas, tênis).
+export async function fetchRuns(userId, { light = false } = {}) {
   const query = columns => db
     .from('runs')
-    .select(columns)
+    .select(light ? columns.replace(' route,', '') : columns)
     .eq('user_id', userId)
     .order('run_date', { ascending: false })
     .order('started_at', { ascending: false });

@@ -20,8 +20,12 @@ describe('addPoint', () => {
     const r = addPoint(build(line(3)), -23.6, -46.6, true);
     expect(r).toHaveLength(2);
     const full = [Array.from({ length: MAX_POINTS }, (_, i) => [i, i])];
-    expect(addPoint(full, -23.7, -46.7)).toBe(full);
     expect(countPoints(full)).toBe(MAX_POINTS);
+    // No limite, o percurso é afinado (um ponto sim, outro não) e o ponto novo entra: não para de gravar.
+    const next = addPoint(full, -23.7, -46.7);
+    expect(countPoints(next)).toBeLessThan(MAX_POINTS);
+    expect(next[0].at(-1)).toEqual([Math.round(-23.7 * 1e5), Math.round(-46.7 * 1e5)]);
+    expect(next[0][0]).toEqual([0, 0]);
   });
 });
 

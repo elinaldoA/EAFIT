@@ -17,7 +17,7 @@ vi.mock('../../lib/supabase', () => {
 
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
-  saveRun, isRejectedByServer, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
+  saveRun, isRejectedByServer, MAX_REJECTIONS, isStuck, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
   fetchRunFeed, shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
@@ -115,6 +115,34 @@ describe('banco e fila do aparelho', () => {
     expect(pendingRuns('u1')).toHaveLength(1);
     h.result = { data: null, error: new Error('offline') };
     expect((await saveRun('u1', run({ client_id: 'c2' }))).rejected).toBe(false);
+  });
+
+  it('corrida recusada pelo servidor para de ser tentada depois de MAX_REJECTIONS, e rede caída não conta', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.result = { data: null, error: { code: '23514', message: 'check violation' } };
+    await saveRun('u1', run());
+    for (let i = 0; i < MAX_REJECTIONS + 2; i++) await flushPendingRuns('u1');
+    expect(pendingRuns('u1')[0].rejections).toBe(MAX_REJECTIONS);
+    expect(isStuck(pendingRuns('u1')[0])).toBe(true);
+    h.calls = [];
+    await flushPendingRuns('u1');
+    expect(h.calls.some(c => c[0] === 'upsert')).toBe(false);
+
+    localStorage.clear();
+    h.result = { data: null, error: new Error('offline') };
+    await saveRun('u1', run());
+    await flushPendingRuns('u1');
+    expect(pendingRuns('u1')[0].rejections).toBeUndefined();
+  });
+
+  it('fetchRuns light não pede o percurso', async () => {
+    h.result = { data: [], error: null };
+    await fetchRuns('u1', { light: true });
+    const sel = h.calls.find(c => c[0] === 'select')[1];
+    expect(sel).not.toMatch(/\broute\b/);
+    h.calls = [];
+    await fetchRuns('u1');
+    expect(h.calls.find(c => c[0] === 'select')[1]).toMatch(/\broute\b/);
   });
 
   it('isRejectedByServer só reconhece dado recusado, não sessão vencida nem rede', () => {

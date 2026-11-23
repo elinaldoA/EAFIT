@@ -286,8 +286,21 @@ export function getLiveRun() {
   return cache;
 }
 
-export function setLiveRun(next) {
-  cache = next || null;
+// Gravar a corrida inteira (com o percurso) a cada leitura do GPS pesa em
+// celular simples. Mudanças só de dados (distância, ponto, passo, FC) gravam no
+// máximo a cada LOCAL_EVERY_MS; início, fim, pausa, retomada e saída da tela
+// gravam na hora. A memória (cache) está sempre em dia.
+export const LOCAL_EVERY_MS = 2000;
+let localTimer = null;
+let localLast = 0;
+let localShape = null;
+const shapeOf = s => (s ? `${s.id}|${s.segmentStart == null ? 'p' : 'r'}|${!!s.autoPaused}|${s.kmMarks?.length || 0}` : null);
+
+function persistLocal() {
+  clearTimeout(localTimer);
+  localTimer = null;
+  localLast = Date.now();
+  localShape = shapeOf(cache);
   try {
     if (cache) localStorage.setItem(KEY, JSON.stringify(cache));
     else { localStorage.removeItem(KEY); localStorage.removeItem(SEEN_KEY); }
@@ -296,6 +309,19 @@ export function setLiveRun(next) {
     // Sem storage: segue só na memória, e a tela avisa.
     persistFailed = !!cache;
   }
+}
+
+if (typeof window !== 'undefined') {
+  const flushLocal = () => { if (localTimer) persistLocal(); };
+  window.addEventListener('pagehide', flushLocal);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushLocal(); });
+}
+
+export function setLiveRun(next) {
+  cache = next || null;
+  const wait = LOCAL_EVERY_MS - (Date.now() - localLast);
+  if (shapeOf(cache) !== localShape || wait <= 0) persistLocal();
+  else if (!localTimer) localTimer = setTimeout(persistLocal, wait);
   scheduleMirror();
   listeners.forEach(fn => fn());
   return cache;
@@ -318,6 +344,6 @@ export const isRunActive = () => {
 };
 
 // Só para testes.
-export function resetLiveRunCache() { cache = undefined; persistFailed = false; clearTimeout(mirrorTimer); mirrorTimer = null; mirrorLast = 0; }
+export function resetLiveRunCache() { cache = undefined; persistFailed = false; clearTimeout(mirrorTimer); mirrorTimer = null; mirrorLast = 0; clearTimeout(localTimer); localTimer = null; localLast = 0; localShape = null; }
 // Só para testes: troca a cópia (padrão: IndexedDB).
 export function setLiveRunMirror(next) { mirror = next || idbMirror; }

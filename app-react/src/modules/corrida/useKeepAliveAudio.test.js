@@ -14,6 +14,9 @@ describe('useKeepAliveAudio', () => {
       this.load = vi.fn();
       this.removeAttribute = vi.fn();
       this.setAttribute = vi.fn();
+      this.listeners = {};
+      this.addEventListener = vi.fn((name, fn) => { this.listeners[name] = fn; });
+      this.removeEventListener = vi.fn();
       instances.push(this);
     });
     URL.createObjectURL = vi.fn(() => 'blob:silencio');
@@ -36,6 +39,19 @@ describe('useKeepAliveAudio', () => {
     expect(instances[0].pause).toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:silencio');
     unmount();
+  });
+
+  it('volta a tocar sozinho se o sistema pausar o áudio', () => {
+    vi.useFakeTimers();
+    const { unmount } = renderHook(() => useKeepAliveAudio(true));
+    const a = instances[0];
+    a.play.mockClear();
+    a.paused = true;
+    a.listeners.pause();
+    vi.advanceTimersByTime(1000);
+    expect(a.play).toHaveBeenCalled();
+    unmount();
+    vi.useRealTimers();
   });
 
   it('não toca desligado', () => {

@@ -66,7 +66,7 @@ export default function FinishRun({ run, now, onBack, onDone }) {
     let loaded = false;
     // O clima do começo do percurso (até 4 s; sem internet salva sem ele) busca junto com a lista, sem somar espera.
     const weatherPromise = record.gps ? fetchWeather(run.route) : Promise.resolve(null);
-    try { previous = await fetchRuns(user.id); loaded = true; } catch { /* sem rede: sem recorde agora */ }
+    try { previous = await fetchRuns(user.id, { light: true }); loaded = true; } catch { /* sem rede: sem recorde agora */ }
     // Se a consulta de agora falhar (4 s, sem rede), vale o clima que a tela já mostrava.
     record.weather = (await weatherPromise) || weather;
     const out = await saveRun(user.id, record);

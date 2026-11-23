@@ -29,9 +29,16 @@ export const countPoints = route => (route || []).reduce((n, seg) => n + seg.len
 
 // Acrescenta um ponto (graus). `newSegment`: primeiro ponto depois de uma
 // pausa. `t`: segundos de corrida até o ponto (opcional).
+// Perto do limite, em vez de parar de gravar (corrida longa ficaria sem o fim do
+// desenho), mantém um ponto sim, um não, em cada trecho (sempre com o último).
+export function thinRoute(route) {
+  return route.map(seg => seg.filter((_, i) => i % 2 === 0 || i === seg.length - 1));
+}
+
 export function addPoint(route, lat, lon, newSegment = false, t = null) {
-  const list = Array.isArray(route) ? route : [];
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || countPoints(list) >= MAX_POINTS) return list;
+  let list = Array.isArray(route) ? route : [];
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return list;
+  if (countPoints(list) >= MAX_POINTS) list = thinRoute(list);
   const point = Number.isFinite(t) && t >= 0 ? [toInt(lat), toInt(lon), Math.round(t)] : [toInt(lat), toInt(lon)];
   const last = list.at(-1);
   if (!last || newSegment) return [...list, [point]];

@@ -59,9 +59,26 @@ export function useKeepAliveAudio(enabled) {
     const onVis = () => { if (document.visibilityState === 'visible' && audio.paused) tryPlay(); };
     document.addEventListener('visibilitychange', onVis);
 
+    // Toque em "pause" na tela de bloqueio ou pausa do sistema: o áudio é só um
+    // truque, então volta sozinho (com a tela apagada a página ainda pode rodar).
+    let off = false;
+    const onPause = () => { setTimeout(() => { if (!off && audio.paused) tryPlay(); }, 1000); };
+    audio.addEventListener('pause', onPause);
+    const watchdog = setInterval(() => { if (audio.paused) tryPlay(); }, 15000);
+    const actions = ['play', 'pause', 'stop'];
+    try {
+      if ('mediaSession' in navigator) actions.forEach(a => navigator.mediaSession.setActionHandler(a, () => tryPlay()));
+    } catch { /* sem Media Session */ }
+
     return () => {
+      off = true;
       removeGesture();
       document.removeEventListener('visibilitychange', onVis);
+      audio.removeEventListener('pause', onPause);
+      clearInterval(watchdog);
+      try {
+        if ('mediaSession' in navigator) actions.forEach(a => navigator.mediaSession.setActionHandler(a, null));
+      } catch { /* sem Media Session */ }
       audio.pause();
       audio.removeAttribute('src');
       audio.load();
