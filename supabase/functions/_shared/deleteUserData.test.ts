@@ -37,12 +37,15 @@ type FakeAdminOpts = {
   plans?: { id: string }[];
   days?: { id: string }[];
   files?: { name: string }[];
+  // run-photos: pasta de cada corrida -> arquivos dela
+  runPhotos?: Record<string, { name: string }[]>;
 };
 
 function makeFakeAdmin(opts: FakeAdminOpts = {}) {
   const calledTables: string[] = [];
   const eqCalls: string[] = [];
   let removedPaths: string[] = [];
+  const removedRunPaths: string[] = [];
 
   const admin = {
     from(table: string) {
@@ -54,7 +57,18 @@ function makeFakeAdmin(opts: FakeAdminOpts = {}) {
       return makeChain({ data: null, error: null }, onEq);
     },
     storage: {
-      from(_bucket: string) {
+      from(bucket: string) {
+        if (bucket === 'run-photos') {
+          return {
+            list: (prefix: string) => {
+              const folders = opts.runPhotos ?? {};
+              const [, folder] = prefix.split('/');
+              return Promise.resolve({ data: folder ? (folders[folder] ?? []) : Object.keys(folders).map((name) => ({ name })), error: null });
+            },
+            // deno-lint-ignore no-explicit-any
+            remove: (paths: string[]) => { removedRunPaths.push(...paths); return Promise.resolve({ data: null as any, error: null }); },
+          };
+        }
         return {
           list: (_prefix: string) => Promise.resolve({ data: opts.files ?? [], error: null }),
           // deno-lint-ignore no-explicit-any
@@ -64,12 +78,12 @@ function makeFakeAdmin(opts: FakeAdminOpts = {}) {
     },
   };
 
-  return { admin, calledTables, eqCalls, getRemovedPaths: () => removedPaths };
+  return { admin, calledTables, eqCalls, getRemovedPaths: () => removedPaths, getRemovedRunPaths: () => removedRunPaths };
 }
 
 const DIRECT_TABLES = [
   'progress_photos', 'water_logs', 'protein_logs', 'nutrition_foods', 'nutrition_plans', 'nutrition_entries', 'weight_logs', 'achievements', 'push_subscriptions', 'exercise_discomfort',
-  'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles',
+  'run_photos', 'segment_efforts', 'segments', 'body_measurements', 'daily_checkins', 'challenge_members', 'feed_reactions', 'feed_events', 'friend_profiles',
   'friendships', 'feedback', 'user_notifications', 'notification_log', 'client_errors', 'admin_user_notes',
   'appointment_reminder_log', 'trainer_charge_reminder_log', 'trainer_appointments', 'trainer_charges', 'trainer_alert_log', 'trainer_messages', 'trainer_notes',
   'trainer_goals', 'trainer_clients', 'trainer_templates', 'trainer_quick_replies', 'trainer_scheduled_messages', 'trainer_settings', 'trainers',
@@ -119,6 +133,14 @@ Deno.test('deleteUserData remove do storage as fotos de progresso existentes, co
   await deleteUserData(admin as unknown as SupabaseClient, 'user-42');
 
   assertEquals(getRemovedPaths(), ['user-42/a.jpg', 'user-42/b.jpg']);
+});
+
+Deno.test('deleteUserData remove as fotos de corrida (uma pasta por corrida) do bucket run-photos', async () => {
+  const { admin, getRemovedRunPaths } = makeFakeAdmin({ runPhotos: { 'run-1': [{ name: 'a.jpg' }], 'run-2': [{ name: 'b.jpg' }, { name: 'c.jpg' }] } });
+
+  await deleteUserData(admin as unknown as SupabaseClient, 'user-42');
+
+  assertEquals(getRemovedRunPaths(), ['user-42/run-1/a.jpg', 'user-42/run-2/b.jpg', 'user-42/run-2/c.jpg']);
 });
 
 Deno.test('deleteUserData não tenta remover do storage quando não há fotos', async () => {
