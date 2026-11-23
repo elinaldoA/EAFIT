@@ -110,7 +110,7 @@ jobs:
       # chamadas pelo pg_cron (autenticadas pelo header x-cron-secret).
       - name: Deploy
         run: |
-          deploy() { supabase functions deploy "$1" --project-ref "$SUPABASE_PROJECT_ID" "${@:2}"; }
+          deploy() { supabase functions deploy "$1" --remote="$SUPABASE_PROJECT_ID" --yes "${@:2}"; }
           deploy send-reminders --no-verify-jwt
           deploy send-scheduled-broadcast --no-verify-jwt
           deploy send-engagement --no-verify-jwt
