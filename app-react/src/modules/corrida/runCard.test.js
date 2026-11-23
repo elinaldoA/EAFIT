@@ -64,7 +64,9 @@ describe('cartão da corrida', () => {
     expect(canColorTrace(base, 'ritmo')).toBe(true);
     expect(canColorTrace(base, 'elevacao')).toBe(true);
     expect(canColorTrace({ ...base, km_elev: null }, 'elevacao')).toBe(false);
-    expect(canColorTrace({ ...base, route: [[[1, 1], [2, 2]]] }, 'ritmo')).toBe(false);
+    // corrida antiga, sem tempo nos pontos: pinta por km (aproximado) se há parciais
+    expect(canColorTrace({ ...base, route: [[[100000, 200000], [100300, 200300]]] }, 'ritmo')).toBe(true);
+    expect(canColorTrace({ ...base, route: [[[100000, 200000], [100300, 200300]]], splits: [] }, 'ritmo')).toBe(false);
     expect(canColorTrace(base, 'laranja')).toBe(true);
   });
 

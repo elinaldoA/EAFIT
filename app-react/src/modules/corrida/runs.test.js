@@ -18,7 +18,7 @@ vi.mock('../../lib/supabase', () => {
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
   saveRun, isRejectedByServer, MAX_REJECTIONS, isStuck, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
-  fetchRunFeed, shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
+  fetchRunFeed, cachedRuns, shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
 const run = (over = {}) => ({
@@ -370,5 +370,29 @@ describe('fetchRunFeed', () => {
     ] };
     const feed = await fetchRunFeed({ limit: 20 });
     expect(feed.map(r => r.weather)).toEqual([{ t: 24, w: 12, h: 60, c: 0 }, null, null]);
+  });
+});
+
+describe('fetchRunFeed: parciais, subida e cadência', () => {
+  it('traz os números do gráfico do cartão e, sem a migration, vem vazio', async () => {
+    h.result = { error: null, data: [
+      { rf_id: 'a', rf_route: [], rf_splits: [330, 340], rf_km_elev: [[10, 2], [0, 5]], rf_elev_gain_m: 40, rf_cadence: 170 },
+      { rf_id: 'b', rf_route: [] }, // banco sem a migration
+    ] };
+    const [a, b] = await fetchRunFeed();
+    expect(a).toMatchObject({ splits: [330, 340], km_elev: [[10, 2], [0, 5]], elev_gain_m: 40, cadence: 170 });
+    expect(b).toMatchObject({ splits: [], km_elev: [], elev_gain_m: null, cadence: null });
+  });
+});
+
+describe('cachedRuns', () => {
+  it('guarda a última lista carregada (sem o percurso) só para a mesma conta', async () => {
+    h.result = { error: null, data: [{ client_id: 'x', run_date: '2026-11-05', started_at: '2026-11-05T10:00:00Z', distance_m: 5000, duration_s: 1800, splits: [360], route: [[[1, 1], [2, 2]]] }] };
+    await fetchRuns('u1');
+    const saved = cachedRuns('u1');
+    expect(saved).toEqual([{ client_id: 'x', run_date: '2026-11-05', started_at: '2026-11-05T10:00:00Z', distance_m: 5000, duration_s: 1800, splits: [360] }]);
+    expect(cachedRuns('outra')).toEqual([]);
+    localStorage.clear();
+    expect(cachedRuns('u1')).toEqual([]);
   });
 });

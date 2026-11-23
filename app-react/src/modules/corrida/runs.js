@@ -338,6 +338,28 @@ export async function flushPendingRuns(userId) {
   return sent;
 }
 
+// Última lista carregada, só com o que os recordes e conquistas precisam (sem o
+// percurso), para os selos do cartão aparecerem também sem internet.
+const RUNS_CACHE_KEY = 'eafit_runs_cache';
+const RUNS_CACHE_MAX = 400;
+
+function rememberRuns(userId, rows) {
+  try {
+    const slim = rows.slice(0, RUNS_CACHE_MAX).map(r => ({ client_id: r.client_id, run_date: r.run_date, started_at: r.started_at, distance_m: r.distance_m, duration_s: r.duration_s, splits: r.splits }));
+    localStorage.setItem(RUNS_CACHE_KEY, JSON.stringify({ userId, runs: slim }));
+  } catch { /* sem storage: sem cache */ }
+}
+
+// Lista guardada da última vez que carregou; [] sem nada guardado ou se for de outra conta.
+export function cachedRuns(userId) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(RUNS_CACHE_KEY) || 'null');
+    return saved?.userId === userId && Array.isArray(saved.runs) ? saved.runs : [];
+  } catch {
+    return [];
+  }
+}
+
 // Corridas da pessoa (as da fila do aparelho entram também), mais recentes primeiro.
 // light: sem o percurso (a parte mais pesada), para contas que só usam números
 // (recordes, medalhas, conquistas, tênis).
@@ -356,6 +378,7 @@ export async function fetchRuns(userId, { light = false } = {}) {
   }
   if (error) throw error;
   const rows = (data || []).map(normalizeRow);
+  rememberRuns(userId, rows);
   const ids = new Set(rows.map(r => r.client_id));
   const pending = pendingRuns(userId).filter(r => !ids.has(r.client_id)).map(r => ({ ...normalizeRow(r), pending: true }));
   return [...pending, ...rows].sort((a, b) => (b.started_at || '').localeCompare(a.started_at || ''));
@@ -372,6 +395,11 @@ export async function fetchRunFeed({ limit = 20, before = null } = {}) {
     duration_s: Number(r.rf_duration_s) || 0, distance_m: Number(r.rf_distance_m) || 0,
     route: cleanRoute(r.rf_route), kind: r.rf_kind, title: r.rf_title, visibility: r.rf_visibility,
     kudos: Number(r.rf_kudos) || 0, kudoed: !!r.rf_kudoed, comments: Number(r.rf_comments) || 0, weather: cleanWeather(r.rf_weather),
+    // Parciais, subida e cadência (migration 20270305130000); sem elas o cartão só fica sem o gráfico.
+    splits: Array.isArray(r.rf_splits) ? r.rf_splits.map(Number).filter(n => n > 0) : [],
+    km_elev: cleanKmElev(r.rf_km_elev),
+    elev_gain_m: r.rf_elev_gain_m == null ? null : Number(r.rf_elev_gain_m),
+    cadence: r.rf_cadence == null ? null : Number(r.rf_cadence),
   }));
 }
 

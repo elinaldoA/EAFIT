@@ -6,7 +6,7 @@ import { mapView, TILE_SIZE, paceRuns } from './route';
 import { tileSrc } from './mapStyle';
 import { weatherShort, weatherDetail, tempText } from './weather';
 import { periodSummary, periodRuns, periodRange, comparePeriod } from './runSummary';
-import { splitsChart, extrasOf, elevRuns, LEVEL_COLORS } from './runCardData';
+import { splitsChart, extrasOf, elevRuns, paceKmRuns, LEVEL_COLORS } from './runCardData';
 import { weatherBands } from './weatherInsights';
 import { goalProgress } from './runReadings';
 import { addDays } from '../../lib/pause';
@@ -47,7 +47,7 @@ function loadTile(src) {
 export const TRACE_MODES = ['laranja', 'ritmo', 'elevacao'];
 
 function traceLevels(run, mode) {
-  if (mode === 'ritmo') return paceRuns(run.route);
+  if (mode === 'ritmo') { const fine = paceRuns(run.route); return fine.length ? fine : paceKmRuns(run.route, run.splits); }
   if (mode === 'elevacao') return elevRuns(run.route, run.splits, run.km_elev);
   return [];
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../context/useToast';
-import { paceSeconds, formatPace, formatClock, formatKm, fetchRuns } from './runs';
+import { paceSeconds, formatPace, formatClock, formatKm, fetchRuns, cachedRuns } from './runs';
 import { weatherText } from './weather';
 import { renderRunCard, shareRunCard } from './runShareCard';
 import RunShareSheet from './RunShareSheet';
@@ -25,14 +25,17 @@ export default function SavedRun({ record, onClose }) {
   const [photoOpen, setPhotoOpen] = useState(false);
   // O cartão é desenhado ao abrir a tela: no toque em Compartilhar ele já está
   // pronto e o share nativo não perde o gesto (lib/shareCard.js). Antes de
-  // desenhar busca as corridas anteriores, para os selos de recorde e conquista;
-  // sem internet o cartão sai sem os selos.
+  // desenhar busca as corridas anteriores, para os selos de recorde e conquista
+  // (sem internet, usa a última lista guardada no aparelho).
   const prepared = useRef(null);
   useEffect(() => {
     if (prepared.current) return;
     prepared.current = (async () => {
       let found = [];
-      try { found = badgesFor(card, await fetchRuns(user?.id, { light: true })); } catch { /* sem rede: sem selos */ }
+      try { found = badgesFor(card, await fetchRuns(user?.id, { light: true })); } catch {
+        // Sem rede: vale a última lista carregada (sem ela, sem selos).
+        found = badgesFor(card, cachedRuns(user?.id));
+      }
       setBadges(found);
       return renderRunCard(found.length ? { ...card, badges: found } : card);
     })().catch(() => null);

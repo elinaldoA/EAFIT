@@ -81,7 +81,7 @@ export function extrasOf(run) {
   return out;
 }
 
-// ---- Percurso pintado pela subida de cada km ---------------------------------
+// ---- Percurso pintado por km -------------------------------------------------
 
 // Cor de cada nível, de 0 (mais lento ou descida) a 4 (mais rápido ou subida íngreme).
 export const LEVEL_COLORS = ['#38bdf8', '#34d399', '#facc15', '#fb923c', '#ef4444'];
@@ -89,31 +89,63 @@ export const LEVEL_COLORS = ['#38bdf8', '#34d399', '#facc15', '#fb923c', '#ef444
 // Saldo (subida − descida, em m) de um km → nível: descida, plano e três faixas de subida.
 const netLevel = n => (n <= -8 ? 0 : n < 8 ? 1 : n < 20 ? 2 : n < 40 ? 3 : 4);
 
-// Trechos [{ level, pts }] do percurso pintados pelo saldo de subida do km em que
-// cada ponto cai (o tempo do ponto contra o fim de cada km). [] sem o tempo nos
-// pontos, sem os parciais ou sem a subida por km.
-export function elevRuns(route, splits, kmElev) {
+// Velocidade do km contra a média da corrida → nível (mesmas faixas de route.paceRuns).
+const PACE_BANDS = [0.9, 0.96, 1.04, 1.1];
+
+// Distância aproximada entre dois pontos [lat, lon] (inteiros de 1e-5 grau), em m.
+function gap(a, b) {
+  const k = 1e-5 * 111320;
+  const dy = (b[0] - a[0]) * k;
+  const dx = (b[1] - a[1]) * k * Math.cos(((a[0] + b[0]) / 2) * 1e-5 * (Math.PI / 180));
+  return Math.hypot(dx, dy);
+}
+
+// Trechos [{ level, pts }] do percurso, cada ponto com o nível do km em que cai.
+// Com o tempo nos pontos, o km vem do tempo contra o fim de cada km. Nas corridas
+// antigas (pontos só com [lat, lon]) é aproximado: a fração do caminho já andada
+// vira o km (as pontas cortadas por privacidade deslocam um pouco as trocas).
+// `levels` tem um nível por km completo.
+function kmRuns(route, splits, levels) {
   const segs = cleanRoute(route);
-  if (!segs.length || !segs.every(seg => seg.every(p => p.length === 3))) return [];
-  if (!Array.isArray(splits) || !splits.length || !Array.isArray(kmElev) || kmElev.length < splits.length) return [];
+  if (!segs.length) return [];
+  const timed = segs.every(seg => seg.every(p => p.length === 3));
   const ends = [];
   let acc = 0;
   for (const s of splits) { acc += s; ends.push(acc); }
-  const levels = splits.map((_, i) => netLevel((kmElev[i][0] || 0) - (kmElev[i][1] || 0)));
+  let total = 0;
+  if (!timed) segs.forEach(seg => seg.forEach((p, i) => { if (i) total += gap(seg[i - 1], p); }));
+  if (!timed && !(total > 0)) return [];
   const out = [];
+  let walked = 0;
   for (const seg of segs) {
     let cur = null;
-    for (const p of seg) {
-      const i = ends.findIndex(e => p[2] <= e);
+    seg.forEach((p, i) => {
+      if (i) walked += gap(seg[i - 1], p);
+      const km = timed ? ends.findIndex(e => p[2] <= e) : Math.min(levels.length - 1, Math.floor((walked / total) * levels.length));
       // Depois do último km completo não há dado: segue com o nível que vinha.
-      const level = i >= 0 ? levels[i] : (cur ? cur.level : 1);
+      const level = km >= 0 ? levels[km] : (cur ? cur.level : 1);
       if (cur && cur.level === level) cur.pts.push(p);
       else {
         const last = cur ? cur.pts.at(-1) : null;
         cur = { level, pts: last ? [last, p] : [p] };
         out.push(cur);
       }
-    }
+    });
   }
   return out.filter(r => r.pts.length >= 2);
+}
+
+// Percurso pintado pelo saldo de subida de cada km. [] sem os parciais ou sem a
+// subida por km.
+export function elevRuns(route, splits, kmElev) {
+  if (!Array.isArray(splits) || !splits.length || !Array.isArray(kmElev) || kmElev.length < splits.length) return [];
+  return kmRuns(route, splits, splits.map((_, i) => netLevel((kmElev[i][0] || 0) - (kmElev[i][1] || 0))));
+}
+
+// Percurso pintado pelo ritmo de cada km, para as corridas em que os pontos não
+// têm tempo (route.paceRuns, mais fino, só funciona com ele). [] com menos de 2 km.
+export function paceKmRuns(route, splits) {
+  if (!Array.isArray(splits) || splits.length < 2) return [];
+  const mean = splits.reduce((a, b) => a + b, 0) / splits.length;
+  return kmRuns(route, splits, splits.map(s => PACE_BANDS.filter(b => mean / s >= b).length));
 }

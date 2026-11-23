@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { badgesFor, splitsChart, extrasOf, elevRuns, previousRuns } from './runCardData';
+import { badgesFor, splitsChart, extrasOf, elevRuns, paceKmRuns, previousRuns } from './runCardData';
 import { periodSummary, comparePeriod, previousRange, periodRange } from './runSummary';
 
 const run = (id, date, km, sec, extra = {}) => ({
@@ -78,8 +78,22 @@ describe('percurso pintado pela subida', () => {
     expect(pieces[0].pts.at(-1)).toEqual(pieces[1].pts[0]);
   });
 
-  it('sem tempo nos pontos ou sem subida por km não pinta', () => {
-    expect(elevRuns([[[0, 0], [1, 1]]], [300], [[1, 0]])).toEqual([]);
+  it('corrida antiga (pontos sem tempo): o km sai pela fração do caminho já andada', () => {
+    const old = [[[0, 0], [100, 0], [200, 0], [300, 0]]];
+    const pieces = elevRuns(old, [300, 300], [[50, 0], [2, 2]]);
+    expect(pieces.map(p => p.level)).toEqual([4, 1]);
+    expect(pieces[0].pts.at(-1)).toEqual(pieces[1].pts[0]);
+  });
+
+  it('ritmo por km nas corridas antigas: o km mais rápido ganha o nível mais alto', () => {
+    const old = [[[0, 0], [100, 0], [200, 0], [300, 0]]];
+    expect(paceKmRuns(old, [300, 300, 300])).toHaveLength(1); // ritmo constante: tudo no nível do meio
+    const levels = paceKmRuns(old, [400, 300]).map(p => p.level);
+    expect(levels[0]).toBeLessThan(levels.at(-1));
+    expect(paceKmRuns(old, [300])).toEqual([]);
+  });
+
+  it('sem subida por km não pinta', () => {
     expect(elevRuns(route, [300, 300], null)).toEqual([]);
     expect(elevRuns(route, [300, 300], [[1, 0]])).toEqual([]);
   });
