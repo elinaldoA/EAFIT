@@ -29,6 +29,7 @@ import RunInsights from './RunInsights';
 import IntervalResults from './IntervalResults';
 import { weatherText, weatherShort } from './weather';
 import { hrText } from './heartRate';
+import { relativeEffort, EFFORT_LEVEL_LABEL } from './runLoad';
 import { gradeAdjustedPace } from './elevation';
 import HrZones from './HrZones';
 import { ghostFrom, bestOnSameRoute } from './ghost';
@@ -74,6 +75,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
       setSharing(false);
     }
   }
+  const effort = useMemo(() => relativeEffort(run), [run]);
   const pace = paceSeconds(run.duration_s, run.distance_m);
   // A melhor corrida da mesma rota (só calculada com a corrida aberta).
   const best = useMemo(() => (open && !run.pending ? bestOnSameRoute(runs, run) : run), [open, runs, run]);
@@ -122,6 +124,7 @@ function RunItem({ run, runs, shoe, onDelete }) {
           )}
           {kcal && <p className="run-item__weather">{t('🔥 ~{v1} kcal queimadas', { v1: kcal })}</p>}
           {run.hr && <p className="run-item__weather">{hrText(run.hr)}</p>}
+          {effort.source === 'hr' && <p className="run-item__weather">{t('🔥 Esforço relativo: {v1} ({v2})', { v1: effort.points, v2: EFFORT_LEVEL_LABEL[effort.level]() })}</p>}
           {run.hr?.z && <HrZones zones={run.hr.z} />}
           {run.weather && <p className="run-item__weather">{weatherText(run.weather)}</p>}
           {run.splits.length > 0 ? <SplitBars splits={run.splits} elev={run.km_elev} />

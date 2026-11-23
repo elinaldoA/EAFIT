@@ -6,6 +6,7 @@ import { kmGoals } from './runProfileStats';
 import { weatherBands } from './weatherInsights';
 import { monthRuns } from './runSummary';
 import { tempText } from './weather';
+import RunFitness from './RunFitness';
 import { t } from '../../lib/i18n';
 
 // Leituras da aba Você do EAFIT Run: carga da semana, previsão de prova,
@@ -211,6 +212,7 @@ export default function RunInsights({ runs, meta }) {
     <>
       <Goals runs={runs} today={today} meta={meta} />
       <WeekLoad runs={runs} today={today} />
+      <RunFitness runs={runs} today={today} />
       <Predictions runs={runs} today={today} />
       <EffortHistory runs={runs} today={today} />
       <WeatherPace runs={runs} today={today} />

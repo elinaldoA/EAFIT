@@ -2,6 +2,7 @@ import { computeRunStats, bestEffort, EFFORT_KM, paceSeconds, formatKm, formatPa
 import { newAchievements } from './runReadings';
 import { cleanRoute } from './route';
 import { cleanHr } from './heartRate';
+import { relativeEffort } from './runLoad';
 import { gradeAdjustedPace } from './elevation';
 import { t } from '../../lib/i18n';
 
@@ -86,6 +87,8 @@ export function extrasOf(run) {
   if (hr) out.push(t("❤️ {v1} bpm", { v1: hr.avg }));
   const adjusted = gradeAdjustedPace(run?.splits, run?.km_elev);
   if (adjusted) out.push(t("⛰ {v1}/km ajustado", { v1: formatPace(adjusted.adjusted) }));
+  const re = relativeEffort(run);
+  if (re.source === 'hr') out.push(t('🔥 Esforço relativo {v1}', { v1: re.points }));
   if (run?.shoe_name) out.push(`👟 ${String(run.shoe_name).slice(0, 24)}`);
   if (run?.effort > 0) out.push(t("💪 Esforço {v1}/10", { v1: run.effort }));
   return out;
