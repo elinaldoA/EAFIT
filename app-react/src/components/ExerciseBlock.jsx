@@ -8,6 +8,7 @@ import { parseTempo } from '../lib/tempo';
 import { todayDate } from '../data/treinoData';
 import ExerciseNote from './ExerciseNote';
 import ExerciseHistory from './ExerciseHistory';
+import ExerciseMuscle from './ExerciseMuscle';
 import { fetchRecentDiscomfort } from '../lib/discomfort';
 import { substituteExercise } from '../lib/workoutPlans';
 import { logExerciseSwap } from '../lib/tracking';
@@ -206,6 +207,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
         <div className="ex-block__tools">
           <ExerciseNote userId={user.id} nome={ex.nome} started={started} />
           <ExerciseHistory userId={user.id} nome={ex.nome} />
+          <ExerciseMuscle userId={user.id} nome={ex.nome} />
         </div>
       )}
       {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}

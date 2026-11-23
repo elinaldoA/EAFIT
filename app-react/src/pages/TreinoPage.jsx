@@ -73,7 +73,7 @@ export default function TreinoPage() {
   useEffect(() => {
     if (!user?.id) return undefined;
     let active = true;
-    Promise.all([fetchRecentSets(user.id), fetchLibraryMap()])
+    Promise.all([fetchRecentSets(user.id), fetchLibraryMap(user.id)])
       .then(([sets, libMap]) => { if (active) setHistory({ sets, libMap }); })
       .catch(err => console.error('fetchRecentSets:', err));
     return () => { active = false; };

@@ -2,6 +2,7 @@ import { db } from './supabase';
 import { todayDate } from '../data/treinoData';
 import { addDays } from './pause';
 import { fetchLibrary } from './exerciseSwap';
+import { fetchMyMuscles, mergeCustomMuscles } from './exerciseMuscles';
 
 // Volume semanal por grupo muscular: quantas séries concluídas cada músculo
 // recebeu nos últimos 7 dias. Conta só o músculo principal do exercício (o
@@ -56,12 +57,22 @@ export function buildLibraryMap(rows) {
   return new Map((rows || []).map(r => [String(r.nome).toLowerCase(), LIBRARY_GROUPS[r.grupo_muscular] ?? null]));
 }
 
-export async function fetchLibraryMap() {
+// userId (opcional): junta o músculo que a pessoa escolheu para exercícios
+// fora da biblioteca (lib/exerciseMuscles.js).
+export async function fetchLibraryMap(userId = null) {
+  let map;
   try {
-    return buildLibraryMap(await fetchLibrary());
+    map = buildLibraryMap(await fetchLibrary());
   } catch (err) {
     console.warn('fetchLibraryMap: sem biblioteca, só palavras-chave', err);
-    return new Map();
+    map = new Map();
+  }
+  if (!userId) return map;
+  try {
+    return mergeCustomMuscles(map, await fetchMyMuscles(userId));
+  } catch (err) {
+    console.warn('fetchLibraryMap: sem músculos personalizados', err);
+    return map;
   }
 }
 

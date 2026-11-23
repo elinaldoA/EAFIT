@@ -1084,4 +1084,8 @@ export default {
   'Sem histórico aqui: faça o aquecimento leve. Quando anotar a carga da Série 1, as cargas do aquecimento se ajustam.': 'No history here: keep the warm-up light. Once you log the Set 1 load, the warm-up loads adjust.',
   'Séries da semana por músculo, abaixo da faixa de referência': 'Weekly sets per muscle, below the reference range',
   'Séries na semana:': 'Sets this week:',
+  '💪 Conta como: {musculo}': '💪 Counts as: {musculo}',
+  'alterar': 'change',
+  '💪 Qual músculo este exercício trabalha?': '💪 Which muscle does this exercise train?',
+  'Escolher…': 'Choose…',
 };

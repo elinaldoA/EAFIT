@@ -22,7 +22,7 @@ export default function MuscleVolumeCard({ userId, planDays, active }) {
   useEffect(() => {
     if (!active || !userId) return undefined;
     let cancelled = false;
-    Promise.all([fetchWeekSets(userId), fetchLibraryMap()])
+    Promise.all([fetchWeekSets(userId), fetchLibraryMap(userId)])
       .then(([sets, libMap]) => {
         if (cancelled) return;
         setData({ counts: countSetsByMuscle(sets, libMap), planned: plannedMuscles(planDays, libMap) });
