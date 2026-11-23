@@ -18,7 +18,7 @@ vi.mock('../../lib/supabase', () => {
 import {
   paceSeconds, formatPace, formatClock, formatKm, decimal, bestEffort, computeRunStats, newRecords, describeRecord,
   saveRun, isRejectedByServer, MAX_REJECTIONS, isStuck, flushPendingRuns, pendingRuns, fetchRuns, deleteRun, manualRun, canEditMeasures, editFormFrom, editRun, missingColumn,
-  fetchRunFeed, cachedRuns, shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
+  fetchRunFeed, cachedRuns, cleanTagged, fetchTaggableFriends, shoeUsage, shoeWear, defaultShoeId, rememberShoe, shoeWearNotice, commentError,
 } from './runs';
 
 const run = (over = {}) => ({
@@ -394,5 +394,30 @@ describe('cachedRuns', () => {
     expect(cachedRuns('outra')).toEqual([]);
     localStorage.clear();
     expect(cachedRuns('u1')).toEqual([]);
+  });
+});
+
+describe('amigos marcados', () => {
+  it('cleanTagged: só texto, sem repetir, até 10', () => {
+    expect(cleanTagged(['a', 'a', '', 3, 'b'])).toEqual(['a', 'b']);
+    expect(cleanTagged(null)).toEqual([]);
+    expect(cleanTagged(Array.from({ length: 15 }, (_, i) => `u${i}`))).toHaveLength(10);
+  });
+  it('a edição só leva "tagged" se os marcados mudaram', () => {
+    const base = run({ tagged: ['a'] });
+    const form = editFormFrom(base);
+    expect(editRun(base, form).patch).not.toHaveProperty('tagged');
+    expect(editRun(base, { ...form, tagged: ['a', 'b'] }).patch.tagged).toEqual(['a', 'b']);
+    expect(editRun(base, { ...form, tagged: [] }).patch.tagged).toEqual([]);
+  });
+  it('o feed traz os nomes dos marcados e a lista de amigos para marcar vem do banco', async () => {
+    h.result = { error: null, data: [{ rf_id: 'a', rf_route: [], rf_tags: ['Bia', 'Caio'] }, { rf_id: 'b', rf_route: [] }] };
+    const [a, b] = await fetchRunFeed();
+    expect(a.tags).toEqual(['Bia', 'Caio']);
+    expect(b.tags).toEqual([]);
+    h.result = { error: null, data: [{ tf_user: 'u1', tf_name: 'Bia' }] };
+    expect(await fetchTaggableFriends()).toEqual([{ id: 'u1', name: 'Bia' }]);
+    h.result = { error: { message: 'function does not exist' }, data: null };
+    expect(await fetchTaggableFriends()).toEqual([]);
   });
 });

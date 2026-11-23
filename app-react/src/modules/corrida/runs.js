@@ -20,7 +20,7 @@ const PENDING_KEY = 'eafit_runs_pending';
 const COLUMNS = 'id, client_id, run_date, started_at, title, visibility, duration_s, distance_m, splits, route, kind, program_week, program_day, gps, effort, notes, elev_gain_m, cadence, shoe_id';
 // Colunas de migrations mais novas (tiros do intervalado, subida por km): sem
 // a migration a coluna falta e o app segue sem esse dado, só aquela coluna sai.
-const OPTIONAL_COLUMNS = ['intervals', 'km_elev', 'weather', 'hr'];
+const OPTIONAL_COLUMNS = ['intervals', 'km_elev', 'weather', 'hr', 'tagged'];
 const columnsWith = extras => [COLUMNS, ...extras].join(', ');
 const hasValue = v => (Array.isArray(v) ? v.length > 0 : !!v && typeof v === 'object' && Object.keys(v).length > 0);
 // Só vale erro de coluna inexistente que cite o nome inteiro da coluna: 'hr' não pode casar com 'through'
@@ -199,6 +199,7 @@ export function editFormFrom(run) {
     effort: run.effort || null,
     visibility: run.visibility === 'privado' ? 'privado' : 'amigos',
     shoeId: run.shoe_id || null,
+    tagged: cleanTagged(run.tagged),
     date: run.run_date,
     time: Number.isNaN(start.getTime()) ? '00:00' : `${pad(start.getHours())}:${pad(start.getMinutes())}`,
     hours: String(Math.floor(s / 3600)),
@@ -218,6 +219,9 @@ export function editRun(run, form, now = Date.now()) {
     visibility: form.visibility === 'privado' ? 'privado' : 'amigos',
     shoe_id: form.shoeId || null,
   };
+  // Amigos marcados: só vai na edição se mudou (sem a migration a coluna não existe).
+  const tagged = cleanTagged(form.tagged);
+  if (tagged.join() !== cleanTagged(run.tagged).join()) patch.tagged = tagged;
   if (canEditMeasures(run)) {
     const measured = manualRun({ ...form, title: '' }, now);
     if (measured.error) return { error: measured.error };
@@ -235,9 +239,13 @@ export const runTitle = run =>(run?.title && run.title.trim()) || defaultRunTitl
 
 // ---- Banco -----------------------------------------------------------------
 
+// Ids de amigos marcados: só texto, sem repetir, no máximo 10.
+export const cleanTagged = list => (Array.isArray(list) ? [...new Set(list.filter(x => typeof x === 'string' && x))].slice(0, 10) : []);
+
 function normalizeRow(r) {
   return {
     ...r,
+    tagged: cleanTagged(r.tagged),
     duration_s: Number(r.duration_s) || 0,
     distance_m: Number(r.distance_m) || 0,
     splits: Array.isArray(r.splits) ? r.splits.map(Number).filter(n => n > 0) : [],
@@ -403,7 +411,16 @@ export async function fetchRunFeed({ limit = 20, before = null } = {}) {
     // Frequência cardíaca e nome do tênis (migration 20270305140000).
     hr: cleanHr(r.rf_hr),
     shoe_name: r.rf_shoe_name ? String(r.rf_shoe_name) : null,
+    // Nomes dos amigos marcados na corrida (migration 20270305150000).
+    tags: Array.isArray(r.rf_tags) ? r.rf_tags.filter(n => typeof n === 'string' && n).slice(0, 10) : [],
   }));
+}
+
+// Amigos que dá para marcar numa corrida: [{ id, name }]. Vazio se a função ainda não existe no banco.
+export async function fetchTaggableFriends() {
+  const { data, error } = await db.rpc('run_taggable_friends');
+  if (error) return [];
+  return (data || []).map(r => ({ id: r.tf_user, name: r.tf_name }));
 }
 
 // Recarrega a primeira página do feed sem perder as páginas mais antigas que a

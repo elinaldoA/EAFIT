@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '../../context/useToast';
 import { todayDate } from '../../data/treinoData';
-import { RUN_SAVED_EVENT, canEditMeasures, editFormFrom, editRun, updateRun, fetchShoes, cachedShoes } from './runs';
+import { RUN_SAVED_EVENT, canEditMeasures, editFormFrom, editRun, updateRun, fetchShoes, cachedShoes, fetchTaggableFriends } from './runs';
 import { ShoePicker } from './Shoes';
 
 import { t } from '../../lib/i18n';
@@ -18,6 +18,13 @@ export default function EditRunForm({ userId, run, onClose }) {
     fetchShoes(userId).then(list => { if (alive) setShoes(list); });
     return () => { alive = false; };
   }, [userId]);
+  const [friends, setFriends] = useState([]);
+  useEffect(() => {
+    let alive = true;
+    if (!run.pending) fetchTaggableFriends().then(list => { if (alive) setFriends(list); }).catch(() => {});
+    return () => { alive = false; };
+  }, [run.pending]);
+  const toggleTag = id => set('tagged', form.tagged.includes(id) ? form.tagged.filter(x => x !== id) : [...form.tagged, id].slice(0, 10));
   const measures = canEditMeasures(run);
   const set = (key, value) => setForm(f => ({ ...f, [key]: value }));
   const field = (key, label, props = {}) => (
@@ -81,6 +88,16 @@ export default function EditRunForm({ userId, run, onClose }) {
           ))}
         </div>
       </div>
+      {friends.length > 0 && (
+        <div className="profile-field">
+          <span className="profile-field__label" id="runEditTags">{t('👥 Quem correu com você')}</span>
+          <div className="run-chips" role="group" aria-labelledby="runEditTags">
+            {friends.map(f => (
+              <button key={f.id} type="button" aria-pressed={form.tagged.includes(f.id)} className={`run-chip${form.tagged.includes(f.id) ? ' run-chip--on' : ''}`} onClick={() => toggleTag(f.id)}>{f.name}</button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="profile-field">
         <label className="profile-field__label" htmlFor="runEdit-notes">{t('Notas')}</label>
         <textarea id="runEdit-notes" className="input" rows={3} maxLength={500} value={form.notes} onChange={e => set('notes', e.target.value)} />

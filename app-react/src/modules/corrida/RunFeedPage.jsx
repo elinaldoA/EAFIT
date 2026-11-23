@@ -99,6 +99,7 @@ function RunCard({ run, feed, onToggleKudos }) {
       </div>
       <h3 className="run-card__title">{runTitle(run)}</h3>
       {run.weather && <p className="run-card__wx">{weatherText(run.weather)}</p>}
+      {run.tags?.length > 0 && <p className="run-card__wx">{t('👥 Com {v1}', { v1: run.tags.join(', ') })}</p>}
       <div className="run-card__stats">
         <div><span>{t('Distância')}</span><strong>{t('{v1} km', { v1: formatKm(run.distance_m) })}</strong></div>
         <div><span>{t('Ritmo')}</span><strong>{formatPace(pace)}/km</strong></div>

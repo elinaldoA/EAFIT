@@ -880,4 +880,6 @@ export default {
   "Não chegaram a correr juntos, mas passaram a {v1} m um do outro.": "You did not run together, but came within {v1} m of each other.",
   "⏸ Pausar": "⏸ Pause",
   "▶ Reproduzir": "▶ Play",
+  "👥 Quem correu com você": "👥 Who ran with you",
+  "👥 Com {v1}": "👥 With {v1}",
 };
