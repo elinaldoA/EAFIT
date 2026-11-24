@@ -203,6 +203,28 @@ describe('LiveWorkoutModal — descanso', () => {
     act(() => { vi.advanceTimersByTime(1_600); });
     expect(screen.queryByRole('timer')).toBeNull();
   });
+
+  it('séries todas feitas: ao fim do descanso passa sozinho pro próximo exercício', () => {
+    markDone('Supino Reto', 1);
+    setup();
+    markDone('Supino Reto', 2); // a última série é marcada com o modal já aberto
+    fireEvent.click(screen.getByRole('button', { name: 'marcar Supino Reto' }));
+    act(() => { vi.advanceTimersByTime(29_000); });
+    expect(screen.getByRole('button', { name: 'marcar Supino Reto' })).toBeTruthy();
+
+    act(() => { vi.advanceTimersByTime(1_500); }); // zera o descanso
+    act(() => { vi.advanceTimersByTime(1_600); }); // fim do aviso "Bora!"
+
+    expect(screen.getByRole('button', { name: 'marcar Crucifixo' })).toBeTruthy();
+  });
+
+  it('com séries faltando, fica no mesmo exercício depois do descanso', () => {
+    markDone('Supino Reto', 1);
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'marcar Supino Reto' }));
+    act(() => { vi.advanceTimersByTime(32_000); });
+    expect(screen.getByRole('button', { name: 'marcar Supino Reto' })).toBeTruthy();
+  });
 });
 
 describe('LiveWorkoutModal — bi-set', () => {

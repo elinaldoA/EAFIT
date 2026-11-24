@@ -48,6 +48,8 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
   const [rest, setRest] = useState(null); // { id, label, total, endsAt }
   const [now, setNow] = useState(() => Date.now());
   const restSeq = useRef(0);
+  const indexRef = useRef(index);
+  indexRef.current = index;
   const bodyRef = useRef(null);
 
   useEffect(() => {
@@ -116,7 +118,16 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
     if (!restDone) return;
     playRestDoneSound();
     coachSay('restDone', {}, { delayMs: 3900 }); // depois do alarme, sem sobrepor
-    const id = setTimeout(() => setRest(null), 1500);
+    const id = setTimeout(() => {
+      setRest(null);
+      // Fechou todas as séries do exercício e o descanso acabou: segue sozinho
+      // pro próximo. Só se a pessoa ainda está nele (bi-set já troca por conta
+      // própria) e se não é o último (aí fica o "Finalizar treino").
+      const from = rest.index;
+      if (indexRef.current === from && from < items.length - 1 && isExerciseDone(items[from], day.dia)) {
+        setIndex(from + 1);
+      }
+    }, 1500);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restDone, rest?.id]);
@@ -128,7 +139,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
     restSeq.current += 1;
     const start = Date.now();
     setNow(start);
-    setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000 });
+    setRest({ id: restSeq.current, label, total: seconds, endsAt: start + seconds * 1000, index });
   }
 
   // A série acabou de ser marcada (o localStorage já tem o check): em vez de só
