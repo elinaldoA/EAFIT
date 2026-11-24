@@ -7,7 +7,7 @@ export const EXERCISE_GIFS = {
   'Crucifixo Máquina': 'Crucifixo Máquina',
   'Desenvolvimento com Barra': 'Desenvolvimento com barra',
   'Prancha com Peso': 'Prancha com Peso',
-  'Rosca Martelo Alternada': 'Rosca Martelo Cruzada',
+  'Rosca Martelo Alternada': 'Rosca Martelo Alternada',
   'Cardio — Esteira Inclinada': 'Cardio — Esteira Inclinada',
   'Face Pull': 'Face Pull',
   'Pulldown Neutro (Triângulo)': 'Pulldown Neutro (Triângulo)',
@@ -22,11 +22,34 @@ export const EXERCISE_GIFS = {
   'Supino Reto com Barra': 'Supino Reto com Barra',
   'Tríceps Corda na Polia': 'Tríceps Corda na Polia',
   'Tríceps Testa com Barra W': 'Tríceps Testa com Barra W',
+  'Afundo Búlgaro': 'Afundo Búlgaro',
+  'Agachamento Livre': 'Agachamento Livre',
+  'Cadeira Adutora': 'Cadeira Adutora',
+  'Cadeira Extensora': 'Cadeira Extensora',
+  'Cadeira Flexora (Deitado)': 'Cadeira Flexora (Deitado)',
+  'Crucifixo Invertido': 'Crucifixo Invertido',
+  'Crunch Invertido (banco)': 'Crunch Invertido (banco)',
+  'Desenvolvimento Arnold': 'Desenvolvimento Arnold',
+  'Elevação Pélvica': 'Elevação Pélvica',
+  'Farmer Walk': 'Farmer Walk',
+  'Leg Press 45°': 'Leg Press 45°',
+  'Mesa Flexora (Sentado)': 'Mesa Flexora (Sentado)',
+  'Panturrilha Sentado': 'Panturrilha Sentado',
+  'Panturrilha em Pé (carga)': 'Panturrilha em Pé (carga)',
+  'Panturrilha em Pé': 'Panturrilha em Pé',
+  'Prancha Lateral com Elevação': 'Prancha Lateral com Elevação',
+  'Remada Curvada com Halteres': 'Remada Curvada com Halteres',
+  'Remada com Barra T': 'Remada com Barra T',
+  'Romeno com Barra': 'Romeno com Barra',
+  'Rosca Scott': 'Rosca Scott',
+  'Stiff com Halteres': 'Stiff com Halteres',
+  'Supino Reto com Halteres': 'Supino Reto com Halteres',
+  'Tríceps Francês com Halter': 'Tríceps Francês com Halter',
 };
 
 // Os GIFs mantêm o nome ao serem trocados; o ?v= faz o navegador buscar de novo.
 // Subir o número sempre que um GIF for substituído por outro com o mesmo nome.
-export const GIFS_VERSION = 2;
+export const GIFS_VERSION = 3;
 
 export const gifUrl = (file, base) => `${base}gifs/${encodeURIComponent(file)}.gif?v=${GIFS_VERSION}`;
 
