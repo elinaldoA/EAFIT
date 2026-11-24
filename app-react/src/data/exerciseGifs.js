@@ -45,11 +45,18 @@ export const EXERCISE_GIFS = {
   'Stiff com Halteres': 'Stiff com Halteres',
   'Supino Reto com Halteres': 'Supino Reto com Halteres',
   'Tríceps Francês com Halter': 'Tríceps Francês com Halter',
+  'Abdominal na Máquina': 'Abdominal na Máquina',
+  'Cardio — Caminhada Leve': 'Cardio — Caminhada Leve',
+  'Cardio — Escada': 'Cardio — Escada',
+  'Cardio — HIIT Esteira': 'Cardio — HIIT Esteira',
+  'Elevação de Pernas Deitado': 'Elevação de Pernas Deitado',
+  'Prancha Frontal Estática': 'Prancha Frontal Estática',
+  'Tesoura (Scissor Kicks)': 'Tesoura (Scissor Kicks)',
 };
 
 // Os GIFs mantêm o nome ao serem trocados; o ?v= faz o navegador buscar de novo.
 // Subir o número sempre que um GIF for substituído por outro com o mesmo nome.
-export const GIFS_VERSION = 3;
+export const GIFS_VERSION = 4;
 
 export const gifUrl = (file, base) => `${base}gifs/${encodeURIComponent(file)}.gif?v=${GIFS_VERSION}`;
 

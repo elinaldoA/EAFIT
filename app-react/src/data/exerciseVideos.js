@@ -96,14 +96,12 @@ export const EXERCISE_VIDEOS = {
   'Sit-Up com Peso': 'abdominal-sit-up-peso',
   'Cardio — Esteira': 'esteira-caminhada',
   'Cardio — Caminhada (6km/h)': 'esteira-caminhada',
-  'Cardio — Caminhada Leve': 'esteira-caminhada',
   // Variações cuja execução é a mesma de um vídeo acima (pausa, carga extra
   // ou ritmo não mudam o movimento)
   'Roda (Ab Wheel)': 'roda-abdominal',
   'Supino Reto com Barra (pausa no peito)': 'supino-reto-barra',
   'Agachamento Livre (pausa no fundo)': 'agachamento-livre',
   'HIIT na Esteira (Sprints)': 'esteira-corrida',
-  'Cardio — HIIT Esteira': 'esteira-corrida',
   'Bicicleta Ergométrica': 'bike-spinning',
 };
 
