@@ -207,6 +207,7 @@ export default {
   'Subir': 'Up',
   'Descer': 'Down',
   'Técnica / observação (opcional)': 'Technique / note (optional)',
+  'Técnica (opcional)': 'Technique (optional)',
   '📤 Enviar treino para o aluno': '📤 Send workout to the client',
   '💾 Salvar como modelo': '💾 Save as template',
   '💾 Salvar modelo': '💾 Save template',

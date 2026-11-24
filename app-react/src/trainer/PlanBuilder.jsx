@@ -198,7 +198,7 @@ export default function PlanBuilder({ client, initialPlan, templateId, onBack, o
                   <input className="input input--sm" aria-label={t('Repetições')} placeholder="Reps" value={ex.reps} onChange={e => setEx(di, ei, { reps: e.target.value })} />
                   <input className="input input--sm" aria-label={t('Descanso')} placeholder={t('Descanso')} value={ex.descanso} onChange={e => setEx(di, ei, { descanso: e.target.value })} />
                 </div>
-                <input className="input input--sm" aria-label={t('Técnica / observação (opcional)')} placeholder={t('Técnica / observação (opcional)')} value={ex.tecnica}
+                <input className="input input--sm" aria-label={t('Técnica / observação (opcional)')} placeholder={t('Técnica (opcional)')} value={ex.tecnica}
                   onChange={e => setEx(di, ei, { tecnica: e.target.value })} />
                 {isRepeatedName(ex.nome, repeatedNames(day.exercicios)) && <p className="plan-ex-row__warn" role="alert">{t('⚠️ Há outro exercício com este nome neste dia: eles dividem as mesmas séries. Mude o nome (ex.: "{nome} (2)").', { nome: ex.nome })}</p>}
                 <ExerciseExtras grupo={ex.grupo} aquecimento={ex.aquecimento} intensidade={ex.intensidade} onChange={patch => setEx(di, ei, patch)} />

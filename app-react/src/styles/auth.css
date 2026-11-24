@@ -151,6 +151,7 @@ h1.auth-logo__name { margin: 0; }
   /* Só para leitor de tela: o rótulo "Idioma" sai da vista, não da página. */
   .lang-compact__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .lang-compact__select { min-width: 0; width: auto; padding: 8px 10px; font-size: var(--fs-sm); font-weight: 700; }
+  .input.lang-compact__select { --select-pr: 26px; --select-ar: 9px; }
   /* Logo centralizada (ícone, nome e frase), só menor; o idioma fica no canto. */
   .auth-logo { gap: 2px; }
   .auth-logo__icon { width: 56px; height: 56px; margin: 0 0 4px; border-radius: 16px; box-shadow: 0 0 0 1px var(--border), 0 6px 20px var(--primary-glow); }

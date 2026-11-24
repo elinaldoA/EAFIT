@@ -4,6 +4,7 @@
 .input--sm {
   padding: 9px var(--sp-3);
   font-size: var(--fs-md);
+  --select-pr: 34px; --select-ar: 12px; /* espaço da setinha nos selects (controls.css) */
 }
 
 /* ============================================================

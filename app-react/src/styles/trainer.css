@@ -258,6 +258,8 @@ button.kpi:hover { border-color: var(--border-2); }
 
 /* montador e modelos */
 .plan-copy { width: auto; max-width: 52%; padding: var(--sp-1) var(--sp-2); font-size: var(--fs-xs); }
+/* Mais específico que .input--sm (profile.css), que também ajusta a setinha. */
+.input.plan-copy { --select-pr: 24px; --select-ar: 8px; }
 .plan-row__dup {
   width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--border-2); border-radius: var(--r-sm);
   background: none; color: var(--text-muted); cursor: pointer;
