@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTheme } from '../context/useTheme';
+import { useAuth } from '../context/useAuth';
 import InboxBell from './InboxBell';
 import { t } from '../lib/i18n';
 
 // Menu do canto direito da barra superior: avisos, tema e os botões de trocar
-// de modo (Personal, Embaixador, Influenciador). Juntos num botão só, sobra
+// de modo (Personal, Embaixador, Influenciador) e Sair da conta. Juntos num botão só, sobra
 // espaço para o nome e o módulo de esporte. A bolinha vermelha mostra os
 // avisos não lidos. `modes`: [{ label: '📣 Influenciador', onClick }].
 //
@@ -12,6 +13,7 @@ import { t } from '../lib/i18n';
 // sendo buscados e o painel de avisos, aberto por ela, não some ao fechar.
 export default function TopbarMenu({ modes = [] }) {
   const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const rootRef = useRef(null);
@@ -61,6 +63,10 @@ export default function TopbarMenu({ modes = [] }) {
             </button>
           );
         })}
+        <button type="button" role="menuitem" className="topbar-menu__item" onClick={pick(logout)}>
+          <span aria-hidden="true">🚪</span>
+          <span className="topbar-menu__text">{t('Sair da conta')}</span>
+        </button>
       </div>
     </div>
   );

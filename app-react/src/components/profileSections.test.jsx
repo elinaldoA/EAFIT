@@ -33,6 +33,7 @@ import ProfileAccountSection from './ProfileAccountSection';
 import ProfileBodySection from './ProfileBodySection';
 import { WeeklyGoalSection, MacrosSection } from './ProfileGoalsSection';
 import ProfileHeader from './ProfileHeader';
+import ProfileIdentity from './ProfileIdentity';
 import ProfilePauseSection from './ProfilePauseSection';
 import ProfilePersonalSection from './ProfilePersonalSection';
 import ProfileFeedbackSection from './ProfileFeedbackSection';
@@ -103,11 +104,9 @@ describe('ProfileAccountSection', () => {
     expect(p.onUpdatePassword).toHaveBeenCalled();
   });
 
-  it('sair da conta', () => {
-    const p = props();
-    render(<ProfileAccountSection {...p} />);
-    fireEvent.click(screen.getByText('Sair da conta'));
-    expect(p.onLogout).toHaveBeenCalled();
+  it('não tem mais o botão sair (agora fica no menu da barra superior)', () => {
+    render(<ProfileAccountSection {...props()} />);
+    expect(screen.queryByText('Sair da conta')).toBeNull();
   });
 
   it('exclusão exige digitar EXCLUIR (sem diferenciar maiúsculas)', () => {
@@ -252,20 +251,15 @@ describe('ProfileGoalsSection', () => {
 });
 
 describe('ProfileHeader', () => {
-  const user = { email: 'ana@x.com', created_at: '2026-01-15T12:00:00Z', user_metadata: { apelido: 'Aninha' } };
-
-  it('mostra apelido, e-mail, estatísticas e meta semanal', () => {
-    render(<ProfileHeader user={user} avatarData={null} uploadingAvatar={false} onAvatarChange={vi.fn()} stats={{ week: 3, streak: 5, total: 40 }} weeklyGoalNum={4} />);
-    expect(screen.getByText('Aninha')).toBeTruthy();
-    expect(screen.getByText('ana@x.com')).toBeTruthy();
+  it('mostra as estatísticas e a meta semanal', () => {
+    render(<ProfileHeader stats={{ week: 3, streak: 5, total: 40 }} weeklyGoalNum={4} />);
     expect(screen.getByText('3/4')).toBeTruthy();
     expect(screen.getByText('5')).toBeTruthy();
     expect(screen.getByText('40')).toBeTruthy();
-    expect(screen.getByText('A')).toBeTruthy();
   });
 
   it('no módulo de corrida mostra km da semana, semanas seguidas e km no total', () => {
-    render(<ProfileHeader user={user} stats={{ week: 3, streak: 5, total: 40 }} weeklyGoalNum={4} runStats={{ week: '12,3/20', streak: '3 sem', total: '85,2' }} />);
+    render(<ProfileHeader stats={{ week: 3, streak: 5, total: 40 }} weeklyGoalNum={4} runStats={{ week: '12,3/20', streak: '3 sem', total: '85,2' }} />);
     expect(screen.getByText('12,3/20')).toBeTruthy();
     expect(screen.getByText('km esta semana')).toBeTruthy();
     expect(screen.getByText('3 sem')).toBeTruthy();
@@ -276,30 +270,36 @@ describe('ProfileHeader', () => {
   });
 
   it('semana ainda não numérica aparece sem a meta', () => {
-    render(<ProfileHeader user={user} stats={{ week: '–', streak: 0, total: 0 }} weeklyGoalNum={4} />);
+    render(<ProfileHeader stats={{ week: '–', streak: 0, total: 0 }} weeklyGoalNum={4} />);
     expect(screen.getByText('–', { selector: '.stat-card__value' })).toBeTruthy();
+  });
+});
+
+describe('ProfileIdentity', () => {
+  const user = { email: 'ana@x.com', created_at: '2026-01-15T12:00:00Z', user_metadata: { apelido: 'Aninha' } };
+
+  it('mostra e-mail e inicial, sem repetir o nome', () => {
+    render(<ProfileIdentity user={user} avatarData={null} uploadingAvatar={false} onAvatarChange={vi.fn()} />);
+    expect(screen.queryByText('Aninha')).toBeNull();
+    expect(screen.getAllByText('ana@x.com')).toHaveLength(1);
+    expect(screen.getByText('A')).toBeTruthy();
   });
 
   it('usa a foto quando existe e bloqueia upload em andamento', () => {
-    render(<ProfileHeader user={user} avatarData="data:img" uploadingAvatar onAvatarChange={vi.fn()} stats={{ week: 0, streak: 0, total: 0 }} weeklyGoalNum={3} />);
+    render(<ProfileIdentity user={user} avatarData="data:img" uploadingAvatar onAvatarChange={vi.fn()} />);
     expect(screen.getByAltText('Foto de perfil').getAttribute('src')).toBe('data:img');
     expect(document.querySelector('input[type="file"]').disabled).toBe(true);
   });
 
-  it('não repete o e-mail quando ele é o nome exibido', () => {
-    render(<ProfileHeader user={{ email: 'solo@x.com', created_at: '2026-01-01T12:00:00Z' }} stats={{ week: 0, streak: 0, total: 0 }} weeklyGoalNum={3} />);
-    expect(screen.getAllByText('solo@x.com')).toHaveLength(1);
-  });
-
   it('avatar vazio mostra "?" e sem usuário mostra travessão', () => {
-    render(<ProfileHeader user={null} stats={{ week: 0, streak: 0, total: 0 }} weeklyGoalNum={3} />);
+    render(<ProfileIdentity user={null} />);
     expect(screen.getByText('?')).toBeTruthy();
     expect(screen.getAllByText('–').length).toBeGreaterThan(0);
   });
 
   it('dispara onAvatarChange ao escolher arquivo', () => {
     const onAvatarChange = vi.fn();
-    render(<ProfileHeader user={user} onAvatarChange={onAvatarChange} stats={{ week: 0, streak: 0, total: 0 }} weeklyGoalNum={3} />);
+    render(<ProfileIdentity user={user} onAvatarChange={onAvatarChange} />);
     fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
     expect(onAvatarChange).toHaveBeenCalled();
   });

@@ -10,7 +10,7 @@ export default function ProfileAccountSection({
   user,
   newEmail, setNewEmail, onUpdateEmail,
   newPassword, setNewPassword, onUpdatePassword,
-  onLogout, onDeleteAccount,
+  onDeleteAccount,
 }) {
   const googleOnly = isGoogleOnly(user);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -59,8 +59,6 @@ export default function ProfileAccountSection({
               </button>
             </div>
       </CollapsibleCard>
-
-      <button className="btn btn--outline btn--full" onClick={onLogout}>{t('Sair da conta')}</button>
 
       {!deleteOpen ? (
         <button

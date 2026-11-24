@@ -84,13 +84,12 @@ vi.mock('../components/ProfileGoalsSection', () => ({
   ),
 }));
 vi.mock('../components/ProfileAccountSection', () => ({
-  default: ({ newEmail, setNewEmail, onUpdateEmail, newPassword, setNewPassword, onUpdatePassword, onLogout, onDeleteAccount }) => (
+  default: ({ newEmail, setNewEmail, onUpdateEmail, newPassword, setNewPassword, onUpdatePassword, onDeleteAccount }) => (
     <div>
       <input aria-label="novo e-mail" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
       <button onClick={onUpdateEmail}>trocar e-mail</button>
       <input aria-label="nova senha" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
       <button onClick={onUpdatePassword}>trocar senha</button>
-      <button onClick={onLogout}>sair</button>
       <button onClick={onDeleteAccount}>excluir conta</button>
     </div>
   ),
@@ -440,11 +439,6 @@ describe('PerfilPage', () => {
       await waitFor(() => expect(mockToast).toHaveBeenCalledWith('⚠️ Não foi possível excluir a conta agora.'));
     });
 
-    it('sair chama o logout', () => {
-      render(<PerfilPage active />);
-      fireEvent.click(screen.getByText('sair'));
-      expect(auth.logout).toHaveBeenCalled();
-    });
   });
 
   describe('atalhos e chaves do painel admin', () => {

@@ -6,6 +6,8 @@ import TopbarMenu from './TopbarMenu';
 
 const theme = { theme: 'dark', toggleTheme: vi.fn() };
 vi.mock('../context/useTheme', () => ({ useTheme: () => theme }));
+const auth = { logout: vi.fn() };
+vi.mock('../context/useAuth', () => ({ useAuth: () => auth }));
 vi.mock('./InboxBell', () => ({
   default: function InboxBellMock({ onUnreadChange }) {
     useEffect(() => { onUnreadChange(3); }, [onUnreadChange]);
@@ -16,6 +18,14 @@ vi.mock('./InboxBell', () => ({
 afterEach(cleanup);
 
 describe('TopbarMenu', () => {
+  it('Sair da conta fica no menu e fecha ao escolher', () => {
+    render(<TopbarMenu />);
+    fireEvent.click(screen.getByRole('button', { name: /^Menu/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Sair da conta/ }));
+    expect(auth.logout).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /^Menu/ }).getAttribute('aria-expanded')).toBe('false');
+  });
+
   it('fechado: só o botão, com a bolinha dos avisos não lidos', () => {
     render(<TopbarMenu />);
     const btn = screen.getByRole('button', { name: 'Menu (3 aviso(s) novo(s))' });

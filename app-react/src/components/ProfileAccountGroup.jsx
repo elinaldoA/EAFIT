@@ -7,7 +7,7 @@ import { t } from '../lib/i18n';
 // Grupo "Conta" do Perfil: trocar e-mail e senha, sair e apagar a conta. O
 // estado dos campos novos fica aqui; o que fala com a conta vem do useAuth.
 export default function ProfileAccountGroup({ user, toast }) {
-  const { logout, updateEmail, updatePassword, deleteAccount } = useAuth();
+  const { updateEmail, updatePassword, deleteAccount } = useAuth();
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
@@ -40,7 +40,7 @@ export default function ProfileAccountGroup({ user, toast }) {
         user={user}
         newEmail={newEmail} setNewEmail={setNewEmail} onUpdateEmail={handleUpdateEmail}
         newPassword={newPassword} setNewPassword={setNewPassword} onUpdatePassword={handleUpdatePassword}
-        onLogout={logout} onDeleteAccount={handleDeleteAccount}
+        onDeleteAccount={handleDeleteAccount}
       />
     </div>
   );

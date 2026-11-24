@@ -17,6 +17,7 @@ import { createGeneratedPlan, listPlans, undoGeneratedPlan } from '../lib/workou
 import { useProfileData } from '../hooks/useProfileData';
 import CollapsibleCard from '../components/CollapsibleCard';
 import ProfileHeader from '../components/ProfileHeader';
+import ProfileIdentity from '../components/ProfileIdentity';
 import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
 import { focusFirstError } from '../lib/fieldErrors';
@@ -264,16 +265,16 @@ export default function PerfilPage({ active }) {
 
   return (
     <section id="page-perfil" className="page active">
-      <ProfileHeader
-        user={user} avatarData={avatarData} uploadingAvatar={uploadingAvatar}
-        onAvatarChange={handleAvatarChange} stats={stats} weeklyGoalNum={weeklyGoalNum}
-        runStats={usesWorkouts ? null : runStats}
-      />
+      <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} />
 
       <div className="section-group">
         <div className="section-group__label">{t('Meus dados')}</div>
 
         <CollapsibleCard icon="👤" title={t('Dados pessoais')} summary={fullName || apelido || t('Nome e apelido')}>
+          <ProfileIdentity
+            user={user} avatarData={avatarData} uploadingAvatar={uploadingAvatar}
+            onAvatarChange={handleAvatarChange}
+          />
           <ProfilePersonalSection
             nome={nome} setNome={setNome} sobrenome={sobrenome} setSobrenome={setSobrenome}
             apelido={apelido} setApelido={setApelido} onSave={handleSavePersonal}
