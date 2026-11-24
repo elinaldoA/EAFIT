@@ -126,6 +126,53 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
   const tempo = parseTempo(ex.tecnica);
   const canRepeat = !!onRepeatLast && lastSets.length > 0;
   const goal = isFlagOn(config.flags, 'metas_carga') ? goalFor(user, ex.nome) : null;
+  const repeatBtn = canRepeat ? (
+    <button type="button" className="ex-block__apply-btn ex-block__repeat" disabled={!started} onClick={() => onRepeatLast(lastSets)}>
+      {t('↩︎ Repetir o último treino')}
+    </button>
+  ) : null;
+  const tools = (
+    <>
+      {isFlagOn(config.flags, 'anilhas') && <PlateCalc ex={ex} day={day} setCount={setCount} />}
+
+      {user && (
+        <div className="ex-block__tools">
+          <ExerciseNote userId={user.id} nome={ex.nome} started={started} />
+          <ExerciseHistory userId={user.id} nome={ex.nome} />
+          <ExerciseMuscle userId={user.id} nome={ex.nome} />
+        </div>
+      )}
+      {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
+      {canSwap && <ExerciseSwap ex={ex} day={day} user={user} toast={toast} onSwapped={refreshPlan} />}
+    </>
+  );
+  // Modo ao vivo: uma dica principal por vez (platô/sugestão de carga, que ficam
+  // no cabeçalho). As demais — meta da semana, faixa de reps, cadência, meta de
+  // carga — vão para "Mais dicas", fechado, e a intensidade não repete (o modal
+  // já mostra). A semana leve fica à vista: muda o número de séries.
+  const deloadLine = periodization && !timed && setCount > 0 && ex.deload ? (
+    <p className="ex-block__intensity">{t('🌿 Semana leve: {n} séries (eram {m}), mesma carga e sem ir à falha', { n: ex.series, m: ex.seriesPlanned })}</p>
+  ) : null;
+  const hints = (
+    <>
+      {periodization && !timed && setCount > 0 && !ex.deload && periodization.step && suggestion?.lastCarga ? (
+        <p className="ex-block__intensity">{t('📈 Meta da semana {week}: {target} kg', { week: periodization.week, target: decimal(suggestion.lastCarga + periodization.step) })}</p>
+      ) : null}
+      {rule && !ex.deload && (
+        <p className="ex-block__rule">{t('📐 Faixa {min}–{max}: bata {max} reps em todas as séries e suba {step} kg', { min: rule.min, max: rule.max, step: decimal(rule.step) })}</p>
+      )}
+      {tempo && (
+        <p className="ex-block__rule">{t('⏱ Cadência {label}: descer {down}s · pausa {bottom}s · subir {up}s', { label: tempo.label, down: tempo.down, bottom: tempo.bottom, up: tempo.up })}</p>
+      )}
+      {goal && (
+        <p className="ex-block__goal">{t('🎯 Meta: {target} kg até {data}', { target: goal.target, data: fmtDate(goal.by) })}</p>
+      )}
+    </>
+  );
+  const hasHints = !!((periodization && !timed && !ex.deload && periodization.step && suggestion?.lastCarga) || (rule && !ex.deload) || tempo || goal);
+  const intensityLine = isIntensity(ex.intensidade) ? (
+    <p className="ex-block__intensity" title={intensityHint(ex.intensidade)}>⚡ {intensityLabel(ex.intensidade)} — {intensityHint(ex.intensidade)}</p>
+  ) : null;
   return (
     <div className="ex-block">
       <div className="ex-block__header">
@@ -137,25 +184,9 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
               <ExerciseDemo nome={ex.nome} tecnica={ex.tecnica} />
             </>
           )}
-          {periodization && !timed && setCount > 0 && (
-            ex.deload ? (
-              <p className="ex-block__intensity">{t('🌿 Semana leve: {n} séries (eram {m}), mesma carga e sem ir à falha', { n: ex.series, m: ex.seriesPlanned })}</p>
-            ) : periodization.step && suggestion?.lastCarga ? (
-              <p className="ex-block__intensity">{t('📈 Meta da semana {week}: {target} kg', { week: periodization.week, target: decimal(suggestion.lastCarga + periodization.step) })}</p>
-            ) : null
-          )}
-          {rule && !ex.deload && (
-            <p className="ex-block__rule">{t('📐 Faixa {min}–{max}: bata {max} reps em todas as séries e suba {step} kg', { min: rule.min, max: rule.max, step: decimal(rule.step) })}</p>
-          )}
-          {tempo && (
-            <p className="ex-block__rule">{t('⏱ Cadência {label}: descer {down}s · pausa {bottom}s · subir {up}s', { label: tempo.label, down: tempo.down, bottom: tempo.bottom, up: tempo.up })}</p>
-          )}
-          {isIntensity(ex.intensidade) && (
-            <p className="ex-block__intensity" title={intensityHint(ex.intensidade)}>⚡ {intensityLabel(ex.intensidade)} — {intensityHint(ex.intensidade)}</p>
-          )}
-          {goal && (
-            <p className="ex-block__goal">{t('🎯 Meta: {target} kg até {data}', { target: goal.target, data: fmtDate(goal.by) })}</p>
-          )}
+          {deloadLine}
+          {!hideName && hints}
+          {!hideName && intensityLine}
           {plateau ? (
             <p className="ex-block__suggestion ex-block__suggestion--plateau">
               {t('⚠️ Estagnado há')} {plateau.sessionsStuck} {t('treinos em')} {plateau.lastCarga}kg
@@ -173,6 +204,12 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
               {' '}<button type="button" className="ex-block__apply-btn" disabled={!started} onClick={() => onApplySuggestion(suggestion.suggestedCarga, suggestion.suggestedReps)}>{t('🎯 Usar sugestão')}</button>
             </p>
           )}
+          {hideName && hasHints && (
+            <details className="ex-block__more">
+              <summary>{t('ⓘ Mais dicas')}</summary>
+              {hints}
+            </details>
+          )}
         </div>
         <button
           type="button"
@@ -188,11 +225,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
       {warmups > 0 && !workKg && suggestionDone && (
         <p className="ex-block__rule">{t('Sem histórico aqui: faça o aquecimento leve. Quando anotar a carga da Série 1, as cargas do aquecimento se ajustam.')}</p>
       )}
-      {canRepeat && (
-        <button type="button" className="ex-block__apply-btn ex-block__repeat" disabled={!started} onClick={() => onRepeatLast(lastSets)}>
-          {t('↩︎ Repetir o último treino')}
-        </button>
-      )}
+      {!hideName && repeatBtn}
 
       <div className="ex-block__sets">
         {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (timed
@@ -201,22 +234,19 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
         ))}
       </div>
 
-      {isFlagOn(config.flags, 'anilhas') && <PlateCalc ex={ex} day={day} setCount={setCount} />}
-
-      {user && (
-        <div className="ex-block__tools">
-          <ExerciseNote userId={user.id} nome={ex.nome} started={started} />
-          <ExerciseHistory userId={user.id} nome={ex.nome} />
-          <ExerciseMuscle userId={user.id} nome={ex.nome} />
-        </div>
-      )}
-      {user && <DiscomfortPanel userId={user.id} exerciseName={ex.nome} toast={toast} />}
+      {/* Ao vivo: o que não é a série em andamento fica recolhido em "Mais". */}
+      {hideName ? (
+        <details className="ex-block__more">
+          <summary>{t('⋯ Mais')}</summary>
+          {repeatBtn}
+          {tools}
+        </details>
+      ) : tools}
       {showSwap && (
         <button type="button" className="ex-block__swap-btn" disabled={substituting} onClick={handleSubstitute}>
           {substituting ? t('Trocando…') : t('🔄 Trocar por: {nome}', { nome: tEx(alternative.nome) })}
         </button>
       )}
-      {canSwap && <ExerciseSwap ex={ex} day={day} user={user} toast={toast} onSwapped={refreshPlan} />}
     </div>
   );
 }

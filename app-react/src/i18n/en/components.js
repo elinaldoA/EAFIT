@@ -1079,6 +1079,8 @@ export default {
   '1RM ~{v} kg': '1RM ~{v} kg',
   '↩︎ Cargas do último treino aplicadas': '↩︎ Loads from your last workout applied',
   '↩︎ Repetir o último treino': '↩︎ Repeat last workout',
+  '⋯ Mais': '⋯ More',
+  'ⓘ Mais dicas': 'ⓘ More tips',
   '📐 Faixa {min}–{max}: bata {max} reps em todas as séries e suba {step} kg': '📐 Range {min}–{max}: hit {max} reps on every set, then add {step} kg',
   '⏱ Cadência {label}: descer {down}s · pausa {bottom}s · subir {up}s': '⏱ Tempo {label}: lower {down}s · pause {bottom}s · lift {up}s',
   'Sem histórico aqui: faça o aquecimento leve. Quando anotar a carga da Série 1, as cargas do aquecimento se ajustam.': 'No history here: keep the warm-up light. Once you log the Set 1 load, the warm-up loads adjust.',

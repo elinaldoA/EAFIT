@@ -74,6 +74,18 @@ describe('ExerciseBlock', () => {
     expect(screen.getAllByTestId('set-row')).toHaveLength(3);
   });
 
+  it('ao vivo: troca de exercício e painel de desconforto ficam dentro de "Mais" (fechado); na lista, soltos', () => {
+    const { unmount } = render(<ExerciseBlock ex={EX} day={DAY} open version={0} started hideName bump={vi.fn()} onRestStart={vi.fn()} onToggleAll={vi.fn()} onFillOthers={vi.fn()} onApplySuggestion={vi.fn()} />);
+    const more = screen.getByText('⋯ Mais').closest('details');
+    expect(more.open).toBe(false);
+    expect(more.contains(screen.getByTestId('swap'))).toBe(true);
+    expect(more.contains(screen.getByTestId('discomfort-panel'))).toBe(true);
+    unmount();
+    setup();
+    expect(screen.queryByText('⋯ Mais')).toBeNull();
+    expect(screen.getByTestId('swap')).toBeTruthy();
+  });
+
   it('Marcar todas dispara o callback; vira ✓ Todas quando todas as séries estão feitas', () => {
     const { onToggleAll } = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Marcar todas' }));

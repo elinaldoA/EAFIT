@@ -535,3 +535,12 @@ body.live-open .toast.show { transform: translateX(-50%) translateY(0); }
   font-weight: 600;
   cursor: pointer;
 }
+
+/* Ao vivo: dicas e ferramentas recolhidas (ExerciseBlock) para a tela focar na série */
+.live__block .ex-block__more { margin-top: var(--sp-2); }
+.live__block .ex-block__more > summary {
+  cursor: pointer; list-style: none; font-size: var(--fs-xs); color: var(--text-muted);
+  padding: var(--sp-1) 0; user-select: none;
+}
+.live__block .ex-block__more > summary::-webkit-details-marker { display: none; }
+.live__block .ex-block__more[open] > summary { color: var(--text); }
