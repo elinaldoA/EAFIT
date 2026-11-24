@@ -15,7 +15,11 @@ export const EXERCISE_GIFS = {
   'Tríceps Testa com Barra W': 'Tríceps Testa com Barra W',
 };
 
-export const gifUrl = (file, base) => `${base}gifs/${encodeURIComponent(file)}.gif`;
+// Os GIFs mantêm o nome ao serem trocados; o ?v= faz o navegador buscar de novo.
+// Subir o número sempre que um GIF for substituído por outro com o mesmo nome.
+export const GIFS_VERSION = 2;
+
+export const gifUrl = (file, base) => `${base}gifs/${encodeURIComponent(file)}.gif?v=${GIFS_VERSION}`;
 
 // Mesmo exercício com GIF diferente conforme a técnica anotada na ficha
 // (ex.: o 2º Crucifixo Máquina do dia, "Foco no encurtamento, pico de contração").

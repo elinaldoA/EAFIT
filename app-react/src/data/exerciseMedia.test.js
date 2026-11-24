@@ -50,18 +50,18 @@ describe('getExerciseMedia', () => {
 
   it('GIF próprio da EAFIT tem prioridade sobre vídeo, YouTube e quadros', () => {
     expect(getExerciseMedia('Supino Reto com Barra', '/EAFIT/')).toEqual({
-      custom: true, type: 'imagem', url: '/EAFIT/gifs/Supino%20Reto%20com%20Barra.gif',
+      custom: true, type: 'imagem', url: '/EAFIT/gifs/Supino%20Reto%20com%20Barra.gif?v=2',
     });
-    expect(getExerciseMedia('Crucifixo Máquina', '/')?.url).toBe('/gifs/Crucifixo%20M%C3%A1quina.gif');
-    expect(getExerciseMedia('Crucifixo Máquina', '/', null, 'Pico de contração')?.url).toBe('/gifs/Crucifixo%20M%C3%A1quina.gif');
+    expect(getExerciseMedia('Crucifixo Máquina', '/')?.url).toBe('/gifs/Crucifixo%20M%C3%A1quina.gif?v=2');
+    expect(getExerciseMedia('Crucifixo Máquina', '/', null, 'Pico de contração')?.url).toBe('/gifs/Crucifixo%20M%C3%A1quina.gif?v=2');
     expect(getExerciseMedia('Crucifixo Máquina', '/', null, 'Foco no encurtamento, pico de contração')?.url)
-      .toBe('/gifs/Crucifixo%20M%C3%A1quina%20-%20foco%20encurtamento%20pico%20contra%C3%A7%C3%A3o.gif');
-    expect(getExerciseMedia('Prancha com Peso', '/')?.url).toBe('/gifs/Prancha%20com%20Peso.gif');
-    expect(getExerciseMedia('Desenvolvimento com Barra', '/')?.url).toBe('/gifs/Desenvolvimento%20com%20barra.gif');
+      .toBe('/gifs/Crucifixo%20M%C3%A1quina%20-%20foco%20encurtamento%20pico%20contra%C3%A7%C3%A3o.gif?v=2');
+    expect(getExerciseMedia('Prancha com Peso', '/')?.url).toBe('/gifs/Prancha%20com%20Peso.gif?v=2');
+    expect(getExerciseMedia('Desenvolvimento com Barra', '/')?.url).toBe('/gifs/Desenvolvimento%20com%20barra.gif?v=2');
   });
 
   it('acha exercício de pós-treino com emoji no nome', () => {
-    expect(getExerciseMedia('🔷 Abdominal Polia (Corda)', '/')?.url).toBe('/gifs/Abdominal%20Polia%20(Corda).gif');
+    expect(getExerciseMedia('🔷 Abdominal Polia (Corda)', '/')?.url).toBe('/gifs/Abdominal%20Polia%20(Corda).gif?v=2');
     expect(getExerciseMedia('🔷 Abdominal Infra (Elevação de Pernas)', '/')?.fallback?.id).toBe('Flat_Bench_Lying_Leg_Raise');
     expect(getExerciseMedia('🏃 Cardio — Esteira Inclinada', '/')?.fallback?.id).toBe('Walking_Treadmill');
   });
