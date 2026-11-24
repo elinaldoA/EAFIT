@@ -15,3 +15,14 @@ export const EXERCISE_GIFS = {
 };
 
 export const gifUrl = (file, base) => `${base}gifs/${encodeURIComponent(file)}.gif`;
+
+// Mesmo exercício com GIF diferente conforme a técnica anotada na ficha
+// (ex.: o 2º Crucifixo Máquina do dia, "Foco no encurtamento, pico de contração").
+const GIF_VARIANTS = {
+  'Crucifixo Máquina': [{ tecnica: /encurtamento/i, file: 'Crucifixo Máquina - foco encurtamento pico contração' }],
+};
+
+export function gifFileFor(key, tecnica) {
+  const variant = GIF_VARIANTS[key]?.find(v => v.tecnica.test(tecnica || ''));
+  return variant ? variant.file : EXERCISE_GIFS[key];
+}

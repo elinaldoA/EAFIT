@@ -1,6 +1,6 @@
 import { EXERCISE_VIDEOS, videoCredit } from './exerciseVideos';
 import { EXERCISE_YOUTUBE } from './exerciseYoutube';
-import { EXERCISE_GIFS, gifUrl } from './exerciseGifs';
+import { EXERCISE_GIFS, gifFileFor, gifUrl } from './exerciseGifs';
 import { matchCatalogExercise } from './exerciseMatch';
 
 // Demonstração de execução (2 quadros do movimento, sem ordem garantida) por nome de
@@ -244,14 +244,14 @@ function catalogNames(custom) {
 // (data/exerciseGifs.js) → vídeo
 // curto (data/exerciseVideos.js) → player do YouTube (data/exerciseYoutube.js,
 // com os 2 quadros como reserva offline) → 2 quadros do Free Exercise DB.
-export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom = null) {
+export function getExerciseMedia(nome, base = import.meta.env.BASE_URL, custom = null, tecnica = '') {
   const exact = normalizeExerciseName(nome);
   // Nome de fora do catálogo (ficha importada, Strong/Hevy, personal): procura
   // o mesmo exercício escrito de outro jeito (data/exerciseMatch.js).
   const key = hasExactMedia(exact, custom) ? exact : (matchCatalogExercise(exact, catalogNames(custom)) || exact);
   const own = custom?.[key];
   if (own) return { custom: true, type: own.type, url: own.url };
-  const gif = EXERCISE_GIFS[key];
+  const gif = gifFileFor(key, tecnica);
   if (gif) return { custom: true, type: 'imagem', url: gifUrl(gif, base) };
   const video = EXERCISE_VIDEOS[key];
   if (video) return { stock: true, type: 'video', url: `${base}videos/${video}.mp4`, credit: videoCredit(video) };

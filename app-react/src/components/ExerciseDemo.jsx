@@ -226,7 +226,7 @@ function ExerciseDemoModal({ nome: nomePt, tecnica: tecnicaPt, media, onClose })
 export default function ExerciseDemo({ nome, tecnica, variant = 'link' }) {
   const [open, setOpen] = useState(false);
   const custom = useCustomExerciseMedia();
-  const media = getExerciseMedia(nome, undefined, custom);
+  const media = getExerciseMedia(nome, undefined, custom, tecnica);
   if (!media) return null;
 
   return (
