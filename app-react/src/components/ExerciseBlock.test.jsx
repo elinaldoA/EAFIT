@@ -33,6 +33,7 @@ vi.mock('../lib/workoutPlans', () => ({ substituteExercise: (...a) => h.substitu
 vi.mock('./SetRow', () => ({ default: ({ n }) => <div data-testid="set-row">série {n}</div> }));
 vi.mock('./CardioRow', () => ({ default: () => <div data-testid="cardio-row" /> }));
 vi.mock('./ExerciseDemo', () => ({ default: () => <span data-testid="demo" /> }));
+vi.mock('./WarmupSets', () => ({ default: () => <div data-testid="warmup" /> }));
 vi.mock('./ExerciseSwap', () => ({ default: () => <div data-testid="swap" /> }));
 vi.mock('./DiscomfortWidgets', () => ({ DiscomfortPanel: () => <div data-testid="discomfort-panel" /> }));
 
@@ -84,6 +85,19 @@ describe('ExerciseBlock', () => {
     setup();
     expect(screen.queryByText('⋯ Mais')).toBeNull();
     expect(screen.getByTestId('swap')).toBeTruthy();
+  });
+
+  it('aquecimento: ao vivo fica recolhido; na lista, solto', () => {
+    const exW = { ...EX, aquecimento: 2 };
+    const props = { day: DAY, open: true, version: 0, started: true, bump: vi.fn(), onRestStart: vi.fn(), onToggleAll: vi.fn(), onFillOthers: vi.fn(), onApplySuggestion: vi.fn() };
+    const { unmount } = render(<ExerciseBlock ex={exW} hideName {...props} />);
+    const det = screen.getByText('🔥 Aquecimento (2 séries)').closest('details');
+    expect(det.open).toBe(false);
+    expect(det.contains(screen.getByTestId('warmup'))).toBe(true);
+    unmount();
+    render(<ExerciseBlock ex={exW} {...props} />);
+    expect(screen.queryByText('🔥 Aquecimento (2 séries)')).toBeNull();
+    expect(screen.getByTestId('warmup')).toBeTruthy();
   });
 
   it('Marcar todas dispara o callback; vira ✓ Todas quando todas as séries estão feitas', () => {

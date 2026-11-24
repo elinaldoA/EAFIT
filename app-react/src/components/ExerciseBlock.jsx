@@ -126,6 +126,14 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
   const tempo = parseTempo(ex.tecnica);
   const canRepeat = !!onRepeatLast && lastSets.length > 0;
   const goal = isFlagOn(config.flags, 'metas_carga') ? goalFor(user, ex.nome) : null;
+  const warmupBlock = warmups > 0 ? (
+    <>
+      <WarmupSets key={`warm-${version}`} ex={ex} day={day} count={warmups} workKg={workKg} started={started} />
+      {!workKg && suggestionDone && (
+        <p className="ex-block__rule">{t('Sem histórico aqui: faça o aquecimento leve. Quando anotar a carga da Série 1, as cargas do aquecimento se ajustam.')}</p>
+      )}
+    </>
+  ) : null;
   const repeatBtn = canRepeat ? (
     <button type="button" className="ex-block__apply-btn ex-block__repeat" disabled={!started} onClick={() => onRepeatLast(lastSets)}>
       {t('↩︎ Repetir o último treino')}
@@ -221,10 +229,13 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
         </button>
       </div>
 
-      {warmups > 0 && <WarmupSets key={`warm-${version}`} ex={ex} day={day} count={warmups} workKg={workKg} started={started} />}
-      {warmups > 0 && !workKg && suggestionDone && (
-        <p className="ex-block__rule">{t('Sem histórico aqui: faça o aquecimento leve. Quando anotar a carga da Série 1, as cargas do aquecimento se ajustam.')}</p>
-      )}
+      {warmups > 0 && (hideName ? (
+        // Ao vivo: o aquecimento fica fechado até a pessoa querer (menos coisa na tela).
+        <details className="ex-block__more">
+          <summary>{t('🔥 Aquecimento ({n} séries)', { n: warmups })}</summary>
+          {warmupBlock}
+        </details>
+      ) : warmupBlock)}
       {!hideName && repeatBtn}
 
       <div className="ex-block__sets">

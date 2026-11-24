@@ -119,15 +119,15 @@
   letter-spacing: -0.4px;
 }
 
-.live__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.live__chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; }
+/* Uma linha só ("4 séries · 8-10 reps · ⏱ 60s"): sem pílulas, só os separadores. */
 .live__chip {
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
   font-weight: 700;
-  background: var(--surface-3);
-  color: var(--text);
-  border-radius: var(--r-full);
-  padding: var(--sp-1) 10px;
+  color: var(--text-muted);
 }
+.live__chip + .live__chip::before { content: '·'; margin: 0 8px; font-weight: 400; }
+.live__chips > :not(.live__chip) { margin-left: var(--sp-2); }
 
 .live__tecnica { font-size: var(--fs-sm); color: var(--text-muted); }
 

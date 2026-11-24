@@ -970,6 +970,7 @@ export default {
   'Não': 'No',
   'Grupo {l}': 'Group {l}',
   '🔥 Aquecimento': '🔥 Warm-up',
+  '🔥 Aquecimento ({n} séries)': '🔥 Warm-up ({n} sets)',
   'Automático': 'Automatic',
   '1 série': '1 set',
   '2 séries': '2 sets',
