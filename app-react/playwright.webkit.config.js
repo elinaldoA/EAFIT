@@ -8,8 +8,10 @@ import base from './playwright.config.js';
 // assumir a página, e no WebKit do Playwright a rede de uma página controlada por
 // service worker não passa pelo Supabase simulado (as gravações nunca chegam ao
 // falso) — limitação da ferramenta, não do app. Esse arquivo roda no Chromium.
+// Pelo mesmo motivo o service worker fica bloqueado aqui: sem isso, depois de alguns
+// segundos a página passa a falar com o Supabase de verdade (chave inválida, 401).
 export default defineConfig({
   ...base,
   testIgnore: '**/offline-workout.spec.js',
-  use: { ...base.use, ...devices['iPhone 15'], locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', permissions: [] },
+  use: { ...base.use, ...devices['iPhone 15'], locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', permissions: [], serviceWorkers: 'block' },
 });

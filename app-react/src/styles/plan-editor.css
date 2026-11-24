@@ -262,6 +262,13 @@
   color: var(--text-muted);
 }
 .plan-ex-row__extra .input { padding-left: var(--sp-2); padding-right: var(--sp-2); }
+/* Nos selects (colunas estreitas) o texto precisa deixar espaço para a setinha (controls.css). */
+.plan-ex-row__extra select.input { padding-right: 28px; background-position: right 9px center; }
+/* Telas estreitas: em duas colunas "Automático" não cabe no select (o iOS ainda força fonte de
+   16 px nos campos, base.css) e virava "Autom…". Os campos extras empilham em uma coluna. */
+@media (max-width: 480px) {
+  .plan-ex-row__extras { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 380px) {
   .plan-modal { padding-left: 10px; padding-right: 10px; }
