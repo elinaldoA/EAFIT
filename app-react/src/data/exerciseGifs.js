@@ -7,6 +7,7 @@ export const EXERCISE_GIFS = {
   'Crucifixo Máquina': 'Crucifixo Máquina',
   'Desenvolvimento com Barra': 'Desenvolvimento com barra',
   'Prancha com Peso': 'Prancha com Peso',
+  'Remada baixa triangulo': 'Remada baixa triangulo',
   'Rosca Martelo Alternada': 'Rosca Martelo Alternada',
   'Cardio — Esteira Inclinada': 'Cardio — Esteira Inclinada',
   'Face Pull': 'Face Pull',
