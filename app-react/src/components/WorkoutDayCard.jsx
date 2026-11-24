@@ -30,7 +30,7 @@ import { t, locale, tFoco } from '../lib/i18n';
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
 // TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
 // que é quem tem o cronômetro e as ações de série do dia.
-export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liveOpen, onOpenLive, onCloseLive }) {
+export default function DayCard({ day, isToday, bump, onRestStart, onRestAdjust, onFinish, liveOpen, onOpenLive, onCloseLive }) {
   const { user } = useAuth();
   const { saveWorkoutStatus, saveWorkoutTimer, saveWorkoutNotes, activePlanDays, markPending, periodization } = useWorkout();
   const toast = useToast();
@@ -121,6 +121,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
     return (
       <ExerciseBlock
         key={ex.nome} ex={ex} day={day} bump={bump} onRestStart={(label, seconds, ...rest) => { markRest(seconds); (live ? live.onRestStart : onRestStart)(label, seconds, ...rest); }}
+        onRestAdjust={live ? live.onRestAdjust : onRestAdjust}
         onSetDone={group ? n => handleGroupSetDone(group, ex, n, live) : undefined}
         // Na lista, não busca sugestões enquanto o modo ao vivo (que tem as
         // próprias instâncias do bloco) estiver aberto por cima.
@@ -238,8 +239,9 @@ export default function DayCard({ day, isToday, bump, onRestStart, onFinish, liv
           day={day}
           timer={timer}
           week={weekProgress(activePlanDays)}
-          renderExercise={(ex, onLiveRest, onGroupStep) => renderExerciseBlock(ex, {
+          renderExercise={(ex, onLiveRest, onGroupStep, onLiveAdjust) => renderExerciseBlock(ex, {
             onRestStart: onLiveRest,
+            onRestAdjust: onLiveAdjust,
             onGroupStep: (doneEx, step) => { if (step.rest && step.seconds > 0) markRest(step.seconds); onGroupStep(doneEx, step); },
           })}
           onFinish={finishFromLive}

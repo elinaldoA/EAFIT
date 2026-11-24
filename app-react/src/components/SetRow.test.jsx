@@ -21,6 +21,7 @@ vi.mock('../lib/friends', () => ({ postActivity: (...a) => h.postActivity(...a) 
 vi.mock('../lib/pushSubscriptions', () => ({ sendPushToSelf: (...a) => h.sendPushToSelf(...a) }));
 
 import SetRow from './SetRow';
+import { claimRest } from '../lib/restAdapt';
 
 const EX = { nome: 'Supino Reto', series: '3', reps: '8-10', descanso: '60s' };
 const DAY = { dia: 'Segunda' };
@@ -267,5 +268,62 @@ describe('SetRow — RIR opcional', () => {
     expect(localStorage.getItem('set_Segunda_Supino Reto_1_rir')).toBe('2');
     fireEvent.click(screen.getByRole('button', { name: '2' }));
     expect(h.saveSetState).toHaveBeenLastCalledWith('Segunda', 'Supino Reto', 1, { rir: null });
+  });
+});
+
+describe('SetRow — descanso em andamento ajustado pelo RIR', () => {
+  const EX90 = { ...EX, descanso: '90s' };
+  const rirBtn = v => screen.getByRole('button', { name: String(v), exact: true });
+
+  async function checkAndRest(props = {}) {
+    const onRestAdjust = vi.fn();
+    const { onRestStart } = setup({ ex: EX90, onRestAdjust, ...props });
+    await act(async () => { fireEvent.click(check()); });
+    return { onRestAdjust, onRestStart };
+  }
+
+  it('até a falha (RIR 0) alonga o descanso que já está correndo em 30 s', async () => {
+    const { onRestAdjust, onRestStart } = await checkAndRest();
+    expect(onRestStart).toHaveBeenCalledWith('Supino Reto', 90);
+    fireEvent.click(rirBtn(0));
+    expect(onRestAdjust).toHaveBeenCalledWith(30);
+  });
+
+  it('trocar o RIR ajusta só a diferença; tirar a resposta volta ao descanso do plano', async () => {
+    const { onRestAdjust } = await checkAndRest();
+    fireEvent.click(rirBtn(0));   // 90 → 120
+    fireEvent.click(rirBtn(3));   // 120 → 75
+    fireEvent.click(rirBtn(3));   // tocar de novo limpa: 75 → 90
+    expect(onRestAdjust.mock.calls.map(c => c[0])).toEqual([30, -45, 15]);
+  });
+
+  it('RIR intermediário não muda nada', async () => {
+    const { onRestAdjust } = await checkAndRest();
+    fireEvent.click(rirBtn(2));
+    expect(onRestAdjust).not.toHaveBeenCalled();
+  });
+
+  it('o descanso já acabou: o RIR anotado depois não mexe em nada', async () => {
+    const { onRestAdjust } = await checkAndRest();
+    await act(async () => { vi.advanceTimersByTime(91_000); });
+    fireEvent.click(rirBtn(0));
+    expect(onRestAdjust).not.toHaveBeenCalled();
+  });
+
+  it('descanso de outra série tomou o lugar: não ajusta o novo', async () => {
+    const { onRestAdjust } = await checkAndRest();
+    claimRest('Segunda|Outro Exercicio|1');
+    fireEvent.click(rirBtn(0));
+    expect(onRestAdjust).not.toHaveBeenCalled();
+  });
+
+  it('o descanso já nasce adaptado ao RIR da série anterior, e o ajuste parte dele', async () => {
+    localStorage.setItem('set_Segunda_Supino Reto_1_rir', '0');
+    const onRestAdjust = vi.fn();
+    const { onRestStart } = setup({ ex: EX90, n: 2, onRestAdjust });
+    await act(async () => { fireEvent.click(check()); });
+    expect(onRestStart).toHaveBeenCalledWith('Supino Reto', 120);
+    fireEvent.click(rirBtn(3));   // 120 → 75
+    expect(onRestAdjust).toHaveBeenCalledWith(-45);
   });
 });

@@ -36,6 +36,15 @@ describe('RestTimer', () => {
     expect(screen.getByText('00:25')).toBeTruthy();
   });
 
+  it('ajuste pelo RIR alonga ou encurta o descanso em andamento, sem zerá-lo', () => {
+    const { rerender } = render(<RestTimer session={session({ seconds: 90 })} onClose={vi.fn()} />);
+    act(() => { vi.advanceTimersByTime(10_000); });
+    rerender(<RestTimer session={session({ seconds: 90, adjust: { id: 1, delta: 30 } })} onClose={vi.fn()} />);
+    expect(screen.getByText('01:50')).toBeTruthy();
+    rerender(<RestTimer session={session({ seconds: 90, adjust: { id: 2, delta: -45 } })} onClose={vi.fn()} />);
+    expect(screen.getByText('01:05')).toBeTruthy();
+  });
+
   it('pausar congela a contagem e continuar retoma', () => {
     render(<RestTimer session={session()} onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: '⏸ Pausar' }));

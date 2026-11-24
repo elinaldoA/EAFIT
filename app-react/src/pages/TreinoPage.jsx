@@ -101,6 +101,11 @@ export default function TreinoPage() {
     bump();
   }
 
+  // RIR anotado depois do ✓: encurta ou alonga o descanso que está rodando.
+  function handleRestAdjust(delta) {
+    setRestSession(s => (s ? { ...s, adjust: { id: (s.adjust?.id || 0) + 1, delta } } : s));
+  }
+
   function handleRestStart(label, seconds) {
     restKey.current += 1;
     setRestSession({ key: restKey.current, label, seconds });
@@ -208,7 +213,7 @@ export default function TreinoPage() {
           {planDays.map(day => (
             <DayCard
               key={day.dia} day={day} isToday={day.dia === todayName()} bump={bump}
-              onRestStart={handleRestStart} onFinish={setSummary}
+              onRestStart={handleRestStart} onRestAdjust={handleRestAdjust} onFinish={setSummary}
               liveOpen={liveDay === day.dia}
               onOpenLive={() => setLiveDay(day.dia)}
               onCloseLive={() => setLiveDay(null)}

@@ -308,7 +308,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
         </div>
 
         {setCountOf(ex) > 0 ? (
-          <div className="live__block">{renderExercise(ex, handleRestStart, handleGroupStep)}</div>
+          <div className="live__block">{renderExercise(ex, handleRestStart, handleGroupStep, addRest)}</div>
         ) : (
           <div className="empty-state empty-state--inline">
             <p className="empty-state__text">{t('Sem séries pra registrar aqui — faça o combinado e siga pro próximo.')}</p>

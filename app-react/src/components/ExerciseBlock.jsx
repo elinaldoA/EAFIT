@@ -35,7 +35,7 @@ import { fmtDate } from '../lib/utils';
 import { t, decimal, tEx, tReps } from '../lib/i18n';
 // hideName: o modo treino ao vivo já mostra nome/meta do exercício em
 // destaque no próprio cabeçalho, então o bloco omite os dele.
-export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, open, version, onToggleAll, onFillOthers, onApplySuggestion, onRepeatLast, started, hideName = false }) {
+export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, open, version, onToggleAll, onFillOthers, onApplySuggestion, onRepeatLast, onRestAdjust, started, hideName = false }) {
   const { user } = useAuth();
   const { refreshPlan, periodization } = useWorkout();
   const { config } = useAppConfig();
@@ -197,7 +197,7 @@ export default function ExerciseBlock({ ex, day, bump, onRestStart, onSetDone, o
       <div className="ex-block__sets">
         {Array.from({ length: setCount }, (_, i) => i + 1).map(n => (timed
           ? <TimedSetRow key={`${n}-${version}`} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} started={started} />
-          : <SetRow key={n} version={version} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} onFillOthers={onFillOthers} started={started} />
+          : <SetRow key={n} version={version} ex={ex} n={n} day={day} bump={bump} onRestStart={onRestStart} onSetDone={onSetDone} onFillOthers={onFillOthers} onRestAdjust={onRestAdjust} started={started} />
         ))}
       </div>
 

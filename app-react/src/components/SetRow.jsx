@@ -4,7 +4,7 @@ import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { parseRestSeconds } from '../lib/utils';
 import { checkForNewPR, invalidateExerciseHistory } from '../lib/records';
-import { adaptRest } from '../lib/restAdapt';
+import { adaptRest, restDelta, claimRest, ownsRest } from '../lib/restAdapt';
 import { coachSay, noteRecord, speechExercise, speechLoad } from '../lib/coach';
 import { isNotifyEnabled } from '../lib/notifications';
 import { postActivity } from '../lib/friends';
@@ -21,7 +21,7 @@ import { INTENSITY_KEYS, normalizeIntensity, intensityLabel } from '../lib/inten
 // ✓ — ao digitar as reps da Série 1 e tocar no ✓ direto, o blur do campo
 // repetia os valores nas outras séries, a linha era trocada entre o soltar do
 // campo e o clique, e a série não era marcada.
-export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFillOthers, started, version }) {
+export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFillOthers, onRestAdjust, started, version }) {
   const { user } = useAuth();
   const { saveSetState, workoutIds } = useWorkout();
   const toast = useToast();
@@ -36,6 +36,11 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   // no exercício, gravada ao marcar a série como feita.
   const prescribed = normalizeIntensity(ex.intensidade) || '';
   const [tipo, setTipo] = useState(() => stored('tipo') ?? '');
+
+  // Descanso que este ✓ iniciou: base do plano e o RIR que já está embutido nele
+  // (o da série anterior, até a pessoa anotar o desta).
+  const restRef = useRef(null);
+  const restKey = `${day.dia}|${ex.nome}|${n}`;
 
   const seenVersion = useRef(version);
   useEffect(() => {
@@ -143,6 +148,15 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
     localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_rir`, next);
     bump();
     if (user) saveSetState(day.dia, ex.nome, n, { rir: next === '' ? null : Number(next) });
+    // Série acabou de acabar: o descanso em andamento passa a refletir o esforço desta série.
+    const r = restRef.current;
+    // Só enquanto o descanso corre: depois de acabar (ou de outra série tomar o lugar) não mexe.
+    if (r && onRestAdjust && ownsRest(restKey) && Date.now() < r.endsAt) {
+      const delta = restDelta(r.base, r.rir, next);
+      r.rir = next;
+      r.endsAt += delta * 1000;
+      if (delta) onRestAdjust(delta);
+    }
   }
 
   function handleTipo(value) {
@@ -163,7 +177,11 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
       const restSeconds = adaptRest(parseRestSeconds(ex.descanso), prevRir);
       invalidateExerciseHistory();
       if (onSetDone) onSetDone(n);
-      else if (restSeconds > 0) onRestStart(ex.nome, restSeconds);
+      else if (restSeconds > 0) {
+        restRef.current = { base: parseRestSeconds(ex.descanso), rir: prevRir, endsAt: Date.now() + restSeconds * 1000 };
+        claimRest(restKey);
+        onRestStart(ex.nome, restSeconds);
+      }
     }
     if (user) {
       const wId = await saveSetState(day.dia, ex.nome, n, { completed: next, ...(next && tipoShown && { tipo: tipoShown }) });

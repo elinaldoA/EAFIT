@@ -19,3 +19,10 @@ export function adaptRest(baseSeconds, rir) {
 export function restDelta(baseSeconds, prevRir, nextRir) {
   return adaptRest(baseSeconds, nextRir) - adaptRest(baseSeconds, prevRir);
 }
+
+// Quem iniciou o descanso em andamento (dia|exercício|série). O RIR anotado
+// depois do ✓ só mexe no descanso da própria série: se outra série já tomou o
+// lugar, o descanso novo não é alterado.
+let restOwner = null;
+export const claimRest = key => { restOwner = key; };
+export const ownsRest = key => restOwner === key;

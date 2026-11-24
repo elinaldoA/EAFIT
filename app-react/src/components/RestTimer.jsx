@@ -12,11 +12,14 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 export default function RestTimer({ session, onClose }) {
   useBackToClose(onClose);
   const [left, setLeft] = useState(session.seconds);
+  // Duração total do descanso (cresce com +15s e com o ajuste pelo RIR) para o anel não passar de 100%.
+  const [total, setTotal] = useState(session.seconds);
   const [paused, setPaused] = useState(false);
   const doneRef = useRef(false);
 
   useEffect(() => {
     setLeft(session.seconds);
+    setTotal(session.seconds);
     doneRef.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.key]);
@@ -35,6 +38,16 @@ export default function RestTimer({ session, onClose }) {
     }, 1000);
     return () => clearInterval(id);
   }, [paused, session.key]);
+
+  // Ajuste vindo do RIR da série (lib/restAdapt.js): só enquanto o descanso corre.
+  const adjustId = session.adjust?.id;
+  useEffect(() => {
+    if (!adjustId || doneRef.current) return;
+    const delta = session.adjust.delta;
+    setLeft(l => (l > 0 ? Math.max(1, l + delta) : l));
+    setTotal(tt => Math.max(1, tt + delta));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adjustId]);
 
   // Prevent the page behind the modal from scrolling while it's open.
   useEffect(() => {
@@ -55,7 +68,7 @@ export default function RestTimer({ session, onClose }) {
 
   const mm = String(Math.floor(left / 60)).padStart(2, '0');
   const ss = String(left % 60).padStart(2, '0');
-  const pct = session.seconds ? (session.seconds - left) / session.seconds : 1;
+  const pct = total ? Math.min(1, Math.max(0, (total - left) / total)) : 1;
   const dashoffset = CIRCUMFERENCE * (1 - pct);
 
   return createPortal(
@@ -83,7 +96,7 @@ export default function RestTimer({ session, onClose }) {
         <div className="rest-modal__actions">
           {!finished && (
             <>
-              <button type="button" className="rest-modal__btn" aria-label={t('Mais 15 segundos de descanso')} onClick={() => setLeft(l => l + 15)}>+15s</button>
+              <button type="button" className="rest-modal__btn" aria-label={t('Mais 15 segundos de descanso')} onClick={() => { setLeft(l => l + 15); setTotal(tt => tt + 15); }}>+15s</button>
               <button type="button" className="rest-modal__btn" onClick={() => setPaused(p => !p)}>
                 {paused ? t('▶ Continuar') : t('⏸ Pausar')}
               </button>

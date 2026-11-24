@@ -60,6 +60,8 @@ test('regra, cadência, repetir último treino, nota, histórico e descanso pelo
   await row(1).getByRole('button', { name: '✓' }).tap();
   // As bolinhas de RIR ficam logo abaixo da linha da série, no mesmo bloco.
   await live.getByRole('group', { name: 'Quantas reps ainda sobravam?' }).first().getByRole('button', { name: '0', exact: true }).click();
+  // O descanso que já corria (90 s) ganha os 30 s na hora, antes de marcar a série seguinte.
+  await expect(live.getByText(/^0[12]:[0-9]{2}$/).first()).toHaveText(/^(02:00|01:5[0-9])$/);
   await row(2).getByRole('button', { name: '✓' }).tap();
   await expect(live.getByText(/^0[12]:[0-9]{2}$/).first()).toHaveText(/^(02:00|01:5[89])$/);
   await page.screenshot({ path: 'test-results/tools-3-rest.png', fullPage: true });
