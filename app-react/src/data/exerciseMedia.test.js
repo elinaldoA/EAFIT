@@ -52,6 +52,7 @@ describe('getExerciseMedia', () => {
     expect(getExerciseMedia('Supino Reto com Barra', '/EAFIT/')).toEqual({
       custom: true, type: 'imagem', url: '/EAFIT/gifs/Supino%20Reto%20com%20Barra.gif',
     });
+    expect(getExerciseMedia('Crucifixo Máquina', '/')?.url).toBe('/gifs/Crucifixo%20M%C3%A1quina.gif');
     expect(getExerciseMedia('Desenvolvimento com Barra', '/')?.url).toBe('/gifs/Desenvolvimento%20com%20barra.gif');
   });
 
