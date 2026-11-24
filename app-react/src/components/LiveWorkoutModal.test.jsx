@@ -218,6 +218,24 @@ describe('LiveWorkoutModal — descanso', () => {
     expect(screen.getByRole('button', { name: 'marcar Crucifixo' })).toBeTruthy();
   });
 
+  it('"Pular" o descanso com o exercício completo também vai pro próximo', () => {
+    markDone('Supino Reto', 1);
+    setup();
+    markDone('Supino Reto', 2);
+    fireEvent.click(screen.getByRole('button', { name: 'marcar Supino Reto' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pular' }));
+    expect(screen.getByRole('button', { name: 'marcar Crucifixo' })).toBeTruthy();
+  });
+
+  it('"Pular" com séries faltando só encerra o descanso', () => {
+    markDone('Supino Reto', 1);
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'marcar Supino Reto' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pular' }));
+    expect(screen.queryByRole('timer')).toBeNull();
+    expect(screen.getByRole('button', { name: 'marcar Supino Reto' })).toBeTruthy();
+  });
+
   it('com séries faltando, fica no mesmo exercício depois do descanso', () => {
     markDone('Supino Reto', 1);
     setup();

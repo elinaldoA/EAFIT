@@ -118,19 +118,22 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
     if (!restDone) return;
     playRestDoneSound();
     coachSay('restDone', {}, { delayMs: 3900 }); // depois do alarme, sem sobrepor
-    const id = setTimeout(() => {
-      setRest(null);
-      // Fechou todas as séries do exercício e o descanso acabou: segue sozinho
-      // pro próximo. Só se a pessoa ainda está nele (bi-set já troca por conta
-      // própria) e se não é o último (aí fica o "Finalizar treino").
-      const from = rest.index;
-      if (indexRef.current === from && from < items.length - 1 && isExerciseDone(items[from], day.dia)) {
-        setIndex(from + 1);
-      }
-    }, 1500);
+    const id = setTimeout(endRest, 1500);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restDone, rest?.id]);
+
+  // Fim do descanso (acabou o tempo ou a pessoa tocou em "Pular"). Se fechou
+  // todas as séries do exercício, segue sozinho pro próximo. Só se a pessoa
+  // ainda está nele (bi-set já troca por conta própria) e se não é o último
+  // (aí fica o "Finalizar treino").
+  function endRest() {
+    const from = rest?.index;
+    setRest(null);
+    if (from != null && indexRef.current === from && from < items.length - 1 && isExerciseDone(items[from], day.dia)) {
+      setIndex(from + 1);
+    }
+  }
 
   function handleRestStart(label, seconds, nextName) {
     // Depois da última série do treino não há o que esperar: sem contagem de
@@ -350,7 +353,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
             {!restDone && (
               <div className="live__rest-actions">
                 <button type="button" className="btn btn--ghost btn--sm" aria-label={t('Mais 15 segundos de descanso')} onClick={() => addRest(15)}>+15s</button>
-                <button type="button" className="btn btn--outline btn--sm" onClick={() => setRest(null)}>{t('Pular')}</button>
+                <button type="button" className="btn btn--outline btn--sm" onClick={endRest}>{t('Pular')}</button>
               </div>
             )}
           </div>
