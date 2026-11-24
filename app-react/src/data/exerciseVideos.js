@@ -23,7 +23,6 @@ export const EXERCISE_VIDEOS = {
   'Mesa Flexora (Sentado)': 'flexora-sentado',
   'Panturrilha em Pé': 'panturrilha-em-pe',
   'Panturrilha em Pé (carga)': 'panturrilha-em-pe',
-  'Rosca Martelo Alternada': 'rosca-martelo',
   'Afundo Estático com Barra': 'afundo-estatico-barra',
   'Afundo Caminhando': 'afundo-caminhando',
   'Passada com Barra': 'passada-barra',
