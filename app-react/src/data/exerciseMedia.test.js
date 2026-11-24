@@ -48,8 +48,16 @@ describe('getExerciseMedia', () => {
     });
   });
 
+  it('GIF próprio da EAFIT tem prioridade sobre vídeo, YouTube e quadros', () => {
+    expect(getExerciseMedia('Supino Reto com Barra', '/EAFIT/')).toEqual({
+      custom: true, type: 'imagem', url: '/EAFIT/gifs/Supino%20Reto%20com%20Barra.gif',
+    });
+    expect(getExerciseMedia('Desenvolvimento com Barra', '/')?.url).toBe('/gifs/Desenvolvimento%20com%20barra.gif');
+  });
+
   it('acha exercício de pós-treino com emoji no nome', () => {
-    expect(getExerciseMedia('🔷 Abdominal Polia (Corda)', '/')?.fallback?.id).toBe('Cable_Crunch');
+    expect(getExerciseMedia('🔷 Abdominal Polia (Corda)', '/')?.url).toBe('/gifs/Abdominal%20Polia%20(Corda).gif');
+    expect(getExerciseMedia('🔷 Abdominal Infra (Elevação de Pernas)', '/')?.fallback?.id).toBe('Flat_Bench_Lying_Leg_Raise');
     expect(getExerciseMedia('🏃 Cardio — Esteira Inclinada', '/')?.fallback?.id).toBe('Walking_Treadmill');
   });
 
