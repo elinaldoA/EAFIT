@@ -56,6 +56,7 @@ describe('getExerciseMedia', () => {
     expect(getExerciseMedia('Crucifixo Máquina', '/', null, 'Pico de contração')?.url).toBe('/gifs/Crucifixo%20M%C3%A1quina.gif');
     expect(getExerciseMedia('Crucifixo Máquina', '/', null, 'Foco no encurtamento, pico de contração')?.url)
       .toBe('/gifs/Crucifixo%20M%C3%A1quina%20-%20foco%20encurtamento%20pico%20contra%C3%A7%C3%A3o.gif');
+    expect(getExerciseMedia('Prancha com Peso', '/')?.url).toBe('/gifs/Prancha%20com%20Peso.gif');
     expect(getExerciseMedia('Desenvolvimento com Barra', '/')?.url).toBe('/gifs/Desenvolvimento%20com%20barra.gif');
   });
 

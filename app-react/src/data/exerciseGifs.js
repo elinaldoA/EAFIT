@@ -6,6 +6,7 @@ export const EXERCISE_GIFS = {
   'Abdominal Polia (Corda)': 'Abdominal Polia (Corda)',
   'Crucifixo Máquina': 'Crucifixo Máquina',
   'Desenvolvimento com Barra': 'Desenvolvimento com barra',
+  'Prancha com Peso': 'Prancha com Peso',
   'Elevação de Pernas Pendurado': 'Elevação de Pernas Pendurado',
   'Elevação Lateral com Halteres': 'Elevação lateral com halteres',
   'Supino Inclinado com Halteres': 'Supino Inclinado com Halteres',
