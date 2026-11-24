@@ -265,6 +265,14 @@ function speaksAt(event, frequency) {
   return !FREE_EVENTS.includes(event);
 }
 
+// Voz, velocidade e timbre que o usuário escolheu para o treinador, para outras
+// telas (a corrida ao vivo) falarem com a mesma voz.
+export function coachVoiceOptions() {
+  const prefs = getCoachPrefs();
+  const delivery = DELIVERY[prefs.tone] || DELIVERY.animado;
+  return { voiceName: prefs.voiceName, rate: delivery.rate * prefs.rate, pitch: delivery.pitch };
+}
+
 export function coachSay(event, data = {}, { delayMs = 0, force = false, queue = false } = {}) {
   if (!isCoachAvailable()) return false;
   const prefs = getCoachPrefs();

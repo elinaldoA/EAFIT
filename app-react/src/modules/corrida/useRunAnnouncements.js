@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { t } from '../../lib/i18n';
-import { speak } from '../../lib/voice';
+import { speak as speakRaw } from '../../lib/voice';
+import { coachVoiceOptions } from '../../lib/coach';
+
+// Fala com a voz neural/tom que o usuário escolheu no perfil (antes a corrida
+// ignorava a escolha e usava sempre a voz padrão).
+const speak = (text, opts = {}) => speakRaw(text, { ...coachVoiceOptions(), ...opts });
 import { phaseAt } from '../../lib/runIntervals';
 import { elapsedMs, splitsOf, isPaused } from './liveRun';
 import { hrAlert } from './heartRate';

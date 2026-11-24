@@ -7,7 +7,7 @@ import { trackFeature } from './tracking';
 const FEMALE = /francisca|thalita|giovanna|let[ií]cia|maria|luciana|vit[oó]ria|helo[ií]sa|raquel|yara|fernanda|google portugu[eê]s|female|feminin/i;
 const MALE = /antonio|ant[oô]nio|ricardo|j[uú]lio|daniel|felipe|donato|humberto|male\b|masculin/i;
 // Vozes "neurais"/online soam bem mais naturais que as locais antigas.
-const NATURAL = /natural|neural|online|enhanced|premium|aprimorada|siri/i;
+const NATURAL = /natural|neural|online|enhanced|premium|aprimorada|siri|wavenet|studio|multilingual|-network/i;
 // Vozes antigas, de som claramente sintético: só entram se não houver outra.
 const ROBOTIC = /espeak|pico|compact|compacta|desktop/i;
 
