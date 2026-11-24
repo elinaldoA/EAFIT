@@ -257,7 +257,7 @@ button.kpi:hover { border-color: var(--border-2); }
 .plan-history__item--active { border-color: var(--success); }
 
 /* montador e modelos */
-.plan-copy { width: auto; max-width: 52%; padding: var(--sp-1) var(--sp-2); font-size: var(--fs-xs); }
+.plan-copy { width: auto; max-width: 70%; flex-shrink: 0; /* o texto "Copiar para…" tem que caber inteiro; o título do dia quebra de linha */ padding: var(--sp-1) var(--sp-2); font-size: var(--fs-xs); }
 /* Mais específico que .input--sm (profile.css), que também ajusta a setinha. */
 .input.plan-copy { --select-pr: 24px; --select-ar: 8px; }
 .plan-row__dup {
