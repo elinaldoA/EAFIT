@@ -48,7 +48,7 @@ export default function ExerciseMuscle({ userId, nome }) {
   return (
     <label className="ex-note">
       <span className="ex-block__rule">{t('💪 Qual músculo este exercício trabalha?')}</span>
-      <select className="input input--sm" value={info.mine || ''} onChange={e => choose(e.target.value)}>
+      <select className="ex-muscle__select" value={info.mine || ''} onChange={e => choose(e.target.value)}>
         <option value="" disabled>{t('Escolher…')}</option>
         {MUSCLES.map(m => <option key={m} value={m}>{MUSCLE_LABELS[m]}</option>)}
       </select>

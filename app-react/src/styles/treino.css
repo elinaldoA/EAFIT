@@ -940,3 +940,6 @@
 .progress-card__chip { border: 1px solid var(--border); border-radius: var(--r-full); padding: 1px 8px; font-variant-numeric: tabular-nums; }
 
 .plan-ex-row__warn { margin: 0; font-size: var(--fs-xs); color: var(--warning); font-weight: 600; }
+
+/* Seletor de músculo: compacto, do tamanho dos links ao lado (não a largura toda) */
+.ex-muscle__select { width: auto; max-width: 100%; min-height: 0; padding: 2px 22px 2px 8px; font: inherit; font-size: var(--fs-xs); border: 1px solid var(--border); border-radius: var(--r-full); background-color: var(--surface); color: var(--text); }
