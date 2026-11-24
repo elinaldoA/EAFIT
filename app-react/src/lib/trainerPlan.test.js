@@ -47,6 +47,14 @@ describe('buildPlanPayload', () => {
     expect(r.days[0].exercicios[0].nome).toBe('Supino');
   });
 
+  it('recusa o mesmo exercício duas vezes no mesmo dia, mas aceita em dias diferentes', () => {
+    const r = buildPlanPayload({ name: 'Plano', weeks: '', days: [day('Segunda', ['Supino', ' supino '])] });
+    expect(r.ok).toBe(false);
+    expect(r.error).toMatch(/Segunda/);
+    expect(r.error).toMatch(/Supino/);
+    expect(buildPlanPayload({ name: 'Plano', weeks: '', days: [day('Segunda', ['Supino']), day('Quarta', ['Supino'])] }).ok).toBe(true);
+  });
+
   it('sem prazo vira null e passa de 20 exercícios é recusado', () => {
     expect(buildPlanPayload({ name: 'P', weeks: '', days: [day('Segunda', ['A'])] }).name).toBeUndefined(); // nome curto
     expect(buildPlanPayload({ name: 'Plano', weeks: '', days: [day('Segunda', ['A'])] }).weeks).toBeNull();
