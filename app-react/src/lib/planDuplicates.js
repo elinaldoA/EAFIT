@@ -1,7 +1,7 @@
 // Dois exercícios com o mesmo nome no mesmo dia dividem as mesmas séries: as
 // cargas e os ✓ são guardados por (dia, nome, série), no aparelho e no servidor.
 // O editor avisa para a pessoa diferenciar o nome ("Rosca Direta (2)").
-export const norm = nome => String(nome || '').replace(/^[\p{Extended_Pictographic}️‍\s]+/u, '').trim().toLowerCase();
+const norm = nome => String(nome || '').replace(/^[\p{Extended_Pictographic}️‍\s]+/u, '').trim().toLowerCase();
 
 // Nomes repetidos entre as listas de um dia (força e pós-treino): Set de nomes normalizados.
 export function repeatedNames(...lists) {

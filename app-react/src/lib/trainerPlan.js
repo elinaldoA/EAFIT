@@ -3,7 +3,6 @@ import { sendMessage } from './trainerMessages';
 
 import { t } from './i18n';
 import { normalizeIntensity } from './intensity';
-import { repeatedNames, norm } from './planDuplicates';
 export const WEEK_DAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 export const DURATION_CHOICES = [
   { value: '', label: t('Sem prazo') },
@@ -101,12 +100,6 @@ export function buildPlanPayload(draft) {
       }))
       .filter(e => e.nome);
     if (!exercicios.length) return { ok: false, error: t('{dia}: adicione pelo menos um exercício.', { dia: d.dia }) };
-    // Mesmo nome no mesmo dia = mesmas séries para o aluno (ver lib/planDuplicates.js).
-    const dup = repeatedNames(exercicios);
-    if (dup.size) {
-      const nome = exercicios.find(e => dup.has(norm(e.nome)))?.nome;
-      return { ok: false, error: t('{dia}: "{nome}" aparece mais de uma vez. Mude o nome de um deles (ex.: "{nome} (2)").', { dia: d.dia, nome }) };
-    }
     if (exercicios.length > MAX_EXERCISES) return { ok: false, error: t('{dia}: no máximo {MAX_EXERCISES} exercícios.', { dia: d.dia, MAX_EXERCISES }) };
     days.push({ dia: d.dia, foco: String(d.foco || '').trim(), exercicios });
   }
