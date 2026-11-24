@@ -9,6 +9,7 @@ import { ghostGapS } from './ghost';
 import { spoken } from './workout';
 import { formatPace } from './runs';
 import { buzz } from './haptics';
+import { kmMotivation, timeMotivation, startMotivation, TIME_INTERVAL_S } from './runMotivation';
 
 // "1 quilômetro. Tempo 6 minutos e 10 segundos. Ritmo 6:10 por quilômetro."
 function kmAnnouncement(km, totalS, splitS) {
@@ -34,10 +35,33 @@ export function useRunAnnouncements(run, now, voiceOn, { bpm, maxBpm }) {
       const splits = splitsOf(run.kmMarks);
       const totalS = Math.round(run.kmMarks[kmCount - 1] / 1000);
       const ghostSentence = run.ghost ? ` ${gapSpoken(ghostGapS(run.ghost, totalS, kmCount * 1000))}` : '';
-      speak(kmAnnouncement(kmCount, totalS, splits[kmCount - 1]) + ghostSentence, { queue: true });
+      speak(`${kmAnnouncement(kmCount, totalS, splits[kmCount - 1])}${ghostSentence} ${kmMotivation(kmCount)}`, { queue: true });
     }
     spokenKm.current = kmCount;
   }, [kmCount, run, voiceOn]);
+
+  // Incentivo: ao começar e a cada 4 min sem aviso de km (não no corre/caminha,
+  // que já tem seus avisos de fase).
+  const isRunWalk = run?.session?.type === 'corre_caminha';
+  const startedS = run ? Math.floor(elapsedMs(run, now) / 1000) : 0;
+  const lastCheer = useRef(null);
+  const cheers = useRef(0);
+  useEffect(() => {
+    if (!run) { lastCheer.current = null; cheers.current = 0; return; }
+    if (!voiceOn || isRunWalk || isPaused(run)) return;
+    if (lastCheer.current === null) {
+      lastCheer.current = startedS;
+      if (startedS < 15) speak(startMotivation(), { queue: true });
+      return;
+    }
+    const lastKmS = kmCount ? Math.round(run.kmMarks[kmCount - 1] / 1000) : 0;
+    const since = startedS - Math.max(lastCheer.current, lastKmS);
+    if (since >= TIME_INTERVAL_S) {
+      lastCheer.current = startedS;
+      speak(timeMotivation(cheers.current++), { queue: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startedS, voiceOn, isRunWalk, !!run]);
 
   // Corre/caminha: avisa a troca de fase.
   const session = run?.session;
