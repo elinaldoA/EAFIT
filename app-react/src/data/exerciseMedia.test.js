@@ -56,6 +56,7 @@ describe('getExerciseMedia', () => {
     expect(getExerciseMedia('Crucifixo Máquina', '/', null, 'Pico de contração')?.url).toBe('/gifs/Crucifixo%20M%C3%A1quina.gif?v=2');
     expect(getExerciseMedia('Crucifixo Máquina', '/', null, 'Foco no encurtamento, pico de contração')?.url)
       .toBe('/gifs/Crucifixo%20M%C3%A1quina%20-%20foco%20encurtamento%20pico%20contra%C3%A7%C3%A3o.gif?v=2');
+    expect(getExerciseMedia('Face Pull', '/')?.url).toBe('/gifs/Face%20Pull.gif?v=2');
     expect(getExerciseMedia('Prancha com Peso', '/')?.url).toBe('/gifs/Prancha%20com%20Peso.gif?v=2');
     expect(getExerciseMedia('Desenvolvimento com Barra', '/')?.url).toBe('/gifs/Desenvolvimento%20com%20barra.gif?v=2');
   });
@@ -63,7 +64,7 @@ describe('getExerciseMedia', () => {
   it('acha exercício de pós-treino com emoji no nome', () => {
     expect(getExerciseMedia('🔷 Abdominal Polia (Corda)', '/')?.url).toBe('/gifs/Abdominal%20Polia%20(Corda).gif?v=2');
     expect(getExerciseMedia('🔷 Abdominal Infra (Elevação de Pernas)', '/')?.fallback?.id).toBe('Flat_Bench_Lying_Leg_Raise');
-    expect(getExerciseMedia('🏃 Cardio — Esteira Inclinada', '/')?.fallback?.id).toBe('Walking_Treadmill');
+    expect(getExerciseMedia('🏃 Cardio — Esteira Inclinada', '/')?.url).toBe('/gifs/Cardio%20%E2%80%94%20Esteira%20Inclinada.gif?v=2');
   });
 
   it('sem equivalente seguro, não tem quadros', () => {
