@@ -742,10 +742,10 @@
   border-radius: var(--r-lg);
 }
 .name-prompt__title { font-size: var(--fs-base); }
-.name-prompt__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.name-prompt__text { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); }
 .name-prompt__row { display: flex; gap: var(--sp-2); align-items: center; }
 .name-prompt__row .input { flex: 1; min-width: 0; }
-.name-prompt__dismiss { min-height: var(--tap-min); color: var(--text-muted); font-weight: 600; }
+.name-prompt__dismiss { align-self: flex-start; min-height: var(--tap-min); color: var(--text-muted); font-weight: 600; }
 .first-steps__head { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-base); }
 .first-steps__count { margin-left: auto; font-size: var(--fs-sm); color: var(--text-muted); }
 .first-steps__close { border: 0; background: transparent; color: var(--text-muted); font: inherit; padding: var(--sp-1) 6px; cursor: pointer; }
