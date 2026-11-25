@@ -96,4 +96,21 @@ describe('RestTimer', () => {
     unmount();
     expect(document.body.classList.contains('modal-open')).toBe(false);
   });
+
+  it('ao voltar do segundo plano recalcula o tempo pelo relógio, não pela contagem parada', () => {
+    render(<RestTimer session={session({ seconds: 60 })} onClose={vi.fn()} />);
+    expect(screen.getByText('01:00')).toBeTruthy();
+    // tela apagada: o setInterval não roda, mas o relógio avança 40s
+    vi.setSystemTime(Date.now() + 40000);
+    act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+    expect(screen.getByText('00:20')).toBeTruthy();
+  });
+
+  it('se o descanso acabou enquanto estava em segundo plano, toca o alarme ao voltar', () => {
+    render(<RestTimer session={session({ seconds: 30 })} onClose={vi.fn()} />);
+    vi.setSystemTime(Date.now() + 45000);
+    act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+    expect(playSound).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('✓')).toBeTruthy();
+  });
 });

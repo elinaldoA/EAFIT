@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { playRestDoneSound } from '../lib/sound';
 import { getModalRoot } from '../lib/modalRoot';
 import { useBackToClose } from '../hooks/useBackToClose';
+import { scheduleNativeRestEnd, cancelNativeRestEnd } from '../lib/nativeRest';
 
 import { t } from '../lib/i18n';
 const RADIUS = 90;
@@ -16,13 +17,45 @@ export default function RestTimer({ session, onClose }) {
   const [total, setTotal] = useState(session.seconds);
   const [paused, setPaused] = useState(false);
   const doneRef = useRef(false);
+  // Fim previsto do descanso (ms). Com a tela apagada o setInterval para; ao voltar
+  // o tempo restante sai daqui, não da contagem. `rev` muda quando o tempo muda sem
+  // ser o tique (+15s, ajuste pelo RIR) para reagendar o aviso do sistema.
+  const leftRef = useRef(session.seconds);
+  const deadlineRef = useRef(0);
+  const [rev, setRev] = useState(0);
+  leftRef.current = left;
 
   useEffect(() => {
     setLeft(session.seconds);
     setTotal(session.seconds);
     doneRef.current = false;
+    leftRef.current = session.seconds;
+    setRev(r => r + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.key]);
+
+  // Aviso do sistema (app Android) para quando o descanso acabar com a tela apagada.
+  useEffect(() => {
+    if (paused || doneRef.current || leftRef.current <= 0) {
+      cancelNativeRestEnd();
+      return undefined;
+    }
+    deadlineRef.current = Date.now() + leftRef.current * 1000;
+    scheduleNativeRestEnd(leftRef.current, session.label);
+    return () => { cancelNativeRestEnd(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rev, paused, session.key]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.hidden || paused || doneRef.current || !deadlineRef.current) return;
+      const remaining = Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
+      if (remaining <= 0) { doneRef.current = true; playRestDoneSound(); }
+      setLeft(l => Math.min(l, remaining));
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [paused]);
 
   useEffect(() => {
     if (paused) return;
@@ -30,7 +63,7 @@ export default function RestTimer({ session, onClose }) {
       setLeft(l => {
         if (l <= 1) {
           clearInterval(id);
-          if (!doneRef.current) { doneRef.current = true; playRestDoneSound(); }
+          if (!doneRef.current) { doneRef.current = true; playRestDoneSound(); cancelNativeRestEnd(); }
           return 0;
         }
         return l - 1;
@@ -46,6 +79,7 @@ export default function RestTimer({ session, onClose }) {
     const delta = session.adjust.delta;
     setLeft(l => (l > 0 ? Math.max(1, l + delta) : l));
     setTotal(tt => Math.max(1, tt + delta));
+    setRev(r => r + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adjustId]);
 
@@ -96,7 +130,7 @@ export default function RestTimer({ session, onClose }) {
         <div className="rest-modal__actions">
           {!finished && (
             <>
-              <button type="button" className="rest-modal__btn" aria-label={t('Mais 15 segundos de descanso')} onClick={() => { setLeft(l => l + 15); setTotal(tt => tt + 15); }}>+15s</button>
+              <button type="button" className="rest-modal__btn" aria-label={t('Mais 15 segundos de descanso')} onClick={() => { setLeft(l => l + 15); setTotal(tt => tt + 15); setRev(r => r + 1); }}>+15s</button>
               <button type="button" className="rest-modal__btn" onClick={() => setPaused(p => !p)}>
                 {paused ? t('▶ Continuar') : t('⏸ Pausar')}
               </button>
