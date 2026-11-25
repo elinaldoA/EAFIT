@@ -36,6 +36,29 @@ export async function fetchProviders(ids) {
   }
 }
 
+// País (ISO-2) das contas da página: id -> 'BR'. Falha não derruba a lista.
+export async function fetchCountries(ids) {
+  try {
+    if (!ids.length) return new Map();
+    const { data, error } = await db.rpc('admin_user_countries', { p_ids: ids });
+    if (error) throw error;
+    return new Map((data || []).map(r => [r.uco_id, r.uco_country]));
+  } catch {
+    return new Map();
+  }
+}
+
+// Contas por país na base inteira: [{ country: 'BR'|null, users }].
+export async function fetchCountrySummary() {
+  try {
+    const { data, error } = await db.rpc('admin_users_by_country');
+    if (error) throw error;
+    return (data || []).map(r => ({ country: r.ubc_country, users: Number(r.ubc_users) }));
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchUsersPage({ search = '', status = '', sort = '', nivel = '', meta = '', page = 0, pageSize = PAGE_SIZE } = {}) {
   const { data, error } = await db.rpc('admin_list_users_page', {
     search: search || null,

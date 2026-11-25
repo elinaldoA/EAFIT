@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAdminAuth } from '../context/useAdminAuth';
 import { useAdminAccess } from '../context/useAdminAccess';
 import { fetchSegments, createSegment, hasFilters } from '../lib/segments';
-import { fetchUsersPage, fetchDeactivatedIds, fetchProviders, PAGE_SIZE } from '../lib/users';
+import { fetchUsersPage, fetchDeactivatedIds, fetchProviders, fetchCountries, fetchCountrySummary, PAGE_SIZE } from '../lib/users';
+import { countryName, flag } from '../lib/geo';
 import { exportCutNotice } from '../lib/listLimits';
 import { toCsv, downloadCsv } from '../lib/csv';
 import Loading from '../components/Loading';
@@ -24,6 +25,7 @@ const CSV_COLUMNS = [
   { key: 'last_sign_in_at', label: 'UltimoLogin' }, { key: 'email_confirmed_at', label: 'Confirmado' },
   { key: 'banned_until', label: 'BanidoAte' }, { key: 'deactivated', label: 'Desativado' },
   { key: 'is_admin', label: 'Admin' }, { key: 'login', label: 'Login' },
+  { key: 'pais', label: 'Pais' },
 ];
 
 const STATUS_OPTIONS = [
@@ -57,8 +59,19 @@ function formatDate(value, withTime = true) {
 // Página de usuários com a marca de conta desativada em cada linha.
 async function fetchPage(params) {
   const [{ rows, total }, deactivated] = await Promise.all([fetchUsersPage(params), fetchDeactivatedIds()]);
-  const providers = await fetchProviders(rows.map(r => r.id));
-  return { rows: rows.map(r => ({ ...r, deactivated: deactivated.has(r.id), providers: providers.get(r.id) || [], login: (providers.get(r.id) || []).join('+') })), total };
+  const ids = rows.map(r => r.id);
+  const [providers, countries] = await Promise.all([fetchProviders(ids), fetchCountries(ids)]);
+  return {
+    rows: rows.map(r => ({
+      ...r,
+      deactivated: deactivated.has(r.id),
+      providers: providers.get(r.id) || [],
+      login: (providers.get(r.id) || []).join('+'),
+      country: countries.get(r.id) || '',
+      pais: countries.get(r.id) ? countryName(countries.get(r.id)) : '',
+    })),
+    total,
+  };
 }
 
 function formatDay(iso) {
@@ -102,6 +115,7 @@ export default function UsersList() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [exportMsg, setExportMsg] = useState('');
   const [segments, setSegments] = useState([]);
+  const [countrySummary, setCountrySummary] = useState([]);
   const [segmentMsg, setSegmentMsg] = useState('');
   const [selected, setSelected] = useState(() => new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -121,6 +135,7 @@ export default function UsersList() {
   useEffect(() => { setPage(0); }, [status, sort, nivel, meta]);
 
   useEffect(() => { fetchSegments().then(setSegments).catch(softFail('Usuários: segmentos')); }, []);
+  useEffect(() => { fetchCountrySummary().then(setCountrySummary); }, []);
 
   function applyFilters(f = {}) {
     setSearchInput(f.search || '');
@@ -302,6 +317,17 @@ export default function UsersList() {
         </div>
       </div>
 
+      {countrySummary.length > 0 && (
+        <div className="card actions-row" role="region" aria-label="Usuários por país">
+          <strong>Países:</strong>
+          {countrySummary.map(c => (
+            <span key={c.country || 'none'} className="badge">
+              {c.country ? <><span aria-hidden="true">{flag(c.country)}</span> {countryName(c.country)}</> : 'Sem localização'} · {c.users}
+            </span>
+          ))}
+        </div>
+      )}
+
       {selected.size > 0 && (
         <div className="card actions-row" role="region" aria-label="Ações em massa">
           <strong>{selected.size} selecionado(s)</strong>
@@ -346,6 +372,7 @@ export default function UsersList() {
                 <th scope="col">Fim do plano</th>
                 <th scope="col">Criado em</th>
                 <th scope="col">Último login</th>
+                <th scope="col">País</th>
               </tr>
             </thead>
             <tbody>
@@ -379,10 +406,11 @@ export default function UsersList() {
                   <td data-label="Fim do plano">{formatDay(u.plan_end_date)}</td>
                   <td data-label="Criado em" className="hide-mobile">{formatDate(u.created_at, false)}</td>
                   <td data-label="Último login">{formatDate(u.last_sign_in_at)}</td>
+                  <td data-label="País">{u.country ? <><span aria-hidden="true">{flag(u.country)}</span> {u.pais}</> : '—'}</td>
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={9}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
+                <tr><td colSpan={10}><EmptyState icon="👥" label="Nenhum usuário encontrado." /></td></tr>
               )}
             </tbody>
           </table></div></div>
