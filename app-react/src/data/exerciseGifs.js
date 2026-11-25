@@ -55,6 +55,7 @@ export const EXERCISE_GIFS = {
   'Tesoura (Scissor Kicks)': 'Tesoura (Scissor Kicks)',
   'Russian Twist com Halter': 'Russian Twist com Halter',
   'Agachamento Sumô com Halter': 'Agachamento Sumô com Halter',
+  'Afundo Búlgaro (foco glúteo)': 'Afundo Búlgaro (foco glúteo)',
 };
 
 // Os GIFs mantêm o nome ao serem trocados; o ?v= faz o navegador buscar de novo.
