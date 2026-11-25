@@ -248,6 +248,23 @@ describe('TreinoPage', () => {
       expect(screen.getByText(/\+20% vs\. o mesmo ponto/)).toBeTruthy();
     });
 
+    it('músculo de hoje ainda se recuperando: avisa, sugere outro dia que cabe e leva à aba de recuperação', async () => {
+      // Domingo (ontem): 6 séries de peito. Hoje (segunda) é dia de peito; terça é costas, descansadas.
+      history.fetchRecentSets.mockResolvedValue(Array.from({ length: 6 }, () => ({ exercise_name: 'Supino', carga: 60, reps: 10, workout_date: '2026-10-25' })));
+      render(<TreinoPage />);
+      expect(await screen.findByText(/Ainda em recuperação do último treino: Peitoral/)).toBeTruthy();
+      expect(screen.getByRole('button', { name: '⚡ Treinar Terça hoje (Costas)' })).toBeTruthy();
+      fireEvent.click(screen.getByRole('button', { name: 'Ver a recuperação dos músculos' }));
+      expect(localStorage.getItem('dash_tab')).toBe('recuperacao');
+    });
+
+    it('sem outro dia que caiba, avisa mas não oferece troca', async () => {
+      history.fetchRecentSets.mockResolvedValue(['Supino', 'Remada'].flatMap(nome => Array.from({ length: 6 }, () => ({ exercise_name: nome, carga: 60, reps: 10, workout_date: '2026-10-25' }))));
+      render(<TreinoPage />);
+      expect(await screen.findByText(/Ainda em recuperação do último treino: Peitoral/)).toBeTruthy();
+      expect(screen.queryByRole('button', { name: /Treinar Terça hoje/ })).toBeNull();
+    });
+
     it('depois de 5 semanas puxadas seguidas, avisa que esta é a semana leve', async () => {
       history.fetchRecentSets.mockResolvedValue(['2026-10-19', '2026-10-12', '2026-10-05', '2026-09-28', '2026-09-21']
         .map(d => ({ exercise_name: 'Remada', carga: 50, reps: 10, workout_date: d })));

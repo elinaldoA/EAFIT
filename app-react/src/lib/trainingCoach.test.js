@@ -40,6 +40,22 @@ describe('sorePlannedMuscles', () => {
     expect(sorePlannedMuscles(QUI, sets, TODAY)).toEqual(['quads']);
   });
 
+  it('usa a recuperação: músculo grande ainda se recupera no dia seguinte, o pequeno já está pronto', () => {
+    const dia = day('Quinta', 'Braços', [ex('Rosca Direta'), ex('Agachamento')]);
+    const sets = [...Array.from({ length: 5 }, () => set('Rosca Direta', 15, 10, '2026-10-28')), ...Array.from({ length: 5 }, () => set('Agachamento', 60, 10, '2026-10-28'))];
+    expect(sorePlannedMuscles(dia, sets, TODAY)).toEqual(['quads']);
+  });
+
+  it('volume alto alonga a janela: 12 séries de coxa ainda pesam 2 dias depois', () => {
+    const sets = Array.from({ length: 12 }, () => set('Agachamento Búlgaro', 20, 10, '2026-10-27'));
+    expect(sorePlannedMuscles(QUI, sets, TODAY)).toEqual(['quads']);
+  });
+
+  it('não conta o treino de hoje: o músculo que está sendo treinado agora não vira aviso', () => {
+    const sets = Array.from({ length: 6 }, () => set('Agachamento Búlgaro', 20, 10, TODAY));
+    expect(sorePlannedMuscles(QUI, sets, TODAY)).toEqual([]);
+  });
+
   it('ignora volume pequeno ou de outro dia', () => {
     const sets = [set('Agachamento', 80, 10, '2026-10-28'), ...Array.from({ length: 5 }, () => set('Leg Press', 100, 10, '2026-10-26'))];
     expect(sorePlannedMuscles(QUI, sets, TODAY)).toEqual([]);
@@ -140,10 +156,22 @@ describe('buildTrainingCoach', () => {
     expect(c.offerQuick).toBe(false);
   });
 
-  it('músculo cansado de ontem vence a sugestão de subir carga', () => {
+  it('músculo ainda se recuperando vence a sugestão de subir carga, que sumiria do aviso "não busque recorde"', () => {
     const c = buildTrainingCoach({ today: pending, sore: ['quads'], readings: { ready, stuck: [] } });
     expect(c.kind).toBe('sore');
-    expect(c.notes.map(n => n.kind)).toEqual(['up']);
+    expect(c.notes).toEqual([]);
+  });
+
+  it('com músculo se recuperando, ainda avisa de exercício parado (platô)', () => {
+    const c = buildTrainingCoach({ today: pending, sore: ['quads'], readings: { ready, stuck } });
+    expect(c.notes.map(n => n.kind)).toEqual(['stuck']);
+  });
+
+  it('o dia sugerido acompanha a leitura de músculo cansado', () => {
+    const alternative = { dia: 'Sexta', foco: 'Ombros' };
+    const c = buildTrainingCoach({ today: pending, sore: ['quads'], alternative, readings: { ready: [], stuck: [] } });
+    expect(c).toMatchObject({ kind: 'sore', alternative });
+    expect(buildTrainingCoach({ today: pending, sore: ['quads'], readings: { ready: [], stuck: [] } }).alternative).toBeNull();
   });
 
   it('semana de deload esconde as sugestões de carga', () => {

@@ -340,3 +340,4 @@
 .body-avatar__legend:has(.body-avatar__legend-item) { gap: var(--sp-1) var(--sp-3); }
 .recovery__summary { display: flex; flex-direction: column; gap: var(--sp-1); margin: 0 0 var(--sp-3); font-size: var(--fs-md); line-height: 1.45; }
 .recovery__summary p { margin: 0; }
+.train-coach__link { align-self: center; min-height: var(--tap-min); }

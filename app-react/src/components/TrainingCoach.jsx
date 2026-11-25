@@ -7,7 +7,7 @@ const muscles = list => list.map(m => MUSCLE_LABELS[m]).join(t(' e '));
 function leadText(c) {
   switch (c.kind) {
     case 'low_energy': return t('Energia e sono baixos hoje. Um treino curto ainda conta para a semana.');
-    case 'sore': return t('Ontem já teve bastante volume de {musculos}. Comece leve e não busque recorde nesse músculo hoje.', { musculos: muscles(c.muscles) });
+    case 'sore': return t('Ainda em recuperação do último treino: {musculos}. Comece leve e não busque recorde nesses músculos hoje.', { musculos: muscles(c.muscles) });
     case 'deload_week': return c.source === 'plan'
       ? t('Esta é a semana leve do seu plano: cerca de 60% das séries, mesma carga e sem ir à falha.')
       : t('{n} semanas seguidas de treino puxado. Esta é a semana leve: cerca de 60% das séries, mesma carga e sem ir à falha.', { n: c.weeks });
@@ -33,7 +33,7 @@ function noteText(n) {
 
 // Leitura do dia dentro do cartão "Treino de hoje" (ver lib/trainingCoach.js):
 // uma frase, até três observações e no máximo um botão.
-export default function TrainingCoach({ coach, onQuick, onCatchup }) {
+export default function TrainingCoach({ coach, onQuick, onCatchup, onSuggest = null, onSeeRecovery = null }) {
   if (!coach) return null;
   const lead = leadText(coach);
   const notes = coach.notes.map(noteText).filter(Boolean);
@@ -48,6 +48,14 @@ export default function TrainingCoach({ coach, onQuick, onCatchup }) {
       )}
       {coach.kind === 'low_energy' && coach.offerQuick && onQuick && (
         <button type="button" className="btn btn--outline btn--full" onClick={onQuick}>{t('⏱ Fazer a versão de 30 min')}</button>
+      )}
+      {coach.kind === 'sore' && coach.alternative && onSuggest && (
+        <button type="button" className="btn btn--outline btn--full" onClick={() => onSuggest(coach.alternative.dia)}>
+          {t('⚡ Treinar {dia} hoje ({foco})', { dia: t(coach.alternative.dia), foco: tFoco(coach.alternative.foco) })}
+        </button>
+      )}
+      {coach.kind === 'sore' && onSeeRecovery && (
+        <button type="button" className="link-btn train-coach__link" onClick={onSeeRecovery}>{t('Ver a recuperação dos músculos')}</button>
       )}
       {coach.kind === 'catchup' && (
         <button type="button" className="btn btn--primary btn--full" onClick={() => onCatchup(coach.day.dia)}>

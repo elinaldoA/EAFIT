@@ -44,3 +44,25 @@ test('sem treino nas últimas semanas, explica como começar', async ({ page, fa
   await page.getByRole('tab', { name: 'Recuperação' }).click();
   await expect(page.getByText(/Nenhum treino nas últimas 8 semanas/)).toBeVisible();
 });
+
+test('no Treino: músculo de hoje ainda se recuperando avisa, sugere outro dia que cabe e abre o treino dele', async ({ page, fake }) => {
+  const NOMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const hoje = NOMES[new Date().getDay()];
+  const amanha = NOMES[(new Date().getDay() + 1) % 7];
+  // Hoje é dia de peito (Supino, do plano padrão do teste); os outros dias são de costas.
+  fake.rows('plan_days').forEach(d => { if (d.dia !== hoje) d.foco = 'Costas'; });
+  fake.rows('plan_exercises').forEach(ex => {
+    const dia = fake.rows('plan_days').find(d => d.id === ex.plan_day_id).dia;
+    if (dia !== hoje) ex.nome = 'Remada Curvada com Barra';
+  });
+  seedSession(fake, 'w-r1', 1, [['Supino Reto', 6]]); // peito ontem
+
+  await page.goto('/app/');
+  const coach = page.locator('.train-coach');
+  await expect(coach).toContainText('Ainda em recuperação do último treino: Peitoral');
+  await page.screenshot({ path: 'test-results/recovery-2-treino.png' });
+  await coach.getByRole('button', { name: `⚡ Treinar ${amanha} hoje (Costas)` }).click();
+  const live = page.locator('.live');
+  await expect(live).toBeVisible();
+  await expect(live.getByText('Remada Curvada com Barra').first()).toBeVisible();
+});

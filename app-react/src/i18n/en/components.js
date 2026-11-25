@@ -1043,7 +1043,9 @@ export default {
   // TrainingCoach
   ' e ': ' and ',
   'Energia e sono baixos hoje. Um treino curto ainda conta para a semana.': 'Low energy and poor sleep today. A short workout still counts toward your week.',
-  'Ontem já teve bastante volume de {musculos}. Comece leve e não busque recorde nesse músculo hoje.': 'Yesterday already had plenty of {musculos} volume. Start light and skip records for that muscle today.',
+  'Ainda em recuperação do último treino: {musculos}. Comece leve e não busque recorde nesses músculos hoje.': 'Still recovering from the last workout: {musculos}. Start light and skip records for those muscles today.',
+  '⚡ Treinar {dia} hoje ({foco})': '⚡ Train {dia} today ({foco})',
+  'Ver a recuperação dos músculos': 'See muscle recovery',
   'Esta é a semana leve do seu plano: cerca de 60% das séries, mesma carga e sem ir à falha.': "This is your plan's light week: about 60% of the sets, same weight and no going to failure.",
   '{n} semanas seguidas de treino puxado. Esta é a semana leve: cerca de 60% das séries, mesma carga e sem ir à falha.': '{n} hard weeks in a row. This is your light week: about 60% of the sets, same weight and no going to failure.',
   '{n} exercícios de hoje estão parados há 3 treinos. Vale uma semana leve, com cerca de 60% das séries e a mesma carga.': "{n} of today's exercises have been stuck for 3 workouts. A light week at about 60% of the sets and the same weight is worth it.",

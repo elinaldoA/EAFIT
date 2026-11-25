@@ -39,6 +39,8 @@ import {
   weekVolume, hardWeekStreak, deloadStatus,
 } from '../lib/trainingCoach';
 import TrainingCoach from '../components/TrainingCoach';
+import { suggestAlternativeDay } from '../lib/muscleRecovery';
+import { goTo } from '../lib/appNav';
 
 import { t } from '../lib/i18n';
 export default function TreinoPage() {
@@ -146,11 +148,17 @@ export default function TreinoPage() {
     ? pickFirstWorkoutDay(activePlanDays, todayName(), d => countSets(gatherExerciseDetails(d)).total > 0)
     : null;
   const startFirst = firstDay ? () => { trackFeature('first_workout_start'); setLiveDay(firstDay.dia); } : null;
+  const sore = history && today && todayHasSets ? sorePlannedMuscles(today, history.sets, todayStr, history.libMap) : [];
+  // Dia de hoje trabalha músculo que ainda se recupera: qual outro dia do plano cabe melhor.
+  const alternative = history && sore.length && !todayDone
+    ? suggestAlternativeDay({ planDays: activePlanDays, todayName: todayName(), sets: history.sets, today: todayStr, libraryMap: history.libMap, isDone: isDayDone })
+    : null;
   const coach = history && !planExpired && !activePause(user?.user_metadata || {}, todayStr)
     ? buildTrainingCoach({
         today: today && { hasSets: todayHasSets, done: todayDone, started: todaySets.done > 0, quick: !!quickMinutes },
         checkin,
-        sore: today && todayHasSets ? sorePlannedMuscles(today, history.sets, todayStr, history.libMap) : [],
+        sore,
+        alternative,
         readings: today && todayHasSets ? exerciseReadings(today, history.sets, todayStr) : null,
         missed,
         behind: weekBehind(activePlanDays, history.sets, todayStr, history.libMap),
@@ -163,6 +171,8 @@ export default function TreinoPage() {
       coach={coach}
       onQuick={quickOn && fullToday ? () => handleQuickChoice(30) : null}
       onCatchup={dia => { trackFeature('treino_recuperado'); setLiveDay(dia); }}
+      onSuggest={dia => { trackFeature('treino_dia_sugerido'); setLiveDay(dia); }}
+      onSeeRecovery={() => { trackFeature('recuperacao_do_treino'); goTo({ tab: 'dash', dashTab: 'recuperacao' }); }}
     />
   );
 
