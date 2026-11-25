@@ -1,7 +1,7 @@
 name: Android APK (teste)
 
 # Gera o APK de debug do app Android (Capacitor) para instalar no celular e testar.
-# Baixe em: aba Actions > esta execucao > Artifacts > eafit-android-debug.
+# Baixe em: aba Actions > esta execucao > Artifacts > EAFIT-debug.apk (arquivo .apk direto, sem zip).
 # Roda pelo botao "Run workflow" ou quando o projeto Android muda.
 on:
   workflow_dispatch:
@@ -56,9 +56,11 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - uses: actions/upload-artifact@v4
+      # archive: false envia o .apk sem zip (o nome do artefato vira o nome do arquivo)
+      - uses: actions/upload-artifact@v7
         with:
-          name: eafit-android-debug
+          name: EAFIT-debug.apk
+          archive: false
           path: app-react/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
