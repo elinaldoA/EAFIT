@@ -4,7 +4,6 @@ import { addDays } from './pause';
 import { parseLocalDate } from './utils';
 import { progressionFromSets, plateauFromSets } from './records';
 import { countSetsByMuscle, behindMuscles, plannedMuscles } from './muscleVolume';
-import { muscleRecovery } from './muscleRecovery';
 
 // Assistente do dia no Treino: junta check-in, recuperação, semana e histórico
 // de cargas numa leitura só, com no máximo um botão. As contas ficam aqui
@@ -16,7 +15,7 @@ export const LOOKBACK_DAYS = 56;
 export const DELOAD_EVERY = 6;
 // Semana com menos que isso do volume típico conta como leve (ou pausa).
 const LIGHT_WEEK_SHARE = 0.7;
-// Séries de um músculo no último treino a partir das quais ele pede cuidado enquanto se recupera.
+// Séries de um músculo ontem que pedem cuidado com ele hoje.
 const RECOVERY_MIN_SETS = 4;
 // Platôs no plano a partir dos quais vale uma semana leve.
 const PLATEAUS_FOR_DELOAD = 3;
@@ -52,13 +51,11 @@ export function missedDays(planDays, today, isDone, since = null) {
     .sort((a, b) => DAY_NAMES.indexOf(b.dia) - DAY_NAMES.indexOf(a.dia));
 }
 
-// Músculos do dia que ainda se recuperam do último treino (mesma conta da aba Recuperação,
-// lib/muscleRecovery.js): têm treino anterior com bastante volume e ainda não passou a
-// janela. Só conta sessões anteriores a hoje, para a leitura não mudar no meio do treino.
+// Músculos do dia que receberam bastante volume ontem.
 export function sorePlannedMuscles(day, sets, today, libraryMap = null) {
-  const recovery = muscleRecovery(sets.filter(s => s.workout_date < today), today, libraryMap);
-  return [...plannedMuscles([day], libraryMap)]
-    .filter(m => ['tired', 'recovering'].includes(recovery[m].state) && recovery[m].sets >= RECOVERY_MIN_SETS);
+  const yesterday = addDays(today, -1);
+  const counts = countSetsByMuscle(sets.filter(s => s.workout_date === yesterday), libraryMap);
+  return [...plannedMuscles([day], libraryMap)].filter(m => counts[m] >= RECOVERY_MIN_SETS);
 }
 
 // Por exercício do dia: quem está pronto para subir carga e quem travou. Só
@@ -137,7 +134,7 @@ export function deloadStatus({ periodization = null, hardWeeks = null } = {}) {
 // A leitura do dia. Devolve { kind, tone, ...dados } ou null; o texto fica no
 // componente. Prioridade: o que muda o treino de hoje vem antes do que é só
 // informação. today: { day, hasSets, done, started, quick }.
-export function buildTrainingCoach({ today, checkin, sore = [], alternative = null, readings, missed = [], behind = [], hardWeeks = 0, deload: status = null }) {
+export function buildTrainingCoach({ today, checkin, sore = [], readings, missed = [], behind = [], hardWeeks = 0, deload: status = null }) {
   const notes = [];
   const lowEnergy = checkin && checkin.energy <= 2 && checkin.sleep <= 2;
   // Dormiu mal ou está sem energia: o check-in já pede cautela, então nada de subir carga.
@@ -149,15 +146,14 @@ export function buildTrainingCoach({ today, checkin, sore = [], alternative = nu
   if (today?.hasSets && !today.done) {
     let lead;
     if (lowEnergy) lead = { kind: 'low_energy', tone: 'warn', offerQuick: !today.started && !today.quick };
-    else if (sore.length) lead = { kind: 'sore', tone: 'warn', muscles: sore, alternative };
+    else if (sore.length) lead = { kind: 'sore', tone: 'warn', muscles: sore };
     else if (deload) lead = { kind: 'deload_week', tone: '', weeks: hardWeeks, source: status?.source || 'history' };
     else if (stuck.length >= PLATEAUS_FOR_DELOAD) lead = { kind: 'deload_plateaus', tone: 'warn', count: stuck.length };
     else if (ready.length && !holdLoads) lead = { kind: 'ready', tone: 'ok', count: ready.length, energized: checkin?.energy >= 4 };
     // Energia alta ou sono ruim sozinhos o check-in já comenta logo acima.
 
-    // Em semana leve, dia ruim ou com músculo ainda se recuperando ("não busque recorde"),
-    // sugestão de subir carga atrapalha e contradiz o aviso.
-    if (!deload && !holdLoads && lead?.kind !== 'sore') ready.forEach(r => notes.push({ kind: 'up', ...r }));
+    // Em semana leve ou dia ruim, sugestão de subir carga atrapalha.
+    if (!deload && !holdLoads) ready.forEach(r => notes.push({ kind: 'up', ...r }));
     if (!deload) stuck.forEach(s => notes.push({ kind: 'stuck', ...s }));
     return lead || notes.length ? { ...(lead || { kind: null, tone: '' }), notes: notes.slice(0, MAX_NOTES) } : null;
   }

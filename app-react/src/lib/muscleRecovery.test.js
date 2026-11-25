@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { muscleRecovery, musclesIn, recoveryWindowDays, suggestAlternativeDay, HEAVY_SETS } from './muscleRecovery';
+import { muscleRecovery, musclesIn, recoveryWindowDays, HEAVY_SETS } from './muscleRecovery';
 
 const supino = (workout_date, n = 1) => Array.from({ length: n }, () => ({ exercise_name: 'Supino Reto com Barra', workout_date }));
 const rosca = (workout_date, n = 1) => Array.from({ length: n }, () => ({ exercise_name: 'Rosca Direta', workout_date }));
@@ -71,44 +71,5 @@ describe('musclesIn', () => {
     expect(musclesIn(r, 'tired')).toEqual(['chest', 'biceps']);
     expect(musclesIn(r, 'ready')).toEqual([]);
     expect(musclesIn(r, 'none')).toContain('back');
-  });
-});
-
-describe('suggestAlternativeDay', () => {
-  const dia = (nome, foco, ...exercicios) => ({ dia: nome, foco, exercicios: exercicios.map(n => ({ nome: n, series: '3' })), pos: [] });
-  const PEITO = dia('Segunda', 'Peito', 'Supino Reto com Barra');
-  const COSTAS = dia('Terça', 'Costas', 'Remada Curvada com Barra');
-  const PERNAS = dia('Quarta', 'Pernas', 'Agachamento Livre');
-  const ARGS = { planDays: [PEITO, COSTAS, PERNAS], todayName: 'Segunda', today: '2026-10-26' };
-
-  it('sugere o próximo dia do plano cujos músculos já estão recuperados', () => {
-    const sets = supino('2026-10-25', 6);
-    expect(suggestAlternativeDay({ ...ARGS, sets }).dia).toBe('Terça');
-  });
-
-  it('pula o dia que também trabalha músculo cansado, e vai para o seguinte', () => {
-    const sets = [...supino('2026-10-25', 6), ...Array.from({ length: 6 }, () => ({ exercise_name: 'Remada Curvada com Barra', workout_date: '2026-10-25' }))];
-    expect(suggestAlternativeDay({ ...ARGS, sets }).dia).toBe('Quarta');
-  });
-
-  it('pula o dia que já foi feito nesta semana', () => {
-    expect(suggestAlternativeDay({ ...ARGS, sets: supino('2026-10-25', 6), isDone: d => d === 'Terça' }).dia).toBe('Quarta');
-  });
-
-  it('segue a ordem da semana a partir de hoje, dando a volta no domingo', () => {
-    const planDays = [dia('Domingo', 'Pernas', 'Agachamento Livre'), dia('Terça', 'Costas', 'Remada Curvada com Barra')];
-    expect(suggestAlternativeDay({ planDays, todayName: 'Sábado', sets: [], today: '2026-10-31' }).dia).toBe('Domingo');
-  });
-
-  it('sem alternativa (tudo cansado ou nenhum dia com séries) devolve null', () => {
-    const sets = [...supino('2026-10-25', 6), ...Array.from({ length: 6 }, () => ({ exercise_name: 'Remada Curvada com Barra', workout_date: '2026-10-25' })), ...Array.from({ length: 8 }, () => ({ exercise_name: 'Agachamento Livre', workout_date: '2026-10-25' }))];
-    expect(suggestAlternativeDay({ ...ARGS, sets })).toBeNull();
-    expect(suggestAlternativeDay({ ...ARGS, planDays: [PEITO, dia('Terça', 'Descanso')], sets })).toBeNull();
-  });
-
-  it('não conta o treino de hoje: a sugestão não muda no meio do treino', () => {
-    // Costas treinado hoje (já começou o treino) não tira Terça da lista.
-    const sets = [...supino('2026-10-25', 6), ...Array.from({ length: 6 }, () => ({ exercise_name: 'Remada Curvada com Barra', workout_date: '2026-10-26' }))];
-    expect(suggestAlternativeDay({ ...ARGS, sets }).dia).toBe('Terça');
   });
 });

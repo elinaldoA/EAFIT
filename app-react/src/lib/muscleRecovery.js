@@ -1,5 +1,4 @@
-import { MUSCLES, muscleOfName, plannedMuscles } from './muscleVolume';
-import { DAY_NAMES } from '../data/treinoData';
+import { MUSCLES, muscleOfName } from './muscleVolume';
 
 // Recuperação muscular: dá a cada grupo um estado (descansando, quase pronto,
 // recuperado) a partir do último dia em que ele foi treinado e de quantas séries
@@ -60,22 +59,4 @@ export function musclesIn(recovery, state) {
   return MUSCLES
     .filter(m => recovery[m].state === state)
     .sort((a, b) => recovery[b].daysLeft - recovery[a].daysLeft);
-}
-
-// Quando o treino de hoje trabalha músculo que ainda se recupera, qual outro dia do plano
-// cabe melhor hoje: o primeiro (a partir de amanhã, na ordem da semana) que ainda não foi
-// feito e cujos músculos estão todos recuperados ou sem treino recente. Conta só treinos
-// anteriores a hoje, para a sugestão não mudar no meio do treino. Devolve o dia ou null.
-// isDone(dia): treino já concluído nesta semana.
-export function suggestAlternativeDay({ planDays, todayName, sets, today, libraryMap = null, isDone = () => false }) {
-  const recovery = muscleRecovery((sets || []).filter(s => s.workout_date < today), today, libraryMap);
-  const start = DAY_NAMES.indexOf(todayName);
-  const order = d => (DAY_NAMES.indexOf(d.dia) - start + 7) % 7;
-  return [...(planDays || [])]
-    .filter(d => d.dia !== todayName && !isDone(d.dia))
-    .sort((a, b) => order(a) - order(b))
-    .find(d => {
-      const muscles = [...plannedMuscles([d], libraryMap)];
-      return muscles.length > 0 && muscles.every(m => recovery[m].state === 'ready' || recovery[m].state === 'none');
-    }) || null;
 }
