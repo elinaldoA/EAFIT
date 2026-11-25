@@ -5,5 +5,11 @@
   "android": {
     "allowMixedContent": false,
     "useLegacyBridge": true
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_tracking",
+      "iconColor": "#FA842B"
+    }
   }
 }

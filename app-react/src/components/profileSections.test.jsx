@@ -20,6 +20,7 @@ vi.mock('../lib/trainerInsights', () => h.goals);
 vi.mock('../lib/notifications', async orig => ({
   ...(await orig()),
   isNotificationSupported: () => h.notif.supported,
+  isReminderSupported: () => h.notif.supported,
   isIosSafariNotInstalled: () => h.notif.iosNotInstalled,
   sendNotification: (...a) => h.notif.sendNotification(...a),
 }));

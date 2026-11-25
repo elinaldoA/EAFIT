@@ -1,4 +1,13 @@
 import { t } from './i18n';
+import { isNative } from './native';
+import { requestNativeNotificationPermission, sendNativeNotification } from './nativeReminders';
+// Lembretes (check e botão de teste): no app Android usam notificações locais;
+// no navegador, a API Notification. Diferente de isNotificationSupported, que é
+// só a API do navegador (quem lê Notification.permission precisa dela).
+export function isReminderSupported() {
+  return isNative() || isNotificationSupported();
+}
+
 export function isNotificationSupported() {
   return typeof window !== 'undefined' && 'Notification' in window;
 }
@@ -15,6 +24,7 @@ export function isIosSafariNotInstalled() {
 }
 
 export async function requestNotificationPermission() {
+  if (isNative()) return requestNativeNotificationPermission();
   if (!isNotificationSupported()) return 'unsupported';
   if (Notification.permission === 'granted') return 'granted';
   if (Notification.permission === 'denied') return 'denied';
@@ -29,6 +39,7 @@ export function isNotifyEnabled(meta, key) {
 }
 
 export async function sendNotification(title, options) {
+  if (isNative()) return sendNativeNotification(title, options);
   if (!isNotificationSupported()) throw new Error(t('Notificações não suportadas neste navegador'));
   if (Notification.permission !== 'granted') throw new Error(t('Permissão de notificação: {permission}', { permission: Notification.permission }));
 

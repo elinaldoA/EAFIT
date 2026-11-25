@@ -3,13 +3,14 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { useReminders } from '../hooks/useReminders';
-import { isNotificationSupported } from '../lib/notifications';
+import { isReminderSupported } from '../lib/notifications';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { getModalRoot } from '../lib/modalRoot';
 import {
   INBOX_PAGE, fetchInbox, markInboxRead, markInboxItemRead, timeAgo, inboxTarget,
 } from '../lib/inbox';
 import { goTo } from '../lib/appNav';
+import { isNative } from '../lib/native';
 
 import { t } from '../lib/i18n';
 function InboxModal({ items, hasMore, onMore, onClose, onReadOne, onReadAll, onGo, remindersEnabled, onToggleReminders }) {
@@ -28,10 +29,10 @@ function InboxModal({ items, hasMore, onMore, onClose, onReadOne, onReadAll, onG
           <button type="button" className="icon-btn" aria-label={t('Fechar')} onClick={onClose}>✕</button>
         </div>
         <label className="inbox__reminders">
-          <input type="checkbox" checked={remindersEnabled} onChange={onToggleReminders} disabled={!isNotificationSupported()} />
+          <input type="checkbox" checked={remindersEnabled} onChange={onToggleReminders} disabled={!isReminderSupported()} />
           <span>
             {t('Lembretes neste aparelho')}
-            <small>{isNotificationSupported() ? t('Treino, água e incentivos, mesmo com o app fechado.') : t('Notificações não são suportadas neste navegador.')}</small>
+            <small>{isReminderSupported() ? (isNative() ? t('Água, mesmo com o app fechado. Os outros avisos ainda não chegam no app Android.') : t('Treino, água e incentivos, mesmo com o app fechado.')) : t('Notificações não são suportadas neste navegador.')}</small>
           </span>
         </label>
         {items.some(i => i.unread) && (
@@ -174,7 +175,7 @@ export default function InboxBell({ asMenuItem = false, onUnreadChange }) {
     <>
       <button type="button" className="inbox-bell" title={t('Avisos')} aria-label={unread ? t('Avisos ({unread} novo(s))', { unread }) : t('Avisos')} onClick={() => setOpen(true)}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          {remindersEnabled || !isNotificationSupported()
+          {remindersEnabled || !isReminderSupported()
             ? <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>
             : <><path d="M13.73 21a2 2 0 0 1-3.46 0" /><path d="M18.63 13A17.89 17.89 0 0 1 18 8" /><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" /><path d="M18 8a6 6 0 0 0-9.33-5" /><line x1="1" y1="1" x2="23" y2="23" /></>}
         </svg>

@@ -1,4 +1,5 @@
-import { isNotificationSupported, isIosSafariNotInstalled, sendNotification, isNotifyEnabled } from '../lib/notifications';
+import { isReminderSupported, isIosSafariNotInstalled, sendNotification, isNotifyEnabled } from '../lib/notifications';
+import { isNative } from '../lib/native';
 import { exportSummaryCSV, exportBackupJSON, printReport } from '../lib/exportData';
 import { useEffect, useState } from 'react';
 import { getCoachPrefs, saveCoachPrefs, coachSample, coachStop } from '../lib/coach';
@@ -38,10 +39,10 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
         <input
           type="checkbox" id="remindersToggle"
           checked={remindersEnabled} onChange={toggleReminders}
-          disabled={!isNotificationSupported()}
+          disabled={!isReminderSupported()}
         />
       </div>
-      {!isNotificationSupported() && (
+      {!isReminderSupported() && (
         <p className="dash-empty">
           {isIosSafariNotInstalled()
             ? t('No iPhone/iPad, notificações só funcionam depois de instalar o app: toque em Compartilhar → "Adicionar à Tela de Início".')
@@ -50,7 +51,7 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
       )}
       <button
         className="btn btn--outline btn--sm"
-        disabled={!isNotificationSupported()}
+        disabled={!isReminderSupported()}
         onClick={() => sendNotification(t('🔔 Notificação de teste'), { body: t('Se você está vendo isso, está tudo funcionando!') })
           .then(() => toast(t('✅ Notificação enviada')))
           .catch(err => toast(t('❌ Falhou: {message}', { message: err.message })))}
@@ -74,13 +75,17 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
       </div>
       )}
 
+      {isNative() && (
+        <p className="dash-empty">{t('No app Android, por enquanto só os lembretes de água funcionam. Os outros avisos chegam pelo app no navegador.')}</p>
+      )}
+
       {prefs.map(({ key, label }) => (
         <div className="profile-field profile-field--row" key={key}>
           <label className="profile-field__label" htmlFor={key}>{label}</label>
           <input
             type="checkbox" id={key}
             checked={isNotifyEnabled(user.user_metadata, key)}
-            disabled={!remindersEnabled}
+            disabled={!remindersEnabled || (isNative() && key !== 'notifyWater')}
             onChange={e => updateProfile({ [key]: e.target.checked })
               .then(({ error }) => error && toast(`❌ ${friendlyError(error)}`))}
           />

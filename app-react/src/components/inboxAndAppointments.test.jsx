@@ -13,7 +13,7 @@ vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
 vi.mock('../hooks/useReminders', () => ({ useReminders: () => h.reminders }));
-vi.mock('../lib/notifications', () => ({ isNotificationSupported: () => h.notifSupported }));
+vi.mock('../lib/notifications', () => ({ isNotificationSupported: () => h.notifSupported, isReminderSupported: () => h.notifSupported }));
 vi.mock('../lib/inbox', async (importActual) => ({
   ...(await importActual()),
   fetchInbox: (...a) => h.api.fetchInbox(...a),

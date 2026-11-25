@@ -3,6 +3,8 @@ import { todayDate, waterStorageKey, getWaterGoalLiters } from '../data/treinoDa
 import { useAuth } from '../context/useAuth';
 import { sendNotification, isNotifyEnabled } from '../lib/notifications';
 import { isPushSupported } from '../lib/pushSubscriptions';
+import { isNative } from '../lib/native';
+import { scheduleNativeWaterReminders, cancelNativeWaterReminders } from '../lib/nativeReminders';
 
 import { t } from '../lib/i18n';
 // Mantenha em sincronia com WATER_REMINDER_TIMES em
@@ -22,6 +24,15 @@ export default function ReminderScheduler() {
   const waterNotifiedRef = useRef(new Set());
 
   useEffect(() => {
+    // App Android: a água é agendada no aparelho (lib/nativeReminders.js), com o
+    // app fechado e sem checagem periódica. Reagenda a cada abertura e quando a
+    // preferência de água muda.
+    if (isNative()) {
+      const on = localStorage.getItem('reminders_enabled') === 'true' && isNotifyEnabled(user?.user_metadata, 'notifyWater');
+      (on ? scheduleNativeWaterReminders() : cancelNativeWaterReminders()).catch(err => console.error('lembretes de água:', err));
+      return undefined;
+    }
+
     let cancelled = false;
     let pushActive = false;
 

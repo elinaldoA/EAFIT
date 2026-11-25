@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { requestNotificationPermission } from '../lib/notifications';
 import { subscribeToPush, unsubscribeFromPush } from '../lib/pushSubscriptions';
+import { isNative } from '../lib/native';
+import { scheduleNativeWaterReminders, cancelNativeWaterReminders } from '../lib/nativeReminders';
 
 import { t } from '../lib/i18n';
 export function useReminders(toast, user) {
@@ -11,7 +13,8 @@ export function useReminders(toast, user) {
       localStorage.setItem('reminders_enabled', 'false');
       setEnabled(false);
       toast(t('🔕 Lembretes desativados'));
-      unsubscribeFromPush().catch(err => console.error('unsubscribeFromPush:', err));
+      if (isNative()) cancelNativeWaterReminders();
+      else unsubscribeFromPush().catch(err => console.error('unsubscribeFromPush:', err));
       return;
     }
 
@@ -23,6 +26,18 @@ export function useReminders(toast, user) {
 
     localStorage.setItem('reminders_enabled', 'true');
     setEnabled(true);
+
+    // App Android: lembretes de água agendados no aparelho (sem push do servidor).
+    if (isNative()) {
+      try {
+        await scheduleNativeWaterReminders();
+        toast(t('🔔 Lembretes de água ativados (funcionam mesmo com o app fechado)'));
+      } catch (err) {
+        console.error('scheduleNativeWaterReminders:', err);
+        toast(t('⚠️ Não foi possível agendar os lembretes'));
+      }
+      return;
+    }
 
     if (user) {
       try {
