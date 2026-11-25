@@ -9,6 +9,7 @@ import { installErrorReporter } from './lib/errorReporter'
 import { enableTracking, capturePushOpen } from './lib/tracking'
 import { captureInstallPrompt } from './lib/installPrompt'
 import { initNativePush } from './lib/nativePush'
+import { installNativeShare } from './lib/nativeShare'
 import { capturePushTarget } from './lib/appNav'
 import { captureRef } from './lib/ambassadorRef'
 import { captureSportPref } from './lib/sportPreference'
@@ -27,6 +28,7 @@ enableTracking()
 capturePushTarget()
 capturePushOpen()
 initNativePush()
+installNativeShare()
 captureInstallPrompt()
 captureRef()
 captureSportPref()
