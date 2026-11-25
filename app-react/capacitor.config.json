@@ -1,0 +1,9 @@
+{
+  "appId": "br.com.eafit.app",
+  "appName": "EAFIT",
+  "webDir": "dist-native",
+  "android": {
+    "allowMixedContent": false,
+    "useLegacyBridge": true
+  }
+}

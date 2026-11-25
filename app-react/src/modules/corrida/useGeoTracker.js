@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { emptyTrack, applyFix } from './geoTrack';
+import { isNative } from '../../lib/native';
+import { watchNativePosition } from '../../lib/nativeGeo';
 
 // Sem leitura aceita por tanto tempo (ms) o sinal conta como fraco.
 const WEAK_AFTER_MS = 15000;
@@ -13,7 +15,7 @@ const APPROX_M = 500;
 // dois pontos não é o caminho feito. A distância continua somando em linha reta.
 export const ROUTE_GAP_MS = 60000;
 
-export const geoSupported = () => typeof navigator !== 'undefined' && 'geolocation' in navigator;
+export const geoSupported = () => isNative() || (typeof navigator !== 'undefined' && 'geolocation' in navigator);
 
 // Acompanha o GPS enquanto `active` (corrida rodando, não pausada) e soma a
 // distância a partir de `baseMeters`, já filtrada por geoTrack.js. Chama
@@ -43,12 +45,12 @@ export function useGeoTracker({ active, paused = false, baseMeters, onMeters, on
   pausedRef.current = paused;
 
   useEffect(() => {
+    const native = isNative();
     if (!active) { setStatus('idle'); setAccuracy(null); return undefined; }
     if (!geoSupported()) { setStatus('unsupported'); return undefined; }
     // Em http (ex.: IP da rede local) o navegador bloqueia a localização sem perguntar.
-    if (typeof window !== 'undefined' && window.isSecureContext === false) { setStatus('insecure'); return undefined; }
+    if (!native && typeof window !== 'undefined' && window.isSecureContext === false) { setStatus('insecure'); return undefined; }
 
-    const geolocation = navigator.geolocation;
     let track = emptyTrack(Math.max(0, baseRef.current || 0));
     const startedAt = Date.now();
     let lastAcceptedAt = 0;
@@ -57,8 +59,7 @@ export function useGeoTracker({ active, paused = false, baseMeters, onMeters, on
     setStatus('searching');
     setAccuracy(null);
 
-    const watchId = geolocation.watchPosition(
-      pos => {
+    const onPosition = pos => {
         const { latitude: lat, longitude: lon, accuracy: acc, altitude, altitudeAccuracy } = pos.coords;
         const before = track.meters;
         const gap = track.last ? pos.timestamp - track.last.t : 0;
@@ -82,16 +83,24 @@ export function useGeoTracker({ active, paused = false, baseMeters, onMeters, on
           }
         }
         onSampleRef.current?.({ t: pos.timestamp, reason: result.reason, meters: moved });
-      },
-      err => {
-        // Timeout (3) só quer dizer que a leitura demorou: o rastreio continua
-        // e a próxima leitura chega sozinha. Não é erro.
-        if (err.code === 3) return;
-        failed = true;
-        setStatus(err.code === 1 ? 'denied' : 'error');
-      },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
-    );
+    };
+    const onError = err => {
+      // Timeout (3) só quer dizer que a leitura demorou: o rastreio continua
+      // e a próxima leitura chega sozinha. Não é erro.
+      if (err.code === 3) return;
+      failed = true;
+      setStatus(err.code === 1 ? 'denied' : 'error');
+    };
+    // No app nativo o GPS segue com a tela apagada (serviço em primeiro plano);
+    // no navegador/PWA só funciona com o app aberto.
+    const stopWatch = native
+      ? watchNativePosition(onPosition, onError)
+      : (() => {
+        const geolocation = navigator.geolocation;
+        const id = geolocation.watchPosition(onPosition, onError,
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 });
+        return () => geolocation.clearWatch(id);
+      })();
 
     const watchdog = setInterval(() => {
       if (failed) return;
@@ -104,7 +113,7 @@ export function useGeoTracker({ active, paused = false, baseMeters, onMeters, on
     }, 3000);
 
     return () => {
-      geolocation.clearWatch(watchId);
+      stopWatch();
       clearInterval(watchdog);
     };
   }, [active]);

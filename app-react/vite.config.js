@@ -2,9 +2,15 @@ import { defineConfig } from 'vite'
 import { configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { fileURLToPath } from 'node:url'
+import { rmSync } from 'node:fs'
 
-export default defineConfig({
-  base: '/app/',
+// `vite build --mode native`: pacote do app Android (Capacitor). Serve da raiz,
+// sem service worker (o conteúdo já vai dentro do APK) e sai em dist-native/.
+export default defineConfig(({ mode }) => {
+const native = mode === 'native'
+return {
+  base: native ? '/' : '/app/',
   test: {
     // e2e/ e dist-e2e/ são do Playwright (npm run e2e), não do Vitest.
     exclude: [...configDefaults.exclude, 'e2e/**', 'dist-e2e/**'],
@@ -21,7 +27,9 @@ export default defineConfig({
       VITE_SUPABASE_ANON_KEY: 'test-anon-key',
     },
   },
+  resolve: native ? { alias: { 'virtual:pwa-register/react': fileURLToPath(new URL('./src/native/pwaRegisterStub.js', import.meta.url)) } } : undefined,
   build: {
+    outDir: native ? 'dist-native' : 'dist',
     // Os maiores pacotes (cliente do Supabase e o núcleo do app, ≈600 KB antes do gzip)
     // são carregados uma vez e vão para o precache; os pesados (PDF, OCR, jsPDF)
     // já são separados e baixados só sob demanda. O aviso padrão de 500 KB só fazia ruído.
@@ -29,7 +37,14 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
+    // O APK não precisa do site de divulgação (landing/, ≈120 MB) nem da imagem de prévia de link.
+    native && {
+      name: 'native-prune',
+      closeBundle() {
+        for (const f of ['landing', 'og-image.png']) rmSync(`dist-native/${f}`, { recursive: true, force: true })
+      },
+    },
+    !native && VitePWA({
       registerType: 'prompt',
       strategies: 'injectManifest',
       srcDir: 'src',
@@ -85,4 +100,5 @@ export default defineConfig({
       },
     }),
   ],
+}
 })

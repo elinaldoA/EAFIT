@@ -47,6 +47,7 @@ export function detectDevice(userAgent, platform, maxTouchPoints) {
 // App instalado (aberto pelo ícone) ou aba do navegador.
 export function detectDisplayMode(win) {
   try {
+    if (win?.Capacitor?.isNativePlatform?.()) return 'standalone';
     if (win?.navigator?.standalone === true) return 'standalone';
     if (win?.matchMedia?.('(display-mode: standalone)').matches) return 'standalone';
   } catch { /* navegador sem matchMedia */ }
