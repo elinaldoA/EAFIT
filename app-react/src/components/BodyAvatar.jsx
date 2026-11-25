@@ -59,7 +59,8 @@ function BackView({ active, levels }) {
   );
 }
 
-export default function BodyAvatar({ activeGroups = new Set(), levels = null }) {
+// legend: 'volume' (padrão: Pouco, Na faixa, Acima) ou 'recovery' (Descansando, Quase pronto, Pronto).
+export default function BodyAvatar({ activeGroups = new Set(), levels = null, legend = 'volume' }) {
   return (
     <div className="body-avatar">
       <div className="body-avatar__figures">
@@ -72,7 +73,14 @@ export default function BodyAvatar({ activeGroups = new Set(), levels = null }) 
           <span className="body-avatar__label">{t('Costas')}</span>
         </div>
       </div>
-      {levels ? (
+      {levels && legend === 'recovery' ? (
+        <div className="body-avatar__legend">
+          <span className="body-avatar__legend-item"><span className="body-avatar__legend-dot body-avatar__legend-dot--tired" />{t('Descansando')}</span>
+          <span className="body-avatar__legend-item"><span className="body-avatar__legend-dot body-avatar__legend-dot--recovering" />{t('Quase pronto')}</span>
+          <span className="body-avatar__legend-item"><span className="body-avatar__legend-dot body-avatar__legend-dot--ready" />{t('Pronto')}</span>
+          <span className="body-avatar__legend-item"><span className="body-avatar__legend-dot" />{t('Sem treino recente')}</span>
+        </div>
+      ) : levels ? (
         <div className="body-avatar__legend">
           <span className="body-avatar__legend-dot body-avatar__legend-dot--low" />
           <span>{t('Pouco')}</span>
