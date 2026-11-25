@@ -5,6 +5,7 @@ import { getModalRoot } from '../lib/modalRoot';
 import { todayName } from '../data/treinoData';
 import { formatDuration } from '../lib/utils';
 import { playRestDoneSound } from '../lib/sound';
+import { scheduleNativeRestEnd, cancelNativeRestEnd } from '../lib/nativeRest';
 import { allSetsDone, countSets, gatherExerciseDetails, setCountOf } from '../lib/workoutSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
@@ -122,6 +123,16 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restDone, rest?.id]);
+
+  // Aviso do sistema (app Android) para o fim do descanso com a tela apagada;
+  // reagendado quando o tempo muda (+15s) e cancelado ao pular ou fechar.
+  const restEndsAt = rest?.endsAt;
+  useEffect(() => {
+    if (!restEndsAt) return undefined;
+    scheduleNativeRestEnd((restEndsAt - Date.now()) / 1000, rest.label);
+    return () => { cancelNativeRestEnd(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restEndsAt]);
 
   // Fim do descanso (acabou o tempo ou a pessoa tocou em "Pular"). Se fechou
   // todas as séries do exercício, segue sozinho pro próximo. Só se a pessoa

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { hapticTap } from '../lib/nativeHaptics';
 import { useAuth } from '../context/useAuth';
 import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
@@ -169,6 +170,7 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
   async function handleCheck() {
     const next = !done;
     setDone(next);
+    if (next) hapticTap();
     localStorage.setItem(`set_${day.dia}_${ex.nome}_${n}_done`, next);
     bump();
     if (next) {

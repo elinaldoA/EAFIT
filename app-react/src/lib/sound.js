@@ -1,3 +1,5 @@
+import { vibratePattern } from './nativeHaptics';
+
 // Ganho do alarme de descanso (0–1). Era 0.16. Perto de 1 a onda quadrada já usa a
 // faixa toda; o resto do volume é o volume de mídia do aparelho.
 const REST_ALARM_GAIN = 0.9;
@@ -62,7 +64,7 @@ export function playRestDoneSound() {
       t += roundGap;
     }
   } catch { /* som indisponível */ }
-  if (navigator.vibrate) navigator.vibrate([130, 90, 130, 90, 130, 220, 130, 90, 130, 90, 130]);
+  vibratePattern([130, 90, 130, 90, 130, 220, 130, 90, 130, 90, 130]);
 }
 
 export function playWorkoutFinishedSound() {
@@ -73,7 +75,7 @@ export function playWorkoutFinishedSound() {
     tone(ctx, 659.25, ctx.currentTime + 0.15, 0.18);
     tone(ctx, 783.99, ctx.currentTime + 0.3, 0.5, 0.18);
   } catch { /* som indisponível */ }
-  if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 250]);
+  vibratePattern([120, 60, 120, 60, 250]);
 }
 
 // Bip curto e suave entre os movimentos da mobilidade (e na troca de lado):
@@ -84,7 +86,7 @@ export function playStepSound() {
     tone(ctx, 880, ctx.currentTime, 0.14, 0.2);
     tone(ctx, 1174.66, ctx.currentTime + 0.12, 0.22, 0.2);
   } catch { /* som indisponível */ }
-  if (navigator.vibrate) navigator.vibrate([90, 60, 90]);
+  vibratePattern([90, 60, 90]);
 }
 
 // Troca de fase no corre/caminha: dois bips agudos para correr, um grave e
@@ -99,7 +101,7 @@ export function playRunCue(phase) {
       tone(ctx, 660, ctx.currentTime, 0.35, 0.3);
     }
   } catch { /* som indisponível */ }
-  if (navigator.vibrate) navigator.vibrate(phase === 'run' ? [120, 60, 120] : [300]);
+  vibratePattern(phase === 'run' ? [120, 60, 120] : [300]);
 }
 
 // Lembrete de hidratação no treino: duas notas descendentes, suaves, como uma
@@ -110,5 +112,5 @@ export function playHydrationSound() {
     tone(ctx, 1046.5, ctx.currentTime, 0.12, 0.16);
     tone(ctx, 784, ctx.currentTime + 0.11, 0.2, 0.16);
   } catch { /* som indisponível */ }
-  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  vibratePattern([200, 100, 200]);
 }

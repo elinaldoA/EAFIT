@@ -1,3 +1,5 @@
+import { vibratePattern } from '../../lib/nativeHaptics';
+
 // Vibração da corrida ao vivo: avisa sem depender da voz (desligada, música
 // alta, celular no braço). Cada aviso tem um padrão diferente para dar para
 // distinguir sem olhar a tela. Sem suporte (iPhone, desktop) não faz nada.
@@ -16,6 +18,6 @@ export const BUZZ = {
 export function buzz(kind) {
   try {
     const pattern = BUZZ[kind];
-    if (pattern && typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(pattern);
+    if (pattern) vibratePattern(pattern);
   } catch { /* vibração indisponível */ }
 }
