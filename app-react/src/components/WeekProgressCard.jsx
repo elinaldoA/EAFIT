@@ -1,15 +1,36 @@
+import { todayName } from '../data/treinoData';
 import { fmtDate, daysUntil } from '../lib/utils';
 import { fmtVolume } from '../lib/workoutHistory';
 import { MUSCLE_LABELS } from '../data/bodyMuscleMap';
-import { t } from '../lib/i18n';
+import { t, tFoco } from '../lib/i18n';
 
-// Card "Semana atual": treinos feitos, volume, músculos e validade do ciclo (a faixa dos dias fica no topo, HomeHero).
-export default function WeekProgressCard({ done, total, volume, planStartDate, planEndDate, planExpired, planByTrainer, muscles = [] }) {
+// Card "Semana atual": treinos feitos, faixa dos dias, volume e validade do ciclo.
+export default function WeekProgressCard({ workDays, done, total, isDayDone, missedSet, volume, planStartDate, planEndDate, planExpired, planByTrainer, muscles = [] }) {
   return (
     <div className="progress-card">
       <div className="progress-card__row">
         <span className="progress-card__label">{t('Semana atual')}</span>
         <span className="progress-card__count">{t('{done}/{total} treinos', { done, total })}</span>
+      </div>
+      <div className="week-strip">
+        {workDays.map(d => {
+          const isDone = isDayDone(d.dia);
+          const isToday = d.dia === todayName();
+          const isMissed = missedSet.has(d.dia);
+          let status = '';
+          if (isDone) status = t('(concluído)');
+          else if (isMissed) status = t('(ficou para trás)');
+          return (
+            <div
+              key={d.dia}
+              className={`week-strip__day${isDone ? ' week-strip__day--done' : ''}${isToday ? ' week-strip__day--today' : ''}${isMissed ? ' week-strip__day--missed' : ''}`}
+              title={`${t(d.dia)} — ${tFoco(d.foco)}${status}`}
+            >
+              <span className="week-strip__dot" aria-hidden="true">{isDone ? '✓' : ''}</span>
+              <span className="week-strip__label">{t(d.dia).slice(0, 3)}</span>
+            </div>
+          );
+        })}
       </div>
       {volume?.now > 0 && (
         <p className="progress-card__volume">

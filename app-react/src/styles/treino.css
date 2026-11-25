@@ -959,18 +959,3 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 9px center; background-size: 10px 6px;
 }
-
-/* ── Topo do Treino (HomeHero): saudação, semana em dias e atalhos ── */
-.home-hero { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4); background: linear-gradient(160deg, var(--primary-glow), transparent 70%), var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
-.home-hero__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
-.home-hero__hello { margin: 0; font-size: var(--fs-xl); font-weight: 800; line-height: 1.15; }
-.home-hero__date { margin: 2px 0 0; font-size: var(--fs-sm); color: var(--text-muted); }
-.home-hero__date::first-letter { text-transform: uppercase; }
-.home-hero__streak { flex: none; padding: 4px 10px; border-radius: var(--r-full); background: var(--primary-glow); color: var(--primary-text); font-size: var(--fs-xs); font-weight: 800; white-space: nowrap; }
-.home-hero__links { display: flex; gap: var(--sp-2); overflow-x: auto; scrollbar-width: none; margin: 0 calc(var(--sp-4) * -1); padding: 0 var(--sp-4); }
-.home-hero__links::-webkit-scrollbar { display: none; }
-.home-link { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 72px; min-height: var(--tap-min); padding: 10px var(--sp-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text); font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.home-link__icon { font-size: 22px; line-height: 1; }
-.home-link__label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
-.home-link:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
-@media (hover: hover) { .home-link:hover { border-color: var(--primary); } }
