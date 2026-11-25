@@ -179,7 +179,7 @@ export function baseFor(_platform: Platform): string {
 // O que a rede aceita deste post (o painel já valida; aqui é a última barreira).
 export function checkPost(platform: Platform, post: Post): string | null {
   if (platform === 'tiktok') {
-    if (post.format === 'story') return 'TikTok não tem stories pelo painel.';
+    // A API de postagem do TikTok não publica Story: o story em vídeo sai como vídeo comum (ver tiktokVersion).
     if (post.media.length !== 1 || post.media[0].type !== 'video') return 'TikTok pelo painel aceita só um vídeo por post.';
   }
   if (platform === 'youtube') {
@@ -196,6 +196,16 @@ export function checkPost(platform: Platform, post: Post): string | null {
   if (platform === 'instagram' && !post.media.length) return 'Instagram exige ao menos uma imagem ou vídeo.';
   if (!post.caption.trim() && !post.media.length) return 'Post vazio.';
   return null;
+}
+
+// Legenda dos stories que vão ao TikTok (story não tem legenda; lá o vídeo precisa de uma).
+export const TIKTOK_STORY_CAPTION = 'Corre com a gente! 🏃 #corrida #corridaderua #running #EAFIT';
+
+// O TikTok não tem Story pela API: o story em vídeo vira um vídeo comum, com a legenda curta de corrida
+// quando o story não tem texto. Post de feed segue como está.
+export function tiktokVersion(post: Post): Post {
+  if (post.format !== 'story') return post;
+  return { ...post, format: 'feed', caption: post.caption.trim() ? post.caption : TIKTOK_STORY_CAPTION };
 }
 
 // O post do Facebook sai com um link do app marcado com o id do post (utm_content),

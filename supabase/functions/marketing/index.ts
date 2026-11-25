@@ -26,7 +26,7 @@ import { corsHeadersFor } from '../_shared/cors.ts';
 import { CRON_SECRET_HEADER, isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import {
   type Account, baseFor, checkPost, continuePublish, decryptToken, deletePublished, editPublished, encryptToken, fetchAds, fetchComments, fetchMetrics, GraphError, makeApi,
-  type Media, type Post, replyToComment, setCommentHidden, startPublish, type Step, trackedCaption,
+  type Media, type Post, replyToComment, setCommentHidden, startPublish, type Step, tiktokVersion, trackedCaption,
 } from '../_shared/marketing.ts';
 import { continueTikTok, creatorInfo, makeTikTokApi, oauthToken, parseToken, startTikTok, tokenFromOAuth } from '../_shared/tiktok.ts';
 import {
@@ -163,7 +163,7 @@ async function processTarget(t: TargetRow, posts: Map<string, Post>): Promise<{ 
       const tk = makeTikTokApi(fetch, token);
       step = t.container_id
         ? await continueTikTok(tk, account.username, t.container_id, TIKTOK_PUBLIC_POSTS)
-        : await startTikTok(tk, fetch, post, TIKTOK_PUBLIC_POSTS);
+        : await startTikTok(tk, fetch, tiktokVersion(post), TIKTOK_PUBLIC_POSTS);
     } else if (account.platform === 'youtube') {
       step = await publishYouTube(token, fetch, post, YOUTUBE_PUBLIC_POSTS);
     } else {

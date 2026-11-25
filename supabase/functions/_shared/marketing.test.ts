@@ -1,7 +1,7 @@
 import { assertEquals, assertRejects } from 'jsr:@std/assert@1';
 import {
   type Account, checkPost, continuePublish, decryptToken, deletePublished, encryptToken, fetchAdAccounts, fetchAds, fetchComments, fetchMetrics, GraphError, makeApi,
-  replyToComment, setCommentHidden, signState, startPublish, trackedCaption, verifyState,
+  replyToComment, setCommentHidden, signState, startPublish, TIKTOK_STORY_CAPTION, tiktokVersion, trackedCaption, verifyState,
 } from './marketing.ts';
 
 type Call = { method: string; path: string; params: Record<string, string> };
