@@ -32,4 +32,3 @@
 @import './styles/modules.css'; /* Módulos de esporte (cores e marca de cada versão) */
 @import './styles/run.css'; /* EAFIT Run: aba Correr, Corridas e corrida ao vivo */
 @import './styles/polish.css'; /* Foco, área de toque e estados (vazio/erro/carregando) */
-@import './styles/soft.css'; /* Visual suave do Treino: topo escuro, cartão laranja, mini-cartões */

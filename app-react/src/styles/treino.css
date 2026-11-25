@@ -974,15 +974,3 @@
 .home-link__label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); }
 .home-link:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
 @media (hover: hover) { .home-link:hover { border-color: var(--primary); } }
-
-/* ── Aderência da semana (anel) e treinos recentes ── */
-.adherence { display: flex; align-items: center; gap: var(--sp-3); }
-.adherence__ring { --pct: 0; flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--primary) calc(var(--pct) * 1%), var(--surface-3) 0); }
-.adherence__ring--full { background: conic-gradient(var(--success) 100%, var(--surface-3) 0); }
-.adherence__ring span { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); font-size: var(--fs-sm); font-weight: 800; font-variant-numeric: tabular-nums; }
-.adherence__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.adherence__hint { font-size: var(--fs-sm); color: var(--text-muted); }
-.recent { display: flex; flex-direction: column; gap: var(--sp-2); }
-.recent__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
-.recent__head .section-group__label { margin: 0; }
-.recent__head .link-btn { min-height: var(--tap-min); font-weight: 700; }

@@ -24,13 +24,13 @@ describe('HomeHero', () => {
   it('cumprimenta pelo primeiro nome e mostra a sequência', () => {
     render(<HomeHero {...base} streak={3} />);
     expect(screen.getByRole('heading', { name: 'Boa noite, Ana' })).toBeTruthy();
-    expect(screen.getByText('🔥 Sequência de 3 dias')).toBeTruthy();
+    expect(screen.getByText('🔥 3 dias seguidos')).toBeTruthy();
   });
 
   it('sem nome (só e-mail) não chama a pessoa pelo e-mail, e sem sequência não mostra o chip', () => {
     render(<HomeHero {...base} user={{ email: 'ana@x.com', user_metadata: {} }} streak={0} />);
     expect(screen.getByRole('heading', { name: 'Boa noite' })).toBeTruthy();
-    expect(screen.queryByText(/Sequência/)).toBeNull();
+    expect(screen.queryByText(/seguidos/)).toBeNull();
   });
 
   it('semana em dias: feito, hoje e atrasado', () => {
@@ -43,8 +43,8 @@ describe('HomeHero', () => {
 
   it('atalhos levam à tela certa; Recuperação some com o recurso desligado', () => {
     const { rerender } = render(<HomeHero {...base} />);
-    fireEvent.click(screen.getByRole('button', { name: /Evolução/ }));
-    expect(h.goTo).toHaveBeenCalledWith({ tab: 'dash', dashTab: 'treinos' });
+    fireEvent.click(screen.getByRole('button', { name: /Água/ }));
+    expect(h.goTo).toHaveBeenCalledWith({ tab: 'hidratacao' });
     fireEvent.click(screen.getByRole('button', { name: /Histórico/ }));
     expect(h.goTo).toHaveBeenCalledWith({ tab: 'dash', dashTab: 'historico' });
     expect(screen.getByRole('button', { name: /Recuperação/ })).toBeTruthy();

@@ -5,8 +5,10 @@ import { goTo } from '../lib/appNav';
 import { trackFeature } from '../lib/tracking';
 import { t, tFoco, nDias, locale } from '../lib/i18n';
 
-// Atalhos para as telas de acompanhamento (Água, Proteína e Peso têm os próprios cartões, HomeTiles).
+// Atalhos para as outras telas, na ordem de uso: o que se abre logo depois de treinar.
 const SHORTCUTS = [
+  { key: 'agua', icon: '💧', label: () => t('Água'), target: { tab: 'hidratacao' } },
+  { key: 'nutricao', icon: '🍎', label: () => t('Nutrição'), target: { tab: 'nutricao' } },
   { key: 'historico', icon: '📅', label: () => t('Histórico'), target: { tab: 'dash', dashTab: 'historico' } },
   { key: 'recuperacao', icon: '💪', label: () => t('Recuperação'), target: { tab: 'dash', dashTab: 'recuperacao' }, flag: 'recuperacao_muscular' },
   { key: 'evolucao', icon: '📈', label: () => t('Evolução'), target: { tab: 'dash', dashTab: 'treinos' } },
@@ -31,7 +33,7 @@ export default function HomeHero({ user, streak = 0, workDays, isDayDone, missed
           <h1 className="home-hero__hello">{name ? t('{saudacao}, {nome}', { saudacao: hello, nome: name }) : hello}</h1>
           <p className="home-hero__date">{date}</p>
         </div>
-        {streak > 0 && <span className="home-hero__streak">{t('🔥 Sequência de {n}', { n: nDias(streak) })}</span>}
+        {streak > 0 && <span className="home-hero__streak">{t('🔥 {n} seguidos', { n: nDias(streak) })}</span>}
       </div>
       <div className="week-strip">
         {workDays.map(d => {
