@@ -16,6 +16,7 @@ import SurveyPrompt from '../components/SurveyPrompt';
 import { fetchPendingSurvey } from '../lib/surveys';
 import DayCard from '../components/WorkoutDayCard';
 import PauseBanner from '../components/PauseBanner';
+import OverflowMenu from '../components/OverflowMenu';
 import DailyCheckin from '../components/DailyCheckin';
 import FirstSteps from '../components/FirstSteps';
 import NamePrompt from '../components/NamePrompt';
@@ -167,12 +168,9 @@ export default function TreinoPage() {
 
   return (
     <section id="page-treino" className="page active">
+      {/* Acima do treino de hoje só o que muda o que treinar hoje (pausa, plano vencido).
+          O resto (check-in, recados, primeiros passos) vem depois dele. */}
       <PauseBanner />
-      <PersonalMessages />
-      <MyAppointments onlyPending />
-      <NamePrompt />
-      <FirstSteps onStartWorkout={startFirst} />
-      {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
         <div className="plan-expired-banner">
@@ -195,17 +193,28 @@ export default function TreinoPage() {
         />
       )}
       {!today && !loading && coach && <div className="today-card">{coachEl}</div>}
+      {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
+      <PersonalMessages />
+      <MyAppointments onlyPending />
+      <FirstSteps onStartWorkout={startFirst} />
+      <NamePrompt />
       <WeekProgressCard
         workDays={workDays} done={done} total={total} isDayDone={isDayDone} missedSet={missedSet} volume={volume} muscles={muscles}
         planStartDate={planStartDate} planEndDate={planEndDate} planExpired={planExpired} planByTrainer={planByTrainer}
       />
       <div className="toolbar">
-        <p className="toolbar__hint">
-          {loading ? t('Carregando dados salvos…') : t('Marque os treinos · salva automático')}
-        </p>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn--ghost btn--sm" onClick={() => setShowPlanEditor(true)}>{t('⚙️ Editar treino')}</button>
-          <button className="btn btn--ghost btn--sm" onClick={handleReset} disabled={loading} aria-label={t('Limpar a semana')}>{t('Limpar')}</button>
+        <div className="section-group__label toolbar__title">
+          {loading ? t('Carregando dados salvos…') : t('Treinos da semana')}
+        </div>
+        <div className="toolbar__actions">
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowPlanEditor(true)}>{t('⚙️ Editar treino')}</button>
+          {/* Limpar apaga a semana (com desfazer) e Importar é de uso raro: ficam no menu, longe do toque sem querer. */}
+          <OverflowMenu
+            items={[
+              { label: t('Limpar a semana'), onClick: handleReset, disabled: loading },
+              { label: t('Importar treinos de outro app'), onClick: () => setShowImport(true) },
+            ]}
+          />
         </div>
       </div>
       <div id="treinoContainer">
@@ -221,9 +230,6 @@ export default function TreinoPage() {
           ))}
         </div>
       </div>
-      <button type="button" className="btn btn--ghost btn--full" onClick={() => setShowImport(true)}>
-        {t('📥 Importar treinos de outro app')}
-      </button>
       <footer className="footer">
         <strong>{t('Progressão:')}</strong> {t('suba a carga quando bater o topo das reps')}
         {deload && (deload.active

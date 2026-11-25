@@ -78,9 +78,12 @@
   gap: var(--sp-3);
 }
 
-.toolbar__hint { font-size: var(--fs-xs); color: var(--text-dim); }
+.toolbar__title { margin: 0; min-width: 0; }
 
-.toolbar__actions { display: flex; align-items: center; gap: var(--sp-1); }
+.toolbar__actions { display: flex; align-items: center; gap: var(--sp-1); flex-shrink: 0; }
+/* Abre para cima: a barra de ferramentas fica no meio da tela e a navegação de baixo cobriria a lista. */
+.overflow-menu .topbar-menu__list { top: auto; bottom: calc(100% + 8px); }
+.overflow-menu__btn { min-width: 36px; font-size: 1.25rem; line-height: 1; letter-spacing: 1px; }
 
 /* ============================================================
    ACCORDION — DIAS DE TREINO
@@ -133,9 +136,14 @@
   min-width: 0;
 }
 
+/* Área de toque de 44px com margem negativa: o cartão não cresce. */
+.day-card__check-wrap {
+  display: flex; align-items: center; justify-content: center;
+  width: var(--tap-min); height: var(--tap-min); margin: -13px; flex-shrink: 0; cursor: pointer;
+}
 .day-card__check {
-  width: 17px;
-  height: 17px;
+  width: 20px;
+  height: 20px;
   accent-color: var(--primary);
   cursor: pointer;
   flex-shrink: 0;
