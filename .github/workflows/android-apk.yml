@@ -1,0 +1,64 @@
+name: Android APK (teste)
+
+# Gera o APK de debug do app Android (Capacitor) para instalar no celular e testar.
+# Baixe em: aba Actions > esta execucao > Artifacts > eafit-android-debug.
+# Roda pelo botao "Run workflow" ou quando o projeto Android muda.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app-react/android/**'
+      - 'app-react/capacitor.config.json'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-react/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build do app (modo nativo) e copia para o Android
+        working-directory: app-react
+        run: |
+          npm ci
+          npm run build:native
+          npx cap sync android
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+
+      - name: Gera o APK de debug
+        working-directory: app-react/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eafit-android-debug
+          path: app-react/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
