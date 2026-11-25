@@ -4,7 +4,6 @@ import { seasonNavIcon } from './seasonIcons';
 import { BASE_TABS } from '../modules/registry';
 const ITEMS = [
   { key: 'treino', label: t('Treino') },
-  { key: 'historico', label: t('Histórico') },
   { key: 'hidratacao', label: t('Água') },
   { key: 'nutricao', label: t('Nutrição') },
   { key: 'dash', label: t('Evolução') },

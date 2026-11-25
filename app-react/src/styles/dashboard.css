@@ -593,8 +593,10 @@
   border: 1px solid var(--border);
   box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .5);
 }
+.seg { overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
 .seg__btn {
-  flex: 1;
+  flex: 1 0 auto;
   border: none;
   border-radius: var(--r-full);
   background: transparent;

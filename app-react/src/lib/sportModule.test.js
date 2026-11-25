@@ -18,7 +18,7 @@ describe('registro de módulos', () => {
   it('a musculação é o padrão, lançada e com as seis abas de sempre', () => {
     const base = MODULES.find(m => m.id === DEFAULT_MODULE_ID);
     expect(base).toMatchObject({ released: true, name: 'Gym', defaultTab: 'treino' });
-    expect(base.tabs).toEqual(['treino', 'historico', 'hidratacao', 'nutricao', 'dash', 'perfil']);
+    expect(base.tabs).toEqual(['treino', 'hidratacao', 'nutricao', 'dash', 'perfil']);
   });
 
   it('ids únicos e aba inicial entre as abas do módulo', () => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { goTo, takeProfileCardToOpen, capturePushTarget, NAV_EVENT } from './appNav';
+import { goTo, takeProfileCardToOpen, capturePushTarget, redirectLegacyTab, NAV_EVENT } from './appNav';
 import { NAV_TARGETS } from './pushTarget';
 import { readMode } from './appMode';
 
@@ -78,5 +78,21 @@ describe('capturePushTarget', () => {
     onMessage({ data: { type: 'eafit-push-open' } });
     expect(window.location.hash).toBe('#dash');
     delete navigator.serviceWorker;
+  });
+});
+
+describe('redirectLegacyTab', () => {
+  it('#historico (atalho antigo) abre a aba Histórico da Evolução', () => {
+    window.history.replaceState(null, '', '/EAFIT/#historico');
+    redirectLegacyTab();
+    expect(window.location.hash).toBe('#dash');
+    expect(localStorage.getItem('dash_tab')).toBe('historico');
+  });
+
+  it('outros destinos ficam como estão', () => {
+    window.history.replaceState(null, '', '/EAFIT/#perfil');
+    redirectLegacyTab();
+    expect(window.location.hash).toBe('#perfil');
+    expect(localStorage.getItem('dash_tab')).toBeNull();
   });
 });

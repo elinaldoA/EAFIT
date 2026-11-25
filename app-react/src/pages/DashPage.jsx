@@ -13,11 +13,13 @@ import DashTreinosTab from '../components/DashTreinosTab';
 import DashRecordesTab from '../components/DashRecordesTab';
 import DashCorpoTab from '../components/DashCorpoTab';
 import DashRecoveryTab from '../components/DashRecoveryTab';
+import HistoricoPage from './HistoricoPage';
 import { addDays } from '../lib/pause';
 
 import { t } from '../lib/i18n';
 const TABS = [
   { key: 'treinos', label: t('Treinos') },
+  { key: 'historico', label: t('Histórico') },
   { key: 'recuperacao', label: t('Recuperação') },
   { key: 'recordes', label: t('Recordes') },
   { key: 'corpo', label: t('Corpo') },
@@ -121,6 +123,8 @@ export default function DashPage({ active }) {
           selectedExercise={selectedExercise} onExerciseChange={setSelectedExercise}
         />
       )}
+
+      {tab === 'historico' && <HistoricoPage />}
 
       {tab === 'recuperacao' && <DashRecoveryTab active={active} />}
 
