@@ -22,25 +22,23 @@ vi.mock('../hooks/useSportModule', () => ({ useSportModule: () => ({ module: h.s
 
 import OnboardingScreen from './OnboardingScreen';
 
-const next = () => fireEvent.click(document.querySelector('button[type="submit"]'));
-const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
-const pickCard = label => fireEvent.click(screen.getAllByRole('radio').find(r => r.querySelector('strong')?.textContent === label));
-// Passa pelas telas de cartão que existirem (objetivo, nível, local, sexo) e pelas de número.
-const fillCards = () => {
-  [['Objetivo principal', 'Ganho de massa'], ['Nível de experiência', 'Iniciante'], ['Onde você treina', 'Academia'], ['Sexo biológico', 'Masculino']].forEach(([group, label]) => {
-    if (screen.queryByRole('radiogroup', { name: group })) pickCard(label);
-  });
+const next = () => fireEvent.click(screen.getByRole('button', { name: 'Próximo passo' }));
+const fillStep1 = () => {
+  fireEvent.change(screen.getByLabelText('Como podemos te chamar?'), { target: { value: 'Ana' } });
+  fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: 'M' } });
+  fireEvent.change(screen.getByLabelText('Idade'), { target: { value: '30' } });
 };
-// Preenche o cadastro todo, tela a tela, e para na última (pronto para enviar).
+const fillStep2 = () => {
+  fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '80' } });
+  fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: '180' } });
+};
+// Preenche o cadastro todo, passo a passo, e para no último (pronto para enviar).
 const fill = () => {
-  if (screen.queryByRole('radiogroup', { name: 'Qual é a sua vibe?' })) next();
-  fillCards();
-  type('Idade', '30');
+  fillStep1();
   next();
-  type('Peso (kg)', '80');
-  type('Altura (cm)', '180');
-  next();
-  type('Como podemos te chamar?', 'Ana');
+  fillStep2();
+  if (!screen.queryByLabelText('Nível de experiência')) next();
+  fireEvent.change(screen.getByLabelText('Nível de experiência'), { target: { value: 'iniciante' } });
 };
 
 beforeEach(() => {
@@ -55,9 +53,10 @@ describe('onboarding: qual é a sua vibe?', () => {
   it('abre sem nenhum esporte marcado e pede a escolha antes de continuar', () => {
     render(<OnboardingScreen />);
     expect(screen.getAllByRole('radio').every(r => r.getAttribute('aria-checked') === 'false')).toBe(true);
+    fillStep1();
     next();
     expect(screen.getByText('Escolha o seu esporte para continuar.')).toBeTruthy();
-    expect(screen.getByText('Passo 1 de 8')).toBeTruthy();
+    expect(screen.getByText('Passo 1 de 3')).toBeTruthy();
     expect(h.updateProfile).not.toHaveBeenCalled();
     expect(h.track).toHaveBeenCalledWith('onboarding', 'erro_esporte');
   });
@@ -66,7 +65,7 @@ describe('onboarding: qual é a sua vibe?', () => {
     localStorage.setItem('eafit_sport_pref', JSON.stringify({ id: 'corrida', at: Date.now() }));
     render(<OnboardingScreen />);
     fill();
-    fireEvent.submit(screen.getByLabelText('Como podemos te chamar?').closest('form'));
+    fireEvent.submit(screen.getByLabelText('Nível de experiência').closest('form'));
     await waitFor(() => expect(h.updateProfile).toHaveBeenCalled());
   });
 
@@ -98,57 +97,43 @@ describe('onboarding: qual é a sua vibe?', () => {
     h.released = [h.sports[0]]; // liberado só por conta ou no modo de desenvolvimento
     localStorage.setItem('eafit_sport_pref', JSON.stringify({ id: 'corrida', at: Date.now() }));
     render(<OnboardingScreen />);
-    expect(screen.queryByRole('radiogroup', { name: 'Qual é a sua vibe?' })).toBeNull(); // sem tela de esporte
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
     fill();
     fireEvent.click(screen.getByRole('button', { name: /Gerar meu treino|Começar/ }));
     await waitFor(() => expect(h.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ esporte: 'musculacao' })));
   });
 
-  it('em telas: não avança com campo inválido, volta sem perder o que foi digitado e as escolhas começam vazias', () => {
+  it('em passos: não avança com campo inválido, volta sem perder o que foi digitado e o nível começa vazio', () => {
     localStorage.setItem('eafit_sport_pref', JSON.stringify({ id: 'musculacao', at: Date.now() }));
     render(<OnboardingScreen />);
-    next(); // esporte
-    expect(screen.getByText('Passo 2 de 8')).toBeTruthy();
-    pickCard('Ganho de massa');
-    expect(screen.getAllByRole('radio').every(r => r.getAttribute('aria-checked') === 'false')).toBe(true); // nível
-    pickCard('Iniciante');
-    pickCard('Academia');
-    pickCard('Masculino');
-    expect(screen.getByText('Passo 6 de 8')).toBeTruthy();
-    type('Idade', '3');
     next();
     expect(screen.getByText('Corrija os campos marcados acima.')).toBeTruthy();
-    expect(screen.getByText('Passo 6 de 8')).toBeTruthy();
-    type('Idade', '30');
+    expect(screen.getByText('Passo 1 de 3')).toBeTruthy();
+    fillStep1();
     next();
-    expect(screen.getByText('Passo 7 de 8')).toBeTruthy();
-    type('Peso (kg)', '80');
-    type('Altura (cm)', '180');
+    expect(screen.getByText('Passo 2 de 3')).toBeTruthy();
+    fillStep2();
     fireEvent.click(screen.getByRole('button', { name: 'Voltar' }));
     expect(screen.getByLabelText('Idade').value).toBe('30');
     next();
     expect(screen.getByLabelText('Peso (kg)').value).toBe('80');
     next();
-    expect(screen.getByLabelText('Como podemos te chamar?').value).toBe('');
+    expect(screen.getByLabelText('Nível de experiência').value).toBe('');
     fireEvent.click(screen.getByRole('button', { name: 'Gerar meu treino' }));
-    expect(screen.getByText('Diga como podemos te chamar.')).toBeTruthy();
+    expect(screen.getByText('Escolha o seu nível de experiência.')).toBeTruthy();
     expect(h.updateProfile).not.toHaveBeenCalled();
   });
 
-  it('corrida (sem plano) não pergunta objetivo nem local: 6 telas, com o nível logo depois do esporte', async () => {
+  it('corrida (sem plano) tem 2 passos e pede o nível no segundo', async () => {
     localStorage.setItem('eafit_sport_pref', JSON.stringify({ id: 'corrida', at: Date.now() }));
     render(<OnboardingScreen />);
-    next(); // esporte
-    expect(screen.getByText('Passo 2 de 6')).toBeTruthy();
-    expect(screen.queryByRole('radiogroup', { name: 'Objetivo principal' })).toBeNull();
-    pickCard('Avançado');
-    pickCard('Masculino');
-    type('Idade', '30');
+    fillStep1();
     next();
-    type('Peso (kg)', '80');
-    type('Altura (cm)', '180');
-    next();
-    type('Como podemos te chamar?', 'Ana');
+    expect(screen.getByText('Passo 2 de 2')).toBeTruthy();
+    fillStep2();
+    fireEvent.click(screen.getByRole('button', { name: 'Começar' }));
+    expect(screen.getByText('Escolha o seu nível de experiência.')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Nível de experiência'), { target: { value: 'avancado' } });
     fireEvent.click(screen.getByRole('button', { name: 'Começar' }));
     await waitFor(() => expect(h.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ nivel: 'avancado', esporte: 'corrida' })));
   });

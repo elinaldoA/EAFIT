@@ -371,65 +371,24 @@ describe('PasswordRecoveryScreen', () => {
 
 describe('OnboardingScreen', () => {
   const advance = () => fireEvent.click(document.querySelector('button[type="submit"]'));
-  const pickCard = label => fireEvent.click(screen.getAllByRole('radio').find(r => r.querySelector('strong')?.textContent === label));
-  const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
-  const CARDS = [
-    ['Objetivo principal', { massa: 'Ganho de massa', forca: 'Aumento de força' }, 'meta'],
-    ['Nível de experiência', { iniciante: 'Iniciante', intermediario: 'Intermediário', avancado: 'Avançado' }, 'nivel'],
-    ['Onde você treina', { academia: 'Academia', casa: 'Em casa' }, 'local'],
-    ['Sexo biológico', { M: 'Masculino', F: 'Feminino' }, 'sexo'],
-  ];
-  // Preenche tela a tela. Se uma tela trava por erro (ou o valor é vazio), para nela, como a pessoa veria.
-  // `nome: null` deixa o nome como veio.
-  const fill = ({ meta = 'massa', nivel = 'intermediario', local = 'academia', sexo = 'M', idade = '30', peso = '80', altura = '180', nome = 'Ana' } = {}) => {
-    const values = { meta, nivel, local, sexo };
-    for (const [group, labels, key] of CARDS) {
-      if (!screen.queryByRole('radiogroup', { name: group })) continue;
-      if (!values[key]) return;
-      pickCard(labels[values[key]]);
-    }
-    if (!screen.queryByLabelText('Idade')) return;
-    type('Idade', idade);
+  // Preenche passo a passo. Se um passo trava por erro, para nele (como a pessoa veria).
+  const fill = ({ nome = 'Ana', sexo = 'M', idade = '30', peso = '80', altura = '180', nivel = 'intermediario' } = {}) => {
+    fireEvent.change(screen.getByLabelText('Como podemos te chamar?'), { target: { value: nome } });
+    fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: sexo } });
+    fireEvent.change(screen.getByLabelText('Idade'), { target: { value: idade } });
     advance();
     if (!screen.queryByLabelText('Peso (kg)')) return;
-    type('Peso (kg)', peso);
-    type('Altura (cm)', altura);
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: peso } });
+    fireEvent.change(screen.getByLabelText('Altura (cm)'), { target: { value: altura } });
     advance();
-    if (nome !== null && screen.queryByLabelText('Como podemos te chamar?')) type('Como podemos te chamar?', nome);
+    if (!screen.queryByLabelText('Nível de experiência')) return;
+    fireEvent.change(screen.getByLabelText('Nível de experiência'), { target: { value: nivel } });
   };
   const submit = advance;
 
-  it('uma pergunta por tela: tocar num cartão escolhe e já passa para a próxima, sem botão', () => {
-    render(<OnboardingScreen />);
-    expect(screen.getByText('Passo 1 de 7')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Qual é o seu objetivo?' })).toBeTruthy();
-    expect(document.querySelector('button[type="submit"]')).toBeNull();
-    pickCard('Aumento de força');
-    expect(screen.getByText('Passo 2 de 7')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Há quanto tempo você treina?' })).toBeTruthy();
-    expect(screen.getByRole('radiogroup', { name: 'Nível de experiência' })).toBeTruthy();
-  });
-
-  it('Voltar mantém a escolha feita, e as telas seguintes começam sem nada marcado', () => {
-    render(<OnboardingScreen />);
-    expect(screen.queryByRole('button', { name: 'Voltar' })).toBeNull(); // na primeira tela não há para onde voltar
-    pickCard('Ganho de massa');
-    expect(screen.getAllByRole('radio').every(r => r.getAttribute('aria-checked') === 'false')).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Voltar' }));
-    expect(screen.getByRole('radio', { name: /Ganho de massa/ }).getAttribute('aria-checked')).toBe('true');
-  });
-
-  it('sem escolher o sexo não há como avançar: a tela só tem os cartões', () => {
-    render(<OnboardingScreen />);
-    fill({ sexo: '' });
-    expect(screen.getByRole('radiogroup', { name: 'Sexo biológico' })).toBeTruthy();
-    expect(screen.getAllByRole('radio').every(r => r.getAttribute('aria-checked') === 'false')).toBe(true);
-    expect(document.querySelector('button[type="submit"]')).toBeNull();
-    expect(h.tpl.generatePlan).not.toHaveBeenCalled();
-  });
-
   it.each([
     [{ nome: '   ' }, 'Como podemos te chamar?', 'Diga como podemos te chamar.'],
+    [{ sexo: '' }, 'Sexo biológico', 'Selecione o sexo biológico.'],
     [{ idade: '10' }, 'Idade', 'Informe uma idade válida (14–100).'],
     [{ peso: '10' }, 'Peso (kg)', 'Informe um peso entre 30 e 300 kg.'],
     [{ altura: '50' }, 'Altura (cm)', 'Informe a altura entre 100 e 250 cm.'],
@@ -444,24 +403,28 @@ describe('OnboardingScreen', () => {
     expect(h.tpl.generatePlan).not.toHaveBeenCalled();
   });
 
-  it('mostra os erros da tela de uma vez, leva ao primeiro e cada um some ao mexer no campo', () => {
+  it('mostra os erros do passo de uma vez, leva ao primeiro e cada um some ao mexer no campo', () => {
     render(<OnboardingScreen />);
-    fill({ idade: '3' });
+    fill({ sexo: '', idade: '3', peso: '850' });
+    submit();
+    expect(screen.getByText('Selecione o sexo biológico.')).toBeTruthy();
     expect(screen.getByText('Informe uma idade válida (14–100).')).toBeTruthy();
-    expect(screen.queryByLabelText('Peso (kg)')).toBeNull(); // trava na tela da idade
-    expect(document.activeElement).toBe(screen.getByLabelText('Idade'));
+    expect(screen.queryByLabelText('Peso (kg)')).toBeNull(); // trava no passo 1
+    expect(document.activeElement).toBe(screen.getByLabelText('Sexo biológico'));
 
-    type('Idade', '30');
+    fireEvent.change(screen.getByLabelText('Sexo biológico'), { target: { value: 'F' } });
+    fireEvent.change(screen.getByLabelText('Idade'), { target: { value: '30' } });
+    expect(screen.queryByText('Selecione o sexo biológico.')).toBeNull();
     expect(screen.queryByText('Informe uma idade válida (14–100).')).toBeNull();
     expect(screen.getByLabelText('Idade').getAttribute('aria-invalid')).toBeNull();
     expect(screen.queryByText('Corrija os campos marcados acima.')).toBeNull();
 
     submit();
-    type('Peso (kg)', '850');
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '850' } });
     submit();
     expect(screen.getByText('Informe um peso entre 30 e 300 kg.')).toBeTruthy();
     expect(screen.getByText('Informe a altura entre 100 e 250 cm.')).toBeTruthy();
-    type('Peso (kg)', '85');
+    fireEvent.change(screen.getByLabelText('Peso (kg)'), { target: { value: '85' } });
     expect(screen.queryByText('Informe um peso entre 30 e 300 kg.')).toBeNull();
   });
 
@@ -469,9 +432,8 @@ describe('OnboardingScreen', () => {
     h.tpl.generatePlan.mockResolvedValue([{ dia: 'Seg' }]);
     h.auth.updateProfile.mockResolvedValue({});
     const first = render(<OnboardingScreen />);
-    fill({ nome: null });
     expect(screen.getByLabelText('Como podemos te chamar?').value).toBe('');
-    type('Como podemos te chamar?', '  Bia   Souza ');
+    fill({ nome: '  Bia   Souza ' });
     submit();
     await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalledWith(expect.objectContaining({ nome: 'Bia Souza' })));
     first.unmount();
@@ -479,7 +441,6 @@ describe('OnboardingScreen', () => {
     const prev = h.auth.user;
     h.auth.user = { ...prev, user_metadata: { full_name: 'Carla Dias', given_name: 'Carla' } };
     render(<OnboardingScreen />);
-    fill({ nome: null });
     expect(screen.getByLabelText('Como podemos te chamar?').value).toBe('Carla');
     h.auth.user = prev;
   });
@@ -512,7 +473,10 @@ describe('OnboardingScreen', () => {
     h.plans.seedGeneratedPlan.mockImplementation(async () => { order.push('seed'); });
     h.auth.updateProfile.mockImplementation(async () => { order.push('profile'); return {}; });
     render(<OnboardingScreen />);
-    fill({ meta: 'forca', nivel: 'avancado', local: 'casa' });
+    fill();
+    fireEvent.change(screen.getByLabelText('Objetivo principal'), { target: { value: 'forca' } });
+    fireEvent.change(screen.getByLabelText('Nível de experiência'), { target: { value: 'avancado' } });
+    fireEvent.change(screen.getByLabelText('Onde você treina'), { target: { value: 'casa' } });
     submit();
     await waitFor(() => expect(h.auth.updateProfile).toHaveBeenCalled());
     expect(order).toEqual(['generate', 'seed', 'profile']);

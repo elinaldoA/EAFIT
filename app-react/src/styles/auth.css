@@ -263,52 +263,12 @@ h1.auth-logo__name { margin: 0; }
 .lang-compact__label { font-size: var(--fs-sm); color: var(--text-muted); }
 .lang-compact__select { width: auto; min-width: 120px; }
 
-/* Onboarding: uma pergunta por tela, com cartões. Só tokens do tema do app (claro,
-   escuro e temporadas), sem cores próprias. */
-/* Fixo no topo (não centralizado): o cabeçalho não pula de posição a cada pergunta. */
-.onb { gap: var(--sp-5); max-width: 420px; margin: 0; }
-.onb-brand { display: flex; align-items: center; gap: var(--sp-2); }
-.onb-brand__icon { width: 32px; height: 32px; border-radius: 9px; box-shadow: 0 0 0 1px var(--border); }
-.onb-brand__name { font-size: 1.3rem; font-weight: 900; letter-spacing: -.5px; line-height: 1; }
-.onb-form { gap: var(--sp-3); }
-.onb-progress { margin-bottom: var(--sp-2); }
-.onb-progress__row { display: flex; align-items: center; gap: var(--sp-2); }
-.onb-progress__bar { flex: 1; height: 6px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
+/* Onboarding em passos */
+.onb-progress { margin-bottom: 4px; }
+.onb-progress__bar { height: 6px; border-radius: 999px; background: var(--border-2); overflow: hidden; }
 .onb-progress__bar i { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width .25s ease; }
-.onb-progress__label { margin: 6px 0 0; font-size: var(--fs-sm); color: var(--text-muted); }
-.onb-back {
-  flex: none; width: 44px; height: 44px; margin-left: -10px; border: 0; border-radius: 50%;
-  background: transparent; color: var(--text); font-size: 28px; line-height: 1; cursor: pointer;
-}
-.onb-back:hover:not(:disabled) { background: var(--surface-2); }
-.onb-back:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
-.onb-back--ghost { cursor: default; pointer-events: none; }
-.onb-question { margin: var(--sp-2) 0 0; font-size: 1.75rem; line-height: 1.15; font-weight: 800; letter-spacing: -.5px; outline: none; }
-.onb-why { margin: 0 0 var(--sp-2); font-size: var(--fs-md); line-height: 1.45; color: var(--text-muted); }
-.onb-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.onb-field { display: flex; flex-direction: column; gap: var(--sp-1); }
-.onb-choices { display: grid; grid-template-columns: 1fr; gap: var(--sp-2); outline: none; }
-.onb-choices--2 { grid-template-columns: 1fr 1fr; }
-.onb-choice {
-  display: flex; align-items: center; gap: var(--sp-3); min-height: 64px; padding: var(--sp-3) var(--sp-4);
-  text-align: left; cursor: pointer; font: inherit; color: var(--text);
-  background: var(--surface); border: 2px solid var(--border); border-radius: var(--r-lg);
-  transition: border-color .15s ease, background-color .15s ease, transform .1s ease;
-}
-@media (hover: hover) { .onb-choice:hover { border-color: var(--primary); } }
-.onb-choice:active { transform: scale(0.98); }
-.onb-choice:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
-.onb-choice--on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--surface)); }
-.onb-choices--2 .onb-choice { justify-content: center; text-align: center; min-height: 72px; font-size: var(--fs-lg); }
-.onb-choice__icon { flex: none; font-size: 26px; line-height: 1; }
-.onb-choice__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.onb-choice__text strong { font-size: var(--fs-lg); }
-.onb-choice__text span { font-size: var(--fs-sm); line-height: 1.35; color: var(--text-muted); }
-.input--lg { min-height: 56px; font-size: var(--fs-xl); font-weight: 600; }
-.onb-actions { display: flex; gap: 10px; margin-top: var(--sp-2); }
+.onb-progress__label { margin: 6px 0 0; font-size: var(--fs-sm); color: var(--text-muted); text-align: center; }
+.onb-step__title { margin: 4px 0 2px; font-size: 20px; text-align: center; outline: none; }
+.onb-actions { display: flex; gap: 10px; }
 .onb-actions .btn--primary { flex: 1; }
-.btn--lg { min-height: 52px; font-size: var(--fs-lg); }
-@media (prefers-reduced-motion: reduce) {
-  .onb-progress__bar i, .onb-choice { transition: none; }
-  .onb-choice:active { transform: none; }
-}
+@media (prefers-reduced-motion: reduce) { .onb-progress__bar i { transition: none; } }
