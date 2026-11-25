@@ -1,0 +1,93 @@
+/* ============================================================
+   VISUAL SUAVE (Treino): topo escuro, treino do dia em cartão laranja,
+   mini-cartões de números e cartões mais arredondados.
+   Vem por último no index.css: ajusta o que treino.css e layout.css definiram.
+============================================================ */
+
+/* ── Topo escuro (HomeHero): a mesma cara nos dois temas ── */
+.home-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 24px;
+  color: #fff;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(249, 115, 22, .38), transparent 55%),
+    linear-gradient(160deg, #2b1608, #130b06);
+  box-shadow: var(--shadow-md);
+}
+.home-hero__date { color: rgba(255, 255, 255, .68); }
+.home-hero__streak { background: rgba(255, 255, 255, .12); color: #fdba74; }
+.home-hero .week-strip__dot { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .28); color: #fff; }
+.home-hero .week-strip__day--done .week-strip__dot { background: var(--primary); border-color: var(--primary); color: #1a0d05; }
+.home-hero .week-strip__day--today .week-strip__dot { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(249, 115, 22, .3); }
+.home-hero .week-strip__day--missed .week-strip__dot { border-color: #fbbf24; }
+.home-hero .week-strip__label { color: rgba(255, 255, 255, .62); }
+.home-hero .week-strip__day--today .week-strip__label { color: #fdba74; }
+.home-link { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .14); color: #fff; }
+.home-link__label { color: rgba(255, 255, 255, .82); }
+@media (hover: hover) { .home-link:hover { border-color: #fdba74; } }
+
+/* ── Treino de hoje: cartão laranja com o botão em destaque ── */
+.today-card {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 24px;
+  color: #fff;
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(255, 255, 255, .22), transparent 60%),
+    linear-gradient(135deg, #fb923c, #ea580c);
+  box-shadow: 0 16px 32px -14px rgba(234, 88, 12, .6);
+}
+.today-card--done {
+  background: radial-gradient(90% 120% at 100% 0%, rgba(255, 255, 255, .2), transparent 60%), linear-gradient(135deg, #34d399, #059669);
+  box-shadow: 0 16px 32px -14px rgba(5, 150, 105, .55);
+}
+.today-card__kicker, .today-card--done .today-card__kicker { color: rgba(255, 255, 255, .88); }
+.today-card__title { color: #fff; }
+.today-card__meta, .today-card__rest { color: rgba(255, 255, 255, .9); }
+.today-card__quick { color: #fff; }
+.today-card__link { color: #fff; text-decoration: underline; }
+.today-card__ring, .today-card--done .today-card__ring { background: conic-gradient(#fff calc(var(--pct) * 1%), rgba(0, 0, 0, .2) 0); }
+.today-card__ring span { background: #c2410c; color: #fff; }
+.today-card--done .today-card__ring span { background: #047857; }
+.today-card .btn--primary { background: #fff; color: #9a3412; border-color: #fff; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .4); }
+.today-card--done .btn--primary { color: #047857; }
+.today-card .btn--outline { color: #fff; border-color: rgba(255, 255, 255, .7); background: transparent; }
+/* O assistente do dia volta a ser um cartão claro dentro do laranja. */
+.today-card__coach {
+  padding: var(--sp-3);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Mini-cartões: água, proteína e peso ── */
+.home-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.home-tile {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 0;
+  padding: var(--sp-3);
+  background: var(--surface); color: var(--text); font: inherit; text-align: left;
+  border: 1px solid var(--border); border-radius: var(--r-xl); box-shadow: var(--shadow-sm);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.home-tile--wide { grid-column: 1 / -1; }
+.home-tile__label { font-size: var(--fs-xs); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+.home-tile__value { font-size: var(--fs-xl); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.home-tile__value small { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); }
+.home-tile__bar { display: block; height: 8px; border-radius: var(--r-full); background: var(--surface-3); overflow: hidden; }
+.home-tile__bar span { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width .3s; }
+.home-tile--water .home-tile__bar span { background: #38bdf8; }
+.home-tile__hint { font-size: var(--fs-xs); color: var(--text-muted); }
+.home-tile:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
+@media (hover: hover) { .home-tile:hover { border-color: var(--primary); } }
+
+/* ── Cartões mais arredondados e com sombra suave ── */
+.progress-card, .dash-card, .checkin, .name-prompt, .history-item, .accordion > * { border-radius: var(--r-xl); }
+.progress-card, .dash-card, .checkin, .history-item { box-shadow: var(--shadow-sm); }
+
+/* ── Barra de baixo: a aba ativa vira uma pastilha cheia ── */
+.nav-item.active .nav-item__icon { background: var(--primary); color: var(--on-primary); box-shadow: 0 6px 14px -6px var(--primary); }
+.today-card__coach:empty { display: none; }

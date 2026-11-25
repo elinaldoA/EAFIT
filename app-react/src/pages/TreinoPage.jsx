@@ -30,6 +30,8 @@ import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
 import TodayCard from '../components/TodayCard';
 import WeekProgressCard from '../components/WeekProgressCard';
 import HomeHero from '../components/HomeHero';
+import RecentWorkouts from '../components/RecentWorkouts';
+import HomeTiles from '../components/HomeTiles';
 import { useWorkoutReset } from '../hooks/useWorkoutReset';
 import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice, QUICK_OPTIONS } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
@@ -208,7 +210,8 @@ export default function TreinoPage() {
           onStartFirst={startFirst}
         />
       )}
-      {!today && !loading && coach && <div className="today-card">{coachEl}</div>}
+      {!today && !loading && coach && <div className="today-card"><div className="today-card__coach">{coachEl}</div></div>}
+      <HomeTiles />
       {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
       <PersonalMessages />
       <MyAppointments onlyPending />
@@ -246,6 +249,7 @@ export default function TreinoPage() {
           ))}
         </div>
       </div>
+      <RecentWorkouts />
       <footer className="footer">
         <strong>{t('Progressão:')}</strong> {t('suba a carga quando bater o topo das reps')}
         {deload && (deload.active

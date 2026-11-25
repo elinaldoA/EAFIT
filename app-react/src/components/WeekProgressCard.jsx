@@ -5,11 +5,22 @@ import { t } from '../lib/i18n';
 
 // Card "Semana atual": treinos feitos, volume, músculos e validade do ciclo (a faixa dos dias fica no topo, HomeHero).
 export default function WeekProgressCard({ done, total, volume, planStartDate, planEndDate, planExpired, planByTrainer, muscles = [] }) {
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
   return (
     <div className="progress-card">
-      <div className="progress-card__row">
-        <span className="progress-card__label">{t('Semana atual')}</span>
-        <span className="progress-card__count">{t('{done}/{total} treinos', { done, total })}</span>
+      <div className="adherence">
+        <div className={`adherence__ring${total > 0 && done >= total ? ' adherence__ring--full' : ''}`} style={{ '--pct': pct }} role="img" aria-label={t('{v1}% dos treinos da semana', { v1: pct })}>
+          <span>{pct}%</span>
+        </div>
+        <div className="adherence__text">
+          <span className="progress-card__label">{t('Semana atual')}</span>
+          <span className="progress-card__count">{t('{done}/{total} treinos', { done, total })}</span>
+          {total > 0 && (
+            <span className="adherence__hint">
+              {done >= total ? t('Semana completa! 🎉') : t('Faltam {n} para fechar a semana', { n: total - done })}
+            </span>
+          )}
+        </div>
       </div>
       {volume?.now > 0 && (
         <p className="progress-card__volume">

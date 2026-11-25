@@ -32,7 +32,7 @@ export default function TodayCard({ day, sets, done, onStart, quickMinutes, onQu
         )}
       </div>
       {!hasSets && <p className="today-card__rest">{t('Dia de recuperação — descanse bem ou faça um cardio leve. 🧘')}</p>}
-      {coach}
+      {coach && <div className="today-card__coach">{coach}</div>}
       {hasSets && <button type="button" className="btn btn--primary btn--full" onClick={onStart}>{cta}</button>}
       {!hasSets && firstDay && onStartFirst && (
         <button type="button" className="btn btn--primary btn--full" onClick={onStartFirst}>
