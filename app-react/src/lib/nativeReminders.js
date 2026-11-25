@@ -35,6 +35,9 @@ export async function scheduleNativeWaterReminders() {
       id: BASE_ID + i,
       title: t('💧 Hora de beber água'),
       body: t('Beba um copo de água e registre no app.'),
+      // Inexata: o padrão do plugin é alarme exato, que faz o Android abrir a tela
+      // "Alarmes e lembretes" pedindo uma permissão que o app não declara (e não precisa).
+      isExactNotification: false,
       schedule: { on: { hour, minute }, allowWhileIdle: true },
     };
   });
@@ -46,6 +49,6 @@ export async function sendNativeNotification(title, options = {}) {
   const permission = await requestNativeNotificationPermission();
   if (permission !== 'granted') throw new Error(t('Permissão de notificação: {permission}', { permission }));
   await LocalNotifications.schedule({
-    notifications: [{ id: 9000 + Math.floor(Math.random() * 99), title, body: options.body || '' }],
+    notifications: [{ id: 9000 + Math.floor(Math.random() * 99), title, body: options.body || '', isExactNotification: false }],
   });
 }

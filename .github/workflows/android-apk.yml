@@ -2,7 +2,7 @@ name: Android APK (teste)
 
 # Gera o APK de debug do app Android (Capacitor) para instalar no celular e testar.
 # Baixe em: aba Actions > esta execucao > Artifacts > EAFIT-debug.apk (arquivo .apk direto, sem zip).
-# Roda pelo botao "Run workflow" ou quando o projeto Android muda.
+# Roda pelo botao "Run workflow" ou quando o projeto Android ou o codigo do app mudam.
 on:
   workflow_dispatch:
   push:
@@ -10,6 +10,8 @@ on:
     paths:
       - 'app-react/android/**'
       - 'app-react/capacitor.config.json'
+      - 'app-react/src/**'
+      - 'app-react/package*.json'
       - '.github/workflows/android-apk.yml'
 
 permissions:

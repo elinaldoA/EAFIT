@@ -48,6 +48,8 @@ describe('scheduleNativeWaterReminders', () => {
     expect(notifications[0].schedule).toEqual({ on: { hour: 9, minute: 0 }, allowWhileIdle: true });
     expect(notifications.at(-1).schedule.on).toEqual({ hour: 21, minute: 0 });
     expect(new Set(notifications.map(n => n.id)).size).toBe(WATER_TIMES.length);
+    // alarme exato faria o Android abrir a tela "Alarmes e lembretes"
+    expect(notifications.every(n => n.isExactNotification === false)).toBe(true);
   });
 
   it('cancelar não estoura se o plugin falhar', async () => {
@@ -59,7 +61,7 @@ describe('scheduleNativeWaterReminders', () => {
 describe('sendNativeNotification', () => {
   it('manda a notificação na hora quando há permissão', async () => {
     await sendNativeNotification('Oi', { body: 'corpo' });
-    expect(ln.schedule.mock.calls[0][0].notifications[0]).toMatchObject({ title: 'Oi', body: 'corpo' });
+    expect(ln.schedule.mock.calls[0][0].notifications[0]).toMatchObject({ title: 'Oi', body: 'corpo', isExactNotification: false });
   });
 
   it('sem permissão: erro e nada é enviado', async () => {
