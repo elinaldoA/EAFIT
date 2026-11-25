@@ -1,34 +1,83 @@
 /* ============================================================
-   VISUAL SUAVE (Treino): topo escuro, treino do dia em cartão laranja,
-   mini-cartões de números e cartões mais arredondados.
-   Vem por último no index.css: ajusta o que treino.css e layout.css definiram.
+   VISUAL SUAVE: topo escuro, cartão de destaque na cor do tema, mini-cartões,
+   cartões arredondados com sombra leve e botões em pílula.
+   Vem por último no index.css: ajusta o que as outras folhas definiram.
+
+   Nada aqui usa cor fixa: tudo sai dos tokens (--bg, --surface, --primary,
+   --text, --success, --water...). Por isso o tema de temporada (season.css) e a
+   cor de cada módulo de esporte (modules.css) repintam o app inteiro sozinhos.
 ============================================================ */
 
-/* ── Topo escuro (HomeHero): a mesma cara nos dois temas ── */
-.home-hero {
+/* ── Tokens derivados ── */
+:root {
+  /* Base escura do topo: o fundo do tema escurecido; no tema claro, o texto (que é escuro). */
+  --hero-base: color-mix(in srgb, var(--bg) 62%, #000);
+  --on-hero: #fff;
+  --on-hero-muted: rgba(255, 255, 255, .7);
+  --hero-glass: rgba(255, 255, 255, .08);
+  --hero-line: rgba(255, 255, 255, .16);
+  /* Destaque sobre o topo escuro: a cor do tema clareada. */
+  --hero-accent: color-mix(in srgb, var(--primary-h) 68%, #fff);
+  /* Cartão de destaque (treino de hoje): a cor do tema, escura o bastante para texto branco. */
+  --accent-from: color-mix(in srgb, var(--primary) 92%, #000);
+  --accent-to: color-mix(in srgb, var(--primary) 68%, #000);
+  --accent-ink: color-mix(in srgb, var(--primary) 50%, #000);
+  --done-from: color-mix(in srgb, var(--success) 90%, #000);
+  --done-to: color-mix(in srgb, var(--success) 62%, #000);
+}
+[data-theme="light"] {
+  --hero-base: color-mix(in srgb, var(--text) 90%, #000);
+}
+
+/* ── Topo escuro ── */
+.home-hero, .water-hero, .dash-kpis, #page-perfil .stats-grid {
+  --hero-tint: var(--primary);
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, .08);
+  border: 1px solid var(--hero-line);
   border-radius: 24px;
-  color: #fff;
+  color: var(--on-hero);
   background:
-    radial-gradient(120% 140% at 100% 0%, rgba(249, 115, 22, .38), transparent 55%),
-    linear-gradient(160deg, #2b1608, #130b06);
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--hero-tint) 40%, transparent), transparent 55%),
+    linear-gradient(160deg, color-mix(in srgb, var(--hero-tint) 20%, var(--hero-base)), var(--hero-base));
   box-shadow: var(--shadow-md);
 }
-.home-hero__date { color: rgba(255, 255, 255, .68); }
-.home-hero__streak { background: rgba(255, 255, 255, .12); color: #fdba74; }
-.home-hero .week-strip__dot { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .28); color: #fff; }
-.home-hero .week-strip__day--done .week-strip__dot { background: var(--primary); border-color: var(--primary); color: #1a0d05; }
-.home-hero .week-strip__day--today .week-strip__dot { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(249, 115, 22, .3); }
-.home-hero .week-strip__day--missed .week-strip__dot { border-color: #fbbf24; }
-.home-hero .week-strip__label { color: rgba(255, 255, 255, .62); }
-.home-hero .week-strip__day--today .week-strip__label { color: #fdba74; }
-.home-link { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .14); color: #fff; }
-.home-link__label { color: rgba(255, 255, 255, .82); }
-@media (hover: hover) { .home-link:hover { border-color: #fdba74; } }
+/* Água: o topo puxa para o azul da água. */
+#page-hidratacao .water-hero { --hero-tint: var(--water-h, var(--water)); }
+.home-hero__date { color: var(--on-hero-muted); }
+.home-hero__streak { background: var(--hero-glass); color: var(--hero-accent); }
+.home-hero .week-strip__dot { background: var(--hero-glass); border-color: var(--hero-line); color: var(--on-hero); }
+.home-hero .week-strip__day--done .week-strip__dot { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.home-hero .week-strip__day--today .week-strip__dot { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent); }
+.home-hero .week-strip__day--missed .week-strip__dot { border-color: var(--warning); }
+.home-hero .week-strip__label { color: var(--on-hero-muted); }
+.home-hero .week-strip__day--today .week-strip__label { color: var(--hero-accent); }
+.home-link { background: var(--hero-glass); border-color: var(--hero-line); color: var(--on-hero); }
+.home-link__label { color: var(--on-hero-muted); }
+@media (hover: hover) { .home-link:hover { border-color: var(--hero-accent); } }
 
-/* ── Treino de hoje: cartão laranja com o botão em destaque ── */
+/* Água e Nutrição: o anel e os textos sobre o topo escuro. */
+.water-hero { border-color: var(--hero-line); }
+#page-nutricao .water-hero, #page-nutricao .water-hero--done { border-color: var(--hero-line); }
+.water-hero__ring { background: conic-gradient(var(--water-h, var(--water)) calc(var(--pct) * 1%), var(--hero-glass) 0); }
+#page-nutricao .water-hero__ring { background: conic-gradient(var(--hero-accent) calc(var(--pct) * 1%), var(--hero-glass) 0); }
+.water-hero--done .water-hero__ring, #page-nutricao .water-hero--done .water-hero__ring { background: conic-gradient(var(--success) calc(var(--pct) * 1%), var(--hero-glass) 0); }
+.water-hero__inner { background: var(--hero-base); }
+.water-hero__value, .water-hero__kicker { color: var(--water-h, var(--water)); }
+#page-nutricao .water-hero__value, #page-nutricao .water-hero__kicker { color: var(--hero-accent); }
+.water-hero--done .water-hero__value, .water-hero--done .water-hero__kicker, #page-nutricao .water-hero--done .water-hero__value, #page-nutricao .water-hero--done .water-hero__kicker { color: var(--success); }
+.water-hero__goal, .water-hero__hint { color: var(--on-hero-muted); }
+.water-hero__status { color: var(--on-hero); }
+
+/* Evolução e Perfil: os números do topo em vidro sobre o escuro. */
+.dash-kpis, #page-perfil .stats-grid { padding: var(--sp-3); }
+.dash-kpi, #page-perfil .stat-card, #page-perfil .stat-card--streak { background: var(--hero-glass); border-color: var(--hero-line); border-radius: var(--r-lg); }
+.dash-kpi__value, #page-perfil .stat-card__value { color: var(--hero-accent); }
+#page-perfil .stat-card--streak .stat-card__value { color: var(--warning); }
+.dash-kpi__label, #page-perfil .stat-card__label { color: var(--on-hero-muted); }
+.dash-kpi__label { font-size: 10px; letter-spacing: .02em; }
+
+/* ── Treino de hoje: cartão na cor do tema, com o botão em destaque ── */
 .today-card {
   position: relative;
   overflow: hidden;
@@ -37,25 +86,29 @@
   color: #fff;
   background:
     radial-gradient(90% 120% at 100% 0%, rgba(255, 255, 255, .22), transparent 60%),
-    linear-gradient(135deg, #fb923c, #ea580c);
-  box-shadow: 0 16px 32px -14px rgba(234, 88, 12, .6);
+    linear-gradient(135deg, var(--accent-from), var(--accent-to));
+  box-shadow: 0 16px 32px -14px color-mix(in srgb, var(--primary) 70%, transparent);
 }
 .today-card--done {
-  background: radial-gradient(90% 120% at 100% 0%, rgba(255, 255, 255, .2), transparent 60%), linear-gradient(135deg, #34d399, #059669);
-  box-shadow: 0 16px 32px -14px rgba(5, 150, 105, .55);
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(255, 255, 255, .2), transparent 60%),
+    linear-gradient(135deg, var(--done-from), var(--done-to));
+  box-shadow: 0 16px 32px -14px color-mix(in srgb, var(--success) 65%, transparent);
 }
-.today-card__kicker, .today-card--done .today-card__kicker { color: rgba(255, 255, 255, .88); }
+.today-card__kicker, .today-card--done .today-card__kicker { color: rgba(255, 255, 255, .9); }
 .today-card__title { color: #fff; }
-.today-card__meta, .today-card__rest { color: rgba(255, 255, 255, .9); }
+.today-card__meta, .today-card__rest { color: rgba(255, 255, 255, .92); }
 .today-card__quick { color: #fff; }
 .today-card__link { color: #fff; text-decoration: underline; }
-.today-card__ring, .today-card--done .today-card__ring { background: conic-gradient(#fff calc(var(--pct) * 1%), rgba(0, 0, 0, .2) 0); }
-.today-card__ring span { background: #c2410c; color: #fff; }
-.today-card--done .today-card__ring span { background: #047857; }
-.today-card .btn--primary { background: #fff; color: #9a3412; border-color: #fff; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .4); }
-.today-card--done .btn--primary { color: #047857; }
+.today-card__ring, .today-card--done .today-card__ring { background: conic-gradient(#fff calc(var(--pct) * 1%), rgba(0, 0, 0, .22) 0); }
+.today-card__ring span { background: var(--accent-ink); color: #fff; }
+.today-card--done .today-card__ring span { background: color-mix(in srgb, var(--success) 45%, #000); }
+.today-card .btn--primary:not(:disabled), [data-season] .today-card .btn--primary:not(:disabled) {
+  background: #fff; color: var(--accent-ink); border-color: #fff; box-shadow: 0 8px 18px -8px rgba(0, 0, 0, .4); animation: none;
+}
+.today-card--done .btn--primary:not(:disabled), [data-season] .today-card--done .btn--primary:not(:disabled) { color: color-mix(in srgb, var(--success) 45%, #000); }
 .today-card .btn--outline { color: #fff; border-color: rgba(255, 255, 255, .7); background: transparent; }
-/* O assistente do dia volta a ser um cartão claro dentro do laranja. */
+/* O assistente do dia volta a ser um cartão claro dentro do destaque. */
 .today-card__coach {
   padding: var(--sp-3);
   background: var(--surface);
@@ -63,6 +116,7 @@
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm);
 }
+.today-card__coach:empty { display: none; }
 
 /* ── Mini-cartões: água, proteína e peso ── */
 .home-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
@@ -79,15 +133,30 @@
 .home-tile__value small { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); }
 .home-tile__bar { display: block; height: 8px; border-radius: var(--r-full); background: var(--surface-3); overflow: hidden; }
 .home-tile__bar span { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width .3s; }
-.home-tile--water .home-tile__bar span { background: #38bdf8; }
+.home-tile--water .home-tile__bar span { background: var(--water-h, var(--water)); }
 .home-tile__hint { font-size: var(--fs-xs); color: var(--text-muted); }
 .home-tile:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
 @media (hover: hover) { .home-tile:hover { border-color: var(--primary); } }
 
-/* ── Cartões mais arredondados e com sombra suave ── */
-.progress-card, .dash-card, .checkin, .name-prompt, .history-item, .accordion > * { border-radius: var(--r-xl); }
-.progress-card, .dash-card, .checkin, .history-item { box-shadow: var(--shadow-sm); }
+/* ── Cartões arredondados, com sombra leve ── */
+.progress-card, .dash-card, .checkin, .name-prompt, .history-item, .day-card, .goal-card, .imc-card,
+.badge-card, .run-card, .sport-card, .update-card, .collapse, .water-quick__btn, .plan-expired-banner {
+  border-radius: var(--r-xl);
+}
+.progress-card, .dash-card, .checkin, .history-item, .day-card, .goal-card, .imc-card, .badge-card,
+.run-card, .sport-card, .collapse, .water-quick__btn {
+  box-shadow: var(--shadow-sm);
+}
+
+/* Rótulos de seção: pequenos, em maiúsculas e espaçados. */
+.section-group__label { letter-spacing: .12em; }
+
+/* Controle de abas dentro da página: pílula flutuante. */
+.seg { box-shadow: var(--shadow-md); }
+
+/* ── Botões em pílula; o principal com leve gradiente ── */
+.btn { border-radius: var(--r-full); }
+.btn--primary:not(:disabled) { background: linear-gradient(135deg, var(--primary-h), var(--primary)); }
 
 /* ── Barra de baixo: a aba ativa vira uma pastilha cheia ── */
 .nav-item.active .nav-item__icon { background: var(--primary); color: var(--on-primary); box-shadow: 0 6px 14px -6px var(--primary); }
-.today-card__coach:empty { display: none; }
