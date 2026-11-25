@@ -5,7 +5,7 @@ import { useWorkout } from '../context/useWorkout';
 import { useToast } from '../context/useToast';
 import { useAppConfig } from '../context/useAppConfig';
 import { isFlagOn } from '../lib/appConfig';
-import { toDateStr } from '../lib/utils';
+import { toDateStr, calcStreak } from '../lib/utils';
 import { countSets, gatherExerciseDetails } from '../lib/workoutSets';
 import RestTimer from '../components/RestTimer';
 import PlanEditorModal from '../components/PlanEditorModal';
@@ -29,6 +29,7 @@ import QuickWorkoutModal from '../components/QuickWorkoutModal';
 import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
 import TodayCard from '../components/TodayCard';
 import WeekProgressCard from '../components/WeekProgressCard';
+import HomeHero from '../components/HomeHero';
 import { useWorkoutReset } from '../hooks/useWorkoutReset';
 import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice, QUICK_OPTIONS } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
@@ -142,6 +143,7 @@ export default function TreinoPage() {
   // Só com histórico anterior à semana (mesma regra do assistente): na primeira semana tudo estaria "atrás".
   const muscles = history && history.sets.some(s => s.workout_date < addDays(todayStr, -6))
     ? weekMuscleProgress(planDays, history.sets, todayStr, history.libMap) : [];
+  const streak = history ? calcStreak(history.sets.map(s => s.workout_date), user?.user_metadata?.pauses, todayStr) : 0;
   const todayHasSets = todaySets.total > 0;
   // Primeiro treino de quem acabou de chegar: se hoje é descanso no plano, oferece o próximo dia.
   const firstDay = history && history.sets.length === 0 && isNewAccount(user)
@@ -180,6 +182,10 @@ export default function TreinoPage() {
     <section id="page-treino" className="page active">
       {/* Acima do treino de hoje só o que muda o que treinar hoje (pausa, plano vencido).
           O resto (check-in, recados, primeiros passos) vem depois dele. */}
+      <HomeHero
+        user={user} streak={streak} workDays={workDays} isDayDone={isDayDone} missedSet={missedSet}
+        flagOn={flag => isFlagOn(config.flags, flag)}
+      />
       <PauseBanner />
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
@@ -209,7 +215,7 @@ export default function TreinoPage() {
       <FirstSteps onStartWorkout={startFirst} />
       <NamePrompt />
       <WeekProgressCard
-        workDays={workDays} done={done} total={total} isDayDone={isDayDone} missedSet={missedSet} volume={volume} muscles={muscles}
+        done={done} total={total} volume={volume} muscles={muscles}
         planStartDate={planStartDate} planEndDate={planEndDate} planExpired={planExpired} planByTrainer={planByTrainer}
       />
       <div className="toolbar">
