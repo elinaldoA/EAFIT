@@ -6,6 +6,7 @@ import { todayName } from '../data/treinoData';
 import { formatDuration } from '../lib/utils';
 import { playRestDoneSound } from '../lib/sound';
 import { scheduleNativeRestEnd, cancelNativeRestEnd } from '../lib/nativeRest';
+import { showWorkoutNotice, clearWorkoutNotice } from '../lib/nativeWorkoutNotice';
 import { allSetsDone, countSets, gatherExerciseDetails, setCountOf } from '../lib/workoutSets';
 import { useBackToClose } from '../hooks/useBackToClose';
 import { useWakeLock } from '../hooks/useWakeLock';
@@ -259,6 +260,17 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
 
   const pct = setsTotal ? (setsDone / setsTotal) * 100 : 0;
   const finished = timer.status === 'finished';
+
+  // Notificação fixa no app Android: exercício e série atuais, ou o fim do descanso.
+  const noticeBody = rest && !restDone
+    ? t('Descanso até {hora} · {exercicio}', { hora: new Date(rest.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), exercicio: tEx(ex.nome) })
+    : t('{exercicio} · {feitas}/{total} séries', { exercicio: tEx(ex.nome), feitas: setsDone, total: setsTotal });
+  useEffect(() => {
+    if (finished) { clearWorkoutNotice(); return; }
+    showWorkoutNotice(t('Treino de {dia} em andamento', { dia: t(day.dia) }), noticeBody);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noticeBody, finished]);
+  useEffect(() => () => { clearWorkoutNotice(); }, []);
   const isPos = index >= day.exercicios.length;
   const next = items[index + 1];
   const restPct = rest ? Math.min(100, ((rest.total - restLeft) / rest.total) * 100) : 0;
