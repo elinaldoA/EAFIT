@@ -56,8 +56,10 @@ export default function NamePrompt() {
 
   return (
     <form className="name-prompt" onSubmit={handleSave} aria-labelledby="namePromptTitle">
-      <strong id="namePromptTitle" className="name-prompt__title">{t('👋 Como podemos te chamar?')}</strong>
-      <p className="name-prompt__text">{t('Seu nome aparece no app no lugar do e-mail.')}</p>
+      <div className="name-prompt__head">
+        <strong id="namePromptTitle" className="name-prompt__title">{t('👋 Como podemos te chamar?')}</strong>
+        <button type="button" className="link-btn name-prompt__dismiss" onClick={handleDismiss}>{t('Agora não')}</button>
+      </div>
       <div className="name-prompt__row">
         <input
           type="text" id={FIELD_ID} className="input" placeholder={t('Seu primeiro nome')}
@@ -68,7 +70,6 @@ export default function NamePrompt() {
         <button type="submit" className="btn btn--primary btn--sm" disabled={busy}>{busy ? t('Salvando…') : t('Salvar')}</button>
       </div>
       <FieldError id={FIELD_ID} message={error} />
-      <button type="button" className="link-btn name-prompt__dismiss" onClick={handleDismiss}>{t('Agora não')}</button>
     </form>
   );
 }
