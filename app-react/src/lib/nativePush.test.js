@@ -18,7 +18,7 @@ vi.mock('./native', () => ({ isNative: () => true }));
 const reportError = vi.hoisted(() => vi.fn());
 vi.mock('./errorReporter', () => ({ reportError }));
 
-import { initNativePush, registerNativePush, unregisterNativePush, getStoredFcmToken, getLastPushFailure, reportNativePushEvent } from './nativePush';
+import { initNativePush, registerNativePush, unregisterNativePush, getStoredFcmToken, getLastPushFailure, getPushStatus, reportNativePushEvent } from './nativePush';
 
 const TOKEN = 'a'.repeat(40);
 
@@ -64,6 +64,17 @@ describe('registerNativePush', () => {
     expect(await registerNativePush()).toBeNull();
   });
 
+  it('getPushStatus: ativo com token, desconhecido sem token, falhou com motivo', async () => {
+    await registerNativePush();
+    expect(getPushStatus()).toBe('active');
+    localStorage.clear();
+    expect(getPushStatus()).toBe('unknown');
+    await registerNativePush();
+    h.push.checkPermissions.mockResolvedValue({ receive: 'denied' });
+    await registerNativePush();
+    expect(getPushStatus()).toBe('failed');
+  });
+
   it('guarda e reporta o motivo de cada falha', async () => {
     h.push.checkPermissions.mockResolvedValue({ receive: 'denied' });
     await registerNativePush();
@@ -75,7 +86,7 @@ describe('registerNativePush', () => {
     h.push.register.mockRejectedValue(new Error('Default FirebaseApp is not initialized'));
     await registerNativePush();
     expect(getLastPushFailure()).toContain('registro: Default FirebaseApp');
-    expect(reportError).toHaveBeenCalledWith('push', expect.objectContaining({ message: expect.stringContaining('FCM registro') }));
+    expect(reportError).toHaveBeenCalledWith('error', expect.objectContaining({ message: expect.stringContaining('FCM registro') }));
     h.push.register.mockImplementation(async () => { setTimeout(() => h.listeners.registrationError?.({ error: 'SERVICE_NOT_AVAILABLE' }), 0); });
     await registerNativePush();
     expect(getLastPushFailure()).toBe('token: SERVICE_NOT_AVAILABLE');

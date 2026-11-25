@@ -29,10 +29,18 @@ export function getLastPushFailure() {
   return lastFailure;
 }
 
+// Situação do push neste aparelho, para a tela do Perfil: 'active' (token
+// registrado), 'failed' (motivo em getLastPushFailure) ou 'unknown' (ainda não tentou).
+export function getPushStatus() {
+  if (lastFailure) return 'failed';
+  return getStoredFcmToken() ? 'active' : 'unknown';
+}
+
 function fail(step, detail) {
   const text = typeof detail === 'string' ? detail : (detail?.message || JSON.stringify(detail) || '');
   lastFailure = `${step}${text ? `: ${text}` : ''}`.slice(0, 160);
-  reportError('push', new Error(`FCM ${lastFailure}`));
+  // kind 'error': client_errors só aceita error/unhandledrejection/boundary.
+  reportError('error', new Error(`FCM ${lastFailure}`));
   return null;
 }
 

@@ -1,3 +1,5 @@
+import { isNative } from '../lib/native';
+import { getPushStatus, getLastPushFailure } from '../lib/nativePush';
 import { isReminderSupported, isIosSafariNotInstalled, sendNotification, isNotifyEnabled } from '../lib/notifications';
 import { exportSummaryCSV, exportBackupJSON, printReport } from '../lib/exportData';
 import { useEffect, useState } from 'react';
@@ -46,6 +48,13 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
           {isIosSafariNotInstalled()
             ? t('No iPhone/iPad, notificações só funcionam depois de instalar o app: toque em Compartilhar → "Adicionar à Tela de Início".')
             : t('Notificações não são suportadas neste navegador.')}
+        </p>
+      )}
+      {isNative() && remindersEnabled && (
+        <p className="dash-empty">
+          {getPushStatus() === 'active' && t('Avisos no app: ativos neste aparelho.')}
+          {getPushStatus() === 'failed' && t('Avisos no app: indisponíveis ({reason}). Só a água chega, pelos lembretes do aparelho.', { reason: getLastPushFailure() })}
+          {getPushStatus() === 'unknown' && t('Avisos no app: ainda não registrados. Reabra o app.')}
         </p>
       )}
       <button
