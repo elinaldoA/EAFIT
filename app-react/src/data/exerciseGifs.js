@@ -53,6 +53,7 @@ export const EXERCISE_GIFS = {
   'Elevação de Pernas Deitado': 'Elevação de Pernas Deitado',
   'Prancha Frontal Estática': 'Prancha Frontal Estática',
   'Tesoura (Scissor Kicks)': 'Tesoura (Scissor Kicks)',
+  'Russian Twist com Halter': 'Russian Twist com Halter',
 };
 
 // Os GIFs mantêm o nome ao serem trocados; o ?v= faz o navegador buscar de novo.
