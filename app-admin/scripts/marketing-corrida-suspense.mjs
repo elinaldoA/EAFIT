@@ -44,6 +44,17 @@ export const STORIES = [
   ['s10', 'Contagem regressiva.', '1º de dezembro, às 10h.'],
 ];
 
+// Stories NOVOS (25 a 30/11), sem repetir gancho nem frase das peças acima. Gerados com NOVAS=1 (só estes; escreve a migration
+// 20270306080000 e não mexe nas peças que já existem).
+export const NEW_STORIES = [
+  ['s11', 'Qual é o seu ritmo?', 'Responde: tranquilo ou acelerado?'],
+  ['s12', 'Rua ou esteira?', 'Conta aqui onde você corre.'],
+  ['s13', 'O tênis já está pronto?', 'Manda um 👟 se está.'],
+  ['s14', 'Madrugada, manhã ou noite?', 'Qual é a sua hora de correr?'],
+  ['s15', 'Quem te chama para correr?', 'Marque quem te leva para correr.'],
+  ['s16', 'Amanhã é o dia.', 'EAFIT Run abre às 10h.'],
+];
+
 // Feeds (vídeo de 12 s, saem como vídeo no feed): [chave, gancho, segunda frase, legenda]
 export const FEEDS = [
   ['f01', 'Bateu vontade de correr?', 'Agora ela tem nome.', 'Aquela vontade de calçar o tênis e sair já tem nome: EAFIT Run. 🏃\n\nMarque aquele amigo que não perde uma corrida. 👇'],
@@ -162,7 +173,45 @@ const VIDEO_TIMING = { total: DURATION, drop: 3.4, t2: 3.5, t3: 9.2 };
 const sqlText = (s) => `'${s.replace(/'/g, "''")}'`;
 const media = (file) => JSON.stringify([{ type: 'video', url: `${SITE}/img/marketing/${file}` }]);
 
+async function mainNovas() {
+  mkdirSync(OUT, { recursive: true });
+  LOGO = await loadImage(join(root, 'app-react', 'public', 'icon-512.png'));
+  const plan = await audioPlan(2);
+  const wavStory = join(tmpdir(), 'eafit-story-suspense.wav');
+  writeFileSync(wavStory, makeWav(STORY_DURATION, { style: 'run', bpm: 128, sweeps: [STORY_DROP] }));
+  const rows = [];
+  for (const [i, [k, hook, line2]] of NEW_STORIES.entries()) {
+    const f = `suspense-corrida-story-${k}.mp4`;
+    await renderVideo(f, STORY_DURATION, plan.story(STORIES.length + i) || wavStory, makeFrame(hook, line2, STORY_TIMING), null);
+    console.log('ok', f);
+    rows.push(`  (${sqlText(`suspense-corrida-${k}-story`)}, ${sqlText(media(f))})`);
+  }
+  // Ordem de saída (1 story por dia, 12:30 BRT): 25/11 s15, 26 s11, 27 s12, 28 s13, 29 s10 (contagem), 30 s16 (véspera),
+  // s14 de reserva; as peças antigas ainda não postadas (s03 a s09) ficam depois.
+  const order = ['s15', 's11', 's12', 's13', 's10', 's16', 's14', 's03', 's04', 's05', 's06', 's07', 's08', 's09'];
+  const pos = order.map((k, i) => `  (${sqlText(`suspense-corrida-${k}-story`)}, ${-99 + i})`);
+  const sql = `-- Marketing do Run: 6 stories de suspense NOVOS (s11 a s16), sem repetir os já postados, e nova ordem de saída
+-- (1 por dia, 12:30 BRT) até o lançamento em 1º/12. Gerado por app-admin/scripts/marketing-corrida-suspense.mjs (NOVAS=1).
+insert into public.marketing_autopost_queue (position, key, format, caption, media, hide_when_module)
+select 0, v.key, 'story', '', v.media::jsonb, 'corrida'
+from (values
+${rows.join(',\n')}
+) as v(key, media)
+where not exists (select 1 from public.marketing_autopost_queue q where q.key = v.key);
+
+update public.marketing_autopost_queue q
+set position = v.pos
+from (values
+${pos.join(',\n')}
+) as v(key, pos)
+where q.key = v.key and q.posted_at is null;
+`;
+  writeFileSync(join(root, 'supabase', 'migrations', '20270306080000_marketing_run_stories_novos.sql'), sql);
+  console.log(`${NEW_STORIES.length} stories novos na migration`);
+}
+
 async function main() {
+  if (process.env.NOVAS === '1') return mainNovas();
   mkdirSync(OUT, { recursive: true });
   LOGO = await loadImage(join(root, 'app-react', 'public', 'icon-512.png'));
   const only = process.env.ONLY || '';
