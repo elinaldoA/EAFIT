@@ -65,7 +65,6 @@ Deno.test('signServiceAccountJwt gera um JWT RS256 verificável com os claims ce
 
 Deno.test('sendFcm troca o JWT por token, envia e reaproveita o token na segunda chamada', async () => {
   const { sa } = await makeServiceAccount();
-  Deno.env.set('FCM_SERVICE_ACCOUNT', JSON.stringify(sa));
   resetFcmTokenCache();
   const calls: string[] = [];
   const fakeFetch = ((url: string, init: RequestInit) => {
@@ -77,21 +76,18 @@ Deno.test('sendFcm troca o JWT por token, envia e reaproveita o token na segunda
     return Promise.resolve(new Response(JSON.stringify({ name: 'm' })));
   }) as unknown as typeof fetch;
 
-  assertEquals(await sendFcm('fcm:tok', { title: 'T', body: 'B' }, fakeFetch), 'sent');
-  assertEquals(await sendFcm('fcm:tok', { title: 'T', body: 'B' }, fakeFetch), 'sent');
+  assertEquals(await sendFcm('fcm:tok', { title: 'T', body: 'B' }, fakeFetch, sa), 'sent');
+  assertEquals(await sendFcm('fcm:tok', { title: 'T', body: 'B' }, fakeFetch, sa), 'sent');
   assertEquals(calls.filter((u) => u.includes('oauth2')).length, 1);
   assertEquals(calls.filter((u) => u.includes('/projects/proj/messages:send')).length, 2);
-  Deno.env.delete('FCM_SERVICE_ACCOUNT');
 });
 
 Deno.test('sendFcm devolve stale para token desregistrado e error sem o secret', async () => {
   const { sa } = await makeServiceAccount();
-  Deno.env.set('FCM_SERVICE_ACCOUNT', JSON.stringify(sa));
   resetFcmTokenCache();
   const fakeFetch = ((url: string) => String(url).includes('oauth2')
     ? Promise.resolve(new Response(JSON.stringify({ access_token: 'at', expires_in: 3600 })))
     : Promise.resolve(new Response(JSON.stringify({ error: { status: 'NOT_FOUND' } }), { status: 404 }))) as unknown as typeof fetch;
-  assertEquals(await sendFcm('fcm:gone', { title: 'T', body: 'B' }, fakeFetch), 'stale');
-  Deno.env.delete('FCM_SERVICE_ACCOUNT');
-  assertEquals(await sendFcm('fcm:tok', { title: 'T', body: 'B' }, fakeFetch), 'error');
+  assertEquals(await sendFcm('fcm:gone', { title: 'T', body: 'B' }, fakeFetch, sa), 'stale');
+  assertEquals(await sendFcm('fcm:tok', { title: 'T', body: 'B' }, fakeFetch, null), 'error');
 });

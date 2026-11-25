@@ -126,8 +126,8 @@ export async function sendFcm(
   endpoint: string,
   payload: FcmPayload,
   fetchFn: typeof fetch = fetch,
+  sa: ServiceAccount | null = loadServiceAccount(),
 ): Promise<'sent' | 'stale' | 'error'> {
-  const sa = loadServiceAccount();
   if (!sa) {
     console.error('sendFcm: secret FCM_SERVICE_ACCOUNT ausente ou inválido');
     return 'error';
