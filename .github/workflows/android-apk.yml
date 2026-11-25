@@ -58,6 +58,21 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
+      # O Health Connect do app e SOMENTE LEITURA (passos, frequencia cardiaca e peso).
+      # O plugin declara dezenas de permissoes, inclusive de escrita; o AndroidManifest
+      # remove as demais. Se alguma voltar a aparecer no manifesto final, o build falha.
+      - name: Confere as permissoes do Health Connect no APK
+        run: |
+          AAPT=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          "$AAPT" dump permissions app-react/android/app/build/outputs/apk/debug/app-debug.apk | tee perms.txt
+          grep "android.permission.health" perms.txt | sort > health.txt || true
+          cat health.txt
+          printf '%s\n' \
+            "uses-permission: name='android.permission.health.READ_HEART_RATE'" \
+            "uses-permission: name='android.permission.health.READ_STEPS'" \
+            "uses-permission: name='android.permission.health.READ_WEIGHT'" | sort > esperado.txt
+          diff esperado.txt health.txt
+
       # archive: false envia o .apk sem zip (o nome do artefato vira o nome do arquivo)
       - uses: actions/upload-artifact@v7
         with:

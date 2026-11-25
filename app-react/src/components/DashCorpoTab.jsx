@@ -7,6 +7,7 @@ import ProgressPhotos from './ProgressPhotos';
 import BodyMeasurements from './BodyMeasurements';
 import CheckinInsights from './CheckinInsights';
 import Skeleton from './Skeleton';
+import HealthConnectCard from './HealthConnectCard';
 import { t, decimal } from '../lib/i18n';
 
 // Aba "Corpo" da Evolução: peso, fotos de progresso, medidas e check-in diário.
@@ -37,6 +38,7 @@ export default function DashCorpoTab({ userId, workouts, weightLogs, loadingPR, 
           )}
         </div>
       </div>
+      <HealthConnectCard />
       {isFlagOn(config.flags, 'fotos_progresso') && (
         <div className="dash-card">
           <div className="dash-card__title">{t('Fotos de progresso')}</div>

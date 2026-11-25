@@ -7,4 +7,5 @@
     <string name="capacitor_background_geolocation_notification_channel_name">Corrida em andamento</string>
     <string name="capacitor_background_geolocation_notification_icon">drawable/ic_tracking</string>
     <string name="capacitor_background_geolocation_notification_color">#FA842B</string>
+    <string name="health_connect_privacy_policy_url">https://eafit.com.br/legal/privacidade.html</string>
 </resources>
