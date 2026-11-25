@@ -3,7 +3,7 @@ import { requestNotificationPermission } from '../lib/notifications';
 import { subscribeToPush, unsubscribeFromPush } from '../lib/pushSubscriptions';
 import { isNative } from '../lib/native';
 import { scheduleNativeWaterReminders, cancelNativeWaterReminders } from '../lib/nativeReminders';
-import { registerNativePush, unregisterNativePush } from '../lib/nativePush';
+import { registerNativePush, unregisterNativePush, getLastPushFailure } from '../lib/nativePush';
 
 import { t } from '../lib/i18n';
 export function useReminders(toast, user) {
@@ -39,7 +39,8 @@ export function useReminders(toast, user) {
       }
       try {
         await scheduleNativeWaterReminders();
-        toast(t('🔔 Lembretes de água ativados (funcionam mesmo com o app fechado)'));
+        // Mostra o motivo do FCM não ter registrado (ver lib/nativePush.js).
+        toast(`${t('🔔 Lembretes de água ativados (funcionam mesmo com o app fechado)')} [push: ${getLastPushFailure() || '?'}]`);
       } catch (err) {
         console.error('scheduleNativeWaterReminders:', err);
         toast(t('⚠️ Não foi possível agendar os lembretes'));

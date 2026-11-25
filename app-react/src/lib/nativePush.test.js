@@ -15,8 +15,10 @@ vi.mock('@capacitor/local-notifications', () => ({ LocalNotifications: h.local }
 vi.mock('./supabase', () => ({ db: h.db }));
 vi.mock('./appNav', () => ({ goTo: h.goTo }));
 vi.mock('./native', () => ({ isNative: () => true }));
+const reportError = vi.hoisted(() => vi.fn());
+vi.mock('./errorReporter', () => ({ reportError }));
 
-import { initNativePush, registerNativePush, unregisterNativePush, getStoredFcmToken, reportNativePushEvent } from './nativePush';
+import { initNativePush, registerNativePush, unregisterNativePush, getStoredFcmToken, getLastPushFailure, reportNativePushEvent } from './nativePush';
 
 const TOKEN = 'a'.repeat(40);
 
@@ -42,6 +44,7 @@ describe('registerNativePush', () => {
     expect(await registerNativePush()).toBe(TOKEN);
     expect(h.db.rpc).toHaveBeenCalledWith('push_register_fcm', { p_token: TOKEN });
     expect(getStoredFcmToken()).toBe(TOKEN);
+    expect(getLastPushFailure()).toBe('');
     expect(h.push.createChannel).toHaveBeenCalledWith(expect.objectContaining({ id: 'eafit_default' }));
   });
 
@@ -59,6 +62,23 @@ describe('registerNativePush', () => {
     expect(getStoredFcmToken()).toBe('');
     h.push.register.mockRejectedValue(new Error('sem google-services'));
     expect(await registerNativePush()).toBeNull();
+  });
+
+  it('guarda e reporta o motivo de cada falha', async () => {
+    h.push.checkPermissions.mockResolvedValue({ receive: 'denied' });
+    await registerNativePush();
+    expect(getLastPushFailure()).toBe('permissão: denied');
+    h.push.checkPermissions.mockResolvedValue({ receive: 'granted' });
+    h.db.rpc.mockResolvedValue({ error: new Error('rls') });
+    await registerNativePush();
+    expect(getLastPushFailure()).toBe('salvar: rls');
+    h.push.register.mockRejectedValue(new Error('Default FirebaseApp is not initialized'));
+    await registerNativePush();
+    expect(getLastPushFailure()).toContain('registro: Default FirebaseApp');
+    expect(reportError).toHaveBeenCalledWith('push', expect.objectContaining({ message: expect.stringContaining('FCM registro') }));
+    h.push.register.mockImplementation(async () => { setTimeout(() => h.listeners.registrationError?.({ error: 'SERVICE_NOT_AVAILABLE' }), 0); });
+    await registerNativePush();
+    expect(getLastPushFailure()).toBe('token: SERVICE_NOT_AVAILABLE');
   });
 
   it('registrationError do FCM devolve null', async () => {

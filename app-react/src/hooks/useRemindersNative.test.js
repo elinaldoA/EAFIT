@@ -7,7 +7,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('../lib/native', () => ({ isNative: () => true }));
 vi.mock('../lib/notifications', () => ({ requestNotificationPermission: h.perm }));
-vi.mock('../lib/nativePush', () => ({ registerNativePush: h.register, unregisterNativePush: h.unregister }));
+vi.mock('../lib/nativePush', () => ({ registerNativePush: h.register, unregisterNativePush: h.unregister, getLastPushFailure: () => 'token: teste' }));
 vi.mock('../lib/nativeReminders', () => ({ scheduleNativeWaterReminders: h.schedule, cancelNativeWaterReminders: h.cancel }));
 vi.mock('../lib/pushSubscriptions', () => ({ subscribeToPush: h.webSub, unsubscribeFromPush: h.webUnsub }));
 
@@ -39,10 +39,13 @@ describe('useReminders no app Android', () => {
 
   it('ligar sem FCM: cai nos lembretes de água agendados no aparelho', async () => {
     h.register.mockResolvedValue(null);
-    const { result } = renderHook(() => useReminders(vi.fn(), user));
+    const toast = vi.fn();
+    const { result } = renderHook(() => useReminders(toast, user));
     await act(async () => { await result.current[1](); });
     expect(h.schedule).toHaveBeenCalledTimes(1);
     expect(result.current[0]).toBe(true);
+    // a mensagem diz por que o FCM não registrou
+    expect(toast.mock.calls.at(-1)[0]).toContain('[push: token: teste]');
   });
 
   it('permissão negada: não liga nem registra nada', async () => {

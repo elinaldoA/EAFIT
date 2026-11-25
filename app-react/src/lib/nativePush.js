@@ -5,6 +5,7 @@ import { goTo } from './appNav';
 import { NAV_TARGETS, pushTargetKey } from './pushTarget';
 import { PUSH_EVENT_URL } from './pushEvents';
 import { isNative } from './native';
+import { reportError } from './errorReporter';
 
 // Push do servidor no app Android (FCM). O token do aparelho é guardado em
 // push_subscriptions com endpoint 'fcm:<token>' (RPC push_register_fcm), e as
@@ -18,6 +19,22 @@ const REGISTRATION_TIMEOUT_MS = 15000;
 
 let listening = false;
 let waiters = [];
+let lastFailure = '';
+let lastRegistrationError = '';
+
+// Por que o último registro no FCM não deu (para a mensagem na tela e para o
+// painel de erros): sem isso, uma falha aqui é silenciosa e o app só cai nos
+// lembretes locais.
+export function getLastPushFailure() {
+  return lastFailure;
+}
+
+function fail(step, detail) {
+  const text = typeof detail === 'string' ? detail : (detail?.message || JSON.stringify(detail) || '');
+  lastFailure = `${step}${text ? `: ${text}` : ''}`.slice(0, 160);
+  reportError('push', new Error(`FCM ${lastFailure}`));
+  return null;
+}
 
 export function getStoredFcmToken() {
   try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
@@ -64,6 +81,7 @@ export function initNativePush() {
   }).catch(() => {});
   PushNotifications.addListener('registrationError', err => {
     console.error('push registrationError:', err);
+    lastRegistrationError = err?.error || err?.message || '';
     const pending = waiters;
     waiters = [];
     pending.forEach(resolve => resolve(null));
@@ -116,24 +134,26 @@ export async function registerNativePush() {
   try {
     let { receive } = await PushNotifications.checkPermissions();
     if (receive === 'prompt' || receive === 'prompt-with-rationale') ({ receive } = await PushNotifications.requestPermissions());
-    if (receive !== 'granted') return null;
+    if (receive !== 'granted') return fail('permissão', receive);
 
     await PushNotifications.createChannel({
       id: CHANNEL_ID, name: 'Avisos', description: 'Lembretes, avisos e novidades do EAFIT', importance: 4, visibility: 1, vibration: true,
     }).catch(() => {});
 
+    lastRegistrationError = '';
     const tokenPromise = waitForToken();
     await PushNotifications.register();
     const token = await tokenPromise;
-    if (!token) return null;
+    if (!token) return fail('token', lastRegistrationError || 'o Firebase não respondeu');
 
     const { error } = await db.rpc('push_register_fcm', { p_token: token });
-    if (error) throw error;
+    if (error) return fail('salvar', error);
+    lastFailure = '';
     storeToken(token);
     return token;
   } catch (err) {
     console.error('registerNativePush:', err);
-    return null;
+    return fail('registro', err);
   }
 }
 
