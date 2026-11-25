@@ -5,6 +5,7 @@ import { sendNotification, isNotifyEnabled } from '../lib/notifications';
 import { isPushSupported } from '../lib/pushSubscriptions';
 import { isNative } from '../lib/native';
 import { scheduleNativeWaterReminders, cancelNativeWaterReminders } from '../lib/nativeReminders';
+import { registerNativePush } from '../lib/nativePush';
 
 import { t } from '../lib/i18n';
 // Mantenha em sincronia com WATER_REMINDER_TIMES em
@@ -24,14 +25,8 @@ export default function ReminderScheduler() {
   const waterNotifiedRef = useRef(new Set());
 
   useEffect(() => {
-    // App Android: a água é agendada no aparelho (lib/nativeReminders.js), com o
-    // app fechado e sem checagem periódica. Reagenda a cada abertura e quando a
-    // preferência de água muda.
-    if (isNative()) {
-      const on = localStorage.getItem('reminders_enabled') === 'true' && isNotifyEnabled(user?.user_metadata, 'notifyWater');
-      (on ? scheduleNativeWaterReminders() : cancelNativeWaterReminders()).catch(err => console.error('lembretes de água:', err));
-      return undefined;
-    }
+    // App Android: o push vem do FCM (efeito abaixo).
+    if (isNative()) return undefined;
 
     let cancelled = false;
     let pushActive = false;
@@ -73,6 +68,21 @@ export default function ReminderScheduler() {
     const id = setInterval(checkReminders, 30000);
     return () => { cancelled = true; clearInterval(id); };
   }, [user]);
+
+  // App Android: a cada abertura (e quando a preferência de água muda) renova o
+  // token do FCM na conta, que o servidor usa para todos os avisos, água
+  // inclusive. Sem FCM, a água cai nos lembretes agendados no aparelho.
+  const userId = user?.id;
+  const waterOn = isNotifyEnabled(user?.user_metadata, 'notifyWater');
+  useEffect(() => {
+    if (!isNative() || !userId) return;
+    (async () => {
+      if (localStorage.getItem('reminders_enabled') !== 'true') { await cancelNativeWaterReminders(); return; }
+      const token = await registerNativePush();
+      if (token || !waterOn) await cancelNativeWaterReminders();
+      else await scheduleNativeWaterReminders();
+    })().catch(err => console.error('lembretes no app:', err));
+  }, [userId, waterOn]);
 
   return null;
 }

@@ -8,6 +8,7 @@ import { clearChunkReloadFlag, reloadOnceForChunkError } from './lib/chunkReload
 import { installErrorReporter } from './lib/errorReporter'
 import { enableTracking, capturePushOpen } from './lib/tracking'
 import { captureInstallPrompt } from './lib/installPrompt'
+import { initNativePush } from './lib/nativePush'
 import { capturePushTarget } from './lib/appNav'
 import { captureRef } from './lib/ambassadorRef'
 import { captureSportPref } from './lib/sportPreference'
@@ -25,6 +26,7 @@ installErrorReporter()
 enableTracking()
 capturePushTarget()
 capturePushOpen()
+initNativePush()
 captureInstallPrompt()
 captureRef()
 captureSportPref()

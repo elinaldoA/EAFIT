@@ -43,6 +43,11 @@
 
         </activity>
 
+        <!-- Avisos do FCM: icone, cor e canal padrao (o servidor manda channel_id = eafit_default) -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_tracking" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_orange" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="eafit_default" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

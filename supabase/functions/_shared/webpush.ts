@@ -5,6 +5,7 @@
 // (um deles rodando via cron a cada minuto) por um refactor que não foi
 // pedido.
 import webpush from 'npm:web-push@3.6.7';
+import { isFcmEndpoint, sendFcm } from './fcm.ts';
 
 export function configureVapid() {
   const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!;
@@ -20,6 +21,8 @@ export async function sendWebPush(
   sub: PushSubscriptionRow,
   payload: { title: string; body: string; tag?: string; url?: string; campaign?: string }
 ): Promise<'sent' | 'stale' | 'error'> {
+  // Token do app Android (endpoint 'fcm:<token>'): vai por FCM, não por web push.
+  if (isFcmEndpoint(sub.endpoint)) return sendFcm(sub.endpoint, payload);
   try {
     // Sem `url` no payload, o service worker abre o endereço do próprio app
     // (APP_URL em app-react/src/sw.js) — vale pro app instalado no endereço

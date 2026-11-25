@@ -3,6 +3,7 @@ import { requestNotificationPermission } from '../lib/notifications';
 import { subscribeToPush, unsubscribeFromPush } from '../lib/pushSubscriptions';
 import { isNative } from '../lib/native';
 import { scheduleNativeWaterReminders, cancelNativeWaterReminders } from '../lib/nativeReminders';
+import { registerNativePush, unregisterNativePush } from '../lib/nativePush';
 
 import { t } from '../lib/i18n';
 export function useReminders(toast, user) {
@@ -13,7 +14,7 @@ export function useReminders(toast, user) {
       localStorage.setItem('reminders_enabled', 'false');
       setEnabled(false);
       toast(t('🔕 Lembretes desativados'));
-      if (isNative()) cancelNativeWaterReminders();
+      if (isNative()) { cancelNativeWaterReminders(); unregisterNativePush(); }
       else unsubscribeFromPush().catch(err => console.error('unsubscribeFromPush:', err));
       return;
     }
@@ -27,8 +28,15 @@ export function useReminders(toast, user) {
     localStorage.setItem('reminders_enabled', 'true');
     setEnabled(true);
 
-    // App Android: lembretes de água agendados no aparelho (sem push do servidor).
+    // App Android: push do servidor por FCM (os mesmos avisos do PWA). Se o FCM
+    // não registrar (sem Google Play Services, sem rede), cai nos lembretes de
+    // água agendados no próprio aparelho.
     if (isNative()) {
+      if (await registerNativePush()) {
+        await cancelNativeWaterReminders();
+        toast(t('🔔 Lembretes ativados (funcionam mesmo com o app fechado)'));
+        return;
+      }
       try {
         await scheduleNativeWaterReminders();
         toast(t('🔔 Lembretes de água ativados (funcionam mesmo com o app fechado)'));

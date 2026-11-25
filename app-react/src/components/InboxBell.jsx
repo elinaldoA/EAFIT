@@ -10,7 +10,6 @@ import {
   INBOX_PAGE, fetchInbox, markInboxRead, markInboxItemRead, timeAgo, inboxTarget,
 } from '../lib/inbox';
 import { goTo } from '../lib/appNav';
-import { isNative } from '../lib/native';
 
 import { t } from '../lib/i18n';
 function InboxModal({ items, hasMore, onMore, onClose, onReadOne, onReadAll, onGo, remindersEnabled, onToggleReminders }) {
@@ -32,7 +31,7 @@ function InboxModal({ items, hasMore, onMore, onClose, onReadOne, onReadAll, onG
           <input type="checkbox" checked={remindersEnabled} onChange={onToggleReminders} disabled={!isReminderSupported()} />
           <span>
             {t('Lembretes neste aparelho')}
-            <small>{isReminderSupported() ? (isNative() ? t('Água, mesmo com o app fechado. Os outros avisos ainda não chegam no app Android.') : t('Treino, água e incentivos, mesmo com o app fechado.')) : t('Notificações não são suportadas neste navegador.')}</small>
+            <small>{isReminderSupported() ? t('Treino, água e incentivos, mesmo com o app fechado.') : t('Notificações não são suportadas neste navegador.')}</small>
           </span>
         </label>
         {items.some(i => i.unread) && (

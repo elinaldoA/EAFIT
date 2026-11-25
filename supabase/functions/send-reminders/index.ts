@@ -13,6 +13,7 @@
 // exato em que os dois baterem o mesmo horário.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
+import { isFcmEndpoint, sendFcm } from '../_shared/fcm.ts';
 import { isAuthorizedCronRequest } from '../_shared/cronAuth.ts';
 import { langOf } from '../_shared/lang.ts';
 import { isRunner } from '../_shared/sport.ts';
@@ -349,6 +350,13 @@ Deno.serve(async (req) => {
 
     for (const payload of toSend) {
       for (const sub of userSubs) {
+        // App Android: token FCM guardado como 'fcm:<token>' (ver _shared/fcm.ts).
+        if (isFcmEndpoint(sub.endpoint)) {
+          const result = await sendFcm(sub.endpoint, { title: payload.title, body: payload.body, tag: payload.tag });
+          if (result === 'sent') sent++;
+          else if (result === 'stale') await supabase.rpc('push_drop_stale', { p_endpoints: [sub.endpoint] });
+          continue;
+        }
         try {
           await webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },

@@ -346,8 +346,6 @@ export default {
   'Beba um copo de água e registre no app.': 'Have a glass of water and log it in the app.',
   '🔔 Lembretes de água ativados (funcionam mesmo com o app fechado)': '🔔 Water reminders on (they work even with the app closed)',
   '⚠️ Não foi possível agendar os lembretes': '⚠️ Could not schedule the reminders',
-  'Água, mesmo com o app fechado. Os outros avisos ainda não chegam no app Android.': 'Water, even with the app closed. Other alerts do not reach the Android app yet.',
-  'No app Android, por enquanto só os lembretes de água funcionam. Os outros avisos chegam pelo app no navegador.': 'In the Android app, only water reminders work for now. Other alerts arrive through the app in the browser.',
   'Treino, água e incentivos, mesmo com o app fechado.': 'Workouts, water and nudges, even with the app closed.',
   'Notificações não são suportadas neste navegador.': 'Notifications are not supported in this browser.',
   'Nenhum aviso por enquanto.': 'No notices for now.',

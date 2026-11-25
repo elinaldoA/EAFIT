@@ -1,5 +1,4 @@
 import { isReminderSupported, isIosSafariNotInstalled, sendNotification, isNotifyEnabled } from '../lib/notifications';
-import { isNative } from '../lib/native';
 import { exportSummaryCSV, exportBackupJSON, printReport } from '../lib/exportData';
 import { useEffect, useState } from 'react';
 import { getCoachPrefs, saveCoachPrefs, coachSample, coachStop } from '../lib/coach';
@@ -75,17 +74,13 @@ export function NotificationsSection({ user, updateProfile, toast, remindersEnab
       </div>
       )}
 
-      {isNative() && (
-        <p className="dash-empty">{t('No app Android, por enquanto só os lembretes de água funcionam. Os outros avisos chegam pelo app no navegador.')}</p>
-      )}
-
       {prefs.map(({ key, label }) => (
         <div className="profile-field profile-field--row" key={key}>
           <label className="profile-field__label" htmlFor={key}>{label}</label>
           <input
             type="checkbox" id={key}
             checked={isNotifyEnabled(user.user_metadata, key)}
-            disabled={!remindersEnabled || (isNative() && key !== 'notifyWater')}
+            disabled={!remindersEnabled}
             onChange={e => updateProfile({ [key]: e.target.checked })
               .then(({ error }) => error && toast(`❌ ${friendlyError(error)}`))}
           />
