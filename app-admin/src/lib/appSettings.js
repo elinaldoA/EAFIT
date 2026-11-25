@@ -16,7 +16,6 @@ export const KNOWN_FLAGS = [
   { key: 'mobilidade', label: 'Mobilidade e alongamento', hint: 'Rotina guiada antes e depois do treino (no dia do treino) e alongamento no dia de descanso.' },
   { key: 'anilhas', label: 'Calculadora de anilhas', hint: 'Botão "Anilhas" nos exercícios com barra ou leg press: quais anilhas pôr em cada lado.' },
   { key: 'volume_musculo', label: 'Volume por músculo', hint: 'Card de séries da semana por grupo muscular em Dashboard → Treinos.' },
-  { key: 'recuperacao_muscular', label: 'Recuperação muscular', hint: 'Aba Recuperação em Evolução: quais músculos estão descansando, quase prontos ou recuperados, pelo dia e volume do último treino.' },
   { key: 'metas_carga', label: 'Metas de carga', hint: 'Metas com prazo e projeção em Dashboard → Recordes, e a meta no exercício durante o treino.' },
 ];
 

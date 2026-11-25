@@ -12,13 +12,11 @@ import Friends from '../components/Friends';
 import DashTreinosTab from '../components/DashTreinosTab';
 import DashRecordesTab from '../components/DashRecordesTab';
 import DashCorpoTab from '../components/DashCorpoTab';
-import DashRecoveryTab from '../components/DashRecoveryTab';
 import { addDays } from '../lib/pause';
 
 import { t } from '../lib/i18n';
 const TABS = [
   { key: 'treinos', label: t('Treinos') },
-  { key: 'recuperacao', label: t('Recuperação') },
   { key: 'recordes', label: t('Recordes') },
   { key: 'corpo', label: t('Corpo') },
   { key: 'amigos', label: t('Amigos') },
@@ -56,8 +54,7 @@ export default function DashPage({ active }) {
 
   // Aba Amigos desligada no painel admin: some do menu e, se era a aba
   // lembrada, a tela abre em Treinos.
-  const tabs = TABS.filter(x => (x.key !== 'amigos' || isFlagOn(config.flags, 'amigos'))
-    && (x.key !== 'recuperacao' || isFlagOn(config.flags, 'recuperacao_muscular')));
+  const tabs = isFlagOn(config.flags, 'amigos') ? TABS : TABS.filter(x => x.key !== 'amigos');
   const tab = tabs.some(x => x.key === savedTab) ? savedTab : 'treinos';
 
   function setTab(next) {
@@ -121,8 +118,6 @@ export default function DashPage({ active }) {
           selectedExercise={selectedExercise} onExerciseChange={setSelectedExercise}
         />
       )}
-
-      {tab === 'recuperacao' && <DashRecoveryTab active={active} />}
 
       {tab === 'amigos' && <Friends myWeek={myWeek} />}
 
