@@ -92,3 +92,5 @@ $function$;
 
 revoke all on function public.admin_list_users_page(text, text, integer, integer, text, text, text, text) from public, anon;
 grant execute on function public.admin_list_users_page(text, text, integer, integer, text, text, text, text) to authenticated;
+
+notify pgrst, 'reload schema';
