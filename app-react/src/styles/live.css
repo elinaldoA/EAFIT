@@ -86,7 +86,7 @@
 }
 /* área de toque maior que a barrinha visível */
 .live__step { position: relative; }
-.live__step::after { content: ""; position: absolute; inset: -20px 0; }
+.live__step::after { content: ''; position: absolute; inset: -10px 0; }
 .live__step--pos { opacity: 0.7; }
 .live__step--done { background: var(--success); }
 .live__step--current { background: var(--primary); transform: scaleY(1.5); }
@@ -544,25 +544,3 @@ body.live-open .toast.show { transform: translateX(-50%) translateY(0); }
 }
 .live__block .ex-block__more > summary::-webkit-details-marker { display: none; }
 .live__block .ex-block__more[open] > summary { color: var(--text); }
-
-/* ── Área de toque no modo ao vivo ──
-   Durante o treino a mão está suada e muitas vezes é uma só. Tudo que se toca tem pelo
-   menos 44px de área de toque, sem mudar o visual. Controles isolados ganham uma área
-   invisível (::after); os que ficam empilhados (e se sobreporiam) ganham altura de verdade. */
-.live__top-right .link-btn,
-.live .demo-btn--chip,
-.live .ex-block__mark-all { position: relative; }
-.live__top-right .link-btn::after,
-.live .demo-btn--chip::after,
-.live .ex-block__mark-all::after {
-  content: '';
-  position: absolute;
-  inset: 50% auto auto 50%;
-  width: max(100%, var(--tap-min));
-  height: max(100%, var(--tap-min));
-  transform: translate(-50%, -50%);
-}
-.live__block .ex-block__more > summary { display: flex; align-items: center; min-height: var(--tap-min); }
-.live__block .ex-note__btn,
-.live__block .discomfort-panel__toggle,
-.live__block .ex-swap__toggle { display: inline-flex; align-items: center; min-height: var(--tap-min); }
