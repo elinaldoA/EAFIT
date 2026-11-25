@@ -16,12 +16,13 @@ export const READY_SEGMENTS = [
 ];
 
 // Só guarda o que de fato filtra: filtro vazio não entra no segmento.
-export function cleanFilters({ search, status, nivel, meta } = {}) {
+export function cleanFilters({ search, status, nivel, meta, country } = {}) {
   const out = {};
   if (search?.trim()) out.search = search.trim();
   if (status) out.status = status;
   if (nivel) out.nivel = nivel;
   if (meta) out.meta = meta;
+  if (country) out.country = country;
   return out;
 }
 
@@ -36,6 +37,7 @@ export function describeFilters(filters) {
   if (f.status) parts.push(STATUS_LABELS[f.status] || f.status);
   if (f.nivel) parts.push(`nível ${f.nivel}`);
   if (f.meta) parts.push(`objetivo ${f.meta}`);
+  if (f.country) parts.push(f.country === '__none' ? 'sem país' : `país ${f.country}`);
   if (f.search) parts.push(`busca "${f.search}"`);
   return parts.length ? parts.join(' · ') : 'todos os usuários';
 }

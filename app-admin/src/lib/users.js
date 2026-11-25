@@ -59,7 +59,7 @@ export async function fetchCountrySummary() {
   }
 }
 
-export async function fetchUsersPage({ search = '', status = '', sort = '', nivel = '', meta = '', page = 0, pageSize = PAGE_SIZE } = {}) {
+export async function fetchUsersPage({ search = '', status = '', sort = '', nivel = '', meta = '', country = '', page = 0, pageSize = PAGE_SIZE } = {}) {
   const { data, error } = await db.rpc('admin_list_users_page', {
     search: search || null,
     status_filter: status || null,
@@ -68,6 +68,7 @@ export async function fetchUsersPage({ search = '', status = '', sort = '', nive
     sort_by: sort || 'created_desc',
     nivel_filter: nivel || null,
     meta_filter: meta || null,
+    ...(country ? { country_filter: country } : {}),
   });
   if (error) throw error;
   const rows = data || [];

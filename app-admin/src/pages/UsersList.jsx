@@ -111,6 +111,7 @@ export default function UsersList() {
   const [sort, setSort] = useState('created_desc');
   const [nivel, setNivel] = useState('');
   const [meta, setMeta] = useState('');
+  const [country, setCountry] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   const [exportMsg, setExportMsg] = useState('');
@@ -132,7 +133,7 @@ export default function UsersList() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  useEffect(() => { setPage(0); }, [status, sort, nivel, meta]);
+  useEffect(() => { setPage(0); }, [status, sort, nivel, meta, country]);
 
   useEffect(() => { fetchSegments().then(setSegments).catch(softFail('Usuários: segmentos')); }, []);
   useEffect(() => { fetchCountrySummary().then(setCountrySummary); }, []);
@@ -143,6 +144,7 @@ export default function UsersList() {
     setStatus(f.status || '');
     setNivel(f.nivel || '');
     setMeta(f.meta || '');
+    setCountry(f.country || '');
     setPage(0);
   }
 
@@ -156,7 +158,7 @@ export default function UsersList() {
   }, [segmentParam, segments, setSearchParams]);
 
   async function handleSaveSegment() {
-    const filters = { search, status, nivel, meta };
+    const filters = { search, status, nivel, meta, country };
     const name = await prompt({ title: 'Salvar segmento', label: 'Nome do segmento (ex.: Iniciantes inativos)' });
     if (!name?.trim()) return;
     setSegmentMsg('');
@@ -172,12 +174,12 @@ export default function UsersList() {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    fetchPage({ search, status, sort, nivel, meta, page, pageSize })
+    fetchPage({ search, status, sort, nivel, meta, country, page, pageSize })
       .then(({ rows, total }) => { if (active) { rows.forEach(r => seenRows.current.set(r.id, r)); setUsers(rows); setTotal(total); } })
       .catch(err => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [search, status, sort, nivel, meta, page, pageSize]);
+  }, [search, status, sort, nivel, meta, country, page, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -206,7 +208,7 @@ export default function UsersList() {
     // Exporta a base filtrada inteira (não só a página atual), com o mesmo
     // filtro em vigor — pra isso vale a pena um limite bem alto em vez de
     // paginar N vezes.
-    const { rows, total: all } = await fetchPage({ search, status, sort, nivel, meta, page: 0, pageSize: 10000 });
+    const { rows, total: all } = await fetchPage({ search, status, sort, nivel, meta, country, page: 0, pageSize: 10000 });
     downloadCsv('usuarios.csv', toCsv(rows, CSV_COLUMNS));
     // O servidor pode cortar a resposta: avisa em vez de entregar um CSV incompleto sem dizer.
     setExportMsg(exportCutNotice(rows.length, all));
@@ -236,7 +238,7 @@ export default function UsersList() {
   const handleBulkBan = (action, verb, confirmText) => handleBulk(verb, confirmText, async () => {
     const res = await bulkAction(action, bannable);
     setSelected(new Set());
-    setUsers(await fetchPage({ search, status, sort, nivel, meta, page, pageSize }).then(r => r.rows));
+    setUsers(await fetchPage({ search, status, sort, nivel, meta, country, page, pageSize }).then(r => r.rows));
     return summarize(res, verb);
   });
 
@@ -270,7 +272,7 @@ export default function UsersList() {
         <div className="actions-row">
           <button
             className="btn btn--small" onClick={handleSaveSegment}
-            disabled={!hasFilters({ search, status, nivel, meta })}
+            disabled={!hasFilters({ search, status, nivel, meta, country })}
             title="Guarda os filtros atuais como um segmento reutilizável"
           >
             Salvar segmento
@@ -299,6 +301,14 @@ export default function UsersList() {
             <option value="">Todos os objetivos</option>
             {METAS.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
+          <select className="input" value={country} onChange={e => setCountry(e.target.value)} aria-label="País">
+            <option value="">Todos os países</option>
+            {countrySummary.map(c => (
+              <option key={c.country || '__none'} value={c.country || '__none'}>
+                {c.country ? `${flag(c.country)} ${countryName(c.country)}` : 'Sem localização'} ({c.users})
+              </option>
+            ))}
+          </select>
           <select className="input" value={sort} onChange={e => setSort(e.target.value)} aria-label="Ordenar por">
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
@@ -311,7 +321,7 @@ export default function UsersList() {
               {segments.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
             </select>
           )}
-          {hasFilters({ search, status, nivel, meta }) && (
+          {hasFilters({ search, status, nivel, meta, country }) && (
             <button type="button" className="btn btn--ghost btn--small" onClick={() => applyFilters()}>Limpar filtros</button>
           )}
         </div>
