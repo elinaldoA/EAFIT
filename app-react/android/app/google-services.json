@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1058700136137",
+    "project_id": "eafit-4ee08",
+    "storage_bucket": "eafit-4ee08.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058700136137:android:78b22cd4e8b4532a8c0718",
+        "android_client_info": {
+          "package_name": "br.com.eafit.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBF6bRtCzC2nL4vE8DBkS8ll1Uf1flXzmo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
