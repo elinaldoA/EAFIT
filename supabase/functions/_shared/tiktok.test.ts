@@ -22,9 +22,10 @@ const ok = (data: unknown) => new Response(JSON.stringify({ data, error: { code:
 const API = 'https://open.tiktokapis.com/v2';
 const VIDEO = { type: 'video' as const, url: 'https://cdn/v.mp4' };
 
-Deno.test('checkPost: TikTok só aceita um vídeo e não tem story', () => {
+Deno.test('checkPost: TikTok só aceita um vídeo; story em vídeo passa (sai como vídeo comum)', () => {
   assertEquals(checkPost('tiktok', { id: 'p', caption: 'x', media: [{ type: 'image', url: 'https://a' }] }), 'TikTok pelo painel aceita só um vídeo por post.');
-  assertEquals(checkPost('tiktok', { id: 'p', caption: '', media: [VIDEO], format: 'story' }), 'TikTok não tem stories pelo painel.');
+  assertEquals(checkPost('tiktok', { id: 'p', caption: '', media: [VIDEO], format: 'story' }), null);
+  assertEquals(checkPost('tiktok', { id: 'p', caption: '', media: [{ type: 'image', url: 'https://a' }], format: 'story' }), 'TikTok pelo painel aceita só um vídeo por post.');
   assertEquals(checkPost('tiktok', { id: 'p', caption: 'x', media: [VIDEO] }), null);
 });
 
