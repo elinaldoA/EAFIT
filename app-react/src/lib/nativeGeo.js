@@ -1,4 +1,5 @@
 import { registerPlugin } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 const BackgroundGeolocation = registerPlugin('BackgroundGeolocation');
 
@@ -7,10 +8,20 @@ const BackgroundGeolocation = registerPlugin('BackgroundGeolocation');
 // { coords: { latitude, longitude, accuracy, altitude, altitudeAccuracy }, timestamp }
 // e onError recebe { code } (1 = permissão negada, 2 = indisponível).
 // Devolve uma função que para o rastreio.
+// Android 13+: a notificação fixa do serviço de GPS exige a permissão
+// POST_NOTIFICATIONS em tempo de execução. Sem ela o rastreio continua, só não
+// aparece o aviso. Pede uma vez; se já foi respondida, não pergunta de novo.
+async function askNotificationPermission() {
+  try {
+    const { display } = await LocalNotifications.checkPermissions();
+    if (display === 'prompt' || display === 'prompt-with-rationale') await LocalNotifications.requestPermissions();
+  } catch { /* sem o plugin ou recusado: o GPS segue sem a notificação */ }
+}
+
 export function watchNativePosition(onPosition, onError, { title, message } = {}) {
   let watcherId = null;
   let stopped = false;
-  BackgroundGeolocation.addWatcher(
+  askNotificationPermission().then(() => (stopped ? null : BackgroundGeolocation.addWatcher(
     {
       backgroundTitle: title || 'Corrida em andamento',
       backgroundMessage: message || 'O EAFIT está registrando o seu percurso.',
@@ -36,7 +47,8 @@ export function watchNativePosition(onPosition, onError, { title, message } = {}
         timestamp: location.time,
       });
     },
-  ).then(id => {
+  ))).then(id => {
+    if (id == null) return;
     if (stopped) BackgroundGeolocation.removeWatcher({ id }).catch(() => {});
     else watcherId = id;
   }).catch(() => { if (!stopped) onError({ code: 2 }); });

@@ -4,4 +4,7 @@
     <string name="title_activity_main">EAFIT</string>
     <string name="package_name">br.com.eafit.app</string>
     <string name="custom_url_scheme">br.com.eafit.app</string>
+    <string name="capacitor_background_geolocation_notification_channel_name">Corrida em andamento</string>
+    <string name="capacitor_background_geolocation_notification_icon">drawable/ic_tracking</string>
+    <string name="capacitor_background_geolocation_notification_color">#FA842B</string>
 </resources>
