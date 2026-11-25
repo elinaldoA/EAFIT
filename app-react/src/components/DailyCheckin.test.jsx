@@ -22,11 +22,6 @@ const TITLE = 'Como você está hoje?';
 const option = (label, n) => screen.getByRole('radio', { name: new RegExp(`^${label} ${n} de 5`) });
 const pick = (label, n) => fireEvent.click(option(label, n));
 const modal = () => screen.queryByRole('dialog');
-// O modal não abre sozinho: a pessoa toca em "Fazer check-in" na linha do Treino.
-const openCheckin = async () => {
-  fireEvent.click(await screen.findByRole('button', { name: 'Fazer check-in' }));
-  return screen.findByRole('dialog', { name: TITLE });
-};
 
 beforeEach(() => {
   localStorage.clear();
@@ -53,19 +48,19 @@ describe('DailyCheckin (modal)', () => {
     expect(h.api.fetchCheckins).not.toHaveBeenCalled();
   });
 
-  it('sem check-in de hoje não abre o modal sozinho: só a linha, e o botão abre as três escalas', async () => {
+  it('sem check-in de hoje abre o modal sozinho, com as três escalas e Registrar desabilitado', async () => {
     render(<DailyCheckin />);
-    expect(await screen.findByRole('button', { name: 'Fazer check-in' })).toBeTruthy();
-    expect(modal()).toBeNull();
-    expect(await openCheckin()).toBeTruthy();
+    expect(await screen.findByRole('dialog', { name: TITLE })).toBeTruthy();
     expect(screen.getAllByRole('radiogroup')).toHaveLength(3);
     expect(screen.getByRole('button', { name: 'Registrar' }).disabled).toBe(true);
     expect(h.api.fetchCheckins).toHaveBeenCalledWith('u1', '2026-10-07');
+    // O card com as escalas não existe mais na página: só a linha com o botão.
+    expect(screen.getByRole('button', { name: 'Fazer check-in' })).toBeTruthy();
   });
 
   it('cada escala diz o que valem as pontas, e o mesmo rosto não aparece com sentidos opostos', async () => {
     render(<DailyCheckin />);
-    await openCheckin();
+    await screen.findByRole('dialog');
     for (const text of ['Sem energia', 'Cheio de energia', 'Dormi mal', 'Dormi muito bem', 'Para baixo', 'Ótimo']) {
       expect(screen.getByText(text)).toBeTruthy();
     }
@@ -75,7 +70,7 @@ describe('DailyCheckin (modal)', () => {
 
   it('só habilita Registrar com energia, sono e humor escolhidos', async () => {
     render(<DailyCheckin />);
-    await openCheckin();
+    await screen.findByRole('dialog');
     pick('Energia', 4);
     pick('Sono', 3);
     expect(screen.getByRole('button', { name: 'Registrar' }).disabled).toBe(true);
@@ -87,7 +82,7 @@ describe('DailyCheckin (modal)', () => {
   it('registrar salva, avisa, fecha o modal e mostra a linha com a dica do dia', async () => {
     const onChange = vi.fn();
     render(<DailyCheckin onChange={onChange} />);
-    await openCheckin();
+    await screen.findByRole('dialog');
     pick('Energia', 5); pick('Sono', 4); pick('Humor', 5);
     fireEvent.click(screen.getByRole('button', { name: 'Registrar' }));
     await waitFor(() => expect(h.api.saveCheckin).toHaveBeenCalledWith('u1', '2026-10-07', { energy: 5, sleep: 4, mood: 5 }));
@@ -101,7 +96,7 @@ describe('DailyCheckin (modal)', () => {
   it('erro ao salvar avisa e mantém o modal aberto com as respostas', async () => {
     h.api.saveCheckin.mockRejectedValue(new Error('rede'));
     render(<DailyCheckin />);
-    await openCheckin();
+    await screen.findByRole('dialog');
     pick('Energia', 3); pick('Sono', 3); pick('Humor', 3);
     fireEvent.click(screen.getByRole('button', { name: 'Registrar' }));
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('❌ Não foi possível salvar o check-in'));
@@ -109,19 +104,21 @@ describe('DailyCheckin (modal)', () => {
     expect(option('Energia', 3).getAttribute('aria-checked')).toBe('true');
   });
 
-  it('Agora não fecha sem salvar e não marca nada; ao voltar ao Treino o modal continua fechado', async () => {
+  it('Agora não fecha e não reabre no mesmo dia; o botão da linha abre de novo', async () => {
     const first = render(<DailyCheckin />);
-    await openCheckin();
+    await screen.findByRole('dialog');
     fireEvent.click(screen.getByRole('button', { name: 'Agora não' }));
     expect(modal()).toBeNull();
     expect(h.api.saveCheckin).not.toHaveBeenCalled();
 
+    // Volta ao Treino no mesmo dia: não abre sozinho.
     first.unmount();
     render(<DailyCheckin />);
     await screen.findByRole('button', { name: 'Fazer check-in' });
     expect(modal()).toBeNull();
 
-    expect(await openCheckin()).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Fazer check-in' }));
+    expect(await screen.findByRole('dialog', { name: TITLE })).toBeTruthy();
   });
 
   it('com check-in de hoje já respondido não abre; Refazer abre o modal com as respostas', async () => {
@@ -146,17 +143,16 @@ describe('DailyCheckin (modal)', () => {
     expect(localStorage.getItem('eafit_checkin_skip:u1')).toBeNull();
   });
 
-  it('check-in de outro dia não conta como o de hoje: a linha pede o de hoje', async () => {
+  it('check-in de outro dia não conta como o de hoje', async () => {
     h.api.fetchCheckins.mockResolvedValue([{ checkin_date: '2026-10-06', energy: 5, sleep: 4, mood: 4 }]);
     render(<DailyCheckin />);
-    expect(await screen.findByRole('button', { name: 'Fazer check-in' })).toBeTruthy();
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(await screen.findByRole('dialog', { name: TITLE })).toBeTruthy();
   });
 
-  it('falha ao buscar ainda mostra a linha, e o botão abre o modal', async () => {
+  it('falha ao buscar ainda abre o modal', async () => {
     h.api.fetchCheckins.mockRejectedValue(new Error('rede'));
     render(<DailyCheckin />);
-    expect(await openCheckin()).toBeTruthy();
+    expect(await screen.findByRole('dialog', { name: TITLE })).toBeTruthy();
   });
 
   it('quem ainda não viu o tutorial de boas-vindas não leva o modal por cima; a linha continua lá', async () => {

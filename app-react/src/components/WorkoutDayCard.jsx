@@ -149,14 +149,11 @@ export default function DayCard({ day, isToday, bump, onRestStart, onRestAdjust,
         }}
       >
         <div className="day-card__left">
-          {/* O rótulo em volta dá os 44px de área de toque; sem ele a caixa de 17px era difícil de acertar. */}
-          <label className="day-card__check-wrap" onClick={e => e.stopPropagation()}>
-            <input
-              type="checkbox" className="day-card__check"
-              aria-label={t('Marcar treino de {dia} como concluído', { dia: t(day.dia) })}
-              checked={checked} onChange={handleCheckbox} onClick={e => e.stopPropagation()}
-            />
-          </label>
+          <input
+            type="checkbox" className="day-card__check"
+            aria-label={t('Marcar treino de {dia} como concluído', { dia: t(day.dia) })}
+            checked={checked} onChange={handleCheckbox} onClick={e => e.stopPropagation()}
+          />
           <div className="day-card__info">
             <div className="day-card__name">{t(day.dia)}</div>
             <div className="day-card__focus">{tFoco(day.foco)}{periodization ? ` · ${weekLabel(periodization)}${periodization.deload ? ' 🌿' : ''}` : ''}</div>

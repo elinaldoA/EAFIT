@@ -25,10 +25,10 @@ vi.mock('../lib/trainingCoach', async orig => ({ ...(await orig()), fetchRecentS
 vi.mock('../lib/muscleVolume', async orig => ({ ...(await orig()), fetchLibraryMap: () => Promise.resolve(new Map()) }));
 
 // Filhos pesados viram stubs: aqui só importa o que a página decide mostrar.
-vi.mock('../components/PauseBanner', () => ({ default: () => <div data-testid="aviso-pausa" /> }));
-vi.mock('../components/PersonalMessages', () => ({ default: () => <div data-testid="aviso-recados" /> }));
+vi.mock('../components/PauseBanner', () => ({ default: () => null }));
+vi.mock('../components/PersonalMessages', () => ({ default: () => null }));
 vi.mock('../components/MyAppointments', () => ({ default: () => null }));
-vi.mock('../components/DailyCheckin', () => ({ default: () => <div data-testid="aviso-checkin" /> }));
+vi.mock('../components/DailyCheckin', () => ({ default: () => null }));
 vi.mock('../components/RestTimer', () => ({ default: () => null }));
 vi.mock('../components/WorkoutDayCard', () => ({ default: ({ day }) => <div data-testid="day-card">{day.dia}</div> }));
 vi.mock('../components/PlanEditorModal', () => ({ default: () => <div role="dialog">editor de plano</div> }));
@@ -42,10 +42,6 @@ const SEGUNDA = { dia: 'Segunda', foco: 'Peito', exercicios: [{ nome: 'Supino', 
 const TERCA = { dia: 'Terça', foco: 'Costas', exercicios: [{ nome: 'Remada', series: '3', reps: '10', descanso: '60s', tecnica: '' }], pos: [] };
 
 afterEach(cleanup);
-
-// "Limpar a semana" fica no menu "⋯" da barra de ferramentas.
-const openMenu = () => fireEvent.click(screen.getByRole('button', { name: 'Mais opções' }));
-const clearWeek = () => { openMenu(); fireEvent.click(screen.getByRole('menuitem', { name: 'Limpar a semana' })); };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -124,28 +120,7 @@ describe('TreinoPage', () => {
     workout.syncStatus = 'loading';
     render(<TreinoPage />);
     expect(screen.queryByText('Treino de hoje')).toBeNull();
-    openMenu();
-    expect(screen.getByRole('menuitem', { name: 'Limpar a semana' }).disabled).toBe(true);
-  });
-
-  it('o treino de hoje vem antes dos avisos: só a pausa fica acima dele', () => {
-    render(<TreinoPage />);
-    const before = (a, b) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-    const hoje = document.querySelector('.today-card');
-    expect(before(screen.getByTestId('aviso-pausa'), hoje)).toBe(true);
-    expect(before(hoje, screen.getByTestId('aviso-checkin'))).toBe(true);
-    expect(before(hoje, screen.getByTestId('aviso-recados'))).toBe(true);
-  });
-
-  it('Limpar e Importar ficam no menu "⋯", não soltos na tela', () => {
-    render(<TreinoPage />);
-    expect(screen.queryByRole('button', { name: /Limpar|Importar/ })).toBeNull();
-    expect(screen.queryByRole('menu')).toBeNull();
-    openMenu();
-    expect(screen.getByRole('menuitem', { name: 'Limpar a semana' })).toBeTruthy();
-    expect(screen.getByRole('menuitem', { name: 'Importar treinos de outro app' })).toBeTruthy();
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('menu')).toBeNull();
+    expect(screen.getByText('Limpar').disabled).toBe(true);
   });
 
   it('plano vencido sem sucessor avisa e oferece escolher outro', () => {
@@ -171,7 +146,7 @@ describe('TreinoPage', () => {
     it('limpar não pede confirmação e o aviso diz quantos treinos concluídos saíram', () => {
       const confirm = vi.spyOn(window, 'confirm');
       render(<TreinoPage />);
-      clearWeek();
+      fireEvent.click(screen.getByText('Limpar'));
       expect(confirm).not.toHaveBeenCalled();
       expect(mockToast).toHaveBeenCalledWith('🧹 Semana apagada, inclusive os treinos concluídos (1 dia)', 6000, expect.objectContaining({ action: expect.objectContaining({ label: 'Desfazer' }) }));
     });
@@ -179,7 +154,7 @@ describe('TreinoPage', () => {
     it('sem treino concluído, o aviso fala só de checks e cargas', () => {
       localStorage.removeItem('treino_Segunda');
       render(<TreinoPage />);
-      clearWeek();
+      fireEvent.click(screen.getByText('Limpar'));
       expect(mockToast).toHaveBeenCalledWith('🧹 Checks e cargas limpos', 6000, expect.anything());
     });
 
@@ -187,7 +162,7 @@ describe('TreinoPage', () => {
       render(<TreinoPage />);
       vi.useFakeTimers({ shouldAdvanceTime: true });
       try {
-        clearWeek();
+        fireEvent.click(screen.getByText('Limpar'));
         expect(localStorage.getItem('treino_Segunda')).toBeNull();
         expect(localStorage.getItem('set_Segunda_Supino_1_done')).toBeNull();
         expect(localStorage.getItem('theme')).toBe('dark');
@@ -203,7 +178,7 @@ describe('TreinoPage', () => {
       render(<TreinoPage />);
       vi.useFakeTimers({ shouldAdvanceTime: true });
       try {
-        clearWeek();
+        fireEvent.click(screen.getByText('Limpar'));
         act(() => { mockToast.mock.calls.at(-1)[2].action.onClick(); });
         expect(localStorage.getItem('treino_Segunda')).toBe('true');
         expect(localStorage.getItem('set_Segunda_Supino_1_done')).toBe('true');
@@ -218,7 +193,7 @@ describe('TreinoPage', () => {
       render(<TreinoPage />);
       vi.useFakeTimers({ shouldAdvanceTime: true });
       try {
-        clearWeek();
+        fireEvent.click(screen.getByText('Limpar'));
         await act(async () => { await vi.advanceTimersByTimeAsync(6100); });
         expect(mockToast).toHaveBeenCalledWith(expect.stringContaining('falhou ao sincronizar'));
         expect(workout.syncNow).not.toHaveBeenCalled();

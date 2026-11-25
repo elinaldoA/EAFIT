@@ -6,8 +6,18 @@ import { useBackToClose } from '../hooks/useBackToClose';
 import { getModalRoot } from '../lib/modalRoot';
 import { todayDate } from '../data/treinoData';
 import { CHECKIN_FIELDS, fetchCheckins, saveCheckin, checkinTip } from '../lib/checkin';
+import { hasSeenTutorial } from '../lib/tutorial';
 
 import { t } from '../lib/i18n';
+
+// "Agora não" vale pelo dia: sem isso o modal reabriria a cada volta ao Treino.
+const SKIP_KEY = 'eafit_checkin_skip';
+function skippedToday(userId, today) {
+  try { return localStorage.getItem(`${SKIP_KEY}:${userId}`) === today; } catch { return false; }
+}
+function skipToday(userId, today) {
+  try { localStorage.setItem(`${SKIP_KEY}:${userId}`, today); } catch { /* sem storage: reabre na próxima visita */ }
+}
 
 // Modal com as três escalas (energia, sono e humor de 1 a 5). Monta só quando
 // aberto, então o "voltar" do aparelho fecha o modal e não sai do app.
@@ -54,10 +64,10 @@ function CheckinModal({ draft, setDraft, busy, onSave, onClose }) {
   );
 }
 
-// Check-in de 3 toques do Treino: energia, sono e humor de 1 a 5, num modal que a
-// pessoa abre quando quiser. Não abre sozinho: era a primeira coisa na frente do
-// "Começar treino" todo dia. Na página fica só uma linha: "Fazer check-in" enquanto
-// falta responder, e a dica do dia com "Refazer" depois.
+// Check-in de 3 toques do Treino: energia, sono e humor de 1 a 5, num modal
+// que abre sozinho quando ainda não há resposta de hoje (uma vez por dia; quem
+// já viu o tutorial). Na página fica só uma linha: "Responder" enquanto falta
+// responder, e a dica do dia com "Refazer" depois.
 // onChange recebe a resposta do dia (ou null) ao carregar e a cada envio.
 export default function DailyCheckin({ onChange }) {
   const { user } = useAuth();
@@ -79,8 +89,16 @@ export default function DailyCheckin({ onChange }) {
         const row = rows.find(r => r.checkin_date === today) || null;
         setSaved(row);
         onChange?.(row);
+        // Sem resposta de hoje: abre sozinho, salvo se a pessoa já dispensou hoje,
+        // se o tutorial de boas-vindas ainda vai abrir ou se há outro modal aberto.
+        if (!row && !skippedToday(userId, today) && hasSeenTutorial('aluno', userId)
+          && !document.body.classList.contains('modal-open')) setOpen(true);
       })
-      .catch(err => { console.error('fetchCheckins:', err); })
+      .catch(err => {
+        console.error('fetchCheckins:', err);
+        if (active && !skippedToday(userId, today) && hasSeenTutorial('aluno', userId)
+          && !document.body.classList.contains('modal-open')) setOpen(true);
+      })
       .finally(() => { if (active) setLoaded(true); });
     return () => { active = false; };
     // onChange é o setState da página (estável); a busca só depende de quem está logado.
@@ -95,6 +113,8 @@ export default function DailyCheckin({ onChange }) {
   }
 
   function closeModal() {
+    // Fechar sem responder vale como "Agora não" até o fim do dia.
+    if (!saved) skipToday(userId, todayDate());
     setOpen(false);
   }
 

@@ -158,9 +158,6 @@ export default {
   // TreinoPage
   '🧹 Semana apagada, inclusive os treinos concluídos ({dias})': '🧹 Week deleted, including completed workouts ({dias})',
   'Limpar a semana': 'Clear the week',
-  'Mais opções': 'More options',
-  'Treinos da semana': 'Workouts this week',
-  'Importar treinos de outro app': 'Import workouts from another app',
 
   '🧹 Checks e cargas limpos': '🧹 Checks and weights cleared',
   '⚠️ Limpou localmente, mas falhou ao sincronizar com o servidor — pode voltar ao reabrir o app': '⚠️ Cleared locally, but syncing with the server failed — it may come back when you reopen the app',
