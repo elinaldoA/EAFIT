@@ -23,16 +23,23 @@ test.beforeEach(async ({ fake }) => {
   });
 });
 
+// No modo ao vivo, dicas secundárias ficam em "Mais dicas" e as ferramentas (repetir, nota, histórico,
+// músculo...) em "⋯ Mais", recolhidas: o teste abre cada uma antes de usar.
+const open = (live, summary) => live.locator('summary', { hasText: summary }).click();
+
 test('regra, cadência, repetir último treino, nota, histórico e descanso pelo RIR', async ({ page, fake }) => {
   await page.goto('/app/');
   await page.locator('.today-card').getByRole('button', { name: '⚡ Começar treino' }).click();
   const live = page.locator('.live');
   await expect(live).toBeVisible();
 
+  await expect(live.getByText(/Faixa 8–12: bata 12 reps/)).toBeHidden();
+  await open(live, 'Mais dicas');
   await expect(live.getByText(/Faixa 8–12: bata 12 reps/)).toBeVisible();
   await expect(live.getByText(/Cadência 3-1-1: descer 3s · pausa 1s · subir 1s/)).toBeVisible();
 
   // Repetir o último treino: cada série recebe a carga/reps da sessão de 3 dias atrás.
+  await open(live, '⋯ Mais');
   await live.getByRole('button', { name: '↩︎ Repetir o último treino' }).click();
   const row = n => live.locator('.set-row').filter({ hasText: `Série ${n}` });
   await expect(row(1).getByPlaceholder('kg')).toHaveValue('60');
@@ -76,6 +83,7 @@ test('exercício fora da biblioteca pergunta o músculo, guarda e passa a mostra
   await live.getByRole('button', { name: /Próximo/ }).click();
   await expect(live.getByText(/Zxqv Misterioso/).first()).toBeVisible();
   await page.screenshot({ path: 'test-results/tools-4-second.png', fullPage: true });
+  await open(live, '⋯ Mais');
   const ask = live.getByText('💪 Qual músculo este exercício trabalha?');
   await expect(ask).toBeVisible({ timeout: 15000 });
   await live.locator('select').filter({ has: page.locator('option', { hasText: 'Escolher…' }) }).selectOption('glutes');
