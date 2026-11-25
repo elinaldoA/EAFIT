@@ -60,7 +60,7 @@ export const EXERCISE_GIFS = {
 
 // Os GIFs mantêm o nome ao serem trocados; o ?v= faz o navegador buscar de novo.
 // Subir o número sempre que um GIF for substituído por outro com o mesmo nome.
-export const GIFS_VERSION = 6;
+export const GIFS_VERSION = 7;
 
 export const gifUrl = (file, base) => `${base}gifs/${encodeURIComponent(file)}.gif?v=${GIFS_VERSION}`;
 
