@@ -64,6 +64,7 @@ vi.mock('./program/ProgramShell', () => ({
   default: ({ kind, onSwitchToStudent }) => <div>painel-programa:{kind}<button onClick={onSwitchToStudent}>usar-como-aluno</button></div>,
 }));
 vi.mock('./pages/TreinoPage', () => ({ default: () => <div>pg-treino</div> }));
+vi.mock('./pages/HistoricoPage', () => ({ default: () => <div>pg-historico</div> }));
 vi.mock('./pages/HidratacaoPage', () => ({ default: ({ active }) => <div>pg-hidratacao:{String(active)}</div> }));
 vi.mock('./pages/DashPage', () => ({ default: () => <div>pg-dash</div> }));
 vi.mock('./pages/PerfilPage', () => ({ default: () => <div>pg-perfil</div> }));
@@ -191,6 +192,7 @@ describe('App', () => {
   });
 
   it.each([
+    ['historico', 'pg-historico'],
     ['hidratacao', 'pg-hidratacao:true'],
     ['dash', 'pg-dash'],
     ['perfil', 'pg-perfil'],

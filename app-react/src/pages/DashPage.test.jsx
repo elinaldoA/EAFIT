@@ -25,7 +25,6 @@ vi.mock('../data/treinoData', async (importOriginal) => ({
 vi.mock('../components/BodyAvatar', () => ({ default: ({ activeGroups }) => <div data-testid="avatar">{activeGroups.size}</div> }));
 vi.mock('../components/LineChart', () => ({ default: ({ points, emptyMsg }) => <div data-testid="line-chart">{points.length || emptyMsg}</div> }));
 vi.mock('../components/ProgressPhotos', () => ({ default: () => <div data-testid="photos" /> }));
-vi.mock('./HistoricoPage', () => ({ default: () => <div data-testid="historico" /> }));
 vi.mock('../components/MonthlyRecap', () => ({ default: () => null }));
 vi.mock('../components/Challenges', () => ({ default: () => null }));
 vi.mock('../components/Friends', () => ({ default: ({ myWeek }) => <div data-testid="friends">semana {myWeek}</div> }));
@@ -136,14 +135,6 @@ describe('DashPage', () => {
 
       render(<DashPage active />);
       expect(screen.getByRole('tab', { name: 'Recordes' }).getAttribute('aria-selected')).toBe('true');
-    });
-
-    it('Histórico é uma aba da Evolução', () => {
-      render(<DashPage active />);
-      expect(screen.queryByTestId('historico')).toBeNull();
-      fireEvent.click(screen.getByRole('tab', { name: 'Histórico' }));
-      expect(screen.getByTestId('historico')).toBeTruthy();
-      expect(localStorage.getItem('dash_tab')).toBe('historico');
     });
 
     it('trocar de aba e voltar não zera o exercício escolhido nem a visão anatômica', () => {

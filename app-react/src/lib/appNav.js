@@ -26,12 +26,6 @@ export function goTo(target, { replace = false, win = window } = {}) {
   win.dispatchEvent(new CustomEvent(NAV_EVENT, { detail: { remount: !!(target.dashTab || target.profileCard) } }));
 }
 
-// A aba Histórico virou parte da Evolução: links antigos (#historico — atalho do
-// ícone instalado, favoritos) levam para lá.
-export function redirectLegacyTab(win = typeof window === 'undefined' ? null : window) {
-  if (win?.location?.hash === '#historico') goTo({ tab: 'dash', dashTab: 'historico' }, { replace: true, win });
-}
-
 // Lido uma vez só: o Perfil abre o cartão pedido e esquece.
 export function takeProfileCardToOpen() {
   try {

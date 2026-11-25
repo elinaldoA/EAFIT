@@ -87,7 +87,7 @@ export default function HistoricoPage() {
   }
 
   return (
-    <div id="page-historico">
+    <section id="page-historico" className="page active">
       <div className="dash-card history-cal">
         <div className="history-cal__head">
           <button type="button" className="icon-btn" aria-label={t('Mês anterior')} onClick={() => shiftMonth(-1)}>‹</button>
@@ -191,6 +191,6 @@ export default function HistoricoPage() {
       </div>
 
       {detail && <SessionDetailModal session={detail} onClose={() => setDetail(null)} />}
-    </div>
+    </section>
   );
 }

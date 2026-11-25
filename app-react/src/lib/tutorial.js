@@ -42,20 +42,20 @@ export const STUDENT_STEPS = [
     text: t('No sino ficam os avisos do EAFIT, as respostas ao seu feedback e as notificações. Toque num aviso para ir direto à tela do assunto e marque como lido o que já viu. Ali também você liga os lembretes de treino e de água neste aparelho.'),
   },
   {
-    tab: 'hidratacao', target: nav(2), icon: '💧', title: t('Hidratação'),
+    tab: 'historico', target: nav(2), icon: '📅', title: t('Histórico'),
+    text: t('O calendário mostra os dias treinados e marca os feriados nacionais. Toque num dia para ver a sessão e comparar cada exercício com a última vez que você o fez.'),
+  },
+  {
+    tab: 'hidratacao', target: nav(3), icon: '💧', title: t('Hidratação'),
     text: t('A meta de água é calculada pelo seu peso. Registre copo, caneca, garrafa ou squeeze com um toque (dá pra desfazer) e acompanhe sua sequência de dias na meta.'),
   },
   {
-    tab: 'nutricao', target: nav(3), icon: '🍎', title: t('Nutrição'),
+    tab: 'nutricao', target: nav(4), icon: '🍎', title: t('Nutrição'),
     text: t('Veja suas metas diárias de calorias, proteína, carboidratos e gorduras, calculadas pelo seu perfil. Registre a proteína do dia com um toque, acompanhe os últimos 14 dias e consulte fontes de proteína.'),
   },
   {
-    tab: 'dash', dashTab: 'treinos', target: nav(4), icon: '📈', title: t('Evolução'),
+    tab: 'dash', dashTab: 'treinos', target: nav(5), icon: '📈', title: t('Evolução'),
     text: t('Em Treinos ficam a retrospectiva do mês (com cartão para compartilhar), o avatar dos músculos trabalhados, os gráficos de carga e volume e as conquistas. Em Recordes, suas melhores cargas.'),
-  },
-  {
-    tab: 'dash', dashTab: 'historico', target: nav(4), icon: '📅', title: t('Histórico'),
-    text: t('O calendário mostra os dias treinados e marca os feriados nacionais. Toque num dia para ver a sessão e comparar cada exercício com a última vez que você o fez.'),
   },
   {
     tab: 'dash', dashTab: 'treinos', flag: 'desafios', icon: '🏆', title: t('Desafios com amigos'),
@@ -70,7 +70,7 @@ export const STUDENT_STEPS = [
     text: t('Adicione amigos pelo código pessoal, dispute o ranking semanal e acompanhe o feed com os treinos deles — dá pra reagir a cada um.'),
   },
   {
-    tab: 'perfil', target: nav(5), icon: '👤', title: t('Perfil e metas'),
+    tab: 'perfil', target: nav(6), icon: '👤', title: t('Perfil e metas'),
     text: t('Atualize peso e altura e defina as metas semanais de treino e de água. Se o peso novo mudar sua faixa de IMC, o treino é ajustado sozinho.'),
   },
   {

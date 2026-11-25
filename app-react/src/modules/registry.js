@@ -33,7 +33,7 @@ import { subscribeLiveRun, isRunActive } from './corrida/liveRun';
 
 export const DEFAULT_MODULE_ID = 'musculacao';
 
-export const BASE_TABS = Object.freeze(['treino', 'hidratacao', 'nutricao', 'dash', 'perfil']);
+export const BASE_TABS = Object.freeze(['treino', 'historico', 'hidratacao', 'nutricao', 'dash', 'perfil']);
 
 export const MODULES = Object.freeze([
   Object.freeze({
