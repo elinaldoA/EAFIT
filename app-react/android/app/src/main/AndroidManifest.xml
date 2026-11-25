@@ -23,6 +23,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Volta do login com Google (navegador do sistema para o app) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="br.com.eafit.app" android:host="auth" />
+            </intent-filter>
+
+            <!-- Links dos e-mails (confirmar cadastro, nova senha) abrem o app.
+                 autoVerify precisa de https://eafit.com.br/.well-known/assetlinks.json
+                 com o SHA-256 da chave de assinatura (ver android/README-android.md). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="eafit.com.br" android:pathPrefix="/app" />
+            </intent-filter>
+
         </activity>
 
         <provider
@@ -39,11 +57,11 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Scanner de código de barras e fotos (getUserMedia na WebView) -->
+    <!-- Scanner de cÃ³digo de barras e fotos (getUserMedia na WebView) -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- O plugin de notificações só é usado para pedir POST_NOTIFICATIONS (aviso fixo do GPS);
-         não agendamos alarmes, então tiramos as permissões que ele traz a mais. -->
+    <!-- O plugin de notificaÃ§Ãµes sÃ³ Ã© usado para pedir POST_NOTIFICATIONS (aviso fixo do GPS);
+         nÃ£o agendamos alarmes, entÃ£o tiramos as permissÃµes que ele traz a mais. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" tools:node="remove" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />

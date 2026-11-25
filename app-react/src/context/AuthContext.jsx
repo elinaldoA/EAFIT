@@ -7,6 +7,8 @@ import { claimLocalData, clearUserLocalData } from '../lib/localData';
 import { isAdminAccount } from '../lib/adminGuard';
 import { isAccountDeactivated } from '../lib/accountStatus';
 import { takeEmailLink } from '../lib/emailLink';
+import { isNative } from '../lib/native';
+import { WEB_APP_URL, parseAuthUrl, startNativeGoogleLogin, listenNativeAuthUrls, closeAuthBrowser } from '../lib/nativeAuth';
 import { pendingRef, clearRef } from '../lib/ambassadorRef';
 import { pendingAttribution, clearAttribution } from '../lib/attribution';
 import { clearPartnerCampaign, pendingPartnerCampaign } from '../lib/partnerCampaign';
@@ -29,6 +31,8 @@ function passwordProblem(password) {
 // do projeto Supabase. A URL precisa estar em Authentication → URL
 // Configuration → Redirect URLs no dashboard.
 function appUrl() {
+  // No app Android o endereço é https://localhost: os e-mails usam o do site.
+  if (isNative()) return WEB_APP_URL;
   return window.location.origin + window.location.pathname;
 }
 
@@ -152,6 +156,27 @@ export function AuthProvider({ children }) {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
+  // App Android: o retorno do Google e os links de e-mail chegam como endereço
+  // que abre o app (lib/nativeAuth.js). A sessão nova entra pelo listener acima.
+  useEffect(() => {
+    if (!isNative()) return undefined;
+    return listenNativeAuthUrls(async raw => {
+      const auth = parseAuthUrl(raw);
+      if (!auth) return;
+      closeAuthBrowser();
+      try {
+        if (auth.kind === 'error') { setLinkError(t('Não foi possível entrar com o Google. Tente de novo.')); return; }
+        const { error } = auth.kind === 'oauth'
+          ? await db.auth.exchangeCodeForSession(auth.code)
+          : await db.auth.verifyOtp({ token_hash: auth.token_hash, type: auth.type });
+        if (error) { setLinkError(translateAuthError(error)); return; }
+        if (auth.kind === 'email' && auth.type === 'signup') sendWelcomeEmail();
+      } catch (err) {
+        console.error('native auth url:', err);
+      }
+    });
+  }, []);
+
   const userId = user?.id;
 
   // Dados do Perfil que ficaram só no aparelho sobem para a conta (uma vez por
@@ -203,10 +228,9 @@ export function AuthProvider({ children }) {
   // conta são o mesmo clique: conta nova é criada pelo Supabase e fechada em
   // finishGoogleSignup na volta.
   async function loginWithGoogle() {
-    const { error } = await db.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: appUrl() },
-    });
+    const { error } = isNative()
+      ? await startNativeGoogleLogin(db)
+      : await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: appUrl() } });
     if (error) {
       trackAuthEvent('login_error', 'google');
       return { error: t('Não foi possível entrar com o Google. Tente de novo.') };

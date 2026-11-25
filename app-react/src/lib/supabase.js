@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { createTimeoutFetch } from './fetchTimeout';
+import { isNative } from './native';
 
 export const db = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
   {
+    // No app Android o Google volta por um endereço que abre o app (lib/nativeAuth.js):
+    // PKCE manda só um código de uso único nele, não os tokens da sessão.
+    auth: { flowType: isNative() ? 'pkce' : 'implicit' },
     // keepalive: uma request já em voo (ex.: save disparado bem antes de um
     // reload/fechar de aba) continua e completa mesmo depois da página descarregar.
     // Dados e login têm prazo (lib/fetchTimeout.js): sem sinal a escrita falha e
