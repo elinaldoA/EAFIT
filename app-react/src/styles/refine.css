@@ -1,4 +1,129 @@
 /* ============================================================
+   DESIGN v2 — camada visual moderna (vem por último)
+   Tipografia Inter, superfícies suaves, cantos maiores, sombras em
+   camadas, hierarquia mais leve. Não muda estrutura nem comportamento.
+============================================================ */
+
+/* Inter variável (só o subconjunto latino: cobre o português), servida pelo
+   próprio app — a CSP não deixa carregar fontes de fora. */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+:root {
+  --font-ui: 'Inter Variable', 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  /* Bordas de cartão quase invisíveis; a separação vem da sombra e do fundo. */
+  --border: rgba(255, 255, 255, .08);
+  --bg: #0a0a0e;
+  --surface: #14141a;
+  --surface-2: #1b1b22;
+  --surface-3: #25252d;
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 8px 24px -12px rgba(0, 0, 0, .6);
+  --glass: rgba(14, 14, 19, .78);
+}
+[data-theme="light"] {
+  --bg: #f4f4f7;
+  --surface: #ffffff;
+  --surface-2: #f2f2f6;
+  --surface-3: #e8e8ee;
+  --border: rgba(20, 20, 40, .07);
+  --card-shadow: 0 1px 2px rgba(20, 20, 40, .04), 0 8px 24px -14px rgba(20, 20, 40, .22);
+  --glass: rgba(255, 255, 255, .8);
+}
+
+html, body, button, input, select, textarea { font-family: var(--font-ui); }
+body { font-feature-settings: 'cv11', 'ss01'; letter-spacing: -.003em; }
+.stat-card__value, .kpi__value, [class*='__value'], [class*='__num'] { font-variant-numeric: tabular-nums; }
+
+/* ---------- barra superior e navegação ---------- */
+.topbar, .bottom-nav {
+  background: var(--glass);
+  -webkit-backdrop-filter: saturate(1.6) blur(14px);
+  backdrop-filter: saturate(1.6) blur(14px);
+}
+.topbar { border-bottom: 1px solid var(--border); }
+.bottom-nav { border-top: 1px solid var(--border); }
+.topbar__avatar { font-weight: 800; box-shadow: 0 2px 8px -2px var(--primary-glow); }
+.topbar__name { font-weight: 700; letter-spacing: -.01em; }
+.nav-item { font-weight: 600; letter-spacing: 0; }
+.nav-item.active { font-weight: 700; }
+.nav-item__icon { width: 52px; height: 30px; }
+.nav-item.active .nav-item__icon { background: var(--primary-glow); }
+
+/* ---------- cartões ---------- */
+.today-card, .progress-card, .day-card, .dash-card, .stat-card, .collapse,
+.history-item, .badge-card, .goal-card, .state, .week-compare {
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+.collapse--open { border-color: var(--border); }
+.day-card--today { border-color: color-mix(in srgb, var(--primary) 55%, transparent); }
+.today-card {
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  background:
+    radial-gradient(110% 80% at 100% -10%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 62%),
+    var(--surface);
+}
+.today-card__kicker { font-weight: 700; letter-spacing: .1em; font-size: 11px; }
+.today-card__title { font-weight: 800; letter-spacing: -.02em; }
+.progress-card__label { font-weight: 600; }
+
+/* Números de destaque: menos "pesados", mais nítidos. */
+.stat-card__value { font-weight: 800; letter-spacing: -.02em; }
+.stat-card__label { font-weight: 600; letter-spacing: .06em; font-size: 10.5px; }
+.dash-card__title { font-weight: 700; letter-spacing: .08em; font-size: 11px; color: var(--text-dim); }
+.section-group__label, .profile-section__title {
+  color: var(--text-dim);
+  font-weight: 700;
+  letter-spacing: .1em;
+  font-size: 11px;
+}
+.day-card__name, .collapse__title { font-weight: 650; letter-spacing: -.01em; }
+
+/* Ícone dos itens de menu: quadrado arredondado com a cor da marca em tom suave. */
+.collapse__icon {
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface-2));
+}
+.collapse__chevron { opacity: .55; }
+
+/* Abas segmentadas */
+.seg { border: 1px solid var(--border); background: var(--surface-2); box-shadow: none; padding: 3px; border-radius: 14px; }
+.seg__btn { border-radius: 11px; font-weight: 600; }
+.seg__btn--active { box-shadow: 0 2px 8px -2px var(--primary-glow); }
+
+/* ---------- botões ---------- */
+.btn { border-radius: 12px; font-weight: 650; }
+.btn--sm { border-radius: 10px; }
+.btn--primary {
+  background: linear-gradient(180deg, var(--primary-h), var(--primary));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .25) inset, 0 6px 16px -8px var(--primary);
+}
+.btn--primary:hover:not(:disabled) { background: linear-gradient(180deg, var(--primary-h), var(--primary-h)); }
+.btn--outline { border-width: 1px; border-color: var(--border-2); }
+.btn--ghost { background: var(--surface-2); border: 1px solid var(--border); }
+.today-card .btn--primary.btn--full { min-height: 46px; font-size: var(--fs-base); }
+
+/* ---------- campos ---------- */
+.input {
+  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); outline: none; }
+
+/* ---------- modais ---------- */
+.plan-modal, .summary-modal, .rating-modal, .demo-modal { border-radius: 22px; border: 1px solid var(--border); }
+
+/* ============================================================
    REFINO VISUAL — escala tipográfica, botões e nomes longos
    Vem por último: ajusta o conjunto sem reescrever cada tela.
    - Títulos e botões um degrau menores (hierarquia mais calma).
@@ -113,3 +238,40 @@ h1, h2, h3, h4 { overflow-wrap: anywhere; text-wrap: balance; }
   .btn { padding: 8px 14px; }
   :root { --fs-xl: 1.0625rem; }
 }
+
+/* ============================================================
+   DESIGN v2 — treino e modo ao vivo
+============================================================ */
+.set-row__carga {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 10px;
+  font-weight: 600;
+}
+.set-row__check {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+.set-row__check--done { border-color: var(--success); }
+/* Dicas e sugestões: tom calmo em vez de texto laranja gritante. */
+.ex-block__suggestion,
+.ex-block__suggestion--first {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.day-card__indicator { font-size: 10px; opacity: .45; }
+
+.live__nav-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  box-shadow: var(--card-shadow);
+}
+.live__next { border-radius: 16px; height: 52px; font-weight: 700; }
+.live__next.btn--ghost { background: var(--surface-2); border: 1px solid var(--border); }
+.live__ex-name { font-weight: 800; }
