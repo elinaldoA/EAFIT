@@ -100,6 +100,17 @@ describe('speak', () => {
     expect(() => cancelSpeech()).not.toThrow();
   });
 
+  it('aparelho sem nenhuma voz listada fala pelo idioma; com vozes só estrangeiras, não fala', async () => {
+    const synth = stubSynth([]);
+    expect(await speak('Bora!', { random: () => 0.5 })).toBe(true);
+    const u = synth.speak.mock.calls[0][0];
+    expect(u.lang).toBe('pt-BR');
+    expect(u.voice).toBeUndefined();
+    const other = stubSynth([v('Samantha', 'en-US')]);
+    expect(await speak('Bora!')).toBe(false);
+    expect(other.speak).not.toHaveBeenCalled();
+  });
+
   it('fala com a melhor voz, cancelando a fala anterior', async () => {
     const synth = stubSynth([v('Luciana'), v('Microsoft Antonio Online (Natural)', 'pt-BR', false)]);
     expect(await speak('Bora!', { rate: 1.1, pitch: 1.2, random: () => 0.5 })).toBe(true);

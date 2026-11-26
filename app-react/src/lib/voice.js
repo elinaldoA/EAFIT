@@ -108,16 +108,22 @@ export function prosody(sentence, random = Math.random) {
 export async function speak(text, { voiceName = '', rate = 1, pitch = 1, volume = 1, queue = false, random = Math.random } = {}) {
   if (!isVoiceSupported() || !text) return false;
   try {
-    const voice = pickVoice(await loadVoices(), voiceName);
-    if (!voice) return false;
+    const voices = await loadVoices();
+    const voice = pickVoice(voices, voiceName);
+    // Aparelho que não lista nenhuma voz (WebView do Android, lista que ainda não
+    // carregou) mas fala: usa o idioma e deixa o sistema escolher a voz. Se ele lista
+    // vozes e nenhuma é em português, não fala: ler português com voz estrangeira é pior.
+    if (!voice && voices.length > 0) return false;
     const sentences = splitSentences(text);
     if (!sentences.length) return false;
     if (!queue) window.speechSynthesis.cancel();
+    // O Chrome do Android às vezes deixa a fila pausada depois de um cancel: sem isto a fala nunca sai.
+    window.speechSynthesis.resume?.();
     sentences.forEach(sentence => {
       const tune = prosody(sentence, random);
       const u = new SpeechSynthesisUtterance(sentence);
-      u.voice = voice;
-      u.lang = voice.lang || 'pt-BR';
+      if (voice) u.voice = voice;
+      u.lang = voice?.lang || 'pt-BR';
       u.rate = clamp(rate * tune.rate, 0.6, 1.6);
       u.pitch = clamp(pitch * tune.pitch, 0.7, 1.4);
       u.volume = volume;
