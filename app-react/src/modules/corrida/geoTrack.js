@@ -11,8 +11,9 @@ export const MAX_ACCURACY_M = 50;
 // Deslocamento mínimo entre leituras aceitas; abaixo disso (ou da metade da
 // precisão, o que for maior) conta como deriva do sinal, não como movimento.
 export const MIN_STEP_M = 4;
-// Velocidade acima disso (m/s, ≈ 43 km/h) é salto de GPS, não corrida.
-export const MAX_SPEED_MS = 12;
+// Velocidade acima disso (m/s, ≈ 29 km/h, ritmo de 2:05/km) é salto de GPS ou
+// veículo, não corrida (era 12 m/s: deixava passar bicicleta e saltos de sinal).
+export const MAX_SPEED_MS = 8;
 // Depois de tantas leituras seguidas recusadas por salto, a última vira a nova
 // âncora (túnel, perda de sinal): senão a contagem ficaria travada.
 export const MAX_SKIPS = 5;
