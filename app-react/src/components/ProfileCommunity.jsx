@@ -1,3 +1,4 @@
+import UiIcon from './UiIcon';
 import CollapsibleCard from './CollapsibleCard';
 import ProfileFeedbackSection from './ProfileFeedbackSection';
 import { useAppConfig } from '../context/useAppConfig';
@@ -10,7 +11,7 @@ import { t } from '../lib/i18n';
 export function ShortcutCard({ icon, title, summary, onClick }) {
   return (
     <button type="button" className="shortcut-card" onClick={onClick}>
-      <span className="collapse__icon" aria-hidden="true">{icon}</span>
+      <span className="collapse__icon" aria-hidden="true"><UiIcon icon={icon} /></span>
       <span className="collapse__text">
         <span className="collapse__title">{title}</span>
         <span className="collapse__summary">{summary}</span>

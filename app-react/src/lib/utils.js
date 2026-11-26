@@ -52,6 +52,20 @@ export function getDisplayName(user) {
   return md.apelido?.trim() || md.nome?.trim() || user?.email || '';
 }
 
+// Só o primeiro nome (ou a parte do e-mail antes do @), para a saudação do topo.
+export function greetingName(user) {
+  const full = getDisplayName(user);
+  if (!full) return '';
+  if (full.includes('@')) return full.split('@')[0];
+  return full.trim().split(/\s+/)[0];
+}
+
+// 'morning' | 'afternoon' | 'night' pela hora local.
+export function dayPeriod(date = new Date()) {
+  const h = date.getHours();
+  return h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'night';
+}
+
 export function formatDuration(ms) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(totalSeconds / 3600);

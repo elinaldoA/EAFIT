@@ -4,7 +4,7 @@ import { useAuth } from '../context/useAuth';
 import { useAppConfig } from '../context/useAppConfig';
 import { isFlagOn } from '../lib/appConfig';
 import { useToast } from '../context/useToast';
-import { parseLocalDate, toDateStr, calcStreak } from '../lib/utils';
+import { parseLocalDate, toDateStr, calcStreak, getWeekStart } from '../lib/utils';
 import { visibleBadges } from '../lib/achievements';
 import { useSeason } from '../hooks/useSeason';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -33,6 +33,34 @@ function readTab() {
   } catch {
     return 'treinos';
   }
+}
+
+// Treinos concluídos por semana nas últimas 8 semanas; a semana atual em destaque
+// e a meta semanal como referência (barras que a atingem ficam cheias).
+function WeeklyWorkoutsCard({ workouts, goal }) {
+  const weeks = useMemo(() => {
+    const done = workouts.filter(w => w.completed).map(w => w.workout_date);
+    return Array.from({ length: 8 }, (_, k) => {
+      const start = getWeekStart(7 - k);
+      const end = addDays(start, 6);
+      return { start, count: done.filter(d => d >= start && d <= end).length, current: k === 7 };
+    });
+  }, [workouts]);
+  const max = Math.max(goal || 0, ...weeks.map(w => w.count), 1);
+  return (
+    <div className="dash-card weekly-card">
+      <h3 className="weekly-card__title">{t('Treinos por semana')}</h3>
+      <p className="weekly-card__sub">{t('Concluídos nas últimas 8 semanas')}{goal ? ` · ${t('meta {n}', { n: goal })}` : ''}</p>
+      <div className="weekly-bars" role="img" aria-label={t('Treinos por semana: {v}', { v: weeks.map(w => w.count).join(', ') })}>
+        {weeks.map(w => (
+          <i key={w.start}
+            className={`${w.current ? 'weekly-bars__bar--now' : ''}${goal && w.count >= goal ? ' weekly-bars__bar--hit' : ''}`}
+            style={{ height: `${Math.max(6, (w.count / max) * 100)}%` }} title={String(w.count)} />
+        ))}
+      </div>
+      <div className="weekly-bars__labels">{weeks.map((w, i) => <span key={w.start}>{i === 7 ? t('Esta') : `S${i + 1}`}</span>)}</div>
+    </div>
+  );
 }
 
 export default function DashPage({ active }) {
@@ -72,8 +100,12 @@ export default function DashPage({ active }) {
     since.setDate(since.getDate() - 29);
     const sinceStr = toDateStr(since);
     const completed = workouts.filter(w => w.completed);
+    const prevSince = parseLocalDate(todayDate());
+    prevSince.setDate(prevSince.getDate() - 59);
+    const prevSinceStr = toDateStr(prevSince);
     return {
       treinos30: completed.filter(w => w.workout_date >= sinceStr).length,
+      treinosPrev30: completed.filter(w => w.workout_date >= prevSinceStr && w.workout_date < sinceStr).length,
       streak: calcStreak(completed.map(w => w.workout_date), user?.user_metadata?.pauses),
       recordes: new Set(allTimeLogs.filter(l => !isNaN(parseFloat(l.carga))).map(l => l.exercise_name)).size,
     };
@@ -85,6 +117,11 @@ export default function DashPage({ active }) {
         <div className="dash-kpi">
           <span className="dash-kpi__value">{loading ? '–' : summary.treinos30}</span>
           <span className="dash-kpi__label">{t('Treinos')}<br />{t('30 dias')}</span>
+          {!loading && summary.treinosPrev30 > 0 && (
+            <span className={`dash-kpi__delta${summary.treinos30 < summary.treinosPrev30 ? ' dash-kpi__delta--down' : ''}`}>
+              {summary.treinos30 >= summary.treinosPrev30 ? '▲' : '▼'} {Math.abs(summary.treinos30 - summary.treinosPrev30)} {summary.treinos30 >= summary.treinosPrev30 ? t('a mais que antes') : t('a menos que antes')}
+            </span>
+          )}
         </div>
         <div className="dash-kpi">
           <span className="dash-kpi__value">{loading ? '–' : `${summary.streak}d`}</span>
@@ -109,6 +146,8 @@ export default function DashPage({ active }) {
           >{t.label}</button>
         ))}
       </div>
+
+      {tab === 'treinos' && !loading && <WeeklyWorkoutsCard workouts={workouts} goal={weeklyGoal} />}
 
       {tab === 'treinos' && (
         <DashTreinosTab

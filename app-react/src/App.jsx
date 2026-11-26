@@ -203,7 +203,8 @@ function Shell() {
             <TrainerInvitePrompt />
             <div className="app-screen" style={{ display: 'flex' }}>
               <header className="topbar">
-                <TopbarProfile subtitle={brandName(sport)} />
+                {/* Saudação no Gym; nos módulos sem plano de treino (Run) a marca fica embaixo do nome. */}
+                <TopbarProfile subtitle={sport.workoutPlan === false ? brandName(sport) : ''} />
                 <TopbarMenu
                   modes={[
                     ...(isTrainer ? [{ label: t('🧑‍🏫 Personal'), onClick: () => setMode('trainer') }] : []),

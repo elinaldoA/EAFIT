@@ -1,10 +1,20 @@
 import { todayName } from '../data/treinoData';
-import { fmtDate, daysUntil } from '../lib/utils';
+import { fmtDate, daysUntil, getWeekStart, parseLocalDate } from '../lib/utils';
 import { fmtVolume } from '../lib/workoutHistory';
 import { MUSCLE_LABELS } from '../data/bodyMuscleMap';
 import { t, tFoco } from '../lib/i18n';
 
 // Card "Semana atual": treinos feitos, faixa dos dias, volume e validade do ciclo.
+const WEEK_ORDER = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+// Dia do mês de cada dia da semana atual (segunda a domingo), para a faixa.
+function dayOfMonth(dia) {
+  const i = WEEK_ORDER.indexOf(dia);
+  if (i < 0) return '';
+  const d = parseLocalDate(getWeekStart());
+  d.setDate(d.getDate() + i);
+  return d.getDate();
+}
+
 export default function WeekProgressCard({ workDays, done, total, isDayDone, missedSet, volume, planStartDate, planEndDate, planExpired, planByTrainer, muscles = [] }) {
   return (
     <div className="progress-card">
@@ -26,7 +36,7 @@ export default function WeekProgressCard({ workDays, done, total, isDayDone, mis
               className={`week-strip__day${isDone ? ' week-strip__day--done' : ''}${isToday ? ' week-strip__day--today' : ''}${isMissed ? ' week-strip__day--missed' : ''}`}
               title={`${t(d.dia)} — ${tFoco(d.foco)}${status}`}
             >
-              <span className="week-strip__dot" aria-hidden="true">{isDone ? '✓' : ''}</span>
+              <span className="week-strip__dot" aria-hidden="true">{isDone ? '✓' : dayOfMonth(d.dia)}</span>
               <span className="week-strip__label">{t(d.dia).slice(0, 3)}</span>
             </div>
           );

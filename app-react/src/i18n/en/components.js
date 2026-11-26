@@ -1,5 +1,9 @@
 // Interface do aluno: App, componentes, contextos e hooks.
 export default {
+  'Bom dia,': 'Good morning,',
+  'Boa tarde,': 'Good afternoon,',
+  'Boa noite,': 'Good evening,',
+  'Sequência de treinos': 'Workout streak',
   // App / shell
   '🧑‍🏫 Personal': '🧑‍🏫 Trainer',
   'Saiba mais': 'Learn more',

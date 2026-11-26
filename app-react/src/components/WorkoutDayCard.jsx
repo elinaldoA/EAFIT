@@ -30,7 +30,7 @@ import { t, locale, tFoco } from '../lib/i18n';
 // liveOpen/onOpenLive/onCloseLive: o modo treino ao vivo é controlado pela
 // TreinoPage (o card "Treino de hoje" também abre ele), mas renderizado aqui,
 // que é quem tem o cronômetro e as ações de série do dia.
-export default function DayCard({ day, isToday, bump, onRestStart, onRestAdjust, onFinish, liveOpen, onOpenLive, onCloseLive }) {
+export default function DayCard({ day, isToday, bump, onRestStart, onRestAdjust, onFinish, liveOpen, onOpenLive, onCloseLive, liveStart = null }) {
   const { user } = useAuth();
   const { saveWorkoutStatus, saveWorkoutTimer, saveWorkoutNotes, activePlanDays, markPending, periodization } = useWorkout();
   const toast = useToast();
@@ -237,6 +237,7 @@ export default function DayCard({ day, isToday, bump, onRestStart, onRestAdjust,
       {liveOpen && (
         <LiveWorkoutModal
           day={day}
+          startIndex={liveStart}
           timer={timer}
           week={weekProgress(activePlanDays)}
           renderExercise={(ex, onLiveRest, onGroupStep, onLiveAdjust) => renderExerciseBlock(ex, {

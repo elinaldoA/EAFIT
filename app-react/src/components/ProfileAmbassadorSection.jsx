@@ -1,3 +1,4 @@
+import UiIcon from './UiIcon';
 import { useEffect, useState } from 'react';
 import { fetchMyAmbassador } from '../lib/ambassador';
 import { goTo } from '../lib/appNav';
@@ -27,7 +28,7 @@ export default function ProfileAmbassadorSection() {
     <div className="section-group">
       <div className="section-group__label">{labels.group}</div>
       <button type="button" className="shortcut-card" onClick={() => goTo({ mode: 'program', tab: 'resultados' })}>
-        <span className="collapse__icon" aria-hidden="true">📣</span>
+        <span className="collapse__icon" aria-hidden="true"><UiIcon icon="📣" /></span>
         <span className="collapse__text">
           <span className="collapse__title">{labels.openMode}</span>
           <span className="collapse__summary">{summary}</span>

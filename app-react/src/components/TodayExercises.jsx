@@ -28,7 +28,7 @@ export default function TodayExercises({ day, onOpen, onEdit }) {
             key={ex.nome}
             type="button"
             className={`today-ex${done ? ' today-ex--done' : ''}${i === nextIdx ? ' today-ex--next' : ''}`}
-            onClick={() => onOpen(i)}
+            onClick={() => onOpen(ex)}
           >
             <span className="today-ex__num" aria-hidden="true">{done ? '✓' : i + 1}</span>
             <span className="today-ex__text">

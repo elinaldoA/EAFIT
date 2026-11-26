@@ -219,20 +219,26 @@ export default function SetRow({ ex, n, day, bump, onRestStart, onSetDone, onFil
     <div className="set-row-wrap">
       <div className="set-row">
         <span className="set-row__label">{t('Série {n}', { n })}</span>
-        <input
-          className={`set-row__carga${saved ? ' saved' : ''}`}
-          type="text" inputMode="decimal" placeholder="kg" autoComplete="off"
-          aria-label={t('Carga em kg, {nome}, série {n}', { nome: tEx(ex.nome), n })}
-          value={carga} onChange={handleCargaInput} onBlur={handleCargaBlur}
-          disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
-        />
-        <input
-          className={`set-row__carga${saved ? ' saved' : ''}`}
-          type="text" inputMode="numeric" placeholder="reps" autoComplete="off"
-          aria-label={t('Repetições, {nome}, série {n}', { nome: tEx(ex.nome), n })}
-          value={reps} onChange={handleRepsInput} onBlur={handleRepsBlur}
-          disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
-        />
+        <span className="set-row__field">
+          <input
+            className={`set-row__carga${saved ? ' saved' : ''}`}
+            type="text" inputMode="decimal" placeholder="kg" autoComplete="off"
+            aria-label={t('Carga em kg, {nome}, série {n}', { nome: tEx(ex.nome), n })}
+            value={carga} onChange={handleCargaInput} onBlur={handleCargaBlur}
+            disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
+          />
+          <span className="set-row__unit" aria-hidden="true">kg</span>
+        </span>
+        <span className="set-row__field">
+          <input
+            className={`set-row__carga${saved ? ' saved' : ''}`}
+            type="text" inputMode="numeric" placeholder="reps" autoComplete="off"
+            aria-label={t('Repetições, {nome}, série {n}', { nome: tEx(ex.nome), n })}
+            value={reps} onChange={handleRepsInput} onBlur={handleRepsBlur}
+            disabled={!started} title={started ? undefined : t('Inicie o treino para registrar as séries')}
+          />
+          <span className="set-row__unit" aria-hidden="true">reps</span>
+        </span>
         <button
           type="button"
           className={`set-row__check${done ? ' set-row__check--done' : ''}`}

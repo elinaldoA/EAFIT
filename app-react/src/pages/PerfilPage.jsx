@@ -254,6 +254,10 @@ export default function PerfilPage({ active }) {
   const waterGoalLabel = decimal(getWaterGoalLiters(user));
   const savedImc = imcInfo(parseFloat(saved.peso), parseFloat(saved.altura));
   const fullName = [nome, sobrenome].filter(Boolean).join(' ');
+  // Meta e nível, embaixo do nome no cartão do topo (só com plano de treino).
+  const GOAL_LABEL = { massa: t('Ganho de massa'), forca: t('Aumento de força'), emagrecer: t('Emagrecimento'), definicao: t('Definição muscular'), saude: t('Saúde e bem-estar'), resistencia: t('Resistência / Condicionamento') };
+  const LEVEL_LABEL = { iniciante: t('Iniciante'), intermediario: t('Intermediário'), avancado: t('Avançado') };
+  const heroSubtitle = usesWorkouts ? [GOAL_LABEL[meta], LEVEL_LABEL[String(nivel || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()]].filter(Boolean).join(' · ') : '';
   const bodySummary = [saved.peso && `${saved.peso}kg`, saved.altura && `${saved.altura}cm`, savedImc && t('IMC {v1}', { v1: decimal(savedImc.value) })]
     .filter(Boolean).join(' · ') || t('Peso, altura, meta e nível');
 
@@ -266,7 +270,7 @@ export default function PerfilPage({ active }) {
 
   return (
     <section id="page-perfil" className="page active">
-      <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} name={getDisplayName(user)} avatar={avatarData} />
+      <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} name={getDisplayName(user)} avatar={avatarData} subtitle={heroSubtitle} />
 
       <div className="section-group">
         <div className="section-group__label">{t('Meus dados')}</div>

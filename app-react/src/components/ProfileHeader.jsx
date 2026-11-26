@@ -3,7 +3,7 @@ import { useSeason } from '../hooks/useSeason';
 import { t } from '../lib/i18n';
 // runStats ({ week, streak, total }, já em texto) troca os números de treino pelos
 // de corrida: km da semana (com a meta, se houver), semanas seguidas e km no total.
-export default function ProfileHeader({ stats, weeklyGoalNum, runStats = null, name = '', avatar = null }) {
+export default function ProfileHeader({ stats, weeklyGoalNum, runStats = null, name = '', avatar = null, subtitle = '' }) {
   const { theme } = useSeason();
 
   // Com o nome, os números moram dentro de um cartão com o avatar (visual do perfil).
@@ -16,6 +16,7 @@ export default function ProfileHeader({ stats, weeklyGoalNum, runStats = null, n
             {avatar ? <img src={avatar} alt="" /> : (name[0] || '?').toUpperCase()}
           </span>
           <span className="profile-hero__name">{name}</span>
+          {subtitle && <span className="profile-hero__sub">{subtitle}</span>}
         </div>
       )}
       <div className="stats-grid">

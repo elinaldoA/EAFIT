@@ -39,11 +39,13 @@ const IDLE_NUDGE_MS = 3 * 60 * 1000;
 // week: { done, total } treinos da semana, para o treinador comentar na abertura.
 // drinkAlert/onDrink/onDismissDrink: lembrete de água, disparado pelo DayCard
 // (hooks/useWorkoutHydration) — aqui só aparece no lugar certo da tela.
-export default function LiveWorkoutModal({ day, timer, week, renderExercise, onFinish, onClose, drinkAlert = null, onDrink, onDismissDrink }) {
+export default function LiveWorkoutModal({ day, timer, week, renderExercise, onFinish, onClose, drinkAlert = null, onDrink, onDismissDrink, startIndex = null }) {
   useBackToClose(onClose);
   useWakeLock();
   const items = [...day.exercicios, ...day.pos];
   const [index, setIndex] = useState(() => {
+    // Aberto pela lista "Exercícios de hoje": começa no exercício tocado.
+    if (Number.isInteger(startIndex) && startIndex >= 0 && startIndex < items.length) return startIndex;
     const firstPending = items.findIndex(ex => setCountOf(ex) > 0 && !isExerciseDone(ex, day.dia));
     return firstPending === -1 ? 0 : firstPending;
   });
@@ -333,6 +335,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
               {group.members[groupPos + 1] && <> · {t('depois:')} {tEx(group.members[groupPos + 1].nome)}</>}
             </span>
           )}
+          {!isPos && day.foco && <span className="live__tag">{tFoco(day.foco)}</span>}
           <h2 className="live__ex-name">{tEx(ex.nome)}</h2>
           <div className="live__chips">
             {setCountOf(ex) > 0 && !isCardioItem(ex) && <span className="live__chip">{t('{series} séries', { series: ex.series })}</span>}
@@ -411,7 +414,7 @@ export default function LiveWorkoutModal({ day, timer, week, renderExercise, onF
         ) : (
           <button
             type="button"
-            className={`btn live__next ${exDone || setCountOf(ex) === 0 ? 'btn--primary' : 'btn--ghost'}`}
+            className="btn btn--primary live__next"
             onClick={() => setIndex(i => i + 1)}
           >
             {t('Próximo')} <span aria-hidden="true">›</span>

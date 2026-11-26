@@ -54,6 +54,8 @@ export default function TreinoPage() {
   const [showPlanEditor, setShowPlanEditor] = useState(false);
   const [summary, setSummary] = useState(null);
   const [liveDay, setLiveDay] = useState(null);
+  // Exercício tocado na lista "Exercícios de hoje" (índice no dia); null = o primeiro pendente.
+  const [liveStart, setLiveStart] = useState(null);
   const [askAppRating, setAskAppRating] = useState(false);
   const [survey, setSurvey] = useState(null);
   const [showQuick, setShowQuick] = useState(false);
@@ -171,9 +173,7 @@ export default function TreinoPage() {
       <PauseBanner />
       <PersonalMessages />
       <MyAppointments onlyPending />
-      <NamePrompt />
       <FirstSteps onStartWorkout={startFirst} />
-      {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
       {planByTrainer && !planExpired && <p className="trainer-plan-note">{t('📋 Plano montado pelo seu personal')}</p>}
       {planExpired && (
         <div className="plan-expired-banner">
@@ -186,7 +186,7 @@ export default function TreinoPage() {
       {today && !loading && (
         <TodayCard
           day={today} sets={todaySets} done={todayDone}
-          onStart={() => setLiveDay(today.dia)}
+          onStart={() => { setLiveStart(null); setLiveDay(today.dia); }}
           quickMinutes={quickMinutes}
           onQuick={canQuick ? () => setShowQuick(true) : null}
           mobility={isFlagOn(config.flags, 'mobilidade')}
@@ -201,8 +201,10 @@ export default function TreinoPage() {
         planStartDate={planStartDate} planEndDate={planEndDate} planExpired={planExpired} planByTrainer={planByTrainer}
       />
       {today && !loading && todayHasSets && !todayDone && (
-        <TodayExercises day={today} onOpen={() => setLiveDay(today.dia)} onEdit={() => setShowPlanEditor(true)} />
+        <TodayExercises day={today} onOpen={ex => { setLiveStart(today.exercicios.findIndex(e => e.nome === ex.nome)); setLiveDay(today.dia); }} onEdit={() => setShowPlanEditor(true)} />
       )}
+      <NamePrompt />
+      {isFlagOn(config.flags, 'checkin_diario') && <DailyCheckin onChange={setCheckin} />}
       <div className="toolbar">
         <p className="toolbar__hint">
           {loading ? t('Carregando dados salvos…') : t('Marque os treinos · salva automático')}
@@ -219,8 +221,9 @@ export default function TreinoPage() {
               key={day.dia} day={day} isToday={day.dia === todayName()} bump={bump}
               onRestStart={handleRestStart} onRestAdjust={handleRestAdjust} onFinish={setSummary}
               liveOpen={liveDay === day.dia}
-              onOpenLive={() => setLiveDay(day.dia)}
-              onCloseLive={() => setLiveDay(null)}
+              liveStart={liveDay === day.dia ? liveStart : null}
+              onOpenLive={() => { setLiveStart(null); setLiveDay(day.dia); }}
+              onCloseLive={() => { setLiveDay(null); setLiveStart(null); }}
             />
           ))}
         </div>

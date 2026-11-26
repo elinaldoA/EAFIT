@@ -191,7 +191,7 @@ describe('TopbarProfile', () => {
   it('mostra inicial do nome e o ponto de sincronização', () => {
     const { container } = render(<TopbarProfile />);
     expect(screen.getByText('A')).toBeTruthy();
-    expect(screen.getByText('ana@x.com')).toBeTruthy();
+    expect(screen.getByText('ana')).toBeTruthy();
     expect(container.querySelector('.sync-dot--ok')).toBeTruthy();
     expect(container.querySelector('button.sync-dot')).toBeNull();
   });
