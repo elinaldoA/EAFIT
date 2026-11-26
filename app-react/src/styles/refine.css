@@ -618,3 +618,210 @@ h1, h2, h3, h4 { overflow-wrap: anywhere; text-wrap: balance; }
 .weekly-bars__bar--now { background: linear-gradient(180deg, #ff9a3d, #ff5a00) !important; }
 .weekly-bars__labels { display: flex; gap: 9px; margin-top: -6px; }
 .weekly-bars__labels span { flex: 1; text-align: center; font-size: 11px; color: var(--text-dim); font-weight: 600; }
+
+/* ============================================================
+   DESIGN v4 — Histórico, Água, Nutrição e janelas (mesmo visual do Treino)
+============================================================ */
+
+/* ---------- Histórico: calendário suave e resumo em grade ---------- */
+.history-cal { padding: 18px; gap: 14px; }
+.history-cal__title { font-size: var(--fs-lg); font-weight: 700; letter-spacing: -.02em; }
+.history-cal__grid { gap: 6px; }
+.history-cal__weekday { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.history-cal__cell {
+  border-radius: 14px;
+  font-weight: 600;
+  background: transparent;
+}
+/* Dia feito: tom da marca em vez de bloco sólido laranja. */
+.history-cal__cell--done {
+  background: color-mix(in srgb, var(--primary) 20%, var(--surface-2));
+  color: var(--primary-text);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.history-cal__cell--partial {
+  background: transparent;
+  color: var(--primary-text);
+  border: 1.5px dashed color-mix(in srgb, var(--primary) 55%, transparent);
+}
+.history-cal__cell--today { border-color: var(--text); color: var(--text); font-weight: 800; }
+.history-cal__cell--today.history-cal__cell--done { border-color: var(--primary); }
+.history-cal__cell--selected { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary); }
+.history-dot { border-radius: 50%; }
+.history-dot--done { background: color-mix(in srgb, var(--primary) 55%, var(--surface-2)); }
+.history-dot--partial { background: transparent; border: 1.5px dashed color-mix(in srgb, var(--primary) 70%, transparent); }
+
+.history-stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+.history-stats .stat-card {
+  align-items: flex-start; text-align: left;
+  padding: 16px; gap: 6px;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+}
+.history-stats .stat-card__value { font-size: 1.75rem; letter-spacing: -.04em; color: var(--text); }
+.history-stats .stat-card__label { text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); font-weight: 550; color: var(--text-muted); }
+
+.history-item { border-radius: 18px; box-shadow: var(--card-shadow); padding: 12px 14px; }
+.history-item__date { width: 48px; height: 52px; border-radius: 14px; background: var(--surface-2); }
+.history-item__date--done { background: color-mix(in srgb, var(--primary) 16%, var(--surface-2)); }
+.history-item__day { font-weight: 800; letter-spacing: -.02em; }
+.history-item__title { font-weight: 650; letter-spacing: -.01em; }
+.history-item__chevron { opacity: .5; }
+
+/* ---------- Água: cartão de destaque azul ---------- */
+.water-hero {
+  border: 0;
+  border-radius: 26px;
+  padding: 20px;
+  color: #04202e;
+  background: radial-gradient(120% 120% at 100% 0%, #7dd3fc 0%, #0ea5e9 52%, #075985 100%);
+  box-shadow: 0 18px 40px -22px rgba(14, 165, 233, .8);
+  position: relative;
+  overflow: hidden;
+}
+.water-hero::after {
+  content: ""; position: absolute; right: -44px; bottom: -64px;
+  width: 210px; height: 210px; border-radius: 50%;
+  background: rgba(255, 255, 255, .14); pointer-events: none;
+}
+.water-hero > * { position: relative; z-index: 1; }
+.water-hero--done { background: radial-gradient(120% 120% at 100% 0%, #6ee7b7 0%, #10b981 55%, #047857 100%); box-shadow: 0 18px 40px -22px rgba(16, 185, 129, .7); }
+.water-hero__ring,
+.water-hero--done .water-hero__ring { background: conic-gradient(#04202e calc(var(--pct) * 1%), rgba(4, 32, 46, .2) 0); }
+.water-hero__inner { background: #0ea5e9; }
+.water-hero--done .water-hero__inner { background: #10b981; }
+.water-hero__value, .water-hero--done .water-hero__value { color: #04202e; font-weight: 800; letter-spacing: -.04em; }
+.water-hero__goal { color: rgba(4, 32, 46, .7); font-weight: 600; }
+.water-hero__kicker, .water-hero--done .water-hero__kicker { color: rgba(4, 32, 46, .65); font-weight: 700; letter-spacing: .1em; font-size: 11px; }
+.water-hero__status { color: #04202e; font-weight: 800; font-size: 1.375rem; letter-spacing: -.03em; }
+.water-hero__hint { color: rgba(4, 32, 46, .75); font-weight: 600; }
+
+.water-quick__btn { border-radius: 18px; box-shadow: var(--card-shadow); }
+.water-quick__ml { color: var(--water); font-weight: 700; }
+.water-stats .stat-card__value { color: var(--water); }
+.water-bars { padding-top: 2px; }
+
+/* ---------- Nutrição: resumo do dia ---------- */
+.nutri-day { padding: 20px; border-radius: 24px; gap: 16px; }
+.nutri-day__kicker { font-weight: 700; letter-spacing: .1em; font-size: 11px; color: var(--text-dim); }
+.nutri-day__kcal { font-size: 1.75rem; font-weight: 800; letter-spacing: -.04em; }
+.nutri-day__status { font-weight: 600; }
+.nutri-day__rows { gap: 14px; }
+.nutri-day__track { height: 8px; background: var(--surface-3); }
+.nutri-day__fill { border-radius: 99px; }
+.nutri-day__fill--protein { background: linear-gradient(90deg, color-mix(in srgb, var(--macro-protein) 70%, #fff), var(--macro-protein)); }
+.nutri-day__fill--carbs { background: linear-gradient(90deg, color-mix(in srgb, var(--macro-carbs) 70%, #fff), var(--macro-carbs)); }
+.nutri-day__fill--fat { background: linear-gradient(90deg, color-mix(in srgb, var(--macro-fat) 70%, #fff), var(--macro-fat)); }
+.nutri-day__row { font-weight: 550; }
+.nutri-day-tools { border-top-color: var(--border); }
+.nutri-ref { border-radius: 18px; }
+
+/* ---------- Janelas e folhas ---------- */
+.plan-modal, .summary-modal, .rating-modal, .demo-modal, .modal {
+  border-radius: 26px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .7);
+}
+.plan-modal__title, .summary-modal__title, .rating-modal__title { font-size: 1.25rem; font-weight: 700; letter-spacing: -.02em; }
+.plan-modal__tabs button, .plan-modal [role="tab"] { font-weight: 600; }
+
+/* Cartões soltos de lista nas outras telas (aviso, convite, lembrete) */
+.progress-card, .plan-expired-banner, .trainer-plan-note { border-radius: 20px; }
+
+.history-stats.water-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.history-stats.water-stats .stat-card { padding: 14px 12px; }
+.history-stats.water-stats .stat-card__value { font-size: 1.375rem; }
+.history-stats.water-stats .stat-card__label { font-size: var(--fs-xs); line-height: 1.25; }
+.nutri-pie { width: 88px; height: 88px; }
+
+/* ============================================================
+   DESIGN v5 — EAFIT Run (mesmo visual do Treino; a cor vem do módulo)
+============================================================ */
+
+/* ---------- Gravar: cartão de destaque com o botão de começar ---------- */
+.run-record {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  border-radius: 26px;
+  padding: 20px;
+  gap: 14px;
+  color: var(--hero-ink);
+  background: radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--primary) 62%, #fff) 0%, var(--primary) 48%, color-mix(in srgb, var(--primary) 60%, #000) 100%);
+  box-shadow: 0 18px 40px -22px color-mix(in srgb, var(--primary) 80%, transparent);
+}
+.run-record::after {
+  content: ""; position: absolute; right: -44px; bottom: -64px;
+  width: 210px; height: 210px; border-radius: 50%;
+  background: rgba(255, 255, 255, .12); pointer-events: none;
+}
+.run-record > * { position: relative; z-index: 1; }
+.run-record__week { gap: 8px; align-self: stretch; justify-content: center; }
+.run-record__week span {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .26);
+  color: rgba(26, 10, 0, .75);
+  font-size: var(--fs-xs); font-weight: 600;
+}
+.run-record__week strong { color: var(--hero-ink); font-size: 1.5rem; font-weight: 800; letter-spacing: -.03em; }
+.run-record__start {
+  background: #fff;
+  color: var(--hero-ink);
+  box-shadow: 0 0 0 10px rgba(255, 255, 255, .28), 0 16px 36px -10px rgba(0, 0, 0, .45);
+}
+.run-record__play { color: color-mix(in srgb, var(--primary) 85%, #000); }
+.run-record__hint { color: rgba(26, 10, 0, .78); font-weight: 600; }
+.run-today__gps {
+  align-self: stretch;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .22);
+  color: var(--hero-ink); font-size: var(--fs-md); font-weight: 600;
+}
+.run-today__gps input { accent-color: var(--hero-ink); width: 18px; height: 18px; }
+.run-record__gps { color: rgba(26, 10, 0, .8); }
+.run-record__gps--tracking { color: #064e3b; font-weight: 700; }
+.run-record__weather, .run-record__tip {
+  align-self: stretch;
+  background: rgba(255, 255, 255, .22);
+  color: var(--hero-ink);
+  border-radius: 14px;
+  font-size: var(--fs-sm);
+  text-align: left;
+  justify-content: flex-start;
+}
+.run-record__advice { color: #7c2d00; }
+.run-today__done { color: #064e3b; font-weight: 700; margin: 0; }
+/* Ações secundárias: linhas de lista, não botões soltos no meio do cartão. */
+.run-record > .btn.btn--ghost.btn--sm {
+  align-self: stretch;
+  justify-content: flex-start;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .26);
+  border: 0;
+  color: var(--hero-ink);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-align: left;
+}
+.run-record > .btn.btn--ghost.btn--sm:hover:not(:disabled) { background: rgba(255, 255, 255, .36); }
+.run-record__tip .btn { background: rgba(255, 255, 255, .3); color: var(--hero-ink); border: 0; }
+
+/* ---------- Início, Desafios e Você ---------- */
+.run-card { border-radius: 20px; box-shadow: var(--card-shadow); }
+.run-card__title { font-weight: 700; letter-spacing: -.01em; }
+.run-stats .stat-card { align-items: flex-start; text-align: left; padding: 16px 14px; }
+.run-stats .stat-card__value { color: var(--text); font-weight: 800; letter-spacing: -.04em; }
+.run-stats .stat-card__label { text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); font-weight: 550; color: var(--text-muted); }
+.run-records .stat-card { align-items: center; text-align: center; padding: 14px 6px; }
+.run-records .stat-card__label { text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; }
+.run-challenge, .run-badge { border-radius: 18px; }
+
+.run-record > .btn.btn--ghost.btn--sm { white-space: normal; line-height: 1.25; }
+.run-record > p, .run-record__gps { color: rgba(26, 10, 0, .85); }
