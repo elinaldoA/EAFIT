@@ -36,6 +36,8 @@ h1, h2, h3, h4 { overflow-wrap: anywhere; text-wrap: balance; }
 }
 .btn:not(.btn--sm) { min-height: var(--btn-h); }
 .btn--sm {
+  flex-shrink: 0;           /* na barra de ferramentas o texto do lado encolhe, não o botão */
+  white-space: nowrap;
   min-height: var(--btn-h-sm);
   padding: 5px 12px;
   font-size: var(--fs-xs);
@@ -55,7 +57,6 @@ h1, h2, h3, h4 { overflow-wrap: anywhere; text-wrap: balance; }
 
 /* ---------- nomes longos ---------- */
 /* Em até 2 linhas com reticências (nome de exercício, treino, plano, aluno...). */
-.ex-name,
 .day-card__name,
 .plan-row__name,
 .run-card__title,
@@ -74,7 +75,8 @@ h1, h2, h3, h4 { overflow-wrap: anywhere; text-wrap: balance; }
   line-clamp: 2;
   overflow: hidden;
 }
-/* No modo ao vivo o nome do exercício é a informação principal: até 3 linhas. */
+/* Nome do exercício é a informação principal: até 3 linhas. */
+.ex-name,
 .live__ex-name {
   min-width: 0;
   overflow-wrap: anywhere;
