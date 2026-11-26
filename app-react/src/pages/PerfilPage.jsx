@@ -35,6 +35,7 @@ import { RunGoalSection, RunPrefsSection, RunShortcuts } from '../modules/corrid
 import { weeklyKmGoal } from '../modules/corrida/runProfileStats';
 
 import { bodyErrors, BODY_FIELD_IDS, cleanName, validWeeklyGoal, validWaterGoal } from '../lib/profileValidation';
+import { getDisplayName } from '../lib/utils';
 import { t, decimal, locale } from '../lib/i18n';
 import { friendlyError } from '../lib/friendlyError';
 export default function PerfilPage({ active }) {
@@ -265,7 +266,7 @@ export default function PerfilPage({ active }) {
 
   return (
     <section id="page-perfil" className="page active">
-      <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} />
+      <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} name={getDisplayName(user)} avatar={avatarData} />
 
       <div className="section-group">
         <div className="section-group__label">{t('Meus dados')}</div>

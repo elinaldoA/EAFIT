@@ -28,6 +28,7 @@ import QuickWorkoutModal from '../components/QuickWorkoutModal';
 import ImportWorkoutsModal from '../components/ImportWorkoutsModal';
 import TodayCard from '../components/TodayCard';
 import WeekProgressCard from '../components/WeekProgressCard';
+import TodayExercises from '../components/TodayExercises';
 import { useWorkoutReset } from '../hooks/useWorkoutReset';
 import { estimateMinutes, fitDayToTime, readQuickChoice, saveQuickChoice, QUICK_OPTIONS } from '../lib/quickWorkout';
 import { trackFeature } from '../lib/tracking';
@@ -199,6 +200,9 @@ export default function TreinoPage() {
         workDays={workDays} done={done} total={total} isDayDone={isDayDone} missedSet={missedSet} volume={volume} muscles={muscles}
         planStartDate={planStartDate} planEndDate={planEndDate} planExpired={planExpired} planByTrainer={planByTrainer}
       />
+      {today && !loading && todayHasSets && !todayDone && (
+        <TodayExercises day={today} onOpen={() => setLiveDay(today.dia)} onEdit={() => setShowPlanEditor(true)} />
+      )}
       <div className="toolbar">
         <p className="toolbar__hint">
           {loading ? t('Carregando dados salvos…') : t('Marque os treinos · salva automático')}

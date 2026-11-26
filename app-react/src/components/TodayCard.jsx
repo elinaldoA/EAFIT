@@ -16,12 +16,16 @@ export default function TodayCard({ day, sets, done, onStart, quickMinutes, onQu
         <div>
           <span className="today-card__kicker">{done ? t('Treino de hoje concluído') : t('Treino de hoje')}</span>
           <h2 className="today-card__title">{tFoco(day.foco)}</h2>
+          {/* Cada dado vira uma pílula; os " · " ficam no texto (escondidos) para a leitura
+              por leitor de tela e o textContent seguirem iguais. */}
           <span className="today-card__meta">
-            {day.exercicios.length === 1
-              ? t('{dia} · 1 exercício', { dia: t(day.dia) })
-              : t('{dia} · {length} exercícios', { dia: t(day.dia), length: day.exercicios.length })}
-            {hasSets && ` · ${t('{setsDone}/{setsTotal} séries', { setsDone: sets.done, setsTotal: sets.total })}`}
-            {hasSets && !done && ` · ${t('~{m} min', { m: estimateMinutes(day) })}`}
+            <span className="today-card__chip">
+              {day.exercicios.length === 1
+                ? t('{dia} · 1 exercício', { dia: t(day.dia) })
+                : t('{dia} · {length} exercícios', { dia: t(day.dia), length: day.exercicios.length })}
+            </span>
+            {hasSets && <><span className="today-card__sep"> · </span><span className="today-card__chip">{t('{setsDone}/{setsTotal} séries', { setsDone: sets.done, setsTotal: sets.total })}</span></>}
+            {hasSets && !done && <><span className="today-card__sep"> · </span><span className="today-card__chip">{t('~{m} min', { m: estimateMinutes(day) })}</span></>}
           </span>
           {quickMinutes && <span className="today-card__quick">{t('⏱ Versão de {m} min', { m: quickMinutes })}</span>}
         </div>
