@@ -1,0 +1,113 @@
+/* ============================================================
+   REFINO VISUAL — escala tipográfica, botões e nomes longos
+   Vem por último: ajusta o conjunto sem reescrever cada tela.
+   - Títulos e botões um degrau menores (hierarquia mais calma).
+   - Botões com 40px visíveis; a área de toque segue em 44px (::after).
+   - Nome longo quebra em até 2 linhas com reticências, nunca estoura o cartão.
+============================================================ */
+
+:root {
+  /* Um degrau abaixo nos títulos; o texto corrido (base/md/sm/xs) não muda. */
+  --fs-lg: 1rem;
+  --fs-xl: 1.125rem;
+  --btn-h: 40px;
+  --btn-h-sm: 30px;
+}
+
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* Títulos nunca estouram a largura: palavras longas quebram. */
+h1, h2, h3, h4 { overflow-wrap: anywhere; text-wrap: balance; }
+
+/* ---------- botões ---------- */
+.btn {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  padding: 9px 18px;
+  font-size: var(--fs-md);
+  font-weight: 650;
+  letter-spacing: .005em;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;      /* rótulo longo quebra em vez de vazar */
+  text-wrap: balance;
+  overflow-wrap: break-word;  /* só quebra palavra se ela sozinha não couber */
+}
+.btn:not(.btn--sm) { min-height: var(--btn-h); }
+.btn--sm {
+  min-height: var(--btn-h-sm);
+  padding: 5px 12px;
+  font-size: var(--fs-xs);
+}
+/* Área de toque de 44px sem aumentar o botão (só a altura; a largura já é a do botão). */
+.btn:not(.btn--sm)::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: max(100%, var(--tap-min));
+  transform: translateY(-50%);
+}
+.btn--primary { box-shadow: 0 1px 0 rgba(255, 255, 255, .12) inset; }
+
+/* Campos: altura alinhada aos botões, sem perder a área de toque. */
+.input { min-height: 42px; }
+
+/* ---------- nomes longos ---------- */
+/* Em até 2 linhas com reticências (nome de exercício, treino, plano, aluno...). */
+.ex-name,
+.day-card__name,
+.plan-row__name,
+.run-card__title,
+.today-card__title,
+.goal-card__title,
+.challenge__title,
+.checkin__title,
+.summary-table__name,
+.client-name,
+.mobility__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+/* No modo ao vivo o nome do exercício é a informação principal: até 3 linhas. */
+.live__ex-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+/* Linhas de lista em flex: o nome encolhe e quebra em vez de empurrar o que está ao lado. */
+.history-item__title,
+.pr-row__name,
+.discomfort-history__name,
+.meal-log__name,
+.goal-meals__name,
+.protein-sources__name,
+.run-event__name,
+.influencer-ranking__name,
+.profile-section__title,
+.dash-card__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Títulos de destaque um pouco menores (hierarquia mais calma). */
+.live__ex-name { font-size: 1.2rem; letter-spacing: -.3px; }
+.mobility__name { font-size: 1.2rem; }
+.today-card__title { font-size: var(--fs-xl); letter-spacing: -.2px; }
+.onb-step__title,
+.error-screen__title { font-size: 1.125rem; }
+
+/* Telas estreitas: nada de botão duplo estourando a linha. */
+@media (max-width: 360px) {
+  .btn { padding: 8px 14px; }
+  :root { --fs-xl: 1.0625rem; }
+}
