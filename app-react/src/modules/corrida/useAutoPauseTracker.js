@@ -36,8 +36,8 @@ export function useAutoPauseTracker(run, { interrupted, autoPauseOn, voiceOn, bl
     active: (running || autoPaused) && run.gps && geoSupported() && !interrupted,
     paused: autoPaused,
     baseMeters: run?.meters || 0,
-    onMeters: meters => updateLiveRun(s => setDistance(s, meters)),
-    onFix: ({ lat, lon, jump, altitude, altitudeAccuracy }) => updateLiveRun(s => addElevation(addRoutePoint(s, lat, lon, { jump }), altitude, altitudeAccuracy)),
+    onMeters: (meters, at) => updateLiveRun(s => setDistance(s, meters, at)),
+    onFix: ({ lat, lon, jump, altitude, altitudeAccuracy, at }) => updateLiveRun(s => addElevation(addRoutePoint(s, lat, lon, { jump, now: at }), altitude, altitudeAccuracy)),
     onSample: handleSample,
   });
 }

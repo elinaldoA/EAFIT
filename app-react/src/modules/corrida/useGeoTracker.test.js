@@ -75,14 +75,14 @@ describe('useGeoTracker', () => {
     const t0 = Date.now();
     act(() => onPos(fix(10, t0, -23.5)));
     act(() => onPos(fix(10, t0 + 5000, -23.5001)));   // ~11 m
-    expect(onMeters).toHaveBeenLastCalledWith(11);
+    expect(onMeters).toHaveBeenLastCalledWith(11, expect.any(Number));
     rerender({ paused: true });
     act(() => onPos(fix(10, t0 + 10000, -23.5002)));  // anda ~11 m parado no cronômetro
     expect(onMeters).toHaveBeenCalledTimes(1);
     expect(onSample).toHaveBeenLastCalledWith({ t: t0 + 10000, reason: 'moved', meters: expect.closeTo(11.1, 0) });
     rerender({ paused: false });
     act(() => onPos(fix(10, t0 + 15000, -23.5003)));  // a soma recomeça da posição nova
-    expect(onMeters).toHaveBeenLastCalledWith(22);
+    expect(onMeters).toHaveBeenLastCalledWith(22, expect.any(Number));
   });
 
   it('desligado não chama o GPS', () => {

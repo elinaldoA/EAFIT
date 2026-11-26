@@ -15,6 +15,10 @@ const APPROX_M = 500;
 // dois pontos não é o caminho feito. A distância continua somando em linha reta.
 export const ROUTE_GAP_MS = 60000;
 
+// Hora (ms) do ponto para o cronômetro: a do GPS, nunca no futuro (relógio
+// adiantado) e, sem ela, a de agora.
+export const fixTime = (ts, now = Date.now()) => (Number.isFinite(ts) && ts > 0 ? Math.min(ts, now) : now);
+
 export const geoSupported = () => isNative() || (typeof navigator !== 'undefined' && 'geolocation' in navigator);
 
 // Acompanha o GPS enquanto `active` (corrida rodando, não pausada) e soma a
@@ -78,8 +82,12 @@ export function useGeoTracker({ active, paused = false, baseMeters, onMeters, on
           lastAcceptedAt = Date.now();
           setStatus('tracking');
           if (!paused) {
-            onFixRef.current?.({ lat, lon, jump: result.reason === 'jump' || gap > ROUTE_GAP_MS, altitude, altitudeAccuracy });
-            if (result.reason !== 'first') onMetersRef.current?.(Math.round(track.meters));
+            // `at`: hora em que o GPS mediu o ponto, não a de chegada ao JavaScript. Com a
+            // tela apagada o app recebe leituras atrasadas em rajada; carimbá-las com a hora
+            // da chegada comprimia o tempo (km de 55 s, rota a 100 km/h).
+            const at = fixTime(pos.timestamp);
+            onFixRef.current?.({ lat, lon, jump: result.reason === 'jump' || gap > ROUTE_GAP_MS, altitude, altitudeAccuracy, at });
+            if (result.reason !== 'first') onMetersRef.current?.(Math.round(track.meters), at);
           }
         }
         onSampleRef.current?.({ t: pos.timestamp, reason: result.reason, meters: moved });

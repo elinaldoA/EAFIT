@@ -106,7 +106,8 @@ export function autoResumeRun(s, now = Date.now()) {
 // Distância menor que a atual é ignorada: a soma só cresce.
 export function setDistance(s, meters, now = Date.now()) {
   if (!s || !(meters > s.meters)) return s;
-  const el = elapsedMs(s, now);
+  // `now` pode ser a hora do fix (leitura atrasada): o tempo nunca anda para trás.
+  const el = Math.max(elapsedMs(s, now), s.sample?.elapsedMs || 0);
   const prev = s.sample || { meters: s.meters, elapsedMs: el };
   const kmMarks = [...s.kmMarks];
   // Foto da subida e descida a cada km completo (elevation.js), alinhada com kmMarks.
@@ -118,7 +119,7 @@ export function setDistance(s, meters, now = Date.now()) {
     const frac = span > 0 ? (k * 1000 - prev.meters) / span : 1;
     kmMarks.push(Math.round(prev.elapsedMs + Math.max(0, Math.min(1, frac)) * (el - prev.elapsedMs)));
   }
-  return { ...s, meters, kmMarks, kmElev, sample: { meters, elapsedMs: el }, updatedAt: now };
+  return { ...s, meters, kmMarks, kmElev, sample: { meters, elapsedMs: el }, updatedAt: Math.max(s.updatedAt || 0, now) };
 }
 
 // Ponto do GPS (graus) para o desenho do percurso. `jump`: o GPS saltou
@@ -127,7 +128,7 @@ export function addRoutePoint(s, lat, lon, { jump = false, now = Date.now() } = 
   if (!s || isPaused(s)) return s;
   const route = addPoint(s.route, lat, lon, s.routeBreak || jump, elapsedMs(s, now) / 1000);
   if (route === s.route && !s.routeBreak) return s;
-  return { ...s, route, routeBreak: false, updatedAt: now };
+  return { ...s, route, routeBreak: false, updatedAt: Math.max(s.updatedAt || 0, now) };
 }
 
 // Altitude do GPS (elevation.js). Pausada, não conta.

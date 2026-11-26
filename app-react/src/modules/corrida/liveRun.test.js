@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   startRun, pauseRun, resumeRun, elapsedMs, isPaused, setDistance, splitsOf, finishRun,
   getLiveRun, setLiveRun, updateLiveRun, isRunActive, resetLiveRunCache, STALE_MS, isPersistFailing, restoreLiveRun, setLiveRunMirror, MIRROR_EVERY_MS, LOCAL_EVERY_MS,
-  autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps, addLap, lapsOf,
+  addRoutePoint, autoPauseRun, autoResumeRun, markRunSeen, interruptedSince, INTERRUPTED_MS, addElevation, addSteps, addLap, lapsOf,
 } from './liveRun';
 
 const T0 = new Date(2026, 10, 5, 7, 0, 0).getTime();
@@ -313,5 +313,27 @@ describe('parcial manual (lap)', () => {
     expect(lapsOf(startRun({}, T0))).toEqual([]);
     expect(lapsOf(null)).toEqual([]);
     expect(addLap(null)).toBeNull();
+  });
+});
+
+describe('leituras atrasadas do GPS (tela apagada)', () => {
+  it('carimba o ponto com a hora do fix, não a da chegada', () => {
+    let s = startRun({ gps: true }, T0);
+    // Três pontos medidos aos 10, 20 e 30 s, entregues juntos aos 60 s.
+    s = addRoutePoint(s, -20.3, -40.3, { now: T0 + 10_000 });
+    s = addRoutePoint(s, -20.3003, -40.3, { now: T0 + 20_000 });
+    s = addRoutePoint(s, -20.3006, -40.3, { now: T0 + 30_000 });
+    expect(s.route[0].map(p => p[2])).toEqual([10, 20, 30]);
+  });
+
+  it('o km usa o tempo do fix e o cronômetro nunca anda para trás', () => {
+    let s = startRun({ gps: true }, T0);
+    s = setDistance(s, 500, T0 + 120_000);
+    s = setDistance(s, 1100, T0 + 240_000);
+    expect(s.kmMarks).toHaveLength(1);
+    // Fix atrasado, medido antes da leitura anterior: não volta no tempo.
+    const late = setDistance(s, 1200, T0 + 200_000);
+    expect(late.sample.elapsedMs).toBe(s.sample.elapsedMs);
+    expect(late.updatedAt).toBe(s.updatedAt);
   });
 });
