@@ -1,4 +1,6 @@
 import { trackFeature } from './tracking';
+import { isNative } from './native';
+import { nativeSpeakAll, nativeStop } from './nativeSpeech';
 // Camada de voz do treinador: só fala (speechSynthesis) e escolhe a melhor voz
 // pt-BR do aparelho. Não conhece treino nem frases — isso fica em coach.js.
 //
@@ -12,6 +14,7 @@ const NATURAL = /natural|neural|online|enhanced|premium|aprimorada|siri|wavenet|
 const ROBOTIC = /espeak|pico|compact|compacta|desktop/i;
 
 export function isVoiceSupported() {
+  if (isNative()) return true; // voz do sistema pelo plugin nativo (nativeSpeech.js)
   return typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
 }
 
@@ -65,7 +68,7 @@ function loadVoices() {
 
 // Vozes em português do aparelho, para escolha manual (melhores primeiro).
 export async function listPtVoices() {
-  if (!isVoiceSupported()) return [];
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return [];
   const voices = (await loadVoices()).filter(v => langScore(v) > 0);
   return voices
     .sort((a, b) => langScore(b) - langScore(a) || qualityScore(b) - qualityScore(a))
@@ -73,7 +76,8 @@ export async function listPtVoices() {
 }
 
 export function cancelSpeech() {
-  if (isVoiceSupported()) window.speechSynthesis.cancel();
+  if (isNative()) nativeStop();
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
 // "Boa! Descansa 1 minuto. Bora?" -> ['Boa!', 'Descansa 1 minuto.', 'Bora?'].
@@ -107,6 +111,16 @@ export function prosody(sentence, random = Math.random) {
 // natural entre elas; `rate` e `pitch` são a base sobre a qual ela varia.
 export async function speak(text, { voiceName = '', rate = 1, pitch = 1, volume = 1, queue = false, random = Math.random } = {}) {
   if (!isVoiceSupported() || !text) return false;
+  if (isNative()) {
+    const sentences = splitSentences(text);
+    const items = sentences.map(sentence => {
+      const tune = prosody(sentence, random);
+      return { text: sentence, rate: clamp(rate * tune.rate, 0.6, 1.6), pitch: clamp(pitch * tune.pitch, 0.7, 1.4) };
+    });
+    if (await nativeSpeakAll(items, { volume, queue })) { trackFeature('voice_coach'); return true; }
+    // Sem o plugin ou sem o idioma no aparelho: tenta a voz do navegador.
+    if (!('speechSynthesis' in window)) return false;
+  }
   try {
     const voices = await loadVoices();
     const voice = pickVoice(voices, voiceName);
