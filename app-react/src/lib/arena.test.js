@@ -6,6 +6,7 @@ vi.mock('./tracking', () => ({ trackFeature: vi.fn() }));
 
 import {
   levelProgress, visibleMissions, progressLabel, dailyLabel, parseArenaBadge, seasonName, shortDate, seasonDaysLeft,
+  bossPercent, bossAmount, bossMine,
 } from './arena';
 import { arenaBadges, visibleBadges } from './achievements';
 
@@ -49,6 +50,19 @@ describe('arena', () => {
     expect(list[0]).toMatchObject({ emoji: '🥇', title: 'Arena · Temporada 1 · 1º' });
     expect(list[0].check()).toBe(false);
     expect(visibleBadges(ids).filter(b => b.arena)).toHaveLength(2);
+  });
+
+  it('calcula e escreve o progresso do chefão', () => {
+    expect(bossPercent({ goal: 750, value: 300 })).toBe(40);
+    expect(bossPercent({ goal: 10, value: 25 })).toBe(100);
+    expect(bossPercent({ goal: 0, value: 5 })).toBe(0);
+    expect(bossPercent(null)).toBe(0);
+    expect(bossAmount({ metric: 'xp', goal: 750, value: 300 })).toBe('300 de 750 XP');
+    expect(bossAmount({ metric: 'workouts', goal: 10, value: 7 })).toBe('7 de 10 treinos');
+    expect(bossAmount({ metric: 'run_km', goal: 40, value: 12.5 })).toBe('12,5 de 40 km');
+    expect(bossMine({ metric: 'run_km', mine: 5 })).toBe('5 km');
+    expect(bossMine({ metric: 'workouts', mine: 2 })).toBe('2 treinos');
+    expect(bossMine({ metric: 'xp', mine: 0 })).toBe('0 XP');
   });
 
   it('formata datas e dias que faltam da temporada', () => {

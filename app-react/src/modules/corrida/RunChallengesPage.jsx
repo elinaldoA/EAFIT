@@ -11,6 +11,8 @@ import RunClubs from './Clubs';
 import CommunityChallenges from './CommunityChallenges';
 import ArenaCard from '../../components/ArenaCard';
 import ArenaRanking from '../../components/ArenaRanking';
+import ArenaBoss from '../../components/ArenaBoss';
+import ArenaTeams from '../../components/ArenaTeams';
 import { communityDone } from './runsCommunity';
 import { monthlyChallenges, challengeProgress, monthMedals } from './challenges';
 
@@ -272,7 +274,9 @@ export default function RunChallengesPage() {
   return (
     <section id="page-desafios" className="page active">
       <ArenaCard sport="run" />
+      <ArenaBoss sport="run" />
       <ArenaRanking sport="run" />
+      <ArenaTeams sport="run" />
       <CommunityChallenges onLoaded={setCommunity} />
       <MonthChallenges runs={runs} today={today} />
       <Medals runs={runs} today={today} community={community} />

@@ -64,17 +64,19 @@ export function dailyLabel(arena) {
 // Para o backup: cada XP ganho, o resumo (nível e sequência) e as missões
 // resgatadas. A RLS já limita as três tabelas ao próprio usuário.
 export async function fetchMyArenaData() {
-  const [events, profile, claims, member, seasons] = await Promise.all([
+  const [events, profile, claims, member, seasons, bosses] = await Promise.all([
     db.from('arena_xp_events').select('source, module, xp, day, created_at').order('created_at'),
     db.from('arena_profiles').select('xp_total, level, streak, best_streak, last_day').maybeSingle(),
     db.from('arena_mission_claims').select('mission_id, period_start, xp, claimed_at').order('claimed_at'),
     db.from('arena_members').select('joined_at').maybeSingle(),
     db.from('arena_season_results').select('season_id, xp, position').order('season_id'),
+    db.from('arena_boss_claims').select('boss_id, xp, claimed_at').order('claimed_at'),
   ]);
-  for (const r of [events, profile, claims, member, seasons]) if (r.error) throw r.error;
+  for (const r of [events, profile, claims, member, seasons, bosses]) if (r.error) throw r.error;
   return {
     xpEvents: events.data || [], profile: profile.data || null, missionClaims: claims.data || [],
     rankingMemberSince: member.data?.joined_at || null, seasonResults: seasons.data || [],
+    bossClaims: bosses.data || [],
   };
 }
 
@@ -121,4 +123,50 @@ export function seasonDaysLeft(endsOn, today) {
   const b = Date.parse(`${today}T00:00:00Z`);
   if (Number.isNaN(a) || Number.isNaN(b)) return 0;
   return Math.max(0, Math.round((a - b) / 86400000));
+}
+
+// ── Chefão semanal e times (supabase/migrations/20270308010000_arena_teams_boss.sql) ──
+export async function fetchArenaBoss() {
+  const { data, error } = await db.rpc('arena_my_boss');
+  if (error) throw error;
+  return data || { enabled: false };
+}
+
+export async function claimArenaBoss(id) {
+  const { data, error } = await db.rpc('arena_claim_boss', { p_boss: id });
+  if (error) throw error;
+  trackFeature('arena_chefao');
+  return data || { xp: 0 };
+}
+
+export async function fetchArenaTeams() {
+  const { data, error } = await db.rpc('arena_my_teams');
+  if (error) throw error;
+  return data || { enabled: false };
+}
+
+// Porcentagem da meta do chefão (trava em 100).
+export function bossPercent(boss) {
+  const goal = Number(boss?.goal) || 0;
+  if (goal <= 0) return 0;
+  return Math.min(100, Math.round(((Number(boss?.value) || 0) / goal) * 100));
+}
+
+// "12 de 40 km", "7 de 10 treinos", "300 de 750 XP"
+export function bossAmount(boss, value = boss?.value) {
+  const n = Number(value) || 0;
+  const goal = Number(boss?.goal) || 0;
+  const fmt = v => decimal(String(Math.round(v * 10) / 10));
+  if (boss?.metric === 'run_km') return t('{have} de {goal} km', { have: fmt(n), goal: fmt(goal) });
+  if (boss?.metric === 'workouts') return t('{have} de {goal} treinos', { have: fmt(n), goal: fmt(goal) });
+  return t('{have} de {goal} XP', { have: fmt(n), goal: fmt(goal) });
+}
+
+// O que a pessoa colocou no chefão, na unidade dele.
+export function bossMine(boss) {
+  const n = Number(boss?.mine) || 0;
+  const v = decimal(String(Math.round(n * 10) / 10));
+  if (boss?.metric === 'run_km') return t('{n} km', { n: v });
+  if (boss?.metric === 'workouts') return t('{n} treinos', { n: v });
+  return t('{n} XP', { n: v });
 }
