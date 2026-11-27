@@ -38,11 +38,13 @@ describe('TrainerShell', () => {
     render(<TrainerShell onSwitchToStudent={() => {}} />);
     fireEvent.click(screen.getByRole('button', { name: /Alunos/ }));
     expect(screen.getByTestId('p-alunos')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Modelos/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Mais/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Modelos/ }));
     expect(screen.getByTestId('p-modelos')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Turma/ }));
     expect(screen.getByTestId('p-turma').textContent).toBe('recados');
-    fireEvent.click(screen.getByRole('button', { name: /Conta/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Mais/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Conta/ }));
     expect(screen.getByTestId('p-conta')).toBeTruthy();
   });
 

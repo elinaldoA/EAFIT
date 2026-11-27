@@ -228,7 +228,7 @@ function Shell() {
                 </ErrorBoundary>
               </main>
 
-              <BottomNav active={page} onChange={setPage} badges={{ perfil: unreadMessages }} tabs={sport.tabs} extraItems={sport.navItems} />
+              <BottomNav active={page} onChange={setPage} badges={{ perfil: unreadMessages }} tabs={sport.tabs} moreTabs={sport.moreTabs} extraItems={sport.navItems} />
               {sport.tutorial && <Suspense fallback={null}><Tutorial role="aluno" userId={user.id} onNavigate={setPage} /></Suspense>}
             </div>
           </WorkoutProvider>

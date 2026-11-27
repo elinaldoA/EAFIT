@@ -16,6 +16,7 @@ import { subscribeLiveRun, isRunActive } from './corrida/liveRun';
 //   label      nome do esporte no seletor do cadastro e do Perfil
 //   icon       emoji do seletor e do card do Perfil
 //   tabs       abas da navegação inferior, na ordem (chaves de BottomNav/App.jsx)
+//   moreTabs   (opcional) abas de `tabs` que ficam no menu "Mais" em vez da barra
 //   defaultTab aba que abre primeiro
 //   released   true = qualquer pessoa pode escolher; false = só aparece depois
 //              de liberado no painel admin (app_settings.modules.enabled)
@@ -33,7 +34,9 @@ import { subscribeLiveRun, isRunActive } from './corrida/liveRun';
 
 export const DEFAULT_MODULE_ID = 'musculacao';
 
-export const BASE_TABS = Object.freeze(['treino', 'historico', 'hidratacao', 'nutricao', 'dash', 'perfil']);
+export const BASE_TABS = Object.freeze(['treino', 'hidratacao', 'nutricao', 'historico', 'dash', 'perfil']);
+// Abas de `tabs` que saem da barra e ficam no menu "Mais" (continuam rotas normais).
+export const MORE_TABS = Object.freeze(['historico', 'dash', 'perfil']);
 
 export const MODULES = Object.freeze([
   Object.freeze({
@@ -43,6 +46,7 @@ export const MODULES = Object.freeze([
     icon: '🏋️',
     blurb: t('Treino na academia, plano pronto e evolução de carga'),
     tabs: BASE_TABS,
+    moreTabs: MORE_TABS,
     defaultTab: 'treino',
     released: true,
     tutorial: true,
@@ -54,6 +58,7 @@ export const MODULES = Object.freeze([
     icon: '🏃',
     blurb: t('GPS, voz a cada km, programa 5K/10K e desafios com amigos'),
     tabs: Object.freeze(['inicio', 'gravar', 'desafios', 'voce', 'perfil']),
+    moreTabs: Object.freeze(['voce', 'perfil']),
     defaultTab: 'inicio',
     released: false,
     navItems: RUN_NAV_ITEMS,

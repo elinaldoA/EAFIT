@@ -47,7 +47,8 @@ describe('ProgramShell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Divulgar/ }));
     expect(screen.getByTestId('p-divulgar')).toBeTruthy();
     expect(window.location.hash).toBe('#divulgar');
-    fireEvent.click(screen.getByRole('button', { name: /Conta/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Mais/ }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Conta/ }));
     fireEvent.click(screen.getByText('virar aluno'));
     expect(onSwitch).toHaveBeenCalled();
   });

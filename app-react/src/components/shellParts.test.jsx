@@ -78,6 +78,19 @@ describe('BottomNav', () => {
     expect(onChange).toHaveBeenCalledWith('nutricao');
   });
 
+  it('moreTabs saem da barra e abrem pelo menu Mais', () => {
+    const onChange = vi.fn();
+    render(<BottomNav active="dash" onChange={onChange} moreTabs={['historico', 'dash', 'perfil']} />);
+    // Treino, Água, Nutrição + Mais
+    expect(screen.getAllByRole('button')).toHaveLength(4);
+    const more = screen.getByRole('button', { name: /Mais/ });
+    expect(more.getAttribute('aria-current')).toBe('page');
+    fireEvent.click(more);
+    fireEvent.click(screen.getByRole('menuitem', { name: /Histórico/ }));
+    expect(onChange).toHaveBeenCalledWith('historico');
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
   it('mostra só as abas do módulo de esporte, na ordem dele', () => {
     render(<BottomNav active="perfil" onChange={() => {}} tabs={['perfil', 'treino', 'inexistente']} />);
     expect(screen.getAllByRole('button').map(b => b.textContent)).toEqual(['Perfil', 'Treino']);

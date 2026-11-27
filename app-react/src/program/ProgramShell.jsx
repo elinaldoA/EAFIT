@@ -16,6 +16,8 @@ import ProgramAccount from './ProgramAccount';
 
 import { t } from '../lib/i18n';
 const TABS = ['resultados', 'divulgar', 'recados', 'conta'];
+// Fora da barra: ficam no menu "Mais".
+const MORE = ['conta'];
 
 const ICONS = {
   resultados: (
@@ -99,7 +101,7 @@ export default function ProgramShell({ kind, onSwitchToStudent }) {
         </ErrorBoundary>
       </main>
 
-      <TrainerNav items={items} active={page} onChange={setPage} label={labels.nav} />
+      <TrainerNav items={items} more={MORE} active={page} onChange={setPage} label={labels.nav} />
       <Tutorial role={labels.tutorialRole} userId={user?.id} onNavigate={setPage} />
     </div>
   );

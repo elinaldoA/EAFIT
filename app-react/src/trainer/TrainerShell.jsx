@@ -17,6 +17,9 @@ const TABS = ['painel', 'alunos', 'modelos', 'turma', 'conta'];
 
 // Casca do app no modo Personal: outra navegação e outras páginas, mas o mesmo
 // login, tema e visual do app de aluno.
+// Fora da barra: ficam no menu "Mais".
+const MORE = ['modelos', 'conta'];
+
 export default function TrainerShell({ onSwitchToStudent }) {
   const { user } = useAuth();
   const [page, setPage] = useHashTab(TABS, 'painel');
@@ -66,7 +69,7 @@ export default function TrainerShell({ onSwitchToStudent }) {
         </ErrorBoundary>
       </main>
 
-      <TrainerNav items={items} active={page} onChange={setPage} />
+      <TrainerNav items={items} more={MORE} active={page} onChange={setPage} />
       <Tutorial role="trainer" userId={user?.id} onNavigate={navigate} />
     </div>
   );

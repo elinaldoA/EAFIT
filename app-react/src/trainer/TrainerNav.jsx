@@ -1,6 +1,5 @@
 import { t } from '../lib/i18n';
-import { useSeason } from '../hooks/useSeason';
-import { seasonNavIcon } from '../components/seasonIcons';
+import NavBar from '../components/NavBar';
 const ICONS = {
   painel: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -39,23 +38,8 @@ const ICONS = {
 
 // Barra inferior do modo personal (mesmo visual da do aluno). O modo
 // do programa (embaixador/influenciador) usa a mesma barra com os próprios ícones (item.icon) e rótulo.
-export default function TrainerNav({ items, active, onChange, label }) {
-  const { theme } = useSeason();
-  return (
-    <nav className="bottom-nav" aria-label={label || t('Navegação do personal')}>
-      {items.map(item => (
-        <button
-          key={item.key}
-          type="button"
-          className={`nav-item${active === item.key ? ' active' : ''}`}
-          aria-current={active === item.key ? 'page' : undefined}
-          onClick={() => onChange(item.key)}
-        >
-          <span className="nav-item__icon" aria-hidden="true">{seasonNavIcon(theme, item.key, item.icon || ICONS[item.key] || ICONS.conta)}</span>
-          <span>{item.label}</span>
-          {item.badge > 0 && <span className="trainer-badge">{item.badge}</span>}
-        </button>
-      ))}
-    </nav>
-  );
+// `more`: chaves que ficam no menu "Mais".
+export default function TrainerNav({ items, more, active, onChange, label }) {
+  const withIcons = items.map(item => ({ ...item, icon: item.icon || ICONS[item.key] || ICONS.conta }));
+  return <NavBar items={withIcons} more={more} active={active} onChange={onChange} label={label || t('Navegação do personal')} />;
 }

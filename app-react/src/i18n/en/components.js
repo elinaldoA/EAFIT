@@ -95,6 +95,7 @@ export default {
   'Evolução': 'Progress',
   'Perfil': 'Profile',
   'Navegação principal': 'Main navigation',
+  'Mais': 'More',
   '{v1} não lido(s)': '{v1} unread',
 
   // CardioRow

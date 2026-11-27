@@ -209,3 +209,41 @@
 }
 .nav-item__icon svg { width: 21px; height: 21px; stroke-width: 1.8; }
 .nav-item.active .nav-item__icon { background: var(--primary-glow); }
+
+/* Menu "Mais": abre acima da barra, alinhado à direita. */
+.bottom-nav { position: relative; }
+.nav-more {
+  position: absolute;
+  right: 8px;
+  bottom: calc(100% + 8px);
+  min-width: 180px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg, 14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+  animation: fadeUp 0.15s ease both;
+}
+.nav-more__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: var(--r-md, 10px);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-sm, 14px);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.nav-more__item.active { color: var(--primary-text); background: var(--primary-glow); }
+.nav-more__item:active { opacity: 0.7; }
+.nav-more__icon { display: flex; }
+.nav-more__icon svg { width: 20px; height: 20px; }
+.nav-more__item { position: relative; }
+.nav-more__item .trainer-badge--inline { position: static; margin-left: auto; }

@@ -4,7 +4,8 @@ import { test, expect, USER } from './support/fixtures.js';
 test('perfil: abrir "Meu corpo" mostra os campos, com os selects visíveis', async ({ page, fake }) => {
   expect(fake).toBeTruthy(); // liga o Supabase simulado e a sessão
   await page.goto('/app/');
-  await page.locator('.bottom-nav').getByText('Perfil', { exact: true }).click();
+  await page.locator('.bottom-nav').getByText('Mais', { exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Perfil' }).click();
   await page.locator('section.page.active').getByText('Meu corpo', { exact: true }).click();
   await expect(page.getByLabel('Sexo biológico')).toBeVisible();
   await expect(page.locator('section.page.active select:visible').first()).toBeVisible();

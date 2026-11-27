@@ -42,19 +42,19 @@ export const STUDENT_STEPS = [
     text: t('No sino ficam os avisos do EAFIT, as respostas ao seu feedback e as notificações. Toque num aviso para ir direto à tela do assunto e marque como lido o que já viu. Ali também você liga os lembretes de treino e de água neste aparelho.'),
   },
   {
-    tab: 'historico', target: nav(2), icon: '📅', title: t('Histórico'),
+    tab: 'historico', target: nav(4), icon: '📅', title: t('Histórico'),
     text: t('O calendário mostra os dias treinados e marca os feriados nacionais. Toque num dia para ver a sessão e comparar cada exercício com a última vez que você o fez.'),
   },
   {
-    tab: 'hidratacao', target: nav(3), icon: '💧', title: t('Hidratação'),
+    tab: 'hidratacao', target: nav(2), icon: '💧', title: t('Hidratação'),
     text: t('A meta de água é calculada pelo seu peso. Registre copo, caneca, garrafa ou squeeze com um toque (dá pra desfazer) e acompanhe sua sequência de dias na meta.'),
   },
   {
-    tab: 'nutricao', target: nav(4), icon: '🍎', title: t('Nutrição'),
+    tab: 'nutricao', target: nav(3), icon: '🍎', title: t('Nutrição'),
     text: t('Veja suas metas diárias de calorias, proteína, carboidratos e gorduras, calculadas pelo seu perfil. Registre a proteína do dia com um toque, acompanhe os últimos 14 dias e consulte fontes de proteína.'),
   },
   {
-    tab: 'dash', dashTab: 'treinos', target: nav(5), icon: '📈', title: t('Evolução'),
+    tab: 'dash', dashTab: 'treinos', target: nav(4), icon: '📈', title: t('Evolução'),
     text: t('Em Treinos ficam a retrospectiva do mês (com cartão para compartilhar), o avatar dos músculos trabalhados, os gráficos de carga e volume e as conquistas. Em Recordes, suas melhores cargas.'),
   },
   {
@@ -70,7 +70,7 @@ export const STUDENT_STEPS = [
     text: t('Adicione amigos pelo código pessoal, dispute o ranking semanal e acompanhe o feed com os treinos deles — dá pra reagir a cada um.'),
   },
   {
-    tab: 'perfil', target: nav(6), icon: '👤', title: t('Perfil e metas'),
+    tab: 'perfil', target: nav(4), icon: '👤', title: t('Perfil e metas'),
     text: t('Atualize peso e altura e defina as metas semanais de treino e de água. Se o peso novo mudar sua faixa de IMC, o treino é ajustado sozinho.'),
   },
   {
@@ -117,15 +117,15 @@ export const TRAINER_STEPS = [
     text: t('Na aba Plano da ficha, marque data, hora, duração e local. O aluno é avisado e confirma ou recusa pelo app, e os dois recebem lembrete antes da aula. As próximas aulas aparecem na agenda do Painel.'),
   },
   {
-    tab: 'modelos', target: nav(3), icon: '🧩', title: t('Modelos de treino'),
+    tab: 'modelos', target: nav(4), icon: '🧩', title: t('Modelos de treino'),
     text: t('Crie um modelo uma vez ("+ Novo modelo") e envie para vários alunos de uma só vez. "Editar" muda o próprio modelo; "Duplicar" cria uma cópia para ajustar sem mexer no original.'),
   },
   {
-    tab: 'turma', target: nav(4), icon: '🏆', title: t('Turma: recados e desafios'),
+    tab: 'turma', target: nav(3), icon: '🏆', title: t('Turma: recados e desafios'),
     text: t('Em Recados, envie incentivos e orientações para todos ou para alunos escolhidos e veja quantos já leram. Em Desafios, crie desafios com nome e prazo para toda a turma ou só para alguns alunos e acompanhe o placar.'),
   },
   {
-    tab: 'conta', target: nav(5), icon: '⚙️', title: t('Conta e alertas'),
+    tab: 'conta', target: nav(4), icon: '⚙️', title: t('Conta e alertas'),
     text: t('Ative as notificações neste aparelho e escolha os avisos: aluno sem treinar (você define o prazo), recorde de carga, relato de dor forte ou lesão e o resumo da semana, toda segunda. Os avisos chegam entre 8h e 20h. Quer treinar também? "Usar como aluno" troca para o app de treino.'),
   },
   {
