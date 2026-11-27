@@ -21,11 +21,14 @@ export function ShortcutCard({ icon, title, summary, onClick }) {
   );
 }
 
-// "Treine junto / Corra junto" e "Ajude a melhorar": convidar amigos e enviar
-// feedback, cada um ligado pelo painel admin (flags convite_amigos e feedback).
+// "Comunidade e ajuda": convidar amigos, enviar feedback e rever o tutorial num
+// grupo só. Convite e feedback são ligados pelo painel admin (flags
+// convite_amigos e feedback); o tutorial só existe nos esportes que o têm.
 // `cardToOpen`: atalho vindo de uma notificação que abre o feedback.
-export function InviteAndFeedback({ user, toast, usesWorkouts, cardToOpen }) {
+export function CommunityGroup({ user, toast, usesWorkouts, cardToOpen, showTutorial }) {
   const { config } = useAppConfig();
+  const showInvite = isFlagOn(config.flags, 'convite_amigos');
+  const showFeedback = isFlagOn(config.flags, 'feedback');
 
   async function handleInvite() {
     const result = await shareInvite();
@@ -33,39 +36,28 @@ export function InviteAndFeedback({ user, toast, usesWorkouts, cardToOpen }) {
     else if (result === 'failed') toast(t('⚠️ Não deu pra compartilhar. Mande o link eafit.com.br'));
   }
 
-  return (
-    <>
-      {isFlagOn(config.flags, 'convite_amigos') && (
-        <div className="section-group">
-          <div className="section-group__label">{usesWorkouts ? t('Treine junto') : t('Corra junto')}</div>
-          <ShortcutCard
-            icon="🤝" title={t('Convidar amigos')} onClick={handleInvite}
-            summary={usesWorkouts ? t('Mande o link do EAFIT pra quem treina com você') : t('Mande o link do EAFIT pra quem corre com você')}
-          />
-        </div>
-      )}
+  if (!showInvite && !showFeedback && !showTutorial) return null;
 
-      {isFlagOn(config.flags, 'feedback') && (
-        <div className="section-group">
-          <div className="section-group__label">{t('Ajude a melhorar')}</div>
-          <CollapsibleCard icon="💬" title={t('Enviar feedback')} summary={t('Sugestão, problema ou elogio')} defaultOpen={cardToOpen === 'feedback'}>
-            <ProfileFeedbackSection userId={user.id} toast={toast} />
-          </CollapsibleCard>
-        </div>
-      )}
-    </>
-  );
-}
-
-// "Ajuda": rever o tutorial do app.
-export function HelpSection() {
   return (
     <div className="section-group">
-      <div className="section-group__label">{t('Ajuda')}</div>
-      <ShortcutCard
-        icon="🎓" title={t('Ver tutorial')} onClick={startTutorial}
-        summary={t('Passo a passo de todas as funções do app')}
-      />
+      <div className="section-group__label">{t('Comunidade e ajuda')}</div>
+      {showInvite && (
+        <ShortcutCard
+          icon="🤝" title={t('Convidar amigos')} onClick={handleInvite}
+          summary={usesWorkouts ? t('Mande o link do EAFIT pra quem treina com você') : t('Mande o link do EAFIT pra quem corre com você')}
+        />
+      )}
+      {showFeedback && (
+        <CollapsibleCard icon="💬" title={t('Enviar feedback')} summary={t('Sugestão, problema ou elogio')} defaultOpen={cardToOpen === 'feedback'}>
+          <ProfileFeedbackSection userId={user.id} toast={toast} />
+        </CollapsibleCard>
+      )}
+      {showTutorial && (
+        <ShortcutCard
+          icon="🎓" title={t('Ver tutorial')} onClick={startTutorial}
+          summary={t('Passo a passo de todas as funções do app')}
+        />
+      )}
     </div>
   );
 }

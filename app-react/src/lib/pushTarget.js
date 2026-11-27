@@ -56,7 +56,7 @@ export function kindTargetKey(kind) {
   if (kind === 'run_week' || kind === 'run_goal') return 'corrida';
   if (kind === 'run_challenge') return 'desafios';
   if (kind === 'run_first' || kind === 'run_streak' || kind === 'run_comeback') return 'gravar';
-  if (kind === 'progress_photo') return 'peso'; // fotos moram em Perfil → Peso e fotos
+  if (kind === 'progress_photo') return 'peso'; // fotos moram em Evolução → Corpo
   if (kind === 'seguranca') return 'recordes'; // resposta automática a relato de dor: histórico em Dashboard → Recordes
   return WORKOUT_KINDS.includes(kind) ? 'treino' : null;
 }

@@ -3,7 +3,7 @@ import { useAuth } from '../context/useAuth';
 import ProfileAmbassadorSection from '../components/ProfileAmbassadorSection';
 import ProfilePreferencesGroup from '../components/ProfilePreferencesGroup';
 import ProfileAccountGroup from '../components/ProfileAccountGroup';
-import { InviteAndFeedback, HelpSection, ShortcutCard } from '../components/ProfileCommunity';
+import { CommunityGroup } from '../components/ProfileCommunity';
 import { useToast } from '../context/useToast';
 import { useAvatar } from '../context/useAvatar';
 import { useWorkout } from '../context/useWorkout';
@@ -261,13 +261,6 @@ export default function PerfilPage({ active }) {
   const bodySummary = [saved.peso && `${saved.peso}kg`, saved.altura && `${saved.altura}cm`, savedImc && t('IMC {v1}', { v1: decimal(savedImc.value) })]
     .filter(Boolean).join(' · ') || t('Peso, altura, meta e nível');
 
-  // Peso e fotos moram na aba Corpo da Evolução (antes ficavam repetidos
-  // aqui). Grava a aba e troca o hash — useHashTab ouve o hashchange.
-  function openBodyProgress() {
-    try { localStorage.setItem('dash_tab', 'corpo'); } catch { /* sem storage */ }
-    window.location.hash = 'dash';
-  }
-
   return (
     <section id="page-perfil" className="page active">
       <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} name={getDisplayName(user)} avatar={avatarData} subtitle={heroSubtitle} />
@@ -310,7 +303,13 @@ export default function PerfilPage({ active }) {
 
         {usesWorkouts ? (
           <>
-            <CollapsibleCard icon="🎯" title={t('Metas')} summary={t('{weekly} treinos/semana · {water}L de água por dia', { weekly: weeklyGoalNum, water: waterGoalLabel })}>
+            <CollapsibleCard
+              icon="🎯" title={t('Metas e nutrição')}
+              summary={[
+                t('{weekly} treinos/semana · {water}L de água por dia', { weekly: weeklyGoalNum, water: waterGoalLabel }),
+                nutritionGoals && t('{kcal} kcal · {protein} g de proteína por dia', { kcal: nutritionGoals.kcal, protein: nutritionGoals.protein }),
+              ].filter(Boolean).join(' · ')}
+            >
               <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
               <div className="collapse__divider" />
               <MacrosSection
@@ -318,16 +317,9 @@ export default function PerfilPage({ active }) {
                 suggestedGoal={suggestedWaterGoal}
                 onSave={handleSaveWaterGoal}
               />
-            </CollapsibleCard>
-
-            <CollapsibleCard icon="🍽️" title={t('Nutrição')} summary={nutritionGoals ? t('{kcal} kcal · {protein} g de proteína por dia', { kcal: nutritionGoals.kcal, protein: nutritionGoals.protein }) : t('Metas diárias de calorias e proteína')}>
+              <div className="collapse__divider" />
               <ProfileNutritionSection goals={nutritionGoals} />
             </CollapsibleCard>
-
-            <ShortcutCard
-              icon="📈" title={t('Peso e fotos de progresso')} onClick={openBodyProgress}
-              summary={weightLogs.length === 1 ? t('1 registro de peso · ver em Evolução') : weightLogs.length ? t('{length} registros de peso · ver em Evolução', { length: weightLogs.length }) : t('Ver em Evolução')}
-            />
           </>
         ) : (
           <>
@@ -349,11 +341,9 @@ export default function PerfilPage({ active }) {
 
       <ProfileAmbassadorSection />
 
-      <InviteAndFeedback user={user} toast={toast} usesWorkouts={usesWorkouts} cardToOpen={cardToOpen} />
-
       <ProfilePreferencesGroup user={user} updateProfile={updateProfile} toast={toast} usesWorkouts={usesWorkouts} />
 
-      {sport.tutorial && <HelpSection />}
+      <CommunityGroup user={user} toast={toast} usesWorkouts={usesWorkouts} cardToOpen={cardToOpen} showTutorial={!!sport.tutorial} />
 
       <ProfileAccountGroup user={user} toast={toast} />
     </section>

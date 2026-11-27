@@ -132,22 +132,22 @@ describe('PerfilPage', () => {
     render(<PerfilPage active />);
     expect(screen.getByTestId('summary-Dados pessoais').textContent).toBe('Ana');
     expect(screen.getByTestId('summary-Meu corpo').textContent).toMatch(/^70kg · 175cm · IMC /);
-    expect(screen.getByTestId('summary-Metas').textContent).toContain('treinos/semana');
+    expect(screen.getByTestId('summary-Metas e nutrição').textContent).toContain('treinos/semana');
   });
 
   it('os resumos mostram o que está salvo: digitar um peso (ainda não salvo) não muda nada', () => {
     const { rerender } = render(<PerfilPage active />);
-    const summaries = () => ['Meu corpo', 'Metas', 'Nutrição'].map(card => screen.getByTestId(`summary-${card}`).textContent);
+    const summaries = () => ['Meu corpo', 'Metas e nutrição'].map(card => screen.getByTestId(`summary-${card}`).textContent);
     const before = summaries();
     type('peso', '850');
     expect(summaries()).toEqual(before);
-    expect(screen.getByTestId('summary-Metas').textContent).not.toContain('29,8');
+    expect(screen.getByTestId('summary-Metas e nutrição').textContent).not.toContain('29,8');
 
     // Salvo (a conta devolve o peso novo), os resumos acompanham.
     auth.user = { ...USER, user_metadata: { ...USER.user_metadata, peso: 85 } };
     rerender(<PerfilPage active />);
     expect(screen.getByTestId('summary-Meu corpo').textContent).toMatch(/^85kg · 175cm/);
-    expect(screen.getByTestId('summary-Metas').textContent).not.toBe(before[1]);
+    expect(screen.getByTestId('summary-Metas e nutrição').textContent).not.toBe(before[1]);
   });
 
   it('usa o cache local quando o perfil na nuvem ainda não tem o dado', () => {
@@ -442,13 +442,6 @@ describe('PerfilPage', () => {
   });
 
   describe('atalhos e chaves do painel admin', () => {
-    it('"Peso e fotos" abre a aba Corpo da Evolução', () => {
-      render(<PerfilPage active />);
-      fireEvent.click(screen.getByText('Peso e fotos de progresso'));
-      expect(localStorage.getItem('dash_tab')).toBe('corpo');
-      expect(window.location.hash).toBe('#dash');
-    });
-
     it('convidar amigos copiado avisa; chaves desligadas escondem convite e feedback', async () => {
       invite.shareInvite.mockResolvedValue('copied');
       const { unmount } = render(<PerfilPage active />);
@@ -481,7 +474,7 @@ describe('PerfilPage no módulo de corrida', () => {
     expect(screen.getByTestId('card-Preferências de corrida')).toBeTruthy();
     expect(screen.getByText('Meu programa')).toBeTruthy();
     expect(screen.getByText('Tênis e zonas de privacidade')).toBeTruthy();
-    expect(screen.queryByTestId('card-Nutrição')).toBeNull();
+    expect(screen.queryByTestId('card-Metas e nutrição')).toBeNull();
     expect(screen.queryByText('Peso e fotos de progresso')).toBeNull();
     expect(screen.queryByText('Meu personal')).toBeNull();
     expect(screen.queryByText('Sou personal trainer')).toBeNull();
@@ -494,7 +487,7 @@ describe('PerfilPage no módulo de corrida', () => {
     expect(document.querySelector('[data-show-training]').getAttribute('data-show-training')).toBe('false');
     expect(screen.getByTestId('notifications').getAttribute('data-running')).toBe('true');
     await waitFor(() => expect(JSON.parse(screen.getByTestId('header').getAttribute('data-run'))).toMatchObject({ week: '0,0/20', total: '0,0' }));
-    expect(screen.getByText('Corra junto')).toBeTruthy();
+    expect(screen.getByText('Comunidade e ajuda')).toBeTruthy();
   });
 
   it('mudar de faixa de IMC não gera plano de musculação para quem corre', async () => {
