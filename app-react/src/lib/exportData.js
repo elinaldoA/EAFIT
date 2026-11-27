@@ -21,6 +21,7 @@ import { fetchMyThread } from './trainerMessages';
 import { fetchMyAppointments } from './trainerAppointments';
 import { fetchMyCharges } from './trainerCharges';
 import { fetchMyLeagueResults } from './league';
+import { fetchMyArenaData } from './arena';
 
 const PHOTO_BACKUP_TTL = 7 * 24 * 3600; // links das fotos no backup valem 7 dias
 
@@ -107,7 +108,7 @@ export async function gatherUserData(userId) {
 
   const [
     profile, workoutExercises, bodyMeasurements, dailyCheckins, challenges,
-    friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, charges, surveyAnswers, leagueResults,
+    friendProfile, friends, feedback, notifications, trainer, trainerGoals, trainerMessages, appointments, charges, surveyAnswers, leagueResults, arena,
     proteinLogs, customFoods, nutritionEntries, nutritionPlan, runs, runShoes, runComments, runClubs, exerciseNotes, exerciseMuscles,
   ] = await Promise.all([
     safe('profile', fetchProfile, null),
@@ -126,6 +127,7 @@ export async function gatherUserData(userId) {
     safe('charges', fetchMyCharges, []),
     safe('surveyAnswers', fetchMySurveyAnswers, []),
     safe('leagueResults', fetchMyLeagueResults, []),
+    safe('arena', fetchMyArenaData, null),
     safe('proteinLogs', () => fetchProteinLogsRange(userId, EPOCH), []),
     safe('customFoods', () => fetchCustomFoods(userId), []),
     safe('nutritionEntries', () => fetchEntriesRange(userId, EPOCH), []),
@@ -148,7 +150,7 @@ export async function gatherUserData(userId) {
     discomfortReports, achievements, exerciseNotes, exerciseMuscles,
     challenges, friendProfile, friends,
     trainer, trainerGoals, trainerMessages, appointments, charges,
-    feedback, notifications, surveyAnswers, leagueResults,
+    feedback, notifications, surveyAnswers, leagueResults, arena,
     incomplete,
   };
 }
