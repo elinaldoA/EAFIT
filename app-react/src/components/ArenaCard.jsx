@@ -1,33 +1,73 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
-import { claimMission, dailyLabel, fetchArena, levelProgress, progressLabel, visibleMissions } from '../lib/arena';
-import { t, nDias } from '../lib/i18n';
+import { claimMission, dailyLabel, fetchArena, progressLabel, visibleMissions } from '../lib/arena';
+import { celebrationSince, fetchHero, saveHero } from '../lib/hero';
+import { t } from '../lib/i18n';
+import ArenaStage from './ArenaStage';
+import HeroCreator from './HeroCreator';
 
-// EAFIT Arena: nível, sequência e missões. Vale para os dois módulos (o mesmo
-// personagem soma XP de treino e de corrida); `sport` ('gym' | 'run') só escolhe
-// quais missões aparecem. Some quando a Arena está desligada, a função ainda não
-// foi publicada ou, no Run, o módulo ainda não foi liberado.
+const CELEBRATE_MS = 3600;
+const seenKey = userId => `arena_seen_${userId}`;
+
+function readSeen(userId) {
+  try { return JSON.parse(localStorage.getItem(seenKey(userId)) || 'null'); } catch { return null; }
+}
+function writeSeen(userId, arena) {
+  try { localStorage.setItem(seenKey(userId), JSON.stringify({ xp: arena.xp, level: arena.level })); } catch { /* sem storage */ }
+}
+
+// EAFIT Arena: o herói, o nível, a sequência e as missões. Vale para os dois
+// módulos (o mesmo herói soma XP de treino e de corrida); `sport` ('gym' | 'run')
+// escolhe o cenário e quais missões aparecem. Quando a pessoa volta depois de
+// treinar ou correr, o herói comemora o XP novo, e sobe de nível com festa. Some
+// quando a Arena está desligada, a função ainda não foi publicada ou, no Run, o
+// módulo ainda não foi liberado.
 export default function ArenaCard({ sport }) {
   const toast = useToast();
+  const { user } = useAuth();
+  const userId = user?.id;
   const [data, setData] = useState(null);
+  const [hero, setHero] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [celebrate, setCelebrate] = useState(null);
   const [busyId, setBusyId] = useState('');
   const alive = useRef(true);
+  const timer = useRef(null);
+  const firstLoad = useRef(true);
+
+  const party = useCallback(value => {
+    setCelebrate(value);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => { if (alive.current) setCelebrate(null); }, CELEBRATE_MS);
+  }, []);
 
   const reload = useCallback(async () => {
     try {
       const next = await fetchArena();
-      if (alive.current) setData(next);
+      if (!alive.current) return next;
+      setData(next);
+      if (next?.enabled && userId) {
+        if (firstLoad.current) {
+          const found = celebrationSince(readSeen(userId), next);
+          if (found) party(found);
+        }
+        writeSeen(userId, next);
+      }
+      firstLoad.current = false;
       return next;
     } catch {
       if (alive.current) setData({ enabled: false });
       return null;
     }
-  }, []);
+  }, [party, userId]);
 
   useEffect(() => {
     alive.current = true;
     reload();
-    return () => { alive.current = false; };
+    fetchHero().then(h => { if (alive.current) setHero(h); }).catch(() => {});
+    return () => { alive.current = false; clearTimeout(timer.current); };
   }, [reload]);
 
   async function claim(mission) {
@@ -37,7 +77,12 @@ export default function ArenaCard({ sport }) {
       const { xp } = await claimMission(mission.id);
       toast(t('⭐ +{xp} XP!', { xp }));
       const next = await reload();
-      if (next?.level > levelBefore) toast(t('🎉 Você chegou ao nível {level}!', { level: next.level }), 6000);
+      if (next?.level > levelBefore) {
+        toast(t('🎉 Você chegou ao nível {level}!', { level: next.level }), 6000);
+        party({ type: 'levelup', amount: xp, level: next.level });
+      } else {
+        party({ type: 'xp', amount: xp, level: next?.level });
+      }
     } catch {
       toast(t('Não foi possível resgatar agora. Tente de novo.'));
       await reload();
@@ -46,40 +91,34 @@ export default function ArenaCard({ sport }) {
     }
   }
 
+  async function save(next) {
+    setSaving(true);
+    try {
+      setHero(await saveHero(next));
+      toast(t('✨ Herói salvo!'));
+      setEditing(false);
+    } catch {
+      toast(t('Não foi possível salvar o herói. Tente de novo.'));
+    } finally {
+      if (alive.current) setSaving(false);
+    }
+  }
+
   if (!data?.enabled) return null;
   // A Arena do Run só existe depois que o módulo Run é liberado (servidor: run_released).
   if (sport === 'run' && !data.run_released) return null;
 
-  const { pct, toNext } = levelProgress(data);
-  const streak = Number(data.streak) || 0;
+  if (editing) {
+    return <HeroCreator initial={hero} level={data.level} saving={saving} onSave={save} onCancel={() => setEditing(false)} />;
+  }
+
   const missions = visibleMissions(data, sport);
 
   return (
     <div className="dash-card arena" aria-label={t('EAFIT Arena')}>
       <div className="dash-card__title">{t('⚔️ EAFIT Arena')}</div>
 
-      <div className="arena__level">
-        <span className="arena__badge" aria-hidden="true">{data.level}</span>
-        <div className="arena__level-body">
-          <strong>{t('Nível {level}', { level: data.level })}</strong>
-          <div className="arena__bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}
-            aria-label={t('Progresso para o próximo nível')}>
-            <i style={{ width: `${pct}%` }} />
-          </div>
-          <span className="challenge__meta">
-            {t('{xp} XP · faltam {falta} para o nível {next}', { xp: data.xp, falta: toNext, next: data.level + 1 })}
-          </span>
-        </div>
-      </div>
-
-      <p className="arena__streak">
-        {streak > 0
-          ? t('🔥 Sequência de {dias}', { dias: nDias(streak) })
-          : t('🔥 Treine ou corra hoje para começar sua sequência')}
-        {data.best_streak > streak && (
-          <span className="challenge__meta"> · {t('recorde: {dias}', { dias: nDias(data.best_streak) })}</span>
-        )}
-      </p>
+      <ArenaStage arena={data} hero={hero} sport={sport} celebrate={celebrate} onEdit={() => setEditing(true)} />
       <p className="challenge__meta">{dailyLabel(data)}</p>
 
       {missions.length > 0 && (

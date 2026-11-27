@@ -64,19 +64,20 @@ export function dailyLabel(arena) {
 // Para o backup: cada XP ganho, o resumo (nível e sequência) e as missões
 // resgatadas. A RLS já limita as três tabelas ao próprio usuário.
 export async function fetchMyArenaData() {
-  const [events, profile, claims, member, seasons, bosses] = await Promise.all([
+  const [events, profile, claims, member, seasons, bosses, hero] = await Promise.all([
     db.from('arena_xp_events').select('source, module, xp, day, created_at').order('created_at'),
     db.from('arena_profiles').select('xp_total, level, streak, best_streak, last_day').maybeSingle(),
     db.from('arena_mission_claims').select('mission_id, period_start, xp, claimed_at').order('claimed_at'),
     db.from('arena_members').select('joined_at').maybeSingle(),
     db.from('arena_season_results').select('season_id, xp, position').order('season_id'),
     db.from('arena_boss_claims').select('boss_id, xp, claimed_at').order('claimed_at'),
+    db.from('arena_heroes').select('body, skin, hair_style, hair_color, outfit').maybeSingle(),
   ]);
-  for (const r of [events, profile, claims, member, seasons, bosses]) if (r.error) throw r.error;
+  for (const r of [events, profile, claims, member, seasons, bosses, hero]) if (r.error) throw r.error;
   return {
     xpEvents: events.data || [], profile: profile.data || null, missionClaims: claims.data || [],
     rankingMemberSince: member.data?.joined_at || null, seasonResults: seasons.data || [],
-    bossClaims: bosses.data || [],
+    bossClaims: bosses.data || [], hero: hero.data || null,
   };
 }
 
