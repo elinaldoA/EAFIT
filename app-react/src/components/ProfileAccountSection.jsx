@@ -3,7 +3,7 @@ import { version as APP_VERSION } from '../../package.json';
 import CollapsibleCard from './CollapsibleCard';
 import { isGoogleOnly } from '../lib/googleAuth';
 
-import { t } from '../lib/i18n';
+import { t, locale } from '../lib/i18n';
 const DELETE_CONFIRM_WORD = t('EXCLUIR');
 
 export default function ProfileAccountSection({
@@ -13,6 +13,7 @@ export default function ProfileAccountSection({
   onDeleteAccount,
 }) {
   const googleOnly = isGoogleOnly(user);
+  const since = user?.created_at ? new Date(user.created_at) : null;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
@@ -26,6 +27,11 @@ export default function ProfileAccountSection({
   return (
     <>
       <CollapsibleCard icon="🔐" title={t('E-mail e senha')} summary={user?.email}>
+            {since && (
+              <p className="profile-field__hint">
+                {t('Membro desde {v1}', { v1: since.toLocaleDateString(locale, { month: 'long', year: 'numeric' }) })}
+              </p>
+            )}
             {googleOnly ? (
               <p className="profile-field__hint">
                 {t('Você entra com o Google, então o e-mail da conta é o do Google e não é trocado por aqui.')}

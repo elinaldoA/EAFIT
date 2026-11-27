@@ -17,7 +17,6 @@ import { createGeneratedPlan, listPlans, undoGeneratedPlan } from '../lib/workou
 import { useProfileData } from '../hooks/useProfileData';
 import CollapsibleCard from '../components/CollapsibleCard';
 import ProfileHeader from '../components/ProfileHeader';
-import ProfileIdentity from '../components/ProfileIdentity';
 import ProfilePersonalSection from '../components/ProfilePersonalSection';
 import ProfileBodySection from '../components/ProfileBodySection';
 import { focusFirstError } from '../lib/fieldErrors';
@@ -263,16 +262,12 @@ export default function PerfilPage({ active }) {
 
   return (
     <section id="page-perfil" className="page active">
-      <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} name={getDisplayName(user)} avatar={avatarData} subtitle={heroSubtitle} />
+      <ProfileHeader stats={stats} weeklyGoalNum={weeklyGoalNum} runStats={usesWorkouts ? null : runStats} name={getDisplayName(user)} avatar={avatarData} subtitle={heroSubtitle} onAvatarChange={handleAvatarChange} uploadingAvatar={uploadingAvatar} />
 
       <div className="section-group">
         <div className="section-group__label">{t('Meus dados')}</div>
 
         <CollapsibleCard icon="👤" title={t('Dados pessoais')} summary={fullName || apelido || t('Nome e apelido')}>
-          <ProfileIdentity
-            user={user} avatarData={avatarData} uploadingAvatar={uploadingAvatar}
-            onAvatarChange={handleAvatarChange}
-          />
           <ProfilePersonalSection
             nome={nome} setNome={setNome} sobrenome={sobrenome} setSobrenome={setSobrenome}
             apelido={apelido} setApelido={setApelido} onSave={handleSavePersonal}
@@ -305,10 +300,7 @@ export default function PerfilPage({ active }) {
           <>
             <CollapsibleCard
               icon="🎯" title={t('Metas e nutrição')}
-              summary={[
-                t('{weekly} treinos/semana · {water}L de água por dia', { weekly: weeklyGoalNum, water: waterGoalLabel }),
-                nutritionGoals && t('{kcal} kcal · {protein} g de proteína por dia', { kcal: nutritionGoals.kcal, protein: nutritionGoals.protein }),
-              ].filter(Boolean).join(' · ')}
+              summary={t('{weekly} treinos/sem · {water} L', { weekly: weeklyGoalNum, water: waterGoalLabel }) + (nutritionGoals ? t(' · {kcal} kcal', { kcal: nutritionGoals.kcal }) : '')}
             >
               <WeeklyGoalSection weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal} onSave={handleSaveWeeklyGoal} />
               <div className="collapse__divider" />

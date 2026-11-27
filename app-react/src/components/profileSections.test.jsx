@@ -34,7 +34,6 @@ import ProfileAccountSection from './ProfileAccountSection';
 import ProfileBodySection from './ProfileBodySection';
 import { WeeklyGoalSection, MacrosSection } from './ProfileGoalsSection';
 import ProfileHeader from './ProfileHeader';
-import ProfileIdentity from './ProfileIdentity';
 import ProfilePauseSection from './ProfilePauseSection';
 import ProfilePersonalSection from './ProfilePersonalSection';
 import ProfileFeedbackSection from './ProfileFeedbackSection';
@@ -276,33 +275,22 @@ describe('ProfileHeader', () => {
   });
 });
 
-describe('ProfileIdentity', () => {
-  const user = { email: 'ana@x.com', created_at: '2026-01-15T12:00:00Z', user_metadata: { apelido: 'Aninha' } };
+describe('ProfileHeader: avatar', () => {
+  const stats = { week: 1, streak: 2, total: 3 };
 
-  it('mostra e-mail e inicial, sem repetir o nome', () => {
-    render(<ProfileIdentity user={user} avatarData={null} uploadingAvatar={false} onAvatarChange={vi.fn()} />);
-    expect(screen.queryByText('Aninha')).toBeNull();
-    expect(screen.getAllByText('ana@x.com')).toHaveLength(1);
-    expect(screen.getByText('A')).toBeTruthy();
-  });
-
-  it('usa a foto quando existe e bloqueia upload em andamento', () => {
-    render(<ProfileIdentity user={user} avatarData="data:img" uploadingAvatar onAvatarChange={vi.fn()} />);
-    expect(screen.getByAltText('Foto de perfil').getAttribute('src')).toBe('data:img');
-    expect(document.querySelector('input[type="file"]').disabled).toBe(true);
-  });
-
-  it('avatar vazio mostra "?" e sem usuário mostra travessão', () => {
-    render(<ProfileIdentity user={null} />);
-    expect(screen.getByText('?')).toBeTruthy();
-    expect(screen.getAllByText('–').length).toBeGreaterThan(0);
-  });
-
-  it('dispara onAvatarChange ao escolher arquivo', () => {
+  it('com onAvatarChange o avatar troca a foto; sem ele fica só de exibição', () => {
     const onAvatarChange = vi.fn();
-    render(<ProfileIdentity user={user} onAvatarChange={onAvatarChange} />);
+    const { unmount } = render(<ProfileHeader stats={stats} weeklyGoalNum={4} name="Ana" onAvatarChange={onAvatarChange} />);
     fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
     expect(onAvatarChange).toHaveBeenCalled();
+    unmount();
+    render(<ProfileHeader stats={stats} weeklyGoalNum={4} name="Ana" />);
+    expect(document.querySelector('input[type="file"]')).toBeNull();
+  });
+
+  it('bloqueia a troca durante o envio', () => {
+    render(<ProfileHeader stats={stats} weeklyGoalNum={4} name="Ana" onAvatarChange={vi.fn()} uploadingAvatar />);
+    expect(document.querySelector('input[type="file"]').disabled).toBe(true);
   });
 });
 

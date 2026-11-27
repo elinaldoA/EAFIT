@@ -132,7 +132,7 @@ describe('PerfilPage', () => {
     render(<PerfilPage active />);
     expect(screen.getByTestId('summary-Dados pessoais').textContent).toBe('Ana');
     expect(screen.getByTestId('summary-Meu corpo').textContent).toMatch(/^70kg · 175cm · IMC /);
-    expect(screen.getByTestId('summary-Metas e nutrição').textContent).toContain('treinos/semana');
+    expect(screen.getByTestId('summary-Metas e nutrição').textContent).toContain('treinos/sem');
   });
 
   it('os resumos mostram o que está salvo: digitar um peso (ainda não salvo) não muda nada', () => {

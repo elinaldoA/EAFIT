@@ -67,7 +67,7 @@ export default function ProfilePreferencesGroup({ user, updateProfile, toast, us
         <ProfilePauseSection user={user} updateProfile={updateProfile} toast={toast} />
       </CollapsibleCard>
       {usesWorkouts && (
-        <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal ou peça o modo Personal')}>
+        <CollapsibleCard icon="🤝" title={t('Meu personal')} summary={t('Vincule-se ao seu personal')}>
           <ProfileTrainerSection toast={toast} />
           <div className="collapse__divider" />
           <div className="profile-field__label">{t('Sou personal trainer')}</div>

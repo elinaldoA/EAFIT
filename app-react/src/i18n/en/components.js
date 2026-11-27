@@ -735,6 +735,7 @@ export default {
   'Gorduras': 'Fats',
   'Estimativa por dia (Mifflin-St Jeor), ajustada pela sua meta principal e pelos treinos por semana. Não substitui orientação de nutricionista.': 'Daily estimate (Mifflin-St Jeor), adjusted for your main goal and weekly workouts. It does not replace advice from a dietitian.',
   'Foto de perfil': 'Profile photo',
+  'Trocar foto de perfil': 'Change profile photo',
   'Membro desde {v1}': 'Member since {v1}',
   'Sequência 🔥': 'Streak 🔥',
   'Total treinos': 'Total workouts',
