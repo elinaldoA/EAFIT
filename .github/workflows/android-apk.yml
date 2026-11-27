@@ -1,6 +1,8 @@
 name: Android APK (teste)
 
 # Gera o APK de debug do app Android (Capacitor) para instalar no celular e testar.
+# O APK sai com chave de debug fixa (app/eafit-debug.p12) e versionCode = numero da execucao,
+# entao o novo instala POR CIMA do anterior, sem desinstalar.
 # Baixe em: aba Actions > esta execucao > Artifacts > EAFIT-debug.apk (arquivo .apk direto, sem zip).
 # Roda pelo botao "Run workflow" ou quando o projeto Android ou o codigo do app mudam.
 on:
@@ -72,6 +74,11 @@ jobs:
             "uses-permission: name='android.permission.health.READ_STEPS'" \
             "uses-permission: name='android.permission.health.READ_WEIGHT'" | sort > esperado.txt
           diff esperado.txt health.txt
+
+      - name: Mostra a assinatura do APK (tem que ser sempre a mesma)
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs app-react/android/app/build/outputs/apk/debug/app-debug.apk | grep "SHA-256"
 
       # archive: false envia o .apk sem zip (o nome do artefato vira o nome do arquivo)
       - uses: actions/upload-artifact@v7
