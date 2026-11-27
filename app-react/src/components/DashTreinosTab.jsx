@@ -11,6 +11,7 @@ import MonthlyRecap from './MonthlyRecap';
 import Challenges from './Challenges';
 import LeagueCard from './LeagueCard';
 import ArenaCard from './ArenaCard';
+import ArenaRanking from './ArenaRanking';
 import Skeleton from './Skeleton';
 import { Heatmap, WeeklyBars, WeekCompare, LoadHistory } from './DashCharts';
 import { DiscomfortPanel } from './DiscomfortWidgets';
@@ -84,6 +85,7 @@ export default function DashTreinosTab({
     <>
     <MonthlyRecap userId={user.id} allTimeLogs={allTimeLogs} loadingLogs={loadingPR} />
     <ArenaCard sport="gym" />
+    <ArenaRanking sport="gym" />
     {isFlagOn(config.flags, 'desafios') && <Challenges />}
     {isFlagOn(config.flags, 'desafios') && <LeagueCard />}
     <div className="dash-card">

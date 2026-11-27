@@ -4,7 +4,10 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('./supabase', () => ({ db: {} }));
 vi.mock('./tracking', () => ({ trackFeature: vi.fn() }));
 
-import { levelProgress, visibleMissions, progressLabel, dailyLabel } from './arena';
+import {
+  levelProgress, visibleMissions, progressLabel, dailyLabel, parseArenaBadge, seasonName, shortDate, seasonDaysLeft,
+} from './arena';
+import { arenaBadges, visibleBadges } from './achievements';
 
 describe('arena', () => {
   it('calcula a barra do nível', () => {
@@ -33,5 +36,27 @@ describe('arena', () => {
 
   it('mostra o saldo do dia', () => {
     expect(dailyLabel({ today_xp: 150, daily_cap: 300 })).toBe('Hoje: 150/300 XP');
+  });
+
+  it('lê a medalha da temporada e monta a grade', () => {
+    expect(parseArenaBadge('arena_temporada-1_1')).toEqual({ slug: 'temporada-1', position: 1 });
+    expect(parseArenaBadge('arena_temporada-1_4')).toBeNull();
+    expect(parseArenaBadge('liga_ouro_1_2026-10')).toBeNull();
+    expect(seasonName('temporada-1')).toBe('Temporada 1');
+    const ids = new Set(['streak_3', 'arena_temporada-2_3', 'arena_temporada-1_1']);
+    const list = arenaBadges(ids);
+    expect(list.map(b => b.id)).toEqual(['arena_temporada-1_1', 'arena_temporada-2_3']);
+    expect(list[0]).toMatchObject({ emoji: '🥇', title: 'Arena · Temporada 1 · 1º' });
+    expect(list[0].check()).toBe(false);
+    expect(visibleBadges(ids).filter(b => b.arena)).toHaveLength(2);
+  });
+
+  it('formata datas e dias que faltam da temporada', () => {
+    expect(shortDate('2026-12-01')).toBe('01/12');
+    expect(shortDate('')).toBe('');
+    expect(seasonDaysLeft('2026-12-10', '2026-12-01')).toBe(9);
+    expect(seasonDaysLeft('2026-12-01', '2026-12-01')).toBe(0);
+    expect(seasonDaysLeft('2026-12-01', '2026-12-05')).toBe(0);
+    expect(seasonDaysLeft('xx', '2026-12-05')).toBe(0);
   });
 });

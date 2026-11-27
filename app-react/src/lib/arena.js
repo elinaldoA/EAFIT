@@ -64,11 +64,61 @@ export function dailyLabel(arena) {
 // Para o backup: cada XP ganho, o resumo (nível e sequência) e as missões
 // resgatadas. A RLS já limita as três tabelas ao próprio usuário.
 export async function fetchMyArenaData() {
-  const [events, profile, claims] = await Promise.all([
+  const [events, profile, claims, member, seasons] = await Promise.all([
     db.from('arena_xp_events').select('source, module, xp, day, created_at').order('created_at'),
     db.from('arena_profiles').select('xp_total, level, streak, best_streak, last_day').maybeSingle(),
     db.from('arena_mission_claims').select('mission_id, period_start, xp, claimed_at').order('claimed_at'),
+    db.from('arena_members').select('joined_at').maybeSingle(),
+    db.from('arena_season_results').select('season_id, xp, position').order('season_id'),
   ]);
-  for (const r of [events, profile, claims]) if (r.error) throw r.error;
-  return { xpEvents: events.data || [], profile: profile.data || null, missionClaims: claims.data || [] };
+  for (const r of [events, profile, claims, member, seasons]) if (r.error) throw r.error;
+  return {
+    xpEvents: events.data || [], profile: profile.data || null, missionClaims: claims.data || [],
+    rankingMemberSince: member.data?.joined_at || null, seasonResults: seasons.data || [],
+  };
+}
+
+// ── Temporada e ranking (supabase/migrations/20270307030000_arena_seasons.sql) ──
+// module: 'all' (geral), 'gym' ou 'run'.
+export async function fetchArenaRanking(module = 'all') {
+  const { data, error } = await db.rpc('arena_my_ranking', { p_module: module });
+  if (error) throw error;
+  return data || { enabled: false };
+}
+
+export async function joinArenaRanking() {
+  const { error } = await db.rpc('join_arena_ranking');
+  if (error) throw error;
+  trackFeature('arena_ranking');
+}
+
+export async function leaveArenaRanking() {
+  const { error } = await db.rpc('leave_arena_ranking');
+  if (error) throw error;
+}
+
+// Medalha do fechamento da temporada: arena_<slug>_<posição> (slug sem "_").
+export function parseArenaBadge(id) {
+  const m = /^arena_([a-z0-9-]+)_([123])$/.exec(String(id || ''));
+  return m ? { slug: m[1], position: Number(m[2]) } : null;
+}
+
+// "temporada-1" → "Temporada 1"
+export function seasonName(slug) {
+  const words = String(slug || '').replace(/-/g, ' ').trim();
+  return words ? words[0].toUpperCase() + words.slice(1) : '';
+}
+
+// "2026-12-01" → "01/12"
+export function shortDate(iso) {
+  const [, m, d] = String(iso || '').split('-');
+  return m && d ? `${d}/${m}` : '';
+}
+
+// Dias que faltam para o fim (0 = último dia). today e endsOn são "AAAA-MM-DD".
+export function seasonDaysLeft(endsOn, today) {
+  const a = Date.parse(`${endsOn}T00:00:00Z`);
+  const b = Date.parse(`${today}T00:00:00Z`);
+  if (Number.isNaN(a) || Number.isNaN(b)) return 0;
+  return Math.max(0, Math.round((a - b) / 86400000));
 }

@@ -10,6 +10,7 @@ import { RUN_SAVED_EVENT, fetchRuns, fetchFriendsWeek, formatKm, decimal } from 
 import RunClubs from './Clubs';
 import CommunityChallenges from './CommunityChallenges';
 import ArenaCard from '../../components/ArenaCard';
+import ArenaRanking from '../../components/ArenaRanking';
 import { communityDone } from './runsCommunity';
 import { monthlyChallenges, challengeProgress, monthMedals } from './challenges';
 
@@ -271,6 +272,7 @@ export default function RunChallengesPage() {
   return (
     <section id="page-desafios" className="page active">
       <ArenaCard sport="run" />
+      <ArenaRanking sport="run" />
       <CommunityChallenges onLoaded={setCommunity} />
       <MonthChallenges runs={runs} today={today} />
       <Medals runs={runs} today={today} community={community} />
