@@ -56,6 +56,30 @@ describe('HeroAvatar', () => {
     expect(cheer.querySelectorAll('.hero__arm')).toHaveLength(2);
   });
 
+  it('o corpo muda com a forma: sem treino tem barriga e olheiras, em forma tem abdômen e bíceps', () => {
+    const draw = (form, goal = 'massa') => render(<HeroAvatar hero={hero} level={10} form={form} goal={goal} />).container;
+    const out = draw(0);
+    expect(out.querySelector('svg').getAttribute('data-belly')).toBe('1.00');
+    expect(out.querySelector('.hero__abs')).toBeNull();
+    expect(out.innerHTML).toContain('#6D28D9'); // olheiras
+    cleanup();
+    const fit = draw(100);
+    expect(Number(fit.querySelector('svg').getAttribute('data-belly'))).toBeLessThan(0.2);
+    expect(fit.querySelector('.hero__abs')).not.toBeNull();
+    expect(fit.innerHTML).not.toContain('#6D28D9');
+    cleanup();
+    expect(draw(0).innerHTML).not.toEqual(draw(100).innerHTML);
+  });
+
+  it('o objetivo muda o corpo no auge e o corpo neutro não muda sem forma', () => {
+    const peak = goal => render(<HeroAvatar hero={hero} level={1} form={100} goal={goal} />).container.innerHTML;
+    expect(new Set(['massa', 'emagrecer', 'definicao', 'resistencia'].map(peak)).size).toBe(4);
+    cleanup();
+    const neutral = render(<HeroAvatar hero={hero} level={1} />).container;
+    expect(neutral.querySelector('svg').getAttribute('data-belly')).toBe('0.00');
+    expect(neutral.querySelector('.hero__abs')).toBeNull();
+  });
+
   it('desenha os seis estilos de cabelo', () => {
     const shapes = [1, 2, 3, 4, 5, 6].map(s => render(<HeroAvatar hero={{ ...hero, hair_style: s }} crop="head" />).container.innerHTML);
     expect(new Set(shapes).size).toBe(6);

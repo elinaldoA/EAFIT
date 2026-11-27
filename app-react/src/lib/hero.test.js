@@ -4,7 +4,10 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('./supabase', () => ({ db: {} }));
 vi.mock('./tracking', () => ({ trackFeature: vi.fn() }));
 
-import { DEFAULT_HERO, HAIR_COLORS, OUTFITS, SKIN, celebrationSince, heroTier, sanitizeHero } from './hero';
+import {
+  DEFAULT_HERO, HAIR_COLORS, NEUTRAL_PHYSIQUE, OUTFITS, SKIN, celebrationSince, formTier, heroTier, physique,
+  sanitizeHero, trainingProfile,
+} from './hero';
 
 describe('hero', () => {
   it('garante um herói válido', () => {
@@ -31,6 +34,65 @@ describe('hero', () => {
     expect(heroTier(99).tier).toBe(6);
     expect(heroTier(0).tier).toBe(1);
     expect(heroTier(undefined).tier).toBe(1);
+  });
+
+  it('fica neutro sem forma calculada', () => {
+    expect(physique(null, 'massa')).toBe(NEUTRAL_PHYSIQUE);
+    expect(physique(undefined, 'massa')).toBe(NEUTRAL_PHYSIQUE);
+    expect(physique('x', 'massa')).toBe(NEUTRAL_PHYSIQUE);
+    expect(formTier(null)).toBeNull();
+    expect(formTier(undefined)).toBeNull();
+  });
+
+  it('quanto mais treino, mais forte e definido; quanto menos, o inverso', () => {
+    const steps = [0, 20, 45, 70, 100].map(score => physique(score, 'massa'));
+    for (let i = 1; i < steps.length; i += 1) {
+      expect(steps[i].arm).toBeGreaterThan(steps[i - 1].arm);
+      expect(steps[i].shoulder).toBeGreaterThan(steps[i - 1].shoulder);
+      expect(steps[i].abs).toBeGreaterThanOrEqual(steps[i - 1].abs);
+      expect(steps[i].belly).toBeLessThan(steps[i - 1].belly);
+      expect(steps[i].waist).toBeLessThan(steps[i - 1].waist);
+    }
+    const out = physique(0, 'massa');
+    expect(out).toMatchObject({ belly: 1, abs: 0, slump: 1, tired: 1 });
+    const peak = physique(100, 'massa');
+    expect(peak.slump).toBe(0);
+    expect(peak.tired).toBe(0);
+    expect(peak.abs).toBeGreaterThan(0.4);
+    expect(peak.bicep).toBe(1);
+  });
+
+  it('o objetivo define a direção do corpo', () => {
+    const massa = physique(100, 'massa');
+    const emagrecer = physique(100, 'emagrecer');
+    const definicao = physique(100, 'definicao');
+    expect(massa.arm).toBeGreaterThan(emagrecer.arm);
+    expect(massa.shoulder).toBeGreaterThan(definicao.shoulder);
+    expect(definicao.abs).toBeGreaterThan(massa.abs);
+    expect(emagrecer.belly).toBe(0);
+    expect(massa.belly).toBeGreaterThan(0);
+    // objetivo desconhecido cai em "saúde"
+    expect(physique(60, 'xyz')).toEqual(physique(60, 'saude'));
+    // forma baixa é igual em estrutura para todos: barriga cheia
+    expect(physique(0, 'emagrecer').belly).toBe(1);
+  });
+
+  it('dá nome à fase do corpo conforme o objetivo', () => {
+    expect(formTier(0).name).toBe('Fora de forma');
+    expect(formTier(25).name).toBe('Voltando à rotina');
+    expect(formTier(50, 'massa').name).toBe('Em forma');
+    expect(formTier(75, 'massa').name).toBe('Forte');
+    expect(formTier(75, 'emagrecer').name).toBe('Definido');
+    expect(formTier(95).name).toBe('No auge');
+    expect(formTier(95).next).toBeNull();
+    expect(formTier(50).next).toEqual({ score: 70, name: 'Definido' });
+  });
+
+  it('lê objetivo e meta semanal do perfil', () => {
+    expect(trainingProfile({ meta: 'emagrecer', weeklyGoal: '4' })).toEqual({ goal: 'emagrecer', weeklyGoal: 4 });
+    expect(trainingProfile({ weeklyGoal: '0' })).toEqual({ goal: 'massa', weeklyGoal: 5 });
+    expect(trainingProfile({ weeklyGoal: '9' }).weeklyGoal).toBe(5);
+    expect(trainingProfile(null)).toEqual({ goal: 'massa', weeklyGoal: 5 });
   });
 
   it('comemora o XP novo desde a última visita', () => {

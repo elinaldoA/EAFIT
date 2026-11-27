@@ -5,6 +5,30 @@ import { useId } from 'react';
 export default function ArenaScene({ sport }) {
   const uid = useId().replace(/:/g, '');
 
+  if (sport === 'boss') {
+    return (
+      <svg className="arena-scene" viewBox="0 0 320 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <defs>
+          <linearGradient id={`sky-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#1E1B4B" />
+            <stop offset="100%" stopColor="#7F1D1D" />
+          </linearGradient>
+          <radialGradient id={`glow-${uid}`} cx="50%" cy="100%" r="70%">
+            <stop offset="0%" stopColor="#F97316" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#F97316" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <rect width="320" height="200" fill={`url(#sky-${uid})`} />
+        <circle cx="160" cy="60" r="34" fill="#FCA5A5" opacity="0.22" />
+        <path d="M0 140 L40 96 L74 132 L120 84 L170 134 L220 90 L268 130 L320 100 L320 200 L0 200 Z" fill="#3B0764" opacity="0.8" />
+        <rect y="156" width="320" height="44" fill="#292524" />
+        <path d="M0 172 H320 M0 188 H320" stroke="#1C1917" strokeWidth="1.5" opacity="0.8" />
+        <path d="M30 200 Q60 178 96 200 M210 200 Q250 176 290 200" stroke="#F97316" strokeWidth="3" fill="none" opacity="0.8" />
+        <rect width="320" height="200" fill={`url(#glow-${uid})`} />
+      </svg>
+    );
+  }
+
   if (sport === 'run') {
     return (
       <svg className="arena-scene" viewBox="0 0 320 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">

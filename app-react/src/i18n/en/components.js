@@ -1149,6 +1149,21 @@ export default {
   'Salvar herói': 'Save hero',
   '✨ Herói salvo!': '✨ Hero saved!',
   'Não foi possível salvar o herói. Tente de novo.': 'Could not save your hero. Try again.',
+  // EAFIT Arena: forma física do herói (lib/hero.js, components/ArenaStage.jsx, hooks/useHeroForm.js)
+  'Fora de forma': 'Out of shape',
+  'Voltando à rotina': 'Getting back on track',
+  'Em forma': 'In shape',
+  'Definido': 'Defined',
+  'No auge': 'At your peak',
+  '💪 Forma: {fase}': '💪 Shape: {fase}',
+  'Forma física': 'Fitness',
+  '{n} de {meta} dias de treino nesta semana': '{n} of {meta} training days this week',
+  'próxima fase: {fase}': 'next stage: {fase}',
+  'Treine com regularidade para fortalecer o herói; parar de treinar faz o corpo voltar atrás.': 'Train regularly to strengthen your hero; stopping makes the body slip back.',
+  // EAFIT Arena: encontro com o chefão (components/ArenaBoss.jsx, BossMonster.jsx)
+  'Vida {hp}%': 'Health {hp}%',
+  '−{dmg}% de vida': '−{dmg}% health',
+  'Chefão derrotado!': 'Boss defeated!',
   // Pedido de acesso de personal (components/ProfileTrainerRequestSection.jsx, lib/trainerRequest.js)
   'CREF inválido. Use o formato 012345-G/SP.': 'Invalid CREF. Use the format 012345-G/SP.',
   'Informe seu nome completo.': 'Enter your full name.',

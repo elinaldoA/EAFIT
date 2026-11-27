@@ -20,7 +20,7 @@ function Swatches({ label, colors, value, onChange, names }) {
 
 // Criação e edição do herói: o desenho ao vivo e as opções de corpo, pele,
 // cabelo e cor da roupa. O equipamento não se escolhe: ele vem do nível.
-export default function HeroCreator({ initial, level = 1, saving, onSave, onCancel }) {
+export default function HeroCreator({ initial, level = 1, form, saving, onSave, onCancel }) {
   const [hero, setHero] = useState(() => sanitizeHero(initial || DEFAULT_HERO));
   const set = key => value => setHero(prev => ({ ...prev, [key]: value }));
   const bodyNames = [t('Esguio'), t('Médio'), t('Forte')];
@@ -29,7 +29,7 @@ export default function HeroCreator({ initial, level = 1, saving, onSave, onCanc
     <div className="dash-card hero-creator">
       <div className="dash-card__title">{initial ? t('✏️ Editar herói') : t('✨ Crie seu herói')}</div>
       <div className="hero-creator__preview">
-        <HeroAvatar hero={hero} level={level} mood="idle" label={t('Prévia do herói')} />
+        <HeroAvatar hero={hero} level={level} form={form?.form} goal={form?.goal} mood="idle" label={t('Prévia do herói')} />
       </div>
 
       <div className="hero-creator__row">

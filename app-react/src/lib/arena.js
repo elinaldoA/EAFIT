@@ -146,6 +146,31 @@ export async function fetchArenaTeams() {
   return data || { enabled: false };
 }
 
+// Qual monstro desenhar para cada tipo de meta (components/BossMonster.jsx).
+const MONSTER_KINDS = { workouts: 'gorilla', xp: 'dragon', run_km: 'serpent' };
+export function monsterKind(metric) {
+  return MONSTER_KINDS[metric] || 'dragon';
+}
+
+// O que mudou no chefão desde a última vez que a pessoa o viu: dano novo (a
+// comunidade avançou) ou a derrota. `seen` é { id, value, defeated } guardado no
+// aparelho; sem ele, ou de outro chefão, não há o que mostrar. dmg é a fatia da
+// vida do monstro (em % da meta) que caiu.
+export function bossHitSince(seen, boss) {
+  const goal = Number(boss?.goal) || 0;
+  if (!seen || !boss || seen.id !== boss.id || goal <= 0) return null;
+  const gained = (Number(boss.value) || 0) - (Number(seen.value) || 0);
+  const dmg = Math.max(1, Math.round((Math.max(gained, 0) / goal) * 100));
+  if (boss.defeated && !seen.defeated) return { type: 'defeat', dmg };
+  if (gained > 0) return { type: 'hit', dmg };
+  return null;
+}
+
+// Vida que sobra no monstro, em % (0 = derrotado).
+export function bossHp(boss) {
+  return boss?.defeated ? 0 : 100 - bossPercent(boss);
+}
+
 // Porcentagem da meta do chefão (trava em 100).
 export function bossPercent(boss) {
   const goal = Number(boss?.goal) || 0;

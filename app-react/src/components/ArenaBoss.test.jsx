@@ -7,10 +7,17 @@ const h = vi.hoisted(() => ({ toast: vi.fn(), api: {} }));
 vi.mock('../lib/supabase', () => ({ db: {} }));
 vi.mock('../lib/tracking', () => ({ trackFeature: vi.fn() }));
 vi.mock('../context/useToast', () => ({ useToast: () => h.toast }));
+vi.mock('../context/useAuth', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }));
 vi.mock('../lib/arena', async importActual => ({
   ...(await importActual()),
   fetchArenaBoss: (...a) => h.api.fetchArenaBoss(...a),
   claimArenaBoss: (...a) => h.api.claimArenaBoss(...a),
+  fetchArena: (...a) => h.api.fetchArena(...a),
+}));
+vi.mock('../lib/hero', async importActual => ({
+  ...(await importActual()),
+  fetchHero: (...a) => h.api.fetchHero(...a),
+  fetchHeroForm: (...a) => h.api.fetchHeroForm(...a),
 }));
 
 import ArenaBoss from './ArenaBoss';
@@ -24,7 +31,14 @@ const DATA = { enabled: true, run_released: true, boss: BOSS, last: { title: 'O 
 
 beforeEach(() => {
   h.toast.mockReset();
-  h.api = { fetchArenaBoss: vi.fn(), claimArenaBoss: vi.fn().mockResolvedValue({ xp: 40 }) };
+  h.api = {
+    fetchArenaBoss: vi.fn(),
+    claimArenaBoss: vi.fn().mockResolvedValue({ xp: 40 }),
+    fetchArena: vi.fn().mockResolvedValue({ level: 12 }),
+    fetchHero: vi.fn().mockResolvedValue(null),
+    fetchHeroForm: vi.fn().mockResolvedValue(null),
+  };
+  localStorage.clear();
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
@@ -89,6 +103,66 @@ describe('ArenaBoss', () => {
     render(<ArenaBoss sport="gym" />);
     fireEvent.click(await screen.findByText('Resgatar +40 XP'));
     await waitFor(() => expect(h.toast).toHaveBeenCalledWith('Não foi possível resgatar agora. Tente de novo.'));
+  });
+
+  it('desenha o monstro do tipo de meta, com a barra de vida', async () => {
+    h.api.fetchArenaBoss.mockResolvedValue(DATA);
+    const { container } = render(<ArenaBoss sport="gym" />);
+    await screen.findByText('🐉 O Dragão do Esforço');
+    expect(container.querySelector('svg.monster').getAttribute('data-kind')).toBe('dragon');
+    expect(container.querySelector('svg.monster').classList.contains('monster--idle')).toBe(true);
+    expect(screen.getByText('Vida 60%')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Seu herói' })).toBeTruthy();
+    cleanup();
+    localStorage.clear();
+    h.api.fetchArenaBoss.mockResolvedValue({ ...DATA, boss: { ...BOSS, metric: 'workouts', goal: 10, value: 7 } });
+    const g = render(<ArenaBoss sport="gym" />);
+    await screen.findByText(/7 de 10 treinos/);
+    expect(g.container.querySelector('svg.monster').getAttribute('data-kind')).toBe('gorilla');
+    expect(g.container.querySelector('svg.monster').classList.contains('monster--idle')).toBe(true);
+    cleanup();
+    localStorage.clear();
+    h.api.fetchArenaBoss.mockResolvedValue({ ...DATA, boss: { ...BOSS, metric: 'run_km', goal: 40, value: 36 } });
+    const s = render(<ArenaBoss sport="run" />);
+    await screen.findByText(/36 de 40 km/);
+    expect(s.container.querySelector('svg.monster').getAttribute('data-kind')).toBe('serpent');
+    expect(s.container.querySelector('svg.monster').classList.contains('monster--hurt')).toBe(true);
+  });
+
+  it('o monstro leva o golpe quando a comunidade avançou desde a última visita', async () => {
+    localStorage.setItem('arena_boss_seen_u1', JSON.stringify({ id: 'b1', value: 150, defeated: false }));
+    h.api.fetchArenaBoss.mockResolvedValue(DATA);
+    const { container } = render(<ArenaBoss sport="gym" />);
+    expect(await screen.findByText('−20% de vida')).toBeTruthy();
+    expect(container.querySelector('svg.monster').classList.contains('monster--hit')).toBe(true);
+    expect(JSON.parse(localStorage.getItem('arena_boss_seen_u1'))).toEqual({ id: 'b1', value: 300, defeated: false });
+  });
+
+  it('mostra a derrota e o baú quando o chefão cai', async () => {
+    localStorage.setItem('arena_boss_seen_u1', JSON.stringify({ id: 'b1', value: 700, defeated: false }));
+    h.api.fetchArenaBoss.mockResolvedValue({ ...DATA, boss: { ...BOSS, value: 760, defeated: true, can_claim: true } });
+    const { container } = render(<ArenaBoss sport="gym" />);
+    expect(await screen.findByText('Chefão derrotado!')).toBeTruthy();
+    expect(container.querySelector('svg.monster').classList.contains('monster--defeated')).toBe(true);
+    expect(container.querySelector('.boss-loot')).not.toBeNull();
+    expect(screen.getByText('Vida 0%')).toBeTruthy();
+  });
+
+  it('não encena nada na primeira visita, em outro chefão ou sem mudança', async () => {
+    h.api.fetchArenaBoss.mockResolvedValue(DATA);
+    render(<ArenaBoss sport="gym" />);
+    await screen.findByText('🐉 O Dragão do Esforço');
+    expect(screen.queryByText(/de vida$/)).toBeNull();
+    cleanup();
+    localStorage.setItem('arena_boss_seen_u1', JSON.stringify({ id: 'outro', value: 10, defeated: false }));
+    render(<ArenaBoss sport="gym" />);
+    await screen.findByText('🐉 O Dragão do Esforço');
+    expect(screen.queryByText(/de vida$/)).toBeNull();
+    cleanup();
+    localStorage.setItem('arena_boss_seen_u1', JSON.stringify({ id: 'b1', value: 300, defeated: false }));
+    render(<ArenaBoss sport="gym" />);
+    await screen.findByText('🐉 O Dragão do Esforço');
+    expect(screen.queryByText(/de vida$/)).toBeNull();
   });
 
   it('mostra km e treinos na unidade do chefão', async () => {

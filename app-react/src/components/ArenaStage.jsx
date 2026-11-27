@@ -1,5 +1,5 @@
 import { levelProgress } from '../lib/arena';
-import { heroTier } from '../lib/hero';
+import { formTier, heroTier } from '../lib/hero';
 import { t, nDias } from '../lib/i18n';
 import ArenaScene from './ArenaScene';
 import HeroAvatar from './HeroAvatar';
@@ -7,10 +7,11 @@ import HeroAvatar from './HeroAvatar';
 // Palco da Arena: o herói em pé no cenário do módulo (academia no Gym, pista no
 // Run), com o nível, a barra de XP e a sequência. `celebrate` faz o herói
 // comemorar: { type: 'xp' | 'levelup', amount, level }.
-export default function ArenaStage({ arena, hero, sport, celebrate, onEdit }) {
+export default function ArenaStage({ arena, hero, sport, celebrate, onEdit, form }) {
   const { pct, toNext } = levelProgress(arena);
   const level = arena.level || 1;
   const tier = heroTier(level);
+  const shape = form ? formTier(form.form, form.goal) : null;
   const streak = Number(arena.streak) || 0;
   const mood = celebrate ? 'cheer' : 'idle';
 
@@ -22,7 +23,7 @@ export default function ArenaStage({ arena, hero, sport, celebrate, onEdit }) {
         <button type="button" className="arena-stage__edit" onClick={onEdit}>
           {hero ? t('✏️ Herói') : t('✨ Criar herói')}
         </button>
-        <HeroAvatar hero={hero} level={level} mood={mood} className="arena-stage__hero" label={t('Seu herói')} />
+        <HeroAvatar hero={hero} level={level} form={form?.form} goal={form?.goal} mood={mood} className="arena-stage__hero" label={t('Seu herói')} />
         {celebrate && (
           <>
             <span className="arena-float" role="status">{t('+{xp} XP', { xp: celebrate.amount })}</span>
@@ -53,6 +54,25 @@ export default function ArenaStage({ arena, hero, sport, celebrate, onEdit }) {
           )}
         </div>
       </div>
+
+      {shape && (
+        <div className="arena__level arena__form">
+          <div className="arena__level-body">
+            <strong>{t('💪 Forma: {fase}', { fase: shape.name })}</strong>
+            <div className="arena__bar arena__bar--form" role="progressbar" aria-valuemin={0} aria-valuemax={100}
+              aria-valuenow={form.form} aria-label={t('Forma física')}>
+              <i style={{ width: `${form.form}%` }} />
+            </div>
+            <span className="challenge__meta">
+              {t('{n} de {meta} dias de treino nesta semana', { n: form.info?.this_week ?? 0, meta: form.info?.target ?? form.weeklyGoal })}
+              {shape.next ? ` · ${t('próxima fase: {fase}', { fase: shape.next.name })}` : ''}
+            </span>
+            <span className="challenge__meta">
+              {t('Treine com regularidade para fortalecer o herói; parar de treinar faz o corpo voltar atrás.')}
+            </span>
+          </div>
+        </div>
+      )}
 
       <p className="arena__streak">
         {streak > 0

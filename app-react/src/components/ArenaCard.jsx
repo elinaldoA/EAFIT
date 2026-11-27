@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useToast } from '../context/useToast';
 import { claimMission, dailyLabel, fetchArena, progressLabel, visibleMissions } from '../lib/arena';
+import { useHeroForm } from '../hooks/useHeroForm';
 import { celebrationSince, fetchHero, saveHero } from '../lib/hero';
 import { t } from '../lib/i18n';
 import ArenaStage from './ArenaStage';
@@ -27,6 +28,7 @@ export default function ArenaCard({ sport }) {
   const toast = useToast();
   const { user } = useAuth();
   const userId = user?.id;
+  const form = useHeroForm();
   const [data, setData] = useState(null);
   const [hero, setHero] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -109,7 +111,7 @@ export default function ArenaCard({ sport }) {
   if (sport === 'run' && !data.run_released) return null;
 
   if (editing) {
-    return <HeroCreator initial={hero} level={data.level} saving={saving} onSave={save} onCancel={() => setEditing(false)} />;
+    return <HeroCreator initial={hero} level={data.level} form={form} saving={saving} onSave={save} onCancel={() => setEditing(false)} />;
   }
 
   const missions = visibleMissions(data, sport);
@@ -118,7 +120,7 @@ export default function ArenaCard({ sport }) {
     <div className="dash-card arena" aria-label={t('EAFIT Arena')}>
       <div className="dash-card__title">{t('⚔️ EAFIT Arena')}</div>
 
-      <ArenaStage arena={data} hero={hero} sport={sport} celebrate={celebrate} onEdit={() => setEditing(true)} />
+      <ArenaStage arena={data} hero={hero} sport={sport} celebrate={celebrate} form={form} onEdit={() => setEditing(true)} />
       <p className="challenge__meta">{dailyLabel(data)}</p>
 
       {missions.length > 0 && (

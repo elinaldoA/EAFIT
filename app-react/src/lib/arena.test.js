@@ -6,7 +6,7 @@ vi.mock('./tracking', () => ({ trackFeature: vi.fn() }));
 
 import {
   levelProgress, visibleMissions, progressLabel, dailyLabel, parseArenaBadge, seasonName, shortDate, seasonDaysLeft,
-  bossPercent, bossAmount, bossMine,
+  bossPercent, bossAmount, bossMine, bossHitSince, bossHp,
 } from './arena';
 import { arenaBadges, visibleBadges } from './achievements';
 
@@ -63,6 +63,22 @@ describe('arena', () => {
     expect(bossMine({ metric: 'run_km', mine: 5 })).toBe('5 km');
     expect(bossMine({ metric: 'workouts', mine: 2 })).toBe('2 treinos');
     expect(bossMine({ metric: 'xp', mine: 0 })).toBe('0 XP');
+  });
+
+  it('calcula a vida do monstro e o que mudou desde a última visita', () => {
+    expect(bossHp({ goal: 750, value: 300 })).toBe(60);
+    expect(bossHp({ goal: 10, value: 25 })).toBe(0);
+    expect(bossHp({ goal: 10, value: 3, defeated: true })).toBe(0);
+    const boss = { id: 'b1', goal: 750, value: 300, defeated: false };
+    expect(bossHitSince(null, boss)).toBeNull();
+    expect(bossHitSince({ id: 'x', value: 0, defeated: false }, boss)).toBeNull();
+    expect(bossHitSince({ id: 'b1', value: 300, defeated: false }, boss)).toBeNull();
+    expect(bossHitSince({ id: 'b1', value: 400, defeated: false }, boss)).toBeNull();
+    expect(bossHitSince({ id: 'b1', value: 150, defeated: false }, boss)).toEqual({ type: 'hit', dmg: 20 });
+    expect(bossHitSince({ id: 'b1', value: 299.9, defeated: false }, boss)).toEqual({ type: 'hit', dmg: 1 });
+    expect(bossHitSince({ id: 'b1', value: 700, defeated: false }, { ...boss, value: 760, defeated: true })).toEqual({ type: 'defeat', dmg: 8 });
+    expect(bossHitSince({ id: 'b1', value: 760, defeated: true }, { ...boss, value: 760, defeated: true })).toBeNull();
+    expect(bossHitSince({ id: 'b1', value: 1 }, { id: 'b1', goal: 0, value: 5 })).toBeNull();
   });
 
   it('formata datas e dias que faltam da temporada', () => {

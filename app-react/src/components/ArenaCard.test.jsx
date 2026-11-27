@@ -17,6 +17,7 @@ vi.mock('../lib/hero', async importActual => ({
   ...(await importActual()),
   fetchHero: (...a) => h.api.fetchHero(...a),
   saveHero: (...a) => h.api.saveHero(...a),
+  fetchHeroForm: (...a) => h.api.fetchHeroForm(...a),
 }));
 
 import ArenaCard from './ArenaCard';
@@ -40,6 +41,7 @@ beforeEach(() => {
     claimMission: vi.fn().mockResolvedValue({ xp: 15 }),
     fetchHero: vi.fn().mockResolvedValue(null),
     saveHero: vi.fn().mockImplementation(async hero => hero),
+    fetchHeroForm: vi.fn().mockResolvedValue(null),
   };
   localStorage.clear();
 });
@@ -104,6 +106,36 @@ describe('ArenaCard', () => {
     expect(screen.getByText('✨ Criar herói')).toBeTruthy();
     expect(screen.getByText('Nível 2 · Novato')).toBeTruthy();
     expect(screen.getByText('Próximo visual: Dedicado no nível 5')).toBeTruthy();
+  });
+
+  it('mostra a forma física e o corpo do herói acompanha o treino', async () => {
+    h.api.fetchArena.mockResolvedValue(ARENA);
+    h.api.fetchHeroForm.mockResolvedValue({ score: 82, target: 4, this_week: 3, weeks: [3, 4, 4, 3, 4, 4, 3, 4] });
+    const { container } = render(<ArenaCard sport="gym" />);
+    expect(await screen.findByText('💪 Forma: Forte')).toBeTruthy();
+    expect(screen.getByText(/3 de 4 dias de treino nesta semana · próxima fase: No auge/)).toBeTruthy();
+    expect(screen.getByRole('progressbar', { name: 'Forma física' }).getAttribute('aria-valuenow')).toBe('82');
+    const svg = container.querySelector('svg.hero');
+    expect(Number(svg.getAttribute('data-abs'))).toBeGreaterThan(0.2);
+    expect(Number(svg.getAttribute('data-belly'))).toBeLessThan(0.3);
+  });
+
+  it('o herói fica sem forma quando a pessoa não treina', async () => {
+    h.api.fetchArena.mockResolvedValue(ARENA);
+    h.api.fetchHeroForm.mockResolvedValue({ score: 4, target: 4, this_week: 0, weeks: [0, 0, 0, 0, 0, 0, 1, 0] });
+    const { container } = render(<ArenaCard sport="gym" />);
+    expect(await screen.findByText('💪 Forma: Fora de forma')).toBeTruthy();
+    const svg = container.querySelector('svg.hero');
+    expect(Number(svg.getAttribute('data-belly'))).toBeGreaterThan(0.8);
+    expect(Number(svg.getAttribute('data-abs'))).toBe(0);
+  });
+
+  it('usa a meta semanal e o objetivo do perfil e não mostra a forma sem o cálculo', async () => {
+    h.api.fetchArena.mockResolvedValue(ARENA);
+    render(<ArenaCard sport="gym" />);
+    await screen.findByText('Nível 2 · Novato');
+    expect(h.api.fetchHeroForm).toHaveBeenCalledWith(5);
+    expect(screen.queryByText(/💪 Forma/)).toBeNull();
   });
 
   it('cria o herói e volta ao palco', async () => {
